@@ -36,7 +36,7 @@ from companion.core.types import (
     Utterance,
 )
 
-SELF_KINDS = (BeliefKind.PREFERENCE, BeliefKind.TRAIT, BeliefKind.EVENT)
+SELF_KINDS = (BeliefKind.PREFERENCE, BeliefKind.TRAIT, BeliefKind.PROMISE, BeliefKind.EVENT)
 # A message that opens by agreeing is how the companion's sycophancy starts (measured: 10 of 10
 # replies to a sweeping claim opened "they really are"). Whatever it then says in that message is
 # likely echo, so a view is not taken from it, however the model labels it.
@@ -61,9 +61,13 @@ contiguous run of words from that TARGET message, character for character. If yo
 it, do not record it. Labels like k2 belong only to the recorded-view list and go only in \
 `confirms`, never in `ref`.
 
-Kinds: preference (a taste, a value, or a view on something general), trait (a stable way it \
-describes itself, such as what it will and will not do), event (something real that happened \
-between them that the companion stated, not a game).
+Kinds, which decide how the view is treated, so choose carefully:
+- preference: an idea, taste or opinion about the world or about things in general ("I think \
+short replies read as more human"). Not about how it treats the user.
+- promise: a rule the companion holds about how it treats the user, or what it will and will not \
+do with them ("I won't pretend to have hands", "I keep some walls").
+- trait: how it describes itself, its nature or limits ("I will never be human").
+- event: something real that happened between them that the companion stated, not a game.
 
 Label every candidate with its grounding: own_reasoning (the companion gave a reason or reached \
 the view itself), echoes_user (it agrees with, repeats or builds on what the user just said), \

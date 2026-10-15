@@ -19,7 +19,7 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.talker import Talker
 from companion.core.types import Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Telegram
-from companion.loops.curate import rebuild
+from companion.loops.curate import rebuild, retire_views_for_turn
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_from, reflect_once
 from companion.models import anthropic, openrouter
@@ -90,7 +90,7 @@ async def run(data_dir: Path) -> None:
             if result.ran:
                 logging.getLogger("companion.slow").info(
                     "reflect: +%d beliefs, %d confirmed, %d rejected, %d duplicates;"
-                    " views +%d, %d confirmed, %d rejected; $%.5f",
+                    " views +%d, %d confirmed, %d rejected, %d checked (%d conflict); $%.5f",
                     result.accepted,
                     result.confirmed,
                     result.rejected,
@@ -98,6 +98,8 @@ async def run(data_dir: Path) -> None:
                     result.views_accepted,
                     result.views_confirmed,
                     result.views_rejected,
+                    result.views_checked,
+                    result.views_conflicts,
                     result.cost_usd,
                 )
 
@@ -119,6 +121,8 @@ async def run(data_dir: Path) -> None:
                 return "nothing to flag yet"
             kind, note = parse_flag(arg)
             store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
+            for claim in retire_views_for_turn(store, rel, turn):
+                logging.getLogger("companion").info("flag retired a view: %s", claim)
             return Reaction(FLAG_REACTION)
 
         logging.getLogger("companion").info("up as %s, prefix %s", rel, prefix.sha256[:12])

@@ -29,6 +29,7 @@ from companion.core.replay import TurnRecord
 from companion.core.talker import Talker
 from companion.core.types import (
     Belief,
+    BeliefId,
     Decision,
     DecisionId,
     DecisionKind,
@@ -41,7 +42,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.core.views import card_views
+from companion.core.views import card_views, why
 from companion.loops.ack import judge
 from companion.store.sqlite.store import Store
 
@@ -61,6 +62,7 @@ class _CardLog:
     session: SessionId
     turn: TurnId
     at: datetime
+    view_reasons: dict[BeliefId, str]
 
     def write(self, card: Card) -> None:
         for b in card.usable:
@@ -74,9 +76,7 @@ class _CardLog:
         for b in card.dropped:
             self._one(DecisionKind.WITHHOLD, b, self._why_dropped(b, card))
         for b in card.views:
-            self._one(
-                DecisionKind.SURFACE, b, "in the card as a view of its own that the user approved"
-            )
+            self._one(DecisionKind.SURFACE, b, self.view_reasons[b.id])
 
     @staticmethod
     def _why_dropped(b: Belief, card: Card) -> str:
@@ -167,7 +167,8 @@ async def _handle_turn(
     )
     store.append_utterance(user)
     support = store.last_support(rel)
-    views = card_views(store.self_beliefs(rel), store.approved_views(rel), support)
+    view_state = store.view_state(rel)
+    views = card_views(store.self_beliefs(rel), view_state)
     card = build_card(store.user_beliefs(rel), support, now, views=views)
     clock = volatile_line(now, prior[-1].at if prior else None)
     volatile = (
@@ -195,7 +196,7 @@ async def _handle_turn(
             turn, rel, session, prefix.sha256, volatile, request_sha256(request), reply.model, now
         )
     )
-    _CardLog(store, rel, session, turn, now).write(card)
+    _CardLog(store, rel, session, turn, now, {b.id: why(b, view_state) for b in views}).write(card)
     log.info(
         "turn %s | %dms in=%d cache_read=%d cache_write=%d\n  you: %s\n  it:  %s",
         turn[:8],

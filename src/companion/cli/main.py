@@ -10,6 +10,7 @@ from companion import daemon
 from companion.cli import beliefs, flags, replay
 from companion.cli import eval as eval_cli
 from companion.cli.target import resolve_db, resolve_relationship
+from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
 
 
@@ -36,6 +37,10 @@ def _parser() -> argparse.ArgumentParser:
 
     _db_args(sub.add_parser("flags", help="list the turns you flagged"))
     _db_args(sub.add_parser("beliefs", help="what it currently believes, with quotes"))
+    vw = sub.add_parser("views", help="show or set how the companion's views reach the card")
+    vw.add_argument("--mode", choices=[m.value for m in ViewMode])
+    _db_args(vw)
+    _db_args(sub.add_parser("calibrate", help="compare the automatic gates with your approvals"))
     _db_args(sub.add_parser("opinions", help="the companion's own views, tentative or settled"))
     _db_args(sub.add_parser("dedupe", help="close beliefs that rest on the same words"))
 
@@ -129,6 +134,15 @@ def _beliefs(a: argparse.Namespace) -> int:
     return _out(beliefs.run(*_target(a)))
 
 
+def _views(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    return _out(beliefs.views_mode(db, rel, a.mode))
+
+
+def _calibrate(a: argparse.Namespace) -> int:
+    return _out(beliefs.calibrate(*_target(a)))
+
+
 def _opinions(a: argparse.Namespace) -> int:
     return _out(beliefs.opinions(*_target(a)))
 
@@ -151,6 +165,8 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "replay": _replay,
     "flags": _flags,
     "beliefs": _beliefs,
+    "views": _views,
+    "calibrate": _calibrate,
     "opinions": _opinions,
     "dedupe": _dedupe,
     "approve": _approve,

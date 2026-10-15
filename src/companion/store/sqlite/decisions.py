@@ -80,3 +80,15 @@ def decisions_for_belief(conn: sqlite3.Connection, belief_id: BeliefId) -> list[
         "SELECT * FROM decisions WHERE belief_id = ? ORDER BY at, id", (belief_id,)
     ).fetchall()
     return [_decision(r) for r in rows]
+
+
+def closure_reasons(
+    conn: sqlite3.Connection, relationship_id: RelationshipId
+) -> dict[BeliefId, str]:
+    rows = conn.execute(
+        "SELECT json_extract(detail, '$.belief_id') AS bid, reason FROM decisions"
+        " WHERE relationship_id = ? AND reason LIKE 'closed belief:%' AND bid IS NOT NULL"
+        " ORDER BY at, id",
+        (relationship_id,),
+    ).fetchall()
+    return {BeliefId(str(r["bid"])): str(r["reason"]) for r in rows}

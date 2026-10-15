@@ -7,9 +7,10 @@ from pathlib import Path
 
 from companion.core.freshness import age_phrase, status
 from companion.core.types import RelationshipId
-from companion.core.views import is_settled
+from companion.core.views import ViewMode, gates, is_settled, parse_mode
+from companion.loops.calibrate import report, reviewed_views
 from companion.loops.curate import approve, close_duplicates, retire
-from companion.store.sqlite.store import Store
+from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
 
 
 def run(db: Path, relationship: str) -> str:
@@ -62,6 +63,8 @@ def opinions(db: Path, relationship: str) -> str:
         days = store.evidence_days(rel)
         support = store.last_support(rel)
         approved = store.approved_views(rel)
+        checks = store.view_checks(rel)
+        mode = parse_mode(store.setting(rel, VIEWS_MODE_KEY))
     finally:
         store.close()
     if not found:
@@ -71,7 +74,12 @@ def opinions(db: Path, relationship: str) -> str:
     for b in sorted(found, key=lambda x: support.get(x.id, x.valid_from), reverse=True):
         n = days.get(b.id, 1)
         state = "settled" if is_settled(b, days) else "tentative"
-        mark = "APPROVED" if b.id in approved else "not approved"
+        g = gates(b, days, checks)
+        mark = (
+            "APPROVED"
+            if b.id in approved
+            else ("auto-eligible" if g.eligible and mode is ViewMode.AUTO else "not in the card")
+        )
         age = age_phrase(now - support.get(b.id, b.valid_from))
         lines.append(f"{b.id[:8]} [{b.kind}] {mark}, {state} ({n} day(s), last {age})  {b.claim}")
         lines.append(f'    "{b.evidence[0].quote}"')
@@ -79,8 +87,7 @@ def opinions(db: Path, relationship: str) -> str:
     live = sum(b.id in approved for b in found)
     return (
         "\n".join(lines)
-        + f"\n\n{len(found)} views, {settled} settled, {live} approved"
-        + " (only approved views reach the card)\n"
+        + f"\n\nmode: {mode}. {len(found)} views, {settled} settled, {live} approved\n"
         + "approve: companion approve <id>    remove: companion retire <id> --reason ...\n"
     )
 
@@ -89,5 +96,29 @@ def approve_one(db: Path, relationship: str, id_prefix: str) -> str:
     store = Store(db)
     try:
         return approve(store, RelationshipId(relationship), id_prefix) + "\n"
+    finally:
+        store.close()
+
+
+def views_mode(db: Path, relationship: str, mode: str | None) -> str:
+    """Show or set how views reach the card: auto, review (approved only) or off."""
+    from datetime import UTC, datetime  # noqa: PLC0415
+
+    store = Store(db)
+    try:
+        rel = RelationshipId(relationship)
+        if mode is None:
+            return f"views mode: {parse_mode(store.setting(rel, VIEWS_MODE_KEY))}\n"
+        chosen = ViewMode(mode)
+        store.set_setting(rel, VIEWS_MODE_KEY, chosen.value, datetime.now(UTC))
+        return f"views mode set to {chosen}\n"
+    finally:
+        store.close()
+
+
+def calibrate(db: Path, relationship: str) -> str:
+    store = Store(db)
+    try:
+        return report(reviewed_views(store, RelationshipId(relationship)))
     finally:
         store.close()

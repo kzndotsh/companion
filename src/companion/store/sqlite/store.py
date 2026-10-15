@@ -14,14 +14,18 @@ from companion.core.types import (
     Decision,
     Evidence,
     Flag,
+    Json,
     RelationshipId,
     Subject,
     TurnId,
     Utterance,
     UtteranceId,
 )
-from companion.store.sqlite import beliefs, decisions, flags, ledger, reflect, turns
+from companion.core.views import ViewState, parse_mode
+from companion.store.sqlite import beliefs, decisions, flags, ledger, reflect, settings, turns
 from companion.store.sqlite.db import connect, migrate
+
+VIEWS_MODE_KEY = "views.mode"
 
 
 class Store:
@@ -77,8 +81,10 @@ class Store:
     def self_beliefs(self, rel: RelationshipId) -> list[Belief]:
         return beliefs.current_beliefs(self._conn, rel, Subject.SELF)
 
-    def evidence_days(self, rel: RelationshipId) -> dict[BeliefId, int]:
-        return beliefs.evidence_days(self._conn, rel)
+    def evidence_days(
+        self, rel: RelationshipId, *, include_closed: bool = False
+    ) -> dict[BeliefId, int]:
+        return beliefs.evidence_days(self._conn, rel, include_closed=include_closed)
 
     def record_reflect(self, r: ReflectRun) -> None:
         reflect.record_run(self._conn, r)
@@ -106,3 +112,34 @@ class Store:
 
     def approved_views(self, rel: RelationshipId) -> set[BeliefId]:
         return beliefs.approved_ids(self._conn, rel)
+
+    def setting(self, rel: RelationshipId, key: str) -> str | None:
+        return settings.get_value(self._conn, rel, key)
+
+    def set_setting(self, rel: RelationshipId, key: str, value: str, at: datetime) -> None:
+        settings.set_value(self._conn, rel, key, value, at)
+
+    def record_view_check(
+        self, belief_id: BeliefId, *, conflicts: bool, detail: dict[str, Json], at: datetime
+    ) -> None:
+        settings.record_check(self._conn, belief_id, conflicts=conflicts, detail=detail, at=at)
+
+    def view_checks(self, rel: RelationshipId) -> dict[BeliefId, bool]:
+        return settings.latest_checks(self._conn, rel)
+
+    def self_beliefs_all(self, rel: RelationshipId) -> list[Belief]:
+        """Every view ever recorded, including closed ones. For calibration, not for the card."""
+        return beliefs.all_beliefs(self._conn, rel, Subject.SELF)
+
+    def view_state(self, rel: RelationshipId) -> ViewState:
+        return ViewState(
+            mode=parse_mode(self.setting(rel, VIEWS_MODE_KEY)),
+            approved=frozenset(self.approved_views(rel)),
+            days=self.evidence_days(rel),
+            checks=self.view_checks(rel),
+            support=self.last_support(rel),
+        )
+
+    def closure_reasons(self, rel: RelationshipId) -> dict[BeliefId, str]:
+        """Why each closed belief was closed, from the decision log (newest reason wins)."""
+        return decisions.closure_reasons(self._conn, rel)

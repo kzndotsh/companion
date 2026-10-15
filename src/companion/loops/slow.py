@@ -47,6 +47,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.views import WANT_KINDS, check_views
 from companion.store.sqlite.store import Store
 
 BATCH = 40
@@ -76,6 +77,8 @@ class ReflectResult:
     views_accepted: int = 0
     views_confirmed: int = 0
     views_rejected: int = 0
+    views_checked: int = 0
+    views_conflicts: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,6 +175,7 @@ class _Counts:
     rejected: int = 0
     duplicates: int = 0
     confirmed: int = 0
+    accepted_ids: frozenset[BeliefId] = frozenset()
     cost: float = 0.0
     latency_ms: int = 0
     model: str = "none"
@@ -247,6 +251,7 @@ async def _extract_pass(
         len(rejections),
         duplicates,
         confirmed,
+        frozenset(b.id for b in stored),
         result.cost_usd,
         result.latency_ms,
         result.model,
@@ -302,15 +307,20 @@ async def reflect_from(
         accepted=users.accepted,
         rejected=users.rejected,
     )
+    wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
+    new_wants = users.accepted_ids & wanted
+    check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
     return ReflectResult(
         True,
         users.accepted,
         users.rejected,
         users.duplicates,
         users.confirmed,
-        users.cost + own.cost,
+        users.cost + own.cost + check.cost_usd,
         upto,
         views_accepted=own.accepted,
         views_confirmed=own.confirmed,
         views_rejected=own.rejected,
+        views_checked=check.checked,
+        views_conflicts=check.conflicts,
     )

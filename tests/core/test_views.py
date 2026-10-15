@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 
+import pytest
+
 from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.types import (
     Belief,
@@ -14,7 +16,15 @@ from companion.core.types import (
     Subject,
     Utterance,
 )
-from companion.core.views import SETTLED_DAYS, card_views, is_settled
+from companion.core.views import (
+    SETTLED_DAYS,
+    ViewMode,
+    ViewState,
+    card_views,
+    gates,
+    is_settled,
+    parse_mode,
+)
 from tests.conftest import REL, T0
 
 NOW = datetime(2026, 10, 20, tzinfo=T0.tzinfo)
@@ -47,13 +57,6 @@ def _item(**over: Json) -> dict[str, Json]:
     return base
 
 
-def test_a_view_needs_two_days_of_evidence_to_be_settled(belief: Callable[..., Belief]) -> None:
-    b = _own(belief, "v1")
-    assert not is_settled(b, {BeliefId("v1"): 1})
-    assert not is_settled(b, {})
-    assert is_settled(b, {BeliefId("v1"): SETTLED_DAYS})
-
-
 def test_events_and_beliefs_about_the_user_are_never_settled_views(
     belief: Callable[..., Belief],
 ) -> None:
@@ -62,38 +65,99 @@ def test_events_and_beliefs_about_the_user_are_never_settled_views(
     assert not is_settled(user, {BeliefId("u"): 5})
 
 
-def test_only_approved_views_reach_the_card_newest_first_and_capped(
+def _state(
+    mode: ViewMode = ViewMode.AUTO,
+    approved: set[str] | None = None,
+    days: dict[str, int] | None = None,
+    checks: dict[str, bool] | None = None,
+    support: dict[str, datetime] | None = None,
+) -> ViewState:
+    return ViewState(
+        mode=mode,
+        approved=frozenset(BeliefId(x) for x in (approved or set())),
+        days={BeliefId(k): v for k, v in (days or {}).items()},
+        checks={BeliefId(k): v for k, v in (checks or {}).items()},
+        support={BeliefId(k): v for k, v in (support or {}).items()},
+    )
+
+
+def test_review_mode_carries_only_approved_views_newest_first_and_capped(
     belief: Callable[..., Belief],
 ) -> None:
     views = [_own(belief, f"v{i}", claim=f"The companion thinks {i}") for i in range(10)]
-    approved = {BeliefId(f"v{i}") for i in range(10) if i != 5}
-    support = {BeliefId(f"v{i}"): datetime(2026, 10, 1 + i, tzinfo=T0.tzinfo) for i in range(10)}
-    got = card_views(views, approved, support, limit=3)
-    assert [b.id for b in got] == ["v9", "v8", "v7"]
-    assert "v5" not in [b.id for b in card_views(views, approved, support)]
+    approved = {f"v{i}" for i in range(10) if i != 5}
+    support = {f"v{i}": datetime(2026, 10, 1 + i, tzinfo=T0.tzinfo) for i in range(10)}
+    state = _state(ViewMode.REVIEW, approved, support=support)
+    assert [b.id for b in card_views(views, state, limit=3)] == ["v9", "v8", "v7"]
+    assert "v5" not in [b.id for b in card_views(views, state)]
 
 
-def test_a_settled_view_the_user_has_not_approved_never_reaches_the_card(
+def test_an_idea_installs_itself_in_auto_mode_only_when_settled_checked_and_clear(
     belief: Callable[..., Belief],
 ) -> None:
     v = _own(belief, "v1")
-    assert is_settled(v, {BeliefId("v1"): 9})
-    assert card_views([v], set(), {}) == ()
+    ready = _state(days={"v1": 2}, checks={"v1": False})
+    assert card_views([v], ready) == (v,)
+    assert gates(v, ready.days, ready.checks).eligible
+    for blocked in (
+        _state(days={"v1": 1}, checks={"v1": False}),  # not settled
+        _state(days={"v1": 2}, checks={}),  # never checked
+        _state(days={"v1": 2}, checks={"v1": True}),  # conflicts with what the user asked for
+    ):
+        assert card_views([v], blocked) == ()
 
 
-def test_an_approved_view_reaches_the_card_even_if_only_expressed_once(
+@pytest.mark.parametrize("kind", [BeliefKind.PROMISE, BeliefKind.TRAIT, BeliefKind.EVENT])
+def test_conduct_and_self_description_never_install_themselves(
+    belief: Callable[..., Belief], kind: BeliefKind
+) -> None:
+    v = _own(belief, "v1", kind=kind)
+    assert card_views([v], _state(days={"v1": 9}, checks={"v1": False})) == ()
+
+
+def test_the_user_can_approve_any_kind_and_approval_beats_the_kind_rule(
     belief: Callable[..., Belief],
 ) -> None:
+    v = _own(belief, "v1", kind=BeliefKind.PROMISE)
+    assert card_views([v], _state(approved={"v1"})) == (v,)
+
+
+def test_review_mode_ignores_auto_eligibility(belief: Callable[..., Belief]) -> None:
     v = _own(belief, "v1")
-    assert not is_settled(v, {BeliefId("v1"): 1})
-    assert card_views([v], {BeliefId("v1")}, {}) == (v,)
+    assert card_views([v], _state(ViewMode.REVIEW, days={"v1": 5}, checks={"v1": False})) == ()
+
+
+def test_off_mode_carries_nothing_even_if_approved(belief: Callable[..., Belief]) -> None:
+    v = _own(belief, "v1")
+    assert card_views([v], _state(ViewMode.OFF, approved={"v1"})) == ()
 
 
 def test_approval_never_lets_a_belief_about_the_user_into_the_views(
     belief: Callable[..., Belief],
 ) -> None:
     user = belief(bid="u", claim="Likes climbing")
-    assert card_views([user], {BeliefId("u")}, {}) == ()
+    assert card_views([user], _state(approved={"u"})) == ()
+
+
+@pytest.mark.parametrize(
+    ("value", "mode"),
+    [
+        ("auto", ViewMode.AUTO),
+        ("review", ViewMode.REVIEW),
+        ("off", ViewMode.OFF),
+        (None, ViewMode.AUTO),
+        ("nonsense", ViewMode.AUTO),
+    ],
+)
+def test_parse_mode_defaults_to_auto(value: str | None, mode: ViewMode) -> None:
+    assert parse_mode(value) is mode
+
+
+def test_a_view_needs_two_days_of_evidence_to_be_settled(belief: Callable[..., Belief]) -> None:
+    b = _own(belief, "v1")
+    assert not is_settled(b, {BeliefId("v1"): 1})
+    assert not is_settled(b, {})
+    assert is_settled(b, {BeliefId("v1"): SETTLED_DAYS})
 
 
 def test_the_model_cannot_choose_subject_or_provenance() -> None:
@@ -142,9 +206,6 @@ def test_an_invented_view_quote_is_rejected(utterance: Callable[..., Utterance])
     mine = utterance(text="honestly not sure", speaker=Speaker.COMPANION, uid="c1")
     ok, _ = parse_views({"beliefs": [_item(quote="i am certain of this")]})
     assert isinstance(to_view(ok[0], {"m1": mine}, REL, NOW, lambda: "b"), Rejection)
-
-
-import pytest  # noqa: E402
 
 
 @pytest.mark.parametrize("label", ["echoes_user", "unknowable", "claims_inner_state", ""])

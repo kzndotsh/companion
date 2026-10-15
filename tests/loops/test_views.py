@@ -27,11 +27,12 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import card_views, is_settled
-from companion.loops.curate import rebuild
+from companion.loops.curate import rebuild, retire_views_for_turn
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_once
+from companion.loops.views import check_views
 from companion.store.sqlite import replay as store_replay
-from companion.store.sqlite.store import Store
+from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
 
 REL = RelationshipId("rel")
 T0 = datetime(2026, 10, 15, 12, 0, tzinfo=UTC)
@@ -42,15 +43,25 @@ VIEW_TEXT = "i don't think lazy is a flaw, it's a preference for how you spend e
 class Routed:
     """Answers the user pass and the self pass separately, and records every prompt."""
 
-    def __init__(self, users: list[Json] | None = None, views: list[Json] | None = None) -> None:
+    def __init__(
+        self,
+        users: list[Json] | None = None,
+        views: list[Json] | None = None,
+        checks: list[Json] | None = None,
+    ) -> None:
         self.users = list(users or [])
         self.views = list(views or [])
-        self.prompts: dict[str, list[str]] = {"user": [], "self": []}
+        self.checks = list(checks or [])
+        self.prompts: dict[str, list[str]] = {"user": [], "self": [], "check": []}
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
-        which = "self" if "views the COMPANION expressed" in system else "user"
+        if "compare views that a companion holds" in system:
+            which, queue = "check", self.checks
+        elif "views the COMPANION expressed" in system:
+            which, queue = "self", self.views
+        else:
+            which, queue = "user", self.users
         self.prompts[which].append(user)
-        queue = self.views if which == "self" else self.users
         data: Json = queue.pop(0) if queue else {"beliefs": []}
         return Extraction(data, "fake", 0.0, 1)
 
@@ -151,7 +162,7 @@ async def test_a_view_is_tentative_until_restated_on_another_day(store: Store) -
     assert result.views_confirmed == 1
     assert len(store.self_beliefs(REL)) == 1
     assert is_settled(store.self_beliefs(REL)[0], store.evidence_days(REL))
-    assert card_views(store.self_beliefs(REL), set(), store.last_support(REL)) == ()
+    assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()  # unchecked
 
 
 async def test_a_rebuild_restates_the_user_beliefs_and_leaves_the_views_alone(
@@ -266,3 +277,184 @@ async def test_only_approved_views_reach_the_model_and_the_placement_is_logged(
     )
     assert "settled" not in reasons
     assert "closed" not in reasons
+
+
+def _two_day_view(
+    store: Store, bid: str = "idea", kind: BeliefKind = BeliefKind.PREFERENCE
+) -> Belief:
+    _say(store, 1, Speaker.COMPANION, "short replies read as more human to me")
+    _say(store, 60 * 30, Speaker.COMPANION, "still: short replies read as more human")
+    view = _own_view(
+        bid,
+        "u1",
+        "short replies read as more human",
+        "The companion thinks short replies read as more human.",
+    )
+    view = Belief(**{**view.__dict__, "kind": kind}) if False else view
+    store.insert_belief(view)
+    store.add_evidence(
+        view.id, Evidence(UtteranceId(f"u{60 * 30}"), "short replies read as more human")
+    )
+    return view
+
+
+def _verdict(conflicts: bool, with_label: str = "") -> Json:
+    return {
+        "results": [{"view": "v1", "conflicts": conflicts, "with": with_label, "confidence": 0.9}]
+    }
+
+
+async def test_a_settled_idea_is_checked_once_and_then_installs_itself(store: Store) -> None:
+    _two_day_view(store)
+    assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()  # unchecked
+    ex = Routed(checks=[_verdict(False)])
+    result = await check_views(store, ex, REL)
+    assert (result.checked, result.conflicts) == (1, 0)
+    assert [b.id for b in card_views(store.self_beliefs(REL), store.view_state(REL))] == ["idea"]
+    again = await check_views(store, ex, REL)
+    assert again.checked == 0  # already checked, so no second model call
+    assert len(ex.prompts["check"]) == 1
+
+
+async def test_a_view_that_conflicts_with_what_the_user_asked_for_stays_out(store: Store) -> None:
+    _say(store, 5, Speaker.USER, "i'm fine with pretending, it's not annoying to me")
+    wants: Json = {
+        "beliefs": [
+            {
+                "ref": "m1",
+                "quote": "i'm fine with pretending",
+                "claim": "The user is fine with pretend play.",
+                "subject": "user",
+                "kind": "preference",
+                "provenance": "stated",
+                "confidence": 0.9,
+                "lasting": True,
+                "sensitivity": 0,
+            }
+        ]
+    }
+    await reflect_once(store, Routed(users=[wants]), REL)
+    _two_day_view(store)
+    ex = Routed(checks=[_verdict(True, "k1")])
+    result = await check_views(store, ex, REL)
+    assert result.conflicts == 1
+    assert "The user is fine with pretend play." in ex.prompts["check"][0]
+    assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()
+
+
+async def test_a_new_user_preference_triggers_a_recheck_of_already_clear_views(
+    store: Store,
+) -> None:
+    _two_day_view(store)
+    await check_views(store, Routed(checks=[_verdict(False)]), REL)
+    assert len(card_views(store.self_beliefs(REL), store.view_state(REL))) == 1
+    _say(store, 70 * 30, Speaker.USER, "please stop doing short replies, i hate them")
+    new_pref: Json = {
+        "beliefs": [
+            {
+                "ref": "m3",
+                "quote": "please stop doing short replies",
+                "claim": "The user wants the companion to stop giving short replies.",
+                "subject": "user",
+                "kind": "boundary",
+                "provenance": "stated",
+                "confidence": 0.9,
+                "lasting": True,
+                "sensitivity": 0,
+            }
+        ]
+    }
+    ex = Routed(users=[new_pref], checks=[_verdict(True, "k1")])
+    result = await reflect_once(store, ex, REL)
+    assert result.views_checked == 1
+    assert result.views_conflicts == 1
+    assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()
+
+
+async def test_an_unparseable_check_leaves_the_view_unchecked_and_out(store: Store) -> None:
+    _two_day_view(store)
+    result = await check_views(store, Routed(checks=[{"nonsense": True}]), REL)
+    assert result.checked == 0
+    assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()
+
+
+async def test_the_mode_setting_is_remembered_and_changes_what_is_carried(store: Store) -> None:
+    _two_day_view(store)
+    await check_views(store, Routed(checks=[_verdict(False)]), REL)
+    assert len(card_views(store.self_beliefs(REL), store.view_state(REL))) == 1
+    store.set_setting(REL, VIEWS_MODE_KEY, "review", T0)
+    assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()
+    store.set_setting(REL, VIEWS_MODE_KEY, "auto", T0 + timedelta(minutes=1))
+    assert len(card_views(store.self_beliefs(REL), store.view_state(REL))) == 1
+    store.set_setting(REL, VIEWS_MODE_KEY, "off", T0 + timedelta(minutes=2))
+    assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()
+
+
+async def test_flagging_a_turn_retires_the_views_it_carried(store: Store) -> None:
+    _two_day_view(store)
+    await check_views(store, Routed(checks=[_verdict(False)]), REL)
+    talker = _Talker()
+    await Conversation(store, talker, PREFIX, REL).handle(
+        SessionId("s"), "hi", "test", T0 + timedelta(days=3)
+    )
+    assert "short replies read as more human" in talker.seen[0].messages[-1].content
+    turn = store.latest_turn(REL)
+    assert turn is not None
+    retired = retire_views_for_turn(store, REL, turn)
+    assert retired == ["The companion thinks short replies read as more human."]
+    assert store.self_beliefs(REL) == []
+    assert len(store.self_beliefs_all(REL)) == 1  # closed, never deleted
+
+
+async def test_flagging_a_turn_with_no_views_retires_nothing(store: Store) -> None:
+    talker = _Talker()
+    await Conversation(store, talker, PREFIX, REL).handle(SessionId("s"), "hi", "test", T0)
+    turn = store.latest_turn(REL)
+    assert turn is not None
+    assert retire_views_for_turn(store, REL, turn) == []
+
+
+async def test_calibration_compares_the_gates_with_the_users_decisions(store: Store) -> None:
+    from companion.loops.calibrate import reviewed_views  # noqa: PLC0415
+
+    _two_day_view(store, "good")  # gates would adopt it, and the user approves it
+    store.insert_belief(
+        _own_view(
+            "bad",
+            "u1",
+            "short replies read as more human",
+            "The companion thinks short replies read as more human, really.",
+        )
+    )
+    store.add_evidence(
+        BeliefId("bad"), Evidence(UtteranceId(f"u{60 * 30}"), "short replies read as more human")
+    )
+    await check_views(
+        store,
+        Routed(
+            checks=[
+                {
+                    "results": [
+                        {"view": "v1", "conflicts": False, "confidence": 0.9},
+                        {"view": "v2", "conflicts": False, "confidence": 0.9},
+                    ]
+                }
+            ]
+        ),
+        REL,
+    )
+    store.approve_view(BeliefId("good"), T0)
+    from companion.loops.curate import retire  # noqa: PLC0415
+
+    retire(store, REL, "bad", "not something i want it to hold")
+    rows = reviewed_views(store, REL)
+    by = {str(r.belief.id): r for r in rows}
+    assert by["good"].verdict == "approved"
+    assert by["good"].gates.eligible
+    assert by["bad"].verdict == "retired"
+    assert by["bad"].gates.eligible  # the gates would have let it through, and the user rejected it
+    from companion.loops.calibrate import report  # noqa: PLC0415
+
+    text = report(rows)
+    assert "1 of 2 adopted views were ones you wanted (50%)" in text
+    assert "would have adopted, but you retired" in text

@@ -162,15 +162,19 @@ def add_evidence(conn: sqlite3.Connection, belief_id: BeliefId, evidence: Eviden
         )
 
 
-def evidence_days(conn: sqlite3.Connection, relationship_id: RelationshipId) -> dict[BeliefId, int]:
-    """How many different UTC calendar days of evidence back each current belief."""
-    rows = conn.execute(
+def evidence_days(
+    conn: sqlite3.Connection, relationship_id: RelationshipId, *, include_closed: bool = False
+) -> dict[BeliefId, int]:
+    """How many different UTC calendar days of evidence back each belief (current ones only)."""
+    base = (
         "SELECT e.belief_id AS id, COUNT(DISTINCT substr(u.at, 1, 10)) AS days"
         " FROM belief_evidence e JOIN utterances u ON u.id = e.utterance_id"
-        " JOIN beliefs b ON b.id = e.belief_id"
-        " WHERE b.relationship_id = ? AND b.valid_until IS NULL GROUP BY e.belief_id",
-        (relationship_id,),
-    ).fetchall()
+        " JOIN beliefs b ON b.id = e.belief_id WHERE b.relationship_id = ?"
+    )
+    sql = base + " GROUP BY e.belief_id"
+    if not include_closed:
+        sql = base + " AND b.valid_until IS NULL GROUP BY e.belief_id"
+    rows = conn.execute(sql, (relationship_id,)).fetchall()
     return {BeliefId(str(r["id"])): int(r["days"]) for r in rows}
 
 
@@ -189,3 +193,13 @@ def approved_ids(conn: sqlite3.Connection, relationship_id: RelationshipId) -> s
         (relationship_id,),
     ).fetchall()
     return {BeliefId(str(r["id"])) for r in rows}
+
+
+def all_beliefs(
+    conn: sqlite3.Connection, relationship_id: RelationshipId, subject: Subject
+) -> list[Belief]:
+    rows = conn.execute(
+        "SELECT * FROM beliefs WHERE relationship_id = ? AND subject = ? ORDER BY recorded_at, id",
+        (relationship_id, subject),
+    ).fetchall()
+    return [_belief(conn, r) for r in rows]
