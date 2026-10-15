@@ -64,3 +64,12 @@ def get_turn(conn: sqlite3.Connection, turn_id: TurnId) -> TurnRecord | None:
         model=str(model) if model is not None else None,
         at=parse_iso(str(row["at"])),
     )
+
+
+def latest_turn(conn: sqlite3.Connection, relationship_id: RelationshipId) -> TurnId | None:
+    row = conn.execute(
+        "SELECT turn_id FROM turn_requests WHERE relationship_id = ? ORDER BY at DESC, rowid DESC"
+        " LIMIT 1",
+        (relationship_id,),
+    ).fetchone()
+    return TurnId(str(row["turn_id"])) if row is not None else None

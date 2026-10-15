@@ -4,19 +4,24 @@ from __future__ import annotations
 
 import logging
 import os
+import uuid
 from datetime import UTC, datetime
 from importlib import resources
 from pathlib import Path
 
 import httpx
 
+from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.talker import Talker
-from companion.core.types import RelationshipId, SessionId
+from companion.core.types import Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Telegram
 from companion.loops.fast import Conversation
 from companion.models import anthropic, openrouter
 from companion.store.sqlite.store import Store
+
+PERSONA = "v2.md"
+SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
 
 
 def load_dotenv(path: Path) -> None:
@@ -52,7 +57,7 @@ async def run(data_dir: Path) -> None:
     token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
     rel = RelationshipId(f"telegram-{user}")
     store = Store(data_dir / f"{rel}.sqlite")
-    persona = resources.files("companion.persona").joinpath("v1.md").read_text(encoding="utf-8")
+    persona = resources.files("companion.persona").joinpath(PERSONA).read_text(encoding="utf-8")
     prefix = build_prefix(persona)
     async with httpx.AsyncClient() as client:
         talker = _talker(client)
@@ -60,8 +65,15 @@ async def run(data_dir: Path) -> None:
         tg = Telegram(token, user, client)
 
         async def handle(text: str) -> str:
-            session = SessionId(f"tg-{datetime.now(UTC).date().isoformat()}")
-            return await convo.handle(session, text, "telegram")
+            return await convo.handle(SESSION, text, "telegram")
+
+        async def flag(arg: str) -> str:
+            turn = store.latest_turn(rel)
+            if turn is None:
+                return "nothing to flag yet"
+            kind, note = parse_flag(arg)
+            store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
+            return "noted"
 
         logging.getLogger("companion").info("up as %s, prefix %s", rel, prefix.sha256[:12])
-        await tg.run(handle)
+        await tg.run(handle, {"flag": flag})

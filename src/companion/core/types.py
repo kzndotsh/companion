@@ -14,6 +14,7 @@ UtteranceId = NewType("UtteranceId", str)
 BeliefId = NewType("BeliefId", str)
 DecisionId = NewType("DecisionId", str)
 TraceId = NewType("TraceId", str)
+FlagId = NewType("FlagId", str)
 
 type Json = str | int | float | bool | list[Json] | dict[str, Json] | None
 
@@ -190,4 +191,28 @@ class Decision:
         if (self.kind in BELIEF_DECISIONS) != (self.belief_id is not None):
             msg = "surface and withhold name a belief; other decisions do not"
             raise ValueError(msg)
+        _require_aware("at", self.at)
+
+
+class FlagKind(StrEnum):
+    """The user's own words for what went wrong, taken from the design doc's exam section."""
+
+    OFF = "off"
+    FORGOT = "forgot"
+    TOO_MUCH = "too_much"
+    UNWANTED = "unwanted"
+
+
+@dataclass(frozen=True, slots=True)
+class Flag:
+    """The user marking a turn as a failure. Each one becomes a fixture later."""
+
+    id: FlagId
+    relationship_id: RelationshipId
+    turn_id: TurnId
+    kind: FlagKind
+    note: str
+    at: datetime
+
+    def __post_init__(self) -> None:
         _require_aware("at", self.at)

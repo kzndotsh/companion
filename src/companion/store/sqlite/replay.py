@@ -6,6 +6,7 @@ import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
 
+from companion.core.history import HISTORY_LIMIT
 from companion.core.prompt.request import TalkerRequest
 from companion.core.replay import ReplayError, TurnRecord, matches_record, rebuild_request
 from companion.core.types import Decision, TurnId
@@ -30,8 +31,12 @@ def replay(conn: sqlite3.Connection, turn_id: TurnId) -> ReplayReport:
     if prefix is None:
         msg = f"prefix {record.prefix_sha256[:12]} is missing from the store"
         raise ReplayError(msg)
-    session = ledger.session_utterances(conn, record.relationship_id, record.session_id)
-    request = rebuild_request(record, prefix, session)
+    user = ledger.user_utterance(conn, record.relationship_id, turn_id)
+    if user is None:
+        msg = f"turn {turn_id} has no user utterance in the ledger"
+        raise ReplayError(msg)
+    history = ledger.history_before(conn, record.relationship_id, user.at, HISTORY_LIMIT)
+    request = rebuild_request(record, prefix, user, history)
     return ReplayReport(
         record=record,
         request=request,

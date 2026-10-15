@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime
 
 from companion.core.types import (
     Frame,
@@ -62,3 +63,25 @@ def session_utterances(
         (relationship_id, session_id),
     ).fetchall()
     return [_utterance(r) for r in rows]
+
+
+def history_before(
+    conn: sqlite3.Connection, relationship_id: RelationshipId, before: datetime, limit: int
+) -> list[Utterance]:
+    """The last `limit` utterances strictly before `before`, across sessions, oldest first."""
+    rows = conn.execute(
+        "SELECT * FROM (SELECT * FROM utterances WHERE relationship_id = ? AND at < ?"
+        " ORDER BY at DESC, id DESC LIMIT ?) ORDER BY at, id",
+        (relationship_id, iso(before), limit),
+    ).fetchall()
+    return [_utterance(r) for r in rows]
+
+
+def user_utterance(
+    conn: sqlite3.Connection, relationship_id: RelationshipId, turn_id: TurnId
+) -> Utterance | None:
+    row = conn.execute(
+        "SELECT * FROM utterances WHERE relationship_id = ? AND turn_id = ? AND speaker = 'user'",
+        (relationship_id, turn_id),
+    ).fetchone()
+    return _utterance(row) if row is not None else None

@@ -8,7 +8,7 @@ import httpx
 
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.models.wire import integer, obj, seq, string
+from companion.models.wire import integer, messages_with_breakpoint, obj, seq, string
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "anthropic/claude-haiku-4.5"
@@ -44,10 +44,7 @@ class OpenRouterTalker:
         return {
             "model": self._model,
             "max_tokens": self._max_tokens,
-            "messages": [
-                system,
-                *({"role": m.role, "content": m.content} for m in request.messages),
-            ],
+            "messages": [system, *messages_with_breakpoint(request)],
             "provider": {"order": [self._provider], "allow_fallbacks": False},
             "reasoning": {"enabled": False},
         }

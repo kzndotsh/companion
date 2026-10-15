@@ -7,8 +7,10 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from companion.core.clock import volatile_line
+from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.prefix import Prefix
-from companion.core.prompt.request import Message, build_request, request_sha256
+from companion.core.prompt.request import build_request, request_sha256
 from companion.core.replay import TurnRecord
 from companion.core.talker import Talker
 from companion.core.types import (
@@ -26,16 +28,11 @@ from companion.core.types import (
 )
 from companion.store.sqlite.store import Store
 
-HISTORY_LIMIT = 40
 log = logging.getLogger("companion.turn")
 
 
 def _id() -> str:
     return uuid.uuid4().hex
-
-
-def _volatile(now: datetime) -> str:
-    return f"[{now.astimezone().strftime('%A %H:%M')}]"
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,13 +54,13 @@ async def _handle_turn(
     store, talker, prefix, rel = c.store, c.talker, c.prefix, c.rel
     now = now or datetime.now(UTC)
     turn = TurnId(_id())
-    prior = store.session_utterances(rel, session)[-HISTORY_LIMIT:]
-    history = [Message("user" if u.speaker is Speaker.USER else "assistant", u.text) for u in prior]
+    prior = store.history_before(rel, now, HISTORY_LIMIT)
+    history = to_messages(prior)
     user = Utterance(
         UtteranceId(_id()), rel, session, turn, Speaker.USER, text, Frame.REAL, channel, now
     )
     store.append_utterance(user)
-    volatile = _volatile(now)
+    volatile = volatile_line(now, prior[-1].at if prior else None)
     request = build_request(prefix, history, text, volatile)
     store.save_prefix(prefix)
     reply = await talker.reply(request)

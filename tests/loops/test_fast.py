@@ -116,3 +116,37 @@ async def test_openrouter_pins_provider_and_disables_reasoning() -> None:
     assert reply.cache_read_tokens == 4
     assert sent["provider"] == {"order": ["Anthropic"], "allow_fallbacks": False}
     assert sent["reasoning"] == {"enabled": False}
+
+
+async def test_history_window_is_shared_by_live_and_replay(store: Store, tmp_path: Path) -> None:
+    from companion.core.history import HISTORY_LIMIT  # noqa: PLC0415
+
+    turns = HISTORY_LIMIT  # enough that the window must have cut off the start
+    talker = FakeTalker(*(f"r{i}" for i in range(turns)))
+    convo = Conversation(store, talker, PREFIX, REL)
+    for i in range(turns):
+        await convo.handle(SESSION, f"m{i}", "test", NOW + timedelta(minutes=i))
+    assert len(talker.seen[-1].messages) == HISTORY_LIMIT + 1
+    store.close()
+    db = tmp_path / "rel.sqlite"
+    assert all(store_replay.replay_file(db, t).matched for t in _turn_ids(db))
+
+
+async def test_history_continues_across_sessions(store: Store) -> None:
+    talker = FakeTalker("a", "b")
+    convo = Conversation(store, talker, PREFIX, REL)
+    await convo.handle(SessionId("monday"), "first", "test", NOW)
+    await convo.handle(SessionId("tuesday"), "second", "test", NOW + timedelta(days=1))
+    assert [m.content.split("\n\n")[-1] for m in talker.seen[1].messages] == [
+        "first",
+        "a",
+        "second",
+    ]
+
+
+async def test_clock_line_names_the_gap(store: Store) -> None:
+    talker = FakeTalker("a", "b")
+    convo = Conversation(store, talker, PREFIX, REL)
+    await convo.handle(SESSION, "first", "test", NOW)
+    await convo.handle(SESSION, "second", "test", NOW + timedelta(hours=5, minutes=1))
+    assert "last message 5 hours ago" in talker.seen[1].messages[-1].content

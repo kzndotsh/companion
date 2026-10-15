@@ -13,6 +13,7 @@ from companion.models.wire import integer, obj, seq
 log = logging.getLogger("companion.telegram")
 
 Handler = Callable[[str], Awaitable[str]]
+Commands = dict[str, Handler]
 
 
 class Telegram:
@@ -29,7 +30,7 @@ class Telegram:
     async def send(self, chat_id: int, text: str) -> None:
         await self._call("sendMessage", chat_id=chat_id, text=text)
 
-    async def run(self, handle: Handler) -> None:
+    async def run(self, handle: Handler, commands: Commands | None = None) -> None:
         offset = 0
         while True:
             try:
@@ -41,9 +42,11 @@ class Telegram:
             for update in seq(updates):
                 u = obj(update)
                 offset = integer(u.get("update_id")) + 1
-                await self._one(u, handle)
+                await self.handle_update(u, handle, commands or {})
 
-    async def _one(self, update: dict[str, object], handle: Handler) -> None:
+    async def handle_update(
+        self, update: dict[str, object], handle: Handler, commands: Commands
+    ) -> None:
         msg = obj(update.get("message"))
         text = msg.get("text")
         if not isinstance(text, str):
@@ -52,11 +55,25 @@ class Telegram:
             log.warning("ignored a message from a user who is not allowed")
             return
         chat_id = integer(obj(msg.get("chat")).get("id"))
+        command = _command(text)
+        if command is not None and command[0] not in commands:
+            return  # unknown and /start commands never reach the model
         try:
-            await self._call("sendChatAction", chat_id=chat_id, action="typing")
-            reply = await handle(text)
+            if command is not None:
+                reply = await commands[command[0]](command[1])
+            else:
+                await self._call("sendChatAction", chat_id=chat_id, action="typing")
+                reply = await handle(text)
         except Exception:
             log.exception("turn failed")
             return
         if reply:
             await self.send(chat_id, reply)
+
+
+def _command(text: str) -> tuple[str, str] | None:
+    """`/flag too long` -> ("flag", "too long"). `/flag@my_bot x` is the same command."""
+    if not text.startswith("/"):
+        return None
+    head, _, arg = text[1:].partition(" ")
+    return head.partition("@")[0].lower(), arg.strip()
