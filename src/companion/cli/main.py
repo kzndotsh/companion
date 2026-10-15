@@ -36,8 +36,14 @@ def _parser() -> argparse.ArgumentParser:
 
     _db_args(sub.add_parser("flags", help="list the turns you flagged"))
     _db_args(sub.add_parser("beliefs", help="what it currently believes, with quotes"))
+    _db_args(sub.add_parser("opinions", help="the companion's own views, tentative or settled"))
     _db_args(sub.add_parser("dedupe", help="close beliefs that rest on the same words"))
 
+    ap = sub.add_parser(
+        "approve", help="approve one of the companion's own views, so it reaches the card"
+    )
+    ap.add_argument("id_prefix")
+    _db_args(ap)
     rt = sub.add_parser("retire", help="close one belief by id prefix, with a reason")
     rt.add_argument("id_prefix")
     rt.add_argument("--reason", required=True)
@@ -123,8 +129,17 @@ def _beliefs(a: argparse.Namespace) -> int:
     return _out(beliefs.run(*_target(a)))
 
 
+def _opinions(a: argparse.Namespace) -> int:
+    return _out(beliefs.opinions(*_target(a)))
+
+
 def _dedupe(a: argparse.Namespace) -> int:
     return _out(beliefs.dedupe(*_target(a)))
+
+
+def _approve(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    return _out(beliefs.approve_one(db, rel, str(a.id_prefix)))
 
 
 def _retire(a: argparse.Namespace) -> int:
@@ -136,7 +151,9 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "replay": _replay,
     "flags": _flags,
     "beliefs": _beliefs,
+    "opinions": _opinions,
     "dedupe": _dedupe,
+    "approve": _approve,
     "retire": _retire,
     "reflect": _reflect,
     "rebuild": _rebuild,

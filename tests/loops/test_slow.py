@@ -30,7 +30,8 @@ class FakeExtractor:
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         self.calls += 1
-        return Extraction(data=self.responses.pop(0), model="fake", cost_usd=0.001, latency_ms=3)
+        data: Json = self.responses.pop(0) if self.responses else {"beliefs": []}
+        return Extraction(data=data, model="fake", cost_usd=0.001, latency_ms=3)
 
 
 class BoomExtractor:
@@ -125,12 +126,12 @@ async def test_a_repeated_claim_is_not_stored_twice(store: Store) -> None:
     assert len(store.current_beliefs(REL)) == 1
 
 
-async def test_a_batch_with_only_companion_words_skips_the_model(store: Store) -> None:
+async def test_a_batch_with_only_companion_words_gets_only_the_self_pass(store: Store) -> None:
     _say(store, 1, Speaker.COMPANION, "hello there")
     ex = FakeExtractor()
     result = await reflect_once(store, ex, REL)
     assert result.ran
-    assert ex.calls == 0
+    assert ex.calls == 1  # the user pass is skipped, the self pass runs
 
 
 async def test_a_failed_model_call_does_not_advance_the_cursor(store: Store) -> None:

@@ -147,6 +147,7 @@ class Candidate:
     sensitivity: int
     lasting: bool = True
     confirms: str = ""
+    grounding: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -218,6 +219,7 @@ def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
                     sensitivity=int(_number(fields.get("sensitivity"))),
                     lasting=fields.get("lasting") is not False,
                     confirms=str(fields.get("confirms") or "").strip(),
+                    grounding=str(fields.get("grounding") or "").strip(),
                 )
             )
         except ValueError as err:
@@ -236,8 +238,10 @@ def normalise(claim: str) -> str:
     return re.sub(r"[^a-z0-9 ]+", "", claim.lower()).strip()
 
 
-def _resolve(c: Candidate, index: Mapping[str, Utterance]) -> Utterance | None:
-    """The cited message, or failing that the one user message that contains the quote.
+def _resolve(
+    c: Candidate, index: Mapping[str, Utterance], speaker: Speaker = Speaker.USER
+) -> Utterance | None:
+    """The cited message, or failing that the one message by `speaker` that contains the quote.
 
     The quote is verified afterwards either way, so the fallback cannot admit anything the
     label would not have. It only rescues a good quote that cites a garbled label.
@@ -245,7 +249,7 @@ def _resolve(c: Candidate, index: Mapping[str, Utterance]) -> Utterance | None:
     cited = index.get(c.ref)
     if cited is not None:
         return cited
-    holders = [u for u in index.values() if u.speaker is Speaker.USER and _holds(u, c.quote)]
+    holders = [u for u in index.values() if u.speaker is speaker and _holds(u, c.quote)]
     return holders[0] if len(holders) == 1 else None
 
 
@@ -323,25 +327,30 @@ class Skip:
     reason: str
 
 
-def _confirmation_problem(source: Utterance | None, belief: Belief | None) -> str | None:
+def _confirmation_problem(
+    source: Utterance | None, belief: Belief | None, speaker: Speaker
+) -> str | None:
     if belief is None:
         return "confirms a belief that is not on the recorded list"
     if source is None:
         return "cited message not found and no single message holds the quote"
-    if source.speaker is not Speaker.USER or source.speaker is not belief.speaker:
-        return "a restatement must be the user's own words, like the belief"
+    if source.speaker is not speaker or source.speaker is not belief.speaker:
+        return "a restatement must be the same speaker's own words, like the belief"
     if source.frame is not belief.frame:
         return "a restatement in a different frame is not the same evidence"
     return None
 
 
 def to_confirmation(
-    c: Candidate, index: Mapping[str, Utterance], known: Mapping[str, Belief]
+    c: Candidate,
+    index: Mapping[str, Utterance],
+    known: Mapping[str, Belief],
+    speaker: Speaker = Speaker.USER,
 ) -> Confirmation | Rejection | Skip:
     raw: Json = {"claim": c.claim, "quote": c.quote, "ref": c.ref, "confirms": c.confirms}
     belief = known.get(c.confirms)
-    source = _resolve(c, index)
-    problem = _confirmation_problem(source, belief)
+    source = _resolve(c, index, speaker)
+    problem = _confirmation_problem(source, belief, speaker)
     if problem is not None or belief is None or source is None:
         return Rejection(problem or "nothing to confirm", raw)
     try:

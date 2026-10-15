@@ -50,10 +50,11 @@ class Card:
     dropped: tuple[Belief, ...]
     aged: Mapping[BeliefId, Aged]
     now: datetime
+    views: tuple[Belief, ...] = ()
 
     @property
     def empty(self) -> bool:
-        return not (self.usable or self.held or self.older)
+        return not (self.usable or self.held or self.older or self.views)
 
 
 def build_card(
@@ -61,7 +62,7 @@ def build_card(
     support: Mapping[BeliefId, datetime],
     now: datetime,
     max_items: int = MAX_ITEMS,
-    max_older: int = MAX_OLDER,
+    views: Sequence[Belief] = (),
 ) -> Card:
     """`support` is each belief's freshest evidence time, falling back to valid_from."""
     aged = {
@@ -80,7 +81,7 @@ def build_card(
         current, key=lambda b: (KIND_ORDER[b.kind], -aged[b.id].last_supported.timestamp())
     )[:max_items]
     older_pool = [b for b in stale if b.sensitivity < HOLD_AT]
-    older = tuple(older_pool[:max_older])
+    older = tuple(older_pool[:MAX_OLDER])
     return Card(
         usable=tuple(b for b in ranked if b.sensitivity < HOLD_AT),
         held=tuple(b for b in ranked if b.sensitivity >= HOLD_AT),
@@ -88,6 +89,7 @@ def build_card(
         dropped=tuple(b for b in stale if b not in older),
         aged=aged,
         now=now,
+        views=tuple(views),
     )
 
 
@@ -121,5 +123,11 @@ def render(card: Card, tz: tzinfo = UTC) -> str:
         parts.append(
             "[Older, and may be out of date. Do not assume these still hold. If it comes up, "
             "check lightly:\n" + "\n".join(_line(b, card) for b in card.older) + "]"
+        )
+    if card.views:
+        parts.append(
+            "[Views of your own that you have expressed and they have approved. Hold to them "
+            "unless they give you a real reason to change your mind. If you do change your mind, "
+            "say so plainly:\n" + "\n".join(f"- {b.claim}" for b in card.views) + "]"
         )
     return "\n".join(parts)

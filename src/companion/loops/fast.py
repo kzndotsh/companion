@@ -41,6 +41,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.core.views import card_views
 from companion.loops.ack import judge
 from companion.store.sqlite.store import Store
 
@@ -72,6 +73,10 @@ class _CardLog:
             self._one(DecisionKind.SURFACE, b, "in the card as older, possibly out of date")
         for b in card.dropped:
             self._one(DecisionKind.WITHHOLD, b, self._why_dropped(b, card))
+        for b in card.views:
+            self._one(
+                DecisionKind.SURFACE, b, "in the card as a view of its own that the user approved"
+            )
 
     @staticmethod
     def _why_dropped(b: Belief, card: Card) -> str:
@@ -161,7 +166,9 @@ async def _handle_turn(
         UtteranceId(_id()), rel, session, turn, Speaker.USER, text, Frame.REAL, channel, now
     )
     store.append_utterance(user)
-    card = build_card(store.current_beliefs(rel), store.last_support(rel), now)
+    support = store.last_support(rel)
+    views = card_views(store.self_beliefs(rel), store.approved_views(rel), support)
+    card = build_card(store.user_beliefs(rel), support, now, views=views)
     clock = volatile_line(now, prior[-1].at if prior else None)
     volatile = (
         f"{clock}\n{render(card, now.astimezone().tzinfo or UTC)}" if not card.empty else clock

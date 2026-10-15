@@ -69,7 +69,7 @@ async def rebuild(
     The old beliefs are closed only after every batch has succeeded, so a failure part-way leaves
     them in force. They stay on disk, closed, with the reason logged.
     """
-    old = store.current_beliefs(rel)
+    old = store.user_beliefs(rel)
     options = ReflectOptions(ignore=frozenset(b.id for b in old), tz=tz)
     start = None
     added = 0
@@ -83,3 +83,38 @@ async def rebuild(
     for b in old:
         _close(store, b, "replaced by a rebuild under improved extraction rules", now)
     return f"rebuilt: {added} beliefs added, {len(old)} replaced"
+
+
+def approve(store: Store, rel: RelationshipId, id_prefix: str, now: datetime | None = None) -> str:
+    """The user approves one of the companion's own views, so it reaches the card."""
+    from companion.core.types import Subject  # noqa: PLC0415
+
+    now = now or datetime.now(UTC)
+    matches = [
+        b
+        for b in store.self_beliefs(rel)
+        if b.id.startswith(id_prefix) and b.subject is Subject.SELF
+    ]
+    if len(matches) != 1:
+        msg = f"{len(matches)} current views start with {id_prefix!r}; need exactly one"
+        raise ValueError(msg)
+    view = matches[0]
+    source = store.get_utterance(view.evidence[0].utterance_id)
+    if source is None:
+        msg = f"view {view.id} cites an utterance missing from the ledger"
+        raise ValueError(msg)
+    store.approve_view(view.id, now)
+    store.append_decision(
+        Decision(
+            DecisionId(uuid.uuid4().hex),
+            rel,
+            source.session_id,
+            source.turn_id,
+            TraceId(uuid.uuid4().hex),
+            DecisionKind.POLICY,
+            "approved by the user: this view now reaches the card",
+            now,
+            detail={"belief_id": view.id, "claim": view.claim},
+        )
+    )
+    return f"approved  {view.claim}"

@@ -7,7 +7,8 @@ from pathlib import Path
 
 from companion.core.freshness import age_phrase, status
 from companion.core.types import RelationshipId
-from companion.loops.curate import close_duplicates, retire
+from companion.core.views import is_settled
+from companion.loops.curate import approve, close_duplicates, retire
 from companion.store.sqlite.store import Store
 
 
@@ -15,7 +16,7 @@ def run(db: Path, relationship: str) -> str:
     store = Store(db)
     try:
         rel = RelationshipId(relationship)
-        found = store.current_beliefs(rel)
+        found = store.user_beliefs(rel)
         support = store.last_support(rel)
     finally:
         store.close()
@@ -48,5 +49,45 @@ def retire_one(db: Path, relationship: str, id_prefix: str, reason: str) -> str:
     store = Store(db)
     try:
         return retire(store, RelationshipId(relationship), id_prefix, reason) + "\n"
+    finally:
+        store.close()
+
+
+def opinions(db: Path, relationship: str) -> str:
+    """The companion's own views: tentative until restated on a second day, then settled."""
+    store = Store(db)
+    try:
+        rel = RelationshipId(relationship)
+        found = store.self_beliefs(rel)
+        days = store.evidence_days(rel)
+        support = store.last_support(rel)
+        approved = store.approved_views(rel)
+    finally:
+        store.close()
+    if not found:
+        return "no views recorded yet\n"
+    now = datetime.now(UTC)
+    lines: list[str] = []
+    for b in sorted(found, key=lambda x: support.get(x.id, x.valid_from), reverse=True):
+        n = days.get(b.id, 1)
+        state = "settled" if is_settled(b, days) else "tentative"
+        mark = "APPROVED" if b.id in approved else "not approved"
+        age = age_phrase(now - support.get(b.id, b.valid_from))
+        lines.append(f"{b.id[:8]} [{b.kind}] {mark}, {state} ({n} day(s), last {age})  {b.claim}")
+        lines.append(f'    "{b.evidence[0].quote}"')
+    settled = sum(is_settled(b, days) for b in found)
+    live = sum(b.id in approved for b in found)
+    return (
+        "\n".join(lines)
+        + f"\n\n{len(found)} views, {settled} settled, {live} approved"
+        + " (only approved views reach the card)\n"
+        + "approve: companion approve <id>    remove: companion retire <id> --reason ...\n"
+    )
+
+
+def approve_one(db: Path, relationship: str, id_prefix: str) -> str:
+    store = Store(db)
+    try:
+        return approve(store, RelationshipId(relationship), id_prefix) + "\n"
     finally:
         store.close()

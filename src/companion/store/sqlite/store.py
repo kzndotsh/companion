@@ -15,6 +15,7 @@ from companion.core.types import (
     Evidence,
     Flag,
     RelationshipId,
+    Subject,
     TurnId,
     Utterance,
     UtteranceId,
@@ -65,7 +66,19 @@ class Store:
         beliefs.insert_belief(self._conn, b)
 
     def current_beliefs(self, rel: RelationshipId) -> list[Belief]:
+        """Every current belief, about the user and about itself. Most callers want one of two."""
         return beliefs.current_beliefs(self._conn, rel)
+
+    def user_beliefs(self, rel: RelationshipId) -> list[Belief]:
+        return [
+            b for b in beliefs.current_beliefs(self._conn, rel) if b.subject is not Subject.SELF
+        ]
+
+    def self_beliefs(self, rel: RelationshipId) -> list[Belief]:
+        return beliefs.current_beliefs(self._conn, rel, Subject.SELF)
+
+    def evidence_days(self, rel: RelationshipId) -> dict[BeliefId, int]:
+        return beliefs.evidence_days(self._conn, rel)
 
     def record_reflect(self, r: ReflectRun) -> None:
         reflect.record_run(self._conn, r)
@@ -87,3 +100,9 @@ class Store:
 
     def add_evidence(self, belief_id: BeliefId, evidence: Evidence) -> None:
         beliefs.add_evidence(self._conn, belief_id, evidence)
+
+    def approve_view(self, belief_id: BeliefId, at: datetime) -> None:
+        beliefs.approve_view(self._conn, belief_id, at)
+
+    def approved_views(self, rel: RelationshipId) -> set[BeliefId]:
+        return beliefs.approved_ids(self._conn, rel)

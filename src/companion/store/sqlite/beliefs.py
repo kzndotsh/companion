@@ -160,3 +160,32 @@ def add_evidence(conn: sqlite3.Connection, belief_id: BeliefId, evidence: Eviden
             "INSERT INTO belief_evidence (belief_id, utterance_id, quote) VALUES (?, ?, ?)",
             (belief_id, evidence.utterance_id, evidence.quote),
         )
+
+
+def evidence_days(conn: sqlite3.Connection, relationship_id: RelationshipId) -> dict[BeliefId, int]:
+    """How many different UTC calendar days of evidence back each current belief."""
+    rows = conn.execute(
+        "SELECT e.belief_id AS id, COUNT(DISTINCT substr(u.at, 1, 10)) AS days"
+        " FROM belief_evidence e JOIN utterances u ON u.id = e.utterance_id"
+        " JOIN beliefs b ON b.id = e.belief_id"
+        " WHERE b.relationship_id = ? AND b.valid_until IS NULL GROUP BY e.belief_id",
+        (relationship_id,),
+    ).fetchall()
+    return {BeliefId(str(r["id"])): int(r["days"]) for r in rows}
+
+
+def approve_view(conn: sqlite3.Connection, belief_id: BeliefId, at: datetime) -> None:
+    with write_tx(conn):
+        conn.execute(
+            "INSERT OR IGNORE INTO view_approvals (belief_id, approved_at) VALUES (?, ?)",
+            (belief_id, iso(at)),
+        )
+
+
+def approved_ids(conn: sqlite3.Connection, relationship_id: RelationshipId) -> set[BeliefId]:
+    rows = conn.execute(
+        "SELECT a.belief_id AS id FROM view_approvals a JOIN beliefs b ON b.id = a.belief_id"
+        " WHERE b.relationship_id = ?",
+        (relationship_id,),
+    ).fetchall()
+    return {BeliefId(str(r["id"])) for r in rows}

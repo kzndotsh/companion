@@ -8,6 +8,7 @@ Idempotent: the run log is the cursor, so a crashed or repeated pass re-reads no
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime, tzinfo
 
@@ -15,6 +16,7 @@ from companion.core.beliefs.dedupe import is_duplicate_candidate
 from companion.core.beliefs.extract import (
     SCHEMA,
     SYSTEM,
+    Candidate,
     Rejection,
     Skip,
     build_user_prompt,
@@ -25,6 +27,9 @@ from companion.core.beliefs.extract import (
     to_belief,
     to_confirmation,
 )
+from companion.core.beliefs.self_extract import SCHEMA as SELF_SCHEMA
+from companion.core.beliefs.self_extract import SYSTEM as SELF_SYSTEM
+from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.extractor import Extractor
 from companion.core.reflect import ReflectRun
 from companion.core.types import (
@@ -68,6 +73,9 @@ class ReflectResult:
     confirmed: int = 0
     cost_usd: float = 0.0
     upto: tuple[datetime, UtteranceId] | None = None
+    views_accepted: int = 0
+    views_confirmed: int = 0
+    views_rejected: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,46 +132,78 @@ async def reflect_once(
     return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), ReflectOptions(now))
 
 
-async def reflect_from(
-    store: Store,
-    extractor: Extractor,
-    rel: RelationshipId,
-    start: tuple[datetime, UtteranceId] | None,
-    options: ReflectOptions = ReflectOptions(),  # noqa: B008
-) -> ReflectResult:
-    """One batch after `start`. Pass None to read from the beginning, for a re-read.
+@dataclass(frozen=True, slots=True)
+class _Spec:
+    """What differs between reading the user's words and reading the companion's own."""
 
-    `ignore` names old beliefs that a rebuild is replacing, so they do not count as duplicates
-    of their own restatements. The caller closes them once the whole rebuild succeeds.
-    """
-    now = options.now or datetime.now(UTC)
-    batch = store.utterances_after(rel, start, BATCH)
-    if not batch:
-        return ReflectResult(ran=False)
-    upto = (batch[-1].at, batch[-1].id)
-    targets = [u for u in batch if u.speaker is Speaker.USER]
-    last = batch[-1]
-    anchor = targets[-1] if targets else last
-    run = _Pass(store, rel, _id(), now, anchor.session_id, anchor.turn_id)
-    if not targets:
-        run.finish(last, len(batch))
-        return ReflectResult(ran=True, upto=upto)
-    index = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
-    known = [b for b in store.current_beliefs(rel) if b.id not in options.ignore]
+    system: str
+    schema: dict[str, Json]
+    parse: Callable[[Json], tuple[list[Candidate], list[Rejection]]]
+    make: Callable[
+        [Candidate, Mapping[str, Utterance], RelationshipId, datetime, Callable[[], str]],
+        Belief | Rejection,
+    ]
+    speaker: Speaker
+    accepted_reason: str
+
+
+USER_SPEC = _Spec(
+    SYSTEM,
+    SCHEMA,
+    parse,
+    to_belief,
+    Speaker.USER,
+    "accepted: quote verified verbatim in a user message",
+)
+SELF_SPEC = _Spec(
+    SELF_SYSTEM,
+    SELF_SCHEMA,
+    parse_views,
+    to_view,
+    Speaker.COMPANION,
+    "accepted: a view the companion expressed, quote verified in its own message",
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _Counts:
+    candidates: int = 0
+    accepted: int = 0
+    rejected: int = 0
+    duplicates: int = 0
+    confirmed: int = 0
+    cost: float = 0.0
+    latency_ms: int = 0
+    model: str = "none"
+
+
+@dataclass(frozen=True, slots=True)
+class _Ctx:
+    """What both passes share: where to read, who to ask, and how to log."""
+
+    store: Store
+    extractor: Extractor
+    run: _Pass
+    window: Mapping[str, Utterance]
+    tz: tzinfo
+
+
+async def _extract_pass(
+    spec: _Spec, ctx: _Ctx, targets: list[Utterance], known: list[Belief]
+) -> _Counts:
+    store, extractor, run, window, tz = ctx.store, ctx.extractor, ctx.run, ctx.window, ctx.tz
     labelled = known_index(known)
-    local = options.tz or datetime.now().astimezone().tzinfo or UTC
     result = await extractor.extract(
-        SYSTEM, build_user_prompt(index, {u.id for u in targets}, labelled, local), SCHEMA
+        spec.system, build_user_prompt(window, {u.id for u in targets}, labelled, tz), spec.schema
     )
-    run = replace(run, model=result.model, cost=result.cost_usd, latency_ms=result.latency_ms)
-    candidates, rejections = parse(result.data)
+    candidates, rejections = spec.parse(result.data)
     n_candidates = len(candidates) + len(rejections)
     seen = {normalise(b.claim) for b in known}
     accepted = duplicates = confirmed = 0
     stored: list[Belief] = []
     for c in candidates:
         if c.confirms:
-            outcome = to_confirmation(c, index, labelled)
+            outcome = to_confirmation(c, window, labelled, spec.speaker)
             if isinstance(outcome, Rejection):
                 rejections.append(outcome)
             elif isinstance(outcome, Skip):
@@ -181,7 +221,7 @@ async def reflect_from(
                     },
                 )
             continue
-        made = to_belief(c, index, rel, now, _id)
+        made = spec.make(c, window, run.rel, run.now, _id)
         if isinstance(made, Rejection):
             rejections.append(made)
             continue
@@ -196,14 +236,81 @@ async def reflect_from(
         stored.append(made)
         accepted += 1
         run.log(
-            "accepted: quote verified verbatim in a user message",
+            spec.accepted_reason,
             {"belief_id": made.id, "claim": made.claim, "quote": c.quote, "model": result.model},
         )
     for r in rejections:
         run.log(f"rejected: {r.reason}", {"candidate": r.raw})
+    return _Counts(
+        n_candidates,
+        accepted,
+        len(rejections),
+        duplicates,
+        confirmed,
+        result.cost_usd,
+        result.latency_ms,
+        result.model,
+    )
+
+
+async def reflect_from(
+    store: Store,
+    extractor: Extractor,
+    rel: RelationshipId,
+    start: tuple[datetime, UtteranceId] | None,
+    options: ReflectOptions = ReflectOptions(),  # noqa: B008
+) -> ReflectResult:
+    """One batch after `start`. Pass None to read from the beginning, for a re-read.
+
+    Two passes over the same batch: beliefs about the user from the user's words, and views the
+    companion expressed from its own words. `ignore` names old beliefs that a rebuild is
+    replacing, so they do not count as duplicates of their own restatements.
+    """
+    now = options.now or datetime.now(UTC)
+    batch = store.utterances_after(rel, start, BATCH)
+    if not batch:
+        return ReflectResult(ran=False)
+    upto = (batch[-1].at, batch[-1].id)
+    last = batch[-1]
+    user_targets = [u for u in batch if u.speaker is Speaker.USER]
+    own_targets = [u for u in batch if u.speaker is Speaker.COMPANION]
+    anchor = user_targets[-1] if user_targets else last
+    run = _Pass(store, rel, _id(), now, anchor.session_id, anchor.turn_id)
+    if not user_targets and not own_targets:
+        run.finish(last, len(batch))
+        return ReflectResult(ran=True, upto=upto)
+    window = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
+    local = options.tz or datetime.now().astimezone().tzinfo or UTC
+    ctx = _Ctx(store, extractor, run, window, local)
+    users = _Counts()
+    own = _Counts()
+    if user_targets:
+        known = [b for b in store.user_beliefs(rel) if b.id not in options.ignore]
+        users = await _extract_pass(USER_SPEC, ctx, user_targets, known)
+    if own_targets:
+        own = await _extract_pass(SELF_SPEC, ctx, own_targets, store.self_beliefs(rel))
+    run = replace(
+        run,
+        model=users.model if user_targets else own.model,
+        cost=users.cost + own.cost,
+        latency_ms=users.latency_ms + own.latency_ms,
+    )
     run.finish(
-        last, len(batch), candidates=n_candidates, accepted=accepted, rejected=len(rejections)
+        last,
+        len(batch),
+        candidates=users.candidates,
+        accepted=users.accepted,
+        rejected=users.rejected,
     )
     return ReflectResult(
-        True, accepted, len(rejections), duplicates, confirmed, result.cost_usd, upto
+        True,
+        users.accepted,
+        users.rejected,
+        users.duplicates,
+        users.confirmed,
+        users.cost + own.cost,
+        upto,
+        views_accepted=own.accepted,
+        views_confirmed=own.confirmed,
+        views_rejected=own.rejected,
     )

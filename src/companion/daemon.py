@@ -89,10 +89,15 @@ async def run(data_dir: Path) -> None:
                 return
             if result.ran:
                 logging.getLogger("companion.slow").info(
-                    "reflect: +%d beliefs, %d rejected, %d duplicates, $%.5f",
+                    "reflect: +%d beliefs, %d confirmed, %d rejected, %d duplicates;"
+                    " views +%d, %d confirmed, %d rejected; $%.5f",
                     result.accepted,
+                    result.confirmed,
                     result.rejected,
                     result.duplicates,
+                    result.views_accepted,
+                    result.views_confirmed,
+                    result.views_rejected,
                     result.cost_usd,
                 )
 
@@ -141,8 +146,9 @@ async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) 
                 start = result.upto
                 lines.append(
                     f"+{result.accepted} beliefs, {result.confirmed} confirmed, "
-                    f"{result.rejected} rejected, {result.duplicates} duplicates, "
-                    f"${result.cost_usd:.5f}"
+                    f"{result.rejected} rejected, {result.duplicates} duplicates; "
+                    f"views +{result.views_accepted}, {result.views_confirmed} confirmed, "
+                    f"{result.views_rejected} rejected; ${result.cost_usd:.5f}"
                 )
     finally:
         store.close()
