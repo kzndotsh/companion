@@ -173,3 +173,14 @@ def test_parse_keeps_good_items_and_rejects_bad_ones() -> None:
 
 def test_normalise_ignores_case_and_punctuation() -> None:
     assert normalise("Has OCD, and ADHD.") == normalise("has ocd and adhd")
+
+
+def test_a_momentary_want_is_rejected(utterance: Callable[..., Utterance]) -> None:
+    got = _make(_candidate(lasting=False), utterance(text=TEXT, uid="u1"))
+    assert isinstance(got, Rejection)
+    assert "momentary" in got.reason
+
+
+def test_a_low_confidence_guess_is_rejected(utterance: Callable[..., Utterance]) -> None:
+    got = _make(_candidate(confidence=0.3), utterance(text=TEXT, uid="u1"))
+    assert isinstance(got, Rejection)

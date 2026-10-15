@@ -148,3 +148,17 @@ async def test_a_malformed_response_is_logged_and_still_advances(store: Store) -
     result = await reflect_once(store, ex, REL)
     assert result.rejected == 1
     assert not (await reflect_once(store, ex, REL)).ran
+
+
+async def test_a_paraphrase_resting_on_the_same_words_is_a_duplicate(store: Store) -> None:
+    _say(store, 1, Speaker.USER, "i hate cooking, im so lazy lol")
+    ex = FakeExtractor(
+        {
+            "beliefs": [
+                _belief("m1", "i hate cooking", "User hates cooking."),
+                _belief("m1", "i hate cooking, im so lazy", "User hates cooking and is lazy."),
+            ]
+        }
+    )
+    result = await reflect_once(store, ex, REL)
+    assert (result.accepted, result.duplicates) == (1, 1)

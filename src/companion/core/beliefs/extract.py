@@ -28,6 +28,7 @@ from companion.core.types import (
 )
 
 SINGLE_EVIDENCE_CONFIDENCE_CAP = 0.6
+MIN_CONFIDENCE = 0.4
 MODEL_PROVENANCE = frozenset(
     {
         Provenance.STATED,
@@ -64,11 +65,12 @@ Sensitivity: 0 ordinary, 1 personal, 2 health, mental health, money or relations
 crisis or legal trouble.
 
 Stay close to their words. Do not add feelings, motives or conclusions they did not state; if you \
-are reading between the lines, the provenance is inferred. Confidence is how sure you are the \
-claim is true and still current, from 0 to 1. Skip small talk, greetings, one-word replies, \
-what they feel like eating or doing this minute, and anything you would not remember a week \
-later. Fewer, true beliefs beat many guesses. If there is nothing worth recording, return an \
-empty list. Write each claim as one short plain sentence about the user, in the third person."""
+are reading between the lines, the provenance is inferred. A self-deprecating joke is joked, not \
+stated. Set lasting to false for anything that will not matter in a week: what they want to eat \
+or do this minute, a passing mood, small talk, polite reassurance. Confidence is how sure you \
+are the claim is true and still current, from 0 to 1. Skip greetings and one-word replies. \
+Fewer, true beliefs beat many guesses. If there is nothing worth recording, return an empty \
+list. Write each claim as one short plain sentence about the user, in the third person."""
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -85,6 +87,7 @@ SCHEMA: dict[str, Json] = {
                     "kind": {"type": "string", "enum": [k.value for k in BeliefKind]},
                     "provenance": {"type": "string", "enum": [p.value for p in MODEL_PROVENANCE]},
                     "confidence": {"type": "number"},
+                    "lasting": {"type": "boolean"},
                     "sensitivity": {"type": "integer"},
                 },
                 "required": [
@@ -95,6 +98,7 @@ SCHEMA: dict[str, Json] = {
                     "kind",
                     "provenance",
                     "confidence",
+                    "lasting",
                     "sensitivity",
                 ],
             },
@@ -114,6 +118,7 @@ class Candidate:
     provenance: Provenance
     confidence: float
     sensitivity: int
+    lasting: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +178,7 @@ def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
                     provenance=Provenance(str(fields.get("provenance"))),
                     confidence=_number(fields.get("confidence")),
                     sensitivity=int(_number(fields.get("sensitivity"))),
+                    lasting=fields.get("lasting") is not False,
                 )
             )
         except ValueError as err:
@@ -212,6 +218,21 @@ def _holds(u: Utterance, quote: str) -> bool:
     return True
 
 
+def _screen(c: Candidate, source: Utterance | None) -> str | None:
+    """Why this candidate must not become a belief, or None if it passes the cheap checks."""
+    if source is None:
+        return "cited message not found and no single message holds the quote"
+    if source.speaker is not Speaker.USER:
+        return "evidence is the companion's own words"
+    if not c.lasting:
+        return "momentary, not lasting"
+    if c.confidence < MIN_CONFIDENCE:
+        return "too uncertain to record"
+    if c.subject not in USER_SUBJECTS or c.provenance not in MODEL_PROVENANCE:
+        return "subject or provenance not allowed from the model"
+    return None
+
+
 def to_belief(
     c: Candidate,
     index: Mapping[str, Utterance],
@@ -221,12 +242,9 @@ def to_belief(
 ) -> Belief | Rejection:
     raw: Json = {"claim": c.claim, "quote": c.quote, "ref": c.ref}
     source = _resolve(c, index)
-    if source is None:
-        return Rejection("cited message not found and no single message holds the quote", raw)
-    if source.speaker is not Speaker.USER:
-        return Rejection("evidence is the companion's own words", raw)
-    if c.subject not in USER_SUBJECTS or c.provenance not in MODEL_PROVENANCE:
-        return Rejection("subject or provenance not allowed from the model", raw)
+    reason = _screen(c, source)
+    if reason is not None or source is None:
+        return Rejection(reason or "no source", raw)
     try:
         evidence = evidence_from(source, c.quote)
     except QuoteNotFoundError:
@@ -242,7 +260,7 @@ def to_belief(
             provenance=c.provenance,
             speaker=source.speaker,
             frame=source.frame,
-            confidence=min(max(c.confidence, 0.0), SINGLE_EVIDENCE_CONFIDENCE_CAP),
+            confidence=min(c.confidence, SINGLE_EVIDENCE_CONFIDENCE_CAP),
             valid_from=source.at,
             recorded_at=now,
             sensitivity=min(max(c.sensitivity, 0), 3),

@@ -10,6 +10,7 @@ from companion.core.reflect import ReflectRun
 from companion.core.replay import TurnRecord
 from companion.core.types import (
     Belief,
+    BeliefId,
     Decision,
     Flag,
     RelationshipId,
@@ -70,3 +71,9 @@ class Store:
 
     def reflect_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
         return reflect.cursor(self._conn, rel)
+
+    def get_utterance(self, utterance_id: UtteranceId) -> Utterance | None:
+        return ledger.get_utterance(self._conn, utterance_id)
+
+    def close_belief(self, belief_id: BeliefId, at: datetime) -> None:
+        beliefs.close_belief(self._conn, belief_id, at)

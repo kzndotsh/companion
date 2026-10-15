@@ -11,6 +11,7 @@ import uuid
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 
+from companion.core.beliefs.dedupe import is_duplicate_candidate
 from companion.core.beliefs.extract import (
     SCHEMA,
     SYSTEM,
@@ -24,6 +25,7 @@ from companion.core.beliefs.extract import (
 from companion.core.extractor import Extractor
 from companion.core.reflect import ReflectRun
 from companion.core.types import (
+    Belief,
     Decision,
     DecisionId,
     DecisionKind,
@@ -140,16 +142,21 @@ async def reflect_from(
     n_candidates = len(candidates) + len(rejections)
     seen = {normalise(b.claim) for b in known}
     accepted = duplicates = 0
+    stored: list[Belief] = []
     for c in candidates:
         made = to_belief(c, index, rel, now, _id)
         if isinstance(made, Rejection):
             rejections.append(made)
             continue
-        if normalise(made.claim) in seen:
+        source = made.evidence[0]
+        if normalise(made.claim) in seen or is_duplicate_candidate(
+            source.utterance_id, source.quote, [*known, *stored]
+        ):
             duplicates += 1
             continue
         seen.add(normalise(made.claim))
         store.insert_belief(made)
+        stored.append(made)
         accepted += 1
         run.log(
             "accepted: quote verified verbatim in a user message",

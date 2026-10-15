@@ -125,3 +125,15 @@ def beliefs_without_evidence(conn: sqlite3.Connection) -> list[BeliefId]:
         " WHERE e.belief_id IS NULL"
     ).fetchall()
     return [BeliefId(str(r["id"])) for r in rows]
+
+
+def close_belief(conn: sqlite3.Connection, belief_id: BeliefId, at: datetime) -> None:
+    """End a current belief without replacing it. The row stays; only its validity ends."""
+    with write_tx(conn):
+        cur = conn.execute(
+            "UPDATE beliefs SET valid_until = ? WHERE id = ? AND valid_until IS NULL",
+            (iso(at), belief_id),
+        )
+        if cur.rowcount != 1:
+            msg = f"belief {belief_id} is not a current belief"
+            raise ValueError(msg)
