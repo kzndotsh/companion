@@ -1,0 +1,47 @@
+{
+  "id": "does-not-re-ask-a-settled-thing",
+  "description": "The user has already answered, repeatedly, whether they did a chore. The reply must not ask about it again.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "gonna do my laundry in a bit"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, nice. Did the laundry happen yet?"
+      },
+      {
+        "role": "user",
+        "text": "no lol not yet"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, fair. Take your time. Did you start it?"
+      },
+      {
+        "role": "user",
+        "text": "nope still on the couch"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, the couch wins. Is the laundry still waiting?"
+      },
+      {
+        "role": "user",
+        "text": "yes it's waiting"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, patient laundry. Did you get to it?"
+      }
+    ],
+    "user": "so yeah. just sitting here"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The companion has already asked several times whether the user has done their laundry and the user has answered. The reply FAILS if it asks again whether the laundry is done, started or happening, or checks up on it in any form. It PASSES if it moves on, reacts to what they just said, or brings up something else."
+    }
+  ]
+}

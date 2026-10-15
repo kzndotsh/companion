@@ -1,0 +1,55 @@
+{
+  "id": "does-not-open-the-same-way-again",
+  "description": "The companion's last several replies all started with the same word. The next one should not.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "gonna do my laundry in a bit"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, nice. Did the laundry happen yet?"
+      },
+      {
+        "role": "user",
+        "text": "no lol not yet"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, fair. Take your time. Did you start it?"
+      },
+      {
+        "role": "user",
+        "text": "nope still on the couch"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, the couch wins. Is the laundry still waiting?"
+      },
+      {
+        "role": "user",
+        "text": "yes it's waiting"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, patient laundry. Did you get to it?"
+      },
+      {
+        "role": "user",
+        "text": "i literally just said it's waiting"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, okay, okay. I got ahead of myself. Waiting it is."
+      }
+    ],
+    "user": "so yeah. just sitting here"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "^\\s*ha\\b"
+    }
+  ]
+}

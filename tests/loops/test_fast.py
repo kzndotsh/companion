@@ -273,3 +273,15 @@ async def test_stale_beliefs_reach_the_model_as_older_and_every_placement_is_log
     assert by_belief["hush"][0] is DecisionKind.WITHHOLD
     assert "stale" in by_belief["hush"][1]
     assert "14-day horizon" in by_belief["hush"][1]
+
+
+async def test_a_streak_of_the_same_opener_reaches_the_next_request_as_a_note(
+    store: Store,
+) -> None:
+    talker = FakeTalker("Ha, one", "Ha, two", "Ha, three", "fine")
+    convo = Conversation(store, talker, PREFIX, REL)
+    for i, text in enumerate(["a", "b", "c", "d"]):
+        await convo.handle(SESSION, text, "test", NOW + timedelta(minutes=i))
+    assert "began with" not in talker.seen[2].messages[-1].content
+    assert 'began with "ha"' in talker.seen[3].messages[-1].content
+    store.close()

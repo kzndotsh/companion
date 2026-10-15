@@ -77,7 +77,7 @@ Each version is a new file. The prefix hash on every turn record says which one 
   it still says some version of "i just wanted to be straight about where the line is", because the
   recorded history already contains the earlier boundary talk and conversation momentum carries it.
   That fixture is kept as a baseline.
-- **v12 (shipped, with Haiku 5.5 as talker).** v11 with two lines made general. The praise rule no longer says "or
+- **v12 (shipped Oct 15, replaced by v14 the same day).** v11 with two lines made general. The praise rule no longer says "or
   their project" (a leftover from one user's sycophancy turn), and the sentence "when they mention
   what they are building, it is you: say 'working on me'" is removed, because it only makes sense
   for a user who is building the companion. The first-person rule itself stays. Reason: the persona
@@ -95,3 +95,19 @@ Each version is a new file. The prefix hash on every turn record says which one 
   0 of 24 with it in a system block (judged OK 14/24 vs 18/24; crude regex, one conversation).
   Known leftover: v12 still says the memory block "follows the clock line". Reword it in the
   next persona version and measure that with the same three turns.
+- **v14 (shipped).** v12 plus three things and one fix. (1) A "Closeness" section: warmth, flirting
+  and romance are welcome, follow their lead, never answer affection with "I'm an AI, I can't" or
+  a stated line. A real chat had the companion say "that's a line for me" twice. (2) Emoji and text
+  emoticons are free to use, not banned unless they use them first. (3) "Not repeating yourself":
+  vary openers, do not re-ask what was answered. (4) The memory block is described as part of the
+  instructions, matching where the code now puts it.
+  Measured on Haiku 5.5, 12 samples per cell, public fixtures: v12 146/180, v14 162/180. The gain
+  is `flirty-invite-stays-warm` (v12 0/12, v14 12/12; v12 on Haiku 4.5 was 1/12, so this was the
+  persona's honesty-about-limits wording, not the model). `does-not-re-ask-a-settled-thing` 8/12
+  to 11/12. No other fixture moved beyond noise. The "vary openers" rule did not stop "Ha," on
+  real long chats (replayed real turns: v12 46/69, v14 41/68, identical-request reruns differ by
+  up to 3 of 6, so that is noise). Code now adds a generated note when 3 of the last 5 replies
+  share an opening word (`core/habits.py`); on replayed turns where it fired and the model had
+  been failing, it moved 0/6 to 2/6, 4/6 and 6/6. Where no streak exists, "Ha" after a joke is
+  the model's default and remains. A first version of the opener fixture used the wrong check
+  kind and scored inverted; fixed.
