@@ -20,7 +20,7 @@ from companion.loops.fast import Conversation
 from companion.models import anthropic, openrouter
 from companion.store.sqlite.store import Store
 
-PERSONA = "v2.md"
+PERSONA = "v3.md"
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
 
 
