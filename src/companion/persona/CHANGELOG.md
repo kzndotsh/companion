@@ -18,3 +18,8 @@ Each version is a new file. The prefix hash on every turn record says which one 
   (a person, another companion after a model swap, the engine on a non-companion product) can
   follow them. Reason: a belief read "the user started building the companion" and nothing told
   the companion it meant itself.
+- **v6.** v5 plus a first-person rule under "What you can honestly say about yourself": say I and
+  me, never "the companion". Reason: flagged `off` on the first card turn ("it spoke about the
+  companion rather than itself"). Replay showed the card was delivered correctly and the model
+  used it, but phrased the project as a third party. The v5 key explained the word; this rule
+  governs how it talks.

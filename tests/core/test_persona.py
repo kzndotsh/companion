@@ -6,7 +6,7 @@ import pytest
 
 from companion.core.prompt.prefix import build_prefix
 
-VERSIONS = ["v1.md", "v2.md", "v3.md", "v4.md", "v5.md"]
+VERSIONS = ["v1.md", "v2.md", "v3.md", "v4.md", "v5.md", "v6.md"]
 
 
 def _text(name: str) -> str:
@@ -27,3 +27,7 @@ def test_v3_has_no_example_replies_to_copy() -> None:
 def test_v5_tells_the_companion_who_the_companion_is() -> None:
     text = _text("v5.md")
     assert '"the companion" is you' in text
+
+
+def test_v6_has_a_first_person_rule() -> None:
+    assert 'never "the companion"' in _text("v6.md")
