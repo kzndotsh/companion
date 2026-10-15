@@ -67,8 +67,8 @@ Provenance: stated (they said it plainly about themselves), inferred (you read i
 lines; use sparingly), joked (said as a joke or tease), played (said inside pretend or roleplay), \
 hypothetical (an if or what-if), third_party (about someone else).
 
-Sensitivity: 0 ordinary, 1 personal, 2 health, mental health, money or relationships, 3 abuse, \
-crisis or legal trouble.
+Sensitivity: 0 ordinary, 1 personal, 2 health, mental health, money, relationships or identity \
+(gender, sexuality, religion, politics), 3 abuse, crisis or legal trouble.
 
 Write every claim so it stands alone, as if read a year later by someone who never saw this \
 chat. Replace relative times (last night, yesterday, lately, this week, now, currently, the night \
@@ -85,7 +85,10 @@ stated. Set lasting to false only for momentary things: what they want to eat or
 passing mood, small talk, polite reassurance. When something started or happened is lasting, and \
 so are habits and coping patterns (a tell); record those. Confidence is how sure you \
 are the claim is true and still current, from 0 to 1. Skip greetings and one-word replies. \
-Fewer, true beliefs beat many guesses. If there is nothing worth recording, return an empty \
+Do not record routine events of the day such as meals, errands or deliveries. Record what they \
+mean, not their literal words: if the phrasing is a figure of speech or easy to misread ("i'm so \
+bad at getting distracted" means they get distracted easily), state the meaning. Fewer, true \
+beliefs beat many guesses. If there is nothing worth recording, return an empty \
 list. Write each claim as one short plain sentence about the user, in the third person."""
 
 SCHEMA: dict[str, Json] = {
