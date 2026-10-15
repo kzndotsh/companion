@@ -18,6 +18,7 @@ from companion.core.types import (
     Belief,
     BeliefId,
     BeliefKind,
+    Evidence,
     Json,
     Provenance,
     RelationshipId,
@@ -67,8 +68,9 @@ Provenance: stated (they said it plainly about themselves), inferred (you read i
 lines; use sparingly), joked (said as a joke or tease), played (said inside pretend or roleplay), \
 hypothetical (an if or what-if), third_party (about someone else).
 
-Sensitivity: 0 ordinary, 1 personal, 2 health, mental health, money, relationships or identity \
-(gender, sexuality, religion, politics), 3 abuse, crisis or legal trouble.
+Sensitivity: 0 ordinary, 1 personal, 2 health, body (appearance, measurements), mental health, \
+money, relationships or identity (gender, sexuality, religion, politics), 3 abuse, crisis or \
+legal trouble.
 
 Write every claim so it stands alone, as if read a year later by someone who never saw this \
 chat. Replace relative times (last night, yesterday, lately, this week, now, currently, the night \
@@ -78,6 +80,11 @@ timezone. Replace vague references (it, that, this project, the current project,
 they refer to. The COMPANION is the AI the user is chatting with. When the user says "you" about \
 a project they are building, they mean this companion system, so say "the companion the user is \
 building".
+
+If a TARGET message restates something already recorded, do not write a new belief. Add a \
+candidate with `confirms` set to that recorded belief's label (for example k2), the message \
+label and an exact quote of the restatement, and the same claim. Leave `confirms` empty for \
+anything new. A restatement keeps a belief fresh.
 
 Stay close to their words. Do not add feelings, motives or conclusions they did not state; if you \
 are reading between the lines, the provenance is inferred. A self-deprecating joke is joked, not \
@@ -108,6 +115,7 @@ SCHEMA: dict[str, Json] = {
                     "confidence": {"type": "number"},
                     "lasting": {"type": "boolean"},
                     "sensitivity": {"type": "integer"},
+                    "confirms": {"type": "string"},
                 },
                 "required": [
                     "ref",
@@ -138,6 +146,7 @@ class Candidate:
     confidence: float
     sensitivity: int
     lasting: bool = True
+    confirms: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,10 +160,15 @@ def index_window(window: Sequence[Utterance]) -> dict[str, Utterance]:
     return {f"m{i}": u for i, u in enumerate(window, start=1)}
 
 
+def known_index(known: Sequence[Belief]) -> dict[str, Belief]:
+    """Short labels (k1, k2, ...) for recorded beliefs, so a restatement can point at one."""
+    return {f"k{i}": b for i, b in enumerate(known, start=1)}
+
+
 def build_user_prompt(
     index: Mapping[str, Utterance],
     targets: set[UtteranceId],
-    known: Sequence[Belief],
+    known: Mapping[str, Belief],
     tz: tzinfo = UTC,
 ) -> str:
     lines: list[str] = []
@@ -166,7 +180,7 @@ def build_user_prompt(
     offset = datetime.now(tz).strftime("%z")
     out = [f"Conversation (times are local, UTC{offset}):", *lines]
     if known:
-        out += ["", "Already recorded (do not repeat these):", *[f"- {b.claim}" for b in known]]
+        out += ["", "Already recorded:", *[f"[{label}] {b.claim}" for label, b in known.items()]]
     return "\n".join(out)
 
 
@@ -203,6 +217,7 @@ def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
                     confidence=_number(fields.get("confidence")),
                     sensitivity=int(_number(fields.get("sensitivity"))),
                     lasting=fields.get("lasting") is not False,
+                    confirms=str(fields.get("confirms") or "").strip(),
                 )
             )
         except ValueError as err:
@@ -291,3 +306,48 @@ def to_belief(
         )
     except ValueError as err:
         return Rejection(f"violates a belief invariant: {err}", raw)
+
+
+@dataclass(frozen=True, slots=True)
+class Confirmation:
+    """New support for a belief that already exists. The quote has been verified."""
+
+    belief: Belief
+    evidence: Evidence
+
+
+@dataclass(frozen=True, slots=True)
+class Skip:
+    """Nothing to do, and nothing wrong."""
+
+    reason: str
+
+
+def _confirmation_problem(source: Utterance | None, belief: Belief | None) -> str | None:
+    if belief is None:
+        return "confirms a belief that is not on the recorded list"
+    if source is None:
+        return "cited message not found and no single message holds the quote"
+    if source.speaker is not Speaker.USER or source.speaker is not belief.speaker:
+        return "a restatement must be the user's own words, like the belief"
+    if source.frame is not belief.frame:
+        return "a restatement in a different frame is not the same evidence"
+    return None
+
+
+def to_confirmation(
+    c: Candidate, index: Mapping[str, Utterance], known: Mapping[str, Belief]
+) -> Confirmation | Rejection | Skip:
+    raw: Json = {"claim": c.claim, "quote": c.quote, "ref": c.ref, "confirms": c.confirms}
+    belief = known.get(c.confirms)
+    source = _resolve(c, index)
+    problem = _confirmation_problem(source, belief)
+    if problem is not None or belief is None or source is None:
+        return Rejection(problem or "nothing to confirm", raw)
+    try:
+        evidence = evidence_from(source, c.quote)
+    except QuoteNotFoundError:
+        return Rejection("quote is not verbatim in the source utterance", raw)
+    if any(e.utterance_id == source.id for e in belief.evidence):
+        return Skip("that message already supports this belief")
+    return Confirmation(belief, evidence)

@@ -140,8 +140,9 @@ async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) 
                     break
                 start = result.upto
                 lines.append(
-                    f"+{result.accepted} beliefs, {result.rejected} rejected, "
-                    f"{result.duplicates} duplicates, ${result.cost_usd:.5f}"
+                    f"+{result.accepted} beliefs, {result.confirmed} confirmed, "
+                    f"{result.rejected} rejected, {result.duplicates} duplicates, "
+                    f"${result.cost_usd:.5f}"
                 )
     finally:
         store.close()

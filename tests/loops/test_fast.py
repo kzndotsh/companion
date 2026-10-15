@@ -215,3 +215,60 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     assert report.matched
     kinds = {d.belief_id: d.kind for d in report.decisions if d.belief_id}
     assert kinds == {"b1": DecisionKind.SURFACE, "b2": DecisionKind.WITHHOLD}
+
+
+async def test_stale_beliefs_reach_the_model_as_older_and_every_placement_is_logged(
+    store: Store, tmp_path: Path
+) -> None:
+    base = Utterance(
+        UtteranceId("old"),
+        REL,
+        SESSION,
+        TurnId("t0"),
+        Speaker.USER,
+        "feeling pretty low and i like climbing",
+        Frame.REAL,
+        "test",
+        NOW - timedelta(days=60),
+    )
+    store.append_utterance(base)
+
+    def believe(bid: str, claim: str, quote: str, kind: BeliefKind, sens: int) -> Belief:
+        return Belief(
+            id=BeliefId(bid),
+            relationship_id=REL,
+            subject=Subject.USER,
+            kind=kind,
+            claim=claim,
+            evidence=(Evidence(base.id, quote),),
+            provenance=Provenance.STATED,
+            speaker=Speaker.USER,
+            frame=Frame.REAL,
+            confidence=0.6,
+            valid_from=base.at,
+            recorded_at=base.at,
+            sensitivity=sens,
+        )
+
+    store.insert_belief(believe("trait", "Likes climbing", "i like climbing", BeliefKind.TRAIT, 0))
+    store.insert_belief(believe("mood", "Feels low", "feeling pretty low", BeliefKind.STATE, 0))
+    store.insert_belief(believe("hush", "Feels very low", "pretty low", BeliefKind.STATE, 2))
+    talker = FakeTalker("hey")
+    await Conversation(store, talker, PREFIX, REL).handle(SESSION, "hi", "test", NOW)
+    sent = talker.seen[0].messages[-1].content
+    main = sent.split("[Older")[0]
+    assert "Likes climbing (mentioned 2 months ago)" in main
+    assert "Feels low" not in main
+    assert "[Older, and may be out of date" in sent
+    assert "Feels low (mentioned 2 months ago)" in sent.split("[Older")[1]
+    assert "Feels very low" not in sent  # sensitive and stale: left out entirely
+    store.close()
+    db = tmp_path / "rel.sqlite"
+    report = store_replay.replay_file(db, _turn_ids(db)[0])
+    assert report.matched
+    by_belief = {str(d.belief_id): (d.kind, d.reason) for d in report.decisions if d.belief_id}
+    assert by_belief["trait"][0] is DecisionKind.SURFACE
+    assert by_belief["mood"] == (DecisionKind.SURFACE, "in the card as older, possibly out of date")
+    assert by_belief["hush"][0] is DecisionKind.WITHHOLD
+    assert "stale" in by_belief["hush"][1]
+    assert "14-day horizon" in by_belief["hush"][1]

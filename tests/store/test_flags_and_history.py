@@ -7,7 +7,7 @@ from datetime import timedelta
 import pytest
 
 from companion.core.replay import TurnRecord
-from companion.core.types import Flag, FlagId, FlagKind, SessionId, TurnId, Utterance
+from companion.core.types import Belief, Flag, FlagId, FlagKind, SessionId, TurnId, Utterance
 from companion.store.sqlite import flags, ledger, turns
 from companion.store.sqlite.db import connect, migrate
 from tests.conftest import REL, T0
@@ -83,3 +83,38 @@ def test_migrations_are_idempotent(tmp_path: object) -> None:
     migrate(c)
     migrate(c)
     c.close()
+
+
+def test_last_support_is_the_newest_evidence_time(
+    conn: sqlite3.Connection, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.types import Evidence, UtteranceId  # noqa: PLC0415
+    from companion.store.sqlite import beliefs  # noqa: PLC0415
+
+    old, new = (
+        utterance(text="my studio has never been cleaner", uid="u1"),
+        utterance(text="my studio has never been cleaner again", uid="u2"),
+    )
+    for u in (old, new):
+        ledger.append_utterance(conn, u)
+    b = belief(bid="b1", utterance_id="u1")
+    beliefs.insert_belief(conn, b)
+    assert beliefs.last_support(conn, REL) == {b.id: old.at}
+    beliefs.add_evidence(
+        conn, b.id, Evidence(UtteranceId("u2"), "my studio has never been cleaner")
+    )
+    assert beliefs.last_support(conn, REL) == {b.id: new.at}
+
+
+def test_added_evidence_is_still_checked_by_the_database(
+    conn: sqlite3.Connection, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.types import Evidence, UtteranceId  # noqa: PLC0415
+    from companion.store.sqlite import beliefs  # noqa: PLC0415
+
+    ledger.append_utterance(conn, utterance(text="my studio has never been cleaner", uid="u1"))
+    ledger.append_utterance(conn, utterance(text="something else entirely", uid="u2"))
+    b = belief(bid="b1", utterance_id="u1")
+    beliefs.insert_belief(conn, b)
+    with pytest.raises(sqlite3.DatabaseError):
+        beliefs.add_evidence(conn, b.id, Evidence(UtteranceId("u2"), "not in that message"))

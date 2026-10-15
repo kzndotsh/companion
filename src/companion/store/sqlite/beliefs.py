@@ -137,3 +137,26 @@ def close_belief(conn: sqlite3.Connection, belief_id: BeliefId, at: datetime) ->
         if cur.rowcount != 1:
             msg = f"belief {belief_id} is not a current belief"
             raise ValueError(msg)
+
+
+def last_support(
+    conn: sqlite3.Connection, relationship_id: RelationshipId
+) -> dict[BeliefId, datetime]:
+    """When each current belief was last backed by something the user said."""
+    rows = conn.execute(
+        "SELECT e.belief_id AS id, MAX(u.at) AS at FROM belief_evidence e"
+        " JOIN utterances u ON u.id = e.utterance_id"
+        " JOIN beliefs b ON b.id = e.belief_id"
+        " WHERE b.relationship_id = ? AND b.valid_until IS NULL GROUP BY e.belief_id",
+        (relationship_id,),
+    ).fetchall()
+    return {BeliefId(str(r["id"])): parse_iso(str(r["at"])) for r in rows}
+
+
+def add_evidence(conn: sqlite3.Connection, belief_id: BeliefId, evidence: Evidence) -> None:
+    """Attach more support to a belief. The triggers check the quote, speaker and frame."""
+    with write_tx(conn):
+        conn.execute(
+            "INSERT INTO belief_evidence (belief_id, utterance_id, quote) VALUES (?, ?, ?)",
+            (belief_id, evidence.utterance_id, evidence.quote),
+        )

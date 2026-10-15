@@ -21,6 +21,7 @@ from companion.core.ack import (
 from companion.core.card import Card, build_card, render
 from companion.core.clock import volatile_line
 from companion.core.extractor import Extractor
+from companion.core.freshness import HORIZON_DAYS, age_phrase
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import build_request, request_sha256
@@ -67,6 +68,16 @@ class _CardLog:
             self._one(
                 DecisionKind.WITHHOLD, b, f"sensitivity {b.sensitivity}: known, held for listening"
             )
+        for b in card.older:
+            self._one(DecisionKind.SURFACE, b, "in the card as older, possibly out of date")
+        for b in card.dropped:
+            self._one(DecisionKind.WITHHOLD, b, self._why_dropped(b, card))
+
+    @staticmethod
+    def _why_dropped(b: Belief, card: Card) -> str:
+        last = age_phrase(card.now - card.aged[b.id].last_supported)
+        horizon = HORIZON_DAYS[b.kind]
+        return f"stale: last mentioned {last}, past its {horizon}-day horizon, so left out"
 
     def _one(self, kind: DecisionKind, belief: Belief, reason: str) -> None:
         self.store.append_decision(
@@ -150,7 +161,7 @@ async def _handle_turn(
         UtteranceId(_id()), rel, session, turn, Speaker.USER, text, Frame.REAL, channel, now
     )
     store.append_utterance(user)
-    card = build_card(store.current_beliefs(rel))
+    card = build_card(store.current_beliefs(rel), store.last_support(rel), now)
     clock = volatile_line(now, prior[-1].at if prior else None)
     volatile = (
         f"{clock}\n{render(card, now.astimezone().tzinfo or UTC)}" if not card.empty else clock

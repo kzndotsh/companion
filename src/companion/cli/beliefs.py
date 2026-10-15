@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from pathlib import Path
 
+from companion.core.freshness import age_phrase, status
 from companion.core.types import RelationshipId
 from companion.loops.curate import close_duplicates, retire
 from companion.store.sqlite.store import Store
@@ -12,16 +14,21 @@ from companion.store.sqlite.store import Store
 def run(db: Path, relationship: str) -> str:
     store = Store(db)
     try:
-        found = store.current_beliefs(RelationshipId(relationship))
+        rel = RelationshipId(relationship)
+        found = store.current_beliefs(rel)
+        support = store.last_support(rel)
     finally:
         store.close()
     if not found:
         return "no beliefs yet\n"
+    now = datetime.now(UTC)
     lines: list[str] = []
     for b in sorted(found, key=lambda x: (x.kind, x.valid_from)):
         quote = b.evidence[0].quote
+        last = support.get(b.id, b.valid_from)
+        fresh = f"{status(b.kind, last, now)} {age_phrase(now - last)}, {len(b.evidence)} quote(s)"
         lines.append(
-            f"{b.id[:8]} [{b.kind}/{b.provenance}] conf {b.confidence:.2f} sens {b.sensitivity}"
+            f"{b.id[:8]} [{b.kind}/{b.provenance}] {fresh}  sens {b.sensitivity}"
             f"  {b.claim}"
             f'\n    "{quote}"'
         )

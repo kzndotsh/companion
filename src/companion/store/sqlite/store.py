@@ -12,6 +12,7 @@ from companion.core.types import (
     Belief,
     BeliefId,
     Decision,
+    Evidence,
     Flag,
     RelationshipId,
     TurnId,
@@ -80,3 +81,9 @@ class Store:
 
     def close_belief(self, belief_id: BeliefId, at: datetime) -> None:
         beliefs.close_belief(self._conn, belief_id, at)
+
+    def last_support(self, rel: RelationshipId) -> dict[BeliefId, datetime]:
+        return beliefs.last_support(self._conn, rel)
+
+    def add_evidence(self, belief_id: BeliefId, evidence: Evidence) -> None:
+        beliefs.add_evidence(self._conn, belief_id, evidence)

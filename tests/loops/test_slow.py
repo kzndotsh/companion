@@ -162,3 +162,63 @@ async def test_a_paraphrase_resting_on_the_same_words_is_a_duplicate(store: Stor
     )
     result = await reflect_once(store, ex, REL)
     assert (result.accepted, result.duplicates) == (1, 1)
+
+
+class _Spy(FakeExtractor):
+    def __init__(self, *responses: Json) -> None:
+        super().__init__(*responses)
+        self.prompts: list[str] = []
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        self.prompts.append(user)
+        return await super().extract(system, user, schema)
+
+
+def _restatement(ref: str, quote: str, label: str) -> Json:
+    return {**_belief(ref, quote, "Feels lonely lately.", kind="state"), "confirms": label}  # type: ignore[dict-item]
+
+
+async def test_a_restatement_refreshes_the_belief_with_new_evidence(store: Store) -> None:
+    _say(store, 1, Speaker.USER, "i feel so lonely lately")
+    first = _Spy(
+        {"beliefs": [_belief("m1", "so lonely lately", "Feels lonely lately.", kind="state")]}
+    )
+    await reflect_once(store, first, REL, T0 + timedelta(hours=1))
+    [b] = store.current_beliefs(REL)
+    before = store.last_support(REL)[b.id]
+
+    later = _say(store, 2, Speaker.USER, "honestly still lonely")
+    spy = _Spy({"beliefs": [_restatement("m2", "still lonely", "k1")]})
+    result = await reflect_once(store, spy, REL, T0 + timedelta(days=9))
+
+    assert "[k1] Feels lonely lately." in spy.prompts[0]
+    assert (result.accepted, result.confirmed, result.rejected) == (0, 1, 0)
+    assert [x.id for x in store.current_beliefs(REL)] == [b.id]
+    assert store.last_support(REL)[b.id] == later.at > before
+    assert {e.utterance_id for e in store.current_beliefs(REL)[0].evidence} == {"u1", "u2"}
+
+
+async def test_a_confirmation_pointing_nowhere_is_rejected_and_logged(store: Store) -> None:
+    _say(store, 1, Speaker.USER, "i feel so lonely lately")
+    ex = FakeExtractor({"beliefs": [_restatement("m1", "so lonely", "k5")]})
+    result = await reflect_once(store, ex, REL)
+    assert (result.confirmed, result.rejected) == (0, 1)
+    assert store.current_beliefs(REL) == []
+
+
+async def test_a_fabricated_restatement_quote_never_attaches(store: Store) -> None:
+    _say(store, 1, Speaker.USER, "i feel so lonely lately")
+    await reflect_once(
+        store,
+        FakeExtractor(
+            {"beliefs": [_belief("m1", "so lonely", "Feels lonely lately.", kind="state")]}
+        ),
+        REL,
+    )
+    _say(store, 2, Speaker.USER, "okay going to sleep now")
+    result = await reflect_once(
+        store, FakeExtractor({"beliefs": [_restatement("m2", "still lonely", "k1")]}), REL
+    )
+    assert (result.confirmed, result.rejected) == (0, 1)
+    [b] = store.current_beliefs(REL)
+    assert len(b.evidence) == 1

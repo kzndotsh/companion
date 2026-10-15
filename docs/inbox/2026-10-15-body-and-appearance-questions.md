@@ -26,6 +26,15 @@ was grounded.
   feel good now and cost trust later, if reality or someone else's opinion contradicts it.
 - Honesty is how the companion earns the right to be believed when it matters.
 
+## Evidence so far
+
+The eval runner (`uv run companion eval`, see `evals/README.md`) has a fixture for this turn. The
+current persona failed it 0 of 5. Removing the memory block from the request (`+nocard`) made little
+difference, 1 of 5, because the numbers the user shared are in the recent conversation itself, and
+the model reaches for them as proof. So the cause is not what the companion remembers. It is how
+the model answers when asked for a judgement about the user's body. That points at options A and C
+below and away from "remember less".
+
 ## Ways to consider it
 
 **A. A persona rule.** Add a short rule to the persona: when the user asks about their own body or

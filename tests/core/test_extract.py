@@ -215,6 +215,103 @@ def test_the_prompt_shows_local_weekday_and_date(utterance: Callable[..., Uttera
     from companion.core.beliefs.extract import build_user_prompt, index_window  # noqa: PLC0415
 
     u = utterance(text="i just started working on you last night", uid="u1")
-    prompt = build_user_prompt(index_window([u]), {u.id}, [], timezone(timedelta(hours=-4)))
+    prompt = build_user_prompt(index_window([u]), {u.id}, {}, timezone(timedelta(hours=-4)))
     assert "Thu 2026-10-01 05:01" in prompt
     assert "UTC" in prompt.splitlines()[0]
+
+
+def _known(belief: Callable[..., Belief], **over: object) -> dict[str, Belief]:
+    return {"k1": belief(bid="b1", **over)}
+
+
+def test_known_beliefs_get_short_labels_in_the_prompt(
+    utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.beliefs.extract import (  # noqa: PLC0415
+        build_user_prompt,
+        index_window,
+        known_index,
+    )
+
+    u = utterance(text=TEXT, uid="u1")
+    labelled = known_index([belief(bid="b1", claim="Cleans when anxious")])
+    prompt = build_user_prompt(index_window([u]), {u.id}, labelled)
+    assert "[k1] Cleans when anxious" in prompt
+
+
+def test_parse_reads_confirms() -> None:
+    item: Json = {
+        "ref": "m1",
+        "quote": "q",
+        "claim": "c",
+        "subject": "user",
+        "kind": "state",
+        "provenance": "stated",
+        "confidence": 0.5,
+        "sensitivity": 0,
+        "confirms": " k2 ",
+    }
+    ok, bad = parse({"beliefs": [item]})
+    assert bad == []
+    assert ok[0].confirms == "k2"
+
+
+def test_a_verified_restatement_becomes_a_confirmation(
+    utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.beliefs.extract import Confirmation, to_confirmation  # noqa: PLC0415
+
+    new = utterance(text="still so lonely lately", uid="u9")
+    c = _candidate(ref="m1", quote="so lonely", confirms="k1")
+    got = to_confirmation(c, {"m1": new}, _known(belief))
+    assert isinstance(got, Confirmation)
+    assert got.evidence.utterance_id == "u9"
+    assert got.evidence.quote == "so lonely"
+
+
+def test_a_confirmation_of_an_unknown_label_is_rejected(
+    utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.beliefs.extract import to_confirmation  # noqa: PLC0415
+
+    new = utterance(text="still so lonely", uid="u9")
+    got = to_confirmation(_candidate(quote="so lonely", confirms="k9"), {"m1": new}, _known(belief))
+    assert isinstance(got, Rejection)
+
+
+def test_a_confirmation_needs_a_verbatim_quote(
+    utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.beliefs.extract import to_confirmation  # noqa: PLC0415
+
+    new = utterance(text="still so lonely", uid="u9")
+    got = to_confirmation(
+        _candidate(quote="deeply sad", confirms="k1"), {"m1": new}, _known(belief)
+    )
+    assert isinstance(got, Rejection)
+    assert "verbatim" in got.reason
+
+
+def test_the_same_message_confirming_twice_is_a_skip(
+    utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.beliefs.extract import Skip, to_confirmation  # noqa: PLC0415
+
+    same = utterance(text="my studio has never been cleaner, so lonely", uid="u1")
+    got = to_confirmation(
+        _candidate(quote="so lonely", confirms="k1"), {"m1": same}, _known(belief)
+    )
+    assert isinstance(got, Skip)
+
+
+def test_a_restatement_in_a_different_frame_or_by_the_companion_is_rejected(
+    utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.beliefs.extract import to_confirmation  # noqa: PLC0415
+
+    play = utterance(text="still so lonely", frame=Frame.PLAY, uid="u8")
+    mine = utterance(text="still so lonely", speaker=Speaker.COMPANION, uid="u9")
+    known = _known(belief)
+    for src in (play, mine):
+        got = to_confirmation(_candidate(quote="so lonely", confirms="k1"), {"m1": src}, known)
+        assert isinstance(got, Rejection)

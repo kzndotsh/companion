@@ -16,11 +16,14 @@ from companion.core.beliefs.extract import (
     SCHEMA,
     SYSTEM,
     Rejection,
+    Skip,
     build_user_prompt,
     index_window,
+    known_index,
     normalise,
     parse,
     to_belief,
+    to_confirmation,
 )
 from companion.core.extractor import Extractor
 from companion.core.reflect import ReflectRun
@@ -62,6 +65,7 @@ class ReflectResult:
     accepted: int = 0
     rejected: int = 0
     duplicates: int = 0
+    confirmed: int = 0
     cost_usd: float = 0.0
     upto: tuple[datetime, UtteranceId] | None = None
 
@@ -146,17 +150,37 @@ async def reflect_from(
         return ReflectResult(ran=True, upto=upto)
     index = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
     known = [b for b in store.current_beliefs(rel) if b.id not in options.ignore]
+    labelled = known_index(known)
     local = options.tz or datetime.now().astimezone().tzinfo or UTC
     result = await extractor.extract(
-        SYSTEM, build_user_prompt(index, {u.id for u in targets}, known, local), SCHEMA
+        SYSTEM, build_user_prompt(index, {u.id for u in targets}, labelled, local), SCHEMA
     )
     run = replace(run, model=result.model, cost=result.cost_usd, latency_ms=result.latency_ms)
     candidates, rejections = parse(result.data)
     n_candidates = len(candidates) + len(rejections)
     seen = {normalise(b.claim) for b in known}
-    accepted = duplicates = 0
+    accepted = duplicates = confirmed = 0
     stored: list[Belief] = []
     for c in candidates:
+        if c.confirms:
+            outcome = to_confirmation(c, index, labelled)
+            if isinstance(outcome, Rejection):
+                rejections.append(outcome)
+            elif isinstance(outcome, Skip):
+                duplicates += 1
+            else:
+                store.add_evidence(outcome.belief.id, outcome.evidence)
+                confirmed += 1
+                run.log(
+                    "confirmed: a new restatement keeps the belief fresh",
+                    {
+                        "belief_id": outcome.belief.id,
+                        "claim": outcome.belief.claim,
+                        "quote": outcome.evidence.quote,
+                        "model": result.model,
+                    },
+                )
+            continue
         made = to_belief(c, index, rel, now, _id)
         if isinstance(made, Rejection):
             rejections.append(made)
@@ -180,4 +204,6 @@ async def reflect_from(
     run.finish(
         last, len(batch), candidates=n_candidates, accepted=accepted, rejected=len(rejections)
     )
-    return ReflectResult(True, accepted, len(rejections), duplicates, result.cost_usd, upto)
+    return ReflectResult(
+        True, accepted, len(rejections), duplicates, confirmed, result.cost_usd, upto
+    )

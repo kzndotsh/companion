@@ -30,7 +30,7 @@ packages = ["src/companion"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -m 'not live'"
 asyncio_mode = "auto"
 markers = [
     "live: hits real endpoints; never in CI",
