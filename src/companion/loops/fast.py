@@ -436,8 +436,9 @@ async def _handle_turn(
     )
     _CardLog(store, rel, session, turn, now, {b.id: why(b, view_state) for b in views}).write(card)
     log.info(
-        "turn %s | %dms in=%d cache_read=%d cache_write=%d%s\n  you: %s\n  it:  %s",
+        "turn %s | %s %dms in=%d cache_read=%d cache_write=%d%s\n  you: %s\n  it:  %s",
         turn[:8],
+        reply.model,
         reply.latency_ms,
         reply.input_tokens,
         reply.cache_read_tokens,
