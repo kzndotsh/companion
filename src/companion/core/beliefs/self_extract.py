@@ -28,6 +28,7 @@ from companion.core.types import (
     Belief,
     BeliefId,
     BeliefKind,
+    Frame,
     Json,
     Provenance,
     RelationshipId,
@@ -83,7 +84,7 @@ NOT record:
 - facts about the user, which belong elsewhere;
 - claims about things it could not know (other products it has not seen, people it has not met, \
 the user's body or feelings);
-- anything said inside pretend or play, and jokes;
+- anything in a message marked [play], [story] or [hypothetical], and anything said as a joke;
 - hedged non-views ("hard to know", "maybe").
 Fewer, real views beat many guesses. If there is nothing, return an empty list.
 
@@ -142,15 +143,29 @@ def _view_problem(c: Candidate, source: Utterance | None) -> str | None:
     """Why this candidate must not become a view, or None if it passes the cheap checks."""
     if source is None:
         return "cited message not found and no single message holds the quote"
-    if source.speaker is not Speaker.COMPANION:
-        return "a view must be quoted from the companion's own words"
-    if c.kind not in SELF_KINDS or c.confidence < MIN_CONFIDENCE:
-        return "kind not allowed for a view, or too uncertain"
-    if c.grounding != "own_reasoning":
-        return f"not the companion's own view ({c.grounding or 'unlabelled'})"
-    if _AGREEING_OPENER.search(source.text):
-        return "stated in a message that opens by agreeing with the user"
-    return None
+    checks = (
+        (
+            source.speaker is not Speaker.COMPANION,
+            "a view must be quoted from the companion's own words",
+        ),
+        (
+            c.kind not in SELF_KINDS or c.confidence < MIN_CONFIDENCE,
+            "kind not allowed for a view, or too uncertain",
+        ),
+        (
+            source.frame is not Frame.REAL,
+            "said inside pretend, a story or a what-if, so not a view of its own",
+        ),
+        (
+            c.grounding != "own_reasoning",
+            f"not the companion's own view ({c.grounding or 'unlabelled'})",
+        ),
+        (
+            _AGREEING_OPENER.search(source.text) is not None,
+            "stated in a message that opens by agreeing with the user",
+        ),
+    )
+    return next((message for failed, message in checks if failed), None)
 
 
 def to_view(

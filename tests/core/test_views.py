@@ -294,3 +294,19 @@ def test_the_rescue_refuses_when_two_companion_messages_hold_the_quote(
     two = utterance(text="again, lazy is a preference", speaker=Speaker.COMPANION, uid="c2")
     ok, _ = parse_views({"beliefs": [_item(ref="k1", quote="lazy is a preference")]})
     assert isinstance(to_view(ok[0], {"m1": one, "m2": two}, REL, NOW, lambda: "b1"), Rejection)
+
+
+def test_a_view_said_inside_pretend_is_never_taken(utterance: Callable[..., Utterance]) -> None:
+    from companion.core.beliefs.extract import Rejection  # noqa: PLC0415
+    from companion.core.types import Frame  # noqa: PLC0415
+
+    mine = utterance(
+        text="lazy is a preference for how you spend energy, said the knight",
+        speaker=Speaker.COMPANION,
+        frame=Frame.PLAY,
+        uid="c1",
+    )
+    ok, _ = parse_views({"beliefs": [_item()]})
+    got = to_view(ok[0], {"m1": mine}, REL, NOW, lambda: "b1")
+    assert isinstance(got, Rejection)
+    assert "pretend" in got.reason

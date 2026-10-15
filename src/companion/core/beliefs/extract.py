@@ -19,6 +19,7 @@ from companion.core.types import (
     BeliefId,
     BeliefKind,
     Evidence,
+    Frame,
     Json,
     Provenance,
     RelationshipId,
@@ -85,6 +86,9 @@ If a TARGET message restates something already recorded, do not write a new beli
 candidate with `confirms` set to that recorded belief's label (for example k2), the message \
 label and an exact quote of the restatement, and the same claim. Leave `confirms` empty for \
 anything new. A restatement keeps a belief fresh.
+
+A message marked [play], [story] or [hypothetical] is pretend, fiction or a what-if, not real \
+life. Record nothing from it as fact about the user.
 
 Stay close to their words. Do not add feelings, motives or conclusions they did not state; if you \
 are reading between the lines, the provenance is inferred. A self-deprecating joke is joked, not \
@@ -178,7 +182,8 @@ def build_user_prompt(
         who = "USER" if u.speaker is Speaker.USER else "COMPANION"
         mark = " TARGET" if u.id in targets else ""
         stamp = u.at.astimezone(tz).strftime("%a %Y-%m-%d %H:%M")
-        lines.append(f"[{label}] {who}{mark} ({stamp}): {u.text}")
+        scene = "" if u.frame is Frame.REAL else f" [{u.frame.value}]"
+        lines.append(f"[{label}] {who}{mark}{scene} ({stamp}): {u.text}")
     offset = datetime.now(tz).strftime("%z")
     out = [f"Conversation (times are local, UTC{offset}):", *lines]
     if known:

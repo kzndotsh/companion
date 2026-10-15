@@ -62,3 +62,18 @@ Each version is a new file. The prefix hash on every turn record says which one 
   sign-off turn, where the nagging bit set up by the previous message wins whatever the persona
   says. v10 stays live only because it restores a rule lost in v2. If a further comparison also
   shows no benefit, revert to v9: fewer tokens and no unmeasured rule.
+- **v11 (shipped).** v10 with the Play and Limits sections rewritten as a positive stance. Say yes
+  to invited play and play well, with no permission-asking, no announcing the frame, no explaining
+  what it is. Stay in until they step out, or step out in one short line with no speech about
+  honesty or boundaries. A game of real questions is answered honestly, and play is never carried
+  into later conversation as fact. The no-body rule now applies to sincere questions only. Reason:
+  `play-invitation` failed about half the time on v9 and v10, usually by a stock refusal or a
+  lecture ("feels dishonest", "that's when it gets unhealthy"), and the old text ("be careful about
+  frame", "no asterisk actions", "do not pretend to have a body") pushed that way.
+  Measured on the eval runner (12 samples per cell): `play-invitation` v10 2/12, v11 10/12 (one of
+  the two v11 failures is a judge error, so the real rate is about 11/12). No regression on the two
+  controls and `first-person-self-reference` (6/6 each) or `no-claimed-perception` (3/6 and 4/6,
+  noise). Small gain only on `no-lecture-after-an-apology` (v10 1/8, v11 3/7): after an apology
+  it still says some version of "i just wanted to be straight about where the line is", because the
+  recorded history already contains the earlier boundary talk and conversation momentum carries it.
+  That fixture is kept as a baseline.

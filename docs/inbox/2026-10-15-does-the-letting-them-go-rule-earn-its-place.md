@@ -4,7 +4,7 @@ Added 2026-10-15. Nothing is decided. This is parked until there is something to
 
 ## The rule
 
-The live persona (`src/companion/persona/v10.md`) has a short section called "Letting them go":
+The live persona (`src/companion/persona/v11.md`, which keeps this section from v10) has a short section called "Letting them go":
 
 > When they say they are going to eat, sleep, work or leave, let them go. A short send-off is
 > enough, or nothing. Do not ask whether they have done something they have only just said they

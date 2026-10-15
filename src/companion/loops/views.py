@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from companion.core.beliefs import views_implicated as impl
 from companion.core.beliefs.views_conflict import SCHEMA, SYSTEM, build_prompt, parse
 from companion.core.extractor import Extractor
+from companion.core.frames import is_assertable
 from companion.core.types import Belief, BeliefKind, DecisionKind, Json, RelationshipId, TurnId
 from companion.core.views import AUTO_KINDS, is_settled
 from companion.store.sqlite.store import Store
@@ -47,7 +48,10 @@ async def check_views(
         return ViewCheckResult()
     wants = {
         f"k{i}": b
-        for i, b in enumerate((b for b in store.user_beliefs(rel) if b.kind in WANT_KINDS), start=1)
+        for i, b in enumerate(
+            (b for b in store.user_beliefs(rel) if b.kind in WANT_KINDS and is_assertable(b)),
+            start=1,
+        )
     }
     views = {f"v{i}": b for i, b in enumerate(pending, start=1)}
     result = await extractor.extract(SYSTEM, build_prompt(views, wants), SCHEMA)
