@@ -1,0 +1,251 @@
+"""Turn a window of conversation into candidate beliefs, then gate each one.
+
+The model proposes. Code disposes: a candidate becomes a Belief only if its quote occurs verbatim
+in a user utterance and the result satisfies every Belief invariant. Everything else is a logged
+rejection, never a silent drop.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
+from datetime import datetime
+from typing import cast
+
+from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
+from companion.core.types import (
+    Belief,
+    BeliefId,
+    BeliefKind,
+    Json,
+    Provenance,
+    RelationshipId,
+    Speaker,
+    Subject,
+    Utterance,
+    UtteranceId,
+)
+
+SINGLE_EVIDENCE_CONFIDENCE_CAP = 0.6
+MODEL_PROVENANCE = frozenset(
+    {
+        Provenance.STATED,
+        Provenance.INFERRED,
+        Provenance.JOKED,
+        Provenance.PLAYED,
+        Provenance.HYPOTHETICAL,
+        Provenance.THIRD_PARTY,
+    }
+)
+USER_SUBJECTS = frozenset({Subject.USER, Subject.RELATIONSHIP, Subject.WORLD})
+
+SYSTEM = """You read a chat between a person (USER) and their companion (COMPANION) and record \
+what the USER revealed about themselves. You are a careful note-taker, not a therapist.
+
+Record only things the USER said in the messages marked TARGET. Use the other messages only to \
+understand them. Never record anything the COMPANION said as a fact about the user.
+
+Each message has a label in brackets, such as m3. For each belief give the label of the message \
+and an exact quote: copy a contiguous run of words from that TARGET message, character for \
+character. Do not paraphrase, fix typos or join separate sentences. If you cannot quote it, do \
+not record it.
+
+Kinds: trait (stable about them), state (true now, may change), event (something that happened), \
+preference (likes, dislikes, how they want things), thread (an ongoing situation or project), \
+boundary (something they ask the companion to do or stop doing), tell (a habit or pattern in how \
+they behave), promise (something the companion committed to do).
+
+Provenance: stated (they said it plainly about themselves), inferred (you read it between the \
+lines; use sparingly), joked (said as a joke or tease), played (said inside pretend or roleplay), \
+hypothetical (an if or what-if), third_party (about someone else).
+
+Sensitivity: 0 ordinary, 1 personal, 2 health, mental health, money or relationships, 3 abuse, \
+crisis or legal trouble.
+
+Stay close to their words. Do not add feelings, motives or conclusions they did not state; if you \
+are reading between the lines, the provenance is inferred. Confidence is how sure you are the \
+claim is true and still current, from 0 to 1. Skip small talk, greetings, one-word replies, \
+what they feel like eating or doing this minute, and anything you would not remember a week \
+later. Fewer, true beliefs beat many guesses. If there is nothing worth recording, return an \
+empty list. Write each claim as one short plain sentence about the user, in the third person."""
+
+SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {
+        "beliefs": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "ref": {"type": "string"},
+                    "quote": {"type": "string"},
+                    "claim": {"type": "string"},
+                    "subject": {"type": "string", "enum": ["user", "relationship", "world"]},
+                    "kind": {"type": "string", "enum": [k.value for k in BeliefKind]},
+                    "provenance": {"type": "string", "enum": [p.value for p in MODEL_PROVENANCE]},
+                    "confidence": {"type": "number"},
+                    "sensitivity": {"type": "integer"},
+                },
+                "required": [
+                    "ref",
+                    "quote",
+                    "claim",
+                    "subject",
+                    "kind",
+                    "provenance",
+                    "confidence",
+                    "sensitivity",
+                ],
+            },
+        }
+    },
+    "required": ["beliefs"],
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Candidate:
+    ref: str
+    quote: str
+    claim: str
+    subject: Subject
+    kind: BeliefKind
+    provenance: Provenance
+    confidence: float
+    sensitivity: int
+
+
+@dataclass(frozen=True, slots=True)
+class Rejection:
+    reason: str
+    raw: Json
+
+
+def index_window(window: Sequence[Utterance]) -> dict[str, Utterance]:
+    """Short labels (m1, m2, ...) the model can copy without error, mapped to real utterances."""
+    return {f"m{i}": u for i, u in enumerate(window, start=1)}
+
+
+def build_user_prompt(
+    index: Mapping[str, Utterance], targets: set[UtteranceId], known: Sequence[Belief]
+) -> str:
+    lines: list[str] = []
+    for label, u in index.items():
+        who = "USER" if u.speaker is Speaker.USER else "COMPANION"
+        mark = " TARGET" if u.id in targets else ""
+        lines.append(f"[{label}] {who}{mark} ({u.at:%Y-%m-%d %H:%M}): {u.text}")
+    out = ["Conversation:", *lines]
+    if known:
+        out += ["", "Already recorded (do not repeat these):", *[f"- {b.claim}" for b in known]]
+    return "\n".join(out)
+
+
+def _obj(value: Json) -> dict[str, Json] | None:
+    return cast("dict[str, Json]", value) if isinstance(value, dict) else None
+
+
+def _list(value: Json) -> list[Json] | None:
+    return cast("list[Json]", value) if isinstance(value, list) else None
+
+
+def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
+    """Malformed items become rejections. A malformed whole yields one rejection and no items."""
+    top = _obj(data)
+    items = _list(top.get("beliefs")) if top is not None else None
+    if items is None:
+        return [], [Rejection("response did not match the schema", data)]
+    ok: list[Candidate] = []
+    bad: list[Rejection] = []
+    for item in items:
+        fields = _obj(item)
+        try:
+            if fields is None:
+                msg = "item is not an object"
+                raise ValueError(msg)
+            ok.append(
+                Candidate(
+                    ref=str(fields.get("ref")).strip(),
+                    quote=str(fields.get("quote")),
+                    claim=str(fields.get("claim")).strip(),
+                    subject=Subject(str(fields.get("subject"))),
+                    kind=BeliefKind(str(fields.get("kind"))),
+                    provenance=Provenance(str(fields.get("provenance"))),
+                    confidence=_number(fields.get("confidence")),
+                    sensitivity=int(_number(fields.get("sensitivity"))),
+                )
+            )
+        except ValueError as err:
+            bad.append(Rejection(f"malformed candidate: {err}", item))
+    return ok, bad
+
+
+def _number(value: Json) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        msg = f"expected a number, got {value!r}"
+        raise ValueError(msg)
+    return float(value)
+
+
+def normalise(claim: str) -> str:
+    return re.sub(r"[^a-z0-9 ]+", "", claim.lower()).strip()
+
+
+def _resolve(c: Candidate, index: Mapping[str, Utterance]) -> Utterance | None:
+    """The cited message, or failing that the one user message that contains the quote.
+
+    The quote is verified afterwards either way, so the fallback cannot admit anything the
+    label would not have. It only rescues a good quote that cites a garbled label.
+    """
+    cited = index.get(c.ref)
+    if cited is not None:
+        return cited
+    holders = [u for u in index.values() if u.speaker is Speaker.USER and _holds(u, c.quote)]
+    return holders[0] if len(holders) == 1 else None
+
+
+def _holds(u: Utterance, quote: str) -> bool:
+    try:
+        evidence_from(u, quote)
+    except QuoteNotFoundError:
+        return False
+    return True
+
+
+def to_belief(
+    c: Candidate,
+    index: Mapping[str, Utterance],
+    relationship_id: RelationshipId,
+    now: datetime,
+    new_id: Callable[[], str],
+) -> Belief | Rejection:
+    raw: Json = {"claim": c.claim, "quote": c.quote, "ref": c.ref}
+    source = _resolve(c, index)
+    if source is None:
+        return Rejection("cited message not found and no single message holds the quote", raw)
+    if source.speaker is not Speaker.USER:
+        return Rejection("evidence is the companion's own words", raw)
+    if c.subject not in USER_SUBJECTS or c.provenance not in MODEL_PROVENANCE:
+        return Rejection("subject or provenance not allowed from the model", raw)
+    try:
+        evidence = evidence_from(source, c.quote)
+    except QuoteNotFoundError:
+        return Rejection("quote is not verbatim in the source utterance", raw)
+    try:
+        return Belief(
+            id=BeliefId(new_id()),
+            relationship_id=relationship_id,
+            subject=c.subject,
+            kind=c.kind,
+            claim=c.claim,
+            evidence=(evidence,),
+            provenance=c.provenance,
+            speaker=source.speaker,
+            frame=source.frame,
+            confidence=min(max(c.confidence, 0.0), SINGLE_EVIDENCE_CONFIDENCE_CAP),
+            valid_from=source.at,
+            recorded_at=now,
+            sensitivity=min(max(c.sensitivity, 0), 3),
+        )
+    except ValueError as err:
+        return Rejection(f"violates a belief invariant: {err}", raw)

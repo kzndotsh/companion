@@ -6,9 +6,18 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.prompt.prefix import Prefix
+from companion.core.reflect import ReflectRun
 from companion.core.replay import TurnRecord
-from companion.core.types import Decision, Flag, RelationshipId, TurnId, Utterance
-from companion.store.sqlite import decisions, flags, ledger, turns
+from companion.core.types import (
+    Belief,
+    Decision,
+    Flag,
+    RelationshipId,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
+from companion.store.sqlite import beliefs, decisions, flags, ledger, reflect, turns
 from companion.store.sqlite.db import connect, migrate
 
 
@@ -44,3 +53,20 @@ class Store:
 
     def flags(self, rel: RelationshipId) -> list[Flag]:
         return flags.list_flags(self._conn, rel)
+
+    def utterances_after(
+        self, rel: RelationshipId, cursor: tuple[datetime, UtteranceId] | None, limit: int
+    ) -> list[Utterance]:
+        return ledger.utterances_after(self._conn, rel, cursor, limit)
+
+    def insert_belief(self, b: Belief) -> None:
+        beliefs.insert_belief(self._conn, b)
+
+    def current_beliefs(self, rel: RelationshipId) -> list[Belief]:
+        return beliefs.current_beliefs(self._conn, rel)
+
+    def record_reflect(self, r: ReflectRun) -> None:
+        reflect.record_run(self._conn, r)
+
+    def reflect_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
+        return reflect.cursor(self._conn, rel)

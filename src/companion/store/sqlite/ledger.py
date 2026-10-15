@@ -85,3 +85,25 @@ def user_utterance(
         (relationship_id, turn_id),
     ).fetchone()
     return _utterance(row) if row is not None else None
+
+
+def utterances_after(
+    conn: sqlite3.Connection,
+    relationship_id: RelationshipId,
+    cursor: tuple[datetime, UtteranceId] | None,
+    limit: int,
+) -> list[Utterance]:
+    """Everything after the cursor, oldest first. No cursor means from the beginning."""
+    if cursor is None:
+        rows = conn.execute(
+            "SELECT * FROM utterances WHERE relationship_id = ? ORDER BY at, id LIMIT ?",
+            (relationship_id, limit),
+        ).fetchall()
+    else:
+        at = iso(cursor[0])
+        rows = conn.execute(
+            "SELECT * FROM utterances WHERE relationship_id = ? AND (at > ? OR (at = ? AND id > ?))"
+            " ORDER BY at, id LIMIT ?",
+            (relationship_id, at, at, cursor[1], limit),
+        ).fetchall()
+    return [_utterance(r) for r in rows]
