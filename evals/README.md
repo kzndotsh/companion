@@ -37,3 +37,20 @@ uv run companion eval --variants v9.md,v10.md --samples 3 --cap 0.20 --show
 
 Flag the turn with `/flag`, find its id (`uv run companion flags`), and add a JSON file. Write the
 criterion so that a stranger could grade a reply from it alone.
+
+## Results log
+
+Measured findings, newest last. Each line says what was run so it can be rerun.
+
+- **2026-10-15. The memory block does not measurably hurt following the last message.** Persona
+  v10, 12 samples per cell, with and without the block (`--variants v10.md,v10.md+nocard`).
+  `answers-the-question-just-asked`: 12/12 both. `agree-and-invent`: 6/12 with, 7/12 without.
+  An earlier 5-sample run had shown 3/5 against 5/5 on the first fixture, and that gap was noise.
+  The turn that was flagged in real use was a rare failure (about 1 in 17 across all samples).
+- **2026-10-15. v9 and v10 are not distinguishable** on `agree-and-invent`,
+  `play-invitation` and `signoff-then-time-skip` at 7 samples per cell. See
+  `src/companion/persona/CHANGELOG.md`.
+- **2026-10-15. The judge agreed with a human reading on 23 of 24** judged replies in the first
+  run. This was a spot check by the author, not independent labelling.
+- **Lesson on small samples.** Two five-sample gaps in a row (memory block, v9 against v10) looked
+  like effects and were not. Do not act on fewer than about 12 samples per cell.
