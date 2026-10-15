@@ -41,6 +41,7 @@ def _parser() -> argparse.ArgumentParser:
     rt.add_argument("--reason", required=True)
     _db_args(rt)
 
+    _db_args(sub.add_parser("rebuild", help="restate every belief under the current rules"))
     rf = sub.add_parser("reflect", help="run one slow-loop pass now")
     rf.add_argument("--from-start", action="store_true", help="re-read the whole conversation")
     _db_args(rf)
@@ -74,6 +75,11 @@ def _run(a: argparse.Namespace) -> int:
     return 0
 
 
+def _rebuild(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    return _out(asyncio.run(daemon.rebuild_now(db, rel)))
+
+
 def _flags(a: argparse.Namespace) -> int:
     return _out(flags.run(*_target(a)))
 
@@ -98,6 +104,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "dedupe": _dedupe,
     "retire": _retire,
     "reflect": _reflect,
+    "rebuild": _rebuild,
     "run": _run,
 }
 

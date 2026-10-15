@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import UTC, tzinfo
 
 from companion.core.types import Belief, BeliefKind
 
@@ -41,6 +42,11 @@ class Card:
         return not self.usable and not self.held
 
 
+def _line(b: Belief, tz: tzinfo) -> str:
+    told = b.valid_from.astimezone(tz).strftime("%a %b %d")
+    return f"- {b.claim} (told you {told})"
+
+
 def build_card(beliefs: Sequence[Belief], max_items: int = MAX_ITEMS) -> Card:
     ranked = sorted(beliefs, key=lambda b: (KIND_ORDER[b.kind], -b.valid_from.timestamp()))
     chosen = ranked[:max_items]
@@ -50,19 +56,19 @@ def build_card(beliefs: Sequence[Belief], max_items: int = MAX_ITEMS) -> Card:
     )
 
 
-def render(card: Card) -> str:
+def render(card: Card, tz: tzinfo = UTC) -> str:
     """Plain text for the volatile part of the user message. Empty when there is nothing."""
     parts: list[str] = []
     if card.usable:
         parts.append(
             "[What you remember about them. Use it naturally, never recite it:\n"
-            + "\n".join(f"- {b.claim}" for b in card.usable)
+            + "\n".join(_line(b, tz) for b in card.usable)
             + "]"
         )
     if card.held:
         parts.append(
             "[Also known, but only touch it if they bring it up:\n"
-            + "\n".join(f"- {b.claim}" for b in card.held)
+            + "\n".join(_line(b, tz) for b in card.held)
             + "]"
         )
     return "\n".join(parts)

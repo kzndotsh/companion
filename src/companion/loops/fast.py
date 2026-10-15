@@ -98,7 +98,9 @@ async def _handle_turn(
     store.append_utterance(user)
     card = build_card(store.current_beliefs(rel))
     clock = volatile_line(now, prior[-1].at if prior else None)
-    volatile = f"{clock}\n{render(card)}" if not card.empty else clock
+    volatile = (
+        f"{clock}\n{render(card, now.astimezone().tzinfo or UTC)}" if not card.empty else clock
+    )
     request = build_request(prefix, history, text, volatile)
     store.save_prefix(prefix)
     reply = await talker.reply(request)

@@ -5,12 +5,14 @@ from pathlib import Path
 
 import pytest
 
+from companion.core.extractor import Extraction
 from companion.core.types import (
     Belief,
     BeliefId,
     BeliefKind,
     Evidence,
     Frame,
+    Json,
     Provenance,
     RelationshipId,
     SessionId,
@@ -20,7 +22,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.curate import close_duplicates, retire
+from companion.loops.curate import close_duplicates, rebuild, retire
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -98,3 +100,48 @@ def test_retire_needs_exactly_one_match(store: Store) -> None:
         retire(store, REL, "bx", "x")
     assert retire(store, REL, "bx1", "noise").startswith("closed")
     assert [b.id for b in store.current_beliefs(REL)] == ["bx2"]
+
+
+class _Ex:
+    def __init__(self, *responses: Json, fail_on: int | None = None) -> None:
+        self.responses = list(responses)
+        self.calls = 0
+        self.fail_on = fail_on
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        self.calls += 1
+        if self.fail_on == self.calls:
+            msg = "provider down"
+            raise RuntimeError(msg)
+        return Extraction(data=self.responses.pop(0), model="fake", cost_usd=0.0, latency_ms=1)
+
+
+def _item(claim: str, quote: str) -> dict[str, Json]:
+    return {
+        "ref": "m1",
+        "quote": quote,
+        "claim": claim,
+        "subject": "user",
+        "kind": "preference",
+        "provenance": "stated",
+        "confidence": 0.9,
+        "lasting": True,
+        "sensitivity": 0,
+    }
+
+
+async def test_rebuild_restates_beliefs_and_closes_the_old_ones(store: Store) -> None:
+    store.insert_belief(_belief("old", "User hates it.", "i hate cooking", 1))
+    ex = _Ex({"beliefs": [_item("The user hates cooking, as of 2026-10-15.", "i hate cooking")]})
+    report = await rebuild(store, ex, REL)
+    assert "1 beliefs added, 1 replaced" in report
+    assert [b.claim for b in store.current_beliefs(REL)] == [
+        "The user hates cooking, as of 2026-10-15."
+    ]
+
+
+async def test_a_failed_rebuild_leaves_the_old_beliefs_in_force(store: Store) -> None:
+    store.insert_belief(_belief("old", "User hates it.", "i hate cooking", 1))
+    with pytest.raises(RuntimeError):
+        await rebuild(store, _Ex(fail_on=1), REL)
+    assert [b.id for b in store.current_beliefs(REL)] == ["old"]

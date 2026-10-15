@@ -18,6 +18,7 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.talker import Talker
 from companion.core.types import Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Telegram
+from companion.loops.curate import rebuild
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_from, reflect_once
 from companion.models import anthropic, openrouter
@@ -143,3 +144,13 @@ async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) 
     finally:
         store.close()
     return "\n".join(lines or ["nothing new to read"]) + "\n"
+
+
+async def rebuild_now(db: Path, relationship: str) -> str:
+    load_dotenv(Path(".env"))
+    store = Store(db)
+    try:
+        async with httpx.AsyncClient() as client:
+            return await rebuild(store, extractor(client), RelationshipId(relationship)) + "\n"
+    finally:
+        store.close()

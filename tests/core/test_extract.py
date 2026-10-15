@@ -176,11 +176,45 @@ def test_normalise_ignores_case_and_punctuation() -> None:
 
 
 def test_a_momentary_want_is_rejected(utterance: Callable[..., Utterance]) -> None:
-    got = _make(_candidate(lasting=False), utterance(text=TEXT, uid="u1"))
+    got = _make(
+        _candidate(lasting=False, kind=BeliefKind.PREFERENCE, sensitivity=0),
+        utterance(text=TEXT, uid="u1"),
+    )
     assert isinstance(got, Rejection)
     assert "momentary" in got.reason
+
+
+@pytest.mark.parametrize(
+    ("kind", "sensitivity"),
+    [
+        (BeliefKind.STATE, 2),
+        (BeliefKind.THREAD, 0),
+        (BeliefKind.EVENT, 0),
+        (BeliefKind.TELL, 1),
+        (BeliefKind.TRAIT, 0),
+    ],
+)
+def test_the_momentary_filter_never_drops_these(
+    utterance: Callable[..., Utterance], kind: BeliefKind, sensitivity: int
+) -> None:
+    got = _make(
+        _candidate(lasting=False, kind=kind, sensitivity=sensitivity),
+        utterance(text=TEXT, uid="u1"),
+    )
+    assert isinstance(got, Belief)
 
 
 def test_a_low_confidence_guess_is_rejected(utterance: Callable[..., Utterance]) -> None:
     got = _make(_candidate(confidence=0.3), utterance(text=TEXT, uid="u1"))
     assert isinstance(got, Rejection)
+
+
+def test_the_prompt_shows_local_weekday_and_date(utterance: Callable[..., Utterance]) -> None:
+    from datetime import timedelta, timezone  # noqa: PLC0415
+
+    from companion.core.beliefs.extract import build_user_prompt, index_window  # noqa: PLC0415
+
+    u = utterance(text="i just started working on you last night", uid="u1")
+    prompt = build_user_prompt(index_window([u]), {u.id}, [], timezone(timedelta(hours=-4)))
+    assert "Thu 2026-10-01 05:01" in prompt
+    assert "UTC" in prompt.splitlines()[0]

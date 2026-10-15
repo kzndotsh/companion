@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime
+from datetime import UTC, datetime, tzinfo
 
 from companion.core.beliefs.dedupe import is_duplicate_candidate
 from companion.core.beliefs.extract import (
@@ -26,6 +26,7 @@ from companion.core.extractor import Extractor
 from companion.core.reflect import ReflectRun
 from companion.core.types import (
     Belief,
+    BeliefId,
     Decision,
     DecisionId,
     DecisionKind,
@@ -46,6 +47,13 @@ CONTEXT = 4
 
 def _id() -> str:
     return uuid.uuid4().hex
+
+
+@dataclass(frozen=True, slots=True)
+class ReflectOptions:
+    now: datetime | None = None
+    ignore: frozenset[BeliefId] = frozenset()
+    tz: tzinfo | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,7 +117,7 @@ class _Pass:
 async def reflect_once(
     store: Store, extractor: Extractor, rel: RelationshipId, now: datetime | None = None
 ) -> ReflectResult:
-    return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), now)
+    return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), ReflectOptions(now))
 
 
 async def reflect_from(
@@ -117,10 +125,14 @@ async def reflect_from(
     extractor: Extractor,
     rel: RelationshipId,
     start: tuple[datetime, UtteranceId] | None,
-    now: datetime | None = None,
+    options: ReflectOptions = ReflectOptions(),  # noqa: B008
 ) -> ReflectResult:
-    """One batch after `start`. Pass None to read from the beginning, for a re-read."""
-    now = now or datetime.now(UTC)
+    """One batch after `start`. Pass None to read from the beginning, for a re-read.
+
+    `ignore` names old beliefs that a rebuild is replacing, so they do not count as duplicates
+    of their own restatements. The caller closes them once the whole rebuild succeeds.
+    """
+    now = options.now or datetime.now(UTC)
     batch = store.utterances_after(rel, start, BATCH)
     if not batch:
         return ReflectResult(ran=False)
@@ -133,9 +145,10 @@ async def reflect_from(
         run.finish(last, len(batch))
         return ReflectResult(ran=True, upto=upto)
     index = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
-    known = store.current_beliefs(rel)
+    known = [b for b in store.current_beliefs(rel) if b.id not in options.ignore]
+    local = options.tz or datetime.now().astimezone().tzinfo or UTC
     result = await extractor.extract(
-        SYSTEM, build_user_prompt(index, {u.id for u in targets}, known), SCHEMA
+        SYSTEM, build_user_prompt(index, {u.id for u in targets}, known, local), SCHEMA
     )
     run = replace(run, model=result.model, cost=result.cost_usd, latency_ms=result.latency_ms)
     candidates, rejections = parse(result.data)

@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime, tzinfo
 from typing import cast
 
 from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
@@ -29,6 +29,12 @@ from companion.core.types import (
 
 SINGLE_EVIDENCE_CONFIDENCE_CAP = 0.6
 MIN_CONFIDENCE = 0.4
+# The model's "lasting" call is unreliable (it has marked loneliness and a project start date as
+# momentary). Dropping a real disclosure costs more than keeping a noisy belief, so the filter
+# applies only to low-sensitivity states and preferences, where the noise is, and never to events,
+# threads, habits or anything sensitive.
+MOMENTARY_KINDS = frozenset({BeliefKind.STATE, BeliefKind.PREFERENCE})
+SENSITIVE = 2
 MODEL_PROVENANCE = frozenset(
     {
         Provenance.STATED,
@@ -64,10 +70,20 @@ hypothetical (an if or what-if), third_party (about someone else).
 Sensitivity: 0 ordinary, 1 personal, 2 health, mental health, money or relationships, 3 abuse, \
 crisis or legal trouble.
 
+Write every claim so it stands alone, as if read a year later by someone who never saw this \
+chat. Replace relative times (last night, yesterday, lately, this week, now, currently, the night \
+before) with absolute dates worked out from that message's own timestamp, for example "on \
+2026-10-14" or "as of 2026-10-15" for a state with no clear start. Times are in the user's local \
+timezone. Replace vague references (it, that, this project, the current project, you) with what \
+they refer to. The COMPANION is the AI the user is chatting with. When the user says "you" about \
+a project they are building, they mean this companion system, so say "the companion the user is \
+building".
+
 Stay close to their words. Do not add feelings, motives or conclusions they did not state; if you \
 are reading between the lines, the provenance is inferred. A self-deprecating joke is joked, not \
-stated. Set lasting to false for anything that will not matter in a week: what they want to eat \
-or do this minute, a passing mood, small talk, polite reassurance. Confidence is how sure you \
+stated. Set lasting to false only for momentary things: what they want to eat or do this minute, a \
+passing mood, small talk, polite reassurance. When something started or happened is lasting, and \
+so are habits and coping patterns (a tell); record those. Confidence is how sure you \
 are the claim is true and still current, from 0 to 1. Skip greetings and one-word replies. \
 Fewer, true beliefs beat many guesses. If there is nothing worth recording, return an empty \
 list. Write each claim as one short plain sentence about the user, in the third person."""
@@ -133,14 +149,19 @@ def index_window(window: Sequence[Utterance]) -> dict[str, Utterance]:
 
 
 def build_user_prompt(
-    index: Mapping[str, Utterance], targets: set[UtteranceId], known: Sequence[Belief]
+    index: Mapping[str, Utterance],
+    targets: set[UtteranceId],
+    known: Sequence[Belief],
+    tz: tzinfo = UTC,
 ) -> str:
     lines: list[str] = []
     for label, u in index.items():
         who = "USER" if u.speaker is Speaker.USER else "COMPANION"
         mark = " TARGET" if u.id in targets else ""
-        lines.append(f"[{label}] {who}{mark} ({u.at:%Y-%m-%d %H:%M}): {u.text}")
-    out = ["Conversation:", *lines]
+        stamp = u.at.astimezone(tz).strftime("%a %Y-%m-%d %H:%M")
+        lines.append(f"[{label}] {who}{mark} ({stamp}): {u.text}")
+    offset = datetime.now(tz).strftime("%z")
+    out = [f"Conversation (times are local, UTC{offset}):", *lines]
     if known:
         out += ["", "Already recorded (do not repeat these):", *[f"- {b.claim}" for b in known]]
     return "\n".join(out)
@@ -224,7 +245,7 @@ def _screen(c: Candidate, source: Utterance | None) -> str | None:
         return "cited message not found and no single message holds the quote"
     if source.speaker is not Speaker.USER:
         return "evidence is the companion's own words"
-    if not c.lasting:
+    if not c.lasting and c.kind in MOMENTARY_KINDS and c.sensitivity < SENSITIVE:
         return "momentary, not lasting"
     if c.confidence < MIN_CONFIDENCE:
         return "too uncertain to record"

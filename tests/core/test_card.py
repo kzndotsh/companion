@@ -51,3 +51,8 @@ def test_boundaries_come_first_and_the_card_is_capped(belief: Callable[..., Beli
     card = build_card([*many, boundary], max_items=5)
     assert len(card.usable) == 5
     assert card.usable[0].claim == "Wants fewer questions"
+
+
+def test_each_line_says_when_they_told_you(belief: Callable[..., Belief]) -> None:
+    text = render(build_card([_b(belief, "a", "Likes climbing")]))
+    assert "Likes climbing (told you Thu Oct 01)" in text
