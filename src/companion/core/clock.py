@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-QUIET_GAP = timedelta(minutes=10)
+QUIET_GAP = timedelta(minutes=1)
 
 
 def describe_gap(gap: timedelta) -> str | None:
@@ -13,7 +13,7 @@ def describe_gap(gap: timedelta) -> str | None:
         return None
     minutes = int(gap.total_seconds() // 60)
     if minutes < 60:
-        return f"{minutes} minutes"
+        return f"{minutes} minute{'s' if minutes != 1 else ''}"
     hours = minutes // 60
     if hours < 24:
         return f"{hours} hour{'s' if hours != 1 else ''}"

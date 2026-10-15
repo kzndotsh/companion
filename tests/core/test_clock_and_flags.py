@@ -14,7 +14,8 @@ NOW = datetime(2026, 10, 15, 16, 54, tzinfo=UTC)
 @pytest.mark.parametrize(
     ("gap", "expected"),
     [
-        (timedelta(minutes=9), None),
+        (timedelta(seconds=59), None),
+        (timedelta(minutes=1), "1 minute"),
         (timedelta(minutes=10), "10 minutes"),
         (timedelta(minutes=59), "59 minutes"),
         (timedelta(hours=1), "1 hour"),
@@ -29,7 +30,7 @@ def test_describe_gap(gap: timedelta, expected: str | None) -> None:
 
 
 def test_volatile_line_has_no_gap_when_continuous() -> None:
-    assert "last message" not in volatile_line(NOW, NOW - timedelta(minutes=2))
+    assert "last message" not in volatile_line(NOW, NOW - timedelta(seconds=30))
     assert "last message" not in volatile_line(NOW, None)
 
 

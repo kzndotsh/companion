@@ -111,3 +111,15 @@ Each version is a new file. The prefix hash on every turn record says which one 
   been failing, it moved 0/6 to 2/6, 4/6 and 6/6. Where no streak exists, "Ha" after a joke is
   the model's default and remains. A first version of the opener fixture used the wrong check
   kind and scored inverted; fixed.
+- **v15 (candidate, not live).** v14 plus two things. (1) Comfort: when they are lonely or
+  touch-starved, give warmth in words (a hug, a cuddle), do not send them to friends or open with
+  what you cannot do. (2) Short gaps: the clock line now shows gaps from one minute up (it was ten),
+  and the persona says to tease lightly when a gap is far shorter than what they say they did.
+  Findings behind it, on one real flagged turn (touch-starved, 16 samples each, same v15 and
+  history): Haiku 5.5 passed 0/16, GPT-6 Luna 15/16, Haiku 4.5 11 to 16/16. Removing the persona's
+  "talk to other people" and "full life" lines changed nothing (16/16 still redirected), and
+  neither did trimming the history or the card, so the redirect-and-disclaim reflex belongs to
+  Haiku 5.5, not to the prompt. Short-gap check ("I'm out" two minutes after "going to shower"):
+  notices 8/8 on both models once the persona line exists, 0/8 without it. At a normal 25 minute
+  gap Haiku 5.5 still teased 3/8 times, Luna 0/8. Public fixtures, 8 samples: v15 on 5.5 113/119,
+  v15 on Luna 115/120, v14 on Luna 113/120.
