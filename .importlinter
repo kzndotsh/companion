@@ -11,6 +11,10 @@ forbidden_modules =
     companion.store
     companion.events
     companion.cli
+    companion.models
+    companion.loops
+    companion.io
+    companion.daemon
 
 [importlinter:contract:only-store-owns-sqlite]
 name = only store imports sqlite3
@@ -19,5 +23,9 @@ source_modules =
     companion.core
     companion.events
     companion.cli
+    companion.models
+    companion.loops
+    companion.io
+    companion.daemon
 forbidden_modules = sqlite3
 allow_indirect_imports = True

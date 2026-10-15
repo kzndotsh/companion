@@ -3,7 +3,9 @@ name = "companion"
 version = "0.0.1"
 description = "A companion that is a process, with a versioned model of a person."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "httpx>=0.28.1",
+]
 
 [project.scripts]
 companion = "companion.cli.main:main"
@@ -16,6 +18,7 @@ dev = [
     "basedpyright>=1.20",
     "import-linter>=2",
     "lefthook>=1",
+    "pytest-asyncio>=1.4.0",
 ]
 
 [build-system]
@@ -28,6 +31,7 @@ packages = ["src/companion"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+asyncio_mode = "auto"
 markers = [
     "live: hits real endpoints; never in CI",
 ]

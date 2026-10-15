@@ -25,3 +25,6 @@ check: lint typecheck layers test
 
 replay turn db:
     uv run companion replay {{turn}} --db {{db}}
+
+run:
+    uv run companion run
