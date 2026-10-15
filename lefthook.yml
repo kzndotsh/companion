@@ -1,0 +1,14 @@
+pre-commit:
+  parallel: true
+  commands:
+    ruff-format:
+      glob: "*.py"
+      run: uv run ruff format --check {staged_files}
+    ruff-check:
+      glob: "*.py"
+      run: uv run ruff check {staged_files}
+    types:
+      glob: "*.py"
+      run: uv run basedpyright
+    layers:
+      run: uv run lint-imports

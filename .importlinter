@@ -1,0 +1,22 @@
+# Extend the module lists as packages are created. import-linter errors on modules that don't exist.
+[importlinter]
+root_package = companion
+include_external_packages = True
+
+[importlinter:contract:core-is-pure]
+name = core imports nothing from the shell
+type = forbidden
+source_modules = companion.core
+forbidden_modules =
+    companion.store
+    companion.events
+    companion.cli
+
+[importlinter:contract:only-store-owns-sqlite]
+name = only store imports sqlite3
+type = forbidden
+source_modules =
+    companion.core
+    companion.events
+    companion.cli
+forbidden_modules = sqlite3
