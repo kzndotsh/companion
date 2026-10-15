@@ -13,3 +13,8 @@ Each version is a new file. The prefix hash on every turn record says which one 
   the clock line, and a second block of sensitive ones to hold unless the user raises them.
   Reason: the first transcript showed it ignoring what it had been told, and the card is how
   beliefs reach the reply.
+- **v5.** v4 plus one sentence in "What you remember": the memory block is neutral, "the user" is
+  the person and "the companion" is you. Stored beliefs stay in the neutral voice so any reader
+  (a person, another companion after a model swap, the engine on a non-companion product) can
+  follow them. Reason: a belief read "the user started building the companion" and nothing told
+  the companion it meant itself.
