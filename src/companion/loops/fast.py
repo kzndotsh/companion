@@ -2,13 +2,25 @@
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from companion.core.ack import (
+    REACT_THRESHOLD,
+    Reaction,
+    inputs_hash,
+    is_candidate,
+    reaction_for,
+    render_reason,
+    schema_hash,
+)
 from companion.core.card import Card, build_card, render
 from companion.core.clock import volatile_line
+from companion.core.extractor import Extractor
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import build_request, request_sha256
@@ -28,6 +40,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.ack import judge
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
@@ -77,16 +90,57 @@ class Conversation:
     talker: Talker
     prefix: Prefix
     rel: RelationshipId
+    judge: Extractor | None = None
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
-    ) -> str:
+    ) -> str | Reaction:
         return await _handle_turn(self, session, text, channel, now)
+
+
+@dataclass(frozen=True, slots=True)
+class _Turn:
+    session: SessionId
+    turn: TurnId
+    now: datetime
+    prior: list[Utterance]
+    text: str
+
+
+async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
+    """A reaction if this short message only acknowledges. Logs every judgement it makes."""
+    if c.judge is None or not is_candidate(t.text, t.prior):
+        return None
+    outcome = await judge(c.judge, t.prior, t.text)
+    if outcome is None:
+        return None
+    judged, model, prompt = outcome
+    reaction = reaction_for(judged)
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            render_reason(judged, reaction is not None),
+            t.now,
+            detail={
+                "scorer": model,
+                "schema_hash": schema_hash(),
+                "inputs_hash": inputs_hash(prompt),
+                "scores": {"kind": judged.kind, "confidence": judged.confidence},
+                "threshold": REACT_THRESHOLD,
+            },
+        )
+    )
+    return reaction
 
 
 async def _handle_turn(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
-) -> str:
+) -> str | Reaction:
     store, talker, prefix, rel = c.store, c.talker, c.prefix, c.rel
     now = now or datetime.now(UTC)
     turn = TurnId(_id())
@@ -103,7 +157,21 @@ async def _handle_turn(
     )
     request = build_request(prefix, history, text, volatile)
     store.save_prefix(prefix)
-    reply = await talker.reply(request)
+    # The talker starts at once. The ack judge runs beside it, so a message that needs a reply
+    # pays no extra wait, and a confident acknowledgement cancels the call.
+    talk = asyncio.ensure_future(talker.reply(request))
+    try:
+        reaction = await _ack_reaction(c, _Turn(session, turn, now, prior, text))
+    except BaseException:
+        talk.cancel()
+        raise
+    if reaction is not None:
+        talk.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await talk
+        log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
+        return reaction
+    reply = await talk
     store.record_turn(
         TurnRecord(
             turn, rel, session, prefix.sha256, volatile, request_sha256(request), reply.model, now

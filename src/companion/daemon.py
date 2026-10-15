@@ -12,12 +12,13 @@ from pathlib import Path
 
 import httpx
 
+from companion.core.ack import Reaction
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.talker import Talker
 from companion.core.types import Flag, FlagId, RelationshipId, SessionId
-from companion.io.telegram import React, Telegram
+from companion.io.telegram import Telegram
 from companion.loops.curate import rebuild
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_from, reflect_once
@@ -75,8 +76,8 @@ async def run(data_dir: Path) -> None:
     prefix = build_prefix(persona)
     async with httpx.AsyncClient() as client:
         talker = _talker(client)
-        convo = Conversation(store, talker, prefix, rel)
         reflector = extractor(client)
+        convo = Conversation(store, talker, prefix, rel, judge=reflector)
         pending: list[asyncio.Task[None]] = []
 
         async def reflect_after_idle() -> None:
@@ -102,18 +103,18 @@ async def run(data_dir: Path) -> None:
 
         tg = Telegram(token, user, client)
 
-        async def handle(text: str) -> str:
+        async def handle(text: str) -> str | Reaction:
             reply = await convo.handle(SESSION, text, "telegram")
             schedule_reflect()
             return reply
 
-        async def flag(arg: str) -> str | React:
+        async def flag(arg: str) -> str | Reaction:
             turn = store.latest_turn(rel)
             if turn is None:
                 return "nothing to flag yet"
             kind, note = parse_flag(arg)
             store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
-            return React(FLAG_REACTION)
+            return Reaction(FLAG_REACTION)
 
         logging.getLogger("companion").info("up as %s, prefix %s", rel, prefix.sha256[:12])
         await tg.run(handle, {"flag": flag})

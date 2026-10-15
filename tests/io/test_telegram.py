@@ -5,7 +5,8 @@ from dataclasses import dataclass, field
 
 import httpx
 
-from companion.io.telegram import React, Telegram
+from companion.core.ack import Reaction
+from companion.io.telegram import Telegram
 
 ALLOWED = 42
 
@@ -44,9 +45,9 @@ async def _run(update: dict[str, object], *, reactions_fail: bool = False) -> Se
         seen.handled.append(text)
         return "reply"
 
-    async def flag(arg: str) -> str | React:
+    async def flag(arg: str) -> str | Reaction:
         seen.handled.append(f"FLAG:{arg}")
-        return React("✍")
+        return Reaction("✍")
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         await Telegram("t", ALLOWED, client).handle_update(update, talk, {"flag": flag})

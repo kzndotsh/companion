@@ -5,24 +5,17 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 
 import httpx
 
+from companion.core.ack import Reaction
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
 
 
-@dataclass(frozen=True, slots=True)
-class React:
-    """A command's answer is an emoji reaction on the user's message, not a message."""
-
-    emoji: str
-
-
-Handler = Callable[[str], Awaitable[str]]
-CommandHandler = Callable[[str], Awaitable[str | React]]
+Handler = Callable[[str], Awaitable[str | Reaction]]
+CommandHandler = Callable[[str], Awaitable[str | Reaction]]
 Commands = dict[str, CommandHandler]
 
 
@@ -88,8 +81,8 @@ class Telegram:
             return
         await self._answer(chat_id, message_id, reply)
 
-    async def _answer(self, chat_id: int, message_id: int, reply: str | React) -> None:
-        if isinstance(reply, React):
+    async def _answer(self, chat_id: int, message_id: int, reply: str | Reaction) -> None:
+        if isinstance(reply, Reaction):
             try:
                 await self.react(chat_id, message_id, reply.emoji)
             except httpx.HTTPError:
