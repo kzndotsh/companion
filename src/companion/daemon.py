@@ -46,6 +46,8 @@ def _talker(client: httpx.AsyncClient) -> Talker:
 
 async def run(data_dir: Path) -> None:
     logging.basicConfig(level=logging.INFO)
+    # httpx logs full request URLs at INFO, and Telegram puts the bot token in the URL.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
     load_dotenv(Path(".env"))
     token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
     rel = RelationshipId(f"telegram-{user}")
