@@ -294,10 +294,9 @@ async def _handle_turn(
     parts = [clock]
     if (note := scene_note(in_scene)) is not None:
         parts.append(note)
-    if not card.empty:
-        parts.append(render(card, now.astimezone().tzinfo or UTC))
     volatile = "\n".join(parts)
-    request = build_request(prefix, history, text, volatile)
+    card_text = "" if card.empty else render(card, now.astimezone().tzinfo or UTC)
+    request = build_request(prefix, history, text, volatile, card_text)
     store.save_prefix(prefix)
     # The talker starts at once. The ack judge and the frame judge run beside it, so a message that
     # needs a reply pays no extra wait, and a confident acknowledgement cancels the call.
@@ -331,7 +330,15 @@ async def _handle_turn(
         _log_frame(c, t, outcome, user_frame)
     store.record_turn(
         TurnRecord(
-            turn, rel, session, prefix.sha256, volatile, request_sha256(request), reply.model, now
+            turn,
+            rel,
+            session,
+            prefix.sha256,
+            volatile,
+            request_sha256(request),
+            reply.model,
+            now,
+            card_text,
         )
     )
     _CardLog(store, rel, session, turn, now, {b.id: why(b, view_state) for b in views}).write(card)

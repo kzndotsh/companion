@@ -89,3 +89,9 @@ Each version is a new file. The prefix hash on every turn record says which one 
   ideas, play and opinions, never in claims about the user's life or what the companion can sense.
   Reason: on v11 `inventive-when-asked-to-entertain` passed 0/8 (every reply handed the question
   back) and `riffs-on-a-silly-idea` passed 5/7 with near-identical replies. Not measured yet.
+- **Memory card moved out of the user message (code change, not a persona version).** The card
+  is now a system block after the persona. Reason: on three flagged turns (8 samples each, Haiku
+  5.5) replies mentioned held-back facts 8 of 24 times with the card inside the user message and
+  0 of 24 with it in a system block (judged OK 14/24 vs 18/24; crude regex, one conversation).
+  Known leftover: v12 still says the memory block "follows the clock line". Reword it in the
+  next persona version and measure that with the same three turns.

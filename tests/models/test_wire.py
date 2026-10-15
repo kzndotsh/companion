@@ -27,3 +27,20 @@ def test_history_bytes_do_not_change_when_the_user_turn_changes() -> None:
     one = messages_with_breakpoint(build_request(PREFIX, history, "c", "[x]"))
     two = messages_with_breakpoint(build_request(PREFIX, history, "d", "[y]"))
     assert one[:2] == two[:2]
+
+
+def test_the_card_rides_a_system_block_after_the_cached_persona() -> None:
+    from companion.models.wire import system_blocks  # noqa: PLC0415
+
+    request = build_request(PREFIX, [], "hi", "[clock]", "[What you remember:\n- likes tea]")
+    first, second = system_blocks(request)
+    assert first["text"] == PREFIX.system
+    assert first["cache_control"] == {"type": "ephemeral"}
+    assert second == {"type": "text", "text": "[What you remember:\n- likes tea]"}
+    assert "likes tea" not in request.messages[-1].content
+
+
+def test_no_card_means_one_system_block() -> None:
+    from companion.models.wire import system_blocks  # noqa: PLC0415
+
+    assert len(system_blocks(build_request(PREFIX, [], "hi"))) == 1

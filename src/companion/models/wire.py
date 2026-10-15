@@ -29,6 +29,17 @@ def string(value: object, default: str = "") -> str:
     return value if isinstance(value, str) else default
 
 
+def system_blocks(request: TalkerRequest) -> list[dict[str, object]]:
+    """The persona, cached, then the memory card. The card changes from turn to turn, so it comes
+    last and carries no breakpoint of its own."""
+    blocks: list[dict[str, object]] = [
+        {"type": "text", "text": request.prefix.system, "cache_control": {"type": "ephemeral"}}
+    ]
+    if request.card:
+        blocks.append({"type": "text", "text": request.card})
+    return blocks
+
+
 def messages_with_breakpoint(request: TalkerRequest) -> list[dict[str, object]]:
     """Wire messages, with a cache breakpoint on the last message before the new user turn.
 

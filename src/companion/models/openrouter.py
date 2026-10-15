@@ -11,7 +11,15 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json
-from companion.models.wire import integer, messages_with_breakpoint, number, obj, seq, string
+from companion.models.wire import (
+    integer,
+    messages_with_breakpoint,
+    number,
+    obj,
+    seq,
+    string,
+    system_blocks,
+)
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "anthropic/claude-haiku-5.5"
@@ -34,16 +42,7 @@ class OpenRouterTalker:
         self._max_tokens = max_tokens
 
     def body(self, request: TalkerRequest) -> dict[str, object]:
-        system = {
-            "role": "system",
-            "content": [
-                {
-                    "type": "text",
-                    "text": request.prefix.system,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
-        }
+        system = {"role": "system", "content": system_blocks(request)}
         body: dict[str, object] = {
             "model": self._model,
             "max_tokens": self._max_tokens,

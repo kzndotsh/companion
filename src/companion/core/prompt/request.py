@@ -25,8 +25,12 @@ class Message:
 
 @dataclass(frozen=True, slots=True)
 class TalkerRequest:
+    """`card` is the memory block. It is sent as a system block after the persona, not inside a
+    user message, so the model reads it as background knowledge and not as something just said."""
+
     prefix: Prefix
     messages: tuple[Message, ...]
+    card: str = ""
 
 
 def build_request(
@@ -34,22 +38,27 @@ def build_request(
     history: Sequence[Message],
     user_turn: str,
     volatile: str = "",
+    card: str = "",
 ) -> TalkerRequest:
-    """Volatile context (plates, moment, catalog) rides the final user message.
+    """The clock and scene note ride the final user message; the memory card rides the system.
 
-    The prefix and every earlier message stay byte-identical turn to turn, so the cache holds.
+    The prefix and every earlier message stay byte-identical turn to turn, so the cache holds
+    for as long as the card does not change.
     """
     content = f"{volatile.rstrip()}\n\n{user_turn}" if volatile.strip() else user_turn
-    return TalkerRequest(prefix=prefix, messages=(*history, Message("user", content)))
+    return TalkerRequest(prefix=prefix, messages=(*history, Message("user", content)), card=card)
 
 
 def request_sha256(request: TalkerRequest) -> str:
     """Identity of exactly what was sent: the prefix hash plus every message, in order."""
+    body: dict[str, object] = {
+        "prefix": request.prefix.sha256,
+        "messages": [[m.role, m.content] for m in request.messages],
+    }
+    if request.card:
+        body["card"] = request.card  # absent when empty, so turns recorded before it still match
     payload = json.dumps(
-        {
-            "prefix": request.prefix.sha256,
-            "messages": [[m.role, m.content] for m in request.messages],
-        },
+        body,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,

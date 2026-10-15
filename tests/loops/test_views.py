@@ -261,7 +261,7 @@ async def test_only_approved_views_reach_the_model_and_the_placement_is_logged(
     await Conversation(store, talker, PREFIX, REL).handle(
         SessionId("s"), "hi", "test", T0 + timedelta(days=3)
     )
-    sent = talker.seen[0].messages[-1].content
+    sent = talker.seen[0].card
     assert "[Views of your own that you have expressed and they have approved" in sent
     assert "pineapple on pizza is fine" in sent
     assert "short replies read as more human" not in sent  # settled, but not approved
@@ -401,7 +401,7 @@ async def _carried_turn(store: Store) -> TurnId:
     await Conversation(store, talker, PREFIX, REL).handle(
         SessionId("s"), "hi", "test", T0 + timedelta(days=3)
     )
-    assert "short replies read as more human" in talker.seen[0].messages[-1].content
+    assert "short replies read as more human" in talker.seen[0].card
     turn = store.latest_turn(REL)
     assert turn is not None
     return turn

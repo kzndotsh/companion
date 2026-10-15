@@ -205,7 +205,8 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     talker = FakeTalker("nice")
     convo = Conversation(store, talker, PREFIX, REL)
     await convo.handle(SESSION, "hey", "test", NOW)
-    sent = talker.seen[0].messages[-1].content
+    sent = talker.seen[0].card
+    assert "Likes climbing" not in talker.seen[0].messages[-1].content
     assert "Likes climbing" in sent.split("Also known")[0]
     assert "Has OCD" in sent.split("Also known")[1]
     store.close()
@@ -255,7 +256,7 @@ async def test_stale_beliefs_reach_the_model_as_older_and_every_placement_is_log
     store.insert_belief(believe("hush", "Feels very low", "pretty low", BeliefKind.STATE, 2))
     talker = FakeTalker("hey")
     await Conversation(store, talker, PREFIX, REL).handle(SESSION, "hi", "test", NOW)
-    sent = talker.seen[0].messages[-1].content
+    sent = talker.seen[0].card
     main = sent.split("[Older")[0]
     assert "Likes climbing (mentioned 2 months ago)" in main
     assert "Feels low" not in main

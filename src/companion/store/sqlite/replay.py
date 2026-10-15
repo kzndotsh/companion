@@ -11,7 +11,7 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.replay import ReplayError, TurnRecord, matches_record, rebuild_request
 from companion.core.types import Decision, TurnId
 from companion.store.sqlite import decisions, ledger, turns
-from companion.store.sqlite.db import connect
+from companion.store.sqlite.db import connect, migrate
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +48,7 @@ def replay(conn: sqlite3.Connection, turn_id: TurnId) -> ReplayReport:
 def replay_file(db: Path, turn_id: str) -> ReplayReport:
     conn = connect(db)
     try:
+        migrate(conn)  # a database written before a column existed still replays
         return replay(conn, TurnId(turn_id))
     finally:
         conn.close()

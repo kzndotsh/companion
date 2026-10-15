@@ -66,8 +66,26 @@ def test_volatile_context_rides_the_user_message_and_never_touches_the_prefix() 
 
 def test_the_request_has_no_thinking_knob() -> None:
     fields = set(build_request(build_prefix(PERSONA), [], "hi").__dataclass_fields__)
-    assert fields == {"prefix", "messages"}
+    assert fields == {"prefix", "messages", "card"}
 
 
 def test_canonical_text_ends_with_exactly_one_newline() -> None:
     assert canonical_text("a  \n\n\n") == "a\n"
+
+
+def test_a_request_without_a_card_hashes_as_before_the_card_existed() -> None:
+    import hashlib  # noqa: PLC0415
+    import json  # noqa: PLC0415
+
+    from companion.core.prompt.request import request_sha256  # noqa: PLC0415
+
+    prefix = build_prefix(PERSONA)
+    plain = build_request(prefix, [], "hi")
+    old = json.dumps(
+        {"prefix": prefix.sha256, "messages": [["user", "hi"]]},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    assert request_sha256(plain) == hashlib.sha256(old.encode()).hexdigest()
+    assert request_sha256(plain) != request_sha256(build_request(prefix, [], "hi", card="[m]"))

@@ -74,7 +74,8 @@ def request_for(base: TalkerRequest, variant: Variant) -> TalkerRequest:
     if not variant.keep_card:
         last = messages[-1]
         messages[-1] = Message(last.role, strip_card(last.content))
-    return TalkerRequest(prefix=variant.prefix, messages=tuple(messages))
+    card = base.card if variant.keep_card else ""
+    return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card)
 
 
 @dataclass(frozen=True, slots=True)

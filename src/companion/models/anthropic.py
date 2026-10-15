@@ -9,7 +9,7 @@ import httpx
 
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.models.wire import integer, messages_with_breakpoint, obj, seq, string
+from companion.models.wire import integer, messages_with_breakpoint, obj, seq, string, system_blocks
 
 URL = "https://api.anthropic.com/v1/messages"
 DEFAULT_MODEL = "claude-haiku-5-5"
@@ -32,13 +32,7 @@ class AnthropicTalker:
         body: dict[str, object] = {
             "model": self._model,
             "max_tokens": self._max_tokens,
-            "system": [
-                {
-                    "type": "text",
-                    "text": request.prefix.system,
-                    "cache_control": {"type": "ephemeral"},
-                }
-            ],
+            "system": system_blocks(request),
             "messages": messages_with_breakpoint(request),
         }
         tools = seq(json.loads(request.prefix.tools_json))

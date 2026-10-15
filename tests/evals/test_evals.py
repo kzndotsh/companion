@@ -264,8 +264,9 @@ def test_a_script_becomes_a_request_shaped_like_a_real_one() -> None:
     assert req.prefix is PREFIX
     assert [m.role for m in req.messages] == ["user", "assistant", "user"]
     last = req.messages[-1].content
-    assert last.startswith("[Thursday 12:00]\n[What you remember")
+    assert last.startswith("[Thursday 12:00]")
     assert last.endswith("\nhow are you")
+    assert req.card.startswith("[What you remember")
 
 
 def test_directories_that_do_not_exist_are_skipped_and_ids_must_stay_unique(

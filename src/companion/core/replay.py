@@ -1,8 +1,8 @@
 """Rebuild exactly what the fast loop saw for one turn.
 
 The ledger is append-only, so the history before a turn never changes after the fact. A turn
-record stores the prefix hash, the volatile context and the request hash; everything else is
-derived, and the rebuilt request must hash to the recorded one.
+record stores the prefix hash, the volatile context, the memory card and the request hash;
+everything else is derived, and the rebuilt request must hash to the recorded one.
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ class TurnRecord:
     request_sha256: str
     model: str | None
     at: datetime
+    card: str = ""
 
 
 class ReplayError(ValueError):
@@ -43,7 +44,7 @@ def rebuild_request(
     if prefix.sha256 != record.prefix_sha256:
         msg = "prefix does not match the one recorded for this turn"
         raise ReplayError(msg)
-    return build_request(prefix, to_messages(history), user.text, record.volatile)
+    return build_request(prefix, to_messages(history), user.text, record.volatile, record.card)
 
 
 def matches_record(record: TurnRecord, rebuilt: TalkerRequest) -> bool:

@@ -18,6 +18,8 @@ def render(report: ReplayReport) -> str:
         "messages:",
     ]
     lines += [f"  [{m.role}] {m.content}" for m in report.request.messages]
+    if report.request.card:
+        lines += ["", "memory card (system block):", report.request.card]
     lines += ["", f"decisions ({len(report.decisions)}):"]
     lines += [f"  {d.kind}  {d.reason}" for d in report.decisions]
     return "\n".join(lines) + "\n"

@@ -35,7 +35,7 @@ def record_turn(conn: sqlite3.Connection, r: TurnRecord) -> None:
     with write_tx(conn):
         conn.execute(
             "INSERT INTO turn_requests (turn_id, relationship_id, session_id, prefix_sha256,"
-            " volatile, request_sha256, model, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            " volatile, request_sha256, model, at, card) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 r.turn_id,
                 r.relationship_id,
@@ -45,6 +45,7 @@ def record_turn(conn: sqlite3.Connection, r: TurnRecord) -> None:
                 r.request_sha256,
                 r.model,
                 iso(r.at),
+                r.card,
             ),
         )
 
@@ -63,6 +64,7 @@ def get_turn(conn: sqlite3.Connection, turn_id: TurnId) -> TurnRecord | None:
         request_sha256=str(row["request_sha256"]),
         model=str(model) if model is not None else None,
         at=parse_iso(str(row["at"])),
+        card=str(row["card"]),
     )
 
 

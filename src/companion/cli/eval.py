@@ -53,12 +53,11 @@ def describe(fixtures: list[Fixture]) -> str:
 def script_request(script: Script, prefix: Prefix) -> TalkerRequest:
     """Build the request a fixture script describes, shaped like a real one: a clock line, an
     optional memory block, then the user's words."""
-    content = "[Thursday 12:00]\n" + (f"{script.memory}\n" if script.memory else "")
     messages = [
         Message("user" if role == "user" else "assistant", text) for role, text in script.history
     ]
-    messages.append(Message("user", f"{content}\n{script.user}"))
-    return TalkerRequest(prefix=prefix, messages=tuple(messages))
+    messages.append(Message("user", f"[Thursday 12:00]\n\n{script.user}"))
+    return TalkerRequest(prefix=prefix, messages=tuple(messages), card=script.memory or "")
 
 
 def estimate(fixtures: list[Fixture], variants: int, samples: int) -> float:
