@@ -123,3 +123,11 @@ Each version is a new file. The prefix hash on every turn record says which one 
   notices 8/8 on both models once the persona line exists, 0/8 without it. At a normal 25 minute
   gap Haiku 5.5 still teased 3/8 times, Luna 0/8. Public fixtures, 8 samples: v15 on 5.5 113/119,
   v15 on Luna 115/120, v14 on Luna 113/120.
+- **Repeated-phrase note (code, not a persona version).** `core/habits.py` now also counts word
+  runs (3 to 5 words, starting and ending on a real word) that recur in the last six replies, and
+  tells the next turn to say something different. Counts only, no topic knowledge. Check on the
+  ledger: it fired on 5 of 12 turns of the asterisk-roleplay chat and 0 of 56 turns of the earlier
+  ordinary chat. Effect on replayed turns (GPT-6 Luna, 8 samples on each of 5 turns where it
+  fired): a model judge called the reply a repeat of an earlier gesture or move 27/40 times
+  without the note and 18/40 with it. Exact phrases were not reused either way, so the loop is in
+  the move ("tucks the blanket around you"), not the words; the note helps but does not end it.

@@ -35,7 +35,7 @@ from companion.core.frames import (
 from companion.core.frames import render_reason as frame_reason
 from companion.core.frames import resolve as frame_resolve
 from companion.core.freshness import HORIZON_DAYS, age_phrase
-from companion.core.habits import opener_note
+from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import build_request, request_sha256
@@ -293,7 +293,7 @@ async def _handle_turn(
     card = build_card(assertable, support, now, views=views)
     clock = volatile_line(now, prior[-1].at if prior else None)
     parts = [clock]
-    if (habit := opener_note(prior)) is not None:
+    if (habit := habit_note(prior)) is not None:
         parts.append(habit)
     if (note := scene_note(in_scene)) is not None:
         parts.append(note)

@@ -42,3 +42,50 @@ def test_an_old_streak_outside_the_window_is_forgotten(
 
 def test_nothing_said_yet_gives_no_note() -> None:
     assert opener_note([]) is None
+
+
+def test_a_phrase_reused_across_replies_is_named(utterance: Callable[..., Utterance]) -> None:
+    from companion.core.habits import repeated_phrases  # noqa: PLC0415
+
+    prior = _chat(
+        utterance,
+        [
+            "*keeps the blanket snug around you* there",
+            "okay, the blanket snug around you again",
+            "*wraps the blanket snug around you* cozy",
+            "something else entirely",
+        ],
+    )
+    assert repeated_phrases(prior) == ["blanket snug around"]
+
+
+def test_function_words_alone_are_not_a_habit(utterance: Callable[..., Utterance]) -> None:
+    from companion.core.habits import repeated_phrases  # noqa: PLC0415
+
+    prior = _chat(utterance, ["and then i am here", "so and then i am there", "and then i am ok"])
+    assert repeated_phrases(prior) == []
+
+
+def test_the_phrase_must_come_from_enough_different_replies(
+    utterance: Callable[..., Utterance],
+) -> None:
+    from companion.core.habits import repeated_phrases  # noqa: PLC0415
+
+    prior = _chat(utterance, ["snug blanket around you, snug blanket around you", "different"])
+    assert repeated_phrases(prior) == []
+
+
+def test_the_habit_note_joins_opener_and_phrase_notes(
+    utterance: Callable[..., Utterance],
+) -> None:
+    from companion.core.habits import habit_note  # noqa: PLC0415
+
+    prior = _chat(
+        utterance,
+        ["Ha, soft cozy burrito now", "Ha, soft cozy burrito time", "Ha, soft cozy burrito"],
+    )
+    note = habit_note(prior)
+    assert note is not None
+    assert 'began with "ha"' in note
+    assert "soft cozy burrito" in note
+    assert habit_note(_chat(utterance, ["one", "two"])) is None
