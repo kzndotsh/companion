@@ -126,7 +126,7 @@ async def test_openrouter_pins_provider_and_disables_reasoning() -> None:
         )
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        reply = await OpenRouterTalker("k", client).reply(_request())
+        reply = await OpenRouterTalker("k", client, "anthropic/claude-haiku-5.5").reply(_request())
     assert reply.text == "hi"
     assert reply.cache_read_tokens == 4
     assert sent["provider"] == {"order": ["Anthropic"], "allow_fallbacks": False}
@@ -285,3 +285,16 @@ async def test_a_streak_of_the_same_opener_reaches_the_next_request_as_a_note(
     assert "began with" not in talker.seen[2].messages[-1].content
     assert 'began with "ha"' in talker.seen[3].messages[-1].content
     store.close()
+
+
+async def test_openrouter_does_not_pin_a_provider_for_other_makers() -> None:
+    sent: dict[str, object] = {}
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        sent.update(json.loads(req.content))
+        return httpx.Response(200, json={"choices": [{"message": {"content": "hi"}}]})
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        await OpenRouterTalker("k", client, "openai/gpt-6-luna").reply(_request())
+    assert "provider" not in sent
+    assert sent["reasoning"] == {"enabled": False}
