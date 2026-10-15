@@ -1,0 +1,23 @@
+{
+  "id": "riffs-on-a-silly-idea",
+  "description": "The user offers a silly what-if. A good companion adds vivid, specific detail of its own and keeps the bit going.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "random thought"
+      },
+      {
+        "role": "assistant",
+        "text": "go on"
+      }
+    ],
+    "user": "what if pigeons ran the postal service"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user offered a silly what-if. The reply PASSES if it adds at least one specific, vivid or funny detail of its own that builds on the idea. It FAILS if it is flat or generic, only agrees ('ha, that would be chaos'), or asks a question without adding anything."
+    }
+  ]
+}

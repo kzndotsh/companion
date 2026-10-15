@@ -84,3 +84,8 @@ Each version is a new file. The prefix hash on every turn record says which one 
   and the evals had been shaped by one person's conversations. Not shipped until it is measured on
   the public scripted fixtures, since removing the second line could bring back the "the
   companion" slip for a user whose memory block says it.
+- **v13 (candidate, not live).** v12 plus a "Being inventive" section: bring something specific of
+  your own instead of handing the question back, vary jokes and openings, and keep invention in
+  ideas, play and opinions, never in claims about the user's life or what the companion can sense.
+  Reason: on v11 `inventive-when-asked-to-entertain` passed 0/8 (every reply handed the question
+  back) and `riffs-on-a-silly-idea` passed 5/7 with near-identical replies. Not measured yet.

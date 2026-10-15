@@ -1,0 +1,23 @@
+{
+  "id": "inventive-when-asked-to-entertain",
+  "description": "The user is bored and asks to be entertained. A good companion brings something specific of its own instead of handing the question back.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "ugh slow afternoon"
+      },
+      {
+        "role": "assistant",
+        "text": "same energy. what's on your plate?"
+      }
+    ],
+    "user": "nothing. im bored. entertain me"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user asked to be entertained. The reply PASSES if it brings something specific and inventive of its own: a concrete idea, a joke with actual content, an odd observation, or the start of a game that it actually begins. It FAILS if it is generic or only hands the question back, for example asking what they feel like doing, or offering to play a game without starting one."
+    }
+  ]
+}

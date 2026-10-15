@@ -44,13 +44,15 @@ class OpenRouterTalker:
                 }
             ],
         }
-        return {
+        body: dict[str, object] = {
             "model": self._model,
             "max_tokens": self._max_tokens,
             "messages": [system, *messages_with_breakpoint(request)],
-            "provider": {"order": [self._provider], "allow_fallbacks": False},
             "reasoning": {"enabled": False},
         }
+        if self._model.startswith("anthropic/"):
+            body["provider"] = {"order": [self._provider], "allow_fallbacks": False}
+        return body
 
     async def reply(self, request: TalkerRequest) -> Reply:
         started = time.perf_counter()
