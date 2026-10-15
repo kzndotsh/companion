@@ -141,3 +141,14 @@ Each version is a new file. The prefix hash on every turn record says which one 
   repeat of its earlier shape, name or emoji from 45 to 33 of 48. The scene's own format (action in
   asterisks then a quoted line) is still named and still repeated, since the user writes that way
   too. Replaces nothing: the cheap word-run note in `core/habits.py` still runs.
+- **v16 (shipped).** v15 plus a plain-text rule: messages are shown as plain text, so no markdown,
+  no double asterisks or bold, no bullet lines even when giving several suggestions; single
+  asterisks around an action stay fine in a scene the user started. Reason: a flag ("random **?")
+  where the companion bolded a list of names and Telegram showed the raw asterisks. Replaying
+  that real turn (GPT-6 Luna, 16 samples): v15 used `**` 16/16, v16 3/16. The public fixture
+  `plain-text-when-listing-ideas` did not reproduce the failure (v15 7/8), because it needs a long
+  history, so the real turn is kept as a local fixture. Public fixtures, 8 samples: v15 120/128,
+  v16 123/128.
+- **Habit check fix (code).** The move-level check sometimes listed non-habits ("no repeated pet
+  names", "not a consistent pattern"). The model must now give, for each habit, how many of the
+  replies it appears in, and code drops any seen in fewer than three.

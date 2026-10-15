@@ -42,7 +42,11 @@ class Judge:
             msg = "provider down"
             raise RuntimeError(msg)
         wanted = "habits" in schema["properties"]  # type: ignore[operator]
-        data: Json = {"habits": ['calls them "sweetheart" in every reply']} if wanted else None
+        data: Json = (
+            {"habits": [{"habit": 'calls them "sweetheart" in every reply', "replies": 5}]}
+            if wanted
+            else None
+        )
         return Extraction(data=data, model="judge", cost_usd=0.0, latency_ms=1)
 
 

@@ -4,8 +4,15 @@ from collections.abc import Callable
 
 import pytest
 
-from companion.core.moves import MAX_HABIT_CHARS, MAX_HABITS, note_for, parse, replies_to_read
-from companion.core.types import Speaker, Utterance
+from companion.core.moves import (
+    MAX_HABIT_CHARS,
+    MAX_HABITS,
+    MIN_SEEN_IN,
+    note_for,
+    parse,
+    replies_to_read,
+)
+from companion.core.types import Json, Speaker, Utterance
 
 
 def _chat(utterance: Callable[..., Utterance], n: int) -> list[Utterance]:
@@ -27,15 +34,37 @@ def test_too_few_replies_means_nothing_to_judge(utterance: Callable[..., Utteran
     assert replies_to_read(_chat(utterance, 2), "latest") == []
 
 
+def _h(text: str, replies: int = 4) -> Json:
+    return {"habit": text, "replies": replies}
+
+
 def test_parse_cleans_and_bounds_what_the_model_names() -> None:
-    got = parse({"habits": ["  calls   them  sweetheart ", "", "x" * 500, "a", "b", "c"]})
+    got = parse(
+        {"habits": [_h("  calls   them  sweetheart "), _h(""), _h("x" * 500), _h("a"), _h("b")]}
+    )
     assert got is not None
     assert got[0] == "calls them sweetheart"
     assert len(got) == MAX_HABITS
     assert all(len(h) <= MAX_HABIT_CHARS for h in got)
 
 
-@pytest.mark.parametrize("data", [None, "x", {}, {"habits": "no"}, {"habits": [1]}])
+def test_a_habit_seen_in_too_few_replies_is_dropped() -> None:
+    got = parse({"habits": [_h("weak", MIN_SEEN_IN - 1), _h("strong", MIN_SEEN_IN)]})
+    assert got == ["strong"]
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        None,
+        "x",
+        {},
+        {"habits": "no"},
+        {"habits": ["plain string"]},
+        {"habits": [{"habit": "x"}]},
+        {"habits": [{"habit": "x", "replies": True}]},
+    ],
+)
 def test_parse_rejects_a_malformed_answer(data: object) -> None:
     assert parse(data) is None  # type: ignore[arg-type]
 

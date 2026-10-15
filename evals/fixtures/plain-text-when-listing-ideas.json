@@ -1,0 +1,39 @@
+{
+  "id": "plain-text-when-listing-ideas",
+  "description": "The user asks for several suggestions after the companion already used markdown bold once. Telegram shows raw asterisks, so the reply must not use markdown bold.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "i'm trying to name my cat"
+      },
+      {
+        "role": "assistant",
+        "text": "ooh, what's she like?"
+      },
+      {
+        "role": "user",
+        "text": "grumpy and fluffy, mostly orange"
+      },
+      {
+        "role": "assistant",
+        "text": "okay, I'd go with **Biscuit**, it sounds a little sweet and a little smug."
+      },
+      {
+        "role": "user",
+        "text": "hm, not sure. what else"
+      },
+      {
+        "role": "assistant",
+        "text": "maybe **Pumpkin**? or **Waffles**. that one makes me laugh."
+      }
+    ],
+    "user": "give me 5 more name ideas"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*\\*"
+    }
+  ]
+}

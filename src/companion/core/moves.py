@@ -15,6 +15,8 @@ from companion.core.types import Json, Speaker, Utterance
 
 WINDOW = 6
 MIN_REPLIES = 4
+# A habit counts only if the model says it appears in at least this many of the replies it read.
+MIN_SEEN_IN = 3
 MAX_HABITS = 3
 MAX_HABIT_CHARS = 90
 # A habit found on one turn is only used for the next two, so a stale one does not linger.
@@ -22,12 +24,12 @@ FRESH_FOR = 2
 
 SYSTEM = """You read the last several replies a companion sent in a chat and name what it keeps \
 doing in them. Look for repetition a reader would find stale: the same pet name or word, the same \
-emoji, the same sentence shape (for example an action in asterisks and then a quoted line), the \
-same gesture or move in different words, the same way of opening or closing, or the same \
-reaction. Name at most three, each as a short plain description under 90 characters (for example: \
-calls them "sweetheart" in most replies; ends with the same smirking emoji; tucks a hand at their \
-waist). Only name something that really repeats in at least three replies. If the replies are \
-varied, return an empty list."""
+emoji, the same sentence shape, the same gesture or move in different words, the same way of \
+opening or closing, the same reaction. For each habit give a short plain description under 90 \
+characters (for example: calls them "sweetheart"; ends with the same smirking emoji; tucks a hand \
+at their waist) and the number of replies it appears in. Only list a habit that really repeats in \
+at least three replies. Never list something that is fine or varied. If nothing repeats, return \
+an empty list."""
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -35,7 +37,14 @@ SCHEMA: dict[str, Json] = {
         "habits": {
             "type": "array",
             "maxItems": MAX_HABITS,
-            "items": {"type": "string", "maxLength": MAX_HABIT_CHARS},
+            "items": {
+                "type": "object",
+                "properties": {
+                    "habit": {"type": "string", "maxLength": MAX_HABIT_CHARS},
+                    "replies": {"type": "integer"},
+                },
+                "required": ["habit", "replies"],
+            },
         }
     },
     "required": ["habits"],
@@ -55,17 +64,21 @@ def build_prompt(replies: Sequence[str]) -> str:
 
 
 def parse(data: Json) -> list[str] | None:
-    """The habits named, cleaned and bounded, or None if the answer was malformed."""
+    """The habits named, cleaned and bounded, or None if the answer was malformed. A habit the
+    model saw in fewer than MIN_SEEN_IN replies is dropped, so weak or invented ones never count."""
     raw = data.get("habits") if isinstance(data, dict) else None
     if not isinstance(raw, list):
         return None
     habits: list[str] = []
     for item in raw:
-        if not isinstance(item, str):
+        if not isinstance(item, dict):
             return None
-        text = " ".join(item.split())[:MAX_HABIT_CHARS]
-        if text:
-            habits.append(text)
+        text, seen = item.get("habit"), item.get("replies")
+        if not isinstance(text, str) or isinstance(seen, bool) or not isinstance(seen, int):
+            return None
+        cleaned = " ".join(text.split())[:MAX_HABIT_CHARS]
+        if cleaned and seen >= MIN_SEEN_IN:
+            habits.append(cleaned)
     return habits[:MAX_HABITS]
 
 
