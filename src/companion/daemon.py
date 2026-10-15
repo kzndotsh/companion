@@ -12,7 +12,7 @@ from pathlib import Path
 
 import httpx
 
-from companion.core.ack import Reaction
+from companion.core.ack import ReactAndReply, Reaction
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
@@ -112,12 +112,12 @@ async def run(data_dir: Path) -> None:
 
         tg = Telegram(token, user, client)
 
-        async def handle(text: str) -> str | Reaction:
+        async def handle(text: str) -> str | Reaction | ReactAndReply:
             reply = await convo.handle(SESSION, text, "telegram")
             schedule_reflect()
             return reply
 
-        async def flag(arg: str) -> str | Reaction:
+        async def flag(arg: str) -> str | Reaction | ReactAndReply:
             turn = store.latest_turn(rel)
             if turn is None:
                 return "nothing to flag yet"
@@ -128,7 +128,7 @@ async def run(data_dir: Path) -> None:
                 logging.getLogger("companion").info("flag retired a view: %s", claim)
             return Reaction(FLAG_REACTION)
 
-        async def favorite(arg: str) -> str | Reaction:
+        async def favorite(arg: str) -> str | Reaction | ReactAndReply:
             turn = store.latest_turn(rel)
             if turn is None:
                 return "nothing to favorite yet"

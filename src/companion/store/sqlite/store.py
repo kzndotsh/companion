@@ -108,6 +108,9 @@ class Store:
     def reflect_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
         return reflect.cursor(self._conn, rel)
 
+    def turns_since_reaction(self, rel: RelationshipId) -> int | None:
+        return decisions.turns_since_reaction(self._conn, rel)
+
     def decisions_for_turn(self, rel: RelationshipId, turn: TurnId) -> list[Decision]:
         return decisions.decisions_for_turn(self._conn, rel, turn)
 

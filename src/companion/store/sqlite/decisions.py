@@ -74,6 +74,22 @@ def decisions_for_turn(
     return [_decision(r) for r in rows]
 
 
+def turns_since_reaction(conn: sqlite3.Connection, relationship_id: RelationshipId) -> int | None:
+    """How many of the user's messages have come since the last reaction, or None if never."""
+    row = conn.execute(
+        "SELECT at FROM decisions WHERE relationship_id = ? AND reason LIKE 'reacted %'"
+        " ORDER BY at DESC, id DESC LIMIT 1",
+        (relationship_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    count = conn.execute(
+        "SELECT COUNT(*) FROM utterances WHERE relationship_id = ? AND speaker = 'user' AND at > ?",
+        (relationship_id, str(row["at"])),
+    ).fetchone()
+    return int(count[0])
+
+
 def decisions_for_belief(conn: sqlite3.Connection, belief_id: BeliefId) -> list[Decision]:
     """Everything that was ever done with this belief: the surfacing history."""
     rows = conn.execute(

@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 
 import httpx
 
-from companion.core.ack import Reaction
+from companion.core.ack import ReactAndReply, Reaction
 from companion.io.telegram import Telegram
 
 ALLOWED = 42
@@ -92,3 +92,41 @@ async def test_other_users_are_ignored() -> None:
     seen = await _run(_update("hello", user=999))
     assert seen.handled == []
     assert seen.methods == []
+
+
+async def _both(*, reactions_fail: bool = False) -> Seen:
+    seen = Seen()
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        method = str(req.url).rsplit("/", 1)[-1]
+        body = json.loads(req.content)
+        seen.methods.append(method)
+        if method == "sendMessage":
+            seen.sent.append(body["text"])
+        if method == "setMessageReaction":
+            if reactions_fail:
+                return httpx.Response(400, json={"ok": False})
+            seen.reactions.append(body)
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> ReactAndReply:
+        seen.handled.append(text)
+        return ReactAndReply(Reaction("😁"), "ha, fair")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        await Telegram("t", ALLOWED, client).handle_update(_update("a joke"), talk, {})
+    return seen
+
+
+async def test_a_reaction_and_a_reply_are_both_sent_reaction_first() -> None:
+    seen = await _both()
+    assert seen.sent == ["ha, fair"]
+    assert seen.reactions == [
+        {"chat_id": 7, "message_id": 99, "reaction": [{"type": "emoji", "emoji": "😁"}]}
+    ]
+    assert seen.methods.index("setMessageReaction") < seen.methods.index("sendMessage")
+
+
+async def test_a_refused_reaction_still_sends_the_reply() -> None:
+    seen = await _both(reactions_fail=True)
+    assert seen.sent == ["ha, fair"]

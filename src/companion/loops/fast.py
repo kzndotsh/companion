@@ -8,9 +8,11 @@ import logging
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from companion.core.ack import (
     REACT_THRESHOLD,
+    ReactAndReply,
     Reaction,
     inputs_hash,
     is_candidate,
@@ -38,7 +40,9 @@ from companion.core.freshness import HORIZON_DAYS, age_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.prefix import Prefix
-from companion.core.prompt.request import build_request, request_sha256
+from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
+from companion.core.react import Judgement as ReactJudgement
+from companion.core.react import decide as decide_reaction
 from companion.core.replay import TurnRecord
 from companion.core.talker import Reply, Talker
 from companion.core.types import (
@@ -62,6 +66,7 @@ from companion.loops.ack import judge
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
+from companion.loops.react import judge_reaction
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
@@ -128,7 +133,7 @@ class Conversation:
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
-    ) -> str | Reaction:
+    ) -> str | Reaction | ReactAndReply:
         return await _handle_turn(self, session, text, channel, now)
 
 
@@ -172,6 +177,54 @@ async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
     return reaction
 
 
+def _react_alongside(
+    c: Conversation, t: _Turn, felt: tuple[ReactJudgement, str, str] | None
+) -> Reaction | None:
+    """A reaction to send with the reply, if the message calls for one. Logs the judgement."""
+    if felt is None:
+        return None
+    judged, model, prompt = felt
+    decision = decide_reaction(judged, c.store.turns_since_reaction(c.rel))
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            decision.reason,
+            t.now,
+            detail={
+                "scorer": model,
+                "inputs_hash": inputs_hash(prompt),
+                "scores": {"tone": judged.tone, "confidence": judged.confidence},
+            },
+        )
+    )
+    return decision.reaction
+
+
+def _start_beside(
+    c: Conversation, t: _Turn, request: TalkerRequest
+) -> tuple[
+    asyncio.Future[Reply],
+    asyncio.Future[tuple[Judgement, str, str] | None] | None,
+    asyncio.Future[tuple[ReactJudgement, str, str] | None] | None,
+]:
+    """Start the reply, and beside it the frame judge and the reaction judge, so neither adds a
+    wait. A confident acknowledgement cancels all of them."""
+    talk = asyncio.ensure_future(c.talker.reply(request))
+    if c.judge is None:
+        return talk, None, None
+    framing = (
+        asyncio.ensure_future(judge_frame(c.judge, t.prior, t.text))
+        if needs_judge(t.text, t.prior)
+        else None
+    )
+    return talk, framing, asyncio.ensure_future(judge_reaction(c.judge, t.prior, t.text))
+
+
 def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> None:
     c.store.append_utterance(
         Utterance(
@@ -188,17 +241,14 @@ def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> None:
     )
 
 
-async def _stop(
-    talk: asyncio.Future[Reply], framing: asyncio.Future[tuple[Judgement, str, str] | None] | None
-) -> None:
+async def _stop(talk: asyncio.Future[Reply], *beside: asyncio.Future[Any] | None) -> None:
     """Cancel whatever is still running beside the reply."""
-    talk.cancel()
-    with contextlib.suppress(asyncio.CancelledError, Exception):
-        await talk
-    if framing is not None:
-        framing.cancel()
+    for task in (talk, *beside):
+        if task is None:
+            continue
+        task.cancel()
         with contextlib.suppress(asyncio.CancelledError, Exception):
-            await framing
+            await task
 
 
 def _log_frame(
@@ -278,8 +328,8 @@ def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, c
 
 async def _handle_turn(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
-) -> str | Reaction:
-    store, talker, prefix, rel = c.store, c.talker, c.prefix, c.rel
+) -> str | Reaction | ReactAndReply:
+    store, prefix, rel = c.store, c.prefix, c.rel
     now = now or datetime.now(UTC)
     turn = TurnId(_id())
     prior = store.history_before(rel, now, HISTORY_LIMIT)
@@ -301,30 +351,24 @@ async def _handle_turn(
     card_text = "" if card.empty else render(card, now.astimezone().tzinfo or UTC)
     request = build_request(prefix, history, text, volatile, card_text)
     store.save_prefix(prefix)
-    # The talker starts at once. The ack judge and the frame judge run beside it, so a message that
-    # needs a reply pays no extra wait, and a confident acknowledgement cancels the call.
-    talk = asyncio.ensure_future(talker.reply(request))
-    framing = (
-        asyncio.ensure_future(judge_frame(c.judge, prior, text))
-        if c.judge is not None and needs_judge(text, prior)
-        else None
-    )
+    talk, framing, feeling = _start_beside(c, t, request)
     try:
         reaction = await _ack_reaction(c, t)
     except BaseException:
-        await _stop(talk, framing)
+        await _stop(talk, framing, feeling)
         _store_user(c, t, channel, Frame.REAL)
         raise
     if reaction is not None:
-        await _stop(talk, framing)
+        await _stop(talk, framing, feeling)
         _store_user(c, t, channel, in_scene)
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
     try:
         reply = await talk
         outcome = await framing if framing is not None else None
+        felt = await feeling if feeling is not None else None
     except BaseException:
-        await _stop(talk, framing)
+        await _stop(talk, framing, feeling)
         _store_user(c, t, channel, Frame.REAL)
         raise
     user_frame = frame_resolve(outcome[0] if outcome else None, fallback=in_scene)
@@ -356,4 +400,6 @@ async def _handle_turn(
         text,
         reply.text or "(no reply)",
     )
-    return _persist_reply(c, t, reply, user_frame, channel)
+    sent = _persist_reply(c, t, reply, user_frame, channel)
+    reacted = _react_alongside(c, t, felt)
+    return ReactAndReply(reacted, sent) if reacted is not None else sent

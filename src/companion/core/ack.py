@@ -33,6 +33,14 @@ class Reaction:
 
 
 @dataclass(frozen=True, slots=True)
+class ReactAndReply:
+    """An emoji reaction on the user's message, then a normal reply."""
+
+    reaction: Reaction
+    text: str
+
+
+@dataclass(frozen=True, slots=True)
 class Judgement:
     kind: str
     confidence: float

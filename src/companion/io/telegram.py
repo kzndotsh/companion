@@ -8,14 +8,14 @@ from collections.abc import Awaitable, Callable
 
 import httpx
 
-from companion.core.ack import Reaction
+from companion.core.ack import ReactAndReply, Reaction
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
 
 
-Handler = Callable[[str], Awaitable[str | Reaction]]
-CommandHandler = Callable[[str], Awaitable[str | Reaction]]
+Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
+CommandHandler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
 
 
@@ -81,8 +81,17 @@ class Telegram:
             return
         await self._answer(chat_id, message_id, reply)
 
-    async def _answer(self, chat_id: int, message_id: int, reply: str | Reaction) -> None:
-        if isinstance(reply, Reaction):
+    async def _answer(
+        self, chat_id: int, message_id: int, reply: str | Reaction | ReactAndReply
+    ) -> None:
+        if isinstance(reply, ReactAndReply):
+            try:
+                await self.react(chat_id, message_id, reply.reaction.emoji)
+            except httpx.HTTPError:
+                log.warning("reaction refused; sending the reply without it")
+            if reply.text:
+                await self.send(chat_id, reply.text)
+        elif isinstance(reply, Reaction):
             try:
                 await self.react(chat_id, message_id, reply.emoji)
             except httpx.HTTPError:

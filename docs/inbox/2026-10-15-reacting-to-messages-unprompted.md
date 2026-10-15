@@ -1,6 +1,7 @@
 # Reacting to a message with an emoji, beyond acknowledgements
 
-Added 2026-10-15. Nothing is decided. This is an idea to look at later, not a task.
+Added 2026-10-15. Partly built the same day: the first kind below (a reaction alongside a reply) now
+exists, behind a small judge, a confidence bar and a cooldown. The rest is still an idea.
 
 ## What exists now
 

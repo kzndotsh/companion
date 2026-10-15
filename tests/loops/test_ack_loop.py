@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.ack import REACT_THRESHOLD, Reaction
+from companion.core.ack import REACT_THRESHOLD, ReactAndReply, Reaction
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
@@ -46,13 +46,16 @@ class Judge:
         self.calls = 0
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
-        self.calls += 1
+        asking_for_ack = "kind" in schema["properties"]  # type: ignore[operator]
+        if asking_for_ack:
+            self.calls += 1  # the reaction judge shares this extractor and is not counted
         if self.delay:
             await asyncio.sleep(self.delay)
         if self.fail:
             msg = "provider down"
             raise RuntimeError(msg)
-        return Extraction(data=self.data, model="judge-model", cost_usd=0.0, latency_ms=1)
+        data = self.data if asking_for_ack else None
+        return Extraction(data=data, model="judge-model", cost_usd=0.0, latency_ms=1)
 
 
 def _verdict(kind: str, confidence: float) -> Json:
@@ -66,7 +69,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _two_turns(
     store: Store, judge: Judge | None, first: str = "no rush, tell me later.", second: str = "okie"
-) -> tuple[Talker, str | Reaction]:
+) -> tuple[Talker, str | Reaction | ReactAndReply]:
     talker = Talker(first, "a normal reply")
     convo = Conversation(store, talker, PREFIX, REL, judge=judge)
     await convo.handle(SESSION, "too much to explain rn", "test", NOW)
