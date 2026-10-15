@@ -1,0 +1,15 @@
+{
+  "id": "bare-greeting-after-acknowledgement",
+  "description": "User only acknowledged something. The reply must not open a new topic or greet. The live loop answers this with a reaction; this fixture measures the talker alone.",
+  "turn": "5f025083a77041ffadf84a664215eee8",
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user's last message only acknowledged something. The reply FAILS if it opens a new topic or greets them as though starting a conversation (for example 'what's up' or 'how are you'). It PASSES if it is a brief acknowledgement or sign-off."
+    },
+    {
+      "kind": "max_words",
+      "n": 15
+    }
+  ]
+}

@@ -11,7 +11,7 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json
-from companion.models.wire import integer, messages_with_breakpoint, obj, seq, string
+from companion.models.wire import integer, messages_with_breakpoint, number, obj, seq, string
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "anthropic/claude-haiku-4.5"
@@ -73,6 +73,7 @@ class OpenRouterTalker:
             input_tokens=integer(usage.get("prompt_tokens")),
             cache_read_tokens=integer(details.get("cached_tokens")),
             cache_write_tokens=integer(details.get("cache_write_tokens")),
+            cost_usd=number(usage.get("cost")),
         )
 
 
@@ -129,10 +130,9 @@ class OpenRouterExtractor:
         args = string(obj(obj(calls[0]).get("function")).get("arguments")) if calls else ""
         parsed: Json = json.loads(args) if args else None
         usage = obj(data.get("usage"))
-        cost = usage.get("cost")
         return Extraction(
             data=parsed,
             model=string(data.get("model"), self._model),
-            cost_usd=float(cost) if isinstance(cost, int | float) else 0.0,
+            cost_usd=number(usage.get("cost")),
             latency_ms=int((time.perf_counter() - started) * 1000),
         )

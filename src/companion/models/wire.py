@@ -21,6 +21,10 @@ def integer(value: object) -> int:
     return value if isinstance(value, int) else 0
 
 
+def number(value: object) -> float:
+    return float(value) if isinstance(value, int | float) and not isinstance(value, bool) else 0.0
+
+
 def string(value: object, default: str = "") -> str:
     return value if isinstance(value, str) else default
 

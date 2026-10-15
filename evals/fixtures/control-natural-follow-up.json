@@ -1,0 +1,11 @@
+{
+  "id": "control-natural-follow-up",
+  "description": "Control: a natural short follow-up question is fine. The reply must stay short.",
+  "turn": "3d2ddfbc5d1845d981b5bc52a1f7ce52",
+  "checks": [
+    {
+      "kind": "max_words",
+      "n": 30
+    }
+  ]
+}

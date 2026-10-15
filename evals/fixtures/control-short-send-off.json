@@ -1,0 +1,15 @@
+{
+  "id": "control-short-send-off",
+  "description": "Control: when the user leaves to eat, a short send-off without a question is right.",
+  "turn": "f67b662ceae84b63a19c26c9742c09e9",
+  "checks": [
+    {
+      "kind": "max_words",
+      "n": 20
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\\?\\s*$"
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+"""Replay recorded turns against variants, score every reply, and stop at a spend cap.
+
+A variant is a persona (a prefix) and optionally a model, with the state card kept or stripped. The
+recorded history and your message are reused exactly, so the only thing that changes between
+variants is the thing under test.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import re
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
+
+from companion.core.extractor import Extractor
+from companion.core.prompt.prefix import Prefix
+from companion.core.prompt.request import Message, TalkerRequest
+from companion.core.talker import Talker
+from companion.evals.checks import Verdict, run_deterministic
+from companion.evals.fixtures import Fixture, JudgeCheck
+from companion.evals.judge import grade
+
+CONCURRENCY = 4
+_CARD_BLOCK = re.compile(r"^\[(?:What you remember|Also known).*?\]\n?", re.MULTILINE | re.DOTALL)
+
+
+@dataclass(frozen=True, slots=True)
+class Variant:
+    label: str
+    prefix: Prefix
+    keep_card: bool = True
+    model: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Sample:
+    reply: str
+    verdicts: tuple[Verdict, ...]
+    latency_ms: int
+    cost_usd: float
+
+    @property
+    def outcome(self) -> Verdict:
+        if "fail" in self.verdicts:
+            return "fail"
+        return "unclear" if "unclear" in self.verdicts else "pass"
+
+
+@dataclass(slots=True)
+class Cell:
+    """All samples for one fixture under one variant."""
+
+    samples: list[Sample] = field(default_factory=list[Sample])
+    skipped: int = 0
+
+    def count(self, outcome: Verdict) -> int:
+        return sum(s.outcome == outcome for s in self.samples)
+
+
+@dataclass(slots=True)
+class Results:
+    cells: dict[tuple[str, str], Cell]
+    spent: float = 0.0
+    stopped_by_cap: bool = False
+
+
+def strip_card(content: str) -> str:
+    """The user message without the memory blocks, keeping the clock line and what they typed."""
+    return _CARD_BLOCK.sub("", content)
+
+
+def request_for(base: TalkerRequest, variant: Variant) -> TalkerRequest:
+    messages = list(base.messages)
+    if not variant.keep_card:
+        last = messages[-1]
+        messages[-1] = Message(last.role, strip_card(last.content))
+    return TalkerRequest(prefix=variant.prefix, messages=tuple(messages))
+
+
+@dataclass(frozen=True, slots=True)
+class Plan:
+    fixtures: Sequence[Fixture]
+    requests: Mapping[str, TalkerRequest]
+    variants: Sequence[Variant]
+    samples: int
+    cap_usd: float
+
+
+@dataclass(frozen=True, slots=True)
+class Models:
+    talker_for: Callable[[str | None], Talker]
+    judge: Extractor
+
+
+async def run_eval(plan: Plan, models: Models) -> Results:
+    results = Results(cells={(f.id, v.label): Cell() for f in plan.fixtures for v in plan.variants})
+    gate = asyncio.Semaphore(CONCURRENCY)
+
+    async def one(f: Fixture, v: Variant) -> None:
+        cell = results.cells[(f.id, v.label)]
+        async with gate:
+            if results.spent >= plan.cap_usd:
+                results.stopped_by_cap = True
+                cell.skipped += 1
+                return
+            req = request_for(plan.requests[f.id], v)
+            reply = await models.talker_for(v.model).reply(req)
+            results.spent += reply.cost_usd
+            verdicts: list[Verdict] = []
+            cost = reply.cost_usd
+            for check in f.checks:
+                if isinstance(check, JudgeCheck):
+                    graded = await grade(models.judge, req.messages, reply.text, check.criterion)
+                    results.spent += graded.cost_usd
+                    cost += graded.cost_usd
+                    verdicts.append(graded.verdict)
+                else:
+                    verdicts.append(run_deterministic(check, reply.text))
+            cell.samples.append(Sample(reply.text, tuple(verdicts), reply.latency_ms, cost))
+
+    await asyncio.gather(
+        *(one(f, v) for f in plan.fixtures for v in plan.variants for _ in range(plan.samples))
+    )
+    return results

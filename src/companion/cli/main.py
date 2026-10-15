@@ -8,7 +8,9 @@ from pathlib import Path
 
 from companion import daemon
 from companion.cli import beliefs, flags, replay
+from companion.cli import eval as eval_cli
 from companion.cli.target import resolve_db, resolve_relationship
+from companion.evals.fixtures import load_fixtures
 
 
 def _db_args(p: argparse.ArgumentParser, *, relationship: bool = True) -> None:
@@ -46,6 +48,18 @@ def _parser() -> argparse.ArgumentParser:
     rf.add_argument("--from-start", action="store_true", help="re-read the whole conversation")
     _db_args(rf)
 
+    ev = sub.add_parser(
+        "eval", help="replay recorded turns against persona variants and score them"
+    )
+    ev.add_argument("--variants", default="", help="comma list: v10.md,v9.md,v10.md+nocard")
+    ev.add_argument("--fixture", action="append", default=[], help="only this fixture id")
+    ev.add_argument("--samples", type=int, default=3)
+    ev.add_argument("--cap", type=float, default=0.10, help="stop at this much spend, in dollars")
+    ev.add_argument("--fixtures-dir", type=Path, default=Path("evals/fixtures"))
+    ev.add_argument("--show", action="store_true", help="print every reply with its verdict")
+    ev.add_argument("--dry-run", action="store_true", help="print the plan and estimate only")
+    ev.add_argument("--list", action="store_true", help="list fixtures and exit")
+    _db_args(ev, relationship=False)
     run = sub.add_parser("run", help="talk to the companion on Telegram")
     run.add_argument("--data", type=Path, default=Path("data"))
     return parser
@@ -80,6 +94,27 @@ def _rebuild(a: argparse.Namespace) -> int:
     return _out(asyncio.run(daemon.rebuild_now(db, rel)))
 
 
+def _eval(a: argparse.Namespace) -> int:
+    if a.list:
+        return _out(eval_cli.describe(load_fixtures(Path(a.fixtures_dir))))
+    specs = [x.strip() for x in str(a.variants).split(",") if x.strip()]
+    if not specs:
+        sys.stderr.write("pass --variants, for example --variants v9.md,v10.md\n")
+        return 2
+    args = eval_cli.EvalArgs(
+        resolve_db(a.db),
+        Path(a.fixtures_dir),
+        specs,
+        list(a.fixture),
+        int(a.samples),
+        float(a.cap),
+        bool(a.show),
+        bool(a.dry_run),
+    )
+    out = asyncio.run(eval_cli.run(args))
+    return _out(out)
+
+
 def _flags(a: argparse.Namespace) -> int:
     return _out(flags.run(*_target(a)))
 
@@ -105,6 +140,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "retire": _retire,
     "reflect": _reflect,
     "rebuild": _rebuild,
+    "eval": _eval,
     "run": _run,
 }
 

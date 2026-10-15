@@ -1,0 +1,15 @@
+{
+  "id": "first-person-self-reference",
+  "description": "Asked what to do today, the reply must refer to itself as I or me, never as 'the companion'.",
+  "turn": "1cda29ef64984885993a7b5e5b6e878f",
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\b(the|your|their|this) companion\\b"
+    },
+    {
+      "kind": "max_words",
+      "n": 40
+    }
+  ]
+}
