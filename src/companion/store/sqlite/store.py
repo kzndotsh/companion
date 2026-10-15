@@ -13,6 +13,7 @@ from companion.core.types import (
     BeliefId,
     Decision,
     Evidence,
+    Favorite,
     Flag,
     Json,
     RelationshipId,
@@ -22,7 +23,16 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import ViewState, parse_mode
-from companion.store.sqlite import beliefs, decisions, flags, ledger, reflect, settings, turns
+from companion.store.sqlite import (
+    beliefs,
+    decisions,
+    favorites,
+    flags,
+    ledger,
+    reflect,
+    settings,
+    turns,
+)
 from companion.store.sqlite.db import connect, migrate
 
 VIEWS_MODE_KEY = "views.mode"
@@ -57,6 +67,12 @@ class Store:
 
     def add_flag(self, f: Flag) -> None:
         flags.add_flag(self._conn, f)
+
+    def add_favorite(self, f: Favorite) -> None:
+        favorites.add_favorite(self._conn, f)
+
+    def favorites(self, rel: RelationshipId) -> list[Favorite]:
+        return favorites.list_favorites(self._conn, rel)
 
     def flags(self, rel: RelationshipId) -> list[Flag]:
         return flags.list_flags(self._conn, rel)

@@ -15,6 +15,7 @@ BeliefId = NewType("BeliefId", str)
 DecisionId = NewType("DecisionId", str)
 TraceId = NewType("TraceId", str)
 FlagId = NewType("FlagId", str)
+FavoriteId = NewType("FavoriteId", str)
 
 type Json = str | int | float | bool | list[Json] | dict[str, Json] | None
 
@@ -201,6 +202,20 @@ class FlagKind(StrEnum):
     FORGOT = "forgot"
     TOO_MUCH = "too_much"
     UNWANTED = "unwanted"
+
+
+@dataclass(frozen=True, slots=True)
+class Favorite:
+    """The user marking a turn they loved: the counterpart of a flag, and what to keep."""
+
+    id: FavoriteId
+    relationship_id: RelationshipId
+    turn_id: TurnId
+    note: str
+    at: datetime
+
+    def __post_init__(self) -> None:
+        _require_aware("at", self.at)
 
 
 @dataclass(frozen=True, slots=True)

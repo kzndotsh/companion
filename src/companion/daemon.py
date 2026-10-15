@@ -17,7 +17,7 @@ from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.talker import Talker
-from companion.core.types import Flag, FlagId, RelationshipId, SessionId
+from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Telegram
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
@@ -28,6 +28,7 @@ from companion.store.sqlite.store import Store
 
 PERSONA = "v14.md"
 FLAG_REACTION = "✍"
+FAVORITE_REACTION = "❤"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 REFLECT_IDLE_SECONDS = 90
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
@@ -127,8 +128,17 @@ async def run(data_dir: Path) -> None:
                 logging.getLogger("companion").info("flag retired a view: %s", claim)
             return Reaction(FLAG_REACTION)
 
+        async def favorite(arg: str) -> str | Reaction:
+            turn = store.latest_turn(rel)
+            if turn is None:
+                return "nothing to favorite yet"
+            store.add_favorite(
+                Favorite(FavoriteId(uuid.uuid4().hex), rel, turn, arg.strip(), datetime.now(UTC))
+            )
+            return Reaction(FAVORITE_REACTION)
+
         logging.getLogger("companion").info("up as %s, prefix %s", rel, prefix.sha256[:12])
-        await tg.run(handle, {"flag": flag})
+        await tg.run(handle, {"flag": flag, "fav": favorite, "favorite": favorite})
 
 
 async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) -> str:
