@@ -42,11 +42,23 @@ type Check = MaxWords | Regex | JudgeCheck
 
 
 @dataclass(frozen=True, slots=True)
+class Script:
+    """A conversation written in the fixture, so it needs no database and anyone can rerun it."""
+
+    history: tuple[tuple[str, str], ...]  # (role, text), role is "user" or "assistant"
+    user: str
+    memory: str = ""  # an optional memory block, rendered like the real one
+
+
+@dataclass(frozen=True, slots=True)
 class Fixture:
+    """Either a recorded turn in the local database, or a script. Never both."""
+
     id: str
     description: str
-    turn: str
     checks: tuple[Check, ...]
+    turn: str | None = None
+    script: Script | None = None
 
 
 def _obj(value: Json) -> dict[str, Json]:
@@ -89,23 +101,50 @@ def _check(raw: Json) -> Check:
     raise FixtureError(msg)
 
 
+def _script(raw: Json) -> Script:
+    d = _obj(raw)
+    history = d.get("history", [])
+    if not isinstance(history, list):
+        msg = "script.history must be a list"
+        raise FixtureError(msg)
+    turns: list[tuple[str, str]] = []
+    for item in cast("list[Json]", history):
+        t = _obj(item)
+        role = _text(t, "role")
+        if role not in ("user", "assistant"):
+            msg = f"unknown role {role!r}"
+            raise FixtureError(msg)
+        turns.append((role, _text(t, "text")))
+    memory = d.get("memory", "")
+    if not isinstance(memory, str):
+        msg = "script.memory must be text"
+        raise FixtureError(msg)
+    return Script(tuple(turns), _text(d, "user"), memory)
+
+
 def parse_fixture(raw: Json) -> Fixture:
     d = _obj(raw)
     checks = d.get("checks")
     if not isinstance(checks, list) or not checks:
         msg = "a fixture needs at least one check"
         raise FixtureError(msg)
+    turn, script = d.get("turn"), d.get("script")
+    if (turn is None) == (script is None):
+        msg = "a fixture needs exactly one of turn and script"
+        raise FixtureError(msg)
     return Fixture(
         id=_text(d, "id"),
         description=_text(d, "description"),
-        turn=_text(d, "turn"),
         checks=tuple(_check(c) for c in cast("list[Json]", checks)),
+        turn=_text(d, "turn") if turn is not None else None,
+        script=_script(script) if script is not None else None,
     )
 
 
-def load_fixtures(directory: Path) -> list[Fixture]:
+def load_fixtures(*directories: Path) -> list[Fixture]:
+    """Every fixture in the given directories. A directory that does not exist is skipped."""
     found: list[Fixture] = []
-    for path in sorted(directory.glob("*.json")):
+    for path in sorted(p for d in directories for p in d.glob("*.json")):
         try:
             found.append(parse_fixture(json.loads(path.read_text(encoding="utf-8"))))
         except (FixtureError, json.JSONDecodeError) as err:

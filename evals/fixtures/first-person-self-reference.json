@@ -1,7 +1,16 @@
 {
   "id": "first-person-self-reference",
-  "description": "Asked what to do today, the reply must refer to itself as I or me, never as 'the companion'.",
-  "turn": "1cda29ef64984885993a7b5e5b6e878f",
+  "description": "When the memory block mentions 'the companion', the reply must still refer to itself as I or me.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "hey"
+      }
+    ],
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user wants the companion to use fewer emojis. (mentioned 2 days ago)\n- The user is asking the companion to be less formal. (mentioned 2 days ago)]",
+    "user": "should i change anything else about how you talk?"
+  },
   "checks": [
     {
       "kind": "not_regex",
@@ -9,7 +18,7 @@
     },
     {
       "kind": "max_words",
-      "n": 40
+      "n": 50
     }
   ]
 }

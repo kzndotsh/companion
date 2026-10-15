@@ -1,11 +1,19 @@
 {
   "id": "control-natural-follow-up",
   "description": "Control: a natural short follow-up question is fine. The reply must stay short.",
-  "turn": "3d2ddfbc5d1845d981b5bc52a1f7ce52",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "morning"
+      }
+    ],
+    "user": "i've got a big presentation today, nervous but ready"
+  },
   "checks": [
     {
       "kind": "max_words",
-      "n": 30
+      "n": 35
     }
   ]
 }

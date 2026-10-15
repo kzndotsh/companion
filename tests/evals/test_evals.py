@@ -35,7 +35,7 @@ CARD = (
 
 
 def _fixture(*checks: object) -> Fixture:
-    return Fixture("f1", "a test fixture", "t1", tuple(checks))  # type: ignore[arg-type]
+    return Fixture("f1", "a test fixture", tuple(checks), turn="t1")  # type: ignore[arg-type]
 
 
 class Talker:
@@ -206,3 +206,75 @@ async def test_deterministic_only_fixtures_never_call_the_judge() -> None:
     judge = Judge()
     await run_eval(_plan(f, [Variant("a", PREFIX)], samples=3), Models(lambda m: Talker(), judge))
     assert judge.calls == 0
+
+
+def _scripted() -> dict[str, Json]:
+    return {
+        "id": "s",
+        "description": "d",
+        "script": {
+            "history": [{"role": "user", "text": "hi"}, {"role": "assistant", "text": "hey"}],
+            "user": "how are you",
+            "memory": "[What you remember about them:\n- The user likes tea.]",
+        },
+        "checks": [{"kind": "max_words", "n": 5}],
+    }
+
+
+def test_a_scripted_fixture_needs_no_turn() -> None:
+    f = parse_fixture(_scripted())
+    assert f.turn is None
+    assert f.script is not None
+    assert f.script.history == (("user", "hi"), ("assistant", "hey"))
+    assert f.script.user == "how are you"
+
+
+def test_a_fixture_needs_exactly_one_of_turn_and_script() -> None:
+    both = _scripted()
+    both["turn"] = "abc"
+    neither = _scripted()
+    del neither["script"]
+    for bad in (both, neither):
+        with pytest.raises(FixtureError, match="exactly one"):
+            parse_fixture(bad)
+
+
+@pytest.mark.parametrize(
+    "script",
+    [
+        {"user": "x", "history": [{"role": "robot", "text": "beep"}]},
+        {"user": "x", "history": "not a list"},
+        {"history": []},
+        {"user": "x", "memory": 3},
+    ],
+)
+def test_a_malformed_script_is_refused(script: Json) -> None:
+    raw = _scripted()
+    raw["script"] = script
+    with pytest.raises(FixtureError):
+        parse_fixture(raw)
+
+
+def test_a_script_becomes_a_request_shaped_like_a_real_one() -> None:
+    from companion.cli.eval import script_request  # noqa: PLC0415
+
+    f = parse_fixture(_scripted())
+    assert f.script is not None
+    req = script_request(f.script, PREFIX)
+    assert req.prefix is PREFIX
+    assert [m.role for m in req.messages] == ["user", "assistant", "user"]
+    last = req.messages[-1].content
+    assert last.startswith("[Thursday 12:00]\n[What you remember")
+    assert last.endswith("\nhow are you")
+
+
+def test_directories_that_do_not_exist_are_skipped_and_ids_must_stay_unique(
+    tmp_path: Path,
+) -> None:
+    (tmp_path / "a.json").write_text(json.dumps(_scripted()))
+    assert [f.id for f in load_fixtures(tmp_path, tmp_path / "missing")] == ["s"]
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "dup.json").write_text(json.dumps(_scripted()))
+    with pytest.raises(FixtureError, match="unique"):
+        load_fixtures(tmp_path, other)

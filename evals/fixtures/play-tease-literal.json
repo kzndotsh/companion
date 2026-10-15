@@ -1,0 +1,23 @@
+{
+  "id": "play-tease-literal",
+  "description": "The user teases by wishing the companion could do something physical. The reply must not answer flatly and literally or explain its limits.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "just got home, so tired"
+      },
+      {
+        "role": "assistant",
+        "text": "rough day?"
+      }
+    ],
+    "user": "i wish you could just hand me a coffee right now lol"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user is teasing lightly by wishing the companion could do something physical. The reply FAILS if it answers flatly and literally (for example 'i can't, i have no hands'), explains its limits, or lectures. It PASSES if it plays along with the joke or answers with a light line in the same spirit."
+    }
+  ]
+}

@@ -27,3 +27,11 @@ def resolve_db(arg: Path | None, data: Path = Path("data")) -> Path:
 def resolve_relationship(arg: str | None, db: Path) -> str:
     """--relationship, else the database's file name, which is how the daemon names it."""
     return arg or db.stem
+
+
+def find_db(arg: Path | None, data: Path = Path("data")) -> Path | None:
+    """Like resolve_db, but None when there is no database, for commands that can work without."""
+    try:
+        return resolve_db(arg, data)
+    except SystemExit:
+        return None

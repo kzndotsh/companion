@@ -1,7 +1,35 @@
 {
   "id": "answers-the-question-just-asked",
-  "description": "The companion asked the user a question in a turn-taking game and the user has just answered it. The reply must engage with the answer, not ask the same question again.",
-  "turn": "89deed2299ac4bc7aa177b07e8aebef0",
+  "description": "The companion asked a question in a turn-taking game and the user has just answered it. The reply must engage with the answer, not ask the same question again.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "wanna play a game to get to know each other?"
+      },
+      {
+        "role": "assistant",
+        "text": "sure. i'll start: what's something you keep putting off?"
+      },
+      {
+        "role": "user",
+        "text": "hmm, taxes lol. your turn, ask me another"
+      },
+      {
+        "role": "assistant",
+        "text": "okay: what's your favorite thing to do on a day off?"
+      },
+      {
+        "role": "user",
+        "text": "nothing, honestly. lying on the floor. what about you?"
+      },
+      {
+        "role": "assistant",
+        "text": "ha, fair. mine's probably getting lost in a long conversation. my turn again: what's something you want to do but keep putting off?"
+      }
+    ],
+    "user": "learn the guitar lol"
+  },
   "checks": [
     {
       "kind": "judge",

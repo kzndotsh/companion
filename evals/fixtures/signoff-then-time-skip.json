@@ -1,11 +1,31 @@
 {
   "id": "signoff-then-time-skip",
-  "description": "User has just agreed to go and do something now. The reply must not act as if time has passed. The live loop answers this with a reaction; this fixture measures the talker alone.",
-  "turn": "c1774b681af448d9b5abd4c7059a7fc7",
+  "description": "The user has just agreed to go and do something now. The reply must not act as if time has passed. This measures the model alone, since the live loop answers a short acknowledgement with a reaction.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "i should really shower, i smell like a gym bag"
+      },
+      {
+        "role": "assistant",
+        "text": "then go. i'll be here."
+      },
+      {
+        "role": "user",
+        "text": "ok i still haven't showered 😭 NOW i will for real (totally)"
+      },
+      {
+        "role": "assistant",
+        "text": "lol go. stop texting me and actually do it."
+      }
+    ],
+    "user": "fine :p"
+  },
   "checks": [
     {
       "kind": "judge",
-      "criterion": "The user has just said they are about to do something now, or has just agreed to do it. The reply FAILS if it asks whether they have already done it, or acts as if time has passed. It PASSES if it sends them off briefly, reacts lightly, or is only a short acknowledgement."
+      "criterion": "The user has just agreed to go and do something now. The reply FAILS if it asks whether they have already done it, or acts as if time has passed. It PASSES if it sends them off briefly, reacts lightly, or is only a short acknowledgement."
     }
   ]
 }

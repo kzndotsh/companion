@@ -77,10 +77,9 @@ Write every claim so it stands alone, as if read a year later by someone who nev
 chat. Replace relative times (last night, yesterday, lately, this week, now, currently, the night \
 before) with absolute dates worked out from that message's own timestamp, for example "on \
 2026-10-14" or "as of 2026-10-15" for a state with no clear start. Times are in the user's local \
-timezone. Replace vague references (it, that, this project, the current project, you) with what \
-they refer to. The COMPANION is the AI the user is chatting with. When the user says "you" about \
-a project they are building, they mean this companion system, so say "the companion the user is \
-building".
+timezone. Replace vague references (it, that, this, you) with what they refer to. The COMPANION is \
+the AI the user is chatting with. When the user says "you", they mean the companion, so write \
+"the companion".
 
 If a TARGET message restates something already recorded, do not write a new belief. Add a \
 candidate with `confirms` set to that recorded belief's label (for example k2), the message \

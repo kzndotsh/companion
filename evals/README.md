@@ -10,9 +10,15 @@ uv run companion eval --variants v9.md,v10.md --samples 3 --cap 0.20 --show
 
 ## How it works
 
-- A **fixture** (`evals/fixtures/*.json`) names a turn in the local database, says in plain words
-  what a good reply does, and lists checks. It holds an opaque turn id and a generic description,
-  never the conversation. The text stays in `data/`, so fixtures need your database to run.
+- A **fixture** is a JSON file with a description and checks, and either:
+  - a `script`: a short invented conversation (history, the user's last message, an optional memory
+    block). It needs nothing else, so **anyone can run it.** The public fixtures in
+    `evals/fixtures/` are all scripts, written to be neutral and to cover a failure *class*, not
+    one person's conversation.
+  - a `turn`: an id of a turn in your local database, replayed exactly. These hold only an opaque id
+    and a generic description, never the conversation, and need your database. They live in
+    `evals/local/`, which is **gitignored**, and are for private regression checks on your own
+    real conversations. Their ids end in `-local` so the two sets never mix up in a table.
 - A **variant** is a persona file, optionally `+nocard` (drop the memory block) or `@model`. The
   recorded history and the user's message are reused exactly, so only the thing under test changes.
 - Checks are either deterministic (`max_words`, `regex`, `not_regex`) or `judge`. A judge is a small
@@ -35,7 +41,10 @@ uv run companion eval --variants v9.md,v10.md --samples 3 --cap 0.20 --show
 
 ## Adding a fixture
 
-Flag the turn with `/flag`, find its id (`uv run companion flags`), and add a JSON file. Write the
+For a general failure class, write a script in `evals/fixtures/` with an invented conversation. To
+capture something from real use, flag the turn with `/flag`, find its id (`uv run companion flags`),
+and add a JSON file in `evals/local/`. Prefer writing the script version too, so the finding is
+reproducible by others. Write the
 criterion so that a stranger could grade a reply from it alone.
 
 ## Results log

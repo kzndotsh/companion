@@ -10,13 +10,13 @@ from pathlib import Path
 
 import httpx
 
-from companion.core.prompt.prefix import build_prefix
-from companion.core.prompt.request import TalkerRequest
+from companion.core.prompt.prefix import Prefix, build_prefix
+from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.replay import ReplayError
 from companion.core.talker import Talker
 from companion.daemon import load_dotenv
 from companion.evals import judge as judge_module
-from companion.evals.fixtures import Fixture, FixtureError, JudgeCheck, load_fixtures
+from companion.evals.fixtures import Fixture, FixtureError, JudgeCheck, Script, load_fixtures
 from companion.evals.report import render_replies, render_table, save
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import parse_spec
@@ -42,8 +42,23 @@ def _variants(specs: list[str]) -> list[Variant]:
 
 
 def describe(fixtures: list[Fixture]) -> str:
-    lines = [f"{f.id:32} {len(f.checks)} checks  {f.description}" for f in fixtures]
+    lines = [
+        f"{f.id:34} {'script' if f.script else 'local turn':10} {len(f.checks)} checks"
+        f"  {f.description}"
+        for f in fixtures
+    ]
     return "\n".join(lines) + "\n"
+
+
+def script_request(script: Script, prefix: Prefix) -> TalkerRequest:
+    """Build the request a fixture script describes, shaped like a real one: a clock line, an
+    optional memory block, then the user's words."""
+    content = "[Thursday 12:00]\n" + (f"{script.memory}\n" if script.memory else "")
+    messages = [
+        Message("user" if role == "user" else "assistant", text) for role, text in script.history
+    ]
+    messages.append(Message("user", f"{content}\n{script.user}"))
+    return TalkerRequest(prefix=prefix, messages=tuple(messages))
 
 
 def estimate(fixtures: list[Fixture], variants: int, samples: int) -> float:
@@ -56,8 +71,8 @@ def estimate(fixtures: list[Fixture], variants: int, samples: int) -> float:
 
 @dataclass(frozen=True, slots=True)
 class EvalArgs:
-    db: Path
-    fixtures_dir: Path
+    db: Path | None
+    fixtures_dirs: tuple[Path, ...]
     specs: list[str]
     only: list[str]
     samples: int
@@ -69,7 +84,7 @@ class EvalArgs:
 async def run(a: EvalArgs) -> str:
     db, samples, cap = a.db, a.samples, a.cap
     load_dotenv(Path(".env"))
-    fixtures = load_fixtures(a.fixtures_dir)
+    fixtures = load_fixtures(*a.fixtures_dirs)
     if a.only:
         fixtures = [f for f in fixtures if f.id in a.only]
     if not fixtures:
@@ -85,11 +100,15 @@ async def run(a: EvalArgs) -> str:
         return header
     requests: dict[str, TalkerRequest] = {}
     for f in fixtures:
-        try:
-            report = replay_file(db, f.turn)
-        except ReplayError as err:
-            return f"fixture {f.id}: {err}\n"
-        requests[f.id] = report.request
+        if f.script is not None:
+            requests[f.id] = script_request(f.script, variants[0].prefix)
+        elif db is None or f.turn is None:
+            return f"fixture {f.id} replays a recorded turn and needs a local database (--db)\n"
+        else:
+            try:
+                requests[f.id] = replay_file(db, f.turn).request
+            except ReplayError as err:
+                return f"fixture {f.id}: {err}\n"
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         return "OPENROUTER_API_KEY is not set (put it in .env)\n"

@@ -9,7 +9,7 @@ from pathlib import Path
 from companion import daemon
 from companion.cli import beliefs, flags, replay
 from companion.cli import eval as eval_cli
-from companion.cli.target import resolve_db, resolve_relationship
+from companion.cli.target import find_db, resolve_db, resolve_relationship
 from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
 
@@ -66,7 +66,13 @@ def _parser() -> argparse.ArgumentParser:
     ev.add_argument("--fixture", action="append", default=[], help="only this fixture id")
     ev.add_argument("--samples", type=int, default=3)
     ev.add_argument("--cap", type=float, default=0.10, help="stop at this much spend, in dollars")
-    ev.add_argument("--fixtures-dir", type=Path, default=Path("evals/fixtures"))
+    ev.add_argument(
+        "--fixtures-dir",
+        type=Path,
+        action="append",
+        default=[],
+        help="default: evals/fixtures (public scripts) and evals/local (private recorded turns)",
+    )
     ev.add_argument("--show", action="store_true", help="print every reply with its verdict")
     ev.add_argument("--dry-run", action="store_true", help="print the plan and estimate only")
     ev.add_argument("--list", action="store_true", help="list fixtures and exit")
@@ -105,16 +111,21 @@ def _rebuild(a: argparse.Namespace) -> int:
     return _out(asyncio.run(daemon.rebuild_now(db, rel)))
 
 
+def _fixture_dirs(a: argparse.Namespace) -> tuple[Path, ...]:
+    given = [Path(p) for p in a.fixtures_dir]
+    return tuple(given) if given else (Path("evals/fixtures"), Path("evals/local"))
+
+
 def _eval(a: argparse.Namespace) -> int:
     if a.list:
-        return _out(eval_cli.describe(load_fixtures(Path(a.fixtures_dir))))
+        return _out(eval_cli.describe(load_fixtures(*_fixture_dirs(a))))
     specs = [x.strip() for x in str(a.variants).split(",") if x.strip()]
     if not specs:
         sys.stderr.write("pass --variants, for example --variants v9.md,v10.md\n")
         return 2
     args = eval_cli.EvalArgs(
-        resolve_db(a.db),
-        Path(a.fixtures_dir),
+        find_db(a.db),
+        _fixture_dirs(a),
         specs,
         list(a.fixture),
         int(a.samples),

@@ -77,3 +77,10 @@ Each version is a new file. The prefix hash on every turn record says which one 
   it still says some version of "i just wanted to be straight about where the line is", because the
   recorded history already contains the earlier boundary talk and conversation momentum carries it.
   That fixture is kept as a baseline.
+- **v12 (candidate, not live).** v11 with two lines made general. The praise rule no longer says "or
+  their project" (a leftover from one user's sycophancy turn), and the sentence "when they mention
+  what they are building, it is you: say 'working on me'" is removed, because it only makes sense
+  for a user who is building the companion. The first-person rule itself stays. Reason: the persona
+  and the evals had been shaped by one person's conversations. Not shipped until it is measured on
+  the public scripted fixtures, since removing the second line could bring back the "the
+  companion" slip for a user whose memory block says it.
