@@ -12,7 +12,7 @@ from companion.core.talker import Reply
 from companion.models.wire import integer, messages_with_breakpoint, obj, seq, string
 
 URL = "https://api.anthropic.com/v1/messages"
-DEFAULT_MODEL = "claude-haiku-4-5"
+DEFAULT_MODEL = "claude-haiku-5-5"
 
 
 class AnthropicTalker:

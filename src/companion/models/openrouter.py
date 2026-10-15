@@ -14,7 +14,7 @@ from companion.core.types import Json
 from companion.models.wire import integer, messages_with_breakpoint, number, obj, seq, string
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_MODEL = "anthropic/claude-haiku-4.5"
+DEFAULT_MODEL = "anthropic/claude-haiku-5.5"
 DEFAULT_PROVIDER = "Anthropic"
 
 
