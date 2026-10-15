@@ -18,7 +18,9 @@ from companion.core.types import Json, Speaker, Utterance
 MAX_CHARS = 40
 MAX_WORDS = 4
 CONTEXT_MESSAGES = 4
-REACT_THRESHOLD = 0.85
+# 0.70, not higher: on 15 hand-labelled messages the clear acknowledgements scored 0.70 to 0.90
+# and the ones that needed a reply scored 0.60 or lower. Every judgement is logged to recalibrate.
+REACT_THRESHOLD = 0.70
 KINDS = ("ack", "answer", "emotional", "invitation", "other")
 EMOJI = ("👍", "❤", "😁", "🔥", "🙏", "👌", "🤗", "🫡")
 

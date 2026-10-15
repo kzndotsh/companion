@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.ack import Reaction
+from companion.core.ack import REACT_THRESHOLD, Reaction
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
@@ -102,7 +102,7 @@ async def test_a_reaction_logs_the_scorer_and_scores_but_creates_no_turn_request
     assert d.detail is not None
     assert d.detail["scorer"] == "judge-model"
     assert d.detail["scores"] == {"kind": "ack", "confidence": 0.95}
-    assert d.detail["threshold"] == 0.85
+    assert d.detail["threshold"] == REACT_THRESHOLD
     assert store.latest_turn(REL) != _last_user_turn(store)
 
 

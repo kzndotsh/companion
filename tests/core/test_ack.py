@@ -92,7 +92,8 @@ def test_parse_rejects_anything_off_the_menu(data: Json) -> None:
     [
         ("ack", 0.95, True),
         ("ack", REACT_THRESHOLD, True),
-        ("ack", 0.84, False),
+        ("ack", 0.69, False),
+        ("ack", 0.60, False),
         ("answer", 0.99, False),
         ("emotional", 0.99, False),
         ("invitation", 0.99, False),
@@ -102,6 +103,10 @@ def test_parse_rejects_anything_off_the_menu(data: Json) -> None:
 def test_only_a_confident_ack_gets_a_reaction(kind: str, confidence: float, reacts: bool) -> None:
     got = reaction_for(Judgement(kind, confidence, "👍"))
     assert (got == Reaction("👍")) is reacts
+
+
+def test_fine_and_lol_at_seventy_react() -> None:
+    assert reaction_for(Judgement("ack", 0.70, "😁")) == Reaction("😁")
 
 
 def test_the_logged_reason_is_built_from_the_scores() -> None:

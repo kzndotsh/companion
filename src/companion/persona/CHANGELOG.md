@@ -46,3 +46,12 @@ Each version is a new file. The prefix hash on every turn record says which one 
   (1, 3 and 5 of 10) are within noise at this sample size. What holds is that every version with
   the "claims you cannot judge" rule beats v6 (10 of 10 agreed). The rule helps but is not
   reliable on this model, so the real fix is probably a moment-read step, not more wording.
+- **v10 (shipped).** v9 plus "Letting them go". v1 had "If someone says they are going to sleep,
+  work, or leave, let them go." It was lost in the v2 rewrite and absent from v2 to v9, which is
+  why, after "fine :p" (the user going to eat), the companion asked "did you actually eat or are
+  you lying to me" as if time had passed. Flagged `off`: "time skip and lack of understanding that
+  this is me basically saying goodbye". v10 restores the rule and adds the time-skip rule.
+  Replay result: on the flagged turn v9 and v10 both asked "did you actually eat or are you lying
+  to me" in 5 of 5 replays, so the rule does not fix that turn; the nagging bit set up by the
+  previous message wins. The fix for that turn is the ack judge (react to "fine :p"). The goodbye
+  turn that went well before was unchanged. Shipped because it restores a rule lost by mistake.

@@ -25,7 +25,7 @@ from companion.loops.slow import reflect_from, reflect_once
 from companion.models import anthropic, openrouter
 from companion.store.sqlite.store import Store
 
-PERSONA = "v9.md"
+PERSONA = "v10.md"
 FLAG_REACTION = "✍"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 REFLECT_IDLE_SECONDS = 90
