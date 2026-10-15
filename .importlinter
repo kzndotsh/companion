@@ -20,3 +20,4 @@ source_modules =
     companion.events
     companion.cli
 forbidden_modules = sqlite3
+allow_indirect_imports = True

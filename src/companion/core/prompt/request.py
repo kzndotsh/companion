@@ -6,6 +6,8 @@ field out makes the mistake unrepresentable; the provider adapter always sends i
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Literal
@@ -39,3 +41,17 @@ def build_request(
     """
     content = f"{volatile.rstrip()}\n\n{user_turn}" if volatile.strip() else user_turn
     return TalkerRequest(prefix=prefix, messages=(*history, Message("user", content)))
+
+
+def request_sha256(request: TalkerRequest) -> str:
+    """Identity of exactly what was sent: the prefix hash plus every message, in order."""
+    payload = json.dumps(
+        {
+            "prefix": request.prefix.sha256,
+            "messages": [[m.role, m.content] for m in request.messages],
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    )
+    return hashlib.sha256(payload.encode()).hexdigest()
