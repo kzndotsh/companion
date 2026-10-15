@@ -6,7 +6,7 @@ import pytest
 
 from companion.core.prompt.prefix import build_prefix
 
-VERSIONS = ["v1.md", "v2.md", "v3.md"]
+VERSIONS = ["v1.md", "v2.md", "v3.md", "v4.md"]
 
 
 def _text(name: str) -> str:

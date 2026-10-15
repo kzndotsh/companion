@@ -23,7 +23,7 @@ from companion.loops.slow import reflect_from, reflect_once
 from companion.models import anthropic, openrouter
 from companion.store.sqlite.store import Store
 
-PERSONA = "v3.md"
+PERSONA = "v4.md"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 REFLECT_IDLE_SECONDS = 90
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005

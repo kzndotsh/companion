@@ -8,12 +8,20 @@ from pathlib import Path
 
 from companion import daemon
 from companion.cli import beliefs, flags, replay
+from companion.cli.target import resolve_db, resolve_relationship
 
 
 def _db_args(p: argparse.ArgumentParser, *, relationship: bool = True) -> None:
-    p.add_argument("--db", type=Path, required=True, help="the relationship's SQLite file")
+    p.add_argument(
+        "--db", type=Path, help="the relationship's SQLite file (default: the one in data/)"
+    )
     if relationship:
-        p.add_argument("--relationship", required=True)
+        p.add_argument("--relationship", help="default: the database's file name")
+
+
+def _target(a: argparse.Namespace) -> tuple[Path, str]:
+    db = resolve_db(a.db)
+    return db, resolve_relationship(getattr(a, "relationship", None), db)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -48,17 +56,14 @@ def _out(text: str) -> int:
 
 
 def _replay(a: argparse.Namespace) -> int:
-    out, code = replay.run(Path(a.db), str(a.turn_id))
+    out, code = replay.run(resolve_db(a.db), str(a.turn_id))
     (sys.stdout if code != 2 else sys.stderr).write(out)
     return code
 
 
 def _reflect(a: argparse.Namespace) -> int:
-    return _out(
-        asyncio.run(
-            daemon.reflect_now(Path(a.db), str(a.relationship), from_start=bool(a.from_start))
-        )
-    )
+    db, rel = _target(a)
+    return _out(asyncio.run(daemon.reflect_now(db, rel, from_start=bool(a.from_start))))
 
 
 def _run(a: argparse.Namespace) -> int:
@@ -69,14 +74,29 @@ def _run(a: argparse.Namespace) -> int:
     return 0
 
 
+def _flags(a: argparse.Namespace) -> int:
+    return _out(flags.run(*_target(a)))
+
+
+def _beliefs(a: argparse.Namespace) -> int:
+    return _out(beliefs.run(*_target(a)))
+
+
+def _dedupe(a: argparse.Namespace) -> int:
+    return _out(beliefs.dedupe(*_target(a)))
+
+
+def _retire(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    return _out(beliefs.retire_one(db, rel, str(a.id_prefix), str(a.reason)))
+
+
 HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "replay": _replay,
-    "flags": lambda a: _out(flags.run(Path(a.db), str(a.relationship))),
-    "beliefs": lambda a: _out(beliefs.run(Path(a.db), str(a.relationship))),
-    "dedupe": lambda a: _out(beliefs.dedupe(Path(a.db), str(a.relationship))),
-    "retire": lambda a: _out(
-        beliefs.retire_one(Path(a.db), str(a.relationship), str(a.id_prefix), str(a.reason))
-    ),
+    "flags": _flags,
+    "beliefs": _beliefs,
+    "dedupe": _dedupe,
+    "retire": _retire,
     "reflect": _reflect,
     "run": _run,
 }

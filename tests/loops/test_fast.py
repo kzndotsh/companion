@@ -10,7 +10,22 @@ import pytest
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.types import DecisionKind, RelationshipId, SessionId
+from companion.core.types import (
+    Belief,
+    BeliefId,
+    BeliefKind,
+    DecisionKind,
+    Evidence,
+    Frame,
+    Provenance,
+    RelationshipId,
+    SessionId,
+    Speaker,
+    Subject,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
 from companion.loops.fast import Conversation
 from companion.models.anthropic import AnthropicTalker
 from companion.models.openrouter import OpenRouterTalker
@@ -150,3 +165,53 @@ async def test_clock_line_names_the_gap(store: Store) -> None:
     await convo.handle(SESSION, "first", "test", NOW)
     await convo.handle(SESSION, "second", "test", NOW + timedelta(hours=5, minutes=1))
     assert "last message 5 hours ago" in talker.seen[1].messages[-1].content
+
+
+async def test_beliefs_reach_the_request_and_each_placement_is_logged(
+    store: Store, tmp_path: Path
+) -> None:
+    base = Utterance(
+        UtteranceId("old"),
+        REL,
+        SESSION,
+        TurnId("t0"),
+        Speaker.USER,
+        "i have ocd and i like climbing",
+        Frame.REAL,
+        "test",
+        NOW - timedelta(days=1),
+    )
+    store.append_utterance(base)
+
+    def believe(bid: str, claim: str, quote: str, sens: int) -> Belief:
+        return Belief(
+            id=BeliefId(bid),
+            relationship_id=REL,
+            subject=Subject.USER,
+            kind=BeliefKind.TRAIT,
+            claim=claim,
+            evidence=(Evidence(base.id, quote),),
+            provenance=Provenance.STATED,
+            speaker=Speaker.USER,
+            frame=Frame.REAL,
+            confidence=0.6,
+            valid_from=base.at,
+            recorded_at=base.at,
+            sensitivity=sens,
+        )
+
+    store.insert_belief(believe("b1", "Likes climbing", "i like climbing", 0))
+    store.insert_belief(believe("b2", "Has OCD", "i have ocd", 2))
+    talker = FakeTalker("nice")
+    convo = Conversation(store, talker, PREFIX, REL)
+    await convo.handle(SESSION, "hey", "test", NOW)
+    sent = talker.seen[0].messages[-1].content
+    assert "Likes climbing" in sent.split("Also known")[0]
+    assert "Has OCD" in sent.split("Also known")[1]
+    store.close()
+    db = tmp_path / "rel.sqlite"
+    [turn_id] = _turn_ids(db)
+    report = store_replay.replay_file(db, turn_id)
+    assert report.matched
+    kinds = {d.belief_id: d.kind for d in report.decisions if d.belief_id}
+    assert kinds == {"b1": DecisionKind.SURFACE, "b2": DecisionKind.WITHHOLD}
