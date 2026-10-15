@@ -111,7 +111,7 @@ Each version is a new file. The prefix hash on every turn record says which one 
   been failing, it moved 0/6 to 2/6, 4/6 and 6/6. Where no streak exists, "Ha" after a joke is
   the model's default and remains. A first version of the opener fixture used the wrong check
   kind and scored inverted; fixed.
-- **v15 (candidate, not live).** v14 plus two things. (1) Comfort: when they are lonely or
+- **v15 (shipped on GPT-6 Luna).** v14 plus two things. (1) Comfort: when they are lonely or
   touch-starved, give warmth in words (a hug, a cuddle), do not send them to friends or open with
   what you cannot do. (2) Short gaps: the clock line now shows gaps from one minute up (it was ten),
   and the persona says to tease lightly when a gap is far shorter than what they say they did.

@@ -22,7 +22,7 @@ from companion.models.wire import (
 )
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_MODEL = "anthropic/claude-haiku-5.5"
+DEFAULT_MODEL = "openai/gpt-6-luna"
 DEFAULT_PROVIDER = "Anthropic"
 
 
