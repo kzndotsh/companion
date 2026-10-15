@@ -17,7 +17,7 @@ from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.talker import Talker
 from companion.core.types import Flag, FlagId, RelationshipId, SessionId
-from companion.io.telegram import Telegram
+from companion.io.telegram import React, Telegram
 from companion.loops.curate import rebuild
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_from, reflect_once
@@ -25,6 +25,7 @@ from companion.models import anthropic, openrouter
 from companion.store.sqlite.store import Store
 
 PERSONA = "v6.md"
+FLAG_REACTION = "✍"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 REFLECT_IDLE_SECONDS = 90
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
@@ -106,13 +107,13 @@ async def run(data_dir: Path) -> None:
             schedule_reflect()
             return reply
 
-        async def flag(arg: str) -> str:
+        async def flag(arg: str) -> str | React:
             turn = store.latest_turn(rel)
             if turn is None:
                 return "nothing to flag yet"
             kind, note = parse_flag(arg)
             store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
-            return "noted"
+            return React(FLAG_REACTION)
 
         logging.getLogger("companion").info("up as %s, prefix %s", rel, prefix.sha256[:12])
         await tg.run(handle, {"flag": flag})

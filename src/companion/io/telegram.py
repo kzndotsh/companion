@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 
 import httpx
 
@@ -12,8 +13,17 @@ from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
 
+
+@dataclass(frozen=True, slots=True)
+class React:
+    """A command's answer is an emoji reaction on the user's message, not a message."""
+
+    emoji: str
+
+
 Handler = Callable[[str], Awaitable[str]]
-Commands = dict[str, Handler]
+CommandHandler = Callable[[str], Awaitable[str | React]]
+Commands = dict[str, CommandHandler]
 
 
 class Telegram:
@@ -29,6 +39,14 @@ class Telegram:
 
     async def send(self, chat_id: int, text: str) -> None:
         await self._call("sendMessage", chat_id=chat_id, text=text)
+
+    async def react(self, chat_id: int, message_id: int, emoji: str) -> None:
+        await self._call(
+            "setMessageReaction",
+            chat_id=chat_id,
+            message_id=message_id,
+            reaction=[{"type": "emoji", "emoji": emoji}],
+        )
 
     async def run(self, handle: Handler, commands: Commands | None = None) -> None:
         offset = 0
@@ -55,6 +73,7 @@ class Telegram:
             log.warning("ignored a message from a user who is not allowed")
             return
         chat_id = integer(obj(msg.get("chat")).get("id"))
+        message_id = integer(msg.get("message_id"))
         command = _command(text)
         if command is not None and command[0] not in commands:
             return  # unknown and /start commands never reach the model
@@ -67,7 +86,16 @@ class Telegram:
         except Exception:
             log.exception("turn failed")
             return
-        if reply:
+        await self._answer(chat_id, message_id, reply)
+
+    async def _answer(self, chat_id: int, message_id: int, reply: str | React) -> None:
+        if isinstance(reply, React):
+            try:
+                await self.react(chat_id, message_id, reply.emoji)
+            except httpx.HTTPError:
+                log.warning("reaction refused, falling back to text")
+                await self.send(chat_id, "noted")
+        elif reply:
             await self.send(chat_id, reply)
 
 
