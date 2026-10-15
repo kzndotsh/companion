@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -26,6 +27,7 @@ from companion.core.types import (
 from companion.store.sqlite.store import Store
 
 HISTORY_LIMIT = 40
+log = logging.getLogger("companion.turn")
 
 
 def _id() -> str:
@@ -69,6 +71,16 @@ async def _handle_turn(
         TurnRecord(
             turn, rel, session, prefix.sha256, volatile, request_sha256(request), reply.model, now
         )
+    )
+    log.info(
+        "turn %s | %dms in=%d cache_read=%d cache_write=%d\n  you: %s\n  it:  %s",
+        turn[:8],
+        reply.latency_ms,
+        reply.input_tokens,
+        reply.cache_read_tokens,
+        reply.cache_write_tokens,
+        text,
+        reply.text or "(no reply)",
     )
     replied_at = now + timedelta(milliseconds=max(reply.latency_ms, 1))
     if not reply.text:
