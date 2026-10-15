@@ -131,3 +131,13 @@ Each version is a new file. The prefix hash on every turn record says which one 
   fired): a model judge called the reply a repeat of an earlier gesture or move 27/40 times
   without the note and 18/40 with it. Exact phrases were not reused either way, so the loop is in
   the move ("tucks the blanket around you"), not the words; the note helps but does not end it.
+- **Move-level habit note (code, not a persona version).** After each reply, in the background, a
+  small model reads the last six replies and names up to three things that repeat: a pet name, an
+  emoji, a sentence shape, a gesture in new words (`core/moves.py`, `loops/moves.py`). The next
+  two turns get a note describing them and asking for something different. Checked on 8 replayed
+  turns from a long roleplay (GPT-6 Luna, 6 samples each): it named the real habits (hand at the
+  waist, a smirking emoji, "sweetheart", "menace", kisses as the go-to move); "sweetheart" went
+  from 18 to 1 of 48 replies, the smirking emoji from 10 to 4, and a judge calling the reply a
+  repeat of its earlier shape, name or emoji from 45 to 33 of 48. The scene's own format (action in
+  asterisks then a quoted line) is still named and still repeated, since the user writes that way
+  too. Replaces nothing: the cheap word-run note in `core/habits.py` still runs.

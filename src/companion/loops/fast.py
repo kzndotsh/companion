@@ -6,7 +6,7 @@ import asyncio
 import contextlib
 import logging
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -39,6 +39,7 @@ from companion.core.frames import resolve as frame_resolve
 from companion.core.freshness import HORIZON_DAYS, age_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
+from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
 from companion.core.react import Judgement as ReactJudgement
@@ -66,6 +67,7 @@ from companion.loops.ack import judge
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
+from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.react import judge_reaction
 from companion.store.sqlite.store import Store
 
@@ -130,6 +132,7 @@ class Conversation:
     prefix: Prefix
     rel: RelationshipId
     judge: Extractor | None = None
+    habits: HabitMemory = field(default_factory=HabitMemory)
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -203,6 +206,54 @@ def _react_alongside(
         )
     )
     return decision.reaction
+
+
+def _volatile(c: Conversation, prior: list[Utterance], now: datetime, in_scene: Frame) -> str:
+    """The clock, what it should know about its own habits, and a note about a scene in progress."""
+    parts = [volatile_line(now, prior[-1].at if prior else None)]
+    if (habit := habit_note(prior)) is not None:
+        parts.append(habit)
+    if (learned := c.habits.note()) is not None:
+        parts.append(learned)
+    if (note := scene_note(in_scene)) is not None:
+        parts.append(note)
+    return "\n".join(parts)
+
+
+def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
+    """After the reply is out, read the last few replies in the background for habits."""
+    if c.judge is None:
+        return
+    replies = replies_to_read(t.prior, sent)
+    if not replies:
+        return
+
+    async def look() -> list[str] | None:
+        found = await find_habits(c.judge, replies)  # type: ignore[arg-type]
+        if found is None:
+            return None
+        habits, model, prompt = found
+        detail: dict[str, Json] = {
+            "scorer": model,
+            "inputs_hash": inputs_hash(prompt),
+            "habits": list[Json](habits),
+        }
+        c.store.append_decision(
+            Decision(
+                DecisionId(_id()),
+                c.rel,
+                t.session,
+                t.turn,
+                TraceId(t.turn),
+                DecisionKind.POLICY,
+                f"habit check: {len(habits)} habits found in the last {len(replies)} replies",
+                t.now,
+                detail=detail,
+            )
+        )
+        return habits
+
+    c.habits.start(look())
 
 
 def _start_beside(
@@ -323,6 +374,7 @@ def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, c
             },
         )
     )
+    _check_habits(c, t, reply.text)
     return reply.text
 
 
@@ -341,13 +393,7 @@ async def _handle_turn(
     views = card_views(store.self_beliefs(rel), view_state)
     assertable = [b for b in store.user_beliefs(rel) if is_assertable(b)]
     card = build_card(assertable, support, now, views=views)
-    clock = volatile_line(now, prior[-1].at if prior else None)
-    parts = [clock]
-    if (habit := habit_note(prior)) is not None:
-        parts.append(habit)
-    if (note := scene_note(in_scene)) is not None:
-        parts.append(note)
-    volatile = "\n".join(parts)
+    volatile = _volatile(c, prior, now, in_scene)
     card_text = "" if card.empty else render(card, now.astimezone().tzinfo or UTC)
     request = build_request(prefix, history, text, volatile, card_text)
     store.save_prefix(prefix)
