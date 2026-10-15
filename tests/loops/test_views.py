@@ -458,3 +458,26 @@ async def test_calibration_compares_the_gates_with_the_users_decisions(store: St
     text = report(rows)
     assert "1 of 2 adopted views were ones you wanted (50%)" in text
     assert "would have adopted, but you retired" in text
+
+
+async def test_a_user_reason_containing_the_word_duplicate_still_counts_as_a_decision(
+    store: Store,
+) -> None:
+    from companion.loops.calibrate import reviewed_views  # noqa: PLC0415
+    from companion.loops.curate import retire  # noqa: PLC0415
+
+    _two_day_view(store, "v")
+    retire(store, REL, "v", "near-duplicate of an approved view")
+    assert [r.verdict for r in reviewed_views(store, REL)] == ["retired"]
+
+
+async def test_a_mechanical_dedupe_closure_is_not_a_user_decision(store: Store) -> None:
+    from companion.loops.calibrate import reviewed_views  # noqa: PLC0415
+    from companion.loops.curate import close_duplicates  # noqa: PLC0415
+
+    _two_day_view(store, "keep")
+    store.insert_belief(
+        _own_view("dupe", "u1", "short replies read as more human", "short replies read as human.")
+    )
+    close_duplicates(store, REL)
+    assert reviewed_views(store, REL) == []
