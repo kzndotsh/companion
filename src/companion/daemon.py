@@ -19,9 +19,10 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.talker import Talker
 from companion.core.types import Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Telegram
-from companion.loops.curate import rebuild, retire_views_for_turn
+from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_from, reflect_once
+from companion.loops.views import views_implicated
 from companion.models import anthropic, openrouter
 from companion.store.sqlite.store import Store
 
@@ -121,7 +122,8 @@ async def run(data_dir: Path) -> None:
                 return "nothing to flag yet"
             kind, note = parse_flag(arg)
             store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
-            for claim in retire_views_for_turn(store, rel, turn):
+            implicated = await views_implicated(store, reflector, rel, turn, note)
+            for claim in retire_implicated_views(store, implicated):
                 logging.getLogger("companion").info("flag retired a view: %s", claim)
             return Reaction(FLAG_REACTION)
 

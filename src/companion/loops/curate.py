@@ -14,7 +14,6 @@ from companion.core.types import (
     DecisionKind,
     RelationshipId,
     TraceId,
-    TurnId,
 )
 from companion.loops.slow import ReflectOptions, reflect_from
 from companion.store.sqlite.store import Store
@@ -121,23 +120,11 @@ def approve(store: Store, rel: RelationshipId, id_prefix: str, now: datetime | N
     return f"approved  {view.claim}"
 
 
-def retire_views_for_turn(
-    store: Store, rel: RelationshipId, turn_id: TurnId, now: datetime | None = None
+def retire_implicated_views(
+    store: Store, views: list[Belief], now: datetime | None = None
 ) -> list[str]:
-    """Friction retires: when the user flags a turn, the views it carried are closed.
-
-    Crude on purpose. A flag does not say which part was wrong, and a closed view that was right
-    simply has to be expressed again to come back. That costs less than keeping one that was wrong.
-    """
+    """Close the views a flag implicates. The caller decides which; most flags implicate none."""
     now = now or datetime.now(UTC)
-    used = {
-        d.belief_id
-        for d in store.decisions_for_turn(rel, turn_id)
-        if d.kind is DecisionKind.SURFACE and d.belief_id is not None
-    }
-    retired: list[str] = []
-    for b in store.self_beliefs(rel):
-        if b.id in used:
-            _close(store, b, "the user flagged a turn that used this view", now)
-            retired.append(b.claim)
-    return retired
+    for b in views:
+        _close(store, b, "the user flagged a turn, and the flag implicates this view", now)
+    return [b.claim for b in views]

@@ -193,12 +193,18 @@ class _Ctx:
 
 
 async def _extract_pass(
-    spec: _Spec, ctx: _Ctx, targets: list[Utterance], known: list[Belief]
+    spec: _Spec,
+    ctx: _Ctx,
+    targets: list[Utterance],
+    known: list[Belief],
+    rejected: list[Belief] | None = None,
 ) -> _Counts:
     store, extractor, run, window, tz = ctx.store, ctx.extractor, ctx.run, ctx.window, ctx.tz
     labelled = known_index(known)
     result = await extractor.extract(
-        spec.system, build_user_prompt(window, {u.id for u in targets}, labelled, tz), spec.schema
+        spec.system,
+        build_user_prompt(window, {u.id for u in targets}, labelled, tz, rejected or ()),
+        spec.schema,
     )
     candidates, rejections = spec.parse(result.data)
     n_candidates = len(candidates) + len(rejections)
@@ -231,7 +237,7 @@ async def _extract_pass(
             continue
         source = made.evidence[0]
         if normalise(made.claim) in seen or is_duplicate_candidate(
-            source.utterance_id, source.quote, [*known, *stored]
+            source.utterance_id, source.quote, [*known, *stored, *(rejected or [])]
         ):
             duplicates += 1
             continue
@@ -293,7 +299,9 @@ async def reflect_from(
         known = [b for b in store.user_beliefs(rel) if b.id not in options.ignore]
         users = await _extract_pass(USER_SPEC, ctx, user_targets, known)
     if own_targets:
-        own = await _extract_pass(SELF_SPEC, ctx, own_targets, store.self_beliefs(rel))
+        own = await _extract_pass(
+            SELF_SPEC, ctx, own_targets, store.self_beliefs(rel), store.rejected_views(rel)
+        )
     run = replace(
         run,
         model=users.model if user_targets else own.model,

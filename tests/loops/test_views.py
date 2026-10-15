@@ -27,10 +27,10 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import card_views, is_settled
-from companion.loops.curate import rebuild, retire_views_for_turn
+from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_once
-from companion.loops.views import check_views
+from companion.loops.views import check_views, views_implicated
 from companion.store.sqlite import replay as store_replay
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
 
@@ -48,14 +48,18 @@ class Routed:
         users: list[Json] | None = None,
         views: list[Json] | None = None,
         checks: list[Json] | None = None,
+        implications: list[Json] | None = None,
     ) -> None:
         self.users = list(users or [])
         self.views = list(views or [])
         self.checks = list(checks or [])
-        self.prompts: dict[str, list[str]] = {"user": [], "self": [], "check": []}
+        self.implications = list(implications or [])
+        self.prompts: dict[str, list[str]] = {"user": [], "self": [], "check": [], "flag": []}
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
-        if "compare views that a companion holds" in system:
+        if "flagged a reply from their companion as wrong" in system:
+            which, queue = "flag", self.implications
+        elif "compare views that a companion holds" in system:
             which, queue = "check", self.checks
         elif "views the COMPANION expressed" in system:
             which, queue = "self", self.views
@@ -390,7 +394,7 @@ async def test_the_mode_setting_is_remembered_and_changes_what_is_carried(store:
     assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()
 
 
-async def test_flagging_a_turn_retires_the_views_it_carried(store: Store) -> None:
+async def _carried_turn(store: Store) -> TurnId:
     _two_day_view(store)
     await check_views(store, Routed(checks=[_verdict(False)]), REL)
     talker = _Talker()
@@ -400,18 +404,69 @@ async def test_flagging_a_turn_retires_the_views_it_carried(store: Store) -> Non
     assert "short replies read as more human" in talker.seen[0].messages[-1].content
     turn = store.latest_turn(REL)
     assert turn is not None
-    retired = retire_views_for_turn(store, REL, turn)
-    assert retired == ["The companion thinks short replies read as more human."]
+    return turn
+
+
+def _implication(labels: list[str], confidence: float = 0.9) -> Json:
+    return {"implicated": list(labels), "confidence": confidence}  # type: ignore[dict-item]
+
+
+async def test_a_flag_that_implicates_a_view_retires_only_that_view(store: Store) -> None:
+    turn = await _carried_turn(store)
+    ex = Routed(implications=[_implication(["v1"])])
+    hit = await views_implicated(store, ex, REL, turn, "it contradicted its own view about replies")
+    assert [b.id for b in hit] == ["idea"]
+    assert "short replies read as more human" in ex.prompts["flag"][0]
+    assert retire_implicated_views(store, hit) == [
+        "The companion thinks short replies read as more human."
+    ]
     assert store.self_beliefs(REL) == []
     assert len(store.self_beliefs_all(REL)) == 1  # closed, never deleted
 
 
-async def test_flagging_a_turn_with_no_views_retires_nothing(store: Store) -> None:
+async def test_a_flag_about_something_else_retires_nothing(store: Store) -> None:
+    """The game-loop flag that closed four unrelated views."""
+    turn = await _carried_turn(store)
+    hit = await views_implicated(
+        store, Routed(implications=[_implication([])]), REL, turn, "weird memory reset/loop?"
+    )
+    assert hit == []
+    assert len(store.self_beliefs(REL)) == 1
+
+
+async def test_a_low_confidence_judgement_retires_nothing(store: Store) -> None:
+    turn = await _carried_turn(store)
+    ex = Routed(implications=[_implication(["v1"], confidence=0.5)])
+    assert await views_implicated(store, ex, REL, turn, "off") == []
+
+
+async def test_an_unparseable_or_failed_judgement_retires_nothing(store: Store) -> None:
+    turn = await _carried_turn(store)
+    assert await views_implicated(store, Routed(implications=[{"x": 1}]), REL, turn, "off") == []
+
+    class Boom:
+        async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+            msg = "provider down"
+            raise RuntimeError(msg)
+
+    assert await views_implicated(store, Boom(), REL, turn, "off") == []
+    assert len(store.self_beliefs(REL)) == 1
+
+
+async def test_a_label_the_model_invents_is_ignored(store: Store) -> None:
+    turn = await _carried_turn(store)
+    ex = Routed(implications=[_implication(["v9"])])
+    assert await views_implicated(store, ex, REL, turn, "off") == []
+
+
+async def test_a_turn_that_carried_no_views_never_asks_the_model(store: Store) -> None:
     talker = _Talker()
     await Conversation(store, talker, PREFIX, REL).handle(SessionId("s"), "hi", "test", T0)
     turn = store.latest_turn(REL)
     assert turn is not None
-    assert retire_views_for_turn(store, REL, turn) == []
+    ex = Routed()
+    assert await views_implicated(store, ex, REL, turn, "off") == []
+    assert ex.prompts["flag"] == []
 
 
 async def test_calibration_compares_the_gates_with_the_users_decisions(store: Store) -> None:
@@ -481,3 +536,43 @@ async def test_a_mechanical_dedupe_closure_is_not_a_user_decision(store: Store) 
     )
     close_duplicates(store, REL)
     assert reviewed_views(store, REL) == []
+
+
+async def test_a_retired_view_is_not_recorded_again_when_the_ledger_is_re_read(
+    store: Store,
+) -> None:
+    from companion.loops.curate import retire  # noqa: PLC0415
+    from companion.loops.slow import reflect_from  # noqa: PLC0415
+
+    _say(store, 1, Speaker.COMPANION, VIEW_TEXT)
+    await reflect_once(store, Routed(views=[_view("m1", "lazy is a flaw")]), REL)
+    [v] = store.self_beliefs(REL)
+    retire(store, REL, v.id[:8], "not a view i want it to hold")
+    assert [b.id for b in store.rejected_views(REL)] == [v.id]
+
+    spy = Routed(views=[_view("m1", "lazy is a flaw")])
+    result = await reflect_from(store, spy, REL, None)
+    assert result.views_accepted == 0
+    assert store.self_beliefs(REL) == []
+    assert "Rejected by the user" in spy.prompts["self"][0]
+    assert "laziness is not a flaw" in spy.prompts["self"][0]
+
+
+async def test_a_mechanical_dedupe_closure_is_not_a_rejection(store: Store) -> None:
+    from companion.loops.curate import close_duplicates  # noqa: PLC0415
+
+    _two_day_view(store, "keep")
+    store.insert_belief(
+        _own_view("dupe", "u1", "short replies read as more human", "short replies read as human.")
+    )
+    close_duplicates(store, REL)
+    assert store.rejected_views(REL) == []
+
+
+async def test_a_view_closed_because_a_flag_implicated_it_counts_as_rejected(
+    store: Store,
+) -> None:
+    turn = await _carried_turn(store)
+    hit = await views_implicated(store, Routed(implications=[_implication(["v1"])]), REL, turn, "x")
+    retire_implicated_views(store, hit)
+    assert [b.id for b in store.rejected_views(REL)] == ["idea"]

@@ -5,9 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+from companion.core.beliefs import views_implicated as impl
 from companion.core.beliefs.views_conflict import SCHEMA, SYSTEM, build_prompt, parse
 from companion.core.extractor import Extractor
-from companion.core.types import BeliefKind, Json, RelationshipId
+from companion.core.types import Belief, BeliefKind, DecisionKind, Json, RelationshipId, TurnId
 from companion.core.views import AUTO_KINDS, is_settled
 from companion.store.sqlite.store import Store
 
@@ -68,3 +69,30 @@ async def check_views(
         store.record_view_check(belief.id, conflicts=found, detail=detail, at=now)
         conflicts += found
     return ViewCheckResult(len(parsed), conflicts, result.cost_usd)
+
+
+async def views_implicated(
+    store: Store, extractor: Extractor, rel: RelationshipId, turn: TurnId, note: str
+) -> list[Belief]:
+    """The views a flagged turn carried that the flag actually implicates. Often none."""
+    carried_ids = {
+        d.belief_id
+        for d in store.decisions_for_turn(rel, turn)
+        if d.kind is DecisionKind.SURFACE and d.belief_id is not None
+    }
+    carried = [b for b in store.self_beliefs(rel) if b.id in carried_ids]
+    user = store.user_utterance(rel, turn)
+    reply = store.companion_utterance(rel, turn)
+    if not carried or user is None or reply is None:
+        return []
+    labelled = {f"v{i}": b for i, b in enumerate(carried, start=1)}
+    try:
+        result = await extractor.extract(
+            impl.SYSTEM, impl.build_prompt(user.text, reply.text, note, labelled), impl.SCHEMA
+        )
+    except Exception:
+        return []  # no judgement means no closure
+    parsed = impl.parse(result.data, set(labelled))
+    if parsed is None or parsed.confidence < impl.MIN_CONFIDENCE:
+        return []
+    return [labelled[label] for label in sorted(parsed.labels)]

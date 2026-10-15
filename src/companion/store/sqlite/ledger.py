@@ -107,3 +107,14 @@ def utterances_after(
             (relationship_id, at, at, cursor[1], limit),
         ).fetchall()
     return [_utterance(r) for r in rows]
+
+
+def companion_utterance(
+    conn: sqlite3.Connection, relationship_id: RelationshipId, turn_id: TurnId
+) -> Utterance | None:
+    row = conn.execute(
+        "SELECT * FROM utterances WHERE relationship_id = ? AND turn_id = ?"
+        " AND speaker = 'companion' ORDER BY at DESC LIMIT 1",
+        (relationship_id, turn_id),
+    ).fetchone()
+    return _utterance(row) if row is not None else None

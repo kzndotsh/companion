@@ -171,6 +171,7 @@ def build_user_prompt(
     targets: set[UtteranceId],
     known: Mapping[str, Belief],
     tz: tzinfo = UTC,
+    rejected: Sequence[Belief] = (),
 ) -> str:
     lines: list[str] = []
     for label, u in index.items():
@@ -182,6 +183,12 @@ def build_user_prompt(
     out = [f"Conversation (times are local, UTC{offset}):", *lines]
     if known:
         out += ["", "Already recorded:", *[f"[{label}] {b.claim}" for label, b in known.items()]]
+    if rejected:
+        out += [
+            "",
+            "Rejected by the user. Never record these or anything like them:",
+            *[f"- {b.claim}" for b in rejected],
+        ]
     return "\n".join(out)
 
 
