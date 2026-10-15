@@ -23,8 +23,12 @@ layers:
 
 check: lint typecheck layers test
 
-replay turn db:
-    uv run companion replay {{turn}} --db {{db}}
+replay turn:
+    uv run companion replay {{turn}}
+
+# jot an idea into docs/inbox/, e.g. just inbox what if it could say when it disagrees
+inbox +text:
+    @python3 -c 'import datetime, pathlib, re, sys; t = " ".join(sys.argv[1:]); s = re.sub(r"[^a-z0-9]+", "-", t.lower()).strip("-")[:48] or "note"; p = pathlib.Path("docs/inbox") / f"{datetime.date.today()}-{s}.md"; p.write_text(f"# {t}\n\nAdded {datetime.date.today()}.\n"); print(p)' {{text}}
 
 run:
     uv run companion run
