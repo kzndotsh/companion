@@ -12,6 +12,10 @@ SessionId = NewType("SessionId", str)
 TurnId = NewType("TurnId", str)
 UtteranceId = NewType("UtteranceId", str)
 BeliefId = NewType("BeliefId", str)
+DecisionId = NewType("DecisionId", str)
+TraceId = NewType("TraceId", str)
+
+type Json = str | int | float | bool | list[Json] | dict[str, Json] | None
 
 
 class Speaker(StrEnum):
@@ -151,3 +155,39 @@ class Belief:
     @property
     def is_current(self) -> bool:
         return self.valid_until is None
+
+
+class DecisionKind(StrEnum):
+    SURFACE = "surface"
+    WITHHOLD = "withhold"
+    INITIATE = "initiate"
+    DO_NOTHING = "do_nothing"
+    POLICY = "policy"
+
+
+BELIEF_DECISIONS = frozenset({DecisionKind.SURFACE, DecisionKind.WITHHOLD})
+
+
+@dataclass(frozen=True, slots=True)
+class Decision:
+    """Something the companion chose, or chose not, to do, and why. Silence is a decision."""
+
+    id: DecisionId
+    relationship_id: RelationshipId
+    session_id: SessionId
+    turn_id: TurnId
+    trace_id: TraceId
+    kind: DecisionKind
+    reason: str
+    at: datetime
+    belief_id: BeliefId | None = None
+    detail: dict[str, Json] | None = None
+
+    def __post_init__(self) -> None:
+        if not self.reason.strip():
+            msg = "every decision carries a reason, including doing nothing"
+            raise ValueError(msg)
+        if (self.kind in BELIEF_DECISIONS) != (self.belief_id is not None):
+            msg = "surface and withhold name a belief; other decisions do not"
+            raise ValueError(msg)
+        _require_aware("at", self.at)
