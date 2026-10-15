@@ -55,3 +55,10 @@ Each version is a new file. The prefix hash on every turn record says which one 
   to me" in 5 of 5 replays, so the rule does not fix that turn; the nagging bit set up by the
   previous message wins. The fix for that turn is the ack judge (react to "fine :p"). The goodbye
   turn that went well before was unchanged. Shipped because it restores a rule lost by mistake.
+- **v9 vs v10, measured (eval runner, 2026-10-15).** Two runs on the same recorded turns, 7 samples
+  per cell in total (2 + 5). agree-and-invent: v9 4/7, v10 3/7. play-invitation: v9 5/7, v10 2/7.
+  signoff-then-time-skip: v9 0/7, v10 0/7. None of the gaps is significant at this sample size
+  (the play gap is p of about 0.12). v10's "Letting them go" rule shows no measurable effect on the
+  sign-off turn, where the nagging bit set up by the previous message wins whatever the persona
+  says. v10 stays live only because it restores a rule lost in v2. If a further comparison also
+  shows no benefit, revert to v9: fewer tokens and no unmeasured rule.
