@@ -30,6 +30,7 @@ PERSONA = "v17.md"
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
+SCENE_MODEL = "deepseek/deepseek-v4-flash"
 REFLECT_IDLE_SECONDS = 90
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
 
@@ -66,6 +67,16 @@ def _talker(client: httpx.AsyncClient) -> Talker:
     return anthropic.AnthropicTalker(key, client, model or anthropic.DEFAULT_MODEL)
 
 
+def _scene_talker(client: httpx.AsyncClient) -> Talker | None:
+    """The model that answers while a pretend scene is in progress. Set COMPANION_SCENE_MODEL to
+    `none` to use the everyday model for scenes too. Scenes need OpenRouter."""
+    model = os.environ.get("COMPANION_SCENE_MODEL", SCENE_MODEL)
+    key = os.environ.get("OPENROUTER_API_KEY")
+    if model.lower() == "none" or not key:
+        return None
+    return openrouter.OpenRouterTalker(key, client, model)
+
+
 async def run(data_dir: Path) -> None:
     logging.basicConfig(level=logging.INFO)
     # httpx logs full request URLs at INFO, and Telegram puts the bot token in the URL.
@@ -79,7 +90,9 @@ async def run(data_dir: Path) -> None:
     async with httpx.AsyncClient() as client:
         talker = _talker(client)
         reflector = extractor(client)
-        convo = Conversation(store, talker, prefix, rel, judge=reflector)
+        convo = Conversation(
+            store, talker, prefix, rel, judge=reflector, scene_talker=_scene_talker(client)
+        )
         pending: list[asyncio.Task[None]] = []
 
         async def reflect_after_idle() -> None:
@@ -137,7 +150,14 @@ async def run(data_dir: Path) -> None:
             )
             return Reaction(FAVORITE_REACTION)
 
-        logging.getLogger("companion").info("up as %s, prefix %s", rel, prefix.sha256[:12])
+        logging.getLogger("companion").info(
+            "up as %s, prefix %s, scenes by %s",
+            rel,
+            prefix.sha256[:12],
+            "the everyday model"
+            if convo.scene_talker is None
+            else os.environ.get("COMPANION_SCENE_MODEL", SCENE_MODEL),
+        )
         await tg.run(handle, {"flag": flag, "fav": favorite, "favorite": favorite})
 
 

@@ -172,3 +172,11 @@ Each version is a new file. The prefix hash on every turn record says which one 
   v16 94/102 and v17 96/102 on GPT-6 Luna; v16 82/101 and v17 83/102 on DeepSeek V4 Flash (its
   weaker everyday scores are unchanged). New fixture `respects-the-time-of-day`; scripts can now
   carry their own `clock` line.
+- **Two talkers (code).** While a pretend scene is in progress (the previous turn was tagged
+  `play`), replies come from a scene model, DeepSeek V4 Flash by default; everything else comes from
+  the everyday model, GPT-6 Luna by default. `COMPANION_SCENE_MODEL=none` turns the split off, and
+  `COMPANION_MODEL` still sets the everyday model. The first message of a scene is answered by the
+  everyday model, because the frame is only known after the message. Reason: on the same persona,
+  Luna led everyday chat (59/64 on the public fixtures against DeepSeek's 49/64) while DeepSeek
+  kept a scripted scene going more (76% against 52% of escalating turns). Every use of the scene
+  talker is a logged decision, and each turn's record names the model that replied.

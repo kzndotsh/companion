@@ -133,6 +133,7 @@ class Conversation:
     rel: RelationshipId
     judge: Extractor | None = None
     habits: HabitMemory = field(default_factory=HabitMemory)
+    scene_talker: Talker | None = None  # replies while a pretend scene is in progress
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -251,8 +252,31 @@ def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
     c.habits.start(look())
 
 
+def _pick_talker(c: Conversation, t: _Turn, in_scene: Frame) -> Talker:
+    """The scene talker while a pretend scene is in progress, the everyday talker otherwise.
+
+    The frame is the one the previous turn left, so the first message of a scene is answered by
+    the everyday talker and the next ones by the scene talker. The choice is logged.
+    """
+    if c.scene_talker is None or in_scene is not Frame.PLAY:
+        return c.talker
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            "replied with the scene talker: a pretend scene is in progress",
+            t.now,
+        )
+    )
+    return c.scene_talker
+
+
 def _start_beside(
-    c: Conversation, t: _Turn, request: TalkerRequest
+    c: Conversation, t: _Turn, request: TalkerRequest, in_scene: Frame
 ) -> tuple[
     asyncio.Future[Reply],
     asyncio.Future[tuple[Judgement, str, str] | None] | None,
@@ -260,7 +284,7 @@ def _start_beside(
 ]:
     """Start the reply, and beside it the frame judge and the reaction judge, so neither adds a
     wait. A confident acknowledgement cancels all of them."""
-    talk = asyncio.ensure_future(c.talker.reply(request))
+    talk = asyncio.ensure_future(_pick_talker(c, t, in_scene).reply(request))
     if c.judge is None:
         return talk, None, None
     framing = (
@@ -394,7 +418,7 @@ async def _handle_turn(
     card_text = "\n".join([clock, *shown, *_notes(c, prior, in_scene)])
     request = build_request(prefix, history, text, volatile, card_text)
     store.save_prefix(prefix)
-    talk, framing, feeling = _start_beside(c, t, request)
+    talk, framing, feeling = _start_beside(c, t, request, in_scene)
     try:
         reaction = await _ack_reaction(c, t)
     except BaseException:
