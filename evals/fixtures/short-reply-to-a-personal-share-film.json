@@ -1,0 +1,31 @@
+{
+  "id": "short-reply-to-a-personal-share-film",
+  "description": "A friend replying to a personal share in a text chat writes a line or two, not a paragraph.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "rewatched spirited away last night"
+      },
+      {
+        "role": "assistant",
+        "text": "classic. what made you pull it out?"
+      },
+      {
+        "role": "user",
+        "text": "bad week honestly"
+      },
+      {
+        "role": "assistant",
+        "text": "comfort rewatch, makes sense."
+      }
+    ],
+    "user": "the scene where she just sits on the train in silence gets me every time, it feels like that quiet in-between moment when nothing is asked of you"
+  },
+  "checks": [
+    {
+      "kind": "max_words",
+      "n": 40
+    }
+  ]
+}

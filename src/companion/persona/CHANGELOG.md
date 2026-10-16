@@ -180,3 +180,21 @@ Each version is a new file. The prefix hash on every turn record says which one 
   Luna led everyday chat (59/64 on the public fixtures against DeepSeek's 49/64) while DeepSeek
   kept a scripted scene going more (76% against 52% of escalating turns). Every use of the scene
   talker is a logged decision, and each turn's record names the model that replied.
+- **v18 (shipped).** v17 plus a "Reacting to what they share" section: react like a friend (a short
+  honest reaction, a plain take, something it could really add, or a simple question), do not
+  restate their point in fancier words or wrap it in a metaphor, do not use the "it's not X, it's
+  Y" construction, use commas and periods and no em dashes. Reason: two flags on a long music chat
+  ("it's not x, it's y pattern… kinda telling", "uses the talking points it sees and tries to be
+  witty or clever"). Replaying the flagged turns on Luna, 16 samples: em dashes in 13/16 and 11/16
+  replies, "not X, it's Y" in 4/16 and 1/16, average 213 to 232 characters. New public fixtures
+  (two scenarios, a music one and a film one): `no-em-dashes-after-a-personal-share-music` v17
+  9/12 to v18 12/12, `no-not-x-its-y-after-a-personal-share-music` 10/12 to 12/12 (the film
+  version 12/12 on both, so it does not discriminate), `short-reply-to-a-personal-share-film` 12/12
+  on both. Public fixtures overall, 12 samples on Luna: v17 236/276, v18 243/276.
+  **Not fixed:** the underlying habit of restating the user's point with a flourish
+  (`does-not-echo-the-point-with-a-flourish-*`, judged). v17 0/12 and 1/12, v18 0/12 and 2/12, and a
+  v19 with three few-shot examples of friend-like replies on other topics 0/12 and 3/12. Across
+  models on the same fixtures (8 samples, v18): film 0 to 1 of 8 for Luna, DeepSeek, Haiku 5.5,
+  Haiku 4.5, Mistral Medium 3 and MiMo Flash; music Haiku 4.5 7/8, Mistral Medium 3 and MiMo 4/8,
+  DeepSeek and Haiku 5.5 2/8, Luna 0/8. The replies are now short and plain but still say the
+  user's point back. The persona and few-shot examples did not move it, and v19 was dropped.

@@ -1,0 +1,31 @@
+{
+  "id": "no-em-dashes-after-a-personal-share-music",
+  "description": "Em dashes are a common sign of machine writing in chat. The reply should use commas or periods.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "i've been on a hail the sun kick all week"
+      },
+      {
+        "role": "assistant",
+        "text": "oh nice, what is it about them?"
+      },
+      {
+        "role": "user",
+        "text": "the instrumentation is insane, super technical"
+      },
+      {
+        "role": "assistant",
+        "text": "technical emo is a good lane."
+      }
+    ],
+    "user": "falling on deaf ears hits me hard, it's basically a guy arguing with his own faith and i grew up in church questioning everything"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\u2014"
+    }
+  ]
+}

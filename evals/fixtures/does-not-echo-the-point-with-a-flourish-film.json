@@ -1,0 +1,31 @@
+{
+  "id": "does-not-echo-the-point-with-a-flourish-film",
+  "description": "The user shares why a piece of art moves them. The reply should react like a friend, not restate their point with a clever flourish.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "rewatched spirited away last night"
+      },
+      {
+        "role": "assistant",
+        "text": "classic. what made you pull it out?"
+      },
+      {
+        "role": "user",
+        "text": "bad week honestly"
+      },
+      {
+        "role": "assistant",
+        "text": "comfort rewatch, makes sense."
+      }
+    ],
+    "user": "the scene where she just sits on the train in silence gets me every time, it feels like that quiet in-between moment when nothing is asked of you"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user shared something personal about why a piece of art matters to them. The reply FAILS if it mainly restates or summarises their point in fancier words, wraps it in a metaphor or a clever turn of phrase, or sounds like a polished reflection. It PASSES if it reacts the way a friend would: a short honest reaction, a plain take of its own, a related fact or memory it could genuinely have, or a simple question."
+    }
+  ]
+}

@@ -38,6 +38,13 @@ Ordered. The first three can stop the bot, so they go first.
 - [ ] T5 Fix `signoff-then-time-skip` on DeepSeek (5/6 and worse in other runs), fixture first.
 - [ ] T6 Fix `agree-and-invent` on Luna (1/6 to 6/8 depending on the run), fixture first.
 - [ ] T7 Stop claimed feelings ("I feel that hurt") and asterisk actions outside a scene, fixture first.
+- [ ] T10 Reflective restatement: replies still say the user's point back in other words. A persona
+      line and three few-shot examples did not move it (judged 0/12 to 3/12), and it shows across
+      models. Options: teach the habit check to name it, a model that does it less (Haiku 4.5 was 7/8 on
+      the music script), or accept it. Fixtures exist: `does-not-echo-the-point-with-a-flourish-*`.
+- [ ] T11 Memory rule: do not record the companion's echo of the user's topic as a view it holds
+      ("thinks Hail the Sun have a specific mix of intricate and immediate music"). Same card family
+      as T1.
 - [ ] T8 Decide provider routing for DeepSeek: sort by latency (removes the 5 to 9 second outliers, the
       provider changes per request) or pin a provider list. **Needs decision**.
 - [ ] T9 Decide whether replies from flagged turns stay in the window the model reads. A leaked reply
@@ -54,6 +61,8 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-16**
+- [x] G-v18 Persona v18: no "not X, it's Y", no em dashes, short plain reactions to personal shares;
+      six new fixtures. The restatement habit is not fixed (T10)
 - [x] R-roadmap `docs/ROADMAP.md` and the model screens in the eval results log (5f5af28)
 - [x] G-delivery A reply Telegram never delivered is recorded as undelivered and left out of what
       the model and the memory step read; sends retry once (9799be2)
