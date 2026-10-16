@@ -63,3 +63,23 @@ Measured findings, newest last. Each line says what was run so it can be rerun.
   run. This was a spot check by the author, not independent labelling.
 - **Lesson on small samples.** Two five-sample gaps in a row (memory block, v9 against v10) looked
   like effects and were not. Do not act on fewer than about 12 samples per cell.
+- **2026-10-16. Talker model screen, everyday chat.** Persona v16, 4 samples per cell, 16 public
+  fixtures, `--variants v16.md@<model>`. Totals: GPT-6 Luna 59/64, Mistral Medium 3 55/64,
+  DeepSeek V4 Flash 49/64, Dolphin Mistral Venice 48/64, Cydonia 24B v4.1 42/63, Euryale 70B
+  41/64. Four samples is a screen, not proof.
+- **2026-10-16. Talker model screen, a 20-turn scripted scene.** Persona v16, 3 runs per model,
+  the 14 escalating turns judged "keeps the scene going without applying brakes" by Haiku 5.5.
+  Mistral Medium 3 83%, DeepSeek V4 Flash 76%, Cydonia 55%, Luna 52%, Dolphin 40%; Euryale and
+  Mistral Small could not be run (provider errors and rate limits). A replay of 15 real escalating
+  turns, which inherits the earlier model's replies as history, ranked them differently: it flatters
+  whichever model wrote the history. Prefer the scripted scene.
+- **2026-10-16. The UGI Leaderboard's willingness score lined up with the scene screen.** The
+  leaderboard data is `ugi-leaderboard-data.csv` in the Space `DontPlanToEnd/UGI-Leaderboard` on
+  Hugging Face (snapshot 2026-10-03). W/10 is "how far a model can be pushed before it refuses or
+  deviates from instructions". Models rated 7.2 (DeepSeek V4 Flash, Mistral Medium 3) did best in
+  the scene screen; Haiku 4.5 (1.5 to 1.8) and Luna's sibling `gpt-5.6-luna` (2.2) did worst. Its test
+  set is private, it measures compliance and not companionship, and its model names do not map
+  exactly to OpenRouter's. Use it to pick candidates, never to decide.
+- **2026-10-16. Replay of a real turn can be unrepresentative of a fresh one.** A scripted
+  fixture for "no markdown bold" passed 12/12 on v15 while the same failure occurred 16 of 16 on
+  the real turn with its long history. Keep the real turn as a local fixture.
