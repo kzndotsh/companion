@@ -282,8 +282,9 @@ async def test_a_streak_of_the_same_opener_reaches_the_next_request_as_a_note(
     convo = Conversation(store, talker, PREFIX, REL)
     for i, text in enumerate(["a", "b", "c", "d"]):
         await convo.handle(SESSION, text, "test", NOW + timedelta(minutes=i))
-    assert "began with" not in talker.seen[2].messages[-1].content
-    assert 'began with "ha"' in talker.seen[3].messages[-1].content
+    assert "began with" not in talker.seen[2].card
+    assert 'began with "ha"' in talker.seen[3].card
+    assert "began with" not in talker.seen[3].messages[-1].content
     store.close()
 
 

@@ -208,16 +208,11 @@ def _react_alongside(
     return decision.reaction
 
 
-def _volatile(c: Conversation, prior: list[Utterance], now: datetime, in_scene: Frame) -> str:
-    """The clock, what it should know about its own habits, and a note about a scene in progress."""
-    parts = [volatile_line(now, prior[-1].at if prior else None)]
-    if (habit := habit_note(prior)) is not None:
-        parts.append(habit)
-    if (learned := c.habits.note()) is not None:
-        parts.append(learned)
-    if (note := scene_note(in_scene)) is not None:
-        parts.append(note)
-    return "\n".join(parts)
+def _notes(c: Conversation, prior: list[Utterance], in_scene: Frame) -> list[str]:
+    """What it should know about its own habits and a scene in progress. These go in the system
+    block with the memory card: in a user message the model read them as something they said."""
+    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene)]
+    return [n for n in notes if n is not None]
 
 
 def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
@@ -393,8 +388,9 @@ async def _handle_turn(
     views = card_views(store.self_beliefs(rel), view_state)
     assertable = [b for b in store.user_beliefs(rel) if is_assertable(b)]
     card = build_card(assertable, support, now, views=views)
-    volatile = _volatile(c, prior, now, in_scene)
-    card_text = "" if card.empty else render(card, now.astimezone().tzinfo or UTC)
+    volatile = volatile_line(now, prior[-1].at if prior else None)
+    shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
+    card_text = "\n".join([*shown, *_notes(c, prior, in_scene)])
     request = build_request(prefix, history, text, volatile, card_text)
     store.save_prefix(prefix)
     talk, framing, feeling = _start_beside(c, t, request)

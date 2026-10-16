@@ -67,8 +67,9 @@ async def _chat(store: Store, judge: Judge | None, n: int) -> Talker:
 
 async def test_a_found_habit_reaches_a_later_request_as_a_note(store: Store) -> None:
     talker = await _chat(store, Judge(), 7)
-    assert "keep doing this" not in talker.seen[2].messages[-1].content
-    assert 'calls them "sweetheart" in every reply' in talker.seen[-1].messages[-1].content
+    assert "keep doing this" not in talker.seen[2].card
+    assert 'calls them "sweetheart" in every reply' in talker.seen[-1].card
+    assert "keep doing this" not in talker.seen[-1].messages[-1].content
 
 
 async def test_the_check_is_logged_with_a_reason_written_by_code(store: Store) -> None:

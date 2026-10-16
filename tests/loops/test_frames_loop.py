@@ -106,8 +106,9 @@ async def test_a_scene_in_progress_adds_a_note_to_the_next_reply_without_waiting
     convo = Conversation(store, talker, PREFIX, REL, judge=judge)
     await convo.handle(SESSION, "let's pretend you're a knight", "t", NOW)
     await convo.handle(SESSION, "and then what", "t", NOW + timedelta(seconds=30))
-    assert "pretend scene" not in talker.seen[0].messages[-1].content
-    assert "A pretend scene they started is in progress" in talker.seen[1].messages[-1].content
+    assert "pretend scene" not in talker.seen[0].card
+    assert "A pretend scene they started is in progress" in talker.seen[1].card
+    assert "pretend scene" not in talker.seen[1].messages[-1].content
     assert judge.calls == 2  # the second message had no cue; the scene alone triggered the judge
 
 

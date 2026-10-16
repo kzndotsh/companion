@@ -152,3 +152,12 @@ Each version is a new file. The prefix hash on every turn record says which one 
 - **Habit check fix (code).** The move-level check sometimes listed non-habits ("no repeated pet
   names", "not a consistent pattern"). The model must now give, for each habit, how many of the
   replies it appears in, and code drops any seen in fewer than three.
+- **Notes moved out of the user message (code).** The habit note and the scene note used to ride
+  the user's message next to the clock line. A live chat on DeepSeek V4 Flash showed the model
+  reading the habit note as something the user said: it apologised for "a habit of reaching for
+  the same kind of phrase", said "that's a good note", and the memory step even recorded a
+  "self preference" from that reply. Replaying six of those turns (8 samples each): replies that
+  leaked the note or echoed the bracketed clock line were 7 to 8 of 48 with the notes in the user
+  message, 2 to 4 of 48 with the notes in the system block beside the memory card, and 1 of 48
+  with the clock moved there too. The notes are now in the system block. The clock is still in the
+  user message, which needs a persona change (the persona describes it there).
