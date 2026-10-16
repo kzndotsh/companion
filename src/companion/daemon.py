@@ -123,7 +123,13 @@ async def run(data_dir: Path) -> None:
                 task.cancel()
             pending[:] = [asyncio.create_task(reflect_after_idle())]
 
-        tg = Telegram(token, user, client)
+        async def undelivered(text: str, reason: str) -> None:
+            if store.mark_undelivered(rel, text, reason, datetime.now(UTC)) is not None:
+                logging.getLogger("companion").warning(
+                    "a reply never arrived and is not remembered"
+                )
+
+        tg = Telegram(token, user, client, on_undelivered=undelivered)
 
         async def handle(text: str) -> str | Reaction | ReactAndReply:
             reply = await convo.handle(SESSION, text, "telegram")

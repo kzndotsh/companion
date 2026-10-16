@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -12,12 +13,15 @@ from companion.core.types import (
     Belief,
     BeliefId,
     Decision,
+    DecisionId,
+    DecisionKind,
     Evidence,
     Favorite,
     Flag,
     Json,
     RelationshipId,
     Subject,
+    TraceId,
     TurnId,
     Utterance,
     UtteranceId,
@@ -49,6 +53,28 @@ class Store:
 
     def append_utterance(self, u: Utterance) -> None:
         ledger.append_utterance(self._conn, u)
+
+    def mark_undelivered(
+        self, rel: RelationshipId, text: str, reason: str, now: datetime
+    ) -> Utterance | None:
+        """Leave a reply the user never received out of what the model reads, and log it."""
+        marked = ledger.mark_undelivered(self._conn, rel, text, reason, now)
+        if marked is not None:
+            decisions.append_decision(
+                self._conn,
+                Decision(
+                    DecisionId(uuid.uuid4().hex),
+                    rel,
+                    marked.session_id,
+                    marked.turn_id,
+                    TraceId(marked.turn_id),
+                    DecisionKind.POLICY,
+                    "reply not delivered, so it is left out of what the model reads",
+                    now,
+                    detail={"utterance_id": marked.id, "cause": reason},
+                ),
+            )
+        return marked
 
     def history_before(self, rel: RelationshipId, before: datetime, limit: int) -> list[Utterance]:
         return ledger.history_before(self._conn, rel, before, limit)

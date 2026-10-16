@@ -31,6 +31,36 @@ def _utterance(row: sqlite3.Row) -> Utterance:
     )
 
 
+# Replies the user never received are not part of the conversation either side has seen, so the
+# queries below skip every utterance that has a row in `undelivered`.
+
+
+def mark_undelivered(
+    conn: sqlite3.Connection,
+    relationship_id: RelationshipId,
+    text: str,
+    reason: str,
+    at: datetime,
+) -> Utterance | None:
+    """Record that the latest companion message with exactly this text was never delivered.
+    None when there is no such message (a command's reply, say) or it is already marked."""
+    row = conn.execute(
+        "SELECT * FROM utterances WHERE relationship_id = ? AND speaker = 'companion' AND text = ?"
+        " AND id NOT IN (SELECT utterance_id FROM undelivered)"
+        " ORDER BY at DESC, id DESC LIMIT 1",
+        (relationship_id, text),
+    ).fetchone()
+    if row is None:
+        return None
+    with write_tx(conn):
+        conn.execute(
+            "INSERT INTO undelivered (utterance_id, relationship_id, reason, at)"
+            " VALUES (?, ?, ?, ?)",
+            (row["id"], relationship_id, reason, iso(at)),
+        )
+    return _utterance(row)
+
+
 def append_utterance(conn: sqlite3.Connection, u: Utterance) -> None:
     with write_tx(conn):
         conn.execute(
@@ -71,6 +101,7 @@ def history_before(
     """The last `limit` utterances strictly before `before`, across sessions, oldest first."""
     rows = conn.execute(
         "SELECT * FROM (SELECT * FROM utterances WHERE relationship_id = ? AND at < ?"
+        " AND id NOT IN (SELECT utterance_id FROM undelivered)"
         " ORDER BY at DESC, id DESC LIMIT ?) ORDER BY at, id",
         (relationship_id, iso(before), limit),
     ).fetchall()
@@ -96,14 +127,15 @@ def utterances_after(
     """Everything after the cursor, oldest first. No cursor means from the beginning."""
     if cursor is None:
         rows = conn.execute(
-            "SELECT * FROM utterances WHERE relationship_id = ? ORDER BY at, id LIMIT ?",
+            "SELECT * FROM utterances WHERE relationship_id = ?"
+            " AND id NOT IN (SELECT utterance_id FROM undelivered) ORDER BY at, id LIMIT ?",
             (relationship_id, limit),
         ).fetchall()
     else:
         at = iso(cursor[0])
         rows = conn.execute(
             "SELECT * FROM utterances WHERE relationship_id = ? AND (at > ? OR (at = ? AND id > ?))"
-            " ORDER BY at, id LIMIT ?",
+            " AND id NOT IN (SELECT utterance_id FROM undelivered) ORDER BY at, id LIMIT ?",
             (relationship_id, at, at, cursor[1], limit),
         ).fetchall()
     return [_utterance(r) for r in rows]

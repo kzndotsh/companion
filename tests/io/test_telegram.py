@@ -210,3 +210,56 @@ async def test_a_failed_send_does_not_stop_the_bot() -> None:
 
     tg = await _tg(handler)
     await tg.handle_update(_update("hi"), talk, {})  # must not raise
+
+
+async def test_an_undelivered_reply_is_reported_with_its_text(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import companion.io.telegram as module  # noqa: PLC0415
+
+    async def no_sleep(seconds: float) -> None:
+        del seconds
+
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+    told: list[tuple[str, str]] = []
+
+    async def on_undelivered(text: str, reason: str) -> None:
+        told.append((text, reason))
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        method = str(req.url).rsplit("/", 1)[-1]
+        if method == "sendMessage":
+            return httpx.Response(500, json={"ok": False})
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        del text
+        return "you never see this"
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    await Telegram("T", ALLOWED, client, on_undelivered=on_undelivered).handle_update(
+        _update("hi"), talk, {}
+    )
+    assert [t for t, _ in told] == ["you never see this"]
+    assert "SECRET" not in told[0][1]
+
+
+async def test_a_delivered_reply_is_not_reported() -> None:
+    told: list[str] = []
+
+    async def on_undelivered(text: str, reason: str) -> None:
+        told.append(text + reason)
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        del text
+        return "fine"
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    await Telegram("T", ALLOWED, client, on_undelivered=on_undelivered).handle_update(
+        _update("hi"), talk, {}
+    )
+    assert told == []

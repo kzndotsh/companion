@@ -17,6 +17,7 @@ log = logging.getLogger("companion.telegram")
 Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 CommandHandler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
+Undelivered = Callable[[str, str], Awaitable[None]]  # the reply text and why it did not arrive
 
 
 class TelegramError(RuntimeError):
@@ -25,10 +26,17 @@ class TelegramError(RuntimeError):
 
 
 class Telegram:
-    def __init__(self, token: str, allowed_user: int, client: httpx.AsyncClient) -> None:
+    def __init__(
+        self,
+        token: str,
+        allowed_user: int,
+        client: httpx.AsyncClient,
+        on_undelivered: Undelivered | None = None,
+    ) -> None:
         self._base = f"https://api.telegram.org/bot{token}"
         self._allowed = allowed_user
         self._client = client
+        self._on_undelivered = on_undelivered
 
     async def _call(self, method: str, **params: object) -> object:
         for attempt in range(2):
@@ -50,7 +58,15 @@ class Telegram:
         raise TelegramError(msg)
 
     async def send(self, chat_id: int, text: str) -> None:
-        await self._call("sendMessage", chat_id=chat_id, text=text)
+        for attempt in range(2):
+            try:
+                await self._call("sendMessage", chat_id=chat_id, text=text)
+            except TelegramError:
+                if attempt == 1:
+                    raise
+                await asyncio.sleep(2.0)
+            else:
+                return
 
     async def react(self, chat_id: int, message_id: int, emoji: str) -> None:
         await self._call(
@@ -109,6 +125,7 @@ class Telegram:
             await self._answer(chat_id, message_id, reply)
         except TelegramError as err:
             log.warning("could not deliver the reply: %s", err)
+            await self._report_undelivered(reply, str(err))
 
     async def _answer(
         self, chat_id: int, message_id: int, reply: str | Reaction | ReactAndReply
@@ -128,6 +145,16 @@ class Telegram:
                 await self.send(chat_id, "noted")
         elif reply:
             await self.send(chat_id, reply)
+
+    async def _report_undelivered(self, reply: str | Reaction | ReactAndReply, reason: str) -> None:
+        """Tell the conversation a reply never arrived, so the model does not think it was seen."""
+        text = reply.text if isinstance(reply, ReactAndReply) else reply
+        if not isinstance(text, str) or not text or self._on_undelivered is None:
+            return
+        try:
+            await self._on_undelivered(text, reason)
+        except Exception:
+            log.exception("could not record an undelivered reply")
 
 
 def _retry_after(resp: httpx.Response) -> float:
