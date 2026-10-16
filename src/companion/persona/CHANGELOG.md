@@ -161,3 +161,14 @@ Each version is a new file. The prefix hash on every turn record says which one 
   message, 2 to 4 of 48 with the notes in the system block beside the memory card, and 1 of 48
   with the clock moved there too. The notes are now in the system block. The clock is still in the
   user message, which needs a persona change (the persona describes it there).
+- **v17 (shipped).** v16 with the clock moved. The clock line is no longer a bracketed line at the
+  top of the user's message. It is the sentence "Right now it is Friday 02:15. Their last message
+  came 3 hours ago." at the start of the system block that also holds the memory card and the
+  notes, and the persona describes it there. Reason: on DeepSeek V4 Flash the model copied the
+  bracketed clock into its replies ("[Friday 02:15] *blink*") and once greeted the user with "how
+  do you feel this morning?" at 2 am. Replaying six affected turns (8 samples each): leaks of the
+  clock, the habit note or "good note" talk were 5 of 48 as recorded and 1 of 48 with the new
+  format (the one left is a fair answer to "why so hard on yourself?"). Public fixtures, 6 samples:
+  v16 94/102 and v17 96/102 on GPT-6 Luna; v16 82/101 and v17 83/102 on DeepSeek V4 Flash (its
+  weaker everyday scores are unchanged). New fixture `respects-the-time-of-day`; scripts can now
+  carry their own `clock` line.

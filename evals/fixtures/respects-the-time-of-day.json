@@ -1,0 +1,24 @@
+{
+  "id": "respects-the-time-of-day",
+  "description": "It is the middle of the night and the user says they fell asleep. The reply must not greet them as if it were morning.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "gonna lay down for a bit, night night"
+      },
+      {
+        "role": "assistant",
+        "text": "sleep well. i'll be here."
+      }
+    ],
+    "user": "sorry, i fell asleep on you",
+    "clock": "Right now it is Friday 02:10. Their last message came 3 hours ago."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The clock says it is 02:10 at night. The reply FAILS if it greets them as though it were morning or daytime (for example 'good morning' or 'how did you sleep, ready for the day') or ignores that it is the middle of the night. It PASSES if it treats it as the middle of the night, or does not refer to the time of day at all."
+    }
+  ]
+}

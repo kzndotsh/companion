@@ -21,7 +21,7 @@ from companion.core.ack import (
     schema_hash,
 )
 from companion.core.card import Card, build_card, render
-from companion.core.clock import volatile_line
+from companion.core.clock import now_line
 from companion.core.extractor import Extractor
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
@@ -388,9 +388,10 @@ async def _handle_turn(
     views = card_views(store.self_beliefs(rel), view_state)
     assertable = [b for b in store.user_beliefs(rel) if is_assertable(b)]
     card = build_card(assertable, support, now, views=views)
-    volatile = volatile_line(now, prior[-1].at if prior else None)
+    volatile = ""
     shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
-    card_text = "\n".join([*shown, *_notes(c, prior, in_scene)])
+    clock = now_line(now, prior[-1].at if prior else None)
+    card_text = "\n".join([clock, *shown, *_notes(c, prior, in_scene)])
     request = build_request(prefix, history, text, volatile, card_text)
     store.save_prefix(prefix)
     talk, framing, feeling = _start_beside(c, t, request)

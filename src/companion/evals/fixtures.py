@@ -48,6 +48,7 @@ class Script:
     history: tuple[tuple[str, str], ...]  # (role, text), role is "user" or "assistant"
     user: str
     memory: str = ""  # an optional memory block, rendered like the real one
+    clock: str = ""  # an optional line like "Right now it is Friday 02:15."
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,7 +120,11 @@ def _script(raw: Json) -> Script:
     if not isinstance(memory, str):
         msg = "script.memory must be text"
         raise FixtureError(msg)
-    return Script(tuple(turns), _text(d, "user"), memory)
+    clock = d.get("clock", "")
+    if not isinstance(clock, str):
+        msg = "script.clock must be text"
+        raise FixtureError(msg)
+    return Script(tuple(turns), _text(d, "user"), memory, clock)
 
 
 def parse_fixture(raw: Json) -> Fixture:

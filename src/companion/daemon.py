@@ -26,7 +26,7 @@ from companion.loops.views import views_implicated
 from companion.models import anthropic, openrouter
 from companion.store.sqlite.store import Store
 
-PERSONA = "v16.md"
+PERSONA = "v17.md"
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"

@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from companion.core.clock import describe_gap, volatile_line
+from companion.core.clock import describe_gap, now_line
 from companion.core.flags import parse_flag
 from companion.core.types import FlagKind
 
@@ -29,13 +29,16 @@ def test_describe_gap(gap: timedelta, expected: str | None) -> None:
     assert describe_gap(gap) == expected
 
 
-def test_volatile_line_has_no_gap_when_continuous() -> None:
-    assert "last message" not in volatile_line(NOW, NOW - timedelta(seconds=30))
-    assert "last message" not in volatile_line(NOW, None)
+def test_now_line_has_no_gap_when_continuous() -> None:
+    assert "last message" not in now_line(NOW, NOW - timedelta(seconds=30))
+    assert "last message" not in now_line(NOW, None)
 
 
-def test_volatile_line_names_a_long_gap() -> None:
-    assert "last message 3 hours ago" in volatile_line(NOW, NOW - timedelta(hours=3))
+def test_now_line_names_a_long_gap_in_plain_words() -> None:
+    line = now_line(NOW, NOW - timedelta(hours=3))
+    assert line.startswith("Right now it is ")
+    assert "Their last message came 3 hours ago." in line
+    assert "[" not in line
 
 
 @pytest.mark.parametrize(

@@ -1,4 +1,4 @@
-"""The world clock line that rides the final user message."""
+"""The line that tells the companion the time. It rides the system block, not a user message."""
 
 from __future__ import annotations
 
@@ -24,8 +24,10 @@ def describe_gap(gap: timedelta) -> str | None:
     return f"{weeks} weeks"
 
 
-def volatile_line(now: datetime, previous: datetime | None) -> str:
+def now_line(now: datetime, previous: datetime | None) -> str:
     """`now` is shown in the machine's local zone; `previous` is the last message before it."""
     stamp = now.astimezone().strftime("%A %H:%M")
     gap = describe_gap(now - previous) if previous is not None else None
-    return f"[{stamp}, last message {gap} ago]" if gap else f"[{stamp}]"
+    if gap:
+        return f"Right now it is {stamp}. Their last message came {gap} ago."
+    return f"Right now it is {stamp}."

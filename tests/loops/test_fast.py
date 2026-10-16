@@ -164,7 +164,8 @@ async def test_clock_line_names_the_gap(store: Store) -> None:
     convo = Conversation(store, talker, PREFIX, REL)
     await convo.handle(SESSION, "first", "test", NOW)
     await convo.handle(SESSION, "second", "test", NOW + timedelta(hours=5, minutes=1))
-    assert "last message 5 hours ago" in talker.seen[1].messages[-1].content
+    assert "Their last message came 5 hours ago." in talker.seen[1].card
+    assert "Right now it is" not in talker.seen[1].messages[-1].content
 
 
 async def test_beliefs_reach_the_request_and_each_placement_is_logged(
