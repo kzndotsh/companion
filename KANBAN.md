@@ -64,6 +64,8 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-16**
+- [x] G-ages Memory ages use the user's calendar days ("yesterday", not "today" at 20 hours)
+- [x] G-retry Network blips are retried for the talker and the memory step
 - [x] G-v18 Persona v18: no "not X, it's Y", no em dashes, short plain reactions to personal shares;
       six new fixtures. The restatement habit is not fixed (T10)
 - [x] R-roadmap `docs/ROADMAP.md` and the model screens in the eval results log (5f5af28)

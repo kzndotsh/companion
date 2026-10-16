@@ -24,6 +24,7 @@ from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.views import views_implicated
 from companion.models import anthropic, openrouter
+from companion.models.retry import retry_on_network_error
 from companion.store.sqlite.store import Store
 
 PERSONA = "v18.md"
@@ -32,6 +33,7 @@ FAVORITE_REACTION = "❤"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 SCENE_MODEL = "deepseek/deepseek-v4-flash"
 REFLECT_IDLE_SECONDS = 90
+REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
 
 
@@ -98,7 +100,15 @@ async def run(data_dir: Path) -> None:
         async def reflect_after_idle() -> None:
             await asyncio.sleep(REFLECT_IDLE_SECONDS)
             try:
-                result = await reflect_once(store, reflector, rel)
+                result = await retry_on_network_error(
+                    lambda: reflect_once(store, reflector, rel), REFLECT_RETRY_DELAYS, "reflect"
+                )
+            except httpx.TransportError as err:
+                logging.getLogger("companion.slow").warning(
+                    "reflect could not reach the model (%s); it will run after the next message",
+                    type(err).__name__,
+                )
+                return
             except Exception:
                 logging.getLogger("companion.slow").exception("reflect failed, will retry")
                 return

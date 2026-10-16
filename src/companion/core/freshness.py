@@ -7,7 +7,7 @@ for facts). They are written down so they can be tuned with use, not because the
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
 from companion.core.types import BeliefKind
@@ -42,8 +42,11 @@ def status(kind: BeliefKind, last_supported: datetime, now: datetime) -> Freshne
     return Freshness.AGING if age <= timedelta(days=horizon) else Freshness.STALE
 
 
-def age_phrase(age: timedelta) -> str:
-    days = max(age.days, 0)
+def when_phrase(last: datetime, now: datetime, tz: tzinfo | None = None) -> str:
+    """How long ago, in the user's calendar days: something said at 5 pm yesterday is "yesterday"
+    at 9 am today, however few hours have passed. `tz` defaults to the machine's local zone, the
+    same one the clock line shows."""
+    days = max((now.astimezone(tz).date() - last.astimezone(tz).date()).days, 0)
     if days < 1:
         return "today"
     if days < 2:

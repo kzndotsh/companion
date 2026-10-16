@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
-from companion.core.freshness import HORIZON_DAYS, Freshness, age_phrase, status
+from companion.core.freshness import HORIZON_DAYS, Freshness, status, when_phrase
 from companion.core.types import BeliefKind
 from tests.conftest import T0
 
@@ -43,9 +43,29 @@ def test_status_by_kind_and_age(kind: BeliefKind, days: int, expected: Freshness
         (90, "3 months ago"),
     ],
 )
-def test_age_phrase(days: int, text: str) -> None:
-    assert age_phrase(timedelta(days=days)) == text
+def test_when_phrase_counts_the_users_calendar_days(days: int, text: str) -> None:
+    now = datetime(2026, 10, 16, 12, 0, tzinfo=UTC)
+    assert when_phrase(now - timedelta(days=days), now, UTC) == text
+
+
+def test_something_said_last_evening_is_yesterday_even_if_under_24_hours_ago() -> None:
+    now = datetime(2026, 10, 16, 16, 51, tzinfo=UTC)
+    last_evening = datetime(2026, 10, 15, 21, 0, tzinfo=UTC)  # 20 hours earlier
+    assert when_phrase(last_evening, now, UTC) == "yesterday"
+
+
+def test_something_said_this_morning_is_today_however_late_it_is() -> None:
+    now = datetime(2026, 10, 16, 23, 30, tzinfo=UTC)
+    assert when_phrase(datetime(2026, 10, 16, 0, 5, tzinfo=UTC), now, UTC) == "today"
+
+
+def test_the_day_is_the_users_not_utc() -> None:
+    new_york = timezone(timedelta(hours=-4))
+    now = datetime(2026, 10, 16, 3, 0, tzinfo=UTC)  # 23:00 on the 15th in New York
+    said = datetime(2026, 10, 15, 22, 0, tzinfo=UTC)  # 18:00 on the 15th in New York
+    assert when_phrase(said, now, new_york) == "today"
 
 
 def test_a_future_timestamp_is_treated_as_today() -> None:
-    assert age_phrase(timedelta(days=-3)) == "today"
+    now = datetime(2026, 10, 16, 12, 0, tzinfo=UTC)
+    assert when_phrase(now + timedelta(days=3), now, UTC) == "today"

@@ -13,7 +13,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, tzinfo
 
-from companion.core.freshness import Freshness, age_phrase, status
+from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.types import Belief, BeliefId, BeliefKind
 
 HOLD_AT = 2
@@ -95,7 +95,7 @@ def build_card(
 
 def _line(b: Belief, card: Card) -> str:
     a = card.aged[b.id]
-    when = age_phrase(card.now - a.last_supported)
+    when = when_phrase(a.last_supported, card.now)
     note = "; may have changed" if a.status is Freshness.AGING else ""
     return f"- {b.claim} (mentioned {when}{note})"
 

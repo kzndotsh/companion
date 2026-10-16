@@ -198,3 +198,14 @@ Each version is a new file. The prefix hash on every turn record says which one 
   Haiku 4.5, Mistral Medium 3 and MiMo Flash; music Haiku 4.5 7/8, Mistral Medium 3 and MiMo 4/8,
   DeepSeek and Haiku 5.5 2/8, Luna 0/8. The replies are now short and plain but still say the
   user's point back. The persona and few-shot examples did not move it, and v19 was dropped.
+- **Memory ages are the user's calendar days (code).** The card said "(mentioned today)" for
+  anything supported less than 24 hours ago, so something said at 6 pm yesterday read as "today"
+  at 4 pm. The companion repeated it ("you did, earlier today") and the user flagged "time
+  awareness is thrown off regarding its memory". The age is now the difference in local calendar
+  days (`when_phrase` in `core/freshness.py`, same zone as the clock line): today, yesterday, N
+  days ago. Checked on the live data: the "flirt" belief (last said Thursday 18:52) changed from
+  "today" to "yesterday".
+- **Network blips are retried (code).** A dropped connection to OpenRouter made the memory step
+  fail with a long traceback and wait for the next message. The talker now retries a dropped
+  connection or timeout twice (0.5 s, 1.5 s), and the memory step retries after 30 s and 120 s,
+  logging one line. Model errors and refusals are never retried.

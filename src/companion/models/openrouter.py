@@ -11,6 +11,7 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json
+from companion.models.retry import retry_on_network_error
 from companion.models.wire import (
     integer,
     messages_with_breakpoint,
@@ -55,11 +56,12 @@ class OpenRouterTalker:
 
     async def reply(self, request: TalkerRequest) -> Reply:
         started = time.perf_counter()
-        resp = await self._client.post(
-            URL,
-            headers={"authorization": f"Bearer {self._key}"},
-            json=self.body(request),
-            timeout=60,
+        body = self.body(request)
+        resp = await retry_on_network_error(
+            lambda: self._client.post(
+                URL, headers={"authorization": f"Bearer {self._key}"}, json=body, timeout=60
+            ),
+            what="talker",
         )
         resp.raise_for_status()
         data = obj(resp.json())

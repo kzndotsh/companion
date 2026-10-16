@@ -36,7 +36,7 @@ from companion.core.frames import (
 )
 from companion.core.frames import render_reason as frame_reason
 from companion.core.frames import resolve as frame_resolve
-from companion.core.freshness import HORIZON_DAYS, age_phrase
+from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.moves import replies_to_read
@@ -105,7 +105,7 @@ class _CardLog:
 
     @staticmethod
     def _why_dropped(b: Belief, card: Card) -> str:
-        last = age_phrase(card.now - card.aged[b.id].last_supported)
+        last = when_phrase(card.aged[b.id].last_supported, card.now)
         horizon = HORIZON_DAYS[b.kind]
         return f"stale: last mentioned {last}, past its {horizon}-day horizon, so left out"
 

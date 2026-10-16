@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
-from companion.core.freshness import age_phrase, status
+from companion.core.freshness import status, when_phrase
 from companion.core.types import RelationshipId
 from companion.core.views import ViewMode, gates, is_settled, parse_mode
 from companion.loops.calibrate import report, reviewed_views
@@ -28,7 +28,7 @@ def run(db: Path, relationship: str) -> str:
     for b in sorted(found, key=lambda x: (x.kind, x.valid_from)):
         quote = b.evidence[0].quote
         last = support.get(b.id, b.valid_from)
-        fresh = f"{status(b.kind, last, now)} {age_phrase(now - last)}, {len(b.evidence)} quote(s)"
+        fresh = f"{status(b.kind, last, now)} {when_phrase(last, now)}, {len(b.evidence)} quote(s)"
         lines.append(
             f"{b.id[:8]} [{b.kind}/{b.provenance}] {fresh}  sens {b.sensitivity}"
             f"  {b.claim}"
@@ -80,7 +80,7 @@ def opinions(db: Path, relationship: str) -> str:
             if b.id in approved
             else ("auto-eligible" if g.eligible and mode is ViewMode.AUTO else "not in the card")
         )
-        age = age_phrase(now - support.get(b.id, b.valid_from))
+        age = when_phrase(support.get(b.id, b.valid_from), now)
         lines.append(f"{b.id[:8]} [{b.kind}] {mark}, {state} ({n} day(s), last {age})  {b.claim}")
         lines.append(f'    "{b.evidence[0].quote}"')
     settled = sum(is_settled(b, days) for b in found)
