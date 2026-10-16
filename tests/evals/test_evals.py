@@ -279,3 +279,20 @@ def test_directories_that_do_not_exist_are_skipped_and_ids_must_stay_unique(
     (other / "dup.json").write_text(json.dumps(_scripted()))
     with pytest.raises(FixtureError, match="unique"):
         load_fixtures(tmp_path, other)
+
+
+async def test_a_failing_provider_costs_samples_not_the_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from companion.evals import runner as runner_module  # noqa: PLC0415
+
+    monkeypatch.setattr(runner_module, "RETRY_WAIT_SECONDS", 0.0)
+
+    class Down:
+        async def reply(self, request: object) -> object:
+            del request
+            msg = "429"
+            raise RuntimeError(msg)
+
+    got = await runner_module._reply_with_retry(Down(), object())  # type: ignore[arg-type]
+    assert got is None

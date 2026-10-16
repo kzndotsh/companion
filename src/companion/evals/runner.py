@@ -15,12 +15,14 @@ from dataclasses import dataclass, field
 from companion.core.extractor import Extractor
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
-from companion.core.talker import Talker
+from companion.core.talker import Reply, Talker
 from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import Fixture, JudgeCheck
 from companion.evals.judge import grade
 
 CONCURRENCY = 4
+RETRIES = 3
+RETRY_WAIT_SECONDS = 2.0
 _CARD_BLOCK = re.compile(r"^\[(?:What you remember|Also known).*?\]\n?", re.MULTILINE | re.DOTALL)
 
 
@@ -93,6 +95,16 @@ class Models:
     judge: Extractor
 
 
+async def _reply_with_retry(talker: Talker, req: TalkerRequest) -> Reply | None:
+    """A provider that rate-limits or errors costs one sample, not the whole run."""
+    for attempt in range(RETRIES):
+        try:
+            return await talker.reply(req)
+        except Exception:
+            await asyncio.sleep(RETRY_WAIT_SECONDS * (attempt + 1))
+    return None
+
+
 async def run_eval(plan: Plan, models: Models) -> Results:
     results = Results(cells={(f.id, v.label): Cell() for f in plan.fixtures for v in plan.variants})
     gate = asyncio.Semaphore(CONCURRENCY)
@@ -105,7 +117,10 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 cell.skipped += 1
                 return
             req = request_for(plan.requests[f.id], v)
-            reply = await models.talker_for(v.model).reply(req)
+            reply = await _reply_with_retry(models.talker_for(v.model), req)
+            if reply is None:
+                cell.skipped += 1
+                return
             results.spent += reply.cost_usd
             verdicts: list[Verdict] = []
             cost = reply.cost_usd
