@@ -15,7 +15,8 @@ How it fits with the rest of `docs/`:
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background |
 | `src/companion/persona/CHANGELOG.md` | every persona version and every behaviour change, with the measurement |
-| `evals/README.md` | the eval runner and its results log |
+| `evals/README.md` | how the eval runner works |
+| `evals/CHANGELOG.md` | what the runner has measured, newest last |
 
 ## What we are building
 
@@ -69,7 +70,7 @@ Measured facts that drive the plan:
 | Haiku 5.5 as talker has a redirect-and-disclaim reflex | 0/16 on a real turn, Luna 15/16 | persona CHANGELOG |
 | Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | persona CHANGELOG |
 | The memory block in the user's message made it recite | held facts surfaced 8/24, now 0/24 | persona CHANGELOG |
-| The leaderboard's willingness score lined up with scene results | W/10 7.2 models did best | `evals/README.md` |
+| The leaderboard's willingness score lined up with scene results | W/10 7.2 models did best | `evals/CHANGELOG.md` |
 
 ## Housekeeping that can stop the bot
 

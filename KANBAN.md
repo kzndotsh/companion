@@ -44,7 +44,7 @@ Ordered. The first three can stop the bot, so they go first.
       the music script), or accept it. Fixtures exist: `does-not-echo-the-point-with-a-flourish-*`.
 - [ ] T12 Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
       reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
-      before any change; the memory card carries what older turns held. See `evals/README.md`.
+      before any change; the memory card carries what older turns held. See `evals/CHANGELOG.md`.
 - [ ] T11 Memory rule: do not record the companion's echo of the user's topic as a view it holds
       ("thinks Hail the Sun have a specific mix of intricate and immediate music"). Same card family
       as T1.
