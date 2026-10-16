@@ -19,6 +19,11 @@ CommandHandler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
 
 
+class TelegramError(RuntimeError):
+    """A Telegram call failed. The message names the method and status, never the URL, because the
+    URL contains the bot token and logs must not."""
+
+
 class Telegram:
     def __init__(self, token: str, allowed_user: int, client: httpx.AsyncClient) -> None:
         self._base = f"https://api.telegram.org/bot{token}"
@@ -26,9 +31,23 @@ class Telegram:
         self._client = client
 
     async def _call(self, method: str, **params: object) -> object:
-        resp = await self._client.post(f"{self._base}/{method}", json=params, timeout=45)
-        resp.raise_for_status()
-        return resp.json()["result"]
+        for attempt in range(2):
+            try:
+                resp = await self._client.post(f"{self._base}/{method}", json=params, timeout=45)
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as err:
+                status = err.response.status_code
+                if status == 429 and attempt == 0:
+                    await asyncio.sleep(_retry_after(err.response))
+                    continue
+                msg = f"telegram {method} failed with status {status}"
+                raise TelegramError(msg) from None
+            except httpx.HTTPError as err:
+                msg = f"telegram {method} failed: {type(err).__name__}"
+                raise TelegramError(msg) from None
+            return resp.json()["result"]
+        msg = f"telegram {method} failed"
+        raise TelegramError(msg)
 
     async def send(self, chat_id: int, text: str) -> None:
         await self._call("sendMessage", chat_id=chat_id, text=text)
@@ -41,13 +60,20 @@ class Telegram:
             reaction=[{"type": "emoji", "emoji": emoji}],
         )
 
+    async def _typing(self, chat_id: int) -> None:
+        """The typing indicator is a courtesy. Failing to show it must never lose the reply."""
+        try:
+            await self._call("sendChatAction", chat_id=chat_id, action="typing")
+        except TelegramError as err:
+            log.warning("typing indicator skipped: %s", err)
+
     async def run(self, handle: Handler, commands: Commands | None = None) -> None:
         offset = 0
         while True:
             try:
                 updates = await self._call("getUpdates", offset=offset, timeout=30)
-            except httpx.HTTPError:
-                log.exception("poll failed, retrying")
+            except TelegramError as err:
+                log.warning("poll failed, retrying: %s", err)
                 await asyncio.sleep(3)
                 continue
             for update in seq(updates):
@@ -74,12 +100,15 @@ class Telegram:
             if command is not None:
                 reply = await commands[command[0]](command[1])
             else:
-                await self._call("sendChatAction", chat_id=chat_id, action="typing")
+                await self._typing(chat_id)
                 reply = await handle(text)
         except Exception:
             log.exception("turn failed")
             return
-        await self._answer(chat_id, message_id, reply)
+        try:
+            await self._answer(chat_id, message_id, reply)
+        except TelegramError as err:
+            log.warning("could not deliver the reply: %s", err)
 
     async def _answer(
         self, chat_id: int, message_id: int, reply: str | Reaction | ReactAndReply
@@ -87,18 +116,27 @@ class Telegram:
         if isinstance(reply, ReactAndReply):
             try:
                 await self.react(chat_id, message_id, reply.reaction.emoji)
-            except httpx.HTTPError:
+            except TelegramError:
                 log.warning("reaction refused; sending the reply without it")
             if reply.text:
                 await self.send(chat_id, reply.text)
         elif isinstance(reply, Reaction):
             try:
                 await self.react(chat_id, message_id, reply.emoji)
-            except httpx.HTTPError:
+            except TelegramError:
                 log.warning("reaction refused, falling back to text")
                 await self.send(chat_id, "noted")
         elif reply:
             await self.send(chat_id, reply)
+
+
+def _retry_after(resp: httpx.Response) -> float:
+    """How long Telegram asked us to wait, capped so a turn never stalls for long."""
+    try:
+        wait = float(resp.json()["parameters"]["retry_after"])
+    except (ValueError, KeyError, TypeError):
+        wait = 1.0
+    return min(max(wait, 0.0), 5.0)
 
 
 def _command(text: str) -> tuple[str, str] | None:

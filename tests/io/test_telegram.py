@@ -4,9 +4,10 @@ import json
 from dataclasses import dataclass, field
 
 import httpx
+import pytest
 
 from companion.core.ack import ReactAndReply, Reaction
-from companion.io.telegram import Telegram
+from companion.io.telegram import Telegram, TelegramError
 
 ALLOWED = 42
 
@@ -130,3 +131,82 @@ async def test_a_reaction_and_a_reply_are_both_sent_reaction_first() -> None:
 async def test_a_refused_reaction_still_sends_the_reply() -> None:
     seen = await _both(reactions_fail=True)
     assert seen.sent == ["ha, fair"]
+
+
+async def _tg(handler: object) -> Telegram:
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))  # type: ignore[arg-type]
+    return Telegram("SECRET:TOKEN", ALLOWED, client)
+
+
+async def test_a_failed_typing_indicator_does_not_lose_the_reply() -> None:
+    seen = Seen()
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        method = str(req.url).rsplit("/", 1)[-1]
+        if method == "sendChatAction":
+            return httpx.Response(500, json={"ok": False})
+        if method == "sendMessage":
+            seen.sent.append(json.loads(req.content)["text"])
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        del text
+        return "reply"
+
+    tg = await _tg(handler)
+    await tg.handle_update(_update("hi"), talk, {})
+    assert seen.sent == ["reply"]
+
+
+async def test_a_rate_limit_is_retried_once_after_the_wait_telegram_asked_for(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import companion.io.telegram as module  # noqa: PLC0415
+
+    waits: list[float] = []
+
+    async def no_sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+    calls: list[int] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        calls.append(1)
+        if len(calls) == 1:
+            return httpx.Response(429, json={"ok": False, "parameters": {"retry_after": 2}})
+        return httpx.Response(200, json={"ok": True, "result": "done"})
+
+    tg = await _tg(handler)
+    await tg.send(1, "hello")
+    assert waits == [2.0]
+    assert len(calls) == 2
+
+
+async def test_errors_never_carry_the_bot_token() -> None:
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        return httpx.Response(500, json={"ok": False})
+
+    tg = await _tg(handler)
+    with pytest.raises(TelegramError) as caught:
+        await tg.send(1, "x")
+    assert "SECRET" not in str(caught.value)
+    assert caught.value.__cause__ is None
+    assert caught.value.__suppress_context__
+
+
+async def test_a_failed_send_does_not_stop_the_bot() -> None:
+    def handler(req: httpx.Request) -> httpx.Response:
+        method = str(req.url).rsplit("/", 1)[-1]
+        if method == "sendMessage":
+            return httpx.Response(400, json={"ok": False})
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        del text
+        return "reply"
+
+    tg = await _tg(handler)
+    await tg.handle_update(_update("hi"), talk, {})  # must not raise
