@@ -56,3 +56,7 @@ rerun, and how many samples stood behind the result. Read `README.md` for how th
      longer (177 to 222 characters): within noise. Prefill (a trailing assistant message "oh " or
      "ha, ") was not honoured by either model through OpenRouter: the replies start as they always
      do, and the restatement rate did not move.
+- **2026-10-16. Trimmed personas v20 and v21 against v18.** Luna, 12 samples per cell, 24 public
+  fixtures: v18 256/288, v20 258/288, v21 262/288. DeepSeek V4 Flash, 6 samples, v18 115/144, v21
+  118/144. New fixture `mood-as-a-stance-not-a-sensation` passed 12/12 on all, so it does not
+  separate them. A 25% shorter prompt lost nothing the fixtures can see. See the persona changelog.

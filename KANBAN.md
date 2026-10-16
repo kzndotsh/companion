@@ -64,6 +64,8 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-16**
+- [x] G-v21 Persona v21: v18 trimmed by a quarter (2,032 to 1,504 words), mood stated as a stance,
+      framing line removed. Measured equal or better on 24 fixtures (Luna 262/288 vs 256/288)
 - [x] G-ages Memory ages use the user's calendar days ("yesterday", not "today" at 20 hours)
 - [x] G-retry Network blips are retried for the talker and the memory step
 - [x] G-v18 Persona v18: no "not X, it's Y", no em dashes, short plain reactions to personal shares;
@@ -145,6 +147,9 @@ Unordered within each group. Pull a card into Todo when it is next.
       ignore, a slow re-probe, a test on a simulated clock, shadow first. (G30, G33)
 - [ ] R2 Looking up older messages on recall cues, starting with a cue-triggered search into the
       system block. (G21)
+- [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
+      with the rest growing as recorded lore. Test that they surface without being asked and do not
+      become talking points. From the Grok review.
 - [ ] R3 Record the lore it invents, through the same filter as the memory rules. (G23)
 - [ ] R4 No reaction alongside a reply while a scene is in progress, send the reaction as soon as the
       judge returns, and record the user's reactions to its messages.

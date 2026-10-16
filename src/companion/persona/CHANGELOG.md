@@ -209,3 +209,19 @@ Each version is a new file. The prefix hash on every turn record says which one 
   fail with a long traceback and wait for the next message. The talker now retries a dropped
   connection or timeout twice (0.5 s, 1.5 s), and the memory step retries after 30 s and 120 s,
   logging one line. Model errors and refusals are never retried.
+- **v20 and v21 (v21 shipped).** A review of v18 by another model (Grok) argued the prompt had
+  conflicting rules, too many overlapping prohibitions, a contradiction between "you can be a little
+  tired" and "do not claim to be tired", and no positive character. We treated its points as
+  hypotheses and measured. v20 collapses the duplicated rules (the question, repetition and
+  send-off rules became one "Conversation habits" section; praise, claims and the yes-man rules
+  merged into "Who you are"; the closing "Reminders" were dropped), states mood as a stance in
+  words and not a bodily sensation, and keeps every rule that a fixture covers: 2,032 words down to
+  1,518. v21 is v20 without the opening line "you are not an assistant and you are not a character
+  performing a role" (1,504 words). Public fixtures on GPT-6 Luna, 12 samples, 24 fixtures: v18
+  256/288, v20 258/288, v21 262/288. On DeepSeek V4 Flash, 6 samples: v18 115/144, v21 118/144.
+  No fixture got worse beyond noise, and the restating fixture moved from 1/12 to 3 and 4/12.
+  The new `mood-as-a-stance-not-a-sensation` fixture passed 12/12 on all three, so it does not
+  separate them: v18 already answered with a mood and not a sensation. What the review got wrong,
+  by our measurements: the brevity and no-restating rules read as effective but are not obeyed
+  (replies average 140 to 230 characters, restating persists). Not done: seeding a few authored
+  tastes in the core, which stays on the board (R3, G23).
