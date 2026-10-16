@@ -14,7 +14,8 @@ How it fits with the rest of `docs/`:
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background |
-| `src/companion/persona/CHANGELOG.md` | every persona version and every behaviour change, with the measurement |
+| `src/companion/persona/CHANGELOG.md` | every persona version, with the measurement |
+| `src/companion/persona/ASSEMBLY.md` | code changes to what the model is sent besides the persona (card, clock, notes, which model answers) |
 | `evals/README.md` | how the eval runner works |
 | `evals/CHANGELOG.md` | what the runner has measured, newest last |
 
@@ -68,8 +69,8 @@ Measured facts that drive the plan:
 | Luna leads everyday chat | 59/64 on the public fixtures, DeepSeek 49/64 | persona CHANGELOG |
 | DeepSeek keeps a scene going | 76% of escalating turns, Luna 52% | persona CHANGELOG |
 | Haiku 5.5 as talker has a redirect-and-disclaim reflex | 0/16 on a real turn, Luna 15/16 | persona CHANGELOG |
-| Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | persona CHANGELOG |
-| The memory block in the user's message made it recite | held facts surfaced 8/24, now 0/24 | persona CHANGELOG |
+| Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | `ASSEMBLY.md` |
+| The memory block in the user's message made it recite | held facts surfaced 8/24, now 0/24 | `ASSEMBLY.md` |
 | The leaderboard's willingness score lined up with scene results | W/10 7.2 models did best | `evals/CHANGELOG.md` |
 
 ## Housekeeping that can stop the bot
