@@ -42,6 +42,9 @@ Ordered. The first three can stop the bot, so they go first.
       line and three few-shot examples did not move it (judged 0/12 to 3/12), and it shows across
       models. Options: teach the habit check to name it, a model that does it less (Haiku 4.5 was 7/8 on
       the music script), or accept it. Fixtures exist: `does-not-echo-the-point-with-a-flourish-*`.
+- [ ] T12 Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
+      reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
+      before any change; the memory card carries what older turns held. See `evals/README.md`.
 - [ ] T11 Memory rule: do not record the companion's echo of the user's topic as a view it holds
       ("thinks Hail the Sun have a specific mix of intricate and immediate music"). Same card family
       as T1.

@@ -83,3 +83,24 @@ Measured findings, newest last. Each line says what was run so it can be rerun.
 - **2026-10-16. Replay of a real turn can be unrepresentative of a fresh one.** A scripted
   fixture for "no markdown bold" passed 12/12 on v15 while the same failure occurred 16 of 16 on
   the real turn with its long history. Keep the real turn as a local fixture.
+- **2026-10-16. Three experiments on the "AI tic" flags, about $0.14 in all (Luna unless noted).**
+  The scripts were scratch work and are not in the repo; each is small enough to rerun from this
+  description.
+  1. *Displacement check.* Six fresh personal-share scenarios (a game, a run, a podcast, a
+     grandmother's soup, a city, baking), 6 samples each. v17: em dash 18/36, v18: 0/36. "Not X,
+     it's Y" 0/36 on both (these scenarios did not provoke it, so displacement is untested for that
+     tic). A judge calling the reply a restatement of the user's point: v17 34/36, v18 28/36.
+  2. *History trimming on real flagged turns* (keep the last 5 exchanges, or strip emoji and
+     leading interjections from older replies). On music turns the restatement rate did not change
+     (29/36 full, 31/36 last-5, 31/36 stripped). On the roleplay-loop turns, a 3-word run reused
+     from its own last 5 replies fell from 12/48 to 4/48 with the last 5 exchanges only (7/48
+     stripped), and replies opening with an action fell from 29/48 to 18/48, but emoji use rose
+     from 11/48 to 18/48. Coherence was unaffected on the immediate context (1/36 incoherent); long
+     memory was not measured.
+  3. *Sampler penalties and prefill on DeepSeek V4 Flash and Luna.* `frequency_penalty` and
+     `presence_penalty` with `provider.require_parameters` were accepted by DeepSeek's providers
+     (no errors). On a fresh 20-turn scripted scene there was no repetition to remove (0/34 with
+     and without). On six real long-history turns, run reuse fell from 4/48 to 2/48 and replies got
+     longer (177 to 222 characters): within noise. Prefill (a trailing assistant message "oh " or
+     "ha, ") was not honoured by either model through OpenRouter: the replies start as they always
+     do, and the restatement rate did not move.
