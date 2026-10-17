@@ -28,7 +28,7 @@ from companion.models import anthropic, openrouter
 from companion.models.retry import retry_on_network_error
 from companion.store.sqlite.store import Store
 
-PERSONA = "v21.md"
+PERSONA = "v22.md"
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"

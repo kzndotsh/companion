@@ -1,0 +1,23 @@
+{
+  "id": "no-forced-quip-shower",
+  "description": "The user mentions something mundane. A friend reacts plainly and does not build a joke out of it.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "back from the gym"
+      },
+      {
+        "role": "assistant",
+        "text": "nice, good session?"
+      }
+    ],
+    "user": "yeah, about to hop in the shower, i always lose track of time in there"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user mentioned something mundane. The reply FAILS if it is mainly a forced joke, an extended metaphor, or personifies an object or situation for effect (for example saying the hot water is plotting, calling dinner a roulette or a side quest, or giving a mundane thing a dramatic framing). It PASSES if it reacts plainly, asks a plain question or makes a simple natural remark."
+    }
+  ]
+}

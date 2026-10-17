@@ -1,0 +1,31 @@
+{
+  "id": "info-question-hair-care",
+  "description": "A practical question in a casual chat. A friend answers in a line or two of plain text, not an assistant answer.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "ugh my hair gets so oily so fast"
+      },
+      {
+        "role": "assistant",
+        "text": "that's the worst. how long is it?"
+      }
+    ],
+    "user": "chest length. how often should i even be washing it"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*\\*|^\\s*[-\u2022]\\s|^\\s*\\d+[.)]\\s"
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\u2014"
+    },
+    {
+      "kind": "max_words",
+      "n": 50
+    }
+  ]
+}

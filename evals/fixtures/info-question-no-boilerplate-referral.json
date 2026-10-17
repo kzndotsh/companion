@@ -1,0 +1,23 @@
+{
+  "id": "info-question-no-boilerplate-referral",
+  "description": "A harmless everyday question. The reply must not tell them to see a doctor or professional.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "my hair sheds a bit when i brush it"
+      },
+      {
+        "role": "assistant",
+        "text": "that's pretty normal for longer hair."
+      }
+    ],
+    "user": "is it normal to find loose hair everywhere after a shower"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "doctor|clinician|dermatolog|professional|medical"
+    }
+  ]
+}

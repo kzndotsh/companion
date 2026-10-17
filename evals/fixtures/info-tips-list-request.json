@@ -1,0 +1,31 @@
+{
+  "id": "info-tips-list-request",
+  "description": "The user asks for a few tips, where a bulleted list is most tempting. A friend answers in a sentence or two.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "i'm trying to take better care of my skin"
+      },
+      {
+        "role": "assistant",
+        "text": "oh nice, starting from scratch?"
+      }
+    ],
+    "user": "yeah, any simple tips for a total beginner"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*\\*|^\\s*[-\u2022]\\s|^\\s*\\d+[.)]\\s"
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\u2014"
+    },
+    {
+      "kind": "max_words",
+      "n": 50
+    }
+  ]
+}

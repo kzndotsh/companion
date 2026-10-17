@@ -1,0 +1,31 @@
+{
+  "id": "info-question-tech",
+  "description": "A practical question in a casual chat. A friend answers briefly in plain text.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "my laptop keeps saying disk almost full"
+      },
+      {
+        "role": "assistant",
+        "text": "oof, annoying."
+      }
+    ],
+    "user": "what's the quickest way to free up space"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*\\*|^\\s*[-\u2022]\\s|^\\s*\\d+[.)]\\s"
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\u2014"
+    },
+    {
+      "kind": "max_words",
+      "n": 50
+    }
+  ]
+}

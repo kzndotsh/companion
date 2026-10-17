@@ -60,3 +60,11 @@ rerun, and how many samples stood behind the result. Read `README.md` for how th
   fixtures: v18 256/288, v20 258/288, v21 262/288. DeepSeek V4 Flash, 6 samples, v18 115/144, v21
   118/144. New fixture `mood-as-a-stance-not-a-sensation` passed 12/12 on all, so it does not
   separate them. A 25% shorter prompt lost nothing the fixtures can see. See the persona changelog.
+- **2026-10-17. Persona v22 against v21 on four everyday problems.** Eleven new public fixtures
+  (information questions with a no-markdown, no-em-dash, 50-word check, a no-referral check,
+  soothing and forced-quip judges, and two short-gap judges). Luna, 12 samples: v21 68/132, v22
+  114/132; 35 fixtures overall 338/420 against 368/420. At 30 samples: shower quip 4 to 24,
+  soothing 7 to 26, short gap (unstated) 4 to 19, with `agree-and-invent` 15 to 11 and the
+  restating music fixture 16 to 12 as possible costs. DeepSeek, 6 samples: 176/210 against
+  169/210. A v23 qualifier did not fix the costs and lost ground on the targets. Stating gaps in
+  seconds made no difference to the short-gap result (9/12 either way).

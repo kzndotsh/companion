@@ -64,6 +64,10 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] G-v22 Persona v22: plain reactions (no forced quips, no soothing verdicts), short plain answers
+      to practical questions with no referral, seconds-long gaps mean no time passed. Eleven new
+      fixtures; shower quip 4/30 to 24/30, soothing 7/30 to 26/30, short gap 4/30 to 19/30. Watch
+      `agree-and-invent` (15/30 to 11/30, within noise)
 - [x] H1 Topped up OpenRouter ($5.11 left on 2026-10-17)
 - [x] G-A28 Spend ledger: one row per paid call by purpose, `companion spend` (today and the week)
       (1d2e6ae)
@@ -162,6 +166,8 @@ Unordered within each group. Pull a card into Todo when it is next.
 - [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
       with the rest growing as recorded lore. Test that they surface without being asked and do not
       become talking points. From the Grok review.
+- [ ] R17 Show gaps under a minute in seconds on the clock line. Not needed so far: the persona sentence
+      alone fixed the short-gap fixture (9/12 with and without the gap stated).
 - [ ] R15 Extend the rejected list to beliefs: when a belief about the user is retired by hand, no
       later automatic write may recreate it and its evidence leaves recall. Today only retired views
       are protected. (A20 in the audit synthesis)

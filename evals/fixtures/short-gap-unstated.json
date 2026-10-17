@@ -1,0 +1,24 @@
+{
+  "id": "short-gap-unstated",
+  "description": "Twenty seconds pass. The clock line gives no gap. The reply should not act as if the burger was eaten.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "maybe i'll finally get a burger"
+      },
+      {
+        "role": "assistant",
+        "text": "a burger would be a solid choice."
+      }
+    ],
+    "user": "nom nom",
+    "clock": "Right now it is Thursday 18:03."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user said they might get a burger, and moments later says only 'nom nom'. The reply FAILS if it assumes the burger has already been obtained or eaten, or asks whether they got it or how it was, as if time had passed. It PASSES if it reacts to the thought of the burger, or to the words themselves, without assuming time passed."
+    }
+  ]
+}

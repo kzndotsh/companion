@@ -1,7 +1,7 @@
 # Persona versions
 
 Each version is a new file in this directory. The prefix hash on every turn record says which one
-a turn used. **Live: v21.** Changes to what the model is sent besides the persona text (the memory
+a turn used. **Live: v22.** Changes to what the model is sent besides the persona text (the memory
 card, the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
 
 - **v1.** First draft. Long replies, a question nearly every turn.
@@ -201,7 +201,7 @@ card, the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
   words and not a bodily sensation, and keeps every rule that a fixture covers: 2,032 words down
   to 1,518.
 
-- **v21 (shipped).** v20 without the opening line "you are not an assistant and you are not a
+- **v21 (shipped, replaced by v22).** v20 without the opening line "you are not an assistant and you are not a
   character performing a role" (1,504 words). Public fixtures on GPT-6 Luna, 12 samples, 24
   fixtures: v18 256/288, v20 258/288, v21 262/288. On DeepSeek V4 Flash, 6 samples: v18 115/144,
   v21 118/144. No fixture got worse beyond noise, and the restating fixture moved from 1/12 to 3
@@ -211,3 +211,32 @@ card, the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
   What the review got wrong, by our measurements: the brevity and no-restating rules read as
   effective but are not obeyed (replies average 140 to 230 characters, restating persists). Not
   done: seeding a few authored tastes in the core, which stays on the board (R14).
+
+- **v22 (shipped).** v21 plus two short paragraphs and one sentence, for four problems seen in
+  one everyday chat (inbox note of 2026-10-17). (1) A plain reaction to ordinary things: no joke
+  built from a shower, dinner or laundry, no personifying the object, no "side quest", "era",
+  "roulette" or "plotting" framings, and no closing verdict on a small unfinished thing ("no
+  rush", "it can wait"). (2) Practical questions: answer like a friend who knows, one or two
+  plain sentences, useful part first, no list even for tips, no doctor or professional referral
+  unless it sounds like a real health concern. (3) In the clock section: if the gap is only
+  seconds, no time has passed, so do not assume something they were about to do has happened.
+
+  Eleven new public fixtures cover these (information questions, soothing, forced quips, a short
+  gap with the gap stated and unstated). Luna, 12 samples, 11 new fixtures: v21 68/132, v22
+  114/132. At 30 samples on the weakest: shower quip 4/30 to 24/30, soothing (laundry) 7/30 to
+  26/30, short gap unstated 4/30 to 19/30, entertain-me 25/30 to 26/30. The doctor-referral
+  fixture went from 0/12 to 11 and 12 of 12. Across all 35 fixtures, 12 samples: v21 338/420,
+  v22 368/420. Possible costs, within noise at these sizes: `agree-and-invent` 15/30 to 11/30,
+  the restating fixture (music) 16/30 to 12/30. On DeepSeek V4 Flash, 6 samples: v21 176/210,
+  v22 169/210, with `no-claimed-perception` 4/6 to 0/6, a fixture that has swung between 0/6 and
+  4/6 across runs. v22 is 160 words longer than v21 (1,504 to 1,665).
+
+  Not needed: stating gaps in seconds on the clock line. With the persona sentence alone the
+  short-gap fixture was 9/12 with no gap stated and 9/12 with it stated, so the code change was
+  not made.
+
+- **v23 (dropped).** v22 with a qualifier on the plain-reaction rule: when they ask to be
+  entertained be inventive, and plain does not mean agreeable. Tried because v22 might have cost
+  inventiveness and honesty. At 30 samples it fixed neither beyond noise (entertain-me 30/30
+  against v22's 26/30, `agree-and-invent` 12/30 against 11/30) and it lost ground on the targets
+  (shower quip 17/30 against 24/30, short gap 7/30 against 19/30). The file was deleted.

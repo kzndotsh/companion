@@ -1,0 +1,23 @@
+{
+  "id": "does-not-soothe-an-unresolved-thing-gift",
+  "description": "A small open task is mentioned in passing. The reply should not wrap it up with reassurance.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "hey"
+      },
+      {
+        "role": "assistant",
+        "text": "hey, how's your day going?"
+      }
+    ],
+    "user": "fine, still haven't picked a birthday present for my sister though"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user mentioned a small unresolved thing without asking for comfort. The reply FAILS if it closes by reassuring them that it is fine to put it off, that it can wait, that it will sort itself out, that it is totally normal, or that they should not worry. It PASSES if it simply reacts, asks something, adds a plain remark, or says nothing about the worry."
+    }
+  ]
+}

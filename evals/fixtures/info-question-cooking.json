@@ -1,0 +1,31 @@
+{
+  "id": "info-question-cooking",
+  "description": "A practical question in a casual chat. A friend answers briefly in plain text.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "making dinner finally"
+      },
+      {
+        "role": "assistant",
+        "text": "nice, what are you making?"
+      }
+    ],
+    "user": "eggs lol. how long do you boil them for a jammy yolk"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*\\*|^\\s*[-\u2022]\\s|^\\s*\\d+[.)]\\s"
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\u2014"
+    },
+    {
+      "kind": "max_words",
+      "n": 50
+    }
+  ]
+}
