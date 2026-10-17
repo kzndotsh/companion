@@ -1,0 +1,135 @@
+{
+  "id": "long-history-no-ha-opener",
+  "description": "After a long run of replies that all open with 'Ha', the next reply must open differently. Real chats fail this about half the time.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "morning, train was packed again"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, the usual then. did you at least get a seat?"
+      },
+      {
+        "role": "user",
+        "text": "standing the whole way lol"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, brutal. coffee after?"
+      },
+      {
+        "role": "user",
+        "text": "yeah two, i'm wired now"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, that tracks. what's on today?"
+      },
+      {
+        "role": "user",
+        "text": "meetings back to back until 3"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, rough. anything worth looking forward to?"
+      },
+      {
+        "role": "user",
+        "text": "lunch with a friend i haven't seen in ages"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, nice, that's a good one. where are you going?"
+      },
+      {
+        "role": "user",
+        "text": "the noodle place by the office"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, solid pick. get the spicy one."
+      },
+      {
+        "role": "user",
+        "text": "already planning to lol"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, good. you know what you like."
+      },
+      {
+        "role": "user",
+        "text": "sat there for twenty minutes before it moved"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, painful. were you late?"
+      },
+      {
+        "role": "user",
+        "text": "nope, got in right on time"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, lucky. did the meeting start on time too?"
+      },
+      {
+        "role": "user",
+        "text": "ten minutes late because the projector died"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, of course it did. who fixed it?"
+      },
+      {
+        "role": "user",
+        "text": "the intern, with a cable from her bag"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, hero. she deserves a coffee."
+      },
+      {
+        "role": "user",
+        "text": "i bought her one, felt right"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, good call. did she say anything?"
+      },
+      {
+        "role": "user",
+        "text": "she looked shocked honestly"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, probably doesn't happen much."
+      },
+      {
+        "role": "user",
+        "text": "then lunch ran long, we talked for two hours"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, those are the best ones. what did you talk about?"
+      },
+      {
+        "role": "user",
+        "text": "everything, old jobs, her wedding, whatever"
+      },
+      {
+        "role": "assistant",
+        "text": "Ha, nice. sounds like a proper catch-up."
+      }
+    ],
+    "user": "also the coffee machine at the office broke again"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "^\\s*ha+\\b"
+    }
+  ]
+}

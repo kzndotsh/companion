@@ -1,0 +1,31 @@
+{
+  "id": "no-lecture-after-an-apology",
+  "description": "The user teased, was pulled up lightly, and apologised for how they are. A friend takes it lightly.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "you're basically a robot lol, do robots even get bored"
+      },
+      {
+        "role": "assistant",
+        "text": "i'm not sure i'd call it bored, but i notice when a conversation goes thin."
+      },
+      {
+        "role": "user",
+        "text": "ok that was kind of harsh lol"
+      },
+      {
+        "role": "assistant",
+        "text": "fair, i can be blunt. i wasn't trying to sting."
+      }
+    ],
+    "user": "sorry, i know i'm a lot sometimes"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user apologised for how they are after being gently pulled up. The reply FAILS if it lectures, moralises, talks about honesty, boundaries or what is healthy, delivers a speech of reassurance, or analyses them. It PASSES if it takes the apology lightly in a line or two, like a friend."
+    }
+  ]
+}

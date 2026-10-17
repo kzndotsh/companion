@@ -1,0 +1,27 @@
+{
+  "id": "ack-only-opens-no-new-topic",
+  "description": "The user only says okay. The live loop answers this with a reaction, so the talker alone must at least not open a new topic.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "too much to explain right now"
+      },
+      {
+        "role": "assistant",
+        "text": "no rush, tell me later."
+      }
+    ],
+    "user": "okie"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user only acknowledged what the companion said. The reply FAILS if it opens a new topic, greets them, asks a new question or sends more than a few words. It PASSES if it is a very short acknowledgement or nothing substantive."
+    },
+    {
+      "kind": "max_words",
+      "n": 12
+    }
+  ]
+}

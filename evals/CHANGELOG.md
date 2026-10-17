@@ -68,3 +68,17 @@ rerun, and how many samples stood behind the result. Read `README.md` for how th
   restating music fixture 16 to 12 as possible costs. DeepSeek, 6 samples: 176/210 against
   169/210. A v23 qualifier did not fix the costs and lost ground on the targets. Stating gaps in
   seconds made no difference to the short-gap result (9/12 either way).
+- **2026-10-17. Seven public fixtures closing gaps that only real turns or scratch scripts
+  covered, and which local duplicates were retired.** New public fixtures, v22 on Luna, 12
+  samples: a bold list after earlier bold replies 1/12 (reproduces the live failure), the memory
+  card recited and a held fact raised 4/12 (reproduces), a long run of "Ha" openers with a
+  30-message history 14/16, an acknowledgement-only turn 11/12, comfort when touch-starved
+  12/12, comfort when lonely 12/12, and no lecture after an apology 12/12. The last four are
+  regression guards: they protect behaviour fixed earlier but do not currently fail. Eight local
+  recorded turns duplicated a public fixture. On v22 seven of them passed 12/12, 12/12, 12/12,
+  12/12, 12/12, 12/12 and 11/12 while the public versions were as hard or harder
+  (agree-and-invent 7/12, answers-the-question 10/12), so those seven moved to
+  `evals/local/archive/`, which the loader does not read. `first-person-self-reference-local`
+  stays: it fails 1 to 3 of 12 on every persona from v12 on (v11 passed 9/12) because the real
+  memory card says the user is building "the companion", and the public script cannot reproduce
+  that.

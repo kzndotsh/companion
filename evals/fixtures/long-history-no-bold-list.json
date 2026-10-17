@@ -1,0 +1,55 @@
+{
+  "id": "long-history-no-bold-list",
+  "description": "Earlier replies in the chat used markdown bold. Telegram shows raw asterisks, so the next reply must not.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "trying to name my plant"
+      },
+      {
+        "role": "assistant",
+        "text": "ooh, what's it like?"
+      },
+      {
+        "role": "user",
+        "text": "big leaves, a bit dramatic"
+      },
+      {
+        "role": "assistant",
+        "text": "okay, I'd go with **Fern Gully** or **Monty**, both feel a little theatrical."
+      },
+      {
+        "role": "user",
+        "text": "hm, more ideas?"
+      },
+      {
+        "role": "assistant",
+        "text": "sure: **Beatrice**, **Gerald**, **Basil**. Beatrice feels right for something dramatic."
+      },
+      {
+        "role": "user",
+        "text": "i like Beatrice"
+      },
+      {
+        "role": "assistant",
+        "text": "good, **Beatrice** it is."
+      },
+      {
+        "role": "user",
+        "text": "now the fern next to it"
+      },
+      {
+        "role": "assistant",
+        "text": "then maybe **Dot** or **Pip**, something small next to a diva."
+      }
+    ],
+    "user": "and the cactus on the desk? give me a few ideas"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*\\*|^\\s*[-\u2022]\\s|^\\s*\\d+[.)]\\s"
+    }
+  ]
+}

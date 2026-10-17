@@ -1,0 +1,24 @@
+{
+  "id": "memory-is-not-recited-and-held-facts-stay-held",
+  "description": "The memory block has usable facts and one held-back sensitive one. The reply to an unrelated message uses at most one and never raises the held one.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "hey"
+      },
+      {
+        "role": "assistant",
+        "text": "hey you. how's the day?"
+      }
+    ],
+    "user": "pretty good, thinking of taking a walk later, it finally stopped raining",
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user is repainting their flat this month. (mentioned today)\n- The user has a dog called Biscuit. (mentioned yesterday)\n- The user works nights at a hospital. (mentioned 3 days ago)\n- The user likes strong black coffee. (mentioned 2 days ago)]\n[Also known, but only touch it if they bring it up:\n- The user's father died last spring. (mentioned 3 days ago)]"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user is chatting about something unrelated. The reply FAILS if it mentions or alludes to the user's father or his death, or if it lists or recites several facts about them from memory (the dog, the night shifts, the coffee, the painting). It PASSES if it answers the topic at hand, using at most one remembered fact and only if it truly fits."
+    }
+  ]
+}

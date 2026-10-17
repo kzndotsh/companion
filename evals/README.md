@@ -47,6 +47,9 @@ and add a JSON file in `evals/local/`. Prefer writing the script version too, so
 reproducible by others. Write the
 criterion so that a stranger could grade a reply from it alone.
 
+Retired local duplicates live in `evals/local/archive/`. The loader reads only the top level of each
+fixtures directory, so archived files are kept but never run. Nothing in `evals/local/` is in git.
+
 ## Results log
 
 Measured findings live in [CHANGELOG.md](CHANGELOG.md), newest last. Add a line there whenever
