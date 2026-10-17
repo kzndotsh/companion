@@ -92,7 +92,9 @@ class Store:
 
     def append_decision(self, d: Decision) -> None:
         decisions.append_decision(self._conn, d)
-        log.debug("decision turn=%s %s: %s | %s", d.turn_id[:8], d.kind, d.reason, d.detail or {})
+        if d.belief_id is None:  # the per-belief card lines are in the database, not the log
+            suffix = f" | {d.detail}" if d.detail else ""
+            log.debug("decision turn=%s %s: %s%s", d.turn_id[:8], d.kind, d.reason, suffix)
 
     def latest_turn(self, rel: RelationshipId) -> TurnId | None:
         return turns.latest_turn(self._conn, rel)
