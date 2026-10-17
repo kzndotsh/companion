@@ -110,3 +110,13 @@ v25. All fixtures, 12 samples: v22 449/516, v25 473/516. Within noise or small c
 `no-forced-quip-shower` 22/30 to 16/30, `does-not-echo-...-music` 12/30 to 15/30. Rerun with
 `uv run companion eval --variants v22.md@openai/gpt-6-luna v25.md@openai/gpt-6-luna --samples 30`
 on the named fixtures, with a cap stated first.
+
+## 2026-10-17: the ack judge no longer reacts to a lively reply mid-conversation
+
+A flag said a short "yerrrrrr", sent after a long exchange, got only a reaction and should have
+got a message. The ack judge's prompt now says a lively, playful or stretched answer in the middle
+of a conversation is not an ack. Invented chats against Haiku 5.5, `tests/live/test_ack_judge.py`
+(`uv run pytest -m live tests/live/test_ack_judge.py -s`, about two cents): the lively case
+reacted 2/5 before and 0/10 after, three other lively cases 0/10, and four plain closings
+(thanks, ok, goodnight, got it) still reacted 10/10. The before run was five samples; the after
+run ten.

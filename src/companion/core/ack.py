@@ -52,7 +52,10 @@ conversation between a USER and their COMPANION, then the USER's newest message.
 message:
 
 - ack: it only acknowledges, agrees, thanks or signs off on what the companion just said, and adds \
-nothing a reply could build on (ok, got it, thanks, lol, nice, a thumbs up).
+nothing a reply could build on (ok, got it, thanks, lol, nice, a thumbs up). A lively, playful or \
+stretched answer in the middle of a conversation (yerrr, yes ma'am!, lets goooo) is not an ack: \
+the person is handing the conversation back and expects a message, so label it other or \
+emotional.
 - answer: it answers something, gives information, states a preference or a decision, even \
 briefly (no, yeah, let's do it, i did).
 - emotional: it carries a feeling that deserves a human reply, even if short (ugh, yeah..., \
