@@ -175,6 +175,8 @@ class Telegram:
             time.monotonic() - started,
             random.uniform(0.8, 1.25),  # noqa: S311
         )
+        if remaining > 0:
+            log.info("holding %.1fs before sending (%d words)", remaining, len(reply.split()))
         while remaining > 0:
             if reply:
                 await self._typing(chat_id)
