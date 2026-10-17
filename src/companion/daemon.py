@@ -16,6 +16,7 @@ from companion.core.ack import ReactAndReply, Reaction
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
+from companion.core.spend import MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Hooks, Telegram
@@ -80,6 +81,24 @@ def _scene_talker(client: httpx.AsyncClient) -> Talker | None:
     return openrouter.OpenRouterTalker(key, client, model)
 
 
+def _metered_models(
+    client: httpx.AsyncClient, store: Store, rel: RelationshipId
+) -> tuple[Talker, Talker | None, Extractor, Extractor]:
+    """The talkers and extractors, each reporting what its calls cost to the spend ledger."""
+
+    def sink(event: SpendEvent) -> None:
+        store.record_spend(rel, event, datetime.now(UTC))
+
+    scene = _scene_talker(client)
+    shared = extractor(client)
+    return (
+        MeteredTalker(_talker(client), sink, "talker"),
+        MeteredTalker(scene, sink, "scene talker") if scene is not None else None,
+        MeteredExtractor(shared, sink, "judge"),
+        MeteredExtractor(shared, sink, "memory"),
+    )
+
+
 def _hooks(store: Store, rel: RelationshipId) -> Hooks:
     """What the Telegram layer reports back: undelivered replies, and which updates were handled."""
 
@@ -108,11 +127,8 @@ async def run(data_dir: Path) -> None:
     persona = resources.files("companion.persona").joinpath(PERSONA).read_text(encoding="utf-8")
     prefix = build_prefix(persona)
     async with httpx.AsyncClient() as client:
-        talker = _talker(client)
-        reflector = extractor(client)
-        convo = Conversation(
-            store, talker, prefix, rel, judge=reflector, scene_talker=_scene_talker(client)
-        )
+        talker, scene, judge, reflector = _metered_models(client, store, rel)
+        convo = Conversation(store, talker, prefix, rel, judge=judge, scene_talker=scene)
         pending: list[asyncio.Task[None]] = []
 
         async def reflect_after_idle() -> None:

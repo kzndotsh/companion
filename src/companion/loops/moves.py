@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 
 from companion.core.extractor import Extractor
 from companion.core.moves import FRESH_FOR, SCHEMA, SYSTEM, build_prompt, note_for, parse
+from companion.core.spend import purpose
 
 TIMEOUT_SECONDS = 6.0
 log = logging.getLogger("companion.moves")
@@ -20,7 +21,10 @@ async def find_habits(
     """The habits, the model id and the prompt, or None if they could not be found in time."""
     prompt = build_prompt(replies)
     try:
-        result = await asyncio.wait_for(extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS)
+        with purpose("habits"):
+            result = await asyncio.wait_for(
+                extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
+            )
     except Exception:
         log.warning("habit check failed or timed out; no note")
         return None

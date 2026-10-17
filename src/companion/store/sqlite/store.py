@@ -9,6 +9,7 @@ from pathlib import Path
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
 from companion.core.replay import TurnRecord
+from companion.core.spend import SpendEvent
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -133,6 +134,14 @@ class Store:
 
     def reflect_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
         return reflect.cursor(self._conn, rel)
+
+    def record_spend(self, rel: RelationshipId, event: SpendEvent, at: datetime) -> None:
+        settings.record_spend(self._conn, rel, event, at)
+
+    def spend_since(
+        self, rel: RelationshipId, since: datetime
+    ) -> list[tuple[str, str, int, float]]:
+        return settings.spend_since(self._conn, rel, since)
 
     def turns_since_reaction(self, rel: RelationshipId) -> int | None:
         return decisions.turns_since_reaction(self._conn, rel)

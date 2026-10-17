@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from companion.core.ack import build_prompt
 from companion.core.extractor import Extractor
 from companion.core.react import SCHEMA, SYSTEM, Judgement, parse
+from companion.core.spend import purpose
 from companion.core.types import Utterance
 
 TIMEOUT_SECONDS = 2.5
@@ -21,7 +22,10 @@ async def judge_reaction(
     """The judgement, the model id and the prompt, or None if it could not be made in time."""
     prompt = build_prompt(history, text)
     try:
-        result = await asyncio.wait_for(extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS)
+        with purpose("reaction"):
+            result = await asyncio.wait_for(
+                extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
+            )
     except Exception:
         log.warning("reaction judgement failed or timed out; no reaction")
         return None

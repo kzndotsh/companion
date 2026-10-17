@@ -6,6 +6,7 @@ import json
 import sqlite3
 from datetime import datetime
 
+from companion.core.spend import SpendEvent
 from companion.core.types import BeliefId, Json, RelationshipId
 from companion.store.sqlite.db import iso, write_tx
 
@@ -54,3 +55,33 @@ def latest_checks(conn: sqlite3.Connection, rel: RelationshipId) -> dict[BeliefI
         (rel,),
     ).fetchall()
     return {BeliefId(str(r["id"])): bool(r["conflicts"]) for r in rows}
+
+
+def record_spend(
+    conn: sqlite3.Connection, rel: RelationshipId, event: SpendEvent, at: datetime
+) -> None:
+    with write_tx(conn):
+        conn.execute(
+            "INSERT INTO spend (relationship_id, purpose, model, cost_usd, input_tokens, at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                rel,
+                event.purpose,
+                event.model,
+                max(event.cost_usd, 0.0),
+                event.input_tokens,
+                iso(at),
+            ),
+        )
+
+
+def spend_since(
+    conn: sqlite3.Connection, rel: RelationshipId, since: datetime
+) -> list[tuple[str, str, int, float]]:
+    """(purpose, model, calls, dollars) for everything at or after `since`, biggest first."""
+    rows = conn.execute(
+        "SELECT purpose, model, COUNT(*) AS n, SUM(cost_usd) AS total FROM spend"
+        " WHERE relationship_id = ? AND at >= ? GROUP BY purpose, model ORDER BY total DESC",
+        (rel, iso(since)),
+    ).fetchall()
+    return [(str(r["purpose"]), str(r["model"]), int(r["n"]), float(r["total"])) for r in rows]
