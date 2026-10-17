@@ -71,6 +71,24 @@ def _talker(client: httpx.AsyncClient) -> Talker:
     return anthropic.AnthropicTalker(key, client, model or anthropic.DEFAULT_MODEL)
 
 
+def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> str:
+    """The line that says what is running: persona, prefix hash and which models talk."""
+    if model := os.environ.get("COMPANION_MODEL"):
+        everyday = model
+    elif os.environ.get("OPENROUTER_API_KEY"):
+        everyday = openrouter.DEFAULT_MODEL
+    else:
+        everyday = anthropic.DEFAULT_MODEL
+    scenes = (
+        "the same model" if scene is None else os.environ.get("COMPANION_SCENE_MODEL", SCENE_MODEL)
+    )
+    persona = PERSONA.removesuffix(".md")
+    return (
+        f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | everyday {everyday}"
+        f" | scenes {scenes}"
+    )
+
+
 def _scene_talker(client: httpx.AsyncClient) -> Talker | None:
     """The model that answers while a pretend scene is in progress. Set COMPANION_SCENE_MODEL to
     `none` to use the everyday model for scenes too. Scenes need OpenRouter."""
@@ -194,14 +212,7 @@ async def run(data_dir: Path) -> None:
             )
             return Reaction(FAVORITE_REACTION)
 
-        logging.getLogger("companion").info(
-            "up as %s, prefix %s, scenes by %s",
-            rel,
-            prefix.sha256[:12],
-            "the everyday model"
-            if convo.scene_talker is None
-            else os.environ.get("COMPANION_SCENE_MODEL", SCENE_MODEL),
-        )
+        logging.getLogger("companion").info(startup_line(rel, prefix.sha256, convo.scene_talker))
         await tg.run(handle, {"flag": flag, "fav": favorite, "favorite": favorite})
 
 
