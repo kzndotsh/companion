@@ -32,3 +32,11 @@ inbox +text:
 
 run:
     uv run companion run
+
+# stop the running bot and start it again here; the "up as" line confirms the persona
+restart:
+    scripts/restart.sh
+
+# commit only the named files, e.g. just commit "fix(x): message" src/a.py tests/test_a.py
+commit message +files:
+    scripts/commit.sh "{{message}}" {{files}}

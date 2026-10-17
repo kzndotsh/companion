@@ -28,6 +28,8 @@ local-only project: the git repo has no remote and the bot runs on the owner's m
 ```bash
 just check        # lint, types, import layers, tests. Run before every commit
 just run          # start the bot (uv run companion run)
+just restart      # stop the running bot, wait for it to exit, start the new one here
+just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 uv run companion flags | favorites | spend | beliefs | replay <turn_id>
 uv run companion eval --variants v22.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
@@ -50,7 +52,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 ## Rules we learned the hard way
 
 **Git**
-- Stage only your own files, by name. Never `git add -A`, `git add .` or `git add docs`: other
+- Commit with `just commit "msg" file...`, which stages only the files you name and refuses
+  directories, `.env`, `data/`, `evals/` private paths and attribution lines. Stage only your own files, by name. Never `git add -A`, `git add .` or `git add docs`: other
   sessions drop unread research files into the tree and they get committed by accident. Leave
   untracked files that are not yours alone.
 - Commit messages are a conventional prefix and a plain sentence. No attribution lines.
@@ -80,7 +83,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 
 **Running the bot**
 - Never log or print the Telegram token. Telegram errors carry no URL (`TelegramError`).
-- Restart by stopping the old process first. Two bots on one token fight over updates. After a
+- Restart with `just restart`, which stops the old process first. Two bots on one token fight over updates. After a
   restart, confirm the "up as" line shows the new prefix and persona.
 - A reply the user never received is marked undelivered and left out of what the model reads.
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
