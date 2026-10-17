@@ -55,6 +55,11 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] S1 Split replies: a plain reply of 25+ words and 2+ sentences is sent as two (three from 60 words) messages
+      about 65% of the time, cut at sentence boundaries, each with its own typing time. The ledger keeps one
+      reply, so the model never sees the habit. `COMPANION_SPLIT=off` disables it. On the real replies 73 of
+      269 are eligible (about 18% would split). Taste call, not measured; the afterthought and double-text
+      shapes wait for the heartbeat (R1).
 - [x] L1 Length note for short statements: the system block asks for a reply near the size of a short
       message. 53/72 to 72/72 on invented chats, a modest trim on real long chats (median 23 to 21
       words). The real fix for long chats is likely A33 (strip old replies in the history).

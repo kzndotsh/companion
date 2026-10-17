@@ -402,3 +402,95 @@ async def test_a_command_reply_is_never_held(monkeypatch: pytest.MonkeyPatch) ->
     tg = Telegram("t", ALLOWED, client, pace=1.6)
     await tg.handle_update(_update("/flag"), flag, {"flag": flag})  # type: ignore[arg-type]
     assert sleeps == []
+
+
+_LONG_REPLY = (
+    "A lot of it is learned association: the smell is tied to waking up, comfort, and that first "
+    "quiet moment of the day. Plus the aroma itself is rich and complex, so your brain gets a "
+    "little reward before you even drink it."
+)
+
+
+async def _split_run(
+    reply: str, *, split: bool, roll: float, fail_second_send: bool = False, pace: float = 0.0
+) -> tuple[list[str], list[str]]:
+    """The messages Telegram was asked to send, and every call in order."""
+    sent: list[str] = []
+    calls: list[str] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        method = str(req.url).rsplit("/", 1)[-1]
+        calls.append(method)
+        if method == "sendMessage":
+            if fail_second_send and sent:
+                return httpx.Response(500, json={"ok": False})
+            sent.append(json.loads(req.content)["text"])
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        del text
+        return reply
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram("t", ALLOWED, client, pace=pace, split=split)
+    import companion.io.telegram as module  # noqa: PLC0415
+
+    original = module.random.random
+    module.random.random = lambda: roll  # type: ignore[assignment]
+    try:
+        await tg.handle_update(_update("hi"), talk, {})
+    finally:
+        module.random.random = original
+    return sent, calls
+
+
+async def test_a_long_reply_is_sent_as_two_messages_with_the_same_words() -> None:
+    sent, _ = await _split_run(_LONG_REPLY, split=True, roll=0.0)
+    assert len(sent) == 2
+    assert " ".join(sent) == _LONG_REPLY
+
+
+async def test_split_off_or_a_high_roll_sends_one_message() -> None:
+    assert (await _split_run(_LONG_REPLY, split=False, roll=0.0))[0] == [_LONG_REPLY]
+    assert (await _split_run(_LONG_REPLY, split=True, roll=0.99))[0] == [_LONG_REPLY]
+
+
+async def test_a_short_reply_is_never_split() -> None:
+    assert (await _split_run("sounds good, talk soon.", split=True, roll=0.0))[0] == [
+        "sounds good, talk soon."
+    ]
+
+
+async def test_a_failed_later_part_is_not_reported_as_an_undelivered_reply() -> None:
+    sent, _ = await _split_run(_LONG_REPLY, split=True, roll=0.0, fail_second_send=True)
+    assert len(sent) == 1  # the first part arrived, the second was refused, nothing crashed
+
+
+async def test_each_part_waits_and_shows_typing_before_it_is_sent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        calls.append(str(req.url).rsplit("/", 1)[-1])
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def fake_sleep(seconds: float) -> None:
+        del seconds
+        calls.append("sleep")
+
+    async def talk(text: str) -> str:
+        del text
+        return _LONG_REPLY
+
+    monkeypatch.setattr("companion.io.telegram.asyncio.sleep", fake_sleep)
+    monkeypatch.setattr("companion.io.telegram.random.random", lambda: 0.0)
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    await Telegram("t", ALLOWED, client, pace=1.0, split=True).handle_update(
+        _update("hi"), talk, {}
+    )
+    sends = [i for i, c in enumerate(calls) if c == "sendMessage"]
+    assert len(sends) == 2
+    between = calls[sends[0] + 1 : sends[1]]
+    assert "sleep" in between
+    assert "sendChatAction" in between

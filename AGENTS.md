@@ -92,6 +92,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - A reply the user never received is marked undelivered and left out of what the model reads.
 - Replies are held to feel typed: `COMPANION_PACE` is off, quick, natural (default) or slow.
   Set `off` when timing a run by hand. Commands are never held.
+- A long, plain reply is sometimes sent as two or three messages (`COMPANION_SPLIT`, on unless `off`).
+  The ledger and the history keep it as one reply, so the model never sees the splitting. Cuts fall at
+  sentence boundaries only (`core/split.py`).
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 
 **Working with the owner**

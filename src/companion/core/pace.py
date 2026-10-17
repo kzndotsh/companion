@@ -23,16 +23,24 @@ def pace_factor(raw: str) -> float:
     return PACES.get(raw.strip().lower(), PACES[DEFAULT_PACE])
 
 
-def target_seconds(user_text: str, reply_text: str, factor: float, jitter: float = 1.0) -> float:
+def target_seconds(
+    user_text: str, reply_text: str, factor: float, jitter: float = 1.0, reading: bool = True
+) -> float:
     """The whole time from their message to the reply going out. An empty reply (a reaction)
-    only pays the reading pause."""
+    only pays the reading pause. A later part of a split reply has nothing new to read."""
     read = min(READ_BASE_SECONDS + READ_PER_WORD * len(user_text.split()), READ_MAX_SECONDS)
+    read = read if reading else 0.0
     typing = TYPE_PER_WORD * len(reply_text.split())
     return min((read + typing) * factor * jitter, MAX_SECONDS)
 
 
-def hold_seconds(
-    user_text: str, reply_text: str, factor: float, elapsed: float, jitter: float = 1.0
+def hold_seconds(  # noqa: PLR0913, PLR0917
+    user_text: str,
+    reply_text: str,
+    factor: float,
+    elapsed: float,
+    jitter: float = 1.0,
+    reading: bool = True,
 ) -> float:
     """How much longer to wait, given the model has already taken `elapsed` seconds."""
-    return max(0.0, target_seconds(user_text, reply_text, factor, jitter) - elapsed)
+    return max(0.0, target_seconds(user_text, reply_text, factor, jitter, reading) - elapsed)

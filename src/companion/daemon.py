@@ -95,6 +95,11 @@ def pace_name() -> str:
     return raw if raw in PACES else DEFAULT_PACE
 
 
+def split_on() -> bool:
+    """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
+    return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
+
+
 def pace_setting() -> float:
     return pace_factor(pace_name())
 
@@ -118,6 +123,7 @@ def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> 
     return (
         f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | everyday {everyday}"
         f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
+        f" | split {'on' if split_on() else 'off'}"
     )
 
 
@@ -223,7 +229,9 @@ async def run(data_dir: Path) -> None:
                 task.cancel()
             pending[:] = [asyncio.create_task(reflect_after_idle())]
 
-        tg = Telegram(token, user, client, _hooks(store, rel), pace=pace_setting())
+        tg = Telegram(
+            token, user, client, _hooks(store, rel), pace=pace_setting(), split=split_on()
+        )
 
         async def handle(text: str) -> str | Reaction | ReactAndReply:
             reply = await convo.handle(SESSION, text, "telegram")

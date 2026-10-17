@@ -13,6 +13,7 @@ import httpx
 
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.pace import hold_seconds
+from companion.core.split import split_reply
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
@@ -42,15 +43,17 @@ class TelegramError(RuntimeError):
 
 
 class Telegram:
-    def __init__(
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         token: str,
         allowed_user: int,
         client: httpx.AsyncClient,
         hooks: Hooks = Hooks(),  # noqa: B008
         pace: float = 0.0,
+        split: bool = False,
     ) -> None:
         self._pace = pace
+        self._split = split
         self._base = f"https://api.telegram.org/bot{token}"
         self._allowed = allowed_user
         self._client = client
@@ -188,15 +191,18 @@ class Telegram:
                 _kind(reply),
             )
 
-    async def _hold(self, chat_id: int, user_text: str, reply: str, started: float) -> None:
+    async def _hold(
+        self, chat_id: int, user_text: str, reply: str, started: float, *, reading: bool = True
+    ) -> None:
         """Wait like someone reading and typing, keeping the typing indicator alive while a text
-        reply is on its way. The wait counts the time the model already took."""
+        reply is on its way. The wait counts the time already spent since `started`."""
         remaining = hold_seconds(
             user_text,
             reply,
             self._pace,
             time.monotonic() - started,
             random.uniform(0.8, 1.25),  # noqa: S311
+            reading,
         )
         if remaining > 0:
             log.info("holding %.1fs before sending (%d words)", remaining, len(reply.split()))
@@ -206,6 +212,32 @@ class Telegram:
             step = min(remaining, TYPING_REFRESH_SECONDS)
             await asyncio.sleep(step)
             remaining -= step
+
+    async def _send_parts(
+        self, chat_id: int, text: str, hold: Callable[..., Awaitable[None]] | None
+    ) -> None:
+        """Send a reply, cut into a few messages when it is long enough, each after its own
+        typing time. A part that fails after an earlier one arrived stops the rest and is logged;
+        the user has already seen the start, so the reply is not reported as undelivered."""
+        parts = split_reply(text, random.random(), random.random()) if self._split else [text]  # noqa: S311
+        if len(parts) > 1:
+            log.info(
+                "splitting into %d messages (%s words)",
+                len(parts),
+                "+".join(str(len(p.split())) for p in parts),
+            )
+        for n, part in enumerate(parts):
+            if hold is not None:
+                await hold(part, first=n == 0)
+            try:
+                await self.send(chat_id, part)
+            except TelegramError:
+                if n == 0:
+                    raise
+                log.warning(
+                    "part %d of %d failed to send; the rest were not sent", n + 1, len(parts)
+                )
+                return
 
     async def _answer(
         self,
@@ -217,9 +249,13 @@ class Telegram:
         """Send the reply. `wait` is the user's text and when the turn started; leave it out for
         a command's reply, which goes at once."""
 
-        async def hold(text: str) -> None:
-            if wait is not None and self._pace > 0:
+        async def hold(text: str, *, first: bool = True) -> None:
+            if wait is None or self._pace <= 0:
+                return
+            if first:
                 await self._hold(chat_id, wait[0], text, wait[1])
+            else:
+                await self._hold(chat_id, "", text, time.monotonic(), reading=False)
 
         if isinstance(reply, ReactAndReply):
             try:
@@ -227,8 +263,7 @@ class Telegram:
             except TelegramError:
                 log.warning("reaction refused; sending the reply without it")
             if reply.text:
-                await hold(reply.text)
-                await self.send(chat_id, reply.text)
+                await self._send_parts(chat_id, reply.text, hold)
         elif isinstance(reply, Reaction):
             await hold("")
             try:
@@ -237,8 +272,7 @@ class Telegram:
                 log.warning("reaction refused, falling back to text")
                 await self.send(chat_id, "noted")
         elif reply:
-            await hold(reply)
-            await self.send(chat_id, reply)
+            await self._send_parts(chat_id, reply, hold if wait is not None else None)
 
     async def _report_undelivered(self, reply: str | Reaction | ReactAndReply, reason: str) -> None:
         """Tell the conversation a reply never arrived, so the model does not think it was seen."""
