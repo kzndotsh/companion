@@ -134,12 +134,47 @@ def _days_until(weekday: int, said: datetime) -> int:
 
 
 _FIXED_OFFSETS = (("tomorrow", 1), ("next week", 7), ("next month", 30))
+_MONTHS = (
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+)
+_DATE = re.compile(
+    r"\b(" + "|".join(m[:3] for m in _MONTHS) + r")[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b"
+)
+
+
+def _calendar_offset(when: str, said: datetime) -> int | None:
+    """Days until a date written out ("december 4th"), the next time it comes round."""
+    m = _DATE.search(when)
+    if m is None:
+        return None
+    month = next(i for i, name in enumerate(_MONTHS, start=1) if name.startswith(m.group(1)))
+    try:
+        date = said.date().replace(month=month, day=int(m.group(2)))
+    except ValueError:
+        return None
+    if date < said.date():
+        date = date.replace(year=date.year + 1)
+    return (date - said.date()).days
 
 
 def _event_offset(when: str, said: datetime) -> int | None:
     """How many days after they spoke the thing happens, or None when `when` does not say."""
     if any(w in when for w in _SAME_DAY):
         return 0
+    dated = _calendar_offset(when, said)
+    if dated is not None:
+        return dated
     fixed = next((days for phrase, days in _FIXED_OFFSETS if phrase in when), None)
     if fixed is not None:
         return fixed

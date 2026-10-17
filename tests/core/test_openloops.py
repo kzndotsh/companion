@@ -45,6 +45,10 @@ def _at(day: int, hour: int = 10) -> datetime:
         ("", "days", _at(15)),
         ("", "unknown", _at(15)),
         ("soon", "unknown", _at(15)),
+        ("december 4th", "days", datetime(2026, 12, 5, 10, 0, tzinfo=UTC)),
+        ("oct 14", "days", _at(15)),
+        ("on jan 2", "days", datetime(2027, 1, 3, 10, 0, tzinfo=UTC)),
+        ("feb 30", "days", _at(15)),
     ],
 )
 def test_the_follow_up_is_the_morning_after_it_happens_or_a_few_days_on(
