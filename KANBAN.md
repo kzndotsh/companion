@@ -34,7 +34,8 @@ Ordered. The first three can stop the bot, so they go first.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
-- [ ] T3 Daily spend cap, so credits cannot run dry unnoticed. (G54)
+- [ ] T3 Daily spend cap, so credits cannot run dry unnoticed. (G54) The ledger it reads now exists
+      (`companion spend`); what is left is the limit and what the bot does when it is reached.
 - [ ] T4 Fix `no-claimed-perception` on DeepSeek (0/6 to 2/6) with a fixture first.
 - [ ] T5 Fix `signoff-then-time-skip` on DeepSeek (5/6 and worse in other runs), fixture first.
 - [ ] T6 Fix `agree-and-invent` on Luna (1/6 to 6/8 depending on the run), fixture first.
@@ -43,7 +44,8 @@ Ordered. The first three can stop the bot, so they go first.
       line and three few-shot examples did not move it (judged 0/12 to 3/12), and it shows across
       models. Options: teach the habit check to name it, a model that does it less (Haiku 4.5 was 7/8 on
       the music script), or accept it. Fixtures exist: `does-not-echo-the-point-with-a-flourish-*`.
-- [ ] T12 Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
+- [ ] T12 (see also A33: strip the leading sentence and stage directions from assistant turns in the
+      injected history only) Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
       reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
       before any change; the memory card carries what older turns held. See `evals/CHANGELOG.md`.
 - [ ] T11 Memory rule: do not record the companion's echo of the user's topic as a view it holds
@@ -63,6 +65,13 @@ Ordered. The first three can stop the bot, so they go first.
 ## Done
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
+
+**2026-10-17**
+- [x] G-A28 Spend ledger: one row per paid call by purpose, `companion spend` (today and the week)
+      (1d2e6ae)
+- [x] G-A31 Clock guard: the wall clock is read only in `core/clock.py`, with a test (2835c74)
+- [x] G-A0 Self-audit of the reply path: a failure keeps the user's message and stores nothing from the
+      error, and an update handled before a restart is no longer handled twice (024bc83)
 
 **2026-10-16**
 - [x] G-v21 Persona v21: v18 trimmed by a quarter (2,032 to 1,504 words), mood stated as a stance,
@@ -151,6 +160,11 @@ Unordered within each group. Pull a card into Todo when it is next.
 - [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
       with the rest growing as recorded lore. Test that they surface without being asked and do not
       become talking points. From the Grok review.
+- [ ] R15 Extend the rejected list to beliefs: when a belief about the user is retired by hand, no
+      later automatic write may recreate it and its evidence leaves recall. Today only retired views
+      are protected. (A20 in the audit synthesis)
+- [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
+      fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
 - [ ] R3 Record the lore it invents, through the same filter as the memory rules. (G23)
 - [ ] R4 No reaction alongside a reply while a scene is in progress, send the reaction as soon as the
       judge returns, and record the user's reactions to its messages.
