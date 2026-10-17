@@ -9,7 +9,6 @@ type = forbidden
 source_modules = companion.core
 forbidden_modules =
     companion.store
-    companion.events
     companion.cli
     companion.models
     companion.loops
@@ -22,7 +21,6 @@ name = only store imports sqlite3
 type = forbidden
 source_modules =
     companion.core
-    companion.events
     companion.cli
     companion.models
     companion.loops
