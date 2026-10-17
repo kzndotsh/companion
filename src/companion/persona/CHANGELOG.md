@@ -1,8 +1,9 @@
 # Persona versions
 
 Each version is a new file in this directory, and dropped and candidate versions stay as files so
-the exact text can always be read. The prefix hash on every turn record says which one a turn used. **Live: v22.** Changes to what the model is sent besides the persona text (the memory
-card, the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
+the exact text can always be read. The prefix hash on every turn record says which one a turn
+used. **Live: v22.** Changes to what the model is sent besides the persona text (the memory card,
+the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
 
 - **v1.** First draft. Long replies, a question nearly every turn.
 
