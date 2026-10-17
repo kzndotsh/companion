@@ -55,6 +55,9 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] L1 Length note for short statements: the system block asks for a reply near the size of a short
+      message. 53/72 to 72/72 on invented chats, a modest trim on real long chats (median 23 to 21
+      words). The real fix for long chats is likely A33 (strip old replies in the history).
 - [x] P1 Reply pace: a reply waits like someone reading and typing (a short read pause plus about 0.15 s a
       word, minus the model's own time, capped at 8 s, typing indicator kept alive; reactions wait only
       the read pause; commands go at once). `COMPANION_PACE` = off, quick, natural (default) or slow, shown

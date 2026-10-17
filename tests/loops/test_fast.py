@@ -300,3 +300,15 @@ async def test_openrouter_does_not_pin_a_provider_for_other_makers() -> None:
         await OpenRouterTalker("k", client, "openai/gpt-6-luna").reply(_request())
     assert "provider" not in sent
     assert sent["reasoning"] == {"enabled": False}
+
+
+async def test_a_short_statement_gets_a_length_note_in_the_system_block(store: Store) -> None:
+    talker = FakeTalker("a", "b", "c")
+    convo = Conversation(store, talker, PREFIX, REL)
+    await convo.handle(SESSION, "just got home", "test", NOW)
+    await convo.handle(SESSION, "what should i eat?", "test", NOW + timedelta(minutes=1))
+    await convo.handle(SESSION, "ok", "test", NOW + timedelta(minutes=2))
+    assert "Their message was short (3 words)" in talker.seen[0].card
+    assert "Their message was short" not in talker.seen[0].messages[-1].content
+    assert "Their message was short" not in talker.seen[1].card  # a question
+    assert "Their message was short (1 word)" in talker.seen[2].card

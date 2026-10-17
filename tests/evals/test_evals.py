@@ -137,6 +137,18 @@ def test_reasoning_stays_off_unless_a_variant_asks_for_it() -> None:
     assert on["reasoning"] == {"effort": "low", "exclude": True}
 
 
+def test_the_length_variant_adds_the_note_for_a_short_statement_only() -> None:
+    from companion.core.prompt.request import Message, TalkerRequest  # noqa: PLC0415
+
+    short = TalkerRequest(OTHER, (Message("user", "just got home"),), card="clock")
+    asked = TalkerRequest(OTHER, (Message("user", "what is for dinner?"),), card="clock")
+    on = Variant("a", OTHER, length=True)
+    assert "Their message was short" in request_for(short, on).card
+    assert request_for(short, on).card.startswith("clock\n")
+    assert request_for(asked, on).card == "clock"
+    assert request_for(short, Variant("b", OTHER)).card == "clock"
+
+
 def test_a_history_variant_keeps_only_the_last_messages() -> None:
     base = _request()
     short = request_for(base, Variant("a", OTHER, history=2))
@@ -153,6 +165,7 @@ def test_a_history_variant_keeps_only_the_last_messages() -> None:
         ("v10.md+h10", "v10.md", True, None, 10),
         ("v10.md+nocard+h6@a/b", "v10.md", False, "a/b", 6),
         ("v10.md+low", "v10.md", True, None, None),
+        ("v10.md+len", "v10.md", True, None, None),
     ],
 )
 def test_variant_specs(

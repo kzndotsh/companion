@@ -70,3 +70,14 @@ persona v17; see [CHANGELOG.md](CHANGELOG.md).
   (`when_phrase` in `core/freshness.py`, same zone as the clock line): today, yesterday, N days
   ago. Checked on the live data: the "flirt" belief (last said Thursday 18:52) changed from
   "today" to "yesterday".
+
+- **A length note for short statements.** Replies to short casual statements ran three to four
+  times longer than the message (a 4-word message got a median of 15 words, 2026-10-17). When
+  their message is a statement of 12 words or fewer, with no question mark, and no scene is in
+  progress, the system block gets one line: "[Their message was short (N words), so keep your reply
+  short too, under about X words, unless what they said needs more.]", with X about one and a half
+  times N plus four, never under 8. `core/length.py`. It never appears in a scene, for a question
+  or for a long message. On 6 invented short statements, 12 samples each: 53/72 checks without it,
+  72/72 with it. On 22 real turns replayed with their long histories: median 23 to 21 words and
+  replies over 25 words 49/132 to 37/132, checks 152/264 to 158/264, within noise. No leak of the
+  note's wording and no curt replies on a read by eye.

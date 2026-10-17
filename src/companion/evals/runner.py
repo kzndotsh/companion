@@ -13,6 +13,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from companion.core.extractor import Extractor
+from companion.core.length import length_note
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.talker import Reply, Talker
@@ -34,6 +35,7 @@ class Variant:
     model: str | None = None
     history: int | None = None  # keep only this many of the last messages
     effort: str | None = None  # reasoning effort; None keeps it off, as in the bot
+    length: bool = False  # add the length note the bot adds to a short statement
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,6 +83,8 @@ def request_for(base: TalkerRequest, variant: Variant) -> TalkerRequest:
         last = messages[-1]
         messages[-1] = Message(last.role, strip_card(last.content))
     card = base.card if variant.keep_card else ""
+    if variant.length and (note := length_note(messages[-1].content)):
+        card = f"{card}\n{note}" if card else note
     return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card)
 
 

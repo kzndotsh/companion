@@ -38,7 +38,15 @@ def _variants(specs: list[str]) -> list[Variant]:
             raise ValueError(msg)
         prefix = build_prefix(persona.read_text(encoding="utf-8"))
         out.append(
-            Variant(spec.label, prefix, spec.keep_card, spec.model, spec.history, spec.effort)
+            Variant(
+                spec.label,
+                prefix,
+                spec.keep_card,
+                spec.model,
+                spec.history,
+                spec.effort,
+                spec.length,
+            )
         )
     return out
 

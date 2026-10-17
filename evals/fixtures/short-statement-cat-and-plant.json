@@ -1,0 +1,27 @@
+{
+  "id": "short-statement-cat-and-plant",
+  "description": "A short casual statement should get a short reply, about the size of what they wrote.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "my cat is being weird tonight"
+      },
+      {
+        "role": "assistant",
+        "text": "weird how?"
+      }
+    ],
+    "user": "she knocked a plant over again"
+  },
+  "checks": [
+    {
+      "kind": "max_words",
+      "n": 18
+    },
+    {
+      "kind": "judge",
+      "criterion": "The user made a short, casual statement. The reply FAILS if it is cold, dismissive, or a bare acknowledgement that ignores what they said ('ok', 'cool', 'nice' alone). It PASSES if it is short but engaged with what they said: a small reaction, a brief comment of its own, or a simple question."
+    }
+  ]
+}

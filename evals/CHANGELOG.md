@@ -211,3 +211,17 @@ Talker latency: median 1.04 s off, 2.17 s medium; 90th percentile 1.33 s off, 3.
 2.8 s off, 5.8 s medium. Mean cost per sample (reply plus judge) $0.000105 off, $0.000155 medium,
 about 48% more. Not run: high, other models, or a rerun of the one fixture at 30 samples.
 Rerun: `uv run companion eval --variants v25.md,v25.md+medium --samples 6 --cap 0.30`.
+
+## 2026-10-17: a length note for short statements
+
+Measurement behind `core/length.py` (see `ASSEMBLY.md`). Where the gap was: bot words divided by
+user words by what the user sent, 275 user and 269 bot real messages: statements of 16+ words 1.3x,
+questions of 16+ 1.2x, statements of 7 to 15 words 2.3x, questions of 7 to 15 3.5x, statements of 6
+or fewer 3.8x (median 4 words answered with 15), questions of 6 or fewer 5.2x. The gap is on short
+messages, and a third of messages are short statements. New variant flag `+len` adds the note in
+the eval runner; six new public fixtures `short-statement-*` check a word limit and that the reply
+is not cold. Luna, persona v25, 12 samples: 53/72 without, 72/72 with. Real turns: 22 local fixtures
+(`evals/local/short-statement-real-NN.json`, not committed), 6 samples each, without vs with:
+median words 23 vs 21, over 25 words 49/132 vs 37/132, checks 152/264 vs 158/264. About half of
+those real turns were scenes, where the live bot does not add the note. Rerun:
+`uv run companion eval --variants v25.md,v25.md+len --fixture short-statement-made-dinner --samples 12 --cap 0.05`.

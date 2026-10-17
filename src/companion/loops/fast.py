@@ -40,6 +40,7 @@ from companion.core.frames import resolve as frame_resolve
 from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
+from companion.core.length import length_note
 from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
@@ -264,10 +265,12 @@ def _react_alongside(
     return decision.reaction
 
 
-def _notes(c: Conversation, prior: list[Utterance], in_scene: Frame) -> list[str]:
-    """What it should know about its own habits and a scene in progress. These go in the system
-    block with the memory card: in a user message the model read them as something they said."""
-    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene)]
+def _notes(c: Conversation, prior: list[Utterance], in_scene: Frame, text: str) -> list[str]:
+    """What it should know about its own habits, a scene in progress and how long to answer.
+    These go in the system block with the memory card: in a user message the model read them as
+    something they said. A scene gets no length note, since scenes run long on purpose."""
+    size = length_note(text) if in_scene is Frame.REAL else None
+    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene), size]
     return [n for n in notes if n is not None]
 
 
@@ -497,7 +500,7 @@ async def _handle_turn(
     volatile = ""
     shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
     clock = now_line(now, prior[-1].at if prior else None)
-    card_text = "\n".join([clock, *shown, *_notes(c, prior, in_scene)])
+    card_text = "\n".join([clock, *shown, *_notes(c, prior, in_scene, text)])
     request = build_request(prefix, history, text, volatile, card_text)
     store.save_prefix(prefix)
     _mark_start(t, in_scene, card, card_text)
