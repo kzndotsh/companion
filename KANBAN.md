@@ -180,7 +180,10 @@ Unordered within each group. Pull a card into Todo when it is next.
 
 - [ ] R1 Heartbeat for initiating contact: a gate before any spend that holds when nothing is new, a
       pure evaluator with named reasons, an outcome recorded per reach-out, a hold never counted as an
-      ignore, a slow re-probe, a test on a simulated clock, shadow first. (G30, G33)
+      ignore, a slow re-probe, a test on a simulated clock, shadow first. (G30, G33) Prototype 2026-10-17:
+      about 8 plausible open loops in 3 days of chat, mostly low stakes, 3 sensitive to block; a model
+      finds a real afterthought in about 1 of 20 replies, so the afterthought stays parked. See
+      `evals/CHANGELOG.md`.
 - [ ] R2 Looking up older messages on recall cues, starting with a cue-triggered search into the
       system block. (G21)
 - [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),

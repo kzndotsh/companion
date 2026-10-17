@@ -225,3 +225,28 @@ is not cold. Luna, persona v25, 12 samples: 53/72 without, 72/72 with. Real turn
 median words 23 vs 21, over 25 words 49/132 vs 37/132, checks 152/264 vs 158/264. About half of
 those real turns were scenes, where the live bot does not add the note. Rerun:
 `uv run companion eval --variants v25.md,v25.md+len --fixture short-statement-made-dinner --samples 12 --cap 0.05`.
+
+## 2026-10-17: prototype for an afterthought and open-loop follow-ups (R1)
+
+Read-only passes over the real chat (570 real-frame messages since 2026-10-15), Haiku 5.5, about
+2 cents in all. Scratch scripts, not kept; each is one prompt plus a schema.
+
+Afterthought, strict prompt (send a second message only if there is something real to add, most of
+the time no): 0 of 60 recent replies got one. Looser prompt (always write one and rate how much a
+real friend would send it, 1 to 5), 40 replies: rated 4 on 2, 3 on 31 and 2 on 7. The two 4s were
+a real addition ("the 'you belong to me' part is the scariest bit") and a small reaction ("hope you
+got the floor mopped"). One of the filler ones invented numbers ("the Markdown is basically 18k
+lines of docs"), which is the usual risk of asking a model for an extra message. Reading: a model
+asked for an afterthought finds nothing to add, or filler, about 19 times in 20. Not tested: other
+models, or a human-rated sample.
+
+Open loops (things the user said about their near future or an unresolved situation), windows of 24
+messages with a verbatim-quote gate: 32 proposed, 30 passed the quote gate. About 8 are plausible
+follow-ups (the haircut put off, returning pants that did not fit, cleaning the room, the project
+name left open, being up at 9 to 10). Most are minute-scale ("going to shower", "making lunch") and
+not worth asking about later. Three are sensitive (avoiding going back to therapy, looking for a
+specialist, nervous about finding someone) and must be blocked by the sensitivity gate. A few were
+not loops at all (an offer to share secrets, the companion's own "no rush"). The due time was a
+vague phrase or null in most; only "tomorrow", "today" and "tonight" appeared. Reading: material
+exists but is sparse (roughly 8 in 3 days) and mostly low stakes, so a first version would reach out
+at most once or twice a week, and extraction must drop minute-scale items and sensitive ones.
