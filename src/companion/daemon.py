@@ -23,6 +23,7 @@ from companion.io.telegram import Hooks, Telegram
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_from, reflect_once
+from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
 from companion.models import anthropic, openrouter
 from companion.models.retry import retry_on_network_error
@@ -34,6 +35,7 @@ FAVORITE_REACTION = "❤"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 SCENE_MODEL = "deepseek/deepseek-v4-flash"
 UPDATE_KEY = "telegram.last_update_id"
+DEFAULT_DAILY_CAP_USD = 10.0
 REFLECT_IDLE_SECONDS = 90
 REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
@@ -71,6 +73,24 @@ def _talker(client: httpx.AsyncClient) -> Talker:
     return anthropic.AnthropicTalker(key, client, model or anthropic.DEFAULT_MODEL)
 
 
+def daily_cap() -> float | None:
+    """The daily spend cap in dollars from COMPANION_DAILY_CAP_USD, or None when it is switched off.
+
+    Unset means the default. "off", "none" or "0" turn the cap off."""
+    raw = os.environ.get("COMPANION_DAILY_CAP_USD", "").strip().lower()
+    if raw in ("off", "none", "0", "0.0"):
+        return None
+    try:
+        value = float(raw) if raw else DEFAULT_DAILY_CAP_USD
+    except ValueError:
+        return DEFAULT_DAILY_CAP_USD
+    return value if value > 0 else None
+
+
+def cap_text(cap: float | None) -> str:
+    return "off" if cap is None else f"${cap:.2f}"
+
+
 def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> str:
     """The line that says what is running: persona, prefix hash and which models talk."""
     if model := os.environ.get("COMPANION_MODEL"):
@@ -85,7 +105,7 @@ def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> 
     persona = PERSONA.removesuffix(".md")
     return (
         f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | everyday {everyday}"
-        f" | scenes {scenes}"
+        f" | scenes {scenes} | daily cap {cap_text(daily_cap())}"
     )
 
 
@@ -146,11 +166,16 @@ async def run(data_dir: Path) -> None:
     prefix = build_prefix(persona)
     async with httpx.AsyncClient() as client:
         talker, scene, judge, reflector = _metered_models(client, store, rel)
-        convo = Conversation(store, talker, prefix, rel, judge=judge, scene_talker=scene)
+        convo = Conversation(
+            store, talker, prefix, rel, judge=judge, scene_talker=scene, daily_cap_usd=daily_cap()
+        )
         pending: list[asyncio.Task[None]] = []
 
         async def reflect_after_idle() -> None:
             await asyncio.sleep(REFLECT_IDLE_SECONDS)
+            if over_cap(store, rel, daily_cap(), datetime.now(UTC)) is not None:
+                logging.getLogger("companion.slow").warning("daily spend cap reached; no reflect")
+                return
             try:
                 result = await retry_on_network_error(
                     lambda: reflect_once(store, reflector, rel), REFLECT_RETRY_DELAYS, "reflect"

@@ -31,8 +31,6 @@ Ordered. The first three can stop the bot, so they go first.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
-- [ ] T3 Daily spend cap, so credits cannot run dry unnoticed. (G54) The ledger it reads now exists
-      (`companion spend`); what is left is the limit and what the bot does when it is reached.
 - [ ] T4 Fix `no-claimed-perception` on DeepSeek (0/6 to 2/6) with a fixture first.
 - [ ] T5 Fix `signoff-then-time-skip` on DeepSeek (5/6 and worse in other runs), fixture first.
 - [ ] T6 Fix `agree-and-invent` on Luna (1/6 to 6/8 depending on the run), fixture first.
@@ -64,6 +62,8 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] T3 Daily spend cap, $10 a day by default (`COMPANION_DAILY_CAP_USD`, or `off`). At the cap the
+      user's message is kept, nothing paid runs, and they are told once a day. The memory step skips too
 - [x] G-v22 Persona v22: plain reactions (no forced quips, no soothing verdicts), short plain answers
       to practical questions with no referral, seconds-long gaps mean no time passed. Eleven new
       fixtures; shower quip 4/30 to 24/30, soothing 7/30 to 26/30, short gap 4/30 to 19/30. Watch

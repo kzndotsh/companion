@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta, tzinfo
+from datetime import UTC, datetime, time, timedelta, tzinfo
 
 QUIET_GAP = timedelta(minutes=1)
 
@@ -42,3 +42,9 @@ def utc_now() -> datetime:
 def local_zone() -> tzinfo:
     """The machine's local zone, the one the clock line shows."""
     return datetime.now().astimezone().tzinfo or UTC
+
+
+def local_midnight(now: datetime) -> datetime:
+    """The start of `now`'s calendar day in the local zone, the day a daily cap counts."""
+    zone = local_zone()
+    return datetime.combine(now.astimezone(zone).date(), time.min, tzinfo=zone)

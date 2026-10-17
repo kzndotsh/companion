@@ -2,27 +2,28 @@
 
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
-from companion.core.clock import local_zone, utc_now
+from companion.core.clock import local_midnight, utc_now
 from companion.core.types import RelationshipId
+from companion.daemon import cap_text, daily_cap
 from companion.store.sqlite.store import Store
 
 
 def run(db: Path, relationship: str, now: datetime | None = None) -> str:
     now = now or utc_now()
-    zone = local_zone()
-    midnight = datetime.combine(now.astimezone(zone).date(), time.min, tzinfo=zone)
+    midnight = local_midnight(now)
     store = Store(db)
     try:
         today = store.spend_since(RelationshipId(relationship), midnight)
         week = store.spend_since(RelationshipId(relationship), midnight - timedelta(days=6))
     finally:
         store.close()
+    cap = f"daily cap: {cap_text(daily_cap())} (set COMPANION_DAILY_CAP_USD, or off)"
     if not week:
-        return "no spend recorded yet\n"
-    return "\n".join([*_block("today", today), "", *_block("last 7 days", week)]) + "\n"
+        return f"no spend recorded yet\n{cap}\n"
+    return "\n".join([cap, "", *_block("today", today), "", *_block("last 7 days", week)]) + "\n"
 
 
 def _block(title: str, rows: list[tuple[str, str, int, float]]) -> list[str]:

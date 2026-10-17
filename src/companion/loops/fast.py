@@ -69,6 +69,7 @@ from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.react import judge_reaction
+from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
@@ -134,10 +135,15 @@ class Conversation:
     judge: Extractor | None = None
     habits: HabitMemory = field(default_factory=HabitMemory)
     scene_talker: Talker | None = None  # replies while a pretend scene is in progress
+    daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
     ) -> str | Reaction | ReactAndReply:
+        now = now or utc_now()
+        capped = _stopped_by_cap(self, session, text, channel, now)
+        if capped is not None:
+            return capped
         return await _handle_turn(self, session, text, channel, now)
 
 
@@ -250,6 +256,33 @@ def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
         return habits
 
     c.habits.start(look())
+
+
+def _stopped_by_cap(
+    c: Conversation, session: SessionId, text: str, channel: str, now: datetime
+) -> str | None:
+    """At the daily cap the user's message is kept and nothing paid runs, and they are told once.
+
+    None means under the cap and the turn goes ahead. An empty string means send nothing."""
+    spent = over_cap(c.store, c.rel, c.daily_cap_usd, now)
+    if spent is None:
+        return None
+    turn = TurnId(_id())
+    t = _Turn(session, turn, now, [], text)
+    _store_user(c, t, channel, Frame.REAL)
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            session,
+            turn,
+            TraceId(turn),
+            DecisionKind.POLICY,
+            f"daily spend cap reached: ${spent:.2f} of ${c.daily_cap_usd or 0:.2f}, no reply",
+            now,
+        )
+    )
+    return NOTICE if first_notice_today(c.store, c.rel, now) else ""
 
 
 def _pick_talker(c: Conversation, t: _Turn, in_scene: Frame) -> Talker:

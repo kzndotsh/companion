@@ -56,4 +56,6 @@ def test_the_report_names_today_and_the_week(tmp_path: Path) -> None:
 
 def test_an_empty_ledger_says_so(tmp_path: Path) -> None:
     Store(tmp_path / "rel.sqlite").close()
-    assert spend_cli.run(tmp_path / "rel.sqlite", str(REL)) == "no spend recorded yet\n"
+    out = spend_cli.run(tmp_path / "rel.sqlite", str(REL))
+    assert out.startswith("no spend recorded yet\n")
+    assert "daily cap:" in out

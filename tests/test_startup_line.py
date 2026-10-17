@@ -12,12 +12,14 @@ def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
     monkeypatch.delenv("COMPANION_MODEL", raising=False)
     monkeypatch.delenv("COMPANION_SCENE_MODEL", raising=False)
+    monkeypatch.delenv("COMPANION_DAILY_CAP_USD", raising=False)
     scene = object()
     line = daemon.startup_line(RelationshipId("telegram-1"), "abcdef0123456789", scene)  # type: ignore[arg-type]
     persona = daemon.PERSONA.removesuffix(".md")
     assert line == (
         f"up as telegram-1 | persona {persona} (prefix abcdef012345)"
         f" | everyday {daemon.openrouter.DEFAULT_MODEL} | scenes {daemon.SCENE_MODEL}"
+        " | daily cap $10.00"
     )
 
 
