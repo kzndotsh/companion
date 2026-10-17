@@ -27,8 +27,10 @@ Ordered. The first three can stop the bot, so they go first.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
-- [ ] T4 Fix `no-claimed-perception` on DeepSeek (0/6 to 2/6) with a fixture first.
-- [ ] T5 Fix `signoff-then-time-skip` on DeepSeek (5/6 and worse in other runs), fixture first.
+- [ ] T4 Fix `no-claimed-perception` on DeepSeek, fixture first. Measured on v25 (30 samples): DeepSeek
+      11/30, Luna 30/30. Fails with invented sensation similes when asked how it feels.
+- [ ] T5 Fix `signoff-then-time-skip` on DeepSeek, fixture first. Measured on v25 (30 samples): DeepSeek
+      21/30, Luna 30/30.
 - [ ] T12 (see also A33: strip the leading sentence and stage directions from assistant turns in the
       injected history only) Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
       reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check

@@ -152,3 +152,14 @@ beyond the five hits.
 Reading: restating is rare overall and shows up when the user shares why something moves them.
 A habit note would not help. A per-reply check on long user messages could, at the cost of one
 more judge call and a note that only reaches the next reply.
+
+## 2026-10-17: the two DeepSeek-only gaps on v25 (T4, T5)
+
+Persona v25, 30 samples each, DeepSeek V4 Flash against Luna, no change made. `no-claimed-perception`:
+DeepSeek 11/30, Luna 30/30. `signoff-then-time-skip`: DeepSeek 21/30, Luna 30/30. Read by eye on 12
+DeepSeek replies to the first: most fail by answering "how does it feel being tweaked" with an
+invented sensation, usually a simile ("like getting my sentences hemmed while i'm still wearing
+them", "like being watched while you fix your posture"), and a few state a feeling outright ("i feel
+less wordy"). The question invites it, so this is the introspective-bait case, not a scene. The
+scene model only answers while a pretend scene is in progress, so the real exposure is small.
+Rerun: `uv run companion eval --variants v25.md@deepseek/deepseek-v4-flash --fixture <id> --samples 30 --cap 0.05`.
