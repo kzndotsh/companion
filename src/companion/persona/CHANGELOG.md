@@ -1,7 +1,7 @@
 # Persona versions
 
-Each version is a new file in this directory. The prefix hash on every turn record says which one
-a turn used. **Live: v22.** Changes to what the model is sent besides the persona text (the memory
+Each version is a new file in this directory, and dropped and candidate versions stay as files so
+the exact text can always be read. The prefix hash on every turn record says which one a turn used. **Live: v22.** Changes to what the model is sent besides the persona text (the memory
 card, the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
 
 - **v1.** First draft. Long replies, a question nearly every turn.
@@ -189,8 +189,8 @@ card, the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
 - **v19 (dropped).** v18 plus three short example exchanges of friend-like replies on other
   topics (a podcast, a game, a trail run), tried because a prompt rule alone had not moved the
   habit of restating the user's point. Judged restating on the film and music scripts, 12
-  samples: v17 0/12 and 2/12, v18 0/12 and 2/12, v19 0/12 and 3/12, which is noise. The file was
-  deleted and the next version is v20.
+  samples: v17 0/12 and 2/12, v18 0/12 and 2/12, v19 0/12 and 3/12, which is noise. The file is kept for
+  the record, and the next version is v20.
 
 - **v20 (candidate, not live).** A review of v18 by another model (Grok) argued the prompt had
   conflicting rules, too many overlapping prohibitions, a contradiction between "you can be a
@@ -239,4 +239,4 @@ card, the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
   entertained be inventive, and plain does not mean agreeable. Tried because v22 might have cost
   inventiveness and honesty. At 30 samples it fixed neither beyond noise (entertain-me 30/30
   against v22's 26/30, `agree-and-invent` 12/30 against 11/30) and it lost ground on the targets
-  (shower quip 17/30 against 24/30, short gap 7/30 against 19/30). The file was deleted.
+  (shower quip 17/30 against 24/30, short gap 7/30 against 19/30). The file is kept for the record.
