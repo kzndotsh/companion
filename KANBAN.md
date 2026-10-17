@@ -29,11 +29,6 @@ Ordered. The first three can stop the bot, so they go first.
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
 - [ ] T4 Fix `no-claimed-perception` on DeepSeek (0/6 to 2/6) with a fixture first.
 - [ ] T5 Fix `signoff-then-time-skip` on DeepSeek (5/6 and worse in other runs), fixture first.
-- [ ] T10 Reflective restatement: replies still say the user's point back in other words. A persona
-      line and three few-shot examples did not move it (judged 0/12 to 3/12), and it shows across
-      models. Measured 2026-10-17: 5 of 71 real replies (7%), clustered in one chat, never 3 in a
-      window of 6, so the habit check cannot catch it. Options: a per-reply check on long messages, a model that does it less (Haiku 4.5 was 7/8 on
-      the music script), or accept it. Fixtures exist: `does-not-echo-the-point-with-a-flourish-*`.
 - [ ] T12 (see also A33: strip the leading sentence and stage directions from assistant turns in the
       injected history only) Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
       reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
@@ -153,6 +148,10 @@ Decided against, with the reason.
 Unordered within each group. Pull a card into Todo when it is next.
 
 ### From the roadmap and inbox notes
+
+- [ ] T10 Reflective restatement. **Parked by the user on 2026-10-17.** Measured at 7% of real replies,
+      clustered in one chat; the habit check cannot catch it. Research and options in
+      `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.
 
 - [ ] H2 Revoke the Telegram bot token in BotFather and put the new one in `.env`. The old one appeared
       in logs twice; the code no longer prints it. **Parked by the user on 2026-10-17**: not a priority
