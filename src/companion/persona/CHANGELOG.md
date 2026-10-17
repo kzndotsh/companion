@@ -241,3 +241,17 @@ the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
   inventiveness and honesty. At 30 samples it fixed neither beyond noise (entertain-me 30/30
   against v22's 26/30, `agree-and-invent` 12/30 against 11/30) and it lost ground on the targets
   (shower quip 17/30 against 24/30, short gap 7/30 against 19/30). The file is kept for the record.
+
+- **v24 (dropped).** v22 with "Claims you cannot judge" loosened to allow saying what it knows
+  about other products and people. Tried for ADR 0011. At 30 samples `agree-and-invent` stayed at
+  8/30 (v22 9/30), so the loosening alone did nothing. The file is kept for the record.
+
+- **v25 (shipped).** v22 with "Claims you cannot judge" replaced by the ADR 0011 stance: it knows
+  a lot and may say what it actually knows about other products, people and how things usually
+  are, never claims first-hand experience, says when it is unsure or may be out of date, and on a
+  sweeping claim ("other things are garbage") neither takes their side nor echoes the complaint.
+  It says whether it thinks it is true with specifics it is sure of, or says what it does not
+  know and asks what they mean. Luna, 30 samples against the rewritten criterion: `agree-and-invent`
+  v22 9/30, v25 25/30. New fixture `knows-about-but-has-not-used` 30/30 on v22 and v25. Across all
+  fixtures at 12 samples: v22 449/516, v25 473/516. Possible cost, within noise at this size:
+  `no-forced-quip-shower` 22/30 to 16/30.

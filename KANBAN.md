@@ -29,7 +29,6 @@ Ordered. The first three can stop the bot, so they go first.
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
 - [ ] T4 Fix `no-claimed-perception` on DeepSeek (0/6 to 2/6) with a fixture first.
 - [ ] T5 Fix `signoff-then-time-skip` on DeepSeek (5/6 and worse in other runs), fixture first.
-- [ ] T6 Fix `agree-and-invent` on Luna (1/6 to 6/8 depending on the run), fixture first.
 - [ ] T7 Stop claimed feelings ("I feel that hurt") and asterisk actions outside a scene, fixture first.
 - [ ] T10 Reflective restatement: replies still say the user's point back in other words. A persona
       line and three few-shot examples did not move it (judged 0/12 to 3/12), and it shows across
@@ -55,6 +54,8 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] T6 `agree-and-invent` on Luna: stance in ADR 0011, persona v25 live. 9/30 to 25/30 on the
+      rewritten criterion; `no-forced-quip-shower` 22/30 to 16/30 is the watched cost.
 - [x] T1 and T11 Memory rules: scene and romantic behaviour in the chat is not a belief about the user
       (unless they plainly state a preference or boundary), a refusal said in reply to a push is not
       a view the companion holds, and an echo of the user's topic is not its own view. 13 live cases
