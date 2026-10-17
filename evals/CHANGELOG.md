@@ -136,3 +136,19 @@ claimed pain. Conclusion: the problem does not reproduce on v25. The real "I fee
 the real asterisk actions in plain chat (3 of 259 replies, none since the persona's asterisk rule)
 came from the first day's setup. The fixtures stay as regression guards. Rerun with
 `uv run companion eval --variants v25.md@openai/gpt-6-luna --fixture <id> --samples 30 --cap 0.05`.
+
+## 2026-10-17: how often it restates the user's point in real chat (T10)
+
+Read-only measurement. The 71 real-frame exchanges since noon on 2026-10-16 were each judged by
+Haiku 5.5 on one question: does the reply mainly say the user's point back in other words and add
+no take, fact, joke or question of its own (replies of a few words never count). Result: 5 of 71
+(7%). They cluster in one conversation about why a piece of music matters to the user. No window
+of six consecutive replies held more than two, so the current habit check, which needs a habit in
+at least three replies, could never have fired on it, and it reads only the companion's own
+replies, not what the user said. Cost about two cents. The script was a scratch script, not kept in
+the repo; the judge prompt is the sentence above. Single judge, 71 samples, not checked by eye
+beyond the five hits.
+
+Reading: restating is rare overall and shows up when the user shares why something moves them.
+A habit note would not help. A per-reply check on long user messages could, at the cost of one
+more judge call and a note that only reaches the next reply.
