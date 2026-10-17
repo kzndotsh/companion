@@ -24,10 +24,6 @@ This file keeps the cards. Created 2026-10-16.
 Ordered. The first three can stop the bot, so they go first.
 
 - [ ] H3 Triage the untracked `docs/research/2026-10-16_sapphire-audit/` folder. Unread, not ours.
-- [ ] T1 Two memory rules: do not record scene behaviour as a belief about the user, and do not turn
-      the companion's own refusals into views it holds. The model labels, code decides. Done when a
-      labelled set of about 20 examples agrees at 85% or better and a fixture for each rule passes.
-      See `docs/inbox/2026-10-15-its-own-refusals-should-not-become-its-views.md`.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
@@ -43,9 +39,6 @@ Ordered. The first three can stop the bot, so they go first.
       injected history only) Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
       reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
       before any change; the memory card carries what older turns held. See `evals/CHANGELOG.md`.
-- [ ] T11 Memory rule: do not record the companion's echo of the user's topic as a view it holds
-      ("thinks Hail the Sun have a specific mix of intricate and immediate music"). Same card family
-      as T1.
 - [ ] T8 Decide provider routing for DeepSeek: sort by latency (removes the 5 to 9 second outliers, the
       provider changes per request) or pin a provider list. **Needs decision**.
 - [ ] T9 Decide whether replies from flagged turns stay in the window the model reads. A leaked reply
@@ -62,6 +55,10 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] T1 and T11 Memory rules: scene and romantic behaviour in the chat is not a belief about the user
+      (unless they plainly state a preference or boundary), a refusal said in reply to a push is not
+      a view the companion holds, and an echo of the user's topic is not its own view. 13 live cases
+      pass 3/3 (`tests/live/test_extraction_rules.py`)
 - [x] T3 Daily spend cap, $10 a day by default (`COMPANION_DAILY_CAP_USD`, or `off`). At the cap the
       user's message is kept, nothing paid runs, and they are told once a day. The memory step skips too
 - [x] G-v22 Persona v22: plain reactions (no forced quips, no soothing verdicts), short plain answers

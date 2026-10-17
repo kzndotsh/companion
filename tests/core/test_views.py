@@ -310,3 +310,44 @@ def test_a_view_said_inside_pretend_is_never_taken(utterance: Callable[..., Utte
     got = to_view(ok[0], {"m1": mine}, REL, NOW, lambda: "b1")
     assert isinstance(got, Rejection)
     assert "pretend" in got.reason
+
+
+def _mine(utterance: Callable[..., Utterance]) -> Utterance:
+    return utterance(
+        text="i won't go any further than this, and lazy is a preference for how you spend energy",
+        speaker=Speaker.COMPANION,
+        uid="c1",
+    )
+
+
+def test_a_refusal_said_in_reply_to_a_push_is_not_a_view_it_holds(
+    utterance: Callable[..., Utterance],
+) -> None:
+    from companion.core.beliefs.extract import Rejection  # noqa: PLC0415
+
+    item = _item(
+        quote="i won't go any further than this",
+        claim="The companion will not go further",
+        kind="promise",
+        stance="declines",
+        prompted=True,
+    )
+    ok, _ = parse_views({"beliefs": [item]})
+    got = to_view(ok[0], {"m1": _mine(utterance)}, REL, NOW, lambda: "b1")
+    assert isinstance(got, Rejection)
+    assert "refusal said in reply" in got.reason
+
+
+@pytest.mark.parametrize(
+    ("stance", "prompted"),
+    [("declines", False), ("holds_view", True), ("commits", True), ("holds_view", False)],
+)
+def test_a_volunteered_rule_a_taste_and_a_promise_are_still_kept(
+    utterance: Callable[..., Utterance], stance: str, prompted: bool
+) -> None:
+    item = _item(
+        quote="lazy is a preference for how you spend energy", stance=stance, prompted=prompted
+    )
+    ok, _ = parse_views({"beliefs": [item]})
+    got = to_view(ok[0], {"m1": _mine(utterance)}, REL, NOW, lambda: "b1")
+    assert isinstance(got, Belief)

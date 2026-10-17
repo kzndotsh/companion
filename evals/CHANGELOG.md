@@ -82,3 +82,20 @@ rerun, and how many samples stood behind the result. Read `README.md` for how th
   stays: it fails 1 to 3 of 12 on every persona from v12 on (v11 passed 9/12) because the real
   memory card says the user is building "the companion", and the public script cannot reproduce
   that.
+- **2026-10-17. Memory rules: the model labels, code decides (T1, T11).** The user pass now
+  labels each candidate `romantic` (about romantic, flirtatious or sexual behaviour or play in
+  the chat), and code rejects it unless the user plainly stated a preference, boundary or trait
+  about themselves. The companion's own-views pass now labels `stance` (holds_view, commits,
+  declines) and `prompted` (said in reply to a request or push), and code rejects a prompted
+  refusal. The echo wording of the `grounding` label was widened to cover an opinion about the
+  very thing the user just raised that adds nothing of its own. Checked on 13 invented chats
+  against the real extractor (Haiku 5.5, 3 runs each, `tests/live/test_extraction_rules.py`,
+  about two cents): every case that should store nothing stored nothing in 3/3 runs, and every
+  case that should be kept was kept in 3/3. What the new code rules changed, with the same model
+  answers judged both ways: a refusal in reply to a push stored in 3/3 runs without the rules
+  and 0/3 with them; an invited-and-declined chat stored in 1/3 and 0/3. The echo cases were
+  already blocked by the agreeing-opener guard and the widened label (0/9 runs stored an echo
+  with the new wording; the old wording was not re-run on those cases). Cost: a joking
+  self-description ("lol i'm a bit of a flirt") is labelled joked and no longer recorded, while
+  a plain "i'm a flirt" is. Not run on the existing database; the five "promises" about keeping
+  things sweet that were already stored are untouched.

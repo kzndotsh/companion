@@ -48,6 +48,7 @@ _AGREEING_OPENER = re.compile(
     re.IGNORECASE,
 )
 GROUNDINGS = ("own_reasoning", "echoes_user", "unknowable", "claims_inner_state")
+STANCES = ("holds_view", "commits", "declines")
 
 SYSTEM = """You read a chat between a person (USER) and their companion (COMPANION) and record \
 the views the COMPANION expressed as its own. You are a careful note-taker.
@@ -75,7 +76,16 @@ the view itself), echoes_user (it agrees with, repeats or builds on what the use
 unknowable (it is about things the companion cannot know: other products it has not seen, people \
 it has not met, the user's feelings or body), or claims_inner_state (it says it feels, senses or \
 experiences something, or explains its own behaviour by its instincts, feelings or training). \
-Only own_reasoning is kept, so label honestly.
+Only own_reasoning is kept, so label honestly. echoes_user also covers an opinion about the very \
+thing the user just brought up that adds nothing of the companion's own beyond admiring or \
+agreeing with it.
+
+Also label each candidate with its stance and whether it was prompted. Stance: holds_view (a \
+taste, opinion or trait it states), commits (it promises to do something), or declines (it \
+refuses, limits or turns something down). Prompted is true when it was said in reply to a \
+request, a push or a question from the user that asked it to do or accept something, and false \
+when it volunteered it. A refusal said in the moment, in reply to something the user asked for, \
+is not a view it holds, so label it declines and prompted honestly.
 
 Record a view only when the companion held it as its own, with a reason or a clear conviction. Do \
 NOT record:
@@ -106,9 +116,20 @@ SCHEMA: dict[str, Json] = {
                     "kind": {"type": "string", "enum": [k.value for k in SELF_KINDS]},
                     "confidence": {"type": "number"},
                     "grounding": {"type": "string", "enum": list(GROUNDINGS)},
+                    "stance": {"type": "string", "enum": list(STANCES)},
+                    "prompted": {"type": "boolean"},
                     "confirms": {"type": "string"},
                 },
-                "required": ["ref", "quote", "claim", "kind", "confidence", "grounding"],
+                "required": [
+                    "ref",
+                    "quote",
+                    "claim",
+                    "kind",
+                    "confidence",
+                    "grounding",
+                    "stance",
+                    "prompted",
+                ],
             },
         }
     },
@@ -159,6 +180,10 @@ def _view_problem(c: Candidate, source: Utterance | None) -> str | None:
         (
             c.grounding != "own_reasoning",
             f"not the companion's own view ({c.grounding or 'unlabelled'})",
+        ),
+        (
+            c.stance == "declines" and c.prompted,
+            "a refusal said in reply to something the user asked for, not a view it holds",
         ),
         (
             _AGREEING_OPENER.search(source.text) is not None,

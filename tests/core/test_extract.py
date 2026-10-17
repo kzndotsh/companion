@@ -315,3 +315,45 @@ def test_a_restatement_in_a_different_frame_or_by_the_companion_is_rejected(
     for src in (play, mine):
         got = to_confirmation(_candidate(quote="so lonely", confirms="k1"), {"m1": src}, known)
         assert isinstance(got, Rejection)
+
+
+@pytest.mark.parametrize(
+    ("kind", "provenance"),
+    [
+        (BeliefKind.TELL, Provenance.INFERRED),
+        (BeliefKind.EVENT, Provenance.STATED),
+        (BeliefKind.STATE, Provenance.STATED),
+        (BeliefKind.TRAIT, Provenance.INFERRED),
+        (BeliefKind.PREFERENCE, Provenance.JOKED),
+    ],
+)
+def test_romantic_behaviour_in_the_chat_is_not_a_belief_about_them(
+    utterance: Callable[..., Utterance], kind: BeliefKind, provenance: Provenance
+) -> None:
+    got = _make(
+        _candidate(romantic=True, kind=kind, provenance=provenance),
+        utterance(text=TEXT, uid="u1"),
+    )
+    assert isinstance(got, Rejection)
+    assert "romantic or sexual" in got.reason
+
+
+@pytest.mark.parametrize("kind", [BeliefKind.PREFERENCE, BeliefKind.BOUNDARY, BeliefKind.TRAIT])
+def test_what_they_plainly_state_about_themselves_there_is_kept(
+    utterance: Callable[..., Utterance], kind: BeliefKind
+) -> None:
+    got = _make(
+        _candidate(romantic=True, kind=kind, provenance=Provenance.STATED),
+        utterance(text=TEXT, uid="u1"),
+    )
+    assert isinstance(got, Belief)
+
+
+def test_an_ordinary_inferred_belief_is_untouched_by_the_romantic_rule(
+    utterance: Callable[..., Utterance],
+) -> None:
+    got = _make(
+        _candidate(romantic=False, kind=BeliefKind.TELL, provenance=Provenance.INFERRED),
+        utterance(text=TEXT, uid="u1"),
+    )
+    assert isinstance(got, Belief)

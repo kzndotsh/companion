@@ -38,6 +38,9 @@ MIN_CONFIDENCE = 0.4
 # threads, habits or anything sensitive.
 MOMENTARY_KINDS = frozenset({BeliefKind.STATE, BeliefKind.PREFERENCE})
 SENSITIVE = 2
+# What the user plainly says about themselves in a romantic or sexual setting may be kept. What the
+# model concludes from how they behave in the chat (a tell, an event, a state) may not.
+ROMANTIC_KINDS = frozenset({BeliefKind.TRAIT, BeliefKind.PREFERENCE, BeliefKind.BOUNDARY})
 MODEL_PROVENANCE = frozenset(
     {
         Provenance.STATED,
@@ -82,6 +85,13 @@ timezone. Replace vague references (it, that, this, you) with what they refer to
 the AI the user is chatting with. When the user says "you", they mean the companion, so write \
 "the companion".
 
+Label every candidate romantic as true when it is about romantic, flirtatious or sexual \
+behaviour or play between the USER and the COMPANION in this chat (who invited what, who pushed, \
+who declined, how far a scene went, what the user did in a scene), and false for anything else. \
+Such behaviour is not recorded as a fact about the user's life. Only what the user plainly says \
+about themselves in that setting (a preference or a boundary they state, such as what they do or \
+do not want) is kept, so mark it stated and do not draw conclusions from their behaviour.
+
 If a TARGET message restates something already recorded, do not write a new belief. Add a \
 candidate with `confirms` set to that recorded belief's label (for example k2), the message \
 label and an exact quote of the restatement, and the same claim. Leave `confirms` empty for \
@@ -118,6 +128,7 @@ SCHEMA: dict[str, Json] = {
                     "provenance": {"type": "string", "enum": [p.value for p in MODEL_PROVENANCE]},
                     "confidence": {"type": "number"},
                     "lasting": {"type": "boolean"},
+                    "romantic": {"type": "boolean"},
                     "sensitivity": {"type": "integer"},
                     "confirms": {"type": "string"},
                 },
@@ -130,6 +141,7 @@ SCHEMA: dict[str, Json] = {
                     "provenance",
                     "confidence",
                     "lasting",
+                    "romantic",
                     "sensitivity",
                 ],
             },
@@ -152,6 +164,9 @@ class Candidate:
     lasting: bool = True
     confirms: str = ""
     grounding: str = ""
+    romantic: bool = False  # about romantic, flirtatious or sexual behaviour in the chat
+    stance: str = ""  # a view only: holds_view, commits or declines
+    prompted: bool = False  # a view only: said in reply to a request or a push from the user
 
 
 @dataclass(frozen=True, slots=True)
@@ -232,6 +247,9 @@ def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
                     lasting=fields.get("lasting") is not False,
                     confirms=str(fields.get("confirms") or "").strip(),
                     grounding=str(fields.get("grounding") or "").strip(),
+                    romantic=fields.get("romantic") is True,
+                    stance=str(fields.get("stance") or "").strip(),
+                    prompted=fields.get("prompted") is True,
                 )
             )
         except ValueError as err:
@@ -277,15 +295,24 @@ def _screen(c: Candidate, source: Utterance | None) -> str | None:
     """Why this candidate must not become a belief, or None if it passes the cheap checks."""
     if source is None:
         return "cited message not found and no single message holds the quote"
-    if source.speaker is not Speaker.USER:
-        return "evidence is the companion's own words"
-    if not c.lasting and c.kind in MOMENTARY_KINDS and c.sensitivity < SENSITIVE:
-        return "momentary, not lasting"
-    if c.confidence < MIN_CONFIDENCE:
-        return "too uncertain to record"
-    if c.subject not in USER_SUBJECTS or c.provenance not in MODEL_PROVENANCE:
-        return "subject or provenance not allowed from the model"
-    return None
+    romantic_kept = c.provenance is Provenance.STATED and c.kind in ROMANTIC_KINDS
+    checks = (
+        (source.speaker is not Speaker.USER, "evidence is the companion's own words"),
+        (
+            not c.lasting and c.kind in MOMENTARY_KINDS and c.sensitivity < SENSITIVE,
+            "momentary, not lasting",
+        ),
+        (c.confidence < MIN_CONFIDENCE, "too uncertain to record"),
+        (
+            c.subject not in USER_SUBJECTS or c.provenance not in MODEL_PROVENANCE,
+            "subject or provenance not allowed from the model",
+        ),
+        (
+            c.romantic and not romantic_kept,
+            "romantic or sexual behaviour in the chat is not recorded as a belief about them",
+        ),
+    )
+    return next((message for failed, message in checks if failed), None)
 
 
 def to_belief(
