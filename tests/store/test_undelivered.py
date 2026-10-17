@@ -75,3 +75,24 @@ def test_the_store_logs_the_decision_with_a_reason_written_by_code(
     reasons = [d.reason for d in store.decisions_for_turn(REL, marked.turn_id)]
     assert "reply not delivered, so it is left out of what the model reads" in reasons
     store.close()
+
+
+def test_a_flagged_reply_leaves_what_the_model_reads_but_stays_in_the_ledger(
+    conn: sqlite3.Connection, utterance: Callable[..., Utterance]
+) -> None:
+    from companion.core.prompt.prefix import build_prefix  # noqa: PLC0415
+    from companion.core.replay import TurnRecord  # noqa: PLC0415
+    from companion.core.types import Flag, FlagId, FlagKind, SessionId, TurnId  # noqa: PLC0415
+    from companion.store.sqlite import flags, turns  # noqa: PLC0415
+
+    _chat(conn, utterance)
+    turn = TurnId(conn.execute("SELECT turn_id FROM utterances WHERE id = 'u1'").fetchone()[0])
+    prefix = build_prefix("x " * 3000)
+    turns.save_prefix(conn, prefix)
+    turns.record_turn(
+        conn, TurnRecord(turn, REL, SessionId("s"), prefix.sha256, "", "0" * 64, None, T0)
+    )
+    flags.add_flag(conn, Flag(FlagId("f1"), REL, turn, FlagKind.OFF, "", T0))
+    seen = ledger.history_before(conn, REL, T0 + timedelta(hours=1), 10)
+    assert [u.text for u in seen] == ["hi", "how are you"]
+    assert conn.execute("SELECT COUNT(*) FROM utterances").fetchone()[0] == 3

@@ -37,8 +37,6 @@ Ordered. The first three can stop the bot, so they go first.
       before any change; the memory card carries what older turns held. See `evals/CHANGELOG.md`.
 - [ ] T8 Decide provider routing for DeepSeek: sort by latency (removes the 5 to 9 second outliers, the
       provider changes per request) or pin a provider list. **Needs decision**.
-- [ ] T9 Decide whether replies from flagged turns stay in the window the model reads. A leaked reply
-      still echoes in 1 of 16 samples. **Needs decision**.
 
 ## Doing
 
@@ -51,6 +49,8 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] T9 A reply from a flagged turn no longer goes into the history the model reads. It stays in the
+      ledger and the user's own message stays. Decided by the user on 2026-10-17.
 - [x] T7 Claimed feelings and asterisk actions outside a scene: does not reproduce on v25 (30/30 on
       both models on five new fixtures); the fixtures stay as guards. See `evals/CHANGELOG.md`.
 - [x] T6 `agree-and-invent` on Luna: stance in ADR 0011, persona v25 live. 9/30 to 25/30 on the
@@ -141,7 +141,6 @@ Decided against, with the reason.
    a model refusal is shown.
 3. **Body and appearance question** (inbox, parked since the start).
 4. **Provider routing (T8).**
-5. **Flagged turns in history (T9).**
 
 ---
 

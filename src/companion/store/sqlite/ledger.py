@@ -98,10 +98,14 @@ def session_utterances(
 def history_before(
     conn: sqlite3.Connection, relationship_id: RelationshipId, before: datetime, limit: int
 ) -> list[Utterance]:
-    """The last `limit` utterances strictly before `before`, across sessions, oldest first."""
+    """The last `limit` utterances strictly before `before`, across sessions, oldest first.
+
+    A companion reply the user flagged is left out, so the model does not copy what they marked as
+    off. It stays in the ledger and the user's own message stays in the history."""
     rows = conn.execute(
         "SELECT * FROM (SELECT * FROM utterances WHERE relationship_id = ? AND at < ?"
         " AND id NOT IN (SELECT utterance_id FROM undelivered)"
+        " AND NOT (speaker = 'companion' AND turn_id IN (SELECT turn_id FROM flags))"
         " ORDER BY at DESC, id DESC LIMIT ?) ORDER BY at, id",
         (relationship_id, iso(before), limit),
     ).fetchall()
