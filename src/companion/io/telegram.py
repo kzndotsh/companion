@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 
 import httpx
 
@@ -18,6 +19,17 @@ Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 CommandHandler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
 Undelivered = Callable[[str, str], Awaitable[None]]  # the reply text and why it did not arrive
+LastHandled = Callable[[], int | None]  # the newest update id already handled, if any
+MarkHandled = Callable[[int], None]
+
+
+@dataclass(frozen=True, slots=True)
+class Hooks:
+    """What the daemon lets the Telegram layer tell it, and ask it. All optional."""
+
+    on_undelivered: Undelivered | None = None
+    last_handled: LastHandled | None = None
+    mark_handled: MarkHandled | None = None
 
 
 class TelegramError(RuntimeError):
@@ -31,12 +43,12 @@ class Telegram:
         token: str,
         allowed_user: int,
         client: httpx.AsyncClient,
-        on_undelivered: Undelivered | None = None,
+        hooks: Hooks = Hooks(),  # noqa: B008
     ) -> None:
         self._base = f"https://api.telegram.org/bot{token}"
         self._allowed = allowed_user
         self._client = client
-        self._on_undelivered = on_undelivered
+        self._hooks = hooks
 
     async def _call(self, method: str, **params: object) -> object:
         for attempt in range(2):
@@ -84,7 +96,8 @@ class Telegram:
             log.warning("typing indicator skipped: %s", err)
 
     async def run(self, handle: Handler, commands: Commands | None = None) -> None:
-        offset = 0
+        last = self._hooks.last_handled() if self._hooks.last_handled else None
+        offset = last + 1 if last is not None else 0
         while True:
             try:
                 updates = await self._call("getUpdates", offset=offset, timeout=30)
@@ -92,10 +105,27 @@ class Telegram:
                 log.warning("poll failed, retrying: %s", err)
                 await asyncio.sleep(3)
                 continue
-            for update in seq(updates):
-                u = obj(update)
-                offset = integer(u.get("update_id")) + 1
-                await self.handle_update(u, handle, commands or {})
+            offset = await self.process(seq(updates), offset, handle, commands or {})
+
+    async def process(
+        self, updates: list[object], offset: int, handle: Handler, commands: Commands
+    ) -> int:
+        """Handle each update once, in order, and return the next offset.
+
+        Telegram only forgets an update when a later poll asks past it, so an update handled just
+        before a restart comes back. The id is recorded before the turn runs, and an id at or below
+        the recorded one is skipped: a message is answered at most once, never twice.
+        """
+        for update in updates:
+            u = obj(update)
+            update_id = integer(u.get("update_id"))
+            if update_id < offset:
+                continue
+            offset = update_id + 1
+            if self._hooks.mark_handled is not None:
+                self._hooks.mark_handled(update_id)
+            await self.handle_update(u, handle, commands)
+        return offset
 
     async def handle_update(
         self, update: dict[str, object], handle: Handler, commands: Commands
@@ -149,10 +179,10 @@ class Telegram:
     async def _report_undelivered(self, reply: str | Reaction | ReactAndReply, reason: str) -> None:
         """Tell the conversation a reply never arrived, so the model does not think it was seen."""
         text = reply.text if isinstance(reply, ReactAndReply) else reply
-        if not isinstance(text, str) or not text or self._on_undelivered is None:
+        if not isinstance(text, str) or not text or self._hooks.on_undelivered is None:
             return
         try:
-            await self._on_undelivered(text, reason)
+            await self._hooks.on_undelivered(text, reason)
         except Exception:
             log.exception("could not record an undelivered reply")
 

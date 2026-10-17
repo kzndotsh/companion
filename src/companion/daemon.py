@@ -18,7 +18,7 @@ from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
-from companion.io.telegram import Telegram
+from companion.io.telegram import Hooks, Telegram
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.slow import reflect_from, reflect_once
@@ -32,6 +32,7 @@ FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 SCENE_MODEL = "deepseek/deepseek-v4-flash"
+UPDATE_KEY = "telegram.last_update_id"
 REFLECT_IDLE_SECONDS = 90
 REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
@@ -77,6 +78,23 @@ def _scene_talker(client: httpx.AsyncClient) -> Talker | None:
     if model.lower() == "none" or not key:
         return None
     return openrouter.OpenRouterTalker(key, client, model)
+
+
+def _hooks(store: Store, rel: RelationshipId) -> Hooks:
+    """What the Telegram layer reports back: undelivered replies, and which updates were handled."""
+
+    async def undelivered(text: str, reason: str) -> None:
+        if store.mark_undelivered(rel, text, reason, datetime.now(UTC)) is not None:
+            logging.getLogger("companion").warning("a reply never arrived and is not remembered")
+
+    def last_handled() -> int | None:
+        saved = store.setting(rel, UPDATE_KEY)
+        return int(saved) if saved is not None else None
+
+    def mark_handled(update_id: int) -> None:
+        store.set_setting(rel, UPDATE_KEY, str(update_id), datetime.now(UTC))
+
+    return Hooks(undelivered, last_handled, mark_handled)
 
 
 async def run(data_dir: Path) -> None:
@@ -133,13 +151,7 @@ async def run(data_dir: Path) -> None:
                 task.cancel()
             pending[:] = [asyncio.create_task(reflect_after_idle())]
 
-        async def undelivered(text: str, reason: str) -> None:
-            if store.mark_undelivered(rel, text, reason, datetime.now(UTC)) is not None:
-                logging.getLogger("companion").warning(
-                    "a reply never arrived and is not remembered"
-                )
-
-        tg = Telegram(token, user, client, on_undelivered=undelivered)
+        tg = Telegram(token, user, client, _hooks(store, rel))
 
         async def handle(text: str) -> str | Reaction | ReactAndReply:
             reply = await convo.handle(SESSION, text, "telegram")

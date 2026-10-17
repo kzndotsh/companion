@@ -7,7 +7,7 @@ import httpx
 import pytest
 
 from companion.core.ack import ReactAndReply, Reaction
-from companion.io.telegram import Telegram, TelegramError
+from companion.io.telegram import Hooks, Telegram, TelegramError
 
 ALLOWED = 42
 
@@ -237,7 +237,7 @@ async def test_an_undelivered_reply_is_reported_with_its_text(
         return "you never see this"
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    await Telegram("T", ALLOWED, client, on_undelivered=on_undelivered).handle_update(
+    await Telegram("T", ALLOWED, client, Hooks(on_undelivered=on_undelivered)).handle_update(
         _update("hi"), talk, {}
     )
     assert [t for t, _ in told] == ["you never see this"]
@@ -259,7 +259,49 @@ async def test_a_delivered_reply_is_not_reported() -> None:
         return "fine"
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    await Telegram("T", ALLOWED, client, on_undelivered=on_undelivered).handle_update(
+    await Telegram("T", ALLOWED, client, Hooks(on_undelivered=on_undelivered)).handle_update(
         _update("hi"), talk, {}
     )
     assert told == []
+
+
+async def test_an_update_handled_before_a_restart_is_not_handled_again() -> None:
+    marked: list[int] = []
+    handled: list[str] = []
+
+    async def talk(text: str) -> str:
+        handled.append(text)
+        return "ok"
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram("T", ALLOWED, client, Hooks(mark_handled=marked.append))
+    first = {**_update("first"), "update_id": 41}
+    second = {**_update("second"), "update_id": 42}
+    # after a restart the saved id (41) makes the next offset 42, and Telegram resends 41 anyway
+    offset = await tg.process([first, second], 42, talk, {})
+    assert handled == ["second"]
+    assert marked == [42]
+    assert offset == 43
+
+
+async def test_updates_are_recorded_before_the_turn_runs_and_in_order() -> None:
+    order: list[str] = []
+
+    async def talk(text: str) -> str:
+        order.append(f"turn {text}")
+        return "ok"
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram("T", ALLOWED, client, Hooks(mark_handled=lambda i: order.append(f"mark {i}")))
+    a = {**_update("a"), "update_id": 1}
+    b = {**_update("b"), "update_id": 2}
+    assert await tg.process([a, b], 0, talk, {}) == 3
+    assert order == ["mark 1", "turn a", "mark 2", "turn b"]
