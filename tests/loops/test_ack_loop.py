@@ -91,7 +91,7 @@ async def test_a_confident_ack_is_reacted_to_and_never_reaches_the_talker(store:
     talker, out = await _two_turns(store, judge)
     assert out == Reaction("👍")
     assert talker.calls == 1  # only the first turn finished
-    assert talker.started == 2  # the second was started in parallel, then cancelled
+    assert talker.started == 1  # the second never started: the judges are asked before the talker
     assert judge.calls == 1
     assert [u.text for u in store.history_before(REL, NOW + timedelta(days=1), 10)][-1] == "okie"
     assert any("reacted 👍 instead of replying" in r for r in _reasons(store))

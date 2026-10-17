@@ -10,6 +10,8 @@ from pathlib import Path
 
 import httpx
 
+from companion.core.listening import Judgement as ListenJudgement
+from companion.core.listening import listening_note
 from companion.core.prompt.prefix import Prefix, build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.replay import ReplayError
@@ -46,6 +48,7 @@ def _variants(specs: list[str]) -> list[Variant]:
                 spec.history,
                 spec.effort,
                 spec.length,
+                spec.listen,
             )
         )
     return out
@@ -70,6 +73,19 @@ def script_request(script: Script, prefix: Prefix) -> TalkerRequest:
     clock = script.clock or "Right now it is Thursday 12:00."
     card = "\n".join(part for part in (clock, script.memory) if part)
     return TalkerRequest(prefix=prefix, messages=tuple(messages), card=card)
+
+
+def _listening_notes(fixtures: list[Fixture]) -> dict[str, str]:
+    """The note each fixture's labels would produce, for the `+listen` variant."""
+    out: dict[str, str] = {}
+    for f in fixtures:
+        if f.script is not None and f.script.labels is not None:
+            severity, stance, vague, medical = f.script.labels
+            replies = [text for role, text in f.script.history if role == "assistant"]
+            note = listening_note(ListenJudgement(severity, stance, vague, medical), replies)
+            if note is not None:
+                out[f.id] = note
+    return out
 
 
 def estimate(fixtures: list[Fixture], variants: int, samples: int) -> float:
@@ -135,7 +151,9 @@ async def run(a: EvalArgs) -> str:
             )
 
         models = Models(talker_for, OpenRouterExtractor(key, client, JUDGE_MODEL))
-        results = await run_eval(Plan(fixtures, requests, variants, samples, cap), models)
+        listening = _listening_notes(fixtures)
+        plan = Plan(fixtures, requests, variants, samples, cap, listening)
+        results = await run_eval(plan, models)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     path = Path("evals/results") / f"{stamp}.json"
     save(path, results, fixtures, variants, judge_module.judge_hash())

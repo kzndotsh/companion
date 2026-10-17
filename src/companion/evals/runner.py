@@ -36,6 +36,7 @@ class Variant:
     history: int | None = None  # keep only this many of the last messages
     effort: str | None = None  # reasoning effort; None keeps it off, as in the bot
     length: bool = False  # add the length note the bot adds to a short statement
+    listen: bool = False  # add the listening note a fixture's labels would produce
 
 
 @dataclass(frozen=True, slots=True)
@@ -75,7 +76,9 @@ def strip_card(content: str) -> str:
     return _CARD_BLOCK.sub("", content)
 
 
-def request_for(base: TalkerRequest, variant: Variant) -> TalkerRequest:
+def request_for(
+    base: TalkerRequest, variant: Variant, listening: str | None = None
+) -> TalkerRequest:
     messages = list(base.messages)
     if variant.history is not None:
         messages = messages[-variant.history :]
@@ -85,6 +88,8 @@ def request_for(base: TalkerRequest, variant: Variant) -> TalkerRequest:
     card = base.card if variant.keep_card else ""
     if variant.length and (note := length_note(messages[-1].content)):
         card = f"{card}\n{note}" if card else note
+    if variant.listen and listening:
+        card = f"{card}\n{listening}" if card else listening
     return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card)
 
 
@@ -95,6 +100,7 @@ class Plan:
     variants: Sequence[Variant]
     samples: int
     cap_usd: float
+    listening: Mapping[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,7 +130,7 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 results.stopped_by_cap = True
                 cell.skipped += 1
                 return
-            req = request_for(plan.requests[f.id], v)
+            req = request_for(plan.requests[f.id], v, plan.listening.get(f.id))
             reply = await _reply_with_retry(models.talker_for(v.model, v.effort), req)
             if reply is None:
                 cell.skipped += 1

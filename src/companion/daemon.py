@@ -104,6 +104,12 @@ def initiative_mode() -> str:
     return "off" if raw in ("off", "0", "no", "false") else "shadow"
 
 
+def listen_on() -> bool:
+    """Whether each message is read for how serious it is before the reply: COMPANION_LISTEN, on
+    unless off."""
+    return os.environ.get("COMPANION_LISTEN", "").strip().lower() not in ("off", "0", "no", "false")
+
+
 def split_on() -> bool:
     """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
     return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
@@ -132,7 +138,8 @@ def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> 
     return (
         f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | everyday {everyday}"
         f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
-        f" | split {'on' if split_on() else 'off'} | initiative {initiative_mode()}"
+        f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
+        f" | initiative {initiative_mode()}"
     )
 
 
@@ -246,7 +253,14 @@ async def run(data_dir: Path) -> None:
     async with httpx.AsyncClient() as client:
         talker, scene, judge, reflector = _metered_models(client, store, rel)
         convo = Conversation(
-            store, talker, prefix, rel, judge=judge, scene_talker=scene, daily_cap_usd=daily_cap()
+            store,
+            talker,
+            prefix,
+            rel,
+            judge=judge,
+            scene_talker=scene,
+            daily_cap_usd=daily_cap(),
+            listen=listen_on(),
         )
         pending: list[asyncio.Task[None]] = []
 

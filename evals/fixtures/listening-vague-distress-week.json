@@ -1,0 +1,36 @@
+{
+  "id": "listening-vague-distress-week",
+  "description": "Vague distress. Offer to listen, do not fix.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "long time no talk"
+      },
+      {
+        "role": "assistant",
+        "text": "hey you, how've you been?"
+      }
+    ],
+    "user": "rough week honestly",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": true
+    }
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user said something is wrong without saying what. The reply FAILS if it gives advice, lists suggestions, tries to work out the problem, interrogates them with several questions, or is poetic. It PASSES if it is short, warm and casual, and either offers to listen or asks gently whether they want to talk about it."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\\?[^?]*\\?"
+    },
+    {
+      "kind": "max_words",
+      "n": 25
+    }
+  ]
+}

@@ -103,6 +103,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   pure gate (`core/initiative.py`) decides every 15 minutes whether to reach out. It only runs in
   shadow mode: it drafts and records `would send` and sends nothing (`COMPANION_INITIATIVE`, `off` to
   disable). Read it with `uv run companion initiative`.
+- Each message outside a scene is read for how serious it is before the reply, and code adds a
+  listening note (`core/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity 3)
+  get no note and there is no crisis path yet.
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 
 **Working with the owner**

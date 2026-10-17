@@ -7,6 +7,7 @@ import contextlib
 import logging
 import time
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -41,6 +42,9 @@ from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.length import length_note
+from companion.core.listening import Judgement as ListenJudgement
+from companion.core.listening import listening_note
+from companion.core.listening import render_reason as render_listening
 from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
@@ -64,11 +68,12 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.core.views import card_views, why
+from companion.core.views import ViewState, card_views, why
 from companion.loops.ack import judge
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
+from companion.loops.listen import judge_listening
 from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.react import judge_reaction
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
@@ -138,6 +143,7 @@ class Conversation:
     habits: HabitMemory = field(default_factory=HabitMemory)
     scene_talker: Talker | None = None  # replies while a pretend scene is in progress
     daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
+    listen: bool = True  # ask how serious a message is before the reply
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -265,12 +271,14 @@ def _react_alongside(
     return decision.reaction
 
 
-def _notes(c: Conversation, prior: list[Utterance], in_scene: Frame, text: str) -> list[str]:
+def _notes(
+    c: Conversation, prior: list[Utterance], in_scene: Frame, text: str, listening: str | None
+) -> list[str]:
     """What it should know about its own habits, a scene in progress and how long to answer.
     These go in the system block with the memory card: in a user message the model read them as
     something they said. A scene gets no length note, since scenes run long on purpose."""
     size = length_note(text) if in_scene is Frame.REAL else None
-    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene), size]
+    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene), size, listening]
     return [n for n in notes if n is not None]
 
 
@@ -396,9 +404,9 @@ def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> None:
     )
 
 
-async def _stop(talk: asyncio.Future[Reply], *beside: asyncio.Future[Any] | None) -> None:
+async def _stop(*tasks: asyncio.Future[Any] | None) -> None:
     """Cancel whatever is still running beside the reply."""
-    for task in (talk, *beside):
+    for task in tasks:
         if task is None:
             continue
         task.cancel()
@@ -482,6 +490,74 @@ def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, c
     return reply.text
 
 
+_Heard = tuple[ListenJudgement, str, str]
+
+
+@dataclass(frozen=True, slots=True)
+class _Assembled:
+    """What one turn sends and what it needs to record afterwards."""
+
+    request: TalkerRequest
+    card_text: str
+    card: Card
+    views: Sequence[Belief]
+    view_state: ViewState
+
+
+async def _listening(c: Conversation, t: _Turn, in_scene: Frame) -> _Heard | None:
+    """How serious the message is and what they are doing. Not asked in a scene."""
+    if c.judge is None or not c.listen or in_scene is not Frame.REAL:
+        return None
+    return await judge_listening(c.judge, t.prior, t.text)
+
+
+def _listening_note(c: Conversation, t: _Turn, heard: _Heard | None) -> str | None:
+    """The line for the system block, with the decision logged from the labels."""
+    if heard is None:
+        return None
+    judged, model, prompt = heard
+    replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
+    note = listening_note(judged, replies)
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            render_listening(judged, note),
+            t.now,
+            detail={
+                "scorer": model,
+                "inputs_hash": inputs_hash(prompt),
+                "labels": {
+                    "severity": judged.severity,
+                    "stance": judged.stance,
+                    "vague": judged.vague,
+                },
+            },
+        )
+    )
+    return note
+
+
+def _assemble(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> _Assembled:
+    store, now = c.store, t.now
+    view_state = store.view_state(c.rel)
+    views = card_views(store.self_beliefs(c.rel), view_state)
+    assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
+    card = build_card(assertable, store.last_support(c.rel), now, views=views)
+    shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
+    clock = now_line(now, t.prior[-1].at if t.prior else None)
+    notes = _notes(c, t.prior, in_scene, t.text, _listening_note(c, t, heard))
+    card_text = "\n".join([clock, *shown, *notes])
+    request = build_request(c.prefix, to_messages(t.prior), t.text, "", card_text)
+    store.save_prefix(c.prefix)
+    _mark_start(t, in_scene, card, card_text)
+    return _Assembled(request, card_text, card, views, view_state)
+
+
 async def _handle_turn(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
 ) -> str | Reaction | ReactAndReply:
@@ -489,34 +565,33 @@ async def _handle_turn(
     now = now or utc_now()
     turn = TurnId(_id())
     prior = store.history_before(rel, now, HISTORY_LIMIT)
-    history = to_messages(prior)
     t = _Turn(session, turn, now, prior, text)
     in_scene = scene_frame(prior)
-    support = store.last_support(rel)
-    view_state = store.view_state(rel)
-    views = card_views(store.self_beliefs(rel), view_state)
-    assertable = [b for b in store.user_beliefs(rel) if is_assertable(b)]
-    card = build_card(assertable, support, now, views=views)
-    volatile = ""
-    shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
-    clock = now_line(now, prior[-1].at if prior else None)
-    card_text = "\n".join([clock, *shown, *_notes(c, prior, in_scene, text)])
-    request = build_request(prefix, history, text, volatile, card_text)
-    store.save_prefix(prefix)
-    _mark_start(t, in_scene, card, card_text)
-    talk, framing, feeling = _start_beside(c, t, request, in_scene)
+    listening = asyncio.ensure_future(_listening(c, t, in_scene))
+    heard: _Heard | None = None
     try:
         reaction = await _ack_reaction(c, t)
+        if reaction is None:
+            heard = await listening
     except BaseException:
-        await _stop(talk, framing, feeling)
+        await _stop(listening)
         _store_user(c, t, channel, Frame.REAL)
         raise
     if reaction is not None:
-        await _stop(talk, framing, feeling)
+        await _stop(listening)
         _store_user(c, t, channel, in_scene)
         _mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
+    asm = _assemble(c, t, in_scene, heard)
+    request, card_text, card, views, view_state = (
+        asm.request,
+        asm.card_text,
+        asm.card,
+        asm.views,
+        asm.view_state,
+    )
+    talk, framing, feeling = _start_beside(c, t, request, in_scene)
     try:
         reply, outcome, felt = await _await_beside(t, talk, framing, feeling)
     except BaseException:
@@ -533,7 +608,7 @@ async def _handle_turn(
             rel,
             session,
             prefix.sha256,
-            volatile,
+            "",
             request_sha256(request),
             reply.model,
             now,

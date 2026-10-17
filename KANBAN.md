@@ -60,6 +60,11 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] W1 Listening note: each message outside a scene is read for how serious it is (0 trivial to 3 acute),
+      what they are doing and whether it is medical, and code adds a line for the reply (sympathy only
+      for trivial, one plain thing for everyday, the weight named plus an offer and a pointer to a
+      prescriber for serious health topics). Medication fixture 0/20 to 19/20; the label calibrated at
+      59/60. `COMPANION_LISTEN=off` turns it off. Acute (3) still has no crisis path (R16).
 - [x] V26 Persona v26: when they tell a small mishap, commiserate and let them lead, no guessing the cause or
       asking what went wrong. Pancakes 9/30 to 30/30, the real flagged turn 20/30 to 30/30, all fixtures
       651 to 665 of 732. Came from a flag; v25 had made it worse than v22.

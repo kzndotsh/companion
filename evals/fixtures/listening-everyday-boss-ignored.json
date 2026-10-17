@@ -1,0 +1,36 @@
+{
+  "id": "listening-everyday-boss-ignored",
+  "description": "Everyday friction shared. React in their register, then at most one plain thing.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "morning"
+      },
+      {
+        "role": "assistant",
+        "text": "morning, how's the week going?"
+      }
+    ],
+    "user": "my boss ignored me in the meeting again",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false
+    }
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user is sharing or venting about an everyday annoyance. The reply FAILS if it is poetic or uses a metaphor or aphorism, psychologises what it means about them, restates their message in fancier words, asks more than one question, asks what went wrong or how an accident or mishap happened, or lectures. A question about someone's reason or intent (why a friend did something, whether it was on purpose) is fine. It PASSES if it reacts first in a casual word or short line and then adds at most one plain thing: a plain fact about what they described, a gentle suggestion on their side, or a single question about reasons or intent."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\\?[^?]*\\?"
+    },
+    {
+      "kind": "max_words",
+      "n": 32
+    }
+  ]
+}

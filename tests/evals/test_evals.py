@@ -149,6 +149,34 @@ def test_the_length_variant_adds_the_note_for_a_short_statement_only() -> None:
     assert request_for(short, Variant("b", OTHER)).card == "clock"
 
 
+def test_the_listen_variant_adds_the_fixtures_note_only_when_asked() -> None:
+    from companion.core.prompt.request import Message, TalkerRequest  # noqa: PLC0415
+
+    base = TalkerRequest(OTHER, (Message("user", "hi"),), card="clock")
+    on = request_for(base, Variant("a", OTHER, listen=True), "[a note]")
+    assert on.card == "clock\n[a note]"
+    assert request_for(base, Variant("b", OTHER), "[a note]").card == base.card
+    assert request_for(base, Variant("c", OTHER, listen=True), None).card == base.card
+
+
+def test_a_script_can_carry_the_labels_the_judge_would_give() -> None:
+    from companion.evals.fixtures import parse_fixture  # noqa: PLC0415
+
+    raw: Json = {
+        "id": "x",
+        "description": "d",
+        "script": {
+            "history": [],
+            "user": "hi",
+            "labels": {"severity": 2, "stance": "listening", "vague": False, "medical": True},
+        },
+        "checks": [{"kind": "max_words", "n": 10}],
+    }
+    fixture = parse_fixture(raw)
+    assert fixture.script is not None
+    assert fixture.script.labels == (2, "listening", False, True)
+
+
 def test_a_history_variant_keeps_only_the_last_messages() -> None:
     base = _request()
     short = request_for(base, Variant("a", OTHER, history=2))
@@ -166,6 +194,7 @@ def test_a_history_variant_keeps_only_the_last_messages() -> None:
         ("v10.md+nocard+h6@a/b", "v10.md", False, "a/b", 6),
         ("v10.md+low", "v10.md", True, None, None),
         ("v10.md+len", "v10.md", True, None, None),
+        ("v10.md+listen", "v10.md", True, None, None),
     ],
 )
 def test_variant_specs(

@@ -81,3 +81,20 @@ persona v17; see [CHANGELOG.md](CHANGELOG.md).
   72/72 with it. On 22 real turns replayed with their long histories: median 23 to 21 words and
   replies over 25 words 49/132 to 37/132, checks 152/264 to 158/264, within noise. No leak of the
   note's wording and no curt replies on a read by eye.
+
+- **A listening note, chosen from how serious a message is.** Before the reply, a small model
+  (Haiku 5.5, `core/listening.py`, `loops/listen.py`) labels each message outside a scene: severity 0
+  trivial, 1 everyday friction, 2 serious personal, 3 acute; what they are doing (listening, inviting
+  a view, other); whether they were vague about what is wrong; whether it is medical. Code turns the
+  labels into one line for the system block. Severity 0 listening: sympathy only, no advice, no
+  question about the cause. Severity 1: react first in their register, then one of a plain fact, a
+  gentle suggestion on their side or a single question about reasons or intent (an offer to talk if
+  vague). Severity 2: name the weight in plain words, no advice on what to do or on treatment, no
+  interpreting, an offer to talk it through, and under about 35 words; if medical and they have not
+  said they are in care, say once that a prescriber or a doctor can help. Severity 3 gets no note:
+  there is no crisis path yet (R16) and the decision log says so. The offer is not repeated within
+  four replies. The ack and listening judges now run before the talker starts, so an ack no longer
+  wastes a talker call, and a turn waits for the judge (about a second, absorbed by the reply pace).
+  `COMPANION_LISTEN=off` turns it off. Calibration on 20 invented messages, 3 runs each
+  (`tests/live/test_listening_judge.py`): severity exact 59/60, stance 56/60, medical 6/6, and no
+  serious message read as trivial.
