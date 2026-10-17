@@ -58,19 +58,27 @@ class Telegram:
 
     async def _call(self, method: str, **params: object) -> object:
         for attempt in range(2):
+            began = time.perf_counter()
             try:
                 resp = await self._client.post(f"{self._base}/{method}", json=params, timeout=45)
                 resp.raise_for_status()
             except httpx.HTTPStatusError as err:
                 status = err.response.status_code
                 if status == 429 and attempt == 0:
-                    await asyncio.sleep(_retry_after(err.response))
+                    wait = _retry_after(err.response)
+                    log.warning(
+                        "telegram %s rate limited; waiting %.1fs and retrying", method, wait
+                    )
+                    await asyncio.sleep(wait)
                     continue
+                log.warning("telegram %s status %d: %s", method, status, err.response.text[:300])
                 msg = f"telegram {method} failed with status {status}"
                 raise TelegramError(msg) from None
             except httpx.HTTPError as err:
                 msg = f"telegram {method} failed: {type(err).__name__}"
                 raise TelegramError(msg) from None
+            if method != "getUpdates":
+                log.debug("telegram %s ok in %dms", method, (time.perf_counter() - began) * 1000)
             return resp.json()["result"]
         msg = f"telegram {method} failed"
         raise TelegramError(msg)
@@ -111,6 +119,8 @@ class Telegram:
                 log.warning("poll failed, retrying: %s", err)
                 await asyncio.sleep(3)
                 continue
+            if seq(updates):
+                log.debug("poll: %d update(s), offset %d", len(seq(updates)), offset)
             offset = await self.process(seq(updates), offset, handle, commands or {})
 
     async def process(
@@ -146,6 +156,12 @@ class Telegram:
         chat_id = integer(obj(msg.get("chat")).get("id"))
         message_id = integer(msg.get("message_id"))
         command = _command(text)
+        log.debug(
+            "message %d in: %d chars%s",
+            message_id,
+            len(text),
+            f", command /{command[0]}" if command else "",
+        )
         if command is not None and command[0] not in commands:
             return  # unknown and /start commands never reach the model
         started = time.monotonic()
@@ -164,6 +180,13 @@ class Telegram:
         except TelegramError as err:
             log.warning("could not deliver the reply: %s", err)
             await self._report_undelivered(reply, str(err))
+        else:
+            log.info(
+                "message %d answered %.1fs after it arrived (%s)",
+                message_id,
+                time.monotonic() - started,
+                _kind(reply),
+            )
 
     async def _hold(self, chat_id: int, user_text: str, reply: str, started: float) -> None:
         """Wait like someone reading and typing, keeping the typing indicator alive while a text
@@ -226,6 +249,14 @@ class Telegram:
             await self._hooks.on_undelivered(text, reason)
         except Exception:
             log.exception("could not record an undelivered reply")
+
+
+def _kind(reply: str | Reaction | ReactAndReply) -> str:
+    if isinstance(reply, ReactAndReply):
+        return f"reaction {reply.reaction.emoji} then {len(reply.text.split())} words"
+    if isinstance(reply, Reaction):
+        return f"reaction {reply.emoji}"
+    return f"{len(reply.split())} words"
 
 
 def _retry_after(resp: httpx.Response) -> float:

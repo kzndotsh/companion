@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 
 import httpx
@@ -22,9 +23,18 @@ from companion.models.wire import (
     system_blocks,
 )
 
+log = logging.getLogger("companion.openrouter")
 URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "openai/gpt-6-luna"
 DEFAULT_PROVIDER = "Anthropic"
+
+
+def _check(resp: httpx.Response, model: str) -> None:
+    """Raise on an error status, after logging what OpenRouter said. The body names the cause
+    (a provider outage, a bad key, no credit) and the bare status error does not."""
+    if resp.status_code >= 400:
+        log.warning("openrouter %s for %s: %s", resp.status_code, model, resp.text[:500])
+    resp.raise_for_status()
 
 
 class OpenRouterTalker:
@@ -67,7 +77,7 @@ class OpenRouterTalker:
             ),
             what="talker",
         )
-        resp.raise_for_status()
+        _check(resp, self._model)
         data = obj(resp.json())
         first = obj(seq(data.get("choices"))[0]) if seq(data.get("choices")) else {}
         text = string(obj(first.get("message")).get("content")).strip()
@@ -130,7 +140,7 @@ class OpenRouterExtractor:
             json=self.body(system, user, schema),
             timeout=120,
         )
-        resp.raise_for_status()
+        _check(resp, self._model)
         data = obj(resp.json())
         first = obj(seq(data.get("choices"))[0]) if seq(data.get("choices")) else {}
         calls = seq(obj(first.get("message")).get("tool_calls"))

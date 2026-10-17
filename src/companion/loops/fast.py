@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -154,17 +155,65 @@ class _Turn:
     now: datetime
     prior: list[Utterance]
     text: str
+    started: float = field(default_factory=time.perf_counter)
+
+
+def _mark(t: _Turn, what: str) -> None:
+    """One DEBUG line per stage of a turn, with the milliseconds since the turn began."""
+    log.debug("turn %s +%dms %s", t.turn[:8], (time.perf_counter() - t.started) * 1000, what)
+
+
+def _mark_start(t: _Turn, in_scene: Frame, card: Card, card_text: str) -> None:
+    _mark(
+        t,
+        f"start: {len(t.prior)} history messages, scene={in_scene.value},"
+        f" card {len(card_text)} chars ({len(card.usable)} usable, {len(card.held)} held,"
+        f" {len(card.older)} older, {len(card.dropped)} dropped, {len(card.views)} views),"
+        f" text {len(t.text)} chars",
+    )
+
+
+async def _await_beside(
+    t: _Turn,
+    talk: asyncio.Future[Reply],
+    framing: asyncio.Future[Any] | None,
+    feeling: asyncio.Future[Any] | None,
+) -> tuple[Reply, Any, Any]:
+    """The reply, then the frame and reaction judgements that ran beside it, marking each."""
+    reply = await talk
+    _mark_reply(t, reply)
+    outcome = await framing if framing is not None else None
+    if framing is not None:
+        _mark(t, "frame judge done")
+    felt = await feeling if feeling is not None else None
+    if feeling is not None:
+        _mark(t, "reaction judge done")
+    return reply, outcome, felt
+
+
+def _mark_reply(t: _Turn, reply: Reply) -> None:
+    _mark(
+        t,
+        f"talker done: {reply.model} {reply.latency_ms}ms in={reply.input_tokens}"
+        f" cache_read={reply.cache_read_tokens} cost=${reply.cost_usd:.5f},"
+        f" {len(reply.text.split())} words",
+    )
 
 
 async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
     """A reaction if this short message only acknowledges. Logs every judgement it makes."""
     if c.judge is None or not is_candidate(t.text, t.prior):
+        _mark(t, "ack judge skipped: not a candidate for a reaction")
         return None
     outcome = await judge(c.judge, t.prior, t.text)
     if outcome is None:
+        _mark(t, "ack judge gave no answer; replying")
         return None
     judged, model, prompt = outcome
     reaction = reaction_for(judged)
+    _mark(
+        t, f"ack judged {judged.kind} {judged.confidence:.2f} -> {'react' if reaction else 'reply'}"
+    )
     c.store.append_decision(
         Decision(
             DecisionId(_id()),
@@ -451,6 +500,7 @@ async def _handle_turn(
     card_text = "\n".join([clock, *shown, *_notes(c, prior, in_scene)])
     request = build_request(prefix, history, text, volatile, card_text)
     store.save_prefix(prefix)
+    _mark_start(t, in_scene, card, card_text)
     talk, framing, feeling = _start_beside(c, t, request, in_scene)
     try:
         reaction = await _ack_reaction(c, t)
@@ -461,12 +511,11 @@ async def _handle_turn(
     if reaction is not None:
         await _stop(talk, framing, feeling)
         _store_user(c, t, channel, in_scene)
+        _mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
     try:
-        reply = await talk
-        outcome = await framing if framing is not None else None
-        felt = await feeling if feeling is not None else None
+        reply, outcome, felt = await _await_beside(t, talk, framing, feeling)
     except BaseException:
         await _stop(talk, framing, feeling)
         _store_user(c, t, channel, Frame.REAL)
@@ -503,4 +552,5 @@ async def _handle_turn(
     )
     sent = _persist_reply(c, t, reply, user_frame, channel)
     reacted = _react_alongside(c, t, felt)
+    _mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to Telegram")
     return ReactAndReply(reacted, sent) if reacted is not None else sent

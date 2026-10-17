@@ -35,8 +35,9 @@ async def judge_frame(
             result = await asyncio.wait_for(
                 extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
             )
-    except Exception:
-        log.warning("frame judgement failed or timed out; storing as real")
+    except Exception as err:
+        log.warning("frame judgement failed or timed out; storing as real: %r", err)
         return None
     judged = parse(result.data)
+    log.debug("frame judged %s in %dms, $%.5f", judged, result.latency_ms, result.cost_usd)
     return None if judged is None else (judged, result.model, prompt)

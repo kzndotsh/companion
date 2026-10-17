@@ -7,6 +7,7 @@ Idempotent: the run log is the cursor, so a crashed or repeated pass re-reads no
 
 from __future__ import annotations
 
+import logging
 import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
@@ -51,6 +52,7 @@ from companion.core.types import (
 from companion.loops.views import WANT_KINDS, check_views
 from companion.store.sqlite.store import Store
 
+log = logging.getLogger("companion.slow")
 BATCH = 40
 CONTEXT = 4
 
@@ -252,6 +254,20 @@ async def _extract_pass(
         )
     for r in rejections:
         run.log(f"rejected: {r.reason}", {"candidate": r.raw})
+    log.debug(
+        "%s pass on %d messages: %d candidates, %d stored, %d rejected, %d duplicates,"
+        " %d confirmed, %dms, $%.5f, %s",
+        spec.speaker,
+        len(targets),
+        n_candidates,
+        accepted,
+        len(rejections),
+        duplicates,
+        confirmed,
+        result.latency_ms,
+        result.cost_usd,
+        result.model,
+    )
     return _Counts(
         n_candidates,
         accepted,
@@ -284,6 +300,9 @@ async def reflect_from(
         return ReflectResult(ran=False)
     upto = (batch[-1].at, batch[-1].id)
     last = batch[-1]
+    log.debug(
+        "reflect: reading %d messages after %s", len(batch), start[0] if start else "the start"
+    )
     user_targets = [u for u in batch if u.speaker is Speaker.USER]
     own_targets = [u for u in batch if u.speaker is Speaker.COMPANION]
     anchor = user_targets[-1] if user_targets else last

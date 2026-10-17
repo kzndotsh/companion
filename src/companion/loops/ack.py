@@ -25,8 +25,9 @@ async def judge(
             result = await asyncio.wait_for(
                 extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
             )
-    except Exception:
-        log.warning("ack judgement failed or timed out; replying normally")
+    except Exception as err:
+        log.warning("ack judgement failed or timed out; replying normally: %r", err)
         return None
     judged = parse(result.data)
+    log.debug("ack judged %s in %dms, $%.5f", judged, result.latency_ms, result.cost_usd)
     return None if judged is None else (judged, result.model, prompt)

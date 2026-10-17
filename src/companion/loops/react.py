@@ -26,8 +26,9 @@ async def judge_reaction(
             result = await asyncio.wait_for(
                 extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
             )
-    except Exception:
-        log.warning("reaction judgement failed or timed out; no reaction")
+    except Exception as err:
+        log.warning("reaction judgement failed or timed out; no reaction: %r", err)
         return None
     judged = parse(result.data)
+    log.debug("reaction judged %s in %dms, $%.5f", judged, result.latency_ms, result.cost_usd)
     return None if judged is None else (judged, result.model, prompt)

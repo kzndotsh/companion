@@ -25,10 +25,11 @@ async def find_habits(
             result = await asyncio.wait_for(
                 extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
             )
-    except Exception:
-        log.warning("habit check failed or timed out; no note")
+    except Exception as err:
+        log.warning("habit check failed or timed out; no note: %r", err)
         return None
     habits = parse(result.data)
+    log.debug("habit judged %s in %dms, $%.5f", habits, result.latency_ms, result.cost_usd)
     return None if habits is None else (habits, result.model, prompt)
 
 

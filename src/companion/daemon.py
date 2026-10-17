@@ -12,6 +12,7 @@ from pathlib import Path
 
 import httpx
 
+from companion import logsetup
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
@@ -166,10 +167,8 @@ def _hooks(store: Store, rel: RelationshipId) -> Hooks:
 
 
 async def run(data_dir: Path) -> None:
-    logging.basicConfig(level=logging.INFO)
-    # httpx logs full request URLs at INFO, and Telegram puts the bot token in the URL.
-    logging.getLogger("httpx").setLevel(logging.WARNING)
     load_dotenv(Path(".env"))
+    log_file = logsetup.configure(data_dir / "logs")
     token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
     rel = RelationshipId(f"telegram-{user}")
     store = Store(data_dir / f"{rel}.sqlite")
@@ -184,6 +183,9 @@ async def run(data_dir: Path) -> None:
 
         async def reflect_after_idle() -> None:
             await asyncio.sleep(REFLECT_IDLE_SECONDS)
+            logging.getLogger("companion.slow").debug(
+                "idle for %ds; reading what has not been read", REFLECT_IDLE_SECONDS
+            )
             if over_cap(store, rel, daily_cap(), datetime.now(UTC)) is not None:
                 logging.getLogger("companion.slow").warning("daily spend cap reached; no reflect")
                 return
@@ -234,7 +236,9 @@ async def run(data_dir: Path) -> None:
                 return "nothing to flag yet"
             kind, note = parse_flag(arg)
             store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
+            logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, note)
             implicated = await views_implicated(store, reflector, rel, turn, note)
+            logging.getLogger("companion").debug("flag implicates %d view(s)", len(implicated))
             for claim in retire_implicated_views(store, implicated):
                 logging.getLogger("companion").info("flag retired a view: %s", claim)
             return Reaction(FLAG_REACTION)
@@ -246,9 +250,11 @@ async def run(data_dir: Path) -> None:
             store.add_favorite(
                 Favorite(FavoriteId(uuid.uuid4().hex), rel, turn, arg.strip(), datetime.now(UTC))
             )
+            logging.getLogger("companion").info("favorite on turn %s: %s", turn[:8], arg.strip())
             return Reaction(FAVORITE_REACTION)
 
         logging.getLogger("companion").info(startup_line(rel, prefix.sha256, convo.scene_talker))
+        logging.getLogger("companion").info("full log: %s", log_file)
         await tg.run(handle, {"flag": flag, "fav": favorite, "favorite": favorite})
 
 

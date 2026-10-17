@@ -28,6 +28,7 @@ local-only project: the git repo has no remote and the bot runs on the owner's m
 ```bash
 just check        # lint, types, import layers, tests. Run before every commit
 just run          # start the bot (uv run companion run)
+just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 uv run companion flags | favorites | spend | beliefs | replay <turn_id>
@@ -82,6 +83,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   result and how to rerun it in `evals/CHANGELOG.md`.
 
 **Running the bot**
+- The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
+  per stage and the full text of what was said. Secrets are scrubbed by value (`logsetup.py`), and
+  `httpx` stays at WARNING because its URLs carry the bot token.
 - Never log or print the Telegram token. Telegram errors carry no URL (`TelegramError`).
 - Restart with `just restart`, which stops the old process first. Two bots on one token fight over updates. After a
   restart, confirm the "up as" line shows the new prefix and persona.

@@ -40,3 +40,7 @@ restart:
 # commit only the named files, e.g. just commit "fix(x): message" src/a.py tests/test_a.py
 commit message +files:
     scripts/commit.sh "{{message}}" {{files}}
+
+# follow the full debug log (every stage of every turn, judges, model and Telegram calls)
+logs:
+    tail -n 60 -f data/logs/companion.log

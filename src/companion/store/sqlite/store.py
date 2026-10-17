@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -41,6 +42,9 @@ from companion.store.sqlite import (
 from companion.store.sqlite.db import connect, migrate
 
 VIEWS_MODE_KEY = "views.mode"
+
+
+log = logging.getLogger("companion.store")
 
 
 class Store:
@@ -88,6 +92,7 @@ class Store:
 
     def append_decision(self, d: Decision) -> None:
         decisions.append_decision(self._conn, d)
+        log.debug("decision turn=%s %s: %s | %s", d.turn_id[:8], d.kind, d.reason, d.detail or {})
 
     def latest_turn(self, rel: RelationshipId) -> TurnId | None:
         return turns.latest_turn(self._conn, rel)
@@ -137,6 +142,13 @@ class Store:
 
     def record_spend(self, rel: RelationshipId, event: SpendEvent, at: datetime) -> None:
         settings.record_spend(self._conn, rel, event, at)
+        log.debug(
+            "spend %s %s $%.5f in=%d",
+            event.purpose,
+            event.model,
+            event.cost_usd,
+            event.input_tokens,
+        )
 
     def spend_since(
         self, rel: RelationshipId, since: datetime
