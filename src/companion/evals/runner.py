@@ -33,6 +33,7 @@ class Variant:
     keep_card: bool = True
     model: str | None = None
     history: int | None = None  # keep only this many of the last messages
+    effort: str | None = None  # reasoning effort; None keeps it off, as in the bot
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,7 +95,7 @@ class Plan:
 
 @dataclass(frozen=True, slots=True)
 class Models:
-    talker_for: Callable[[str | None], Talker]
+    talker_for: Callable[[str | None, str | None], Talker]
     judge: Extractor
 
 
@@ -120,7 +121,7 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 cell.skipped += 1
                 return
             req = request_for(plan.requests[f.id], v)
-            reply = await _reply_with_retry(models.talker_for(v.model), req)
+            reply = await _reply_with_retry(models.talker_for(v.model, v.effort), req)
             if reply is None:
                 cell.skipped += 1
                 return

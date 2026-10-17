@@ -187,3 +187,16 @@ That is the main cost of a shorter window. Not measured: whether the extractor s
 detail as an `event` belief (22 events are stored in the live database), or phrase reuse and
 emoji at these window sizes in ordinary chat (the earlier 25% to 8% was one roleplay loop).
 Rerun: `uv run companion eval --variants v25.md@openai/gpt-6-luna,v25.md+h20@openai/gpt-6-luna,v25.md+h10@openai/gpt-6-luna --fixture recalls-a-detail-from-24-messages-back --samples 12 --cap 0.05`.
+
+## 2026-10-17: reasoning at low effort on Luna, one batch
+
+New variant flags `+low`, `+medium` and `+high` turn the talker's reasoning on at that effort in
+the eval runner (the bot still runs with it off, and the reasoning text is excluded from the
+reply). Luna, persona v25, all 52 public fixtures, 6 samples each, reasoning off against `+low`,
+$0.069 in all. Total checks passed: 279/312 off, 285/312 low, within noise. Only one fixture
+moved by 3 or more checks: `short-gap-unstated` 1/6 to 5/6 (the persona says a gap of seconds
+means no time has passed; 6 samples, so suggestive only). Talker latency: median 1.01 s off, 1.21
+s low; 90th percentile 1.25 s off, 2.05 s low; slowest 2.5 s off, 4.3 s low. Mean cost per sample
+(reply plus judge) $0.000106 off, $0.000116 low, about 10% more. Low effort on this model thinks
+very little, so it neither makes replies feel slower nor changes quality much. Medium and high were
+not run. Rerun: `uv run companion eval --variants v25.md,v25.md+low --samples 6 --cap 0.25`.

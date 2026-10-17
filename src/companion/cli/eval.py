@@ -37,7 +37,9 @@ def _variants(specs: list[str]) -> list[Variant]:
             msg = f"no persona file {spec.persona}"
             raise ValueError(msg)
         prefix = build_prefix(persona.read_text(encoding="utf-8"))
-        out.append(Variant(spec.label, prefix, spec.keep_card, spec.model, spec.history))
+        out.append(
+            Variant(spec.label, prefix, spec.keep_card, spec.model, spec.history, spec.effort)
+        )
     return out
 
 
@@ -115,8 +117,14 @@ async def run(a: EvalArgs) -> str:
         return "OPENROUTER_API_KEY is not set (put it in .env)\n"
     async with httpx.AsyncClient() as client:
 
-        def talker_for(model: str | None) -> Talker:
-            return OpenRouterTalker(key, client, model or DEFAULT_MODEL, max_tokens=400)
+        def talker_for(model: str | None, effort: str | None) -> Talker:
+            return OpenRouterTalker(
+                key,
+                client,
+                model or DEFAULT_MODEL,
+                max_tokens=400 if effort is None else 4000,
+                reasoning_effort=effort,
+            )
 
         models = Models(talker_for, OpenRouterExtractor(key, client, JUDGE_MODEL))
         results = await run_eval(Plan(fixtures, requests, variants, samples, cap), models)

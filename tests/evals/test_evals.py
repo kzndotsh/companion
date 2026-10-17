@@ -127,6 +127,16 @@ def test_a_variant_swaps_only_the_prefix_and_optionally_the_card() -> None:
     assert no_card.messages[0] == base.messages[0]
 
 
+def test_reasoning_stays_off_unless_a_variant_asks_for_it() -> None:
+    from companion.models.openrouter import OpenRouterTalker  # noqa: PLC0415
+
+    req = _request()
+    off = OpenRouterTalker("k", None, "m").body(req)  # type: ignore[arg-type]
+    on = OpenRouterTalker("k", None, "m", reasoning_effort="low").body(req)  # type: ignore[arg-type]
+    assert off["reasoning"] == {"enabled": False}
+    assert on["reasoning"] == {"effort": "low", "exclude": True}
+
+
 def test_a_history_variant_keeps_only_the_last_messages() -> None:
     base = _request()
     short = request_for(base, Variant("a", OTHER, history=2))
@@ -142,6 +152,7 @@ def test_a_history_variant_keeps_only_the_last_messages() -> None:
         ("v9.md@anthropic/claude-haiku-5.5", "v9.md", True, "anthropic/claude-haiku-5.5", None),
         ("v10.md+h10", "v10.md", True, None, 10),
         ("v10.md+nocard+h6@a/b", "v10.md", False, "a/b", 6),
+        ("v10.md+low", "v10.md", True, None, None),
     ],
 )
 def test_variant_specs(
@@ -165,7 +176,7 @@ def test_bad_variant_specs_are_refused(bad: str) -> None:
 
 async def test_a_sample_passes_only_if_every_check_passes() -> None:
     f = _fixture(MaxWords(1), JudgeCheck("c"))
-    models = Models(lambda m: Talker("two words"), Judge("pass"))
+    models = Models(lambda m, e: Talker("two words"), Judge("pass"))
     res = await run_eval(_plan(f, [Variant("a", PREFIX)]), models)
     [s] = res.cells[("f1", "a")].samples
     assert s.verdicts == ("fail", "pass")
@@ -175,7 +186,7 @@ async def test_a_sample_passes_only_if_every_check_passes() -> None:
 async def test_an_unclear_judge_is_unscored_not_a_failure() -> None:
     f = _fixture(JudgeCheck("c"))
     res = await run_eval(
-        _plan(f, [Variant("a", PREFIX)]), Models(lambda m: Talker(), Judge("unclear"))
+        _plan(f, [Variant("a", PREFIX)]), Models(lambda m, e: Talker(), Judge("unclear"))
     )
     cell = res.cells[("f1", "a")]
     assert (cell.count("pass"), cell.count("fail"), cell.count("unclear")) == (0, 0, 1)
@@ -185,7 +196,7 @@ async def test_an_unclear_judge_is_unscored_not_a_failure() -> None:
 
 async def test_a_real_failure_beats_an_unclear_verdict() -> None:
     f = _fixture(MaxWords(1), JudgeCheck("c"))
-    models = Models(lambda m: Talker("two words"), Judge("unclear"))
+    models = Models(lambda m, e: Talker("two words"), Judge("unclear"))
     res = await run_eval(_plan(f, [Variant("a", PREFIX)]), models)
     assert res.cells[("f1", "a")].samples[0].outcome == "fail"
 
@@ -194,7 +205,7 @@ async def test_the_spend_cap_stops_the_run_and_says_so() -> None:
     f = _fixture(MaxWords(5))
     talker = Talker(cost=0.05)
     res = await run_eval(
-        _plan(f, [Variant("a", PREFIX)], samples=10, cap=0.12), Models(lambda m: talker, Judge())
+        _plan(f, [Variant("a", PREFIX)], samples=10, cap=0.12), Models(lambda m, e: talker, Judge())
     )
     cell = res.cells[("f1", "a")]
     assert res.stopped_by_cap
@@ -208,7 +219,7 @@ async def test_each_variant_uses_its_own_prefix_and_model() -> None:
     f = _fixture(MaxWords(5))
     made: dict[str | None, Talker] = {}
 
-    def talker_for(model: str | None) -> Talker:
+    def talker_for(model: str | None, effort: str | None) -> Talker:
         return made.setdefault(model, Talker())
 
     variants = [Variant("a", PREFIX), Variant("b", OTHER, model="other/model")]
@@ -220,7 +231,9 @@ async def test_each_variant_uses_its_own_prefix_and_model() -> None:
 async def test_deterministic_only_fixtures_never_call_the_judge() -> None:
     f = _fixture(MaxWords(5))
     judge = Judge()
-    await run_eval(_plan(f, [Variant("a", PREFIX)], samples=3), Models(lambda m: Talker(), judge))
+    await run_eval(
+        _plan(f, [Variant("a", PREFIX)], samples=3), Models(lambda m, e: Talker(), judge)
+    )
     assert judge.calls == 0
 
 

@@ -28,19 +28,21 @@ DEFAULT_PROVIDER = "Anthropic"
 
 
 class OpenRouterTalker:
-    def __init__(
+    def __init__(  # noqa: PLR0913, PLR0917
         self,
         api_key: str,
         client: httpx.AsyncClient,
         model: str = DEFAULT_MODEL,
         provider: str = DEFAULT_PROVIDER,
         max_tokens: int = 400,
+        reasoning_effort: str | None = None,
     ) -> None:
         self._key = api_key
         self._client = client
         self._model = model
         self._provider = provider
         self._max_tokens = max_tokens
+        self._effort = reasoning_effort
 
     def body(self, request: TalkerRequest) -> dict[str, object]:
         system = {"role": "system", "content": system_blocks(request)}
@@ -48,7 +50,9 @@ class OpenRouterTalker:
             "model": self._model,
             "max_tokens": self._max_tokens,
             "messages": [system, *messages_with_breakpoint(request)],
-            "reasoning": {"enabled": False},
+            "reasoning": {"enabled": False}
+            if self._effort is None
+            else {"effort": self._effort, "exclude": True},
         }
         if self._model.startswith("anthropic/"):
             body["provider"] = {"order": [self._provider], "allow_fallbacks": False}
