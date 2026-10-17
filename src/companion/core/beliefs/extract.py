@@ -14,6 +14,7 @@ from datetime import UTC, datetime, tzinfo
 from typing import cast
 
 from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
+from companion.core.clock import utc_now
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -183,7 +184,7 @@ def build_user_prompt(
         stamp = u.at.astimezone(tz).strftime("%a %Y-%m-%d %H:%M")
         scene = "" if u.frame is Frame.REAL else f" [{u.frame.value}]"
         lines.append(f"[{label}] {who}{mark}{scene} ({stamp}): {u.text}")
-    offset = datetime.now(tz).strftime("%z")
+    offset = utc_now().astimezone(tz).strftime("%z")
     out = [f"Conversation (times are local, UTC{offset}):", *lines]
     if known:
         out += ["", "Already recorded:", *[f"[{label}] {b.claim}" for label, b in known.items()]]

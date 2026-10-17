@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime, tzinfo
+from datetime import datetime, tzinfo
 
 from companion.core.beliefs.dedupe import is_duplicate_candidate
 from companion.core.beliefs.extract import (
@@ -30,6 +30,7 @@ from companion.core.beliefs.extract import (
 from companion.core.beliefs.self_extract import SCHEMA as SELF_SCHEMA
 from companion.core.beliefs.self_extract import SYSTEM as SELF_SYSTEM
 from companion.core.beliefs.self_extract import parse_views, to_view
+from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
 from companion.core.reflect import ReflectRun
 from companion.core.types import (
@@ -277,7 +278,7 @@ async def reflect_from(
     companion expressed from its own words. `ignore` names old beliefs that a rebuild is
     replacing, so they do not count as duplicates of their own restatements.
     """
-    now = options.now or datetime.now(UTC)
+    now = options.now or utc_now()
     batch = store.utterances_after(rel, start, BATCH)
     if not batch:
         return ReflectResult(ran=False)
@@ -291,7 +292,7 @@ async def reflect_from(
         run.finish(last, len(batch))
         return ReflectResult(ran=True, upto=upto)
     window = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
-    local = options.tz or datetime.now().astimezone().tzinfo or UTC
+    local = options.tz or local_zone()
     ctx = _Ctx(store, extractor, run, window, local)
     users = _Counts()
     own = _Counts()

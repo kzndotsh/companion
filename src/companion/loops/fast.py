@@ -21,7 +21,7 @@ from companion.core.ack import (
     schema_hash,
 )
 from companion.core.card import Card, build_card, render
-from companion.core.clock import now_line
+from companion.core.clock import now_line, utc_now
 from companion.core.extractor import Extractor
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
@@ -401,7 +401,7 @@ async def _handle_turn(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
 ) -> str | Reaction | ReactAndReply:
     store, prefix, rel = c.store, c.prefix, c.rel
-    now = now or datetime.now(UTC)
+    now = now or utc_now()
     turn = TurnId(_id())
     prior = store.history_before(rel, now, HISTORY_LIMIT)
     history = to_messages(prior)

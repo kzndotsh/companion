@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta, tzinfo
 
 QUIET_GAP = timedelta(minutes=1)
 
@@ -31,3 +31,14 @@ def now_line(now: datetime, previous: datetime | None) -> str:
     if gap:
         return f"Right now it is {stamp}. Their last message came {gap} ago."
     return f"Right now it is {stamp}."
+
+
+def utc_now() -> datetime:
+    """The one place the wall clock is read. Callers take `now` as an argument and use this only as
+    the default, so tests and replays can pin the time."""
+    return datetime.now(UTC)
+
+
+def local_zone() -> tzinfo:
+    """The machine's local zone, the one the clock line shows."""
+    return datetime.now().astimezone().tzinfo or UTC

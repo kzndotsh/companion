@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime, tzinfo
+from datetime import datetime, tzinfo
 
 from companion.core.beliefs.dedupe import duplicate_groups
+from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
 from companion.core.types import (
     Belief,
@@ -41,7 +42,7 @@ def _close(store: Store, b: Belief, reason: str, now: datetime) -> None:
 
 
 def close_duplicates(store: Store, rel: RelationshipId, now: datetime | None = None) -> list[str]:
-    now = now or datetime.now(UTC)
+    now = now or utc_now()
     report: list[str] = []
     for keep, drop in duplicate_groups(store.current_beliefs(rel)):
         for b in drop:
@@ -57,7 +58,7 @@ def retire(
     if len(matches) != 1:
         msg = f"{len(matches)} current beliefs start with {id_prefix!r}; need exactly one"
         raise ValueError(msg)
-    _close(store, matches[0], reason, now or datetime.now(UTC))
+    _close(store, matches[0], reason, now or utc_now())
     return f"closed  {matches[0].claim}"
 
 
@@ -79,7 +80,7 @@ async def rebuild(
             break
         added += result.accepted
         start = result.upto
-    now = datetime.now(UTC)
+    now = utc_now()
     for b in old:
         _close(store, b, "replaced by a rebuild under improved extraction rules", now)
     return f"rebuilt: {added} beliefs added, {len(old)} replaced"
@@ -89,7 +90,7 @@ def approve(store: Store, rel: RelationshipId, id_prefix: str, now: datetime | N
     """The user approves one of the companion's own views, so it reaches the card."""
     from companion.core.types import Subject  # noqa: PLC0415
 
-    now = now or datetime.now(UTC)
+    now = now or utc_now()
     matches = [
         b
         for b in store.self_beliefs(rel)
@@ -124,7 +125,7 @@ def retire_implicated_views(
     store: Store, views: list[Belief], now: datetime | None = None
 ) -> list[str]:
     """Close the views a flag implicates. The caller decides which; most flags implicate none."""
-    now = now or datetime.now(UTC)
+    now = now or utc_now()
     for b in views:
         _close(store, b, "the user flagged a turn, and the flag implicates this view", now)
     return [b.claim for b in views]

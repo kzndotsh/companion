@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
 from companion.core.beliefs import views_implicated as impl
 from companion.core.beliefs.views_conflict import SCHEMA, SYSTEM, build_prompt, parse
+from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
 from companion.core.frames import is_assertable
 from companion.core.types import Belief, BeliefKind, DecisionKind, Json, RelationshipId, TurnId
@@ -36,7 +37,7 @@ async def check_views(
     `recheck` asks again about all of them, for when the user has just stated a new preference or
     boundary that an earlier clean check could not have known about.
     """
-    now = now or datetime.now(UTC)
+    now = now or utc_now()
     days = store.evidence_days(rel)
     checks = store.view_checks(rel)
     pending = [
