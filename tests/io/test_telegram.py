@@ -494,3 +494,85 @@ async def test_each_part_waits_and_shows_typing_before_it_is_sent(
     between = calls[sends[0] + 1 : sends[1]]
     assert "sleep" in between
     assert "sendChatAction" in between
+
+
+def _msg(update_id: int, text: str) -> dict[str, object]:
+    return {
+        "update_id": update_id,
+        "message": {
+            "message_id": 100 + update_id,
+            "text": text,
+            "from": {"id": ALLOWED},
+            "chat": {"id": 7},
+        },
+    }
+
+
+async def _burst(
+    first_reply: str, *, hold_pace: float, gap: float
+) -> tuple[list[str], list[str], list[str]]:
+    """Run the real polling loop with two messages `gap` seconds apart. Returns what was handled,
+    what was sent, and the replies reported undelivered."""
+    import asyncio  # noqa: PLC0415
+
+    handled: list[str] = []
+    sent: list[str] = []
+    undelivered: list[str] = []
+    batches = [[_msg(1, "first")], [_msg(2, "second")]]
+
+    async def handler(req: httpx.Request) -> httpx.Response:
+        method = str(req.url).rsplit("/", 1)[-1]
+        if method == "getUpdates":
+            if batches:
+                if len(batches) == 1:
+                    await asyncio.sleep(gap)
+                return httpx.Response(200, json={"ok": True, "result": batches.pop(0)})
+            await asyncio.sleep(0.05)
+            return httpx.Response(200, json={"ok": True, "result": []})
+        if method == "sendMessage":
+            sent.append(json.loads(req.content)["text"])
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        handled.append(text)
+        if text == "first":
+            if first_reply == "":
+                await asyncio.sleep(30)  # still being written when the next message arrives
+            return first_reply
+        return "reply to both"
+
+    async def on_undelivered(text: str, reason: str) -> None:
+        del reason
+        undelivered.append(text)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram(
+        "t", ALLOWED, client, Hooks(on_undelivered=on_undelivered), pace=hold_pace, split=False
+    )
+    task = asyncio.create_task(tg.run(talk, {}))
+    await asyncio.sleep(gap + 1.2)
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+    return handled, sent, undelivered
+
+
+async def test_a_message_that_arrives_while_the_reply_is_being_written_replaces_it() -> None:
+    handled, sent, undelivered = await _burst("", hold_pace=0.0, gap=0.2)
+    assert handled == ["first", "second"]
+    assert sent == ["reply to both"]
+    assert undelivered == []  # nothing had been written, so nothing is marked
+
+
+async def test_a_message_that_arrives_while_the_reply_is_held_replaces_it_and_marks_it() -> None:
+    reply = "a reply long enough to be held for a little while before it goes out"
+    handled, sent, undelivered = await _burst(reply, hold_pace=0.3, gap=0.15)
+    assert handled == ["first", "second"]
+    assert sent == ["reply to both"]
+    assert undelivered == [reply]
+
+
+async def test_messages_far_apart_are_each_answered() -> None:
+    handled, sent, undelivered = await _burst("answer one", hold_pace=0.0, gap=0.6)
+    assert handled == ["first", "second"]
+    assert sent == ["answer one", "reply to both"]
+    assert undelivered == []

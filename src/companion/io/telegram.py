@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import random
 import time
@@ -35,6 +36,14 @@ class Hooks:
     on_undelivered: Undelivered | None = None
     last_handled: LastHandled | None = None
     mark_handled: MarkHandled | None = None
+
+
+@dataclass(slots=True)
+class _Delivery:
+    """How many messages of one reply have actually gone out, so a cancelled reply is only called
+    undelivered when the user saw none of it."""
+
+    sent: int = 0
 
 
 class TelegramError(RuntimeError):
@@ -113,8 +122,23 @@ class Telegram:
             log.warning("typing indicator skipped: %s", err)
 
     async def run(self, handle: Handler, commands: Commands | None = None) -> None:
+        """Poll in the background and serve one update at a time. A new plain message that arrives
+        while the previous one is still being answered replaces that answer, so a burst of
+        messages gets one reply that has seen all of them."""
         last = self._hooks.last_handled() if self._hooks.last_handled else None
-        offset = last + 1 if last is not None else 0
+        queue: asyncio.Queue[dict[str, object]] = asyncio.Queue()
+        poller = asyncio.create_task(self._poll(queue, last + 1 if last is not None else 0))
+        waiting: list[dict[str, object]] = []
+        try:
+            while True:
+                update = waiting.pop(0) if waiting else await queue.get()
+                await self._serve(update, queue, waiting, handle, commands or {})
+        finally:
+            poller.cancel()
+
+    async def _poll(self, queue: asyncio.Queue[dict[str, object]], offset: int) -> None:
+        """Fetch updates for ever and queue them. The offset moves past an update as soon as it is
+        queued, so a restart can lose a message that was queued but not yet answered."""
         while True:
             try:
                 updates = await self._call("getUpdates", offset=offset, timeout=30)
@@ -124,7 +148,61 @@ class Telegram:
                 continue
             if seq(updates):
                 log.debug("poll: %d update(s), offset %d", len(seq(updates)), offset)
-            offset = await self.process(seq(updates), offset, handle, commands or {})
+            for update in seq(updates):
+                u = obj(update)
+                update_id = integer(u.get("update_id"))
+                if update_id >= offset:
+                    offset = update_id + 1
+                    queue.put_nowait(u)
+
+    def _plain_text(self, update: dict[str, object]) -> str | None:
+        """The text of a message from the allowed user that is not a command, else None."""
+        msg = obj(update.get("message"))
+        text = msg.get("text")
+        if not isinstance(text, str) or integer(obj(msg.get("from")).get("id")) != self._allowed:
+            return None
+        return None if _command(text) is not None else text
+
+    async def _serve(
+        self,
+        update: dict[str, object],
+        queue: asyncio.Queue[dict[str, object]],
+        waiting: list[dict[str, object]],
+        handle: Handler,
+        commands: Commands,
+    ) -> None:
+        """Answer an update. If another plain message arrives before the answer is out and this
+        one was a plain message too, drop the answer and answer the new one, which sees both."""
+        current = update
+        while True:
+            turn = asyncio.create_task(self._handle_one(current, handle, commands))
+            arrival = asyncio.create_task(queue.get())
+            await asyncio.wait({turn, arrival}, return_when=asyncio.FIRST_COMPLETED)
+            if turn.done():
+                if arrival.done():
+                    waiting.append(arrival.result())
+                else:
+                    arrival.cancel()
+                await turn
+                return
+            newer = arrival.result()
+            if self._plain_text(current) is None or self._plain_text(newer) is None:
+                waiting.append(newer)
+                await turn
+                return
+            log.info("a newer message arrived before the answer went out; answering both together")
+            turn.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await turn
+            current = newer
+
+    async def _handle_one(
+        self, update: dict[str, object], handle: Handler, commands: Commands
+    ) -> None:
+        update_id = integer(update.get("update_id"))
+        if self._hooks.mark_handled is not None:
+            self._hooks.mark_handled(update_id)
+        await self.handle_update(update, handle, commands)
 
     async def process(
         self, updates: list[object], offset: int, handle: Handler, commands: Commands
@@ -174,12 +252,21 @@ class Telegram:
             else:
                 await self._typing(chat_id)
                 reply = await handle(text)
+        except asyncio.CancelledError:
+            log.info("message %d superseded while the reply was being written", message_id)
+            raise
         except Exception:
             log.exception("turn failed")
             return
         wait = (text, started) if command is None else None
+        delivery = _Delivery()
         try:
-            await self._answer(chat_id, message_id, reply, wait)
+            await self._answer(chat_id, message_id, reply, wait, delivery)
+        except asyncio.CancelledError:
+            log.info("message %d superseded; %d part(s) had gone out", message_id, delivery.sent)
+            if delivery.sent == 0:
+                await self._report_undelivered(reply, "superseded by a newer message")
+            raise
         except TelegramError as err:
             log.warning("could not deliver the reply: %s", err)
             await self._report_undelivered(reply, str(err))
@@ -214,7 +301,11 @@ class Telegram:
             remaining -= step
 
     async def _send_parts(
-        self, chat_id: int, text: str, hold: Callable[..., Awaitable[None]] | None
+        self,
+        chat_id: int,
+        text: str,
+        hold: Callable[..., Awaitable[None]] | None,
+        delivery: _Delivery,
     ) -> None:
         """Send a reply, cut into a few messages when it is long enough, each after its own
         typing time. A part that fails after an earlier one arrived stops the rest and is logged;
@@ -231,6 +322,7 @@ class Telegram:
                 await hold(part, first=n == 0)
             try:
                 await self.send(chat_id, part)
+                delivery.sent += 1
             except TelegramError:
                 if n == 0:
                     raise
@@ -245,9 +337,11 @@ class Telegram:
         message_id: int,
         reply: str | Reaction | ReactAndReply,
         wait: tuple[str, float] | None = None,
+        delivery: _Delivery | None = None,
     ) -> None:
         """Send the reply. `wait` is the user's text and when the turn started; leave it out for
         a command's reply, which goes at once."""
+        delivery = delivery or _Delivery()
 
         async def hold(text: str, *, first: bool = True) -> None:
             if wait is None or self._pace <= 0:
@@ -263,7 +357,7 @@ class Telegram:
             except TelegramError:
                 log.warning("reaction refused; sending the reply without it")
             if reply.text:
-                await self._send_parts(chat_id, reply.text, hold)
+                await self._send_parts(chat_id, reply.text, hold, delivery)
         elif isinstance(reply, Reaction):
             await hold("")
             try:
@@ -272,7 +366,7 @@ class Telegram:
                 log.warning("reaction refused, falling back to text")
                 await self.send(chat_id, "noted")
         elif reply:
-            await self._send_parts(chat_id, reply, hold if wait is not None else None)
+            await self._send_parts(chat_id, reply, hold if wait is not None else None, delivery)
 
     async def _report_undelivered(self, reply: str | Reaction | ReactAndReply, reason: str) -> None:
         """Tell the conversation a reply never arrived, so the model does not think it was seen."""

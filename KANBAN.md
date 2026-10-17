@@ -55,6 +55,9 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] S2 Supersede: a plain message that arrives while the last one is being answered (written or
+      held) replaces that answer, which is marked undelivered, and the new reply sees both. Polling runs
+      in the background. Needed because the typing delay opened a 3 to 8 second window for it.
 - [x] S1 Split replies: a plain reply of 25+ words and 2+ sentences is sent as two (three from 60 words) messages
       about 65% of the time, cut at sentence boundaries, each with its own typing time. The ledger keeps one
       reply, so the model never sees the habit. `COMPANION_SPLIT=off` disables it. On the real replies 73 of

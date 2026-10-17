@@ -95,6 +95,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - A long, plain reply is sometimes sent as two or three messages (`COMPANION_SPLIT`, on unless `off`).
   The ledger and the history keep it as one reply, so the model never sees the splitting. Cuts fall at
   sentence boundaries only (`core/split.py`).
+- A plain message that arrives while the previous one is still being answered (written or held)
+  replaces that answer, and the dropped reply is marked undelivered, so the new reply sees both
+  messages. Commands never supersede. The poll offset moves past a message when it is queued, so a
+  restart can lose one that was queued but not answered.
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 
 **Working with the owner**
