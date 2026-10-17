@@ -55,6 +55,10 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] P1 Reply pace: a reply waits like someone reading and typing (a short read pause plus about 0.15 s a
+      word, minus the model's own time, capped at 8 s, typing indicator kept alive; reactions wait only
+      the read pause; commands go at once). `COMPANION_PACE` = off, quick, natural (default) or slow, shown
+      in the startup line. Built because replies at about 1 s felt too fast. Taste call, not measured.
 - [x] T7 Claimed feelings and asterisk actions outside a scene: does not reproduce on v25 (30/30 on
       both models on five new fixtures); the fixtures stay as guards. See `evals/CHANGELOG.md`.
 - [x] T6 `agree-and-invent` on Luna: stance in ADR 0011, persona v25 live. 9/30 to 25/30 on the

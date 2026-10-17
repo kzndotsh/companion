@@ -305,3 +305,100 @@ async def test_updates_are_recorded_before_the_turn_runs_and_in_order() -> None:
     b = {**_update("b"), "update_id": 2}
     assert await tg.process([a, b], 0, talk, {}) == 3
     assert order == ["mark 1", "turn a", "mark 2", "turn b"]
+
+
+async def _paced(
+    reply: str | Reaction | ReactAndReply, pace: float, monkeypatch: pytest.MonkeyPatch
+) -> tuple[list[str], list[float]]:
+    """The calls Telegram saw, in order, and every sleep, with the clock and jitter pinned."""
+    calls: list[str] = []
+    sleeps: list[float] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        calls.append(str(req.url).rsplit("/", 1)[-1])
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def fake_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+        calls.append(f"sleep {seconds:g}")
+
+    async def talk(text: str) -> str | Reaction | ReactAndReply:
+        del text
+        return reply
+
+    monkeypatch.setattr("companion.io.telegram.asyncio.sleep", fake_sleep)
+
+    def steady(low: float, high: float) -> float:
+        del low, high
+        return 1.0
+
+    monkeypatch.setattr("companion.io.telegram.random.uniform", steady)
+    monkeypatch.setattr("companion.io.telegram.time.monotonic", lambda: 100.0)
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram("t", ALLOWED, client, pace=pace)
+    await tg.handle_update(_update("hello there"), talk, {})
+    return calls, sleeps
+
+
+async def test_a_text_reply_waits_while_typing_before_it_is_sent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls, sleeps = await _paced("a reply of about seven words in total", 1.0, monkeypatch)
+    assert sum(sleeps) > 0
+    assert calls.index("sendMessage") > max(i for i, c in enumerate(calls) if c.startswith("sleep"))
+    assert calls.count("sendChatAction") >= 2  # once at the start, once while waiting
+
+
+async def test_pace_off_sends_at_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls, sleeps = await _paced("a reply", 0.0, monkeypatch)
+    assert sleeps == []
+    assert calls == ["sendChatAction", "sendMessage"]
+
+
+async def test_a_long_wait_keeps_the_typing_indicator_alive(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls, sleeps = await _paced("word " * 60, 1.6, monkeypatch)
+    assert len(sleeps) >= 2
+    assert max(sleeps) <= 4.0
+    assert calls.count("sendChatAction") >= len(sleeps)
+
+
+async def test_a_reaction_reply_is_not_held_long_and_shows_no_typing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls, sleeps = await _paced(Reaction("👍"), 1.0, monkeypatch)
+    assert calls.count("sendChatAction") == 1
+    assert 0 < sum(sleeps) < 3
+    assert calls[-1] == "setMessageReaction"
+
+
+async def test_the_reaction_comes_first_and_the_reply_after_its_wait(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls, _ = await _paced(ReactAndReply(Reaction("❤"), "a reply here"), 1.0, monkeypatch)
+    assert calls.index("setMessageReaction") < calls.index("sendMessage")
+    sleep_at = [i for i, c in enumerate(calls) if c.startswith("sleep")]
+    assert calls.index("setMessageReaction") < min(sleep_at) < calls.index("sendMessage")
+
+
+async def test_a_command_reply_is_never_held(monkeypatch: pytest.MonkeyPatch) -> None:
+    sleeps: list[float] = []
+
+    async def fake_sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+
+    async def flag(arg: str) -> str:
+        del arg
+        return "done"
+
+    monkeypatch.setattr("companion.io.telegram.asyncio.sleep", fake_sleep)
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram("t", ALLOWED, client, pace=1.6)
+    await tg.handle_update(_update("/flag"), flag, {"flag": flag})  # type: ignore[arg-type]
+    assert sleeps == []

@@ -4,15 +4,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import random
+import time
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 import httpx
 
 from companion.core.ack import ReactAndReply, Reaction
+from companion.core.pace import hold_seconds
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
+TYPING_REFRESH_SECONDS = 4.0  # Telegram drops the typing indicator after about five
 
 
 Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
@@ -44,7 +48,9 @@ class Telegram:
         allowed_user: int,
         client: httpx.AsyncClient,
         hooks: Hooks = Hooks(),  # noqa: B008
+        pace: float = 0.0,
     ) -> None:
+        self._pace = pace
         self._base = f"https://api.telegram.org/bot{token}"
         self._allowed = allowed_user
         self._client = client
@@ -142,6 +148,7 @@ class Telegram:
         command = _command(text)
         if command is not None and command[0] not in commands:
             return  # unknown and /start commands never reach the model
+        started = time.monotonic()
         try:
             if command is not None:
                 reply = await commands[command[0]](command[1])
@@ -151,29 +158,61 @@ class Telegram:
         except Exception:
             log.exception("turn failed")
             return
+        wait = (text, started) if command is None else None
         try:
-            await self._answer(chat_id, message_id, reply)
+            await self._answer(chat_id, message_id, reply, wait)
         except TelegramError as err:
             log.warning("could not deliver the reply: %s", err)
             await self._report_undelivered(reply, str(err))
 
+    async def _hold(self, chat_id: int, user_text: str, reply: str, started: float) -> None:
+        """Wait like someone reading and typing, keeping the typing indicator alive while a text
+        reply is on its way. The wait counts the time the model already took."""
+        remaining = hold_seconds(
+            user_text,
+            reply,
+            self._pace,
+            time.monotonic() - started,
+            random.uniform(0.8, 1.25),  # noqa: S311
+        )
+        while remaining > 0:
+            if reply:
+                await self._typing(chat_id)
+            step = min(remaining, TYPING_REFRESH_SECONDS)
+            await asyncio.sleep(step)
+            remaining -= step
+
     async def _answer(
-        self, chat_id: int, message_id: int, reply: str | Reaction | ReactAndReply
+        self,
+        chat_id: int,
+        message_id: int,
+        reply: str | Reaction | ReactAndReply,
+        wait: tuple[str, float] | None = None,
     ) -> None:
+        """Send the reply. `wait` is the user's text and when the turn started; leave it out for
+        a command's reply, which goes at once."""
+
+        async def hold(text: str) -> None:
+            if wait is not None and self._pace > 0:
+                await self._hold(chat_id, wait[0], text, wait[1])
+
         if isinstance(reply, ReactAndReply):
             try:
                 await self.react(chat_id, message_id, reply.reaction.emoji)
             except TelegramError:
                 log.warning("reaction refused; sending the reply without it")
             if reply.text:
+                await hold(reply.text)
                 await self.send(chat_id, reply.text)
         elif isinstance(reply, Reaction):
+            await hold("")
             try:
                 await self.react(chat_id, message_id, reply.emoji)
             except TelegramError:
                 log.warning("reaction refused, falling back to text")
                 await self.send(chat_id, "noted")
         elif reply:
+            await hold(reply)
             await self.send(chat_id, reply)
 
     async def _report_undelivered(self, reply: str | Reaction | ReactAndReply, reason: str) -> None:

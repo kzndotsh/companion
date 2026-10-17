@@ -86,6 +86,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - Restart with `just restart`, which stops the old process first. Two bots on one token fight over updates. After a
   restart, confirm the "up as" line shows the new prefix and persona.
 - A reply the user never received is marked undelivered and left out of what the model reads.
+- Replies are held to feel typed: `COMPANION_PACE` is off, quick, natural (default) or slow.
+  Set `off` when timing a run by hand. Commands are never held.
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 
 **Working with the owner**

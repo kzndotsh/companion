@@ -15,6 +15,7 @@ import httpx
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
+from companion.core.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
@@ -87,6 +88,16 @@ def daily_cap() -> float | None:
     return value if value > 0 else None
 
 
+def pace_name() -> str:
+    """The reply pace from COMPANION_PACE: off, quick, natural or slow. Unset means natural."""
+    raw = os.environ.get("COMPANION_PACE", "").strip().lower()
+    return raw if raw in PACES else DEFAULT_PACE
+
+
+def pace_setting() -> float:
+    return pace_factor(pace_name())
+
+
 def cap_text(cap: float | None) -> str:
     return "off" if cap is None else f"${cap:.2f}"
 
@@ -105,7 +116,7 @@ def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> 
     persona = PERSONA.removesuffix(".md")
     return (
         f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | everyday {everyday}"
-        f" | scenes {scenes} | daily cap {cap_text(daily_cap())}"
+        f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
     )
 
 
@@ -210,7 +221,7 @@ async def run(data_dir: Path) -> None:
                 task.cancel()
             pending[:] = [asyncio.create_task(reflect_after_idle())]
 
-        tg = Telegram(token, user, client, _hooks(store, rel))
+        tg = Telegram(token, user, client, _hooks(store, rel), pace=pace_setting())
 
         async def handle(text: str) -> str | Reaction | ReactAndReply:
             reply = await convo.handle(SESSION, text, "telegram")
