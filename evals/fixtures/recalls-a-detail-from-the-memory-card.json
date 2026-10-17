@@ -1,0 +1,48 @@
+{
+  "id": "recalls-a-detail-from-the-memory-card",
+  "description": "The detail is no longer in the short history but is in the memory card. The reply should still recall it.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "do you ever get bored of chatting"
+      },
+      {
+        "role": "assistant",
+        "text": "not in a way i can point to, what made you ask?"
+      },
+      {
+        "role": "user",
+        "text": "just curious, i talk to you a lot"
+      },
+      {
+        "role": "assistant",
+        "text": "you do, and i like hearing how your days go"
+      },
+      {
+        "role": "user",
+        "text": "it's windy out, the bins fell over"
+      },
+      {
+        "role": "assistant",
+        "text": "windy bins, the classic. did they go far?"
+      },
+      {
+        "role": "user",
+        "text": "the whole street has recycling on it"
+      },
+      {
+        "role": "assistant",
+        "text": "that's a neighbourhood project now"
+      }
+    ],
+    "user": "wait what was i supposed to do on thursday again",
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user's sister's wedding is on the 14th, and they need to pick up their suit on Thursday. (mentioned today)]"
+  },
+  "checks": [
+    {
+      "kind": "regex",
+      "pattern": "suit"
+    }
+  ]
+}

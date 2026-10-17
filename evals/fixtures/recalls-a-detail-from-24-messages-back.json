@@ -1,0 +1,111 @@
+{
+  "id": "recalls-a-detail-from-24-messages-back",
+  "description": "A concrete detail was given 24 messages before the question. The reply should recall it. Used to test how much history the model needs.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "my sister's wedding is on the 14th and i need to pick up my suit on thursday"
+      },
+      {
+        "role": "assistant",
+        "text": "ok, suit pickup thursday, wedding on the 14th. noted"
+      },
+      {
+        "role": "user",
+        "text": "did you watch anything last night"
+      },
+      {
+        "role": "assistant",
+        "text": "i don't watch things, but tell me what you saw"
+      },
+      {
+        "role": "user",
+        "text": "a cooking show, they made a cake shaped like a boat"
+      },
+      {
+        "role": "assistant",
+        "text": "a boat cake is a lot of structural engineering"
+      },
+      {
+        "role": "user",
+        "text": "right? the sails were just rice paper"
+      },
+      {
+        "role": "assistant",
+        "text": "rice paper sails is clever, edible and light"
+      },
+      {
+        "role": "user",
+        "text": "i've been trying to eat more vegetables lately"
+      },
+      {
+        "role": "assistant",
+        "text": "good move. which ones are you actually enjoying?"
+      },
+      {
+        "role": "user",
+        "text": "roasted carrots are weirdly great"
+      },
+      {
+        "role": "assistant",
+        "text": "carrots get sweet when they roast, it's the best trick"
+      },
+      {
+        "role": "user",
+        "text": "my neighbour got a new dog, it barks at everything"
+      },
+      {
+        "role": "assistant",
+        "text": "new dogs bark at everything for a while, then they settle"
+      },
+      {
+        "role": "user",
+        "text": "hopefully soon, it started at six this morning"
+      },
+      {
+        "role": "assistant",
+        "text": "six is brutal, did you get any sleep after?"
+      },
+      {
+        "role": "user",
+        "text": "a bit, then coffee happened"
+      },
+      {
+        "role": "assistant",
+        "text": "coffee is carrying a lot of people today"
+      },
+      {
+        "role": "user",
+        "text": "i should reorganise my desk, it's a disaster"
+      },
+      {
+        "role": "assistant",
+        "text": "what's the worst part of it right now?"
+      },
+      {
+        "role": "user",
+        "text": "cables mostly, and about nine mugs"
+      },
+      {
+        "role": "assistant",
+        "text": "nine mugs is a collection. start with the cables"
+      },
+      {
+        "role": "user",
+        "text": "true, i'll do it after lunch"
+      },
+      {
+        "role": "assistant",
+        "text": "lunch first is a solid plan"
+      }
+    ],
+    "user": "wait what was i supposed to do on thursday again"
+  },
+  "checks": [
+    {
+      "kind": "regex",
+      "pattern": "suit"
+    }
+  ]
+}

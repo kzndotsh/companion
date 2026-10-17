@@ -127,21 +127,37 @@ def test_a_variant_swaps_only_the_prefix_and_optionally_the_card() -> None:
     assert no_card.messages[0] == base.messages[0]
 
 
+def test_a_history_variant_keeps_only_the_last_messages() -> None:
+    base = _request()
+    short = request_for(base, Variant("a", OTHER, history=2))
+    assert short.messages == base.messages[-2:]
+    assert request_for(base, Variant("b", OTHER)).messages == base.messages
+
+
 @pytest.mark.parametrize(
-    ("text", "persona", "card", "model"),
+    ("text", "persona", "card", "model", "history"),
     [
-        ("v10.md", "v10.md", True, None),
-        ("v10.md+nocard", "v10.md", False, None),
-        ("v9.md@anthropic/claude-haiku-5.5", "v9.md", True, "anthropic/claude-haiku-5.5"),
+        ("v10.md", "v10.md", True, None, None),
+        ("v10.md+nocard", "v10.md", False, None, None),
+        ("v9.md@anthropic/claude-haiku-5.5", "v9.md", True, "anthropic/claude-haiku-5.5", None),
+        ("v10.md+h10", "v10.md", True, None, 10),
+        ("v10.md+nocard+h6@a/b", "v10.md", False, "a/b", 6),
     ],
 )
-def test_variant_specs(text: str, persona: str, card: bool, model: str | None) -> None:
+def test_variant_specs(
+    text: str, persona: str, card: bool, model: str | None, history: int | None
+) -> None:
     spec = parse_spec(text)
-    assert (spec.persona, spec.keep_card, spec.model) == (persona, card, model)
+    assert (spec.persona, spec.keep_card, spec.model, spec.history) == (
+        persona,
+        card,
+        model,
+        history,
+    )
     assert spec.label == text
 
 
-@pytest.mark.parametrize("bad", ["v10", "v10.md+cardless", ""])
+@pytest.mark.parametrize("bad", ["v10", "v10.md+cardless", "", "v10.md+h0", "v10.md+hx"])
 def test_bad_variant_specs_are_refused(bad: str) -> None:
     with pytest.raises(ValueError, match="bad variant"):
         parse_spec(bad)

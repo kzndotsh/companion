@@ -34,7 +34,9 @@ Ordered. The first three can stop the bot, so they go first.
 - [ ] T12 (see also A33: strip the leading sentence and stage directions from assistant turns in the
       injected history only) Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
       reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
-      before any change; the memory card carries what older turns held. See `evals/CHANGELOG.md`.
+      before any change; the memory card carries what older turns held. Measured 2026-10-17: a detail
+      beyond the window is lost (12/12 in view, 0/12 out) unless the card holds it, and the card only
+      updates after 90 seconds of quiet. See `evals/CHANGELOG.md`.
 - [ ] T8 Decide provider routing for DeepSeek: sort by latency (removes the 5 to 9 second outliers, the
       provider changes per request) or pin a provider list. **Needs decision**.
 

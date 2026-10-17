@@ -32,6 +32,7 @@ class Variant:
     prefix: Prefix
     keep_card: bool = True
     model: str | None = None
+    history: int | None = None  # keep only this many of the last messages
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,6 +74,8 @@ def strip_card(content: str) -> str:
 
 def request_for(base: TalkerRequest, variant: Variant) -> TalkerRequest:
     messages = list(base.messages)
+    if variant.history is not None:
+        messages = messages[-variant.history :]
     if not variant.keep_card:
         last = messages[-1]
         messages[-1] = Message(last.role, strip_card(last.content))

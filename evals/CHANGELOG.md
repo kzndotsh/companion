@@ -163,3 +163,27 @@ them", "like being watched while you fix your posture"), and a few state a feeli
 less wordy"). The question invites it, so this is the introspective-bait case, not a scene. The
 scene model only answers while a pretend scene is in progress, so the real exposure is small.
 Rerun: `uv run companion eval --variants v25.md@deepseek/deepseek-v4-flash --fixture <id> --samples 30 --cap 0.05`.
+
+## 2026-10-17: what a shorter history window costs in recall (T12)
+
+New variant flag `+hN`: `v25.md+h10` keeps only the last 10 messages of history (the last is what
+the user just typed). Four new fixtures: a concrete detail (a task on a day, with a date) given
+12, 24 or 36 messages before the question "what was i supposed to do on thursday again", with
+mundane filler between, checked by regex; and one where the detail is in the memory card, not
+the history. Luna, persona v25, 12 samples each, regex checks, about half a cent in all.
+
+| Detail given | full history | last 20 messages | last 10 messages |
+|---|---|---|---|
+| 12 messages back | 12/12 | 12/12 | 0/12 |
+| 24 messages back | 12/12 | 0/12 | 0/12 |
+| 36 messages back | 12/12 | 0/12 | 0/12 |
+
+Reading: a clean cliff. The model recalls perfectly when the detail is in view and never when it
+is not, so a detail that leaves the window is lost unless the memory card holds it. In the card
+fixture (the detail in the card, not the history) it recalled 12/12. The live bot's slow loop
+only runs after 90 seconds of quiet (`REFLECT_IDLE_SECONDS`), so in a conversation with no long
+pause a detail from earlier in the same chat exists only in the history until the next pause.
+That is the main cost of a shorter window. Not measured: whether the extractor stores such a
+detail as an `event` belief (22 events are stored in the live database), or phrase reuse and
+emoji at these window sizes in ordinary chat (the earlier 25% to 8% was one roleplay loop).
+Rerun: `uv run companion eval --variants v25.md@openai/gpt-6-luna,v25.md+h20@openai/gpt-6-luna,v25.md+h10@openai/gpt-6-luna --fixture recalls-a-detail-from-24-messages-back --samples 12 --cap 0.05`.
