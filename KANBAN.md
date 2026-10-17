@@ -55,6 +55,12 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] R1a Open-loop follow-ups in shadow mode: they say something about their near future, it is recorded
+      with the exact quote and a follow-up time (the morning after, or three days on), and a pure gate
+      with named reasons decides every 15 minutes whether to reach out (quiet hours 11 PM to 8 AM, one a
+      day, 20 hours apart, chat quiet 90 minutes, not in a scene, never sensitive, 2-day horizon). In
+      shadow it drafts the message and records it, and sends nothing. `companion initiative` lists it.
+      `COMPANION_INITIATIVE=off` turns it off. There is no live mode yet.
 - [x] S2 Supersede: a plain message that arrives while the last one is being answered (written or
       held) replaces that answer, which is marked undelivered, and the new reply sees both. Polling runs
       in the background. Needed because the typing delay opened a 3 to 8 second window for it.
@@ -178,7 +184,8 @@ Unordered within each group. Pull a card into Todo when it is next.
       in logs twice; the code no longer prints it. **Parked by the user on 2026-10-17**: not a priority
       for now, do not raise it again until asked.
 
-- [ ] R1 Heartbeat for initiating contact: a gate before any spend that holds when nothing is new, a
+- [ ] R1 Heartbeat for initiating contact (shadow mode built, see R1a; going live needs a week of shadow
+      review and outcome recording): a gate before any spend that holds when nothing is new, a
       pure evaluator with named reasons, an outcome recorded per reach-out, a hold never counted as an
       ignore, a slow re-probe, a test on a simulated clock, shadow first. (G30, G33) Prototype 2026-10-17:
       about 8 plausible open loops in 3 days of chat, mostly low stakes, 3 sensitive to block; a model

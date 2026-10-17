@@ -74,6 +74,16 @@ def decisions_for_turn(
     return [_decision(r) for r in rows]
 
 
+def decisions_of_kind(
+    conn: sqlite3.Connection, relationship_id: RelationshipId, kind: DecisionKind
+) -> list[Decision]:
+    rows = conn.execute(
+        "SELECT * FROM decisions WHERE relationship_id = ? AND kind = ? ORDER BY at, id",
+        (relationship_id, kind),
+    ).fetchall()
+    return [_decision(r) for r in rows]
+
+
 def turns_since_reaction(conn: sqlite3.Connection, relationship_id: RelationshipId) -> int | None:
     """How many of the user's messages have come since the last reaction, or None if never."""
     row = conn.execute(

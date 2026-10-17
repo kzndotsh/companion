@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+from companion.core.openloops import LoopState, OpenLoop
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
 from companion.core.replay import TurnRecord
@@ -35,11 +36,13 @@ from companion.store.sqlite import (
     favorites,
     flags,
     ledger,
+    open_loops,
     reflect,
     settings,
     turns,
 )
 from companion.store.sqlite.db import connect, migrate
+from companion.store.sqlite.open_loops import ReachOut
 
 VIEWS_MODE_KEY = "views.mode"
 
@@ -152,6 +155,22 @@ class Store:
             event.input_tokens,
         )
 
+    def add_open_loop(self, loop: OpenLoop) -> None:
+        open_loops.add_loop(self._conn, loop)
+        log.debug("open loop recorded: %s (follow up %s)", loop.claim, loop.follow_up_at)
+
+    def open_loop_event(self, loop_id: str, state: LoopState, reason: str, at: datetime) -> None:
+        open_loops.add_event(self._conn, loop_id, state, reason, at)
+
+    def open_loops(self, rel: RelationshipId) -> list[OpenLoop]:
+        return open_loops.loops(self._conn, rel)
+
+    def add_reach_out(self, r: ReachOut) -> None:
+        open_loops.add_reach_out(self._conn, r)
+
+    def reach_outs(self, rel: RelationshipId, since: datetime | None = None) -> list[ReachOut]:
+        return open_loops.reach_outs_since(self._conn, rel, since)
+
     def spend_since(
         self, rel: RelationshipId, since: datetime
     ) -> list[tuple[str, str, int, float]]:
@@ -162,6 +181,9 @@ class Store:
 
     def decisions_for_turn(self, rel: RelationshipId, turn: TurnId) -> list[Decision]:
         return decisions.decisions_for_turn(self._conn, rel, turn)
+
+    def decisions_of_kind(self, rel: RelationshipId, kind: DecisionKind) -> list[Decision]:
+        return decisions.decisions_of_kind(self._conn, rel, kind)
 
     def get_utterance(self, utterance_id: UtteranceId) -> Utterance | None:
         return ledger.get_utterance(self._conn, utterance_id)

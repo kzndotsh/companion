@@ -14,6 +14,7 @@ import httpx
 
 from companion import logsetup
 from companion.core.ack import ReactAndReply, Reaction
+from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.pace import DEFAULT_PACE, PACES, pace_factor
@@ -21,9 +22,10 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
-from companion.io.telegram import Hooks, Telegram
+from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
+from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
@@ -95,6 +97,13 @@ def pace_name() -> str:
     return raw if raw in PACES else DEFAULT_PACE
 
 
+def initiative_mode() -> str:
+    """COMPANION_INITIATIVE: `shadow` (the default) records what it would reach out about and sends
+    nothing, `off` turns it off. There is no live mode yet."""
+    raw = os.environ.get("COMPANION_INITIATIVE", "").strip().lower()
+    return "off" if raw in ("off", "0", "no", "false") else "shadow"
+
+
 def split_on() -> bool:
     """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
     return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
@@ -123,7 +132,7 @@ def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> 
     return (
         f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | everyday {everyday}"
         f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
-        f" | split {'on' if split_on() else 'off'}"
+        f" | split {'on' if split_on() else 'off'} | initiative {initiative_mode()}"
     )
 
 
@@ -170,6 +179,60 @@ def _hooks(store: Store, rel: RelationshipId) -> Hooks:
         store.set_setting(rel, UPDATE_KEY, str(update_id), datetime.now(UTC))
 
     return Hooks(undelivered, last_handled, mark_handled)
+
+
+def _commands(store: Store, rel: RelationshipId, reflector: Extractor) -> Commands:
+    """The slash commands, `/flag` and `/fav`, which answer with a reaction."""
+
+    async def flag(arg: str) -> str | Reaction | ReactAndReply:
+        turn = store.latest_turn(rel)
+        if turn is None:
+            return "nothing to flag yet"
+        kind, note = parse_flag(arg)
+        store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
+        logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, note)
+        implicated = await views_implicated(store, reflector, rel, turn, note)
+        logging.getLogger("companion").debug("flag implicates %d view(s)", len(implicated))
+        for claim in retire_implicated_views(store, implicated):
+            logging.getLogger("companion").info("flag retired a view: %s", claim)
+        return Reaction(FLAG_REACTION)
+
+    async def favorite(arg: str) -> str | Reaction | ReactAndReply:
+        turn = store.latest_turn(rel)
+        if turn is None:
+            return "nothing to favorite yet"
+        store.add_favorite(
+            Favorite(FavoriteId(uuid.uuid4().hex), rel, turn, arg.strip(), datetime.now(UTC))
+        )
+        logging.getLogger("companion").info("favorite on turn %s: %s", turn[:8], arg.strip())
+        return Reaction(FAVORITE_REACTION)
+
+    return {"flag": flag, "fav": favorite, "favorite": favorite}
+
+
+INITIATIVE_TICK_SECONDS = 900
+
+
+def _start_initiative(
+    store: Store, rel: RelationshipId, judge: Extractor
+) -> asyncio.Task[None] | None:
+    """The timer that looks at open loops. In shadow mode it records and sends nothing."""
+    if initiative_mode() == "off":
+        return None
+    ticker, draft = Ticker(), drafter(judge)
+    log = logging.getLogger("companion.initiative")
+
+    async def loop() -> None:
+        while True:
+            await asyncio.sleep(INITIATIVE_TICK_SECONDS)
+            if over_cap(store, rel, daily_cap(), datetime.now(UTC)) is not None:
+                continue
+            try:
+                await tick(store, rel, utc_now(), local_zone(), draft, ticker)
+            except Exception:
+                log.exception("initiative tick failed; will try again next time")
+
+    return asyncio.create_task(loop())
 
 
 async def run(data_dir: Path) -> None:
@@ -238,32 +301,14 @@ async def run(data_dir: Path) -> None:
             schedule_reflect()
             return reply
 
-        async def flag(arg: str) -> str | Reaction | ReactAndReply:
-            turn = store.latest_turn(rel)
-            if turn is None:
-                return "nothing to flag yet"
-            kind, note = parse_flag(arg)
-            store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
-            logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, note)
-            implicated = await views_implicated(store, reflector, rel, turn, note)
-            logging.getLogger("companion").debug("flag implicates %d view(s)", len(implicated))
-            for claim in retire_implicated_views(store, implicated):
-                logging.getLogger("companion").info("flag retired a view: %s", claim)
-            return Reaction(FLAG_REACTION)
-
-        async def favorite(arg: str) -> str | Reaction | ReactAndReply:
-            turn = store.latest_turn(rel)
-            if turn is None:
-                return "nothing to favorite yet"
-            store.add_favorite(
-                Favorite(FavoriteId(uuid.uuid4().hex), rel, turn, arg.strip(), datetime.now(UTC))
-            )
-            logging.getLogger("companion").info("favorite on turn %s: %s", turn[:8], arg.strip())
-            return Reaction(FAVORITE_REACTION)
-
         logging.getLogger("companion").info(startup_line(rel, prefix.sha256, convo.scene_talker))
         logging.getLogger("companion").info("full log: %s", log_file)
-        await tg.run(handle, {"flag": flag, "fav": favorite, "favorite": favorite})
+        initiative = _start_initiative(store, rel, judge)
+        try:
+            await tg.run(handle, _commands(store, rel, reflector))
+        finally:
+            if initiative is not None:
+                initiative.cancel()
 
 
 async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) -> str:

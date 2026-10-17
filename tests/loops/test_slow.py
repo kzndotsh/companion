@@ -100,7 +100,7 @@ async def test_the_log_is_the_cursor_so_a_second_pass_reads_nothing(store: Store
     ex = FakeExtractor({"beliefs": []})
     assert (await reflect_once(store, ex, REL)).ran
     assert not (await reflect_once(store, ex, REL)).ran
-    assert ex.calls == 1
+    assert ex.calls == 2  # the beliefs pass and the open-loops pass, once
 
 
 async def test_only_new_utterances_are_read_on_the_next_pass(store: Store) -> None:
@@ -110,7 +110,7 @@ async def test_only_new_utterances_are_read_on_the_next_pass(store: Store) -> No
     _say(store, 2, Speaker.USER, "i like climbing")
     result = await reflect_once(store, ex, REL)
     assert result.ran
-    assert ex.calls == 2
+    assert ex.calls == 4  # two reads, each a beliefs pass and an open-loops pass
 
 
 async def test_a_repeated_claim_is_not_stored_twice(store: Store) -> None:
@@ -140,7 +140,7 @@ async def test_a_failed_model_call_does_not_advance_the_cursor(store: Store) -> 
         await reflect_once(store, BoomExtractor(), REL)
     ex = FakeExtractor({"beliefs": []})
     assert (await reflect_once(store, ex, REL)).ran
-    assert ex.calls == 1
+    assert ex.calls == 2
 
 
 async def test_a_malformed_response_is_logged_and_still_advances(store: Store) -> None:

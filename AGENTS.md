@@ -31,7 +31,7 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-uv run companion flags | favorites | spend | beliefs | replay <turn_id>
+uv run companion flags | favorites | spend | beliefs | initiative | replay <turn_id>
 uv run companion eval --variants v22.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
@@ -99,6 +99,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   replaces that answer, and the dropped reply is marked undelivered, so the new reply sees both
   messages. Commands never supersede. The poll offset moves past a message when it is queued, so a
   restart can lose one that was queued but not answered.
+- Things they said about their near future are recorded as open loops (`core/openloops.py`), and a
+  pure gate (`core/initiative.py`) decides every 15 minutes whether to reach out. It only runs in
+  shadow mode: it drafts and records `would send` and sends nothing (`COMPANION_INITIATIVE`, `off` to
+  disable). Read it with `uv run companion initiative`.
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 
 **Working with the owner**

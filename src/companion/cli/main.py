@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from companion import daemon
-from companion.cli import beliefs, favorites, flags, replay, spend
+from companion.cli import beliefs, favorites, flags, initiative, replay, spend
 from companion.cli import eval as eval_cli
 from companion.cli.target import find_db, resolve_db, resolve_relationship
 from companion.core.views import ViewMode
@@ -38,6 +38,7 @@ def _parser() -> argparse.ArgumentParser:
     _db_args(sub.add_parser("flags", help="list the turns you flagged"))
     _db_args(sub.add_parser("favorites", help="list the turns you loved"))
     _db_args(sub.add_parser("spend", help="what the paid calls cost, by purpose"))
+    _db_args(sub.add_parser("initiative", help="open loops and what shadow mode would send"))
     _db_args(sub.add_parser("beliefs", help="what it currently believes, with quotes"))
     vw = sub.add_parser("views", help="show or set how the companion's views reach the card")
     vw.add_argument("--mode", choices=[m.value for m in ViewMode])
@@ -143,6 +144,10 @@ def _spend(a: argparse.Namespace) -> int:
     return _out(spend.run(*_target(a)))
 
 
+def _initiative(a: argparse.Namespace) -> int:
+    return _out(initiative.run(*_target(a)))
+
+
 def _favorites(a: argparse.Namespace) -> int:
     return _out(favorites.run(*_target(a)))
 
@@ -186,6 +191,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "replay": _replay,
     "flags": _flags,
     "favorites": _favorites,
+    "initiative": _initiative,
     "spend": _spend,
     "beliefs": _beliefs,
     "views": _views,

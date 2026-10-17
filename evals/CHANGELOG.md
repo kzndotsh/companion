@@ -250,3 +250,28 @@ not loops at all (an offer to share secrets, the companion's own "no rush"). The
 vague phrase or null in most; only "tomorrow", "today" and "tonight" appeared. Reading: material
 exists but is sparse (roughly 8 in 3 days) and mostly low stakes, so a first version would reach out
 at most once or twice a week, and extraction must drop minute-scale items and sensitive ones.
+
+## 2026-10-17: replaying shadow-mode open-loop follow-ups over the real history (R1)
+
+The first build of `core/openloops.py`, `core/initiative.py` and `loops/openloops.py`, replayed on a
+copy of the database: the 727 messages cut into windows of 24, open loops extracted at each window's
+end (Haiku 5.5, about a cent in all), then the gate and a simulated clock stepped every 15 minutes
+until four days after the last message, with a drafted check-in for each would-send. Nothing was sent.
+The script was a scratch script; rerun with `uv run companion initiative` on the live database once
+shadow mode has run for a while.
+
+First replay (same-day items allowed, 3-day horizon): 6 would-send check-ins in 6 days, mostly mundane
+("hope the bed-and-relax plans were good", "how did the work stuff go today"). The one-a-day cap and
+oldest-first order spent the slots on those, and the better loops (the haircut, returning pants that
+did not fit) expired unasked. One dated item went out two days late. One draft ran past 15 words.
+Fixes: same-day and minute-scale loops are rejected, passing moods and states are excluded in the
+prompt, the horizon is 2 days, and a draft over 18 words is cut to its first sentence only if that is a
+question, else dropped.
+
+Second replay: 4 would-send check-ins in 4 days. The haircut put off and a project-pace question
+are the reasonable ones; two are weaker (one drawn from the companion's own suggestion, one a
+statement after truncation, since fixed). Holds were recorded once each with a named reason: the
+daily cap, quiet hours (11 PM to 8 AM) and the chat being active within 90 minutes. Many extracted
+loops are about building the companion itself, which is this user's whole subject and would not be
+typical. Not measured: whether the check-ins would feel welcome, which is what the week of shadow
+mode is for.
