@@ -32,4 +32,4 @@ fi
 
 git add -- "$@"
 git commit -q -m "$msg"
-git log --oneline | head -1
+git log --oneline -1
