@@ -200,3 +200,14 @@ s low; 90th percentile 1.25 s off, 2.05 s low; slowest 2.5 s off, 4.3 s low. Mea
 (reply plus judge) $0.000106 off, $0.000116 low, about 10% more. Low effort on this model thinks
 very little, so it neither makes replies feel slower nor changes quality much. Medium and high were
 not run. Rerun: `uv run companion eval --variants v25.md,v25.md+low --samples 6 --cap 0.25`.
+
+## 2026-10-17: reasoning at medium effort on Luna, one batch
+
+Same setup as the low batch: Luna, persona v25, all 52 public fixtures, 6 samples each, off against
+`+medium`, $0.081. Checks passed: 284/311 off, 293/312 medium, a gain of 9 that is within noise at
+this size. One fixture moved by 3 or more: `long-history-no-bold-list` 0/6 to 4/6 (the long history
+is full of bold lists the model copies; thinking first may let it break the pattern; 6 samples).
+Talker latency: median 1.04 s off, 2.17 s medium; 90th percentile 1.33 s off, 3.48 s medium; slowest
+2.8 s off, 5.8 s medium. Mean cost per sample (reply plus judge) $0.000105 off, $0.000155 medium,
+about 48% more. Not run: high, other models, or a rerun of the one fixture at 30 samples.
+Rerun: `uv run companion eval --variants v25.md,v25.md+medium --samples 6 --cap 0.30`.
