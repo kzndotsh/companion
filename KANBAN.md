@@ -23,9 +23,6 @@ This file keeps the cards. Created 2026-10-16.
 
 Ordered. The first three can stop the bot, so they go first.
 
-- [ ] H1 Top up OpenRouter. $0.62 left on 2026-10-16; the bot goes quiet at zero.
-- [ ] H2 Revoke the Telegram bot token in BotFather and put the new one in `.env`. The old one
-      appeared in logs twice.
 - [ ] H3 Triage the untracked `docs/research/2026-10-16_sapphire-audit/` folder. Unread, not ours.
 - [ ] T1 Two memory rules: do not record scene behaviour as a belief about the user, and do not turn
       the companion's own refusals into views it holds. The model labels, code decides. Done when a
@@ -67,6 +64,7 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] H1 Topped up OpenRouter ($5.11 left on 2026-10-17)
 - [x] G-A28 Spend ledger: one row per paid call by purpose, `companion spend` (today and the week)
       (1d2e6ae)
 - [x] G-A31 Clock guard: the wall clock is read only in `core/clock.py`, with a test (2835c74)
@@ -151,6 +149,10 @@ Decided against, with the reason.
 Unordered within each group. Pull a card into Todo when it is next.
 
 ### From the roadmap and inbox notes
+
+- [ ] H2 Revoke the Telegram bot token in BotFather and put the new one in `.env`. The old one appeared
+      in logs twice; the code no longer prints it. **Parked by the user on 2026-10-17**: not a priority
+      for now, do not raise it again until asked.
 
 - [ ] R1 Heartbeat for initiating contact: a gate before any spend that holds when nothing is new, a
       pure evaluator with named reasons, an outcome recorded per reach-out, a hold never counted as an
