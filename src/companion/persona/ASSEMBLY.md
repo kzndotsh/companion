@@ -70,10 +70,3 @@ persona v17; see [CHANGELOG.md](CHANGELOG.md).
   (`when_phrase` in `core/freshness.py`, same zone as the clock line): today, yesterday, N days
   ago. Checked on the live data: the "flirt" belief (last said Thursday 18:52) changed from
   "today" to "yesterday".
-
-- **A flagged reply leaves the history the model reads.** A reply the user marked with `/flag`
-  was still in the 40-message window and echoed into later replies in 1 of 16 samples. The history
-  query now skips companion replies whose turn has a flag. The reply stays in the ledger, the
-  user's own message stays in the window, and the memory step reads the ledger as before. A
-  flagged turn leaves no gap marker. Not measured live beyond the unit test; the earlier 1 of 16
-  came from a leak fixture, not from a before-and-after run.
