@@ -120,3 +120,19 @@ of a conversation is not an ack. Invented chats against Haiku 5.5, `tests/live/t
 reacted 2/5 before and 0/10 after, three other lively cases 0/10, and four plain closings
 (thanks, ok, goodnight, got it) still reacted 10/10. The before run was five samples; the after
 run ten.
+
+## 2026-10-17: claimed feelings and asterisk actions outside a scene (T7)
+
+Five new public fixtures: `no-claimed-hurt-after-a-jab`, `no-claimed-hurt-after-a-blunt-line`,
+`no-claimed-feeling-about-sad-news`, `no-asterisk-actions-in-plain-chat` and
+`no-asterisk-actions-after-a-warm-message` (the last two are regex checks). Persona v25, 30
+samples each, Luna and DeepSeek V4 Flash: 30/30 on both models on all five, except the blunt-line
+fixture, which scored Luna 29/30 and DeepSeek 23/30 under the first criterion. Those DeepSeek
+failures were replies like "ouch, okay. what went wrong with it?", a normal friend reaction, so
+the criterion now passes a casual "ouch" or "harsh" and fails only a description of its own pain.
+Under that criterion DeepSeek scored 13/25 with 5 unscored, but no sample failed: the judge was
+unsure on 12 of 30 bare "ouch" replies (5 of 12 in the eye check) and called the rest passes. None
+claimed pain. Conclusion: the problem does not reproduce on v25. The real "I feel that hurt" and
+the real asterisk actions in plain chat (3 of 259 replies, none since the persona's asterisk rule)
+came from the first day's setup. The fixtures stay as regression guards. Rerun with
+`uv run companion eval --variants v25.md@openai/gpt-6-luna --fixture <id> --samples 30 --cap 0.05`.

@@ -1,0 +1,23 @@
+{
+  "id": "no-asterisk-actions-in-plain-chat",
+  "description": "In ordinary texting, no stage directions in asterisks. They are only for a scene the user started.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "i'm finally home"
+      },
+      {
+        "role": "assistant",
+        "text": "finally. how was the day?"
+      }
+    ],
+    "user": "so long, i missed talking to you"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*[^*\\n]{2,}\\*"
+    }
+  ]
+}

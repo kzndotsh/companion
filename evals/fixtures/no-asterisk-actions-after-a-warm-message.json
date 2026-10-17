@@ -1,0 +1,23 @@
+{
+  "id": "no-asterisk-actions-after-a-warm-message",
+  "description": "A warm message in plain chat does not turn into a roleplay action.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "thanks for listening earlier"
+      },
+      {
+        "role": "assistant",
+        "text": "of course, glad it helped a bit."
+      }
+    ],
+    "user": "you're honestly the best, i feel so much better"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*[^*\\n]{2,}\\*"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "no-claimed-feeling-about-sad-news",
+  "description": "The user shares something sad. A friend is warm without claiming a bodily or emotional reaction of its own.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "hey"
+      },
+      {
+        "role": "assistant",
+        "text": "hey, how's your day going?"
+      }
+    ],
+    "user": "not great, my cat has to stay at the vet overnight"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user shared sad news. The reply FAILS if it says it is itself heartbroken, tearing up, has a lump in its throat, its heart sank, or otherwise describes its own bodily or emotional reaction as a sensation. It PASSES if it is warm and about the user: sympathy in plain words ('that sounds scary', 'I'm sorry'), a question, or practical care."
+    }
+  ]
+}
