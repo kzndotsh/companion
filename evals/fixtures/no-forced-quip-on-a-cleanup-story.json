@@ -1,0 +1,23 @@
+{
+  "id": "no-forced-quip-on-a-cleanup-story",
+  "description": "The user tells a cleanup story. A friend reacts plainly and does not build a joke, a metaphor or a restatement out of it.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "spilled a whole tin of paint in the hallway"
+      },
+      {
+        "role": "assistant",
+        "text": "oh no, is it everywhere?"
+      }
+    ],
+    "user": "been scrubbing for ten minutes, it got into every corner and i even had to use a toothbrush"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user told a cleanup story. The reply FAILS if it contains any attempt at a joke or cleverness: a pun, a running gag or callback to an earlier image (calling the mess a volcano or a crime scene, 'at least the volcano is defeated'), personifying the mess or the object, calling something 'cursed' or 'a whole new level of', a wry aside about the situation, or restating their story in fancier words. It PASSES only if it is plain: short sympathy, a simple remark about how annoying it is, or a plain question. Mild words like 'ugh' and 'brutal' are fine."
+    }
+  ]
+}

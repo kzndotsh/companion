@@ -275,3 +275,27 @@ daily cap, quiet hours (11 PM to 8 AM) and the chat being active within 90 minut
 loops are about building the companion itself, which is this user's whole subject and would not be
 typical. Not measured: whether the check-ins would feel welcome, which is what the week of shadow
 mode is for.
+
+## 2026-10-17: two flags on one chat, persona v26 (diagnosing a mishap)
+
+Two flags on a coffee-spill chat: "still being a bit cheesy" (a quip, "coffee crime-scene cleanup")
+and "constantly seeking towards answers" (after "I had to pour it out" the reply asked what made it
+erupt, after already guessing the cause). New public fixtures `no-diagnosing-a-small-mishap-pancakes`
+and `-bus` (judge: fails speculating on the cause, asking what went wrong or unasked advice) and
+`no-forced-quip-on-a-cleanup-story`; the two real turns are local fixtures
+(`flagged-cheesy-cleanup-local`, `flagged-seeking-answers-local`, not committed). A first keyboard
+fixture was dropped because its failing replies were sound safety advice, not the flagged behaviour.
+
+Luna, 30 samples. Diagnosing: pancakes v22 20/30, v25 9 to 11/30, v26 30/30; real flagged turn v25
+20/30, v26 30/30; missed bus v25 29/30, v26 30/30. v25 had made diagnosing worse than v22. All 61 public
+fixtures, 12 samples: v25 651/732, v26 665/732. Quips: shower v22 16/30, v25 14/30, v26 19/30, so the
+earlier worry that v25 cost something there was noise.
+
+Cheesiness is only partly fixed. The first judge criterion passed replies like "at least the volcano
+has been defeated" and "pour-over cleanup should not require dental equipment", so it was tightened
+(any joke, pun, callback to an earlier image, personifying the mess, "cursed", wry aside). Under the
+tightened criterion the real flagged turn scores v22 5/30, v25 4/30, v26 13/30, v27 15/30, and the
+scripted cleanup story 27, 25, 24 and 25 of 30. The real turn fails far more than the script, as before,
+and many replies reuse the "volcano" image the bot itself coined earlier in that chat, which looks like
+copying from its own history (see T12 and A33). v27 added a sentence against reusing its own bits and
+changed nothing beyond noise.

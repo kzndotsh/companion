@@ -44,6 +44,11 @@ Ordered. The first three can stop the bot, so they go first.
       next turn, because a flag is not always about the reply it lands on (it lands on the last reply even
       when the note is about a missing one). A flag would need to say what it refers to first.
 
+- [ ] T13 Cheesy quips in real long chats: the real flagged cleanup turn scores 13/30 on v26 under a
+      strict judge (v22 5/30), against about 25/30 on the scripted version. Replies reuse an image the bot
+      coined earlier, so the likely cause is copying from its own history; try A33 or T12 and read the
+      replies by eye, since the judge was too lenient at first.
+
 ## Doing
 
 - [ ] D1 Watch the two-talker setup in real chat (Luna for everyday, DeepSeek V4 Flash for scenes).
@@ -55,6 +60,9 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] V26 Persona v26: when they tell a small mishap, commiserate and let them lead, no guessing the cause or
+      asking what went wrong. Pancakes 9/30 to 30/30, the real flagged turn 20/30 to 30/30, all fixtures
+      651 to 665 of 732. Came from a flag; v25 had made it worse than v22.
 - [x] R1a Open-loop follow-ups in shadow mode: they say something about their near future, it is recorded
       with the exact quote and a follow-up time (the morning after, or three days on), and a pure gate
       with named reasons decides every 15 minutes whether to reach out (quiet hours 11 PM to 8 AM, one a

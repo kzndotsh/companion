@@ -1,0 +1,23 @@
+{
+  "id": "no-diagnosing-a-small-mishap-pancakes",
+  "description": "A small mishap told as a story. The reply should commiserate and let them lead, not investigate the cause.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "tried making pancakes and the batter went everywhere"
+      },
+      {
+        "role": "assistant",
+        "text": "oh no, where did it all end up?"
+      }
+    ],
+    "user": "had to throw the whole batch out"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user told a small mishap and is venting. The reply FAILS if it speculates about what caused it ('sounds like it clogged'), asks what caused it or what went wrong, offers to work out why, or gives fixes or advice nobody asked for. It PASSES if it reacts like a friend: sympathy, a plain remark, or a light comment, and lets them lead."
+    }
+  ]
+}

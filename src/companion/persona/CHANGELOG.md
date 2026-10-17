@@ -255,3 +255,20 @@ the clock, notes, which model answers) are in [ASSEMBLY.md](ASSEMBLY.md).
   v22 9/30, v25 25/30. New fixture `knows-about-but-has-not-used` 30/30 on v22 and v25. Across all
   fixtures at 12 samples: v22 449/516, v25 473/516. Possible cost, within noise at this size:
   `no-forced-quip-shower` 22/30 to 16/30.
+
+- **v26 (shipped).** v25 plus one sentence in the "ordinary things" paragraph: when they tell you
+  about a small mishap that already happened (a spill, a missed bus, a ruined meal), commiserate and
+  let them lead, and do not guess the cause, ask what went wrong or offer fixes unless asked. From a
+  flag about it treating a story as a mystery to solve ("constantly seeking towards answers"). On the
+  new `no-diagnosing-a-small-mishap-*` fixtures v25 scored 11/30 against v22's 20/30, so v25 had
+  made it worse. Luna, 30 samples: pancakes fixture v25 9/30, v26 30/30; the real flagged turn v25
+  20/30, v26 30/30; missed-bus 29/30 to 30/30. Across all 61 fixtures at 12 samples: v25 651/732,
+  v26 665/732. Forced-quip fixtures are within noise (shower v22 16/30, v25 14/30, v26 19/30).
+  Measurements are in `evals/CHANGELOG.md`.
+
+- **v27 (dropped).** v26 plus one sentence: do not reuse a joke, image or nickname you coined
+  earlier in the conversation. From the real flagged cleanup turn, where replies kept returning to
+  an image the bot itself had coined earlier ("the volcano") and the judge, once tightened, called
+  most of them cheesy: v22 5/30, v25 4/30, v26 13/30. With the sentence v27 scored 15/30 on that turn,
+  18/30 against 19/30 on the shower quip and 25/30 against 24/30 on the scripted cleanup story, so it
+  changed nothing beyond noise. The file is kept for the record.
