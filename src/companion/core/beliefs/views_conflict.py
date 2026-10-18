@@ -13,13 +13,10 @@ from dataclasses import dataclass
 from typing import cast
 
 from companion.core.types import Belief, Json
+from companion.prompts import get
 
-SYSTEM = """You compare views that a companion holds with things its user has told it they want. \
-For each view, say whether it contradicts, or pushes against, any of the user's stated \
-preferences or boundaries. For example: a view that the companion will refuse something the user \
-said they are happy to do, or insist on something the user said they do not want. A view about \
-ideas that has nothing to do with how the two of them interact does not conflict. When unsure, \
-say it conflicts. Give your confidence from 0 to 1, and name the user item it conflicts with."""
+PROMPT = get("system/views-conflict")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",

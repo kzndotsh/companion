@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, time, timedelta, tzinfo
 
+from companion.prompts import get
+
 QUIET_GAP = timedelta(minutes=1)
 
 
@@ -28,9 +30,10 @@ def now_line(now: datetime, previous: datetime | None) -> str:
     """`now` is shown in the machine's local zone; `previous` is the last message before it."""
     stamp = now.astimezone().strftime("%A %H:%M")
     gap = describe_gap(now - previous) if previous is not None else None
+    line = get("notes/clock").render(stamp=stamp)
     if gap:
-        return f"Right now it is {stamp}. Their last message came {gap} ago."
-    return f"Right now it is {stamp}."
+        return f"{line} {get('notes/clock-gap').render(gap=gap)}"
+    return line
 
 
 def utc_now() -> datetime:

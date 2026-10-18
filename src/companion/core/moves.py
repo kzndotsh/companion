@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from companion.core.types import Json, Speaker, Utterance
+from companion.prompts import get
 
 WINDOW = 6
 MIN_REPLIES = 4
@@ -22,14 +23,8 @@ MAX_HABIT_CHARS = 90
 # A habit found on one turn is only used for the next two, so a stale one does not linger.
 FRESH_FOR = 2
 
-SYSTEM = """You read the last several replies a companion sent in a chat and name what it keeps \
-doing in them. Look for repetition a reader would find stale: the same pet name or word, the same \
-emoji, the same sentence shape, the same gesture or move in different words, the same way of \
-opening or closing, the same reaction. For each habit give a short plain description under 90 \
-characters (for example: calls them "sweetheart"; ends with the same smirking emoji; tucks a hand \
-at their waist) and the number of replies it appears in. Only list a habit that really repeats in \
-at least three replies. Never list something that is fine or varied. If nothing repeats, return \
-an empty list."""
+PROMPT = get("system/habits")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -85,6 +80,4 @@ def parse(data: Json) -> list[str] | None:
 def note_for(habits: Sequence[str]) -> str | None:
     if not habits:
         return None
-    return (
-        "[Your recent replies keep doing this: " + "; ".join(habits) + ". Do something different.]"
-    )
+    return get("notes/habit-moves").render(habits="; ".join(habits))

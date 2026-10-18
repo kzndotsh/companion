@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import math
 
+from companion.prompts import get
+
 MAX_USER_WORDS = 12
+_NOTE = get("notes/length")
 FLOOR_WORDS = 8
 
 
@@ -25,7 +28,4 @@ def length_note(user_text: str) -> str | None:
     if words == 0 or words > MAX_USER_WORDS or "?" in user_text:
         return None
     unit = "word" if words == 1 else "words"
-    return (
-        f"[Their message was short ({words} {unit}), so keep your reply short too, "
-        f"under about {reply_limit(words)} words, unless what they said needs more.]"
-    )
+    return _NOTE.render(words=words, unit=unit, limit=reply_limit(words))

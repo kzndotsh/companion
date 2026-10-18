@@ -20,6 +20,7 @@ from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
 from companion.core.initiative import Caps, Situation, Verdict, evaluate
 from companion.core.openloops import (
+    PROMPT,
     SCHEMA,
     SYSTEM,
     LoopState,
@@ -43,6 +44,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.prompts import get
 from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.store import Store
 
@@ -111,6 +113,7 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
                     "quote": outcome.quote,
                     "follow_up_at": outcome.follow_up_at.isoformat(),
                     "model": result.model,
+                    "prompt": PROMPT.ref,
                 },
             )
     log.debug("open loops: %d proposed, %d stored, %d rejected", len(raw), stored, rejected)
@@ -198,11 +201,8 @@ async def tick(  # noqa: PLR0913, PLR0917
     return verdict
 
 
-DRAFT_SYSTEM = (
-    "Write one casual text message a friend would send to check in about something the person "
-    "mentioned. Ask how it went or whether they got to it. Under 15 words, relaxed, no pressure, "
-    "no guilt, no 'I was thinking about you', and never say you remembered, noticed or tracked it."
-)
+DRAFT_PROMPT = get("system/openloops-draft")
+DRAFT_SYSTEM = DRAFT_PROMPT.text
 DRAFT_SCHEMA: dict[str, Json] = {
     "type": "object",
     "properties": {"message": {"type": "string"}},

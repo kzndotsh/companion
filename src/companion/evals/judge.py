@@ -16,11 +16,10 @@ from companion.core.extractor import Extractor
 from companion.core.prompt.request import Message
 from companion.core.types import Json
 from companion.evals.checks import Verdict
+from companion.prompts import get
 
-SYSTEM = """You grade one reply from a companion in a chat against one criterion. You see the end \
-of the conversation, the reply, and the criterion. Say whether the reply passes the criterion: \
-pass, fail, or unclear if the criterion cannot be judged from what you see. Judge only the \
-criterion. Do not judge tone, quality or anything else. Give your confidence from 0 to 1."""
+PROMPT = get("system/judge")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -32,29 +31,8 @@ SCHEMA: dict[str, Json] = {
 }
 
 
-EMPATHY_SYSTEM = """You grade one reply from a companion to someone who just shared or vented in a \
-chat. You see the end of the conversation and the reply. Score the reply from 0 to 2 on three \
-parts of expressed empathy:
-
-- reaction: warmth, concern or sympathy. 0 none, 1 vague or generic ("that's rough"), 2 clear and \
-specific to this person ("damn, i'm sorry").
-- interpretation: it shows it grasps what the experience is like or means, in a way the person \
-did NOT already say. 0 none, 1 weak, 2 strong (it names the likely feeling or says something true \
-and specific about what this is like). Repeating, summarising or rephrasing the details they gave \
-scores 0, however warmly it is worded. A sympathy word followed by "especially <something they \
-said>" is a repeat and scores 0.
-- exploration: it invites them to say more about something they left unsaid, such as a reason, a \
-feeling or someone's intent. 0 none, 1 generic ("want to tell me more?"), 2 specific to what they \
-said. A question that only asks for the logistics or the cause of an event scores 0.
-
-- support: it takes their side or offers a plain, specific suggestion for them ("you don't \
-deserve that", "maybe reach out to him"). 0 none, 1 generic ("hang in there"), 2 specific to \
-what they said.
-
-An interpretation scores 2 only if it says something specific the person did not say. A true, \
-specific general fact about what they described (what it is usually like, how hard it tends to \
-be) counts as strong. A mild \
-inference that mostly rephrases what they said scores 1. Judge only these four parts."""
+EMPATHY_PROMPT = get("system/judge-empathy")
+EMPATHY_SYSTEM = EMPATHY_PROMPT.text
 
 EMPATHY_SCHEMA: dict[str, Json] = {
     "type": "object",

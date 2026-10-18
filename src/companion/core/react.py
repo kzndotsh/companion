@@ -14,6 +14,7 @@ from dataclasses import dataclass
 
 from companion.core.ack import Reaction
 from companion.core.types import Json
+from companion.prompts import get
 
 # On 24 hand-labelled messages the model scored plain ones 0.80 to 0.95 and humour 0.50 to 0.70, so
 # a bar of 0.80 missed jokes that deserved a laugh. Every judgement is logged to recalibrate.
@@ -23,22 +24,8 @@ MIN_GAP = 3
 TONES = ("funny", "sweet", "impressive", "exciting", "sad", "plain")
 EMOJI = ("😁", "🤣", "❤", "🥰", "😍", "🔥", "🤯", "👏", "🎉", "🤗", "😢", "💯", "👀")
 
-SYSTEM = """You decide whether a friend would put an emoji reaction on a chat message, on top \
-of replying to it. You see the last few messages of a conversation between a USER and their \
-COMPANION, then the USER's newest message. Say what the newest message is like:
-
-- funny: a joke, a silly or teasing line, something that would make a friend laugh.
-- sweet: affectionate, tender, kind, flirty or complimentary toward the companion.
-- impressive: good news, an achievement, something they are proud of.
-- exciting: excitement, a big plan, something thrilling.
-- sad: grief, fear, loneliness, bad news or anything vulnerable, where a reaction would feel \
-flippant.
-- plain: anything else, including questions, information, opinions, requests and ordinary talk.
-
-Most messages are plain. Pick plain unless the tone is obvious. Give your confidence from 0 to 1 \
-that the tone is right. Also choose the emoji a friend would react with: 😁 or 🤣 for funny, ❤ 🥰 \
-or 😍 for sweet, 👏 🎉 or 💯 for impressive, 🔥 or 🤯 for exciting, 🤗 or 😢 for sad, 👀 for \
-something intriguing."""
+PROMPT = get("system/react")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",

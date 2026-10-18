@@ -14,6 +14,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from companion.core.types import Json, Speaker, Utterance
+from companion.prompts import get
 
 MAX_CHARS = 40
 MAX_WORDS = 4
@@ -47,26 +48,8 @@ class Judgement:
     emoji: str
 
 
-SYSTEM = """You decide whether a chat message needs a reply. You see the last few messages of a \
-conversation between a USER and their COMPANION, then the USER's newest message. Label the newest \
-message:
-
-- ack: it only acknowledges, agrees, thanks or signs off on what the companion just said, and adds \
-nothing a reply could build on (ok, got it, thanks, lol, nice, a thumbs up). A lively, playful or \
-stretched answer in the middle of a conversation (yerrr, yes ma'am!, lets goooo) is not an ack: \
-the person is handing the conversation back and expects a message, so label it other or \
-emotional.
-- answer: it answers something, gives information, states a preference or a decision, even \
-briefly (no, yeah, let's do it, i did).
-- emotional: it carries a feeling that deserves a human reply, even if short (ugh, yeah..., \
-i guess).
-- invitation: it invites the companion to continue or react (so?, anyway, hmm).
-- other: none of these.
-
-Give your confidence from 0 to 1 that the label is right, and lower it when unsure. Also choose \
-the emoji a friend would react with if no reply were needed: 👍 for ok or agree, ❤ for thanks \
-or warmth, 😁 for laughing, 🔥 for excitement, 🙏 for gratitude, 👌 for fine, 🤗 for \
-comfort, 🫡 for a sign-off."""
+PROMPT = get("system/ack")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",

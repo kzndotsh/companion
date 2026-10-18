@@ -13,15 +13,12 @@ from dataclasses import dataclass
 from typing import cast
 
 from companion.core.types import Belief, Json
+from companion.prompts import get
 
 MIN_CONFIDENCE = 0.7
 
-SYSTEM = """A user flagged a reply from their companion as wrong and may have left a short note. \
-You see the user's message, the reply, the note, and a list of views the companion holds of its \
-own. Say which views, if any, the reply clearly relied on or contradicted, so that the flag is \
-evidence about them. If the flag is about something else (the conversation lost its thread, a \
-memory slip, the wrong tone, a repeated question), none are implicated. When unsure, name none. \
-Give your confidence from 0 to 1."""
+PROMPT = get("system/views-implicated")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",

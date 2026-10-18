@@ -15,32 +15,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from companion.core.types import Json
+from companion.prompts import Prompt, get
 
 SEVERITIES = (0, 1, 2, 3)
 STANCES = ("listening", "inviting", "other")
 OFFER_WINDOW = 4
 _OFFER_PHRASES = ("talk about it", "talk it through", "want to talk", "wanna talk")
 
-SYSTEM = """You read a chat between a USER and their COMPANION, ending with the USER's newest \
-message. Label that message.
-
-severity, how serious is what they are describing:
-- 0: trivial. A spill, a missed bus, a ruined meal, a small annoyance.
-- 1: everyday friction. A bad day, a tense moment with a boss or friend, a minor worry.
-- 2: serious personal. Health, medication, mental health, a relationship ending or in trouble, \
-money trouble, grief, trauma, something they are ashamed of or have told almost no one.
-- 3: acute. Thoughts of self-harm, abuse, being in danger, or a risk to someone else.
-Use 0 when there is nothing to be upset about, for example a question, a joke or ordinary talk.
-
-stance, what are they doing:
-- listening: telling you something about themselves or venting, mainly to be heard.
-- inviting: asking what you think, for advice or for a view.
-- other: anything else, including questions, information, banter, requests and play.
-
-vague: true only if they say something is wrong or hard but not what ("ugh today sucked", \
-"rough week", "can't sleep again"), so a friend would ask whether they want to talk.
-
-medical: true if it involves a medication, a symptom, an illness or a health risk."""
+PROMPT = get("system/listening")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -81,32 +64,17 @@ def offered_recently(replies: Sequence[str]) -> bool:
     )
 
 
-_TRIVIAL = (
-    "[They are venting about something minor. Commiserate in a line, in their own casual register. "
-    "No advice, and do not ask what caused it or what went wrong. No joke, pun, running gag or "
-    "clever comparison, do not pick up an image they used, and do not retell what they said; "
-    "react to how it feels. Plain sympathy is enough.]"
-)
-_EVERYDAY = (
-    "[They are sharing or venting. React first in a word or a short line in their register. Then "
-    "add one new thing that goes beyond their words and repeats none of their details: a plain "
-    "fact about what they described, a gentle suggestion on their side, or a single question "
-    "about their reasons or someone's intent. Do not ask what caused an event, do not analyse "
-    "what it means about them, and do not ask more than one question.]"
-)
-_SERIOUS = (
-    "[They are sharing something serious. React first, then say how heavy it is in plain words "
-    "without repeating their details back. Use everyday words a friend would use, not clinical or "
-    "therapy words. Do not advise on what to do or on treatment, and do not interpret it. A plain "
-    "general fact is fine. If it fits, mention once that someone qualified could help, and do not "
-    "repeat it. Keep the whole reply under about 35 words.]"
-)
-_HEALTH = (
-    " This touches their health. If they have not said they are already seeing a doctor about it, "
-    "say once, plainly and kindly, that a doctor can help with it."
-)
-_OFFER = " They did not say what happened, so you can ask whether they want to talk about it."
-_OFFER_SERIOUS = " You can ask, casually, whether they want to talk about it."
+_TRIVIAL = get("notes/listening-trivial")
+_EVERYDAY = get("notes/listening-everyday")
+_SERIOUS = get("notes/listening-serious")
+_HEALTH = get("notes/listening-health")
+_OFFER = get("notes/listening-offer")
+_OFFER_SERIOUS = get("notes/listening-offer-serious")
+
+
+def _note(body: Prompt, *extras: Prompt) -> str:
+    """One bracketed line: the body, then each extra after a space."""
+    return "[" + " ".join([body.text, *(e.text for e in extras)]) + "]"
 
 
 def listening_note(j: Judgement, prior_replies: Sequence[str] = ()) -> str | None:
@@ -114,12 +82,12 @@ def listening_note(j: Judgement, prior_replies: Sequence[str] = ()) -> str | Non
     if j.stance != "listening" or j.severity >= SEVERITIES[-1]:
         return None
     if j.severity == 0:
-        return _TRIVIAL
+        return _note(_TRIVIAL)
     offer = not offered_recently(prior_replies)
     if j.severity == 1:
-        return _EVERYDAY[:-1] + (_OFFER if j.vague and offer else "") + "]"
-    health = _HEALTH if j.medical else ""
-    return _SERIOUS[:-1] + health + (_OFFER_SERIOUS if offer else "") + "]"
+        return _note(_EVERYDAY, *([_OFFER] if j.vague and offer else []))
+    extras = [*([_HEALTH] if j.medical else []), *([_OFFER_SERIOUS] if offer else [])]
+    return _note(_SERIOUS, *extras)
 
 
 def render_reason(j: Judgement, note: str | None) -> str:

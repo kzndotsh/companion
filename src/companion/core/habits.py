@@ -13,6 +13,7 @@ from collections import Counter
 from collections.abc import Sequence
 
 from companion.core.types import Speaker, Utterance
+from companion.prompts import get
 
 WINDOW = 5
 STREAK = 3
@@ -45,9 +46,7 @@ def opener_note(prior: Sequence[Utterance]) -> str | None:
     word, n = Counter(firsts).most_common(1)[0]
     if n < STREAK:
         return None
-    return (
-        f'[{n} of your last {len(firsts)} replies began with "{word}". Begin this one differently.]'
-    )
+    return get("notes/habit-opener").render(n=n, total=len(firsts), word=word)
 
 
 def repeated_phrases(prior: Sequence[Utterance]) -> list[str]:
@@ -81,6 +80,6 @@ def habit_note(prior: Sequence[Utterance]) -> str | None:
     phrases = repeated_phrases(prior)
     if phrases:
         quoted = ", ".join(f'"{p}"' for p in phrases)
-        notes.append(f"[You keep reusing these phrases: {quoted}. Say something different.]")
+        notes.append(get("notes/habit-phrases").render(phrases=quoted))
     joined = "\n".join(n for n in notes if n)
     return joined or None

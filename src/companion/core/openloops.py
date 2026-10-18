@@ -17,6 +17,7 @@ from enum import StrEnum
 
 from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
 from companion.core.types import Frame, Json, RelationshipId, Speaker, Utterance, UtteranceId
+from companion.prompts import get
 
 SENSITIVE = 2
 FOLLOW_UP_HOUR = 10
@@ -60,22 +61,8 @@ class RawLoop:
     sensitivity: int
 
 
-SYSTEM = """You read a chat between a USER and their COMPANION. List the things the USER said \
-about their own near future or an unresolved situation that a caring friend would plausibly ask \
-about later: a plan, an appointment, a deadline, something they are waiting on, something \
-they keep putting off. For each give:
-- ref: the label of the USER message it came from.
-- quote: an exact quote from that USER message.
-- claim: the thing, in a few words.
-- when: when it happens, as they said it ("tomorrow", "friday", "next week"), or an empty string.
-- scale: "minutes" if it is about to happen within the hour or is a passing action (getting a \
-snack, taking a shower), "hours" if it is later today, "days" if it is days or more away or an \
-ongoing situation, "unknown" if you cannot tell.
-- sensitivity: 0 to 3. Use 2 or 3 for health, mental health or therapy, relationships, money, \
-grief, sexuality or family conflict.
-Do not list general facts, preferences, passing moods or states ("busy day", "tired"), things \
-about the chat itself or the COMPANION, or anything the COMPANION said. If there is nothing, \
-return an empty list."""
+PROMPT = get("system/openloops")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",

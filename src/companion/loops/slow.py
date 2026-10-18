@@ -15,6 +15,9 @@ from datetime import datetime, tzinfo
 
 from companion.core.beliefs.dedupe import is_duplicate_candidate
 from companion.core.beliefs.extract import (
+    PROMPT as USER_PROMPT,
+)
+from companion.core.beliefs.extract import (
     SCHEMA,
     SYSTEM,
     Candidate,
@@ -28,6 +31,7 @@ from companion.core.beliefs.extract import (
     to_belief,
     to_confirmation,
 )
+from companion.core.beliefs.self_extract import PROMPT as SELF_PROMPT
 from companion.core.beliefs.self_extract import SCHEMA as SELF_SCHEMA
 from companion.core.beliefs.self_extract import SYSTEM as SELF_SYSTEM
 from companion.core.beliefs.self_extract import parse_views, to_view
@@ -152,6 +156,7 @@ class _Spec:
     ]
     speaker: Speaker
     accepted_reason: str
+    prompt_ref: str
 
 
 USER_SPEC = _Spec(
@@ -161,6 +166,7 @@ USER_SPEC = _Spec(
     to_belief,
     Speaker.USER,
     "accepted: quote verified verbatim in a user message",
+    USER_PROMPT.ref,
 )
 SELF_SPEC = _Spec(
     SELF_SYSTEM,
@@ -169,6 +175,7 @@ SELF_SPEC = _Spec(
     to_view,
     Speaker.COMPANION,
     "accepted: a view the companion expressed, quote verified in its own message",
+    SELF_PROMPT.ref,
 )
 
 
@@ -232,6 +239,7 @@ async def _extract_pass(
                         "claim": outcome.belief.claim,
                         "quote": outcome.evidence.quote,
                         "model": result.model,
+                        "prompt": spec.prompt_ref,
                     },
                 )
             continue
@@ -251,7 +259,13 @@ async def _extract_pass(
         accepted += 1
         run.log(
             spec.accepted_reason,
-            {"belief_id": made.id, "claim": made.claim, "quote": c.quote, "model": result.model},
+            {
+                "belief_id": made.id,
+                "claim": made.claim,
+                "quote": c.quote,
+                "model": result.model,
+                "prompt": spec.prompt_ref,
+            },
         )
     for r in rejections:
         run.log(f"rejected: {r.reason}", {"candidate": r.raw})

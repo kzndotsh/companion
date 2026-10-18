@@ -17,6 +17,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from companion.core.types import Belief, Frame, Json, Provenance, Speaker, Utterance
+from companion.prompts import get
 
 NON_REAL = frozenset({Frame.PLAY, Frame.STORY, Frame.HYPOTHETICAL})
 MIN_CONFIDENCE = 0.7
@@ -28,20 +29,8 @@ _CUES = re.compile(
     re.IGNORECASE,
 )
 
-SYSTEM = """You label the frame of a chat message. You see the end of a conversation between a \
-USER and their COMPANION, then the USER's newest message.
-
-- real: sincere talk about real life, real feelings or the actual conversation. This includes \
-honest answers inside a game of real questions, such as a get-to-know-you game.
-- play: pretend or roleplay, where what is said is not literally true or about real life, for \
-example pretending the companion did something or acting out a scene.
-- story: the user is telling or writing fiction.
-- hypothetical: a what-if or thought experiment.
-- ooc: the user steps out of a pretend scene to talk about it or about the real situation, for \
-example "ok stop" or "wait, seriously though".
-
-If the user is continuing a pretend scene that is already going, the frame is play. When unsure, \
-say real. Give your confidence from 0 to 1."""
+PROMPT = get("system/frames")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -80,18 +69,17 @@ def companion_frame(user_frame: Frame) -> Frame:
     return user_frame if user_frame in NON_REAL else Frame.REAL
 
 
+_SCENE_NOTES = {
+    Frame.PLAY: get("notes/scene-play"),
+    Frame.STORY: get("notes/scene-story"),
+    Frame.HYPOTHETICAL: get("notes/scene-hypothetical"),
+}
+
+
 def scene_note(frame: Frame) -> str | None:
     """A line for the reply when the last turn was inside a scene. It does not wait for a judge."""
-    if frame is Frame.PLAY:
-        return (
-            "[A pretend scene they started is in progress. Stay in it lightly. "
-            "If they step out of it, step out with them.]"
-        )
-    if frame is Frame.STORY:
-        return "[They are telling or writing a story. Treat it as fiction.]"
-    if frame is Frame.HYPOTHETICAL:
-        return "[They are exploring a what-if. Treat it as one, not as fact.]"
-    return None
+    note = _SCENE_NOTES.get(frame)
+    return note.text if note else None
 
 
 def build_prompt(history: Sequence[Utterance], text: str) -> str:

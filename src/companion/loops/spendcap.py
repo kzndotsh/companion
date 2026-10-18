@@ -12,9 +12,10 @@ from datetime import datetime
 
 from companion.core.clock import local_midnight
 from companion.core.types import RelationshipId
+from companion.prompts import get
 from companion.store.sqlite.store import Store
 
-NOTICE = "I've hit today's spending limit, so I'm staying quiet until tomorrow."
+NOTICE = get("messages/spend-cap").text
 NOTICE_KEY = "spend.cap_notice_day"
 
 

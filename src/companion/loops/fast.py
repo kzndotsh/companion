@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from companion.core.ack import PROMPT as ACK_PROMPT
 from companion.core.ack import (
     REACT_THRESHOLD,
     ReactAndReply,
@@ -28,6 +29,7 @@ from companion.core.extractor import Extractor
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
 )
+from companion.core.frames import PROMPT as FRAMES_PROMPT
 from companion.core.frames import (
     Judgement,
     companion_frame,
@@ -42,12 +44,15 @@ from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.length import length_note
+from companion.core.listening import PROMPT as LISTEN_PROMPT
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.listening import listening_note
 from companion.core.listening import render_reason as render_listening
+from companion.core.moves import PROMPT as HABITS_PROMPT
 from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
+from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
 from companion.core.react import decide as decide_reaction
 from companion.core.replay import TurnRecord
@@ -233,6 +238,7 @@ async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
             t.now,
             detail={
                 "scorer": model,
+                "prompt": ACK_PROMPT.ref,
                 "schema_hash": schema_hash(),
                 "inputs_hash": inputs_hash(prompt),
                 "scores": {"kind": judged.kind, "confidence": judged.confidence},
@@ -263,6 +269,7 @@ def _react_alongside(
             t.now,
             detail={
                 "scorer": model,
+                "prompt": REACT_PROMPT.ref,
                 "inputs_hash": inputs_hash(prompt),
                 "scores": {"tone": judged.tone, "confidence": judged.confidence},
             },
@@ -297,6 +304,7 @@ def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
         habits, model, prompt = found
         detail: dict[str, Json] = {
             "scorer": model,
+            "prompt": HABITS_PROMPT.ref,
             "inputs_hash": inputs_hash(prompt),
             "habits": list[Json](habits),
         }
@@ -423,6 +431,7 @@ def _log_frame(
     if outcome is not None:
         detail |= {
             "scorer": outcome[1],
+            "prompt": FRAMES_PROMPT.ref,
             "schema_hash": frames_schema_hash(),
             "inputs_hash": frames_inputs_hash(outcome[2]),
             "scores": {"frame": outcome[0].frame.value, "confidence": outcome[0].confidence},
@@ -530,6 +539,7 @@ def _listening_note(c: Conversation, t: _Turn, heard: _Heard | None) -> str | No
             t.now,
             detail={
                 "scorer": model,
+                "prompt": LISTEN_PROMPT.ref,
                 "inputs_hash": inputs_hash(prompt),
                 "labels": {
                     "severity": judged.severity,

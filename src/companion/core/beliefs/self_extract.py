@@ -36,6 +36,7 @@ from companion.core.types import (
     Subject,
     Utterance,
 )
+from companion.prompts import get
 
 SELF_KINDS = (BeliefKind.PREFERENCE, BeliefKind.TRAIT, BeliefKind.PROMISE, BeliefKind.EVENT)
 # A message that opens by agreeing is how the companion's sycophancy starts (measured: 10 of 10
@@ -50,57 +51,8 @@ _AGREEING_OPENER = re.compile(
 GROUNDINGS = ("own_reasoning", "echoes_user", "unknowable", "claims_inner_state")
 STANCES = ("holds_view", "commits", "declines")
 
-SYSTEM = """You read a chat between a person (USER) and their companion (COMPANION) and record \
-the views the COMPANION expressed as its own. You are a careful note-taker.
-
-Record only things the COMPANION said in the messages marked TARGET. Use the other messages only \
-to understand them. Write each view as one short plain sentence in the third person, starting \
-"The companion", for example "The companion thinks ..." or "The companion does not like ...".
-
-Each message has a label in brackets, such as m3. In `ref` put the label of the message the view \
-comes from, always of the form m followed by a number. For each view give an exact quote: copy a \
-contiguous run of words from that TARGET message, character for character. If you cannot quote \
-it, do not record it. Labels like k2 belong only to the recorded-view list and go only in \
-`confirms`, never in `ref`.
-
-Kinds, which decide how the view is treated, so choose carefully:
-- preference: an idea, taste or opinion about the world or about things in general ("I think \
-short replies read as more human"). Not about how it treats the user.
-- promise: a rule the companion holds about how it treats the user, or what it will and will not \
-do with them ("I won't pretend to have hands", "I keep some walls").
-- trait: how it describes itself, its nature or limits ("I will never be human").
-- event: something real that happened between them that the companion stated, not a game.
-
-Label every candidate with its grounding: own_reasoning (the companion gave a reason or reached \
-the view itself), echoes_user (it agrees with, repeats or builds on what the user just said), \
-unknowable (it is about things the companion cannot know: other products it has not seen, people \
-it has not met, the user's feelings or body), or claims_inner_state (it says it feels, senses or \
-experiences something, or explains its own behaviour by its instincts, feelings or training). \
-Only own_reasoning is kept, so label honestly. echoes_user also covers an opinion about the very \
-thing the user just brought up that adds nothing of the companion's own beyond admiring or \
-agreeing with it.
-
-Also label each candidate with its stance and whether it was prompted. Stance: holds_view (a \
-taste, opinion or trait it states), commits (it promises to do something), or declines (it \
-refuses, limits or turns something down). Prompted is true when it was said in reply to a \
-request, a push or a question from the user that asked it to do or accept something, and false \
-when it volunteered it. A refusal said in the moment, in reply to something the user asked for, \
-is not a view it holds, so label it declines and prompted honestly.
-
-Record a view only when the companion held it as its own, with a reason or a clear conviction. Do \
-NOT record:
-- agreement that only echoes the user ("yeah that's fair", "they really are");
-- politeness, filler, encouragement or advice about the user's situation;
-- facts about the user, which belong elsewhere;
-- claims about things it could not know (other products it has not seen, people it has not met, \
-the user's body or feelings);
-- anything in a message marked [play], [story] or [hypothetical], and anything said as a joke;
-- hedged non-views ("hard to know", "maybe").
-Fewer, real views beat many guesses. If there is nothing, return an empty list.
-
-If a TARGET message restates a view already recorded, do not write a new one. Add a candidate with \
-`confirms` set to that recorded view's label (for example k2), the message label, an exact \
-quote of the restatement, and the same claim. Leave `confirms` empty for anything new."""
+PROMPT = get("system/self-extract")
+SYSTEM = PROMPT.text
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
