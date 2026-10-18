@@ -35,3 +35,60 @@ asyncio_mode = "auto"
 markers = [
     "live: hits real endpoints; never in CI",
 ]
+
+[tool.ruff]
+extend-exclude = ["docs"]
+force-exclude = true
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PL", "S", "T20", "ANN"]
+ignore = ["PLR2004", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN", "PLR", "S"]
+
+[tool.basedpyright]
+include = ["src", "tests"]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+
+# Extend the module lists as packages are created. import-linter errors on modules that don't exist.
+[tool.importlinter]
+root_package = "companion"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+id = "core-is-pure"
+name = "core imports nothing from the shell"
+type = "forbidden"
+source_modules = ["companion.core"]
+forbidden_modules = [
+    "companion.store",
+    "companion.cli",
+    "companion.models",
+    "companion.loops",
+    "companion.io",
+    "companion.daemon",
+    "companion.evals",
+]
+
+[[tool.importlinter.contracts]]
+id = "only-store-owns-sqlite"
+name = "only store imports sqlite3"
+type = "forbidden"
+source_modules = [
+    "companion.core",
+    "companion.cli",
+    "companion.models",
+    "companion.loops",
+    "companion.io",
+    "companion.daemon",
+    "companion.evals",
+]
+forbidden_modules = ["sqlite3"]
+allow_indirect_imports = true
