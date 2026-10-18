@@ -117,6 +117,28 @@ src/companion/
 `core` imports nothing from the shell. import-linter enforces the layers, alongside strict ruff and
 basedpyright, a lefthook pre-commit and CI.
 
+### How a reply is made
+
+There is no single big prompt. One talker model writes the reply, and a set of small judges decide
+what it gets to see.
+
+1. **Read the message.** Small models label it before the reply starts: how serious it is, whether
+   it is real talk, a story, a game or a what-if, and whether it only needs a reaction instead of
+   a reply.
+2. **Build the card.** Code turns those labels into short notes and adds the clock and the
+   relevant memory. The persona is the first system block, the card is the second, and nothing from
+   the card ever goes in the user's message.
+3. **Write the reply.** The talker sees the persona, the card, the last 40 messages and the new
+   message exactly as typed. Pretend scenes are answered by a different model than everyday chat.
+4. **Deliver it.** The reply is paced, sometimes split, and sent.
+5. **Learn afterwards.** In the background, extractors record what the user said, with quotes, and
+   what the companion itself holds as a view. A habit check notices phrases and moves it keeps
+   repeating and tells the next turn to vary.
+
+The judges never see the persona, and each logs `name@version` with its decision. Run
+`uv run companion replay <turn_id> --show-prompt` to see exactly what a past turn sent. The full
+list of prompts and how they fit together is in [src/companion/prompts/](src/companion/prompts/README.md).
+
 ### Principles
 
 - **Rough first, then grow from real flags and measurements.** No feature without evidence it is needed.
