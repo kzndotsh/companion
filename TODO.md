@@ -427,6 +427,10 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       (speed-stack audit).
 - [ ] J21 Fallback model: when the talker's provider is down or stalls past a few seconds, answer with a
       backup model instead of nothing, and log it (OpenRouter latency study: route with a fallback).
+- [ ] J44 Kiro judge calibration: re-grade about 200 replies already graded by the paid judge with a Kiro
+      model (Sonnet 4.6) on the same criteria; compare agreement and read the disagreements by eye. At
+      about 90% agreement with no one-sided bias, judging moves to Kiro and evals become nearly free. Free,
+      about 20 minutes at one call at a time.
 - [ ] J22 Cheaper judges through OpenRouter: try a cheaper model than Haiku 5.5 for the small judges (ack,
       listening, frame, react, habits), calibrated against the existing live tests before switching
       (decision-layer audit; the owner prefers this to running judges locally).

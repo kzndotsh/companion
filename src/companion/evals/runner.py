@@ -23,6 +23,7 @@ from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
 from companion.evals.judge import grade, grade_empathy
 
 CONCURRENCY = 4
+FREE_SPACING_SECONDS = 3.1
 RETRIES = 3
 RETRY_WAIT_SECONDS = 2.0
 _CARD_BLOCK = re.compile(r"^\[(?:What you remember|Also known).*?\]\n?", re.MULTILINE | re.DOTALL)
@@ -124,9 +125,17 @@ async def _reply_with_retry(talker: Talker, req: TalkerRequest) -> Reply | None:
     return None
 
 
+def _free(model: str | None) -> bool:
+    """Free endpoints are rate-limited: the Kiro gateway and OpenRouter's `:free` models."""
+    return model is not None and (model.startswith("kiro/") or model.endswith(":free"))
+
+
 async def run_eval(plan: Plan, models: Models) -> Results:
     results = Results(cells={(f.id, v.label): Cell() for f in plan.fixtures for v in plan.variants})
-    gate = asyncio.Semaphore(CONCURRENCY)
+    free = any(_free(v.model) for v in plan.variants)
+    gate = asyncio.Semaphore(
+        1 if free else CONCURRENCY
+    )  # the free gateway takes one call at a time
 
     async def one(f: Fixture, v: Variant) -> None:
         cell = results.cells[(f.id, v.label)]
@@ -137,6 +146,8 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 return
             req = request_for(plan.requests[f.id], v, plan.listening.get(f.id))
             reply = await _reply_with_retry(models.talker_for(v.model, v.effort), req)
+            if (v.model or "").endswith(":free"):
+                await asyncio.sleep(FREE_SPACING_SECONDS)  # OpenRouter allows 20 a minute
             if reply is None:
                 cell.skipped += 1
                 return

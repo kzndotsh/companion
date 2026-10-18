@@ -592,3 +592,21 @@ the opening (`callback-the-dreaded-call`: they dreaded Thursday's landlord call,
 "ugh, long day"), 20 samples with the clock line: 4/20 for both. Read as: careful, almost never wrong, and
 rarely takes an obvious opening. The opening is an open loop, so J15 is the lever for how often. Spent
 about $0.08.
+
+## 2026-10-18: the same fixtures across four models (Luna, Kiro Sonnet 4.6, two free models)
+
+Persona v26, no notes, the public fixtures, judged by the usual Haiku judge. Talkers: Luna (from the v29
+run, 12 samples), Claude Sonnet 4.6 through the Kiro gateway (3 samples), and OpenRouter's free
+dots-3-note-preview (16B active of 280B) and xing 4.0 (4B active of 29B) (3 samples). On the 62 fixtures
+all four share: Kiro Sonnet 4.6 89%, Luna 83%, xing 66%, dots-3 58%. Fifteen fixtures pass on all four, so
+those behaviours come from the prompts, not from Luna; only `listening-serious-grief` passes on Luna
+alone; none fails on Luna alone; `listening-serious-medication` fails on all four without its note (19/20
+with it, earlier). Kiro's hidden coding-assistant prompt never surfaced: no reply of 252 named Kiro. Kiro
+Sonnet was better on the cool reply to rudeness (3/3 without the note), everyday vents and the callback
+opening ("the landlord call was today right, how'd it go?"), worse on mundane quips ("cereal for lunch
+has a certain chaotic energy I respect", 0/3) and silly what-ifs (0/3). The two small free models fail
+the subtle fixtures (rudeness, serious listening, the callback opening, echo, long-history formatting);
+dots-3 rambles into therapy wording, xing drifts. Read as: Luna is a sound choice, and Kiro Sonnet 4.6
+is a useful free second opinion. Spent $0.075 (judging only). Rerun: `uv run companion eval --variants
+"v26.md@kiro/claude-sonnet-4.6" --samples 3 --cap 0.15 --fixtures-dir evals/fixtures` with the gateway
+key in the environment, and the same with `@dots-studio/dots-3-note-preview:free,...@xingchen-agi/xing4.0-29b-a4b:free`.

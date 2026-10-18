@@ -30,6 +30,8 @@ from companion.evals.fixtures import (
 from companion.evals.report import render_replies, render_table, save
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import parse_spec
+from companion.models.kiro import PREFIX as KIRO
+from companion.models.kiro import KiroTalker, kiro_key
 from companion.models.openrouter import DEFAULT_MODEL, OpenRouterExtractor, OpenRouterTalker
 from companion.store.sqlite.replay import replay_file
 
@@ -166,6 +168,8 @@ async def run(a: EvalArgs) -> str:
     async with httpx.AsyncClient() as client:
 
         def talker_for(model: str | None, effort: str | None) -> Talker:
+            if model is not None and model.startswith(KIRO):
+                return KiroTalker(kiro_key(), client, model.removeprefix(KIRO))
             return OpenRouterTalker(
                 key,
                 client,

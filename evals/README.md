@@ -25,6 +25,14 @@ uv run companion eval --variants v25.md,v26.md --samples 12 --cap 0.20 --show
   `+listen` adds the listening note the fixture's labels would produce. The recorded history and the
   user's message are reused exactly, so only the thing under test changes. To try another version of a
   non-persona prompt, set `COMPANION_PROMPT_OVERRIDES` for the run.
+- Free models for cross-model checks. `@kiro/claude-sonnet-4.6` (or another Kiro model) sends the talker
+  request through the local Kiro gateway at `KIRO_GATEWAY_URL` (default `http://127.0.0.1:9000`) with
+  `KIRO_GATEWAY_API_KEY` or `PROXY_API_KEY`; Kiro has no system role (the gateway pastes ours into the
+  first user message) and adds a hidden coding-assistant prompt, so it is a rough second opinion, never
+  a measurement of the live talker. `@<model>:free` uses OpenRouter's free models (20 a minute, 1,000 a
+  day on this account; some are blocked by the account's privacy guardrail). Either kind runs one call
+  at a time. Public fixtures only: real turns are not sent to these providers. Judging stays on the
+  usual paid judge.
 - Checks are either deterministic (`max_words`, `regex`, `not_regex`) or model-graded. `judge` answers
   `pass`, `fail` or `unclear` for one criterion; `epitome` scores a reply 0 to 2 on reaction,
   interpretation, exploration and support and passes with a reaction plus a strong interpretation, an
