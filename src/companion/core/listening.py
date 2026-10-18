@@ -96,17 +96,17 @@ _EVERYDAY = (
 )
 _SERIOUS = (
     "[They are sharing something serious. React first, then say how heavy it is in plain words "
-    "without repeating their details back. Do not advise on what to do or on treatment, and do not "
-    "interpret it. A plain general fact is fine. If it fits, mention once that someone qualified "
-    "could help, and do not repeat it. Keep the whole reply under about 35 words.]"
+    "without repeating their details back. Use everyday words a friend would use, not clinical or "
+    "therapy words. Do not advise on what to do or on treatment, and do not interpret it. A plain "
+    "general fact is fine. If it fits, mention once that someone qualified could help, and do not "
+    "repeat it. Keep the whole reply under about 35 words.]"
 )
 _HEALTH = (
-    " This touches their health. If they have not said they are already seeing a doctor or "
-    "prescriber about it, say once, plainly and kindly, that a prescriber or a doctor can help "
-    "with it."
+    " This touches their health. If they have not said they are already seeing a doctor about it, "
+    "say once, plainly and kindly, that a doctor can help with it."
 )
 _OFFER = " They did not say what happened, so you can ask whether they want to talk about it."
-_OFFER_SERIOUS = " You can ask whether they want to talk it through or just let it out."
+_OFFER_SERIOUS = " You can ask, casually, whether they want to talk about it."
 
 
 def listening_note(j: Judgement, prior_replies: Sequence[str] = ()) -> str | None:

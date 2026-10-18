@@ -374,3 +374,22 @@ note did not work: the model kept echoing details (0 to 2 of 20), and quips crep
 cheesy judge against 29/30 with the plain-sympathy note), so the trivial note stays plain sympathy
 with no gag and no retelling, and the epitome check is left off the trivial fixtures. Whether there
 is any real substance to add to a trivial vent is open; the owner is going to mark replies by hand.
+
+## 2026-10-18: first ten hand-marked replies, and a fix to the notes' own wording
+
+The owner marked the first ten items of the reply review (raw marks in the private
+`evals/local/review-2026-10-18-marks-1-10.md`). Two of the problems were the notes' own words being
+parroted: "prescriber or a doctor" and "talk it through, or just let it out" were phrases written into
+the severity-2 note, and the replies copied them word for word. The note now says "a doctor can help"
+and "ask, casually, whether they want to talk about it", and asks for everyday words, not clinical or
+therapy words. On the serious fixtures, 4 replies each, "prescriber" and the "let it out" phrase are
+gone except one "prescriber" in the medication fixture. Still present because the model says them by
+default: "that sounds unsettling", "don't make the exhaustion any less real", "I'm here with you".
+Other patterns from the marks, not yet acted on: empathy that states the obvious ("three times in a
+month would get to me too") reads as cheesy; a question whose answer is obvious from the message is
+poor ("was there something you needed them to respond to?"); a specific question about how someone was
+treated is good ("was it when you tried to speak, or didn't they acknowledge you at all?"); replies
+should not assume facts ("those shifts", that they want to explain, that they are unsafe); tone should
+match a silly thing (a cat knocking a plant over wants a joke, not comfort); sympathy words with more
+in them ("oof, sorry", "aww, sorry :(") beat a flat "ugh, sorry". Waiting for more batches before
+changing anything else.

@@ -47,9 +47,10 @@ def test_serious_things_get_the_weight_named_no_advice_and_an_offer() -> None:
     assert note is not None
     assert "Do not advise on what to do or on treatment" in note
     assert "mention once that someone qualified" in note
+    assert "everyday words" in note
     assert "under about 35 words" in note
-    assert "talk it through" in note
-    assert "talk it through" not in str(listening_note(_j(2), ["do you want to talk it through?"]))
+    assert "talk about it" in note
+    assert "talk about it" not in str(listening_note(_j(2), ["do you want to talk about it?"]))
 
 
 @pytest.mark.parametrize(
@@ -63,8 +64,8 @@ def test_acute_things_and_other_stances_get_no_note(judged: Judgement) -> None:
 def test_a_serious_health_topic_always_points_to_a_doctor_or_prescriber_once() -> None:
     plain = str(listening_note(_j(2)))
     health = str(listening_note(_j(2, medical=True)))
-    assert "a prescriber or a doctor can help" in health
-    assert "a prescriber or a doctor can help" not in plain
+    assert "a doctor can help" in health
+    assert "a doctor can help" not in plain
     assert "say once" in health
     assert "already seeing a doctor" in health
 
