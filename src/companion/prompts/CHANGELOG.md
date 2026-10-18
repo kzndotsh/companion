@@ -8,7 +8,7 @@ On 2026-10-18 the prompts moved out of the Python files into this folder. For th
 the listening notes the earlier text was recovered from git, one version for each commit that changed
 it, so a version here says which commit introduced it. The recovered versions carry no measurement of
 their own. The other notes were built from f-strings in code, so only today's text is here and their
-earlier history is in git and `src/companion/persona/ASSEMBLY.md`.
+earlier history is in git and `src/companion/prompts/ASSEMBLY.md`.
 
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
@@ -102,6 +102,11 @@ earlier history is in git and `src/companion/persona/ASSEMBLY.md`.
 
 ## system/react
 - **system/react v1** (current). From commit 10b8404 on 2026-10-15: feat(react): a reaction can go with a reply, judged beside the talker, with a confidence bar, a cooldown and no reaction to heavy messages
+
+## system/persona
+- 27 versions, v1 to v27, with a changelog entry and a measurement for each, kept in
+  [`system/persona/CHANGELOG.md`](system/persona/CHANGELOG.md). It moved into this folder on 2026-10-18
+  from `src/companion/persona/`, with its git history. v26 is current; v27 was dropped.
 
 ## system/self-extract
 - **system/self-extract v1** (superseded). From commit 263e363 on 2026-10-15: feat(self): record the companion's own views, with grounding labels, an agreeing-opener guard and user approval before they reach the card

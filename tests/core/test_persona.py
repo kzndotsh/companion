@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from importlib import resources
-
 import pytest
 
+from companion import prompts
 from companion.core.prompt.prefix import build_prefix
 
 VERSIONS = [
@@ -21,7 +20,7 @@ VERSIONS = [
 
 
 def _text(name: str) -> str:
-    return resources.files("companion.persona").joinpath(name).read_text(encoding="utf-8")
+    return prompts.get("system/persona", name.removesuffix(".md")).raw
 
 
 @pytest.mark.parametrize("name", VERSIONS)

@@ -9,7 +9,7 @@ This file keeps the cards. Created 2026-10-16.
 - **Doing holds at most two cards.** Finish or move one before pulling another.
 - **Todo is ordered.** Pull from the top.
 - Every card that changes how it talks needs a fixture or a measurement, and a line in
-  `src/companion/persona/CHANGELOG.md` (a persona version) or `ASSEMBLY.md` (code that changes what
+  `src/companion/prompts/system/persona/CHANGELOG.md` (a persona version) or `ASSEMBLY.md` (code that changes what
   the model is sent).
 - Tags in the backlog say where we stand: **built**, **partial**, **new**.
 - IDs: `H` housekeeping, `T` ready work, `G` from the greenfield design
@@ -60,6 +60,11 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] PR1 Prompts as versioned files (done 2026-10-18): every system prompt, note and message, and the persona,
+      now live under `src/companion/prompts/` (`system/`, `notes/`, `messages/`), each as `vN.md` with a
+      manifest, a changelog and tests. Git history was recovered as versions (the belief extractor has 8).
+      Decisions log `name@version`. `companion prompts` lists them. Output was byte-identical across 21
+      comparison groups and the persona prefix hash is unchanged.
 - [x] E1 `epitome` eval check (reaction, interpretation, exploration, support) calibrated 31/36; the everyday
       listening note now requires one new thing that repeats none of their details (boss ignored 8/20 to
       14/20). Trivial vents still score 0/20: the replies only restate, and the stronger note let quips back

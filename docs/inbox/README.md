@@ -20,7 +20,7 @@ Every so often, read each item and give it one of these fates, then delete the f
 | Fate | Where it goes |
 |---|---|
 | Decide a design question | An ADR in `docs/adr/` |
-| Change how it talks | A new persona version and a line in `src/companion/persona/CHANGELOG.md` |
+| Change how it talks | A new persona version and a line in `src/companion/prompts/system/persona/CHANGELOG.md` |
 | A failure worth testing for | A fixture, once the eval harness exists. Until then keep the turn id |
 | Work to do | Do it, or write it as a GitHub issue |
 | Needs digging into | A report in `docs/research/` |

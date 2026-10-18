@@ -7,12 +7,11 @@ import logging
 import os
 import uuid
 from datetime import UTC, datetime
-from importlib import resources
 from pathlib import Path
 
 import httpx
 
-from companion import logsetup
+from companion import logsetup, prompts
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
@@ -33,7 +32,6 @@ from companion.models import anthropic, openrouter
 from companion.models.retry import retry_on_network_error
 from companion.store.sqlite.store import Store
 
-PERSONA = "v26.md"
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
@@ -134,9 +132,10 @@ def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> 
     scenes = (
         "the same model" if scene is None else os.environ.get("COMPANION_SCENE_MODEL", SCENE_MODEL)
     )
-    persona = PERSONA.removesuffix(".md")
+    persona = prompts.get("system/persona").version
     return (
-        f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | everyday {everyday}"
+        f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | prompts {prompts.set_hash()}"
+        f" | everyday {everyday}"
         f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
         f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
         f" | initiative {initiative_mode()}"
@@ -248,8 +247,7 @@ async def run(data_dir: Path) -> None:
     token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
     rel = RelationshipId(f"telegram-{user}")
     store = Store(data_dir / f"{rel}.sqlite")
-    persona = resources.files("companion.persona").joinpath(PERSONA).read_text(encoding="utf-8")
-    prefix = build_prefix(persona)
+    prefix = build_prefix(prompts.get("system/persona").raw)
     async with httpx.AsyncClient() as client:
         talker, scene, judge, reflector = _metered_models(client, store, rel)
         convo = Conversation(

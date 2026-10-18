@@ -4,7 +4,7 @@ What the model is sent besides the persona text, and how that has changed: where
 and notes sit, how the clock is shown, how memory ages are worded, what the history window leaves
 out, and which model answers. These are code changes, so they are not versions of the persona, but
 they change how the persona is read. Newest last. The clock moving into the system block went with
-persona v17; see [CHANGELOG.md](CHANGELOG.md).
+persona v17; see [the persona changelog](system/persona/CHANGELOG.md).
 
 - **Memory card moved out of the user message.** The card is now a system block after the
   persona. Reason: on three flagged turns (8 samples each, Haiku 5.5) replies mentioned

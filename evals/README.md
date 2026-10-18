@@ -53,4 +53,4 @@ fixtures directory, so archived files are kept but never run. Nothing in `evals/
 ## Results log
 
 Measured findings live in [CHANGELOG.md](CHANGELOG.md), newest last. Add a line there whenever
-a run changes what we believe. Persona changes are logged in `src/companion/persona/CHANGELOG.md`.
+a run changes what we believe. Persona changes are logged in `src/companion/prompts/system/persona/CHANGELOG.md`.

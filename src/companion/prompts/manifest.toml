@@ -24,6 +24,7 @@
 "system/listening" = "v1"
 "system/openloops" = "v1"
 "system/openloops-draft" = "v1"
+"system/persona" = "v26"
 "system/react" = "v1"
 "system/self-extract" = "v4"
 "system/views-conflict" = "v1"

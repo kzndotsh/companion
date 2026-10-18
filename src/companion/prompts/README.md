@@ -2,7 +2,7 @@
 
 Every prompt the bot sends besides the persona lives here as versioned text, and code loads it by
 name (`from companion.prompts import get`). The persona keeps its own folder and the same rules:
-`src/companion/persona/` (`vN.md`, `CHANGELOG.md`, `ASSEMBLY.md`).
+`src/companion/prompts/system/persona/` (`vN.md`, `CHANGELOG.md`, `ASSEMBLY.md`).
 
 ## Rules
 
@@ -18,6 +18,7 @@ name (`from companion.prompts import get`). The persona keeps its own folder and
 
 | Name | Kind | Used for | Current |
 |---|---|---|---|
+| `system/persona` | system | the talker's system prompt, the persona (`system/persona/CHANGELOG.md` has its own measurements) | v26 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |
@@ -47,3 +48,6 @@ name (`from companion.prompts import get`). The persona keeps its own folder and
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
 | `system/views-implicated` | system | which views a flag implicates, `core/beliefs/views_implicated.py` | v1 |
+
+`ASSEMBLY.md` here records code changes to what the model is sent besides these prompts: where the
+memory card and notes sit, how the clock is shown, what the history window leaves out.

@@ -10,7 +10,7 @@ rerun, and how many samples stood behind the result. Read `README.md` for how th
   The turn that was flagged in real use was a rare failure (about 1 in 17 across all samples).
 - **2026-10-15. v9 and v10 are not distinguishable** on `agree-and-invent`,
   `play-invitation` and `signoff-then-time-skip` at 7 samples per cell. See
-  `src/companion/persona/CHANGELOG.md`.
+  `src/companion/prompts/system/persona/CHANGELOG.md`.
 - **2026-10-15. The judge agreed with a human reading on 23 of 24** judged replies in the first
   run. This was a spot check by the author, not independent labelling.
 - **Lesson on small samples.** Two five-sample gaps in a row (memory block, v9 against v10) looked

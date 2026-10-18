@@ -5,13 +5,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-PERSONA = Path(__file__).resolve().parents[1] / "src" / "companion" / "persona"
+from companion import prompts
+
+PERSONA = Path(__file__).resolve().parents[1] / "src/companion/prompts/system/persona"
 
 
 def _files() -> set[int]:
-    return {
-        int(m.group(1)) for p in PERSONA.glob("v*.md") if (m := re.fullmatch(r"v(\d+)\.md", p.name))
-    }
+    return {int(v.removeprefix("v")) for v in prompts.versions("system/persona")}
 
 
 def _entries() -> set[int]:
@@ -28,7 +28,4 @@ def test_every_changelog_entry_has_its_file_kept_even_if_the_version_was_dropped
 
 
 def test_the_live_persona_is_one_of_the_files() -> None:
-    daemon = (PERSONA.parent / "daemon.py").read_text(encoding="utf-8")
-    live = re.search(r'^PERSONA = "(v\d+\.md)"', daemon, re.M)
-    assert live is not None
-    assert (PERSONA / live.group(1)).is_file()
+    assert prompts.manifest()["system/persona"] in prompts.versions("system/persona")

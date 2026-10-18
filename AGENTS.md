@@ -18,8 +18,9 @@ local-only project: the git repo has no remote and the bot runs on the owner's m
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background |
-| `src/companion/persona/CHANGELOG.md` | every persona version, with its measurement |
-| `src/companion/persona/ASSEMBLY.md` | code changes to what the model is sent besides the persona |
+| `src/companion/prompts/` | every prompt the bot sends, as versioned text: `system/` (the persona and the judges' prompts), `notes/` (lines added to the talker's system block each turn), `messages/`. `README.md` lists them, `manifest.toml` says which version is current |
+| `src/companion/prompts/system/persona/CHANGELOG.md` | every persona version, with its measurement |
+| `src/companion/prompts/ASSEMBLY.md` | code changes to what the model is sent besides the prompts |
 | `evals/README.md`, `evals/CHANGELOG.md` | how the eval runner works, and what it has measured |
 | `evals/fixtures/` | public scripted fixtures. `evals/local/` is private, not committed |
 
@@ -31,7 +32,7 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-uv run companion flags | favorites | spend | beliefs | initiative | replay <turn_id>
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | replay <turn_id>
 uv run companion eval --variants v22.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
@@ -63,10 +64,13 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 **The prompt and what the model reads**
 - The memory card, the clock and the notes go in the system block, never in the user's message.
   Anything in the user's message can be read as something the user said, and it leaks into replies.
+- Every prompt is a versioned file under `src/companion/prompts/`. Never edit a shipped version: add the
+  next `vN.md`, an entry in `prompts/CHANGELOG.md` and a line in `manifest.toml` (`tests/test_prompts.py`
+  fails otherwise). A judge's or extractor's logged decision carries `name@version`.
 - Dropped and candidate persona versions stay as files. Each `vN.md` has a changelog entry and each
   entry has its file (`tests/test_persona_versions.py` fails otherwise). Never delete a version.
 - A code change that alters what the model is sent goes in `ASSEMBLY.md`. A persona change goes in
-  the persona `CHANGELOG.md`. A measurement goes in `evals/CHANGELOG.md`.
+  the persona `CHANGELOG.md`; shipping a persona is changing `system/persona` in `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
   live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
 - Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`). A test enforces it.

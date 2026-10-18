@@ -14,8 +14,8 @@ How it fits with the rest of `docs/`:
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background |
-| `src/companion/persona/CHANGELOG.md` | every persona version, with the measurement |
-| `src/companion/persona/ASSEMBLY.md` | code changes to what the model is sent besides the persona (card, clock, notes, which model answers) |
+| `src/companion/prompts/system/persona/CHANGELOG.md` | every persona version, with the measurement |
+| `src/companion/prompts/ASSEMBLY.md` | code changes to what the model is sent besides the persona (card, clock, notes, which model answers) |
 | `evals/README.md` | how the eval runner works |
 | `evals/CHANGELOG.md` | what the runner has measured, newest last |
 

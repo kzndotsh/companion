@@ -32,7 +32,12 @@ _VERSION = re.compile(r"v(\d+)\.md")
 class Prompt:
     name: str
     version: str
-    text: str
+    raw: str  # exactly the file, with its closing newline
+
+    @property
+    def text(self) -> str:
+        """The prompt without the file's closing newline, which is how it reads in code."""
+        return self.raw.removesuffix("\n")
 
     @property
     def ref(self) -> str:
@@ -41,7 +46,7 @@ class Prompt:
 
     @property
     def sha(self) -> str:
-        return hashlib.sha256(self.text.encode()).hexdigest()[:12]
+        return hashlib.sha256(self.raw.encode()).hexdigest()[:12]
 
     def render(self, **values: object) -> str:
         """The text with each `$name` filled in. A missing value is an error, never a blank."""
@@ -90,7 +95,7 @@ def get(name: str, version: str | None = None) -> Prompt:
     if not path.is_file():
         msg = f"prompt {name!r} has no version {chosen!r}"
         raise KeyError(msg)
-    return Prompt(name, chosen, path.read_text(encoding="utf-8").removesuffix("\n"))
+    return Prompt(name, chosen, path.read_text(encoding="utf-8"))
 
 
 def current() -> list[Prompt]:

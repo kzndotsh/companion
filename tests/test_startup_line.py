@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion import daemon
+from companion import daemon, prompts
 from companion.core.types import RelationshipId
 
 
@@ -19,9 +19,10 @@ def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
     monkeypatch.delenv("COMPANION_LISTEN", raising=False)
     scene = object()
     line = daemon.startup_line(RelationshipId("telegram-1"), "abcdef0123456789", scene)  # type: ignore[arg-type]
-    persona = daemon.PERSONA.removesuffix(".md")
+    persona = prompts.get("system/persona").version
     assert line == (
         f"up as telegram-1 | persona {persona} (prefix abcdef012345)"
+        f" | prompts {prompts.set_hash()}"
         f" | everyday {daemon.openrouter.DEFAULT_MODEL} | scenes {daemon.SCENE_MODEL}"
         " | daily cap $10.00 | pace natural | split on | listen on | initiative shadow"
     )

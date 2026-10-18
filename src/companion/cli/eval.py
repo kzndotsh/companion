@@ -5,11 +5,11 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from importlib import resources
 from pathlib import Path
 
 import httpx
 
+from companion import prompts
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.listening import listening_note
 from companion.core.prompt.prefix import Prefix, build_prefix
@@ -41,11 +41,12 @@ def _variants(specs: list[str]) -> list[Variant]:
     out: list[Variant] = []
     for text in specs:
         spec = parse_spec(text)
-        persona = resources.files("companion.persona").joinpath(spec.persona)
-        if not persona.is_file():
+        try:
+            persona = prompts.get("system/persona", spec.persona.removesuffix(".md"))
+        except KeyError as err:
             msg = f"no persona file {spec.persona}"
-            raise ValueError(msg)
-        prefix = build_prefix(persona.read_text(encoding="utf-8"))
+            raise ValueError(msg) from err
+        prefix = build_prefix(persona.raw)
         out.append(
             Variant(
                 spec.label,

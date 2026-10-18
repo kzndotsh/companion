@@ -56,8 +56,8 @@ def test_a_prompt_with_its_own_changelog_has_an_entry_for_every_version() -> Non
         if not path.exists():
             continue
         text = path.read_text(encoding="utf-8")
-        for v in prompts.versions(name):
-            assert f"**{v} " in text or f"**{v}**" in text, f"{name} {v} has no changelog entry"
+        entries = {f"v{n}" for n in re.findall(r"^- \*\*v(\d+)\b", text, re.M)}
+        assert set(prompts.versions(name)) == entries, f"{name} files and changelog entries differ"
 
 
 def test_files_end_in_one_newline_and_have_no_trailing_spaces_or_carriage_returns() -> None:
