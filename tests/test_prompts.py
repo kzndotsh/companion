@@ -39,7 +39,7 @@ def test_every_prompt_folder_is_in_the_manifest() -> None:
 
 def test_every_version_has_a_changelog_entry_and_every_entry_has_a_file() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    entries = set(re.findall(r"^- \*\*(\S+) (v\d+)\*\*", changelog, re.M))
+    entries = set(re.findall(r"^- \*\*(\S+) (v\d+)\*\*", changelog, re.MULTILINE))
     files = {(name, v) for name, vs in _all_versions().items() for v in vs}
     assert files - entries == set(), "a version file has no entry in prompts/CHANGELOG.md"
     assert entries - files == set(), "a changelog entry has no file"

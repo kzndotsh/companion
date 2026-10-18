@@ -16,7 +16,7 @@ def _files() -> set[int]:
 
 def _entries() -> set[int]:
     text = CHANGELOG.read_text(encoding="utf-8")
-    return {int(n) for n in re.findall(r"^- \*\*system/persona v(\d+)\*\*", text, re.M)}
+    return {int(n) for n in re.findall(r"^- \*\*system/persona v(\d+)\*\*", text, re.MULTILINE)}
 
 
 def test_every_version_file_has_a_changelog_entry() -> None:

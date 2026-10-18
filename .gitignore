@@ -13,3 +13,4 @@ __pycache__/
 docs/research/2026-10-15_openrouter-latency-comparison/**/*.json
 /evals/results/
 /evals/local/
+.coverage
