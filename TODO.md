@@ -420,6 +420,11 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J20 Live-typed drafts: Telegram's sendMessageDraft shows the reply appearing as it is written, which
       could replace the held typing indicator with real typing. Test against pace, split and supersede first
       (speed-stack audit).
+- [ ] J21 Fallback model: when the talker's provider is down or stalls past a few seconds, answer with a
+      backup model instead of nothing, and log it (OpenRouter latency study: route with a fallback).
+- [ ] J22 Cheaper judges through OpenRouter: try a cheaper model than Haiku 5.5 for the small judges (ack,
+      listening, frame, react, habits), calibrated against the existing live tests before switching
+      (decision-layer audit; the owner prefers this to running judges locally).
 
 ### H. Product and business
 
