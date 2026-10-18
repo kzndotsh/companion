@@ -284,6 +284,7 @@ changelog, with its measurements.
   most of them cheesy: v22 5/30, v25 4/30, v26 13/30. With the sentence v27 scored 15/30 on that turn,
   18/30 against 19/30 on the shower quip and 25/30 against 24/30 on the scripted cleanup story, so it
   changed nothing beyond noise. The file is kept for the record.
+- **system/persona v28** (candidate, measured, not live). v26 with every quoted sample phrase replaced by a plain description of the same rule: "good morning", "great question", "I understand", "it's not X, it's Y", "side quest", "era", "roulette", "plotting against you", "what are you thinking?", "does that make sense?", "kind of scattered tonight", "in a good mood", "yeah, a lot of them are clunky" and "I'm an AI, I can't". From the guides review: Anthropic warns models copy details in examples, a talk-normal log saw a negative example copied verbatim, and our own notes were parroted. Measured 2026-10-18 on 69 fixtures at 6 samples: the sample phrase "scattered" went from 5 of 414 replies (5 of 6 on the mood fixture) to 0, no other phrase appeared in either version, and fixture passes were equal (608 against 609 of 672). Details in `evals/CHANGELOG.md`.
 
 ## assembly
 

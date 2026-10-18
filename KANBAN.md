@@ -51,7 +51,9 @@ Ordered. The first three can stop the bot, so they go first.
 - [ ] T15 Prompt experiments from the guides review (`docs/research/2026-10-18_prompting-guides-review.md`): a
       parrot audit of quoted sample phrases in the persona and notes, a trimmed persona against v26, positive
       rewrites of the notes, a stock-phrase note from the owner's marks, and a read of the Luna model page. Each
-      is a prompt version plus a measured eval. Hypotheses only; the sources are mostly assertion.
+      is a prompt version plus a measured eval. Hypotheses only; the sources are mostly assertion. Experiment 1
+      (parrot audit) done: persona v28 removes the quoted samples, and only the follow-examples were parroted
+      ("scattered", 5 of 6 on the mood fixture to 0); v28 is not live, awaiting the owner's say.
 
 ## Doing
 

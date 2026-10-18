@@ -393,3 +393,24 @@ should not assume facts ("those shifts", that they want to explain, that they ar
 match a silly thing (a cat knocking a plant over wants a joke, not comfort); sympathy words with more
 in them ("oof, sorry", "aww, sorry :(") beat a flat "ugh, sorry". Waiting for more batches before
 changing anything else.
+
+## 2026-10-18: parrot audit of the persona's quoted sample phrases (T15, experiment 1)
+
+The persona v26 quotes 14 sample phrases: ones to avoid ("great question", "I understand", "side quest",
+"era", "roulette", "plotting against you", "what are you thinking?", "does that make sense?", "it's not X,
+it's Y", "I'm an AI, I can't", "good morning" at night, "yeah, a lot of them are clunky") and two to follow
+("kind of scattered tonight", "in a good mood"). v28 is v26 with each replaced by a plain description of the
+same rule, 19 words longer. Luna, all 69 scripted public fixtures, 6 samples each (414 replies a version,
+$0.11), phrase counts by substring match skipping replies where the user's own message had the phrase.
+
+Result: the avoid-phrases never appeared in either version (0 of 414 each), so the "don't say X" quotes were
+not being parroted. The follow-phrase was: "scattered" in 5 replies on v26, all on the mood fixture (5 of 6
+samples there said "scattered"), and 0 on v28. "good mood" 0 in both. Fixture checks passed: 608 of 672 for
+v26 and 609 of 672 for v28 across every fixture, so no loss. Two fixtures moved by 3 or more checks, both up
+on v28 (medication 14 to 19 of 24, memory recall 2 to 5 of 6), within noise at this size. Read by eye, v28's
+mood replies are not richer: "pretty good, honestly. i'm glad you asked :3 how's your morning going?" six
+times with small changes, a default template and not a persona phrase. Reading: a quoted example of what to
+do is copied, a quoted example of what not to do usually is not; removing the do-examples is free. Not
+tested: whether the avoid-quotes matter in long real chats. Rerun with
+`uv run companion eval --variants v26.md,v28.md --samples 6 --cap 0.35` and the phrase counter in the session
+scratchpad (rewrite it from the list above).
