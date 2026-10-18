@@ -1,7 +1,8 @@
 # Prompting and humanizing guides to review
 
-Added 2026-10-18. Nothing is decided. This is a reading list to look at later, not a task. None of
-these has been read yet, so what each is about below is only a guess from its address.
+Added 2026-10-18. **Reviewed the same day:** see `docs/research/2026-10-18_prompting-guides-review.md` for
+what each says, what lines up with our measurements and six candidate experiments. The original list
+is kept below.
 
 ## The links
 
