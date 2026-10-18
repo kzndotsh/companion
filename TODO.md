@@ -65,6 +65,8 @@ Ordered. The first three can stop the bot, so they go first.
       note line from "just met, already kind of likes them" up to "close" (ADR 0014). It paces intimacy by how
       well they know each other, beside following their lead. Idea from the same config's five-stage romance
       meter, which swaps one voice line per stage. Needs a design and the owner's say before code.
+      Detail (Utsuwa, aituber-onair audits): it steps down only well below where it rose, and only after a
+      long quiet spell, so it does not flicker; a step-down never guilts them.
 
 ## Doing
 
@@ -454,6 +456,22 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       sending; an unreadable quiet-hours setting means no reach-out; each reach-out fires exactly once (send
       state recorded before the Telegram call, unknown after a crash, never blindly resent) (Miru, OpenSoul,
       Phosphene, Psycheros, Resonant audits). Extends A5.
+- [ ] J36 Backups: snapshot the database and the persona and character files before updates and model swaps,
+      plus a nightly copy, with a restore that never touches live data on failure (Sapphire audit).
+- [ ] J37 Checked merges: when a background pass proposes merging or retiring beliefs, code applies it only
+      after checking the ids it was shown and a measured similarity, never on the model's word (Sapphire).
+- [ ] J38 Validated summaries: a new summary or card replaces the old one only if it passes checks (not empty,
+      under the cap, names, places and dates kept), and failures are logged (Synthetic Heart). With J14, A18.
+- [ ] J39 Claimed-action check: when a reply says something happened that the record does not show ("I set a
+      reminder", "I saved that"), log it and repair it in a follow-up, never by rewriting (Yuralume audit).
+- [ ] J40 Take that back: a command that retires everything one turn wrote to memory, never deleting it
+      (Yuralume audit).
+- [ ] J41 Replayable holds: store the inputs each held reach-out read (idle minutes, sent today) beside its
+      reason, so a hold can be replayed exactly (Yuralume audit). With ADR 0015.
+- [ ] J42 Old quotes marked: a quote from a retired or superseded belief is shown as "old, may not hold", and
+      a miss reads "not proof of never" (Tamanitomo audit, A16).
+- [ ] J43 Retry cooldown: after a judge or memory call fails, wait about two minutes before trying again
+      instead of every turn (Waifu-companion audit).
 
 ### H. Product and business
 
