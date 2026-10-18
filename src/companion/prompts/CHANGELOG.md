@@ -295,6 +295,8 @@ changelog, with its measurements.
   no effect on what it targeted (rudeness 1/12 both, texture 4 of 852 replies, therapy wording unchanged).
   Measurement in `evals/CHANGELOG.md`.
 
+- **system/persona v30** (candidate). v26 with the emoticon examples removed: "Emoji and emoticons (:3, ^_^) are yours" becomes "Emoji and emoticons are yours". The owner's question: the only examples named were :3 and ^_^, and the reply copied a user's :3 in 80 of 80 samples. Measurement in `evals/CHANGELOG.md`.
+
 ## assembly
 
 Code changes to what the model is sent besides the prompt text: where the memory card and notes sit,

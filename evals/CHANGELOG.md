@@ -500,3 +500,15 @@ moved (1 to 6, and 8 to 13 with Ani). Read as: a strong habit a note does not to
 dropped, never live. Spent $0.013. Rerun: copy the four fixtures to a folder, then
 `uv run companion eval --variants v26.md,v26.md+echo,v26.md+as-ani,v26.md+as-ani+echo --samples 20
 --cap 0.15 --fixtures-dir <folder>`.
+
+## 2026-10-18: persona v30 (no emoticon examples) copies their :P less, not their :3
+
+The owner asked whether naming only ":3" and "^_^" as examples in the persona primes copying. v30 is v26
+with "(:3, ^_^)" removed. Luna, the four copying fixtures, 30 samples each, replies that did not copy
+their symbol: v26 4/120, v30 24/120. By fixture: ":P" scripted 1 to 16 of 30, the real flagged ":P"
+turn 3 to 7, ":3" 0 to 0, "😊" 0 to 1. When v30 did not copy it used an emoji of its own (😌, 😘, 😏).
+The seven short-statement fixtures, 12 samples each: 57/72 and 56/72, the same emoji count (8 of 72)
+and no emoticons in either, so nothing lost there. Read as: the named examples were part of it, the
+copying pull from their message is the rest (":3" is still copied every time). Spent $0.029. Rerun:
+`uv run companion eval --variants v26.md,v30.md --samples 30 --cap 0.1 --fixtures-dir <the four
+copying fixtures>`.
