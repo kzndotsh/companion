@@ -13,6 +13,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from companion.core.extractor import Extractor
+from companion.core.habits import echo_note
 from companion.core.length import length_target
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
@@ -37,6 +38,7 @@ class Variant:
     effort: str | None = None  # reasoning effort; None keeps it off, as in the bot
     length: bool = False  # add the length note the bot adds to a short statement
     listen: bool = False  # add the listening note a fixture's labels would produce
+    echo: bool = False  # add the note against copying their emoji, when they used one
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,6 +91,8 @@ def request_for(
     if variant.length and (size := length_target(messages[-1].content)):
         note = size.note
         card = f"{card}\n{note}" if card else note
+    if variant.echo and (echo := echo_note(messages[-1].content)):
+        card = f"{card}\n{echo}" if card else echo
     if variant.listen and listening:
         card = f"{card}\n{listening}" if card else listening
     return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card)

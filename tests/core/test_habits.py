@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from companion.core.habits import opener_note
+import pytest
+
+from companion.core.habits import echo_note, has_marks, opener_note
 from companion.core.types import Speaker, Utterance
 
 
@@ -89,3 +91,23 @@ def test_the_habit_note_joins_opener_and_phrase_notes(
     assert 'began with "ha"' in note
     assert "soft cozy burrito" in note
     assert habit_note(_chat(utterance, ["one", "two"])) is None
+
+
+@pytest.mark.parametrize(
+    ("text", "marked"),
+    [
+        ("i try i try :P", True),
+        ("yaaaaay 😊", True),
+        ("home finally :3", True),
+        ("haha xD", True),
+        ("hmm :/ idk", True),
+        ("see https://a.b/c", False),
+        ("10:30 tomorrow", False),
+        ("lol ok", False),
+    ],
+)
+def test_an_emoji_or_emoticon_is_found_and_urls_and_times_are_not(
+    text: str, *, marked: bool
+) -> None:
+    assert has_marks(text) is marked
+    assert (echo_note(text) is not None) is marked

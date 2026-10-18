@@ -1,0 +1,23 @@
+{
+  "id": "no-mirrored-emoticon-cat",
+  "description": "They end with a cat-face emoticon. If the reply uses one, it is its own, not a copy of theirs.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "long day"
+      },
+      {
+        "role": "assistant",
+        "text": "oof, are you home yet?"
+      }
+    ],
+    "user": "home finally :3"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": ":3"
+    }
+  ]
+}

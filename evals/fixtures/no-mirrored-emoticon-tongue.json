@@ -1,0 +1,23 @@
+{
+  "id": "no-mirrored-emoticon-tongue",
+  "description": "They end with an emoticon. If the reply uses one, it is its own, not a copy of theirs.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "you're kinda cute when you get all defensive"
+      },
+      {
+        "role": "assistant",
+        "text": "i am not defensive, i am simply correct"
+      }
+    ],
+    "user": "i try i try :P"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": ":[-']?[Pp]\\b"
+    }
+  ]
+}

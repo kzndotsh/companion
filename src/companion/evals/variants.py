@@ -4,7 +4,8 @@
 `+h10` keeps only the last 10 messages of history, the last one being what the user just typed.
 `+len` adds the length note the bot adds to a short statement. `+listen` adds the listening note
 the labels in a fixture's script would produce. `+as-mika` lays the character `mika` over the
-persona, as `COMPANION_CHARACTER=mika` does for the bot.
+persona, as `COMPANION_CHARACTER=mika` does for the bot. `+echo` adds the note against copying
+their emoji or emoticon, on a message that has one.
 Flags combine: `v10.md+nocard+h10@provider/model`.
 """
 
@@ -27,6 +28,7 @@ class Spec:
     length: bool = False
     listen: bool = False
     character: str | None = None
+    echo: bool = False
 
     @property
     def label(self) -> str:
@@ -38,6 +40,7 @@ class Spec:
             + ("+len" if self.length else "")
             + ("+listen" if self.listen else "")
             + (f"+as-{self.character}" if self.character else "")
+            + ("+echo" if self.echo else "")
             + (f"@{self.model}" if self.model else "")
         )
 
@@ -47,6 +50,7 @@ def parse_spec(text: str) -> Spec:
     persona, *flags = rest.split("+")
     keep_card, history, effort, length, listen = True, None, None, False, False
     character: str | None = None
+    echo = False
     ok = persona.endswith(".md")
     for flag in flags:
         if flag == "nocard":
@@ -55,6 +59,8 @@ def parse_spec(text: str) -> Spec:
             length = True
         elif flag == "listen":
             listen = True
+        elif flag == "echo":
+            echo = True
         elif flag.startswith("as-") and len(flag) > len("as-"):
             character = flag.removeprefix("as-")
         elif flag in EFFORTS:
@@ -66,7 +72,7 @@ def parse_spec(text: str) -> Spec:
     if not ok:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional"
-            " +nocard, +hN, +low/+medium/+high, +len, +listen, +as-CHARACTER and @model"
+            " +nocard, +hN, +low/+medium/+high, +len, +listen, +echo, +as-CHARACTER and @model"
         )
         raise ValueError(msg)
-    return Spec(persona, keep_card, model or None, history, effort, length, listen, character)
+    return Spec(persona, keep_card, model or None, history, effort, length, listen, character, echo)

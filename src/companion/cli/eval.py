@@ -62,6 +62,7 @@ def _variants(specs: list[str]) -> list[Variant]:
                 spec.effort,
                 spec.length,
                 spec.listen,
+                spec.echo,
             )
         )
     return out

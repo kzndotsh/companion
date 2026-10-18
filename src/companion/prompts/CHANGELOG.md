@@ -424,6 +424,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/clock-gap
 - **notes/clock-gap v1** (current). Moved here on 2026-10-18 from `core/clock.py`, text unchanged. Earlier history is in git.
 
+## notes/habit-echo
+- **notes/habit-echo v1** (dropped, never live; `+echo` in evals adds it when their message has an emoji or emoticon, `core/habits.py`). Owner's flag of 2026-10-18: it only used :P and :3 when they did. Across the history the reply had one 14 times in 39 after a message with one, always the same one, and 12 times in 533 otherwise. The note names no emoji so it cannot hand one over. Dropped: no effect, 7 of 80 replies avoided copying without it and 8 of 80 with it. Measurement in `evals/CHANGELOG.md`.
+
 ## notes/habit-moves
 - **notes/habit-moves v1** (current). Moved here on 2026-10-18 from `core/moves.py`, text unchanged. Earlier history is in git.
 

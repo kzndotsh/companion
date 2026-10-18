@@ -1,9 +1,12 @@
-"""A note about the companion's own recent habits, built from the ledger, never from the model.
+"""Notes about what the next reply is likely to copy, built by code, never by the model.
 
 The model sees its earlier replies and copies them: a few "Ha," openers in a row make the next one
 likelier, and so does a phrase it keeps reaching for. When the last few replies share an opening
-word or a run of words, the note says so plainly. It adds context to the next request; it never
-touches a reply. Nothing here knows any topic: it only counts what the replies repeat.
+word or a run of words, the note says so plainly. It also copies their message back: after a
+message with an emoji the reply used the same one 22 times in 49, and after an emoticon 14 times in
+36, while it almost never copied a laugh or a stretched word (owner's flag of 2026-10-18), so a
+message with one gets the echo note. Notes add context to the next request; they never touch a
+reply. Nothing here knows any topic: it only counts what repeats.
 """
 
 from __future__ import annotations
@@ -32,6 +35,11 @@ _FUNCTION_TEXT = (
     "really can could would should will about up out all any some"
 )
 _FUNCTION_WORDS = frozenset(_FUNCTION_TEXT.split())
+_EMOTICON = re.compile(
+    r"(?<![\w/:])(?:[:;=][-']?[)(DPpOo3*/\\|\]\[]|\^[_.]?\^|[xX][Dd]\b|<3|T_T|uwu|owo|>_<|-_-)"
+)
+_EMOJI = re.compile("[\U0001f000-\U0001faff\u2600-\u27bf\u2764\u2b50]")
+_ECHO_NOTE = get("notes/habit-echo")
 
 
 def opener_note(prior: Sequence[Utterance]) -> str | None:
@@ -83,3 +91,14 @@ def habit_note(prior: Sequence[Utterance]) -> str | None:
         notes.append(get("notes/habit-phrases").render(phrases=quoted))
     joined = "\n".join(n for n in notes if n)
     return joined or None
+
+
+def has_marks(text: str) -> bool:
+    """Whether a message has an emoji or a text emoticon in it."""
+    return bool(_EMOTICON.search(text) or _EMOJI.search(text))
+
+
+def echo_note(user_text: str) -> str | None:
+    """The note for a message the reply is likely to copy a symbol from, or None. It names nothing,
+    so it cannot hand the model the thing to copy."""
+    return _ECHO_NOTE.text if has_marks(user_text) else None

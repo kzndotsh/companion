@@ -485,3 +485,18 @@ answer") and offering new picks; replies with a stretched word or a doubled ques
 persona sentence about style is a request Luna mostly ignores; the changes that worked today were
 code-chosen notes. Next: rudeness as a listening label with a note (ADR 0014). Spent $0.237. Rerun:
 `uv run companion eval --variants v26.md,v29.md --samples 12 --cap 0.6 --fixtures-dir evals/fixtures`.
+
+## 2026-10-18: the reply copies their emoji and emoticons, and a note does not stop it
+
+Owner's flag: it only used :P and :3 when they did. Across the real history, after a message with an
+emoji the reply used the same one 22 times in 49 (45%), after an emoticon 14 in 36 (39%); it almost
+never copied a laugh (3 in 76) or a stretched word (2 in 52), and used an emoticon unprompted 6 times in
+455. New fixtures `no-mirrored-emoji-smile`, `no-mirrored-emoticon-cat`, `no-mirrored-emoticon-tongue`
+and the real flagged turn (local), each a regex that fails when the reply repeats their symbol. Luna,
+20 samples each, passing (not copying) out of 80: v26 7, v26 with the note `notes/habit-echo` v1
+("use one of your own, not one from their message") 8, v26 with the Ani character 14, Ani with the
+note 19. On ":3" and ":P" it copied in 75 to 80 of 80 whatever the note said; only the 😊 fixture
+moved (1 to 6, and 8 to 13 with Ani). Read as: a strong habit a note does not touch. The note is
+dropped, never live. Spent $0.013. Rerun: copy the four fixtures to a folder, then
+`uv run companion eval --variants v26.md,v26.md+echo,v26.md+as-ani,v26.md+as-ani+echo --samples 20
+--cap 0.15 --fixtures-dir <folder>`.

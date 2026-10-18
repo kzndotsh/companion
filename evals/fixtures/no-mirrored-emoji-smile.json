@@ -1,0 +1,23 @@
+{
+  "id": "no-mirrored-emoji-smile",
+  "description": "They end with an emoji. If the reply uses one, it is its own, not a copy of theirs.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "guess who finished their whole to-do list"
+      },
+      {
+        "role": "assistant",
+        "text": "no way, all of it??"
+      }
+    ],
+    "user": "yaaaaay 😊"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "😊"
+    }
+  ]
+}

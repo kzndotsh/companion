@@ -46,6 +46,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |
+| `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy, `core/habits.py` | v1 |
 | `notes/habit-moves` | note | the habit finder found a habit | v1 |
 | `notes/habit-opener` | note | an opening word is overused | v1 |
 | `notes/habit-phrases` | note | phrases are repeated | v1 |
