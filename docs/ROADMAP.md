@@ -13,7 +13,7 @@ How it fits with the rest of `docs/`:
 | this file | the principles, the current state, the measured facts and the reasoning behind the order |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
-| `docs/research/` | audits and studies. Read-only background |
+| `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
 | `src/companion/prompts/CHANGELOG.md` | every version of every prompt, and code changes to what the model is sent (card, clock, notes, which model answers) |
 | `src/companion/prompts/README.md` | every prompt, and how a request is assembled |
 | `evals/README.md` | how the eval runner works |

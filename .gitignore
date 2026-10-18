@@ -9,8 +9,8 @@ __pycache__/
 *.sqlite-shm
 /data/
 /evals/logs/
-# raw latency pulls (regenerate with docs/research/2026-10-15_openrouter-latency-comparison/pull_openrouter_stats.py)
-docs/research/2026-10-15_openrouter-latency-comparison/**/*.json
+# audits of other projects stay on this machine, not committed
+/docs/research/
 /evals/results/
 /evals/local/
 .coverage

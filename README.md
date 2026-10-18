@@ -162,7 +162,7 @@ list of prompts and how they fit together is in [src/companion/prompts/](src/com
 | [docs/ROADMAP.md](docs/ROADMAP.md) | current state, measured facts, and why the work is in this order |
 | [docs/adr/](docs/adr) | decisions and their reasons |
 | [docs/inbox/](docs/inbox) | ideas that are not yet tasks |
-| [docs/research/](docs/research) | audits and studies |
+| `docs/research/` | audits and studies (local only, not committed) |
 | [src/companion/prompts/](src/companion/prompts/README.md) | every prompt, and how a request is assembled |
 | [prompts/CHANGELOG.md](src/companion/prompts/CHANGELOG.md) | every prompt version, with the flag or measurement behind it |
 | [evals/CHANGELOG.md](evals/CHANGELOG.md) | what the evals have measured |

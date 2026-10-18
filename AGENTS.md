@@ -17,7 +17,7 @@ local-only project: the git repo has no remote and the bot runs on the owner's m
 | `docs/ROADMAP.md` | principles, current state, measured facts, the reasoning behind the order |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
-| `docs/research/` | audits and studies. Read-only background |
+| `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
 | `src/companion/prompts/` | every prompt the bot sends, as versioned text: `system/` (the persona and the judges' prompts), `notes/` (lines added to the talker's system block each turn), `messages/`. `README.md` lists them, `manifest.toml` says which version is current |
 | `src/companion/prompts/CHANGELOG.md` | every version of every prompt and every change to how a request is assembled, with the reason |
 | `evals/README.md`, `evals/CHANGELOG.md` | how the eval runner works, and what it has measured |
