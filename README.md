@@ -1,18 +1,14 @@
 # Companion (branding BTD)
 
-> [!NOTE]
-> Why am I workong on this you may ask? As an experiment, and an attempt to better my skills in constructing evaluations while perfecting one of the hardest problems in AI <> Human experiences: memory.
-
 An AI companion that tries to be as human-like as we can make it, and the memory engine underneath it.
 
 > [!WARNING]
-> Early and experimental. It is built for one person, it changes all the time, and nothing here is
-> guaranteed to work or to stay the same. Use it at your own risk.
+> Early and experimental. It is built for one person, it changes all the time, and nothing here is. guaranteed to work or to stay the same. Use it at your own risk.
 
-It talks like a friend who knows you: it remembers what you told it and who said it, notices when
-something is serious, keeps pace like someone typing, and can tell the difference between a story,
-a game and the real you. Everything it does is logged with a reason, so any reply can be replayed
-and explained.
+> [!NOTE]
+> Why am I workong on this you may ask? As an experiment, and an attempt to better my skills in constructing evaluations while perfecting one of the hardest problems in AI <> Human experiences: memory.
+
+It talks like a friend who knows you: it remembers what you told it and who said it, notices when something is serious, keeps pace like someone typing, and can tell the difference between a story, a game and the real you. Everything it does is logged with a reason, so any reply can be replayed and explained.
 
 Today it is reached through Telegram, which is its only integration for now.
 
