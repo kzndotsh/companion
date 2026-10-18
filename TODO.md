@@ -411,6 +411,15 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       (xinchao's "while you were away" fold, field survey).
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
+- [ ] J17 Noise bars in eval reports: each cell shows its margin of error (Wilson interval) and the report
+      says when two variants are within noise (eval-harness audit, promptfoo).
+- [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
+      does not regenerate them (eval-harness audit: lm-eval, lighteval).
+- [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change
+      drops a behaviour below its usual level, with floors set from two baseline runs (Phoenix's gate).
+- [ ] J20 Live-typed drafts: Telegram's sendMessageDraft shows the reply appearing as it is written, which
+      could replace the held typing indicator with real typing. Test against pace, split and supersede first
+      (speed-stack audit).
 
 ### H. Product and business
 
