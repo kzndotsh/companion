@@ -3,7 +3,7 @@
 An AI companion that tries to be as human-like as we can make it, and the memory engine underneath it.
 
 > [!WARNING]
-> Early and experimental. It is built for one person, it changes all the time, and nothing here is. guaranteed to work or to stay the same. Use it at your own risk.
+> Early and experimental. It is built for one person, it changes all the time, and nothing here is guaranteed to work or to stay the same. Use it at your own risk.
 
 > [!NOTE]
 > Why am I working on this you may ask? As an experiment, and an attempt to better my skills in constructing evaluations while perfecting one of the hardest problems in AI <> Human experiences: memory.
