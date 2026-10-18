@@ -26,9 +26,13 @@ from companion.core.openloops import (
     LoopState,
     Making,
     OpenLoop,
+    loop_labels,
     normalise,
     parse,
+    parse_resolved,
+    render_open_loops,
     to_loop,
+    to_resolution,
 )
 from companion.core.spend import purpose
 from companion.core.types import (
@@ -39,6 +43,7 @@ from companion.core.types import (
     Json,
     RelationshipId,
     SessionId,
+    Speaker,
     TraceId,
     TurnId,
     Utterance,
@@ -61,6 +66,7 @@ class LoopCounts:
     stored: int = 0
     rejected: int = 0
     cost_usd: float = 0.0
+    resolved: int = 0
 
 
 def _id() -> str:
@@ -76,13 +82,14 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
     when: tuple[datetime, tzinfo],
     note: Log,
 ) -> LoopCounts:
-    """Record the open loops in the targeted messages. A failure here never stops the batch."""
+    """Record the open loops in the targeted messages, and close the ones they settle. A failure
+    here never stops the batch."""
     now, tz = when
+    labels = loop_labels(store.open_loops(rel))
+    prompt = build_user_prompt(window, targets, {}, tz) + render_open_loops(labels)
     try:
         with purpose("loops"):
-            result = await extractor.extract(
-                SYSTEM, build_user_prompt(window, targets, {}, tz), SCHEMA
-            )
+            result = await extractor.extract(SYSTEM, prompt, SCHEMA)
     except Exception:
         log.warning("open-loop extraction failed; skipping this batch", exc_info=True)
         return LoopCounts()
@@ -116,8 +123,42 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
                     "prompt": PROMPT.ref,
                 },
             )
-    log.debug("open loops: %d proposed, %d stored, %d rejected", len(raw), stored, rejected)
-    return LoopCounts(len(raw), stored, rejected, result.cost_usd)
+    resolved = _close_resolved(store, result.data, labels, window, now, note)
+    log.debug(
+        "open loops: %d proposed, %d stored, %d rejected, %d resolved",
+        len(raw),
+        stored,
+        rejected,
+        resolved,
+    )
+    return LoopCounts(len(raw), stored, rejected, result.cost_usd, resolved)
+
+
+def _close_resolved(  # noqa: PLR0913, PLR0917
+    store: Store,
+    data: Json,
+    labels: Mapping[str, OpenLoop],
+    window: Mapping[str, Utterance],
+    now: datetime,
+    note: Log,
+) -> int:
+    """Close each loop their new messages settle, so it is never asked about."""
+    closed: set[str] = set()
+    for item in parse_resolved(data):
+        outcome = to_resolution(item, labels, window)
+        if isinstance(outcome, str):
+            note(f"open loop not closed: {outcome}", {"loop": item.loop, "quote": item.quote})
+            continue
+        loop, quote = outcome
+        if loop.id in closed:
+            continue
+        closed.add(loop.id)
+        store.open_loop_event(loop.id, LoopState.RESOLVED, f"they brought it up: {quote!r}", now)
+        note(
+            f"open loop closed, they brought it up themselves: {loop.claim}",
+            {"loop_id": loop.id, "quote": quote, "prompt": PROMPT.ref},
+        )
+    return len(closed)
 
 
 @dataclass(slots=True)
@@ -149,6 +190,11 @@ def _situation(store: Store, rel: RelationshipId, now: datetime, tz: tzinfo) -> 
     recent = store.history_before(rel, now, 8)
     sent = store.reach_outs(rel)
     today = [r for r in sent if r.at >= local_midnight(now)]
+    theirs = [u.at for u in store.history_before(rel, now, 40) if u.speaker is Speaker.USER]
+    last_theirs = max(theirs, default=None)
+    unanswered = sum(
+        1 for r in sent if r.mode == "live" and (last_theirs is None or r.at > last_theirs)
+    )
     return Situation(
         now=now,
         tz=tz,
@@ -156,6 +202,7 @@ def _situation(store: Store, rel: RelationshipId, now: datetime, tz: tzinfo) -> 
         in_scene=scene_frame(recent) is not Frame.REAL,
         sent_today=len(today),
         last_reach_out_at=max((r.at for r in sent), default=None),
+        unanswered=unanswered,
     )
 
 

@@ -8,9 +8,14 @@ from companion.core.openloops import (
     Making,
     OpenLoop,
     RawLoop,
+    RawResolution,
     follow_up_time,
+    loop_labels,
     parse,
+    parse_resolved,
+    render_open_loops,
     to_loop,
+    to_resolution,
 )
 from companion.core.types import (
     Frame,
@@ -103,6 +108,9 @@ def test_a_good_loop_keeps_the_exact_quote_and_gets_its_follow_up_time() -> None
         (_raw(sensitivity=2), "going to the vet tomorrow", "sensitive"),
         (_raw(quote="never said this"), "going to the vet tomorrow", "quote"),
         (_raw(claim=""), "going to the vet tomorrow", "claim"),
+        (_raw(certainty="maybe"), "going to the vet tomorrow", "not a firm plan (maybe)"),
+        (_raw(certainty="wish"), "going to the vet tomorrow", "not a firm plan (wish)"),
+        (_raw(about_companion=True), "going to the vet tomorrow", "about the companion"),
     ],
 )
 def test_loops_that_must_not_be_recorded_say_why(raw: RawLoop, text: str, why: str) -> None:
@@ -140,6 +148,8 @@ def test_parse_accepts_labelled_items_and_refuses_anything_malformed() -> None:
                 "when": " Friday ",
                 "scale": "days",
                 "sensitivity": 1,
+                "certainty": "firm",
+                "about_companion": False,
             }
         ]
     }
@@ -160,3 +170,38 @@ def test_parse_accepts_labelled_items_and_refuses_anything_malformed() -> None:
         "sensitivity": True,
     }
     assert parse({"loops": [flag]}) is None
+
+
+def _loop_from(u: Utterance) -> OpenLoop:
+    made = Making(REL, MON, UTC, lambda: "loop-1")
+    loop = to_loop(_raw(), {"m1": u}, made)
+    assert isinstance(loop, OpenLoop)
+    return loop
+
+
+def test_a_loop_is_closed_only_by_their_own_words_that_hold_the_quote() -> None:
+    loop = _loop_from(_utt("going to the vet tomorrow"))
+    labels = loop_labels([loop])
+    said = _utt("the vet went fine, she is all good")
+    done = to_resolution(RawResolution("L1", "m2", "the vet went fine"), labels, {"m2": said})
+    assert done == (loop, "the vet went fine")
+    raws = [
+        (RawResolution("L9", "m2", "the vet went fine"), "no open loop"),
+        (RawResolution("L1", "m2", "never said"), "quote"),
+    ]
+    for raw, why in raws:
+        assert why in str(to_resolution(raw, labels, {"m2": said}))
+    bot = _utt("the vet went fine", speaker=Speaker.COMPANION)
+    raw = RawResolution("L1", "m2", "the vet went fine")
+    assert "for real" in str(to_resolution(raw, labels, {"m2": bot}))
+
+
+def test_open_loops_are_listed_for_the_model_and_resolutions_are_parsed() -> None:
+    loop = _loop_from(_utt("going to the vet tomorrow"))
+    shown = render_open_loops(loop_labels([loop]))
+    assert "Open loops:" in shown
+    assert "[L1] vet visit" in shown
+    assert render_open_loops({}) == ""
+    data: Json = {"resolved": [{"loop": "L1", "ref": "m2", "quote": "q"}, {"loop": 3}, "x"]}
+    assert parse_resolved(data) == [RawResolution("L1", "m2", "q")]
+    assert parse_resolved({"loops": []}) == []

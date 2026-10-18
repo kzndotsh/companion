@@ -119,3 +119,17 @@ def test_a_loop_past_its_horizon_is_reported_expired_and_not_sent() -> None:
 def test_the_same_inputs_always_give_the_same_answer() -> None:
     loops = [_loop()]
     assert evaluate(loops, _sit()) == evaluate(loops, _sit())
+
+
+def test_after_an_unanswered_reach_out_it_waits_longer_and_after_two_it_stops() -> None:
+    yesterday = NOON - timedelta(hours=30)
+    answered = evaluate([_loop()], _sit(last_reach_out_at=yesterday))
+    assert answered.send
+    once = evaluate([_loop()], _sit(last_reach_out_at=yesterday, unanswered=1))
+    assert not once.send
+    assert "went unanswered; waits 72h before another (30h so far)" in once.reason
+    later = evaluate([_loop()], _sit(last_reach_out_at=NOON - timedelta(hours=80), unanswered=1))
+    assert later.send
+    twice = evaluate([_loop()], _sit(last_reach_out_at=NOON - timedelta(days=9), unanswered=2))
+    assert not twice.send
+    assert "waits for them to write first" in twice.reason

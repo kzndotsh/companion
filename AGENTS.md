@@ -117,7 +117,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - Things they said about their near future are recorded as open loops (`core/openloops.py`), and a
   pure gate (`core/initiative.py`) decides every 15 minutes whether to reach out. It only runs in
   shadow mode: it drafts and records `would send` and sends nothing (`COMPANION_INITIATIVE`, `off` to
-  disable). Read it with `uv run companion initiative`.
+  disable). Read it with `uv run companion initiative`. Only firm plans about their own life become loops
+  (labels, not prompt rules), a loop they settle themselves is closed as resolved, and after an
+  unanswered live reach-out it waits 72 h, after two it waits for them to write first.
 - Each message outside a scene is read for how serious it is before the reply, and code adds a
   listening note (`core/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity 3)
   get no note and there is no crisis path yet.

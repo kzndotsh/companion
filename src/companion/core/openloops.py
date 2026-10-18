@@ -10,7 +10,7 @@ them for real, or not found word for word in their message.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta, tzinfo
 from enum import StrEnum
@@ -26,6 +26,7 @@ MAX_PAST_DAYS = 3
 MAX_CLAIM_CHARS = 160
 SCALES = ("minutes", "hours", "days", "unknown")
 SAME_DAY_SCALES = ("minutes", "hours")
+CERTAINTIES = ("firm", "maybe", "wish")
 _WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 # Whole words only: "now" must not match "know" or "snow", and "later this week" is not today.
 _SAME_DAY = re.compile(
@@ -63,6 +64,15 @@ class RawLoop:
     when: str
     scale: str
     sensitivity: int
+    certainty: str = "firm"
+    about_companion: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class RawResolution:
+    loop: str  # the label the prompt gave the open loop, "L1"
+    ref: str
+    quote: str
 
 
 PROMPT = get("system/openloops")
@@ -82,23 +92,46 @@ SCHEMA: dict[str, Json] = {
                     "when": {"type": "string"},
                     "scale": {"type": "string", "enum": list(SCALES)},
                     "sensitivity": {"type": "integer"},
+                    "certainty": {"type": "string", "enum": list(CERTAINTIES)},
+                    "about_companion": {"type": "boolean"},
                 },
-                "required": ["ref", "quote", "claim", "when", "scale", "sensitivity"],
+                "required": [
+                    "ref",
+                    "quote",
+                    "claim",
+                    "when",
+                    "scale",
+                    "sensitivity",
+                    "certainty",
+                    "about_companion",
+                ],
             },
-        }
+        },
+        "resolved": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "loop": {"type": "string"},
+                    "ref": {"type": "string"},
+                    "quote": {"type": "string"},
+                },
+                "required": ["loop", "ref", "quote"],
+            },
+        },
     },
-    "required": ["loops"],
+    "required": ["loops", "resolved"],
 }
 
 
 def _raw(item: Json) -> RawLoop | None:
     if not isinstance(item, dict):
         return None
-    text = {k: item.get(k) for k in ("ref", "quote", "claim", "when", "scale")}
-    level = item.get("sensitivity")
+    text = {k: item.get(k) for k in ("ref", "quote", "claim", "when", "scale", "certainty")}
+    level, about = item.get("sensitivity"), item.get("about_companion")
     if not all(isinstance(v, str) for v in text.values()):
         return None
-    if isinstance(level, bool) or not isinstance(level, int):
+    if isinstance(level, bool) or not isinstance(level, int) or not isinstance(about, bool):
         return None
     return RawLoop(
         str(text["ref"]),
@@ -107,6 +140,8 @@ def _raw(item: Json) -> RawLoop | None:
         str(text["when"]).strip().lower(),
         str(text["scale"]),
         level,
+        str(text["certainty"]).strip().lower(),
+        about,
     )
 
 
@@ -117,6 +152,49 @@ def parse(data: Json) -> list[RawLoop] | None:
         return None
     out = [_raw(item) for item in items]
     return None if any(r is None for r in out) else [r for r in out if r is not None]
+
+
+def parse_resolved(data: Json) -> list[RawResolution]:
+    """The loops their new messages settle. Malformed items are skipped: a missed resolution only
+    means the loop stays open, and the gate still never asks before its time."""
+    items = data.get("resolved") if isinstance(data, dict) else None
+    out: list[RawResolution] = []
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict):
+            continue
+        loop, ref, quote = item.get("loop"), item.get("ref"), item.get("quote")
+        if isinstance(loop, str) and isinstance(ref, str) and isinstance(quote, str):
+            out.append(RawResolution(loop.strip(), ref.strip(), quote))
+    return out
+
+
+def loop_labels(loops: Sequence[OpenLoop]) -> dict[str, OpenLoop]:
+    """Short labels for the loops still waiting, so the model can point at one."""
+    waiting = [lp for lp in loops if lp.state in {LoopState.OPEN, LoopState.ASKED}]
+    return {f"L{i}": lp for i, lp in enumerate(waiting, start=1)}
+
+
+def render_open_loops(labels: Mapping[str, OpenLoop]) -> str:
+    """The section of the prompt that lists the loops still waiting."""
+    if not labels:
+        return ""
+    lines = [f"[{label}] {lp.claim} (they said: {lp.quote!r})" for label, lp in labels.items()]
+    return "\n".join(["", "Open loops:", *lines])
+
+
+def to_resolution(
+    raw: RawResolution, labels: Mapping[str, OpenLoop], index: Mapping[str, Utterance]
+) -> tuple[OpenLoop, str] | str:
+    """The loop to close and the quote that settles it, or the reason it must not be closed."""
+    loop = labels.get(raw.loop)
+    if loop is None:
+        return f"no open loop labelled {raw.loop!r}"
+    source = index.get(raw.ref)
+    if source is None or source.speaker is not Speaker.USER or source.frame is not Frame.REAL:
+        return "not settled by something they said for real"
+    if not _holds(source, raw.quote):
+        return "the quote is not in their message"
+    return loop, evidence_from(source, raw.quote).quote
 
 
 def _days_until(weekday: int, said: datetime) -> int:
@@ -224,6 +302,8 @@ def _why_not(
         ),
         (source is not None and not _holds(source, raw.quote), "the quote is not in their message"),
         (raw.scale in SAME_DAY_SCALES, "minute-scale or same-day, not worth asking about later"),
+        (raw.about_companion, "about the companion or this chat, not their life"),
+        (raw.certainty != "firm", f"not a firm plan ({raw.certainty}), a friend would not ask"),
         (raw.sensitivity >= SENSITIVE, "sensitive, never raised on its own"),
         (not raw.claim or len(raw.claim) > MAX_CLAIM_CHARS, "no usable claim"),
         (

@@ -20,6 +20,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.openloops import Ticker, extract_open_loops, short_draft, tick
+from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -48,9 +49,14 @@ def store(tmp_path: Path) -> Store:
     return Store(tmp_path / "rel.sqlite")
 
 
-def _said(store: Store, text: str = "going to the vet tomorrow, wish me luck") -> Utterance:
+def _said(
+    store: Store,
+    text: str = "going to the vet tomorrow, wish me luck",
+    uid: str = "u1",
+    at: datetime = SAID,
+) -> Utterance:
     u = Utterance(
-        UtteranceId("u1"),
+        UtteranceId(uid),
         REL,
         SessionId("s"),
         TurnId("t1"),
@@ -58,7 +64,7 @@ def _said(store: Store, text: str = "going to the vet tomorrow, wish me luck") -
         text,
         Frame.REAL,
         "test",
-        SAID,
+        at,
     )
     store.append_utterance(u)
     return u
@@ -72,6 +78,8 @@ def _item(**over: object) -> dict[str, Json]:
         "when": "tomorrow",
         "scale": "days",
         "sensitivity": 0,
+        "certainty": "firm",
+        "about_companion": False,
     }
     item.update(over)  # type: ignore[arg-type]
     return item
@@ -191,3 +199,54 @@ async def test_a_loop_past_its_horizon_expires_and_is_never_sent(store: Store) -
     assert not verdict.send
     assert store.open_loops(REL)[0].state is LoopState.EXPIRED
     assert store.reach_outs(REL) == []
+
+
+class Seen(Fake):
+    def __init__(self, data: Json) -> None:
+        super().__init__(data)
+        self.prompts: list[str] = []
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        self.prompts.append(user)
+        return await super().extract(system, user, schema)
+
+
+async def test_a_loop_they_settle_themselves_is_closed_and_never_asked_about(store: Store) -> None:
+    loop = await _recorded(store)
+    u = _said(store, "the vet went fine, she is all good", "u2", SAID + timedelta(hours=1))
+    data: Json = {
+        "loops": [],
+        "resolved": [{"loop": "L1", "ref": "m2", "quote": "the vet went fine"}],
+    }
+    model = Seen(data)
+    notes: list[str] = []
+    counts = await extract_open_loops(
+        store, model, REL, {"m2": u}, {u.id}, (SAID, UTC), lambda r, d: notes.append(r)
+    )
+    assert counts.resolved == 1
+    assert "[L1] vet visit" in model.prompts[0]
+    assert store.open_loops(REL)[0].state is LoopState.RESOLVED
+    assert any("they brought it up themselves" in n for n in notes)
+    verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
+    assert not verdict.send
+    assert store.reach_outs(REL) == []
+    del loop
+
+
+async def test_a_live_reach_out_they_never_answered_holds_the_next_one(store: Store) -> None:
+    loop = await _recorded(store)
+    sent = ReachOut(
+        "r1", REL, loop.id, "live", "how did it go?", "due", LATER - timedelta(hours=20)
+    )
+    store.add_reach_out(sent)
+    verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
+    assert not verdict.send
+    assert "went unanswered" in verdict.reason
+
+
+async def test_a_shadow_reach_out_never_counts_as_unanswered(store: Store) -> None:
+    loop = await _recorded(store)
+    draft = ReachOut("r1", REL, loop.id, "shadow", "how?", "due", LATER - timedelta(hours=30))
+    store.add_reach_out(draft)
+    verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
+    assert verdict.send

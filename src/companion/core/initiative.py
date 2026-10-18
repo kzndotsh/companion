@@ -7,7 +7,7 @@ sits in front of any spend: nothing is drafted or sent unless it says to.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, tzinfo
 
@@ -22,6 +22,8 @@ class Caps:
     min_gap_hours: float = 20.0
     user_quiet_minutes: int = 90
     expire_days: float = 2.0
+    backoff_hours: float = 72.0  # after one reach-out went unanswered
+    max_unanswered: int = 2  # after this many in a row, wait for them to write first
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +34,7 @@ class Situation:
     in_scene: bool
     sent_today: int
     last_reach_out_at: datetime | None
+    unanswered: int = 0  # sent reach-outs since their last message
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,18 +84,49 @@ def evaluate(loops: Sequence[OpenLoop], sit: Situation, caps: Caps = Caps()) -> 
 
 
 def _hold_reason(sit: Situation, caps: Caps) -> str | None:
-    if in_quiet_hours(sit.now, sit.tz, caps):
-        return f"quiet hours, {_clock(caps.quiet_start)} to {_clock(caps.quiet_end)}"
-    if sit.in_scene:
-        return "a pretend scene is in progress"
-    if sit.sent_today >= caps.max_per_day:
-        return f"already reached out today ({sit.sent_today} of {caps.max_per_day})"
-    if sit.last_reach_out_at is not None:
-        gap = _hours(sit.now - sit.last_reach_out_at)
-        if gap < caps.min_gap_hours:
-            return f"last reach-out was {gap:.0f}h ago, under the {caps.min_gap_hours:.0f}h minimum"
-    if sit.last_message_at is not None:
-        quiet = (sit.now - sit.last_message_at).total_seconds() / 60
-        if quiet < caps.user_quiet_minutes:
-            return f"the chat was active {quiet:.0f} minutes ago, under {caps.user_quiet_minutes}"
-    return None
+    """The first thing that holds a reach-out back, in order, or None."""
+    gap = None if sit.last_reach_out_at is None else _hours(sit.now - sit.last_reach_out_at)
+    quiet = (
+        None
+        if sit.last_message_at is None
+        else (sit.now - sit.last_message_at).total_seconds() / 60
+    )
+    checks: tuple[tuple[bool, Callable[[], str]], ...] = (
+        (
+            in_quiet_hours(sit.now, sit.tz, caps),
+            lambda: f"quiet hours, {_clock(caps.quiet_start)} to {_clock(caps.quiet_end)}",
+        ),
+        (sit.in_scene, lambda: "a pretend scene is in progress"),
+        (
+            sit.sent_today >= caps.max_per_day,
+            lambda: f"already reached out today ({sit.sent_today} of {caps.max_per_day})",
+        ),
+        (
+            sit.unanswered >= caps.max_unanswered,
+            lambda: (
+                f"the last {sit.unanswered} reach-outs went unanswered;"
+                " waits for them to write first"
+            ),
+        ),
+        (
+            gap is not None and sit.unanswered > 0 and gap < caps.backoff_hours,
+            lambda: (
+                f"the last reach-out went unanswered; waits {caps.backoff_hours:.0f}h"
+                f" before another ({gap or 0:.0f}h so far)"
+            ),
+        ),
+        (
+            gap is not None and gap < caps.min_gap_hours,
+            lambda: (
+                f"last reach-out was {gap or 0:.0f}h ago,"
+                f" under the {caps.min_gap_hours:.0f}h minimum"
+            ),
+        ),
+        (
+            quiet is not None and quiet < caps.user_quiet_minutes,
+            lambda: (
+                f"the chat was active {quiet or 0:.0f} minutes ago, under {caps.user_quiet_minutes}"
+            ),
+        ),
+    )
+    return next((reason() for held, reason in checks if held), None)

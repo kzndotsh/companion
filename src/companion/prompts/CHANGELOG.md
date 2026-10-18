@@ -496,7 +496,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/listening v1** (current). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 
 ## system/openloops
-- **system/openloops v1** (current). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing
+- **system/openloops v1** (superseded). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing
+- **system/openloops v2** (current). Each loop also carries a certainty (firm, maybe, wish) and whether it is about the companion, and code keeps only firm plans not about the companion: in shadow mode all four open loops were "maybe someday" statements or about the bot (adding vision), recorded although v1 said not to list things about the companion. The same call now also reports which open loops their new messages already settle, so code closes them as resolved and the companion never asks how something went after they told it. From the proactive-messaging review of 2026-10-18 (modality separates a plan from a wish).
 
 ## system/openloops-draft
 - **system/openloops-draft v1** (current). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing
