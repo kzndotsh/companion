@@ -63,7 +63,7 @@ All optional. Set them in `.env`.
 |---|---|
 | `COMPANION_MODEL` | model for everyday chat |
 | `COMPANION_SCENE_MODEL` | model for pretend scenes |
-| `COMPANION_REFLECT_MODEL` | model for memory extraction and the judges |
+| `COMPANION_REFLECT_MODEL` | model for memory extraction |
 | `COMPANION_DAILY_CAP_USD` | daily spend cap in dollars; `off` removes it |
 | `COMPANION_DB` | path to the SQLite database |
 | `COMPANION_PACE` | `off`, `quick`, `natural` (default) or `slow`. Use `off` when timing a run by hand |
@@ -138,5 +138,6 @@ basedpyright, a lefthook pre-commit and CI.
 | [docs/adr/](docs/adr) | decisions and their reasons |
 | [docs/inbox/](docs/inbox) | ideas that are not yet tasks |
 | [docs/research/](docs/research) | audits and studies |
-| [src/companion/prompts/](src/companion/prompts/README.md) | the prompts, and [how a request is assembled](src/companion/prompts/CHANGELOG.md) |
+| [src/companion/prompts/](src/companion/prompts/README.md) | every prompt, and how a request is assembled |
+| [prompts/CHANGELOG.md](src/companion/prompts/CHANGELOG.md) | every prompt version, with the flag or measurement behind it |
 | [evals/CHANGELOG.md](evals/CHANGELOG.md) | what the evals have measured |
