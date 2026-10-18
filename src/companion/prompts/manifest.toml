@@ -20,6 +20,7 @@
 "notes/scene-play" = "v1"
 "notes/scene-story" = "v1"
 "system/ack" = "v2"
+"system/callback-judge" = "v2"
 "system/character-frame" = "v1"
 "system/extract" = "v8"
 "system/frames" = "v1"

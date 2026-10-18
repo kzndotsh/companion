@@ -7,6 +7,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+from companion.core.callbacks import Check
 from companion.core.openloops import LoopState, OpenLoop
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
@@ -32,6 +33,7 @@ from companion.core.types import (
 from companion.core.views import ViewState, parse_mode
 from companion.store.sqlite import (
     beliefs,
+    callbacks,
     decisions,
     favorites,
     flags,
@@ -170,6 +172,35 @@ class Store:
 
     def reach_outs(self, rel: RelationshipId, since: datetime | None = None) -> list[ReachOut]:
         return open_loops.reach_outs_since(self._conn, rel, since)
+
+    def callbacks_unchecked(
+        self, rel: RelationshipId, since: datetime
+    ) -> list[callbacks.Unchecked]:
+        return callbacks.unchecked(self._conn, rel, since)
+
+    def add_callback_check(  # noqa: PLR0913, PLR0917
+        self,
+        rel: RelationshipId,
+        turn: TurnId,
+        check: Check,
+        judge: str,
+        prompt: str,
+        at: datetime,
+    ) -> None:
+        callbacks.add(self._conn, rel, turn, check, judge, prompt, at)
+
+    def reply_text(self, rel: RelationshipId, turn: TurnId) -> str:
+        row = self._conn.execute(
+            "SELECT text FROM utterances WHERE relationship_id = ? AND turn_id = ?"
+            " AND speaker = 'companion'",
+            (rel, turn),
+        ).fetchone()
+        return str(row["text"]) if row else ""
+
+    def callback_checks_since(
+        self, rel: RelationshipId, start: datetime
+    ) -> list[tuple[TurnId, Check]]:
+        return callbacks.since(self._conn, rel, start)
 
     def spend_since(
         self, rel: RelationshipId, since: datetime

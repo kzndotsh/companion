@@ -6,7 +6,7 @@ import asyncio
 import logging
 import os
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -14,6 +14,7 @@ import httpx
 from companion import characters, logsetup, prompts
 from companion.characters import Character
 from companion.core.ack import ReactAndReply, Reaction
+from companion.core.callbacks import report
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
@@ -23,6 +24,7 @@ from companion.core.spend import MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Commands, Hooks, Telegram
+from companion.loops.callbacks import check_new
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.openloops import Ticker, drafter, tick
@@ -328,6 +330,24 @@ async def run(data_dir: Path) -> None:
         finally:
             if initiative is not None:
                 initiative.cancel()
+
+
+async def callbacks_now(db: Path, relationship: str, days: int, cap_usd: float) -> str:
+    """Judge recent replies for callbacks, then report. For `companion callbacks`."""
+    load_dotenv(Path(".env"))
+    store = Store(db)
+    rel = RelationshipId(relationship)
+    start = utc_now() - timedelta(days=days)
+    try:
+        async with httpx.AsyncClient() as client:
+            judged, spent = await check_new(store, extractor(client), rel, start, cap_usd)
+        verdicts = store.callback_checks_since(rel, start)
+        replies = {t: store.reply_text(rel, t) for t, c in verdicts if c.callback}
+    finally:
+        store.close()
+    shown = [(replies[t], c) for t, c in verdicts if c.callback][-8:]
+    head = f"judged {judged} new replies for ${spent:.4f}\n"
+    return head + report([c for _, c in verdicts], days, shown)
 
 
 async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) -> str:

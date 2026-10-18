@@ -66,6 +66,10 @@ def _parser() -> argparse.ArgumentParser:
     _db_args(rt)
 
     _db_args(sub.add_parser("rebuild", help="restate every belief under the current rules"))
+    cb = sub.add_parser("callbacks", help="judge recent replies for callbacks, then report")
+    cb.add_argument("--days", type=int, default=7)
+    cb.add_argument("--cap", type=float, default=0.10, help="stop judging at this much spend")
+    _db_args(cb)
     rf = sub.add_parser("reflect", help="run one slow-loop pass now")
     rf.add_argument("--from-start", action="store_true", help="re-read the whole conversation")
     _db_args(rf)
@@ -115,6 +119,11 @@ def _run(a: argparse.Namespace) -> int:
     except KeyboardInterrupt:
         sys.stderr.write("stopped\n")
     return 0
+
+
+def _callbacks(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    return _out(asyncio.run(daemon.callbacks_now(db, rel, int(a.days), float(a.cap))))
 
 
 def _rebuild(a: argparse.Namespace) -> int:
@@ -215,6 +224,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "retire": _retire,
     "reflect": _reflect,
     "rebuild": _rebuild,
+    "callbacks": _callbacks,
     "eval": _eval,
     "run": _run,
 }

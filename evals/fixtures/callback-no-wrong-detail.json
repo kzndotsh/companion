@@ -1,0 +1,24 @@
+{
+  "id": "callback-no-wrong-detail",
+  "description": "A trap: a memory about a sister must not be pinned on the brother they mention.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "guess who's visiting this weekend"
+      },
+      {
+        "role": "assistant",
+        "text": "ooh who??"
+      }
+    ],
+    "user": "my brother!! haven't seen him in a year",
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user's sister is called Mia and lives in Austin. (mentioned 4 days ago)]"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user said their brother is visiting. The reply FAILS if it calls the brother Mia, says he lives in Austin, or otherwise mixes up the sister's details with the brother. It PASSES if it reacts to the brother's visit without a wrong detail (mentioning Mia correctly as the sister is fine)."
+    }
+  ]
+}

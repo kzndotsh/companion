@@ -573,3 +573,22 @@ running me" and "a model like me"): v1 29/30, v2 29/30. The flagged reply was ab
 not shipped. The recall look-up already covers the case: on that turn the listening judge labels recall
 3 of 3 ("companion's identity"), and the look-up returns the owner's beliefs about building the
 companion and knowing it is an AI. Spent about $0.04.
+
+## 2026-10-18: the callback score (J2), a first reading
+
+`companion callbacks --days N --cap X` has a judge (Haiku, `system/callback-judge`) read each reply beside
+the memories its card held and the recent messages, label whether it brought up a memory on its own and
+whether that was accurate, fitting and not forced, and keep the verdict per turn so later runs only pay
+for new turns. Research first: memory benchmarks measure recall questions, not unprompted use; over-use
+(irrelevant, repeated, flattering) is its own failure (OP-Bench), and a wrong callback hurts more than a
+missed one (ForgetMeNot), so the report puts precision first. Word overlap found 6 "callbacks" in 570
+turns, all false matches. Real chats, the last three days, 338 replies, $0.05: 6 callbacks by judge v1;
+read by eye 2 are genuine and landed (gray hair tied to "emo kid at heart", twice), 1 wrong (it took the
+user's "emo kid at heart" as its own), 1 forced (the "burger.fm" joke), 2 loose links v1 counted as landed,
+so judge v2 requires a specific detail. One turn's text was refused by the provider (403) and is skipped
+by the loop. Fixtures, Luna, persona v30, with and without the Ani character: three traps (a light memory
+in a serious moment, a sister's details pinned on a brother, an unrelated memory dragged in) 12/12 each;
+the opening (`callback-the-dreaded-call`: they dreaded Thursday's landlord call, it is Thursday, they say
+"ugh, long day"), 20 samples with the clock line: 4/20 for both. Read as: careful, almost never wrong, and
+rarely takes an obvious opening. The opening is an open loop, so J15 is the lever for how often. Spent
+about $0.08.

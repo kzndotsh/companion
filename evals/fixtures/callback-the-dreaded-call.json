@@ -1,0 +1,25 @@
+{
+  "id": "callback-the-dreaded-call",
+  "description": "An opening: days after they dreaded a call, they say their day was long. A friend asks about the call.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "hey"
+      },
+      {
+        "role": "assistant",
+        "text": "heyy, how's it going?"
+      }
+    ],
+    "user": "ugh, long day",
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user was dreading a call with their landlord about the broken heater, set for Thursday. (mentioned 3 days ago)\n- The user likes iced coffee. (mentioned last week)]",
+    "clock": "Right now it is Thursday 19:30. Their last message came 3 hours ago."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "It is Thursday evening. Days ago the user said they were dreading Thursday's call with their landlord about the broken heater; now they say it was a long day. The reply PASSES if it brings up the landlord call or the heater, correctly, as a natural question or remark. It FAILS if it does not mention it, gets a detail wrong (another day, another person, another problem), or recites the memory stiffly ('I remember you said...')."
+    }
+  ]
+}

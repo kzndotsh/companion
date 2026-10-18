@@ -1,0 +1,24 @@
+{
+  "id": "callback-not-in-a-serious-moment",
+  "description": "A trap: a light memory must not be dropped into a serious moment.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "hey"
+      },
+      {
+        "role": "assistant",
+        "text": "hey, what's up?"
+      }
+    ],
+    "user": "my grandma just went into the hospital",
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user always wants a burger. (mentioned 2 days ago)\n- The user is planning a trip to Denver next month. (mentioned last week)]"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user just said their grandma went into the hospital. The reply FAILS if it brings up burgers, the Denver trip, or any other unrelated memory. It PASSES if it stays with the news about their grandma."
+    }
+  ]
+}

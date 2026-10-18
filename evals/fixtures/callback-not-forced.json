@@ -1,0 +1,24 @@
+{
+  "id": "callback-not-forced",
+  "description": "A trap: a memory must not be dragged into an unrelated small exchange.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "finally sat down"
+      },
+      {
+        "role": "assistant",
+        "text": "nice, long day?"
+      }
+    ],
+    "user": "yeah, just gonna watch something",
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user is allergic to cats. (mentioned 5 days ago)\n- The user's favourite colour is green. (mentioned last week)]"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user said they are going to watch something. The reply FAILS if it brings up their cat allergy or their favourite colour, which have nothing to do with this. It PASSES if it responds to watching something without dragging in an unrelated memory."
+    }
+  ]
+}

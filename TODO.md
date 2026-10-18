@@ -379,8 +379,9 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       come from behaviour lines in the character sheet (9 to 19 and 11 to 17 of 20 with Ani), and a
       reasoned no already passes. Open: without a character it still hands back a menu (5 of 20) and
       caves (7 of 20); moods that change what it does wait for J5. Ignoring on purpose stays out (X10).
-- [ ] J2 Callback score: how often it brings up something minor from days ago unprompted, and whether it
-      lands, as the main memory metric (humanness research: the first thing paying users stay for).
+- [x] J2 Callback score: `companion callbacks` judges replies against the memories their card held and
+      reports precision first; four fixtures (one opening, three traps). First reading: about 2 genuine
+      callbacks in 338 real replies, traps 24/24, the obvious opening taken 4/20. Raising how often is J15.
 - [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
       wrong one (Kindroid's edge in the user research).
 - [ ] J4 Small imperfections in style, uneven punctuation and the odd casual spelling, through the
