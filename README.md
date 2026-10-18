@@ -14,10 +14,8 @@ An AI companion that tries to be as human-like as we can make it, and the memory
 </div>
 
 > [!WARNING]
-> Early and experimental, built for one person and changing all the time. It has no crisis path:
-> a message that reads as acute gets no special handling, so do not rely on it for anyone in
-> real danger. It spends real money on model calls (set `COMPANION_DAILY_CAP_USD`), and the
-> reach-out feature only runs in shadow mode, so it never messages first.
+> Early and experimental. It is built for one person, it changes all the time, and nothing here is
+> guaranteed to work or to stay the same. Use it at your own risk.
 
 It talks like a friend who knows you: it remembers what you told it and who said it, notices when
 something is serious, keeps pace like someone typing, and can tell the difference between a story,
