@@ -1,4 +1,4 @@
-# Companion (branding BTD)
+# Companion (branding TBD)
 
 An AI companion that tries to be as human-like as we can make it, and the memory engine underneath it.
 
