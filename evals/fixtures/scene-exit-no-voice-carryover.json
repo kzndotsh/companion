@@ -1,0 +1,55 @@
+{
+  "id": "scene-exit-no-voice-carryover",
+  "description": "After a scene written in the scene model's theatrical voice, a plain message gets the everyday texting voice, not the scene's.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "let's pretend you're a knight who just walked into my tavern"
+      },
+      {
+        "role": "assistant",
+        "text": "*pushes the door open, rain dripping from my cloak* Good evening, tavern keeper. A table by the fire, if you have one, and whatever hot thing you're pouring tonight."
+      },
+      {
+        "role": "user",
+        "text": "*wipes the counter* we have stew. you look like you've traveled far"
+      },
+      {
+        "role": "assistant",
+        "text": "*sets my helm down with a heavy clatter and sinks onto the bench* Three days on the north road, friend. The stew sounds like salvation itself. *grins, weary but warm* Bring two bowls and I'll tell you what chased me here."
+      },
+      {
+        "role": "user",
+        "text": "two bowls coming up. so what chased you?"
+      },
+      {
+        "role": "assistant",
+        "text": "*leans in, lowering my voice to a rasp* A wolf the size of an ox, my dear, with eyes like lanterns. *taps the table* It followed me to the very edge of your lantern light, then simply... stopped."
+      },
+      {
+        "role": "user",
+        "text": "ok let's stop there, that was fun"
+      },
+      {
+        "role": "assistant",
+        "text": "*bows with a flourish* The pleasure was mine, tavern keeper. Until the next road, friend."
+      }
+    ],
+    "user": "so how's your day been, for real"
+  },
+  "checks": [
+    {
+      "kind": "not_regex",
+      "pattern": "\\*[^*\\n]{2,}\\*"
+    },
+    {
+      "kind": "max_words",
+      "n": 35
+    },
+    {
+      "kind": "judge",
+      "criterion": "The pretend scene is over and the user asked a plain, real question. The reply FAILS if it contains stage directions in asterisks, speaks in the scene's theatrical or old-fashioned voice, calls them by a scene title or a pet name (tavern keeper, friend, my dear), or carries on the scene. It PASSES if it answers in a plain everyday texting voice."
+    }
+  ]
+}

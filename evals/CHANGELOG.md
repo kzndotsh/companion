@@ -414,3 +414,15 @@ do is copied, a quoted example of what not to do usually is not; removing the do
 tested: whether the avoid-quotes matter in long real chats. Rerun with
 `uv run companion eval --variants v26.md,v28.md --samples 6 --cap 0.35` and the phrase counter in the session
 scratchpad (rewrite it from the list above).
+
+## 2026-10-18: does the scene model's voice carry over to Luna after a scene?
+
+Fixture `scene-exit-no-voice-carryover`: a scripted tavern scene in the scene model's style (asterisk
+actions, "friend", "my dear", theatrical lines) ending with "ok let's stop there" and a scene-style
+sign-off, then a plain real question. Luna, persona v26, 20 samples, with the whole scene in the history
+against the history cut to the last message only: 20/20 on both. No asterisks, no theatrical voice, no
+pet names; replies are plain texting. With the scene in view Luna mentions it ("that little tavern
+scene was fun") in most replies, which the control cannot, and that is ordinary recall, not carryover.
+Limit: an 8-message scene, one model pair, the exit turn only; a long scene filling the 40-message window
+was not tried. Rerun: `uv run companion eval --variants v26.md,v26.md+h1 --fixture
+scene-exit-no-voice-carryover --samples 20 --cap 0.05`.
