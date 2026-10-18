@@ -54,6 +54,15 @@ Ordered. The first three can stop the bot, so they go first.
       is a prompt version plus a measured eval. Hypotheses only; the sources are mostly assertion. Experiment 1
       (parrot audit) done: persona v28 removes the quoted samples, and only the follow-examples were parroted
       ("scattered", 5 of 6 on the mood fixture to 0); v28 is not live, awaiting the owner's say.
+- [ ] T16 Randomized reply length. The length note gives the same limit for the same message length, so
+      reply lengths feel uniform. Vary the limit a little in code each turn (sometimes shorter, sometimes
+      longer), seeded per turn so replay still matches. Idea from a published companion app config that
+      picks a random word range per reply. Measure with `+len` against the fixed note.
+- [ ] T17 Closeness stage. A stage computed in code from real history (how long they have talked, how much
+      they have shared, how often they flirt), not from points a judge hands out for compliments, picks one
+      note line from "just met, already kind of likes them" up to "close" (ADR 0014). It paces intimacy by how
+      well they know each other, beside following their lead. Idea from the same config's five-stage romance
+      meter, which swaps one voice line per stage. Needs a design and the owner's say before code.
 
 ## Doing
 
