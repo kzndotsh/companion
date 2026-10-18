@@ -27,7 +27,7 @@ comparisons are still failures.
   distinctions, and the `agree-and-invent` criterion is rewritten to match: it now fails simple
   agreement and claimed experience, and no longer fails honest, hedged knowledge.
 - A new fixture covers knowing about versus having used something.
-- Authored tastes and lore (KANBAN R14, R3) sit on top of this: they give it opinions and a history
+- Authored tastes and lore (TODO.md cards R14 and R3) sit on top of this: they give it opinions and a history
   of its own, not knowledge. A persona that is a particular person may still have gaps ("not my
   world"), and that would be part of its core, not a global rule.
 - Earlier `agree-and-invent` results used the old criterion and are not comparable with later ones.

@@ -47,4 +47,4 @@ strength of the guide.
 ## Related
 
 The restating habit (T10, parked) and the substance question for trivial vents (T14) in
-`KANBAN.md`, and `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.
+`TODO.md`, and `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.

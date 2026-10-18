@@ -1,4 +1,4 @@
-# Kanban
+# Todo
 
 The work board. `docs/ROADMAP.md` keeps the principles, the current state and the measured facts.
 This file keeps the cards. Created 2026-10-16.

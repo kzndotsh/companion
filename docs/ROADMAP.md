@@ -2,14 +2,14 @@
 
 Written 2026-10-16. This is the one place that says what we are doing, in what order, and why.
 Update it when something ships, when a measurement changes the plan, or when a decision is made.
-It is allowed to be wrong, but it must never be stale. The work items themselves live in `KANBAN.md`;
+It is allowed to be wrong, but it must never be stale. The work items themselves live in `TODO.md`;
 the Now, Next and Later sections below say why they are in that order.
 
 How it fits with the rest of `docs/`:
 
 | Where | What goes there |
 |---|---|
-| `KANBAN.md` (repo root) | the cards: todo, doing, done, canceled and the backlog. Pull work from there |
+| `TODO.md` (repo root) | the cards: todo, doing, done, canceled and the backlog. Pull work from there |
 | this file | the principles, the current state, the measured facts and the reasoning behind the order |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |

@@ -13,7 +13,7 @@ local-only project: the git repo has no remote and the bot runs on the owner's m
 
 | Where | What |
 |---|---|
-| `KANBAN.md` | the work board: Todo, Doing, Done, Canceled, Backlog. Pull work from here |
+| `TODO.md` | the work board: Todo, Doing, Done, Canceled, Backlog. Pull work from here |
 | `docs/ROADMAP.md` | principles, current state, measured facts, the reasoning behind the order |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |

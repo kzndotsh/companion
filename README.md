@@ -157,7 +157,7 @@ list of prompts and how they fit together is in [src/companion/prompts/](src/com
 | Where | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) | the working rules for anyone, human or agent, changing this repo |
-| [KANBAN.md](KANBAN.md) | the work board |
+| [TODO.md](TODO.md) | the work board |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | current state, measured facts, and why the work is in this order |
 | [docs/adr/](docs/adr) | decisions and their reasons |
 | [docs/inbox/](docs/inbox) | ideas that are not yet tasks |
