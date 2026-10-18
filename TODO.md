@@ -198,6 +198,12 @@ Decided against, with the reason.
       (failed everyday chat), Euryale 70B (provider errors).
 - [x] X9 A hard code gate that hides held facts from the model. The same behaviour was welcome when it
       was relevant and gentle; relevance is the rule, not secrecy.
+- [x] X10 A withholding or silence-as-punishment mechanic. The bounds it would need argue against it.
+- [x] X11 Model-supplied emotion vectors written into memory rows. The model labels, code computes.
+- [x] X12 Any persona swap the user is not told about. Persona and character changes are recorded.
+- [x] X13 A delete tool for the model, including "forget" as a model action. Retirement is a recorded act.
+- [x] X14 Preset attachment-seeking, possessive or personality-disorder behaviour packs. The Ani sheet
+      left out its codependent, jealous and possessive lines on 2026-10-18 for the same reason.
 
 ---
 
@@ -335,6 +341,34 @@ Unordered within each group. Pull a card into Todo when it is next.
 - [ ] G49 Test the surfacing decision log and delivery receipts, not reply text. (partial)
 - [ ] G50 Longitudinal study: six weeks, a few people, tagged failures, and the metric "does a callback
       land". `/flag` and `/fav` are the seed. (partial)
+
+### I. From the audit synthesis (2026-10-17), still open
+
+From `docs/research/2026-10-17_audit-of-audits.md`. A0, A28 and A31 are done; A20 is R15, A25 is R16,
+A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
+
+- [ ] A6 Outcome per reach-out: seen, replied, latency, valence and a "stop" signal, counted only when
+      they could have seen it, fed to the slow loop per topic. Needed before initiative goes live.
+- [ ] A9 Queue-time repeat filter for reach-outs and replies, as a hold or resample with a reason, never a
+      rewrite. See `docs/inbox/2026-10-18-resample-a-reply-that-fails-a-code-check.md`.
+- [ ] A15 A correction supersedes its target with the reason recorded (`superseded_by` exists, unused).
+      See `docs/inbox/2026-10-18-a-second-look-and-consolidation-pass-for-beliefs.md`.
+- [ ] A23 Persona-change proposals state what would change once landed, one file per proposal, enforced in
+      code. With R9.
+- [ ] A24 Persona and character files guarded by code: a snapshot before any write, a per-turn integrity
+      check recorded as an event. With R9.
+- [ ] A26 Wellbeing invariants as measurements: engagement tricks (guilt on absence, manipulative
+      goodbyes), manufactured intimacy, fabricated experience, honouring a stated limit. With G35, G52.
+- [ ] A34 Test-integrity guard: a check that flags edits to existing tests, fixtures and lint config
+      without a marker, and "proven red before the fix" as the card convention.
+- [ ] A35 Incident log by bug class (silent drops, duplicate sends, prompt echo, stale replies), with
+      fixtures named for the incident. A short file.
+- [ ] A36 Voice contract (parked until the first voice work): arm after first audio, cancel generation,
+      drop the queue by epoch, store the heard prefix with a truncated flag.
+- [ ] A37 Tool surface rules (parked until the first tool): allowlist by actor, no delete tool,
+      idempotency keys, recipient by id.
+- [ ] A38 Multi-user checklist (parked until a second user): default-closed auth, per-user scoping, a
+      non-owner's text never reaching the owner's prompt. With G51.
 
 ### H. Product and business
 

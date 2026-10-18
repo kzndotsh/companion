@@ -251,3 +251,22 @@ async def test_a_shadow_reach_out_never_counts_as_unanswered(store: Store) -> No
     store.add_reach_out(draft)
     verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
     assert verdict.send
+
+
+async def test_no_paid_draft_is_made_unless_every_cheap_gate_passes(store: Store) -> None:
+    calls: list[str] = []
+
+    async def counting(loop: OpenLoop) -> str:
+        calls.append(loop.id)
+        return "how did it go?"
+
+    await _recorded(store)
+    not_due = SAID + timedelta(hours=1)
+    night = datetime(2026, 10, 15, 3, 0, tzinfo=UTC)  # due, but in quiet hours
+    for now in (not_due, night):
+        assert not (await tick(store, REL, now, UTC, counting, Ticker())).send
+    _said(store, "back again", "u9", LATER - timedelta(minutes=10))
+    assert not (await tick(store, REL, LATER, UTC, counting, Ticker())).send
+    assert calls == []
+    assert (await tick(store, REL, LATER + timedelta(hours=2), UTC, counting, Ticker())).send
+    assert len(calls) == 1
