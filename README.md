@@ -61,19 +61,19 @@ fight over updates. The "up as" line in the log shows which prefix and persona c
 
 All optional. Set them in `.env`.
 
-| Variable | Effect |
-|---|---|
-| `COMPANION_MODEL` | model for everyday chat |
-| `COMPANION_SCENE_MODEL` | model for pretend scenes |
-| `COMPANION_REFLECT_MODEL` | model for memory extraction |
-| `COMPANION_DAILY_CAP_USD` | daily spend cap in dollars; `off` removes it |
-| `COMPANION_DB` | path to the SQLite database |
-| `COMPANION_PACE` | `off`, `quick`, `natural` (default) or `slow`. Use `off` when timing a run by hand |
-| `COMPANION_SPLIT` | `off` stops long replies being sent as several messages |
-| `COMPANION_LISTEN` | `off` turns off the listening note |
-| `COMPANION_INITIATIVE` | `off` disables the shadow-mode reach-out gate |
-| `COMPANION_PROMPT_OVERRIDES` | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
-| `COMPANION_CHARACTER` | Unset by default. `mika` lays the character sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona: name, age, look, voice, tastes and an authored past. It still says it is an AI when sincerely asked |
+| Variable | Default | What it does |
+|---|---|---|
+| `COMPANION_MODEL` | `openai/gpt-6-luna` | model for everyday chat |
+| `COMPANION_SCENE_MODEL` | `deepseek/deepseek-v4-flash` | model for pretend scenes; `none` uses the everyday model |
+| `COMPANION_REFLECT_MODEL` | `anthropic/claude-haiku-5.5` | model for memory extraction |
+| `COMPANION_DAILY_CAP_USD` | `10` | daily spend cap in dollars; `off` removes it |
+| `COMPANION_DB` | the one database in `data/` | path to the SQLite database, for the CLI commands |
+| `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow`. Use `off` when timing a run by hand |
+| `COMPANION_SPLIT` | on | long replies are sometimes sent as two or three messages; `off` stops it |
+| `COMPANION_LISTEN` | on | the listening note before each reply; `off` turns it off |
+| `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
+| `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
+| `COMPANION_CHARACTER` | none | `mika` lays the character sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona: name, age, look, voice, tastes and an authored past. It still says it is an AI when sincerely asked |
 
 ## Commands
 
