@@ -9,8 +9,7 @@ This file keeps the cards. Created 2026-10-16.
 - **Doing holds at most two cards.** Finish or move one before pulling another.
 - **Todo is ordered.** Pull from the top.
 - Every card that changes how it talks needs a fixture or a measurement, and a line in
-  `src/companion/prompts/system/persona/CHANGELOG.md` (a persona version) or `ASSEMBLY.md` (code that changes what
-  the model is sent).
+  `src/companion/prompts/CHANGELOG.md` (a prompt version, or a code change to what the model is sent).
 - Tags in the backlog say where we stand: **built**, **partial**, **new**.
 - IDs: `H` housekeeping, `T` ready work, `G` from the greenfield design
   (`docs/research/2026-10-15_greenfield-design.md`, numbered as in the review of 2026-10-16),

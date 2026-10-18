@@ -63,4 +63,4 @@ whether v10 really does worse there. Roughly 10 cents.
 
 ## Related
 
-- `src/companion/prompts/system/persona/CHANGELOG.md`, entries for v10 and the v9 versus v10 measurement.
+- `src/companion/prompts/CHANGELOG.md`, entries for v10 and the v9 versus v10 measurement.

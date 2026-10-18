@@ -19,8 +19,7 @@ local-only project: the git repo has no remote and the bot runs on the owner's m
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background |
 | `src/companion/prompts/` | every prompt the bot sends, as versioned text: `system/` (the persona and the judges' prompts), `notes/` (lines added to the talker's system block each turn), `messages/`. `README.md` lists them, `manifest.toml` says which version is current |
-| `src/companion/prompts/system/persona/CHANGELOG.md` | every persona version, with its measurement |
-| `src/companion/prompts/ASSEMBLY.md` | code changes to what the model is sent besides the prompts |
+| `src/companion/prompts/CHANGELOG.md` | every version of every prompt and every change to how a request is assembled, with the reason |
 | `evals/README.md`, `evals/CHANGELOG.md` | how the eval runner works, and what it has measured |
 | `evals/fixtures/` | public scripted fixtures. `evals/local/` is private, not committed |
 
@@ -69,8 +68,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   fails otherwise). A judge's or extractor's logged decision carries `name@version`.
 - Dropped and candidate persona versions stay as files. Each `vN.md` has a changelog entry and each
   entry has its file (`tests/test_persona_versions.py` fails otherwise). Never delete a version.
-- A code change that alters what the model is sent goes in `ASSEMBLY.md`. A persona change goes in
-  the persona `CHANGELOG.md`; shipping a persona is changing `system/persona` in `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
+- A prompt change, or a code change that alters what the model is sent, goes in
+  `src/companion/prompts/CHANGELOG.md`. Shipping a persona is changing `system/persona` in
+  `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
   live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
 - Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`). A test enforces it.

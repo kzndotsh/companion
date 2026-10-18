@@ -7,7 +7,7 @@ from pathlib import Path
 
 from companion import prompts
 
-PERSONA = Path(__file__).resolve().parents[1] / "src/companion/prompts/system/persona"
+CHANGELOG = Path(__file__).resolve().parents[1] / "src/companion/prompts/CHANGELOG.md"
 
 
 def _files() -> set[int]:
@@ -15,8 +15,8 @@ def _files() -> set[int]:
 
 
 def _entries() -> set[int]:
-    text = (PERSONA / "CHANGELOG.md").read_text(encoding="utf-8")
-    return {int(n) for n in re.findall(r"^- \*\*v(\d+)\b", text, re.M)}
+    text = CHANGELOG.read_text(encoding="utf-8")
+    return {int(n) for n in re.findall(r"^- \*\*system/persona v(\d+)\*\*", text, re.M)}
 
 
 def test_every_version_file_has_a_changelog_entry() -> None:

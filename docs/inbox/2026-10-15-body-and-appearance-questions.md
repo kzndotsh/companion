@@ -21,7 +21,7 @@ was grounded.
   confident opinion about something the companion cannot know (for example how other products
   compare), the companion agrees and invents supporting detail. On that turn the persona agreed in
   10 of 10 replays. A rule in the persona cut it to about half, so rules help but do not fully hold
-  on this model. The history of that work is in `src/companion/prompts/system/persona/CHANGELOG.md`.
+  on this model. The history of that work is in `src/companion/prompts/CHANGELOG.md`.
 - Here the same pattern appears on a more vulnerable topic. A reassurance that is not grounded can
   feel good now and cost trust later, if reality or someone else's opinion contradicts it.
 - Honesty is how the companion earns the right to be believed when it matters.
@@ -70,4 +70,4 @@ B is fine if that is what the user wants.
 - Sensitive personal facts the user shares are stored at sensitivity 2 or higher, so they are held
   and not volunteered. The user can ask for any belief to be closed at any time
   (`companion retire <id> --reason ...`).
-- Persona history: `src/companion/prompts/system/persona/CHANGELOG.md`.
+- Persona history: `src/companion/prompts/CHANGELOG.md`.

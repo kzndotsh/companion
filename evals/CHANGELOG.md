@@ -10,7 +10,7 @@ rerun, and how many samples stood behind the result. Read `README.md` for how th
   The turn that was flagged in real use was a rare failure (about 1 in 17 across all samples).
 - **2026-10-15. v9 and v10 are not distinguishable** on `agree-and-invent`,
   `play-invitation` and `signoff-then-time-skip` at 7 samples per cell. See
-  `src/companion/prompts/system/persona/CHANGELOG.md`.
+  `src/companion/prompts/CHANGELOG.md`.
 - **2026-10-15. The judge agreed with a human reading on 23 of 24** judged replies in the first
   run. This was a spot check by the author, not independent labelling.
 - **Lesson on small samples.** Two five-sample gaps in a row (memory block, v9 against v10) looked
@@ -214,7 +214,7 @@ Rerun: `uv run companion eval --variants v25.md,v25.md+medium --samples 6 --cap 
 
 ## 2026-10-17: a length note for short statements
 
-Measurement behind `core/length.py` (see `ASSEMBLY.md`). Where the gap was: bot words divided by
+Measurement behind `core/length.py` (see the assembly section of `src/companion/prompts/CHANGELOG.md`). Where the gap was: bot words divided by
 user words by what the user sent, 275 user and 269 bot real messages: statements of 16+ words 1.3x,
 questions of 16+ 1.2x, statements of 7 to 15 words 2.3x, questions of 7 to 15 3.5x, statements of 6
 or fewer 3.8x (median 4 words answered with 15), questions of 6 or fewer 5.2x. The gap is on short

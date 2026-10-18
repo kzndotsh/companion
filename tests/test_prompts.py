@@ -17,7 +17,6 @@ PLACEHOLDERS = {
     "notes/clock": {"stamp"},
     "notes/clock-gap": {"gap"},
 }
-SEPARATE_CHANGELOGS = {"system/persona": ROOT / "system" / "persona" / "CHANGELOG.md"}
 
 
 def _all_versions() -> dict[str, list[str]]:
@@ -40,24 +39,10 @@ def test_every_prompt_folder_is_in_the_manifest() -> None:
 
 def test_every_version_has_a_changelog_entry_and_every_entry_has_a_file() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    entries = set(re.findall(r"\*\*(\S+) (v\d+)\*\*", changelog))
-    files = {
-        (name, v)
-        for name, vs in _all_versions().items()
-        if name not in SEPARATE_CHANGELOGS
-        for v in vs
-    }
+    entries = set(re.findall(r"^- \*\*(\S+) (v\d+)\*\*", changelog, re.M))
+    files = {(name, v) for name, vs in _all_versions().items() for v in vs}
     assert files - entries == set(), "a version file has no entry in prompts/CHANGELOG.md"
     assert entries - files == set(), "a changelog entry has no file"
-
-
-def test_a_prompt_with_its_own_changelog_has_an_entry_for_every_version() -> None:
-    for name, path in SEPARATE_CHANGELOGS.items():
-        if not path.exists():
-            continue
-        text = path.read_text(encoding="utf-8")
-        entries = {f"v{n}" for n in re.findall(r"^- \*\*v(\d+)\b", text, re.M)}
-        assert set(prompts.versions(name)) == entries, f"{name} files and changelog entries differ"
 
 
 def test_files_end_in_one_newline_and_have_no_trailing_spaces_or_carriage_returns() -> None:

@@ -1,8 +1,7 @@
 # Prompts
 
-Every prompt the bot sends besides the persona lives here as versioned text, and code loads it by
-name (`from companion.prompts import get`). The persona keeps its own folder and the same rules:
-`src/companion/prompts/system/persona/` (`vN.md`, `CHANGELOG.md`, `ASSEMBLY.md`).
+Every prompt the bot sends lives here as versioned text, the persona included, and code loads it by
+name (`from companion.prompts import get`).
 
 ## Rules
 
@@ -11,14 +10,36 @@ name (`from companion.prompts import get`). The persona keeps its own folder and
   `manifest.toml`. A test fails if any of those is missing.
 - Placeholders are written `$name` and filled in with `render`. A missing value is an error.
 - A decision a judge or extractor logs carries `name@version`, so a flag can be traced to the exact text.
-- To try another version without shipping it: `COMPANION_PROMPT_OVERRIDES="ack=v2"` before the process starts.
+- To try another version without shipping it: `COMPANION_PROMPT_OVERRIDES="system/ack=v2"` before the process starts.
 - `uv run companion prompts` lists the current versions.
+
+## How a request is assembled
+
+There is no single overall system prompt. The talker's request has three parts, in this order:
+
+1. **System block 1, the persona** (`system/persona`, about 1,800 words). It is the same on every turn,
+   so the provider caches it.
+2. **System block 2, the card**, rebuilt each turn: the clock line (`notes/clock`, `notes/clock-gap`),
+   the memory lines (what is known about them, with how old each is, and the companion's own approved
+   views), then any notes that apply this turn: the habit notes (`notes/habit-*`), the scene note
+   (`notes/scene-*`), the length note (`notes/length`) and the listening note (`notes/listening-*`).
+   Notes and memory ride here and never in a user message, because anything in a user message can be read
+   as something they said.
+3. **The messages**: the last 40 messages of the conversation, then their new message exactly as typed.
+
+Everything else is a separate small model call with its own system prompt and a short excerpt of the
+chat, and none of them sees the persona: the ack, frame, reaction, listening and habit judges, the
+extractors for memory, the open-loop extractor and the follow-up draft, and the view checks. Each logs
+`name@version` in its decision.
+
+To see exactly what a past turn sent: `uv run companion replay <turn_id> --show-prompt`. How the
+assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 
 ## What is here
 
 | Name | Kind | Used for | Current |
 |---|---|---|---|
-| `system/persona` | system | the talker's system prompt, the persona (`system/persona/CHANGELOG.md` has its own measurements) | v26 |
+| `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v26 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |
@@ -48,6 +69,3 @@ name (`from companion.prompts import get`). The persona keeps its own folder and
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
 | `system/views-implicated` | system | which views a flag implicates, `core/beliefs/views_implicated.py` | v1 |
-
-`ASSEMBLY.md` here records code changes to what the model is sent besides these prompts: where the
-memory card and notes sit, how the clock is shown, what the history window leaves out.

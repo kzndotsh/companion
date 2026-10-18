@@ -14,8 +14,7 @@ How it fits with the rest of `docs/`:
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background |
-| `src/companion/prompts/system/persona/CHANGELOG.md` | every persona version, with the measurement |
-| `src/companion/prompts/ASSEMBLY.md` | code changes to what the model is sent besides the persona (card, clock, notes, which model answers) |
+| `src/companion/prompts/CHANGELOG.md` | every version of every prompt, and code changes to what the model is sent (card, clock, notes, which model answers) |
 | `evals/README.md` | how the eval runner works |
 | `evals/CHANGELOG.md` | what the runner has measured, newest last |
 
@@ -66,11 +65,11 @@ Measured facts that drive the plan:
 
 | Finding | Number | Where |
 |---|---|---|
-| Luna leads everyday chat | 59/64 on the public fixtures, DeepSeek 49/64 | persona CHANGELOG |
-| DeepSeek keeps a scene going | 76% of escalating turns, Luna 52% | persona CHANGELOG |
-| Haiku 5.5 as talker has a redirect-and-disclaim reflex | 0/16 on a real turn, Luna 15/16 | persona CHANGELOG |
-| Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | `ASSEMBLY.md` |
-| The memory block in the user's message made it recite | held facts surfaced 8/24, now 0/24 | `ASSEMBLY.md` |
+| Luna leads everyday chat | 59/64 on the public fixtures, DeepSeek 49/64 | prompts CHANGELOG |
+| DeepSeek keeps a scene going | 76% of escalating turns, Luna 52% | prompts CHANGELOG |
+| Haiku 5.5 as talker has a redirect-and-disclaim reflex | 0/16 on a real turn, Luna 15/16 | prompts CHANGELOG |
+| Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | prompts CHANGELOG, assembly |
+| The memory block in the user's message made it recite | held facts surfaced 8/24, now 0/24 | prompts CHANGELOG, assembly |
 | The leaderboard's willingness score lined up with scene results | W/10 7.2 models did best | `evals/CHANGELOG.md` |
 
 ## Housekeeping that can stop the bot
@@ -168,7 +167,7 @@ Not tasks. Read each before acting on it.
 ## Working agreement
 
 - **One thing at a time.** Pick one item from Now, finish it with its measure, then move.
-- **Every change ships with a fixture or a measurement** and a line in the persona CHANGELOG when it
+- **Every change ships with a fixture or a measurement** and a line in the prompts CHANGELOG when it
   changes how it talks.
 - **A spend cap on every eval**, stated before the run.
 - **Flags set the order.** If a flag contradicts this file, the flag wins and the file changes.
