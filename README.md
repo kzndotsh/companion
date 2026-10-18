@@ -1,6 +1,23 @@
-# Companion
+<div align="center">
+
+<h1>Companion</h1>
 
 An AI companion that tries to be as human-like as we can make it, and the memory engine underneath it.
+
+<p>
+    <a href="https://www.python.org/downloads/">
+        <img alt="Python" src="https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white"></a>
+    <a href="https://docs.astral.sh/uv/">
+        <img alt="uv" src="https://img.shields.io/badge/uv-managed-DE5FE9?logo=uv&logoColor=white"></a>
+</p>
+
+</div>
+
+> [!WARNING]
+> Early and experimental, built for one person and changing all the time. It has no crisis path:
+> a message that reads as acute gets no special handling, so do not rely on it for anyone in
+> real danger. It spends real money on model calls (set `COMPANION_DAILY_CAP_USD`), and the
+> reach-out feature only runs in shadow mode, so it never messages first.
 
 It talks like a friend who knows you: it remembers what you told it and who said it, notices when
 something is serious, keeps pace like someone typing, and can tell the difference between a story,
