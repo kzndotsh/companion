@@ -370,6 +370,29 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] A38 Multi-user checklist (parked until a second user): default-closed auth, per-user scoping, a
       non-owner's text never reaching the owner's prompt. With G51.
 
+### J. From the research walk-through with the owner (2026-10-18)
+
+- [ ] J1 More attitude, in character: wants of its own, moods that change what it does, and an occasional
+      no or ignore with a reason the moment supplies, never rudeness. Through the character sheet and
+      fixtures (humanness research: stakes, Neuro-sama's defiance read as agency).
+- [ ] J2 Callback score: how often it brings up something minor from days ago unprompted, and whether it
+      lands, as the main memory metric (humanness research: the first thing paying users stay for).
+- [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
+      wrong one (Kindroid's edge in the user research).
+- [ ] J4 Small imperfections in style, uneven punctuation and the odd casual spelling, through the
+      character sheet, never by editing replies (HAL cue weights: polish is an AI tell).
+- [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
+      days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
+      section 5: the model picks a label, code owns the size).
+- [ ] J6 Its own time away: after a gap it has something of its own to say about the interval, recorded as
+      lore so it stays consistent (greenfield "continuous" probe; ties to R3 and A22).
+- [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk
+      about that") so marks sort by failure type (greenfield section 10).
+- [ ] J8 Model-swap protocol: probe the old model, diff the new one against it, tell the owner in
+      character, reversible for a window (greenfield section 9: the top reason users quit). With F.
+- [ ] J9 Made-up facts rate: count replies that state a fact about the user with no recorded belief behind
+      it, target zero, as an automatic eval metric (greenfield section 10).
+
 ### H. Product and business
 
 - [ ] G51 A second user, which exposes everything tuned to the first. (new)
