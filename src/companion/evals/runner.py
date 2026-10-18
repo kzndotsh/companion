@@ -13,7 +13,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from companion.core.extractor import Extractor
-from companion.core.length import length_note
+from companion.core.length import length_target
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.talker import Reply, Talker
@@ -86,7 +86,8 @@ def request_for(
         last = messages[-1]
         messages[-1] = Message(last.role, strip_card(last.content))
     card = base.card if variant.keep_card else ""
-    if variant.length and (note := length_note(messages[-1].content)):
+    if variant.length and (size := length_target(messages[-1].content)):
+        note = size.note
         card = f"{card}\n{note}" if card else note
     if variant.listen and listening:
         card = f"{card}\n{listening}" if card else listening

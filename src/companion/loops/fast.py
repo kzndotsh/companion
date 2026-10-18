@@ -43,7 +43,7 @@ from companion.core.frames import resolve as frame_resolve
 from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
-from companion.core.length import length_note
+from companion.core.length import LengthTarget, length_target
 from companion.core.listening import PROMPT as LISTEN_PROMPT
 from companion.core.listening import SERIOUS, listening_note
 from companion.core.listening import Judgement as ListenJudgement
@@ -292,16 +292,38 @@ def _react_alongside(
 
 
 def _notes(
-    c: Conversation, prior: list[Utterance], in_scene: Frame, text: str, heard: _Heard | None
+    c: Conversation, prior: list[Utterance], in_scene: Frame, size: LengthTarget | None
 ) -> list[str]:
     """What it should know about its own habits, a scene in progress and how long to answer.
     These go in the system block with the memory card: in a user message the model read them as
-    something they said. A scene gets no length note, since scenes run long on purpose, and nor
-    does a serious message, whose length the listening note sets."""
-    serious = heard is not None and heard[0].severity >= SERIOUS
-    size = length_note(text, serious=serious) if in_scene is Frame.REAL else None
-    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene), size]
+    something they said."""
+    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene), size.note if size else None]
     return [n for n in notes if n is not None]
+
+
+def _length(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
+) -> LengthTarget | None:
+    """The one length target for this turn, logged with the reason code wrote for it."""
+    severity = heard[0].severity if heard is not None else None
+    size = length_target(
+        t.text, severity=severity, in_scene=in_scene is not Frame.REAL, seed=str(t.turn)
+    )
+    reason = f"length: under about {size.words} words, {size.why}" if size else "length: no cap"
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            reason,
+            t.now,
+            detail={"words": size.words if size else None, "severity": severity},
+        )
+    )
+    return size
 
 
 def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
@@ -576,7 +598,7 @@ def _assemble(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) 
     shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)
-    notes = _notes(c, t.prior, in_scene, t.text, heard)
+    notes = _notes(c, t.prior, in_scene, _length(c, t, in_scene, heard))
     listening = _listening_note(c, t, heard)
     notes += [listening] if listening is not None else []
     card_text = "\n".join([clock, *shown, *notes])

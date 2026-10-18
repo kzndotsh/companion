@@ -63,7 +63,8 @@ async def test_turns_are_logged_and_replay_matches(store: Store, tmp_path: Path)
     for turn_id in _turn_ids(tmp_path / "rel.sqlite"):
         report = store_replay.replay_file(tmp_path / "rel.sqlite", turn_id)
         assert report.matched
-        assert [d.kind for d in report.decisions] == [DecisionKind.POLICY]
+        assert [d.kind for d in report.decisions] == [DecisionKind.POLICY, DecisionKind.POLICY]
+        assert any(d.reason.startswith("length: ") for d in report.decisions)
 
 
 async def test_empty_model_reply_is_logged_not_sent(store: Store, tmp_path: Path) -> None:
@@ -73,7 +74,7 @@ async def test_empty_model_reply_is_logged_not_sent(store: Store, tmp_path: Path
     report = store_replay.replay_file(
         tmp_path / "rel.sqlite", _turn_ids(tmp_path / "rel.sqlite")[0]
     )
-    assert [d.kind for d in report.decisions] == [DecisionKind.DO_NOTHING]
+    assert [d.kind for d in report.decisions] == [DecisionKind.POLICY, DecisionKind.DO_NOTHING]
 
 
 def _turn_ids(db: Path) -> list[str]:

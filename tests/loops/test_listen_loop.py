@@ -127,6 +127,7 @@ async def test_a_serious_or_acute_message_gets_no_length_cap(
 ) -> None:
     talker = await _ask(store, Judge(_labels(severity)), text="my mom is in the hospital")
     assert (SHORT_NOTE in talker.seen[0].card) is capped
+    assert ("under about 35 words" in talker.seen[0].card) is (severity == 2)
 
 
 class AckAndListen:

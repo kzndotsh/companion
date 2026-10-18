@@ -11,6 +11,7 @@ from companion import prompts
 ROOT = Path(str(resources.files("companion.prompts")))
 PLACEHOLDERS = {
     "notes/length": {"words", "unit", "limit"},
+    "notes/length-serious": {"limit"},
     "notes/habit-opener": {"n", "total", "word"},
     "notes/habit-phrases": {"phrases"},
     "notes/habit-moves": {"habits"},
@@ -99,3 +100,9 @@ def test_overrides_pick_another_version_and_unknown_names_are_refused(
 
 def test_versions_are_listed_in_numeric_order() -> None:
     assert prompts.versions("system/extract") == [f"v{n}" for n in range(1, 9)]
+
+
+def test_the_readme_lists_every_prompt_at_its_current_version() -> None:
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    listed = dict(re.findall(r"^\| `([^`]+)` \|.*\| (v\d+) \|$", readme, re.MULTILINE))
+    assert listed == prompts.manifest(), "prompts/README.md is out of step with manifest.toml"

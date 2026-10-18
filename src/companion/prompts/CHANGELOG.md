@@ -406,6 +406,15 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   now measures from their last message, so a message the companion sent on its own in between does
   not shorten the gap.
 
+- **One owner for length, varied per turn.** `core/length.py` chooses the one length target for a turn
+  from their message, the listening severity and the scene, and is the only place a number of words is
+  put in front of the model: a short statement gets its limit (as before), now scaled by a factor between
+  0.6 and 1.5 drawn from the turn id, so replies are not all one size and a replay rebuilds the same
+  note; a serious message gets 35 words through `notes/length-serious` (the sentence moved out of the
+  serious listening note, v5); acute, questions and scenes get none. Each turn logs a "length:" decision
+  with the target and why. The variation is not measured yet (T16): the eval's `+len` uses no seed, so it
+  still sends the unvaried limit.
+
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
 
@@ -427,6 +436,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/length
 - **notes/length v1** (current). Moved here on 2026-10-18 from `core/length.py`, text unchanged. Earlier history is in git.
 
+## notes/length-serious
+- **notes/length-serious v1** (current). New. The length line for a message judged serious, filled by `core/length.py` with the 35 words that were inside the serious listening note. One owner for length: no other note or prompt states a number of words.
+
 ## notes/listening-everyday
 - **notes/listening-everyday v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **notes/listening-everyday v2** (superseded). From commit 7bbfebf on 2026-10-18: feat(evals): an epitome check scores reaction, interpretation, exploration and support; the everyday listening note requires one new thing; trivial vents still only restate (T14)
@@ -435,7 +447,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/listening-health
 - **notes/listening-health v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **notes/listening-health v2** (current). From commit f27ea5c on 2026-10-18: fix(listening): the severity-2 note no longer hands the model phrases to parrot (prescriber, talk it through or just let it out) and asks for everyday words; first ten hand marks recorded
-- **notes/listening-serious v4** (current). v3 without "say how heavy it is": the owner marked "that's a heavy feeling to sit with" as something no one would text, and the word came from the note. It now asks to show they take it seriously in their own words. Measurement in `evals/CHANGELOG.md`.
+- **notes/listening-serious v4** (superseded). v3 without "say how heavy it is": the owner marked "that's a heavy feeling to sit with" as something no one would text, and the word came from the note. It now asks to show they take it seriously in their own words. Measurement in `evals/CHANGELOG.md`.
+- **notes/listening-serious v5** (current). v4 without "Keep the whole reply under about 35 words": the number moved to `core/length.py`, the one place a length target is chosen, and reaches the model as `notes/length-serious`. The words the model reads for a serious message are the same; they now come from two notes.
 
 ## notes/listening-offer
 - **notes/listening-offer v1** (current). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant

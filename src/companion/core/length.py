@@ -1,22 +1,41 @@
-"""A note about how long to answer, from how long they wrote, never from the model.
+"""How long to answer: the one place a length target is chosen, never by a model (ADR 0014).
 
 On short, casual statements the replies ran three to four times longer than the message they
 answered (a 4-word message got a median of 15 words; see `evals/CHANGELOG.md`). When they wrote a
-lot, or asked something, the length was already about right, so the note only appears for a short
-statement. It rides in the system block with the clock, never in their message. A serious or acute
-message gets no length note: the listening note sets the length there, and a short "i want to die"
-must not be answered under a word cap.
+lot, or asked something, the length was already about right, so a short statement is the only
+everyday case with a target. A serious message gets a fixed target that used to sit inside the
+serious listening note (35 words, measured there). An acute message, a scene and a question get
+none: a short "i want to die" must never be answered under a word cap.
+
+The target for a short statement varies a little each turn, seeded by the turn, so replies are not
+all the same size and a replay still rebuilds the same note. The note rides in the system block
+with the clock, never in their message, and only this module puts a number of words in front of
+the model.
 """
 
 from __future__ import annotations
 
 import math
+import random
+from dataclasses import dataclass
 
 from companion.prompts import get
 
 MAX_USER_WORDS = 12
-_NOTE = get("notes/length")
 FLOOR_WORDS = 8
+MIN_VARIED_WORDS = 5
+VARY = (0.6, 1.5)  # the range a short statement's target is scaled by, per turn
+SERIOUS_WORDS = 35
+SERIOUS, ACUTE = 2, 3  # listening severities
+_NOTE = get("notes/length")
+_SERIOUS_NOTE = get("notes/length-serious")
+
+
+@dataclass(frozen=True, slots=True)
+class LengthTarget:
+    words: int
+    why: str  # for the decision log, written by code
+    note: str
 
 
 def reply_limit(user_words: int) -> int:
@@ -24,11 +43,28 @@ def reply_limit(user_words: int) -> int:
     return max(FLOOR_WORDS, math.ceil(1.5 * user_words) + 4)
 
 
-def length_note(user_text: str, *, serious: bool = False) -> str | None:
-    """The note for a short statement, or None for a question, a long message, nothing, or a
-    message judged serious."""
-    words = len(user_text.split())
-    if serious or words == 0 or words > MAX_USER_WORDS or "?" in user_text:
+def varied(base: int, seed: str) -> int:
+    """The base scaled by a factor drawn from the seed. No seed means no variation."""
+    if not seed:
+        return base
+    factor = random.Random(seed).uniform(*VARY)  # noqa: S311 - not security, only variety
+    return max(MIN_VARIED_WORDS, round(base * factor))
+
+
+def length_target(
+    user_text: str, *, severity: int | None = None, in_scene: bool = False, seed: str = ""
+) -> LengthTarget | None:
+    """The one length target for this turn, or None when nothing should cap it."""
+    if in_scene or (severity is not None and severity >= ACUTE):
         return None
+    if severity is not None and severity >= SERIOUS:
+        note = _SERIOUS_NOTE.render(limit=SERIOUS_WORDS)
+        return LengthTarget(SERIOUS_WORDS, "serious message", note)
+    words = len(user_text.split())
+    if words == 0 or words > MAX_USER_WORDS or "?" in user_text:
+        return None
+    base = reply_limit(words)
+    limit = varied(base, seed)
     unit = "word" if words == 1 else "words"
-    return _NOTE.render(words=words, unit=unit, limit=reply_limit(words))
+    why = f"short statement of {words} {unit}, base {base}"
+    return LengthTarget(limit, why, _NOTE.render(words=words, unit=unit, limit=limit))

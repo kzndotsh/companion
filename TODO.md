@@ -54,7 +54,9 @@ Ordered. The first three can stop the bot, so they go first.
       is a prompt version plus a measured eval. Hypotheses only; the sources are mostly assertion. Experiment 1
       (parrot audit) done: persona v28 removes the quoted samples, and only the follow-examples were parroted
       ("scattered", 5 of 6 on the mood fixture to 0); v28 is not live, awaiting the owner's say.
-- [ ] T16 Randomized reply length. The length note gives the same limit for the same message length, so
+- [ ] T16 Randomized reply length. **Built 2026-10-18, not measured:** `core/length.py` scales a short
+      statement's limit by 0.6 to 1.5 from the turn id; the eval's `+len` still sends the unvaried limit, so
+      measuring it needs a seeded `+len`. The length note gives the same limit for the same message length, so
       reply lengths feel uniform. Vary the limit a little in code each turn (sometimes shorter, sometimes
       longer), seeded per turn so replay still matches. Idea from a published companion app config that
       picks a random word range per reply. Measure with `+len` against the fixed note.

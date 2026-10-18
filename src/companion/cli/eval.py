@@ -10,8 +10,9 @@ import httpx
 
 from companion import characters, prompts
 from companion.core.clock import utc_now
+from companion.core.length import length_target
+from companion.core.listening import SERIOUS, listening_note
 from companion.core.listening import Judgement as ListenJudgement
-from companion.core.listening import listening_note
 from companion.core.prompt.prefix import Prefix, build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.replay import ReplayError
@@ -88,7 +89,8 @@ def script_request(script: Script, prefix: Prefix) -> TalkerRequest:
 
 
 def _listening_notes(fixtures: list[Fixture]) -> dict[str, str]:
-    """The note each fixture's labels would produce, for the `+listen` variant."""
+    """The notes each fixture's labels would produce, for the `+listen` variant: the length line a
+    serious message gets, then the listening note, as the bot sends them."""
     out: dict[str, str] = {}
     for f in fixtures:
         labels = f.labels or (f.script.labels if f.script is not None else None)
@@ -98,8 +100,10 @@ def _listening_notes(fixtures: list[Fixture]) -> dict[str, str]:
                 [text for role, text in f.script.history if role == "assistant"] if f.script else []
             )
             note = listening_note(ListenJudgement(severity, stance, vague, medical), replies)
-            if note is not None:
-                out[f.id] = note
+            size = length_target("", severity=severity) if severity >= SERIOUS else None
+            notes = [n for n in (size.note if size else None, note) if n is not None]
+            if notes:
+                out[f.id] = "\n".join(notes)
     return out
 
 

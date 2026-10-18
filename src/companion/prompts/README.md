@@ -50,24 +50,26 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/habit-opener` | note | an opening word is overused | v1 |
 | `notes/habit-phrases` | note | phrases are repeated | v1 |
 | `notes/length` | note | a short statement, `core/length.py` | v1 |
-| `notes/listening-everyday` | note | listening note, severity 1 | v2 |
+| `notes/length-serious` | note | a message judged serious, `core/length.py` | v1 |
+| `notes/listening-everyday` | note | listening note, severity 1 | v3 |
 | `notes/listening-health` | note | added to the severity 2 note for a health topic | v2 |
 | `notes/listening-offer` | note | added to the severity 1 note when they were vague | v1 |
 | `notes/listening-offer-serious` | note | added to the severity 2 note | v2 |
-| `notes/listening-serious` | note | listening note, severity 2 | v3 |
+| `notes/listening-serious` | note | listening note, severity 2 | v5 |
 | `notes/listening-trivial` | note | listening note, severity 0 | v2 |
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
 | `notes/scene-play` | note | a pretend scene is in progress | v1 |
 | `notes/scene-story` | note | they are telling a story | v1 |
 | `system/ack` | system | the ack judge, `core/ack.py` | v2 |
+| `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v8 |
 | `system/frames` | system | the frame judge, `core/frames.py` | v1 |
 | `system/habits` | system | the habit finder, `core/moves.py` | v2 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
 | `system/listening` | system | the listening judge, `core/listening.py` | v1 |
-| `system/openloops` | system | open-loop extraction, `core/openloops.py` | v1 |
-| `system/openloops-draft` | system | the follow-up draft, `loops/openloops.py` | v1 |
+| `system/openloops` | system | open-loop extraction, `core/openloops.py` | v3 |
+| `system/openloops-draft` | system | the follow-up draft, `loops/openloops.py` | v2 |
 | `system/react` | system | the reaction judge, `core/react.py` | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
