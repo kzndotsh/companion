@@ -392,6 +392,25 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       character, reversible for a window (greenfield section 9: the top reason users quit). With F.
 - [ ] J9 Made-up facts rate: count replies that state a fact about the user with no recorded belief behind
       it, target zero, as an automatic eval metric (greenfield section 10).
+- [ ] J10 Refuse-to-overwrite rules for the second look: a one-off never replaces a habit, an occasion
+      never replaces a standing fact, a vaguer statement never replaces a precise one, someone else's value
+      is not theirs (mengram's four named rules, product-code audit). Matches the overstated beliefs the
+      belief audit found. With A15.
+- [ ] J11 Ask the owner when unsure: when the second look cannot decide, or a new statement contradicts a
+      belief, the question is queued for the owner instead of guessed (taosmd's pending-decisions queue).
+      With J3.
+- [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
+      jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
+- [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
+      ones that match the current mood. No product has it. Behind J5.
+- [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
+      updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
+      plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
+- [ ] J15 Bring it up next time: a due open loop that is not sent becomes a quiet note when they next write
+      ("you could ask how the vet went"), instead of a message first. Could ship before live reach-outs
+      (xinchao's "while you were away" fold, field survey).
+- [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
+      later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
 
 ### H. Product and business
 
