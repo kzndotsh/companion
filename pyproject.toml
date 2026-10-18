@@ -1,7 +1,6 @@
 [project]
 name = "companion"
 version = "0.0.1"
-description = "A companion that is a process, with a versioned model of a person."
 requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28.1",
