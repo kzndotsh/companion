@@ -11,7 +11,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, tzinfo
 
-from companion.core.openloops import SENSITIVE, LoopState, OpenLoop
+from companion.core.openloops import SENSITIVE, LoopKind, LoopState, OpenLoop
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,7 +64,7 @@ def evaluate(loops: Sequence[OpenLoop], sit: Situation, caps: Caps = Caps()) -> 
     """Pick the loop to ask about, or hold with the reason."""
     live = [lp for lp in loops if lp.state is LoopState.OPEN]
     horizon = timedelta(days=caps.expire_days)
-    expired = tuple(lp for lp in live if sit.now > lp.follow_up_at + horizon)
+    expired = tuple(lp for lp in live if _past(lp, sit, horizon))
     due = sorted(
         (
             lp
@@ -81,6 +81,13 @@ def evaluate(loops: Sequence[OpenLoop], sit: Situation, caps: Caps = Caps()) -> 
         return Verdict(False, reason, pick, expired)
     since = _hours(sit.now - pick.follow_up_at)
     return Verdict(True, f"due {since:.0f}h ago and nothing holds it: {pick.claim}", pick, expired)
+
+
+def _past(loop: OpenLoop, sit: Situation, horizon: timedelta) -> bool:
+    """A follow-up keeps for a couple of days; a celebration or encouragement for its day only."""
+    if loop.kind is LoopKind.FOLLOW_UP:
+        return sit.now > loop.follow_up_at + horizon
+    return sit.now.astimezone(sit.tz).date() > loop.follow_up_at.astimezone(sit.tz).date()
 
 
 def _hold_reason(sit: Situation, caps: Caps) -> str | None:

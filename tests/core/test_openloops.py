@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from companion.core.openloops import (
+    LoopKind,
     Making,
     OpenLoop,
     RawLoop,
@@ -150,6 +151,7 @@ def test_parse_accepts_labelled_items_and_refuses_anything_malformed() -> None:
                 "sensitivity": 1,
                 "certainty": "firm",
                 "about_companion": False,
+                "kind": "follow_up",
             }
         ]
     }
@@ -205,3 +207,22 @@ def test_open_loops_are_listed_for_the_model_and_resolutions_are_parsed() -> Non
     data: Json = {"resolved": [{"loop": "L1", "ref": "m2", "quote": "q"}, {"loop": 3}, "x"]}
     assert parse_resolved(data) == [RawResolution("L1", "m2", "q")]
     assert parse_resolved({"loops": []}) == []
+
+
+def test_a_celebration_lands_on_the_day_and_encouragement_early_that_morning() -> None:
+    assert follow_up_time("december 4th", "days", MON, UTC, LoopKind.CELEBRATE) == datetime(
+        2026, 12, 4, 10, 0, tzinfo=UTC
+    )
+    assert follow_up_time("friday", "days", MON, UTC, LoopKind.ENCOURAGE) == datetime(
+        2026, 10, 16, 8, 30, tzinfo=UTC
+    )
+    assert follow_up_time("friday", "days", MON, UTC) == _at(17)
+
+
+def test_a_celebration_or_encouragement_without_a_day_after_today_is_not_recorded() -> None:
+    for when in ("", "soon", "today"):
+        raw = _raw(when=when, kind=LoopKind.CELEBRATE)
+        assert "needs a day" in str(_make(raw, _utt("going to the vet tomorrow")))
+    made = _make(_raw(when="friday", kind=LoopKind.ENCOURAGE), _utt("going to the vet tomorrow"))
+    assert isinstance(made, OpenLoop)
+    assert made.kind is LoopKind.ENCOURAGE

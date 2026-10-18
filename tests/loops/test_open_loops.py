@@ -80,6 +80,7 @@ def _item(**over: object) -> dict[str, Json]:
         "sensitivity": 0,
         "certainty": "firm",
         "about_companion": False,
+        "kind": "follow_up",
     }
     item.update(over)  # type: ignore[arg-type]
     return item

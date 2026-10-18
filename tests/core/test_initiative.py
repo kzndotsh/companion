@@ -4,7 +4,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from companion.core.initiative import Caps, Situation, evaluate, in_quiet_hours
-from companion.core.openloops import LoopState, OpenLoop
+from companion.core.openloops import LoopKind, LoopState, OpenLoop
 from companion.core.types import RelationshipId, UtteranceId
 
 REL = RelationshipId("rel")
@@ -133,3 +133,13 @@ def test_after_an_unanswered_reach_out_it_waits_longer_and_after_two_it_stops() 
     twice = evaluate([_loop()], _sit(last_reach_out_at=NOON - timedelta(days=9), unanswered=2))
     assert not twice.send
     assert "waits for them to write first" in twice.reason
+
+
+def test_a_celebration_keeps_only_for_its_own_day() -> None:
+    party = _loop(NOON - timedelta(hours=2), kind=LoopKind.CELEBRATE)
+    assert evaluate([party], _sit()).send
+    next_day = evaluate([party], _sit(now=NOON + timedelta(days=1)))
+    assert not next_day.send
+    assert next_day.expired == (party,)
+    follow = _loop(NOON - timedelta(hours=2))
+    assert evaluate([follow], _sit(now=NOON + timedelta(days=1))).send

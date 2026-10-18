@@ -21,6 +21,8 @@ from companion.prompts import get
 
 SENSITIVE = 2
 FOLLOW_UP_HOUR = 10
+CELEBRATE_TIME = time(10)
+ENCOURAGE_TIME = time(8, 30)  # just after quiet hours, before most things start
 UNDATED_DAYS = 3
 MAX_PAST_DAYS = 3
 MAX_CLAIM_CHARS = 160
@@ -33,6 +35,14 @@ _SAME_DAY = re.compile(
     r"\b(?:today|tonight|this evening|this afternoon|this morning|now"
     r"|later(?! (?:this|next|in) ))\b"
 )
+
+
+class LoopKind(StrEnum):
+    """What the thing is, which decides when and how to reach out."""
+
+    FOLLOW_UP = "follow_up"  # asked about the morning after: how did it go
+    CELEBRATE = "celebrate"  # marked on the day: happy birthday
+    ENCOURAGE = "encourage"  # a word the morning of: cheering them on
 
 
 class LoopState(StrEnum):
@@ -54,6 +64,7 @@ class OpenLoop:
     sensitivity: int
     created_at: datetime
     state: LoopState = LoopState.OPEN
+    kind: LoopKind = LoopKind.FOLLOW_UP
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +77,7 @@ class RawLoop:
     sensitivity: int
     certainty: str = "firm"
     about_companion: bool = False
+    kind: str = LoopKind.FOLLOW_UP
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +106,7 @@ SCHEMA: dict[str, Json] = {
                     "sensitivity": {"type": "integer"},
                     "certainty": {"type": "string", "enum": list(CERTAINTIES)},
                     "about_companion": {"type": "boolean"},
+                    "kind": {"type": "string", "enum": [k.value for k in LoopKind]},
                 },
                 "required": [
                     "ref",
@@ -104,6 +117,7 @@ SCHEMA: dict[str, Json] = {
                     "sensitivity",
                     "certainty",
                     "about_companion",
+                    "kind",
                 ],
             },
         },
@@ -127,7 +141,8 @@ SCHEMA: dict[str, Json] = {
 def _raw(item: Json) -> RawLoop | None:
     if not isinstance(item, dict):
         return None
-    text = {k: item.get(k) for k in ("ref", "quote", "claim", "when", "scale", "certainty")}
+    keys = ("ref", "quote", "claim", "when", "scale", "certainty", "kind")
+    text = {k: item.get(k) for k in keys}
     level, about = item.get("sensitivity"), item.get("about_companion")
     if not all(isinstance(v, str) for v in text.values()):
         return None
@@ -142,6 +157,7 @@ def _raw(item: Json) -> RawLoop | None:
         level,
         str(text["certainty"]).strip().lower(),
         about,
+        str(text["kind"]).strip().lower(),
     )
 
 
@@ -251,10 +267,19 @@ def _event_offset(when: str, said: datetime) -> int | None:
     return next((_days_until(i, said) for i, name in named if name in when), None)
 
 
-def follow_up_time(when: str, scale: str, said_at: datetime, tz: tzinfo) -> datetime:
-    """The morning after the thing happens, or a few days on when nothing says when."""
+def follow_up_time(
+    when: str, scale: str, said_at: datetime, tz: tzinfo, kind: str = LoopKind.FOLLOW_UP
+) -> datetime | None:
+    """When to reach out. A follow-up is the morning after the thing happens, or a few days on when
+    nothing says when. A celebration is the morning of the day and encouragement early that morning;
+    both need a day after today, so None when there is none."""
     said = said_at.astimezone(tz)
     offset = _event_offset(when, said)
+    if kind in {LoopKind.CELEBRATE, LoopKind.ENCOURAGE}:
+        if not offset:
+            return None
+        at = CELEBRATE_TIME if kind == LoopKind.CELEBRATE else ENCOURAGE_TIME
+        return datetime.combine(said.date() + timedelta(days=offset), at, tzinfo=tz)
     if offset is None:
         offset = 0 if scale == "hours" else UNDATED_DAYS - 1
     day = said.date() + timedelta(days=offset + 1)
@@ -304,6 +329,11 @@ def _why_not(
         (raw.scale in SAME_DAY_SCALES, "minute-scale or same-day, not worth asking about later"),
         (raw.about_companion, "about the companion or this chat, not their life"),
         (raw.certainty != "firm", f"not a firm plan ({raw.certainty}), a friend would not ask"),
+        (raw.kind not in set(LoopKind), f"unknown kind {raw.kind!r}"),
+        (
+            source is not None and when is None,
+            "a celebration or encouragement needs a day after today to land on",
+        ),
         (raw.sensitivity >= SENSITIVE, "sensitive, never raised on its own"),
         (not raw.claim or len(raw.claim) > MAX_CLAIM_CHARS, "no usable claim"),
         (
@@ -317,7 +347,7 @@ def _why_not(
 def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenLoop | str:
     """The loop to record, or the reason it must not be."""
     source = _source(raw, index)
-    when = follow_up_time(raw.when, raw.scale, source.at, made.tz) if source else None
+    when = follow_up_time(raw.when, raw.scale, source.at, made.tz, raw.kind) if source else None
     problem = _why_not(raw, source, when, made.now)
     if problem is not None or source is None or when is None:
         return problem or "no source"
@@ -330,6 +360,7 @@ def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenL
         follow_up_at=when,
         sensitivity=max(raw.sensitivity, 0),
         created_at=made.now,
+        kind=LoopKind(raw.kind),
     )
 
 

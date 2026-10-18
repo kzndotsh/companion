@@ -6,7 +6,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.openloops import LoopState, OpenLoop
+from companion.core.openloops import LoopKind, LoopState, OpenLoop
 from companion.core.types import RelationshipId, UtteranceId
 from companion.store.sqlite.db import iso, parse_iso, write_tx
 
@@ -26,7 +26,7 @@ def add_loop(conn: sqlite3.Connection, loop: OpenLoop) -> None:
     with write_tx(conn):
         conn.execute(
             "INSERT INTO open_loops (id, relationship_id, claim, quote, source_utterance_id,"
-            " follow_up_at, sensitivity, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            " follow_up_at, sensitivity, created_at, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 loop.id,
                 loop.relationship_id,
@@ -36,6 +36,7 @@ def add_loop(conn: sqlite3.Connection, loop: OpenLoop) -> None:
                 iso(loop.follow_up_at),
                 loop.sensitivity,
                 iso(loop.created_at),
+                loop.kind,
             ),
         )
         conn.execute(
@@ -72,6 +73,7 @@ def loops(conn: sqlite3.Connection, rel: RelationshipId) -> list[OpenLoop]:
             sensitivity=int(r["sensitivity"]),
             created_at=parse_iso(str(r["created_at"])),
             state=LoopState(str(r["state"])),
+            kind=LoopKind(str(r["kind"])),
         )
         for r in rows
     ]

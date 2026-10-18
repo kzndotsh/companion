@@ -18,9 +18,10 @@ def run(db: Path, relationship: str) -> str:
         held = [d for d in held if d.reason.startswith("held, would otherwise")]
     finally:
         store.close()
-    out = ["open loops (state, follow-up time, what they said)"]
+    out = ["open loops (state, kind, when to reach out, what they said)"]
     out += [
-        f'  {lp.state:8} {lp.follow_up_at:%a %m-%d %H:%M}  {lp.claim}  "{lp.quote[:60]}"'
+        f"  {lp.state:8} {lp.kind:9} {lp.follow_up_at:%a %m-%d %H:%M}  {lp.claim}"
+        f'  "{lp.quote[:60]}"'
         for lp in loops
     ] or ["  none yet"]
     out += ["", "shadow reach-outs (would have sent)"]

@@ -261,7 +261,7 @@ def drafter(extractor: Extractor) -> Draft:
     """A function that drafts the check-in for a loop. Any failure gives an empty draft."""
 
     async def draft(loop: OpenLoop) -> str:
-        prompt = f"They said: {loop.quote!r}\nThe thing: {loop.claim}"
+        prompt = f"They said: {loop.quote!r}\nThe thing: {loop.claim}\nKind: {loop.kind}"
         try:
             with purpose("initiative"):
                 result = await extractor.extract(DRAFT_SYSTEM, prompt, DRAFT_SCHEMA)
