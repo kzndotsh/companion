@@ -1,17 +1,9 @@
-<div align="center">
+# Companion (branding BTD)
 
-<h1>Companion</h1>
+> [!NOTE]
+> Why am I workong on this you may ask? As an experiment, and an attempt to better my skills in constructing evaluations while perfecting one of the hardest problems in AI <> Human experiences: memory.
 
 An AI companion that tries to be as human-like as we can make it, and the memory engine underneath it.
-
-<p>
-    <a href="https://www.python.org/downloads/">
-        <img alt="Python" src="https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white"></a>
-    <a href="https://docs.astral.sh/uv/">
-        <img alt="uv" src="https://img.shields.io/badge/uv-managed-DE5FE9?logo=uv&logoColor=white"></a>
-</p>
-
-</div>
 
 > [!WARNING]
 > Early and experimental. It is built for one person, it changes all the time, and nothing here is
@@ -22,8 +14,7 @@ something is serious, keeps pace like someone typing, and can tell the differenc
 a game and the real you. Everything it does is logged with a reason, so any reply can be replayed
 and explained.
 
-Today it is reached through Telegram, which is its only integration for now. It is a single-user,
-local-only project: it runs on the owner's machine and the repo has no remote.
+Today it is reached through Telegram, which is its only integration for now.
 
 ## What it does
 
