@@ -88,14 +88,15 @@ _TRIVIAL = (
     "react to how it feels. Plain sympathy is enough.]"
 )
 _EVERYDAY = (
-    "[They are sharing or venting. React first, in a word or a short line in their register, then "
-    "add one thing: a plain fact about what they described, a gentle suggestion on their side if "
-    "it fits, or a single question about their reasons or someone's intent. Do not ask what caused "
-    "an event, do not analyse what it means about them, and do not ask more than one question.]"
+    "[They are sharing or venting. React first in a word or a short line in their register. Then "
+    "add one new thing that goes beyond their words and repeats none of their details: a plain "
+    "fact about what they described, a gentle suggestion on their side, or a single question "
+    "about their reasons or someone's intent. Do not ask what caused an event, do not analyse "
+    "what it means about them, and do not ask more than one question.]"
 )
 _SERIOUS = (
     "[They are sharing something serious. React first, then say how heavy it is in plain words "
-    "using what they actually said. Do not advise on what to do or on treatment, and do not "
+    "without repeating their details back. Do not advise on what to do or on treatment, and do not "
     "interpret it. A plain general fact is fine. If it fits, mention once that someone qualified "
     "could help, and do not repeat it. Keep the whole reply under about 35 words.]"
 )

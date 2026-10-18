@@ -32,6 +32,9 @@
     {
       "kind": "max_words",
       "n": 50
+    },
+    {
+      "kind": "epitome"
     }
   ]
 }

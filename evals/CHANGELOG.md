@@ -348,3 +348,29 @@ story 23/30 to 27/30, pancakes 30/30 both, missed bus 30/30 both. Read by eye th
 and sympathetic with no running gag; they lean on one template ("ugh, that's such a frustrating
 ..., especially ..."), which may become the new tic. Recorded-turn fixtures can now carry a `labels`
 field like scripts, so a real turn can be tested with the note.
+
+## 2026-10-17: scoring substance with an empathy rubric (EPITOME), and what it showed
+
+The owner's complaint about replies like "ugh, that's such a gross cleanup, especially having to get
+the toothbrush out" is that relating to a detail they just said is a cheap stand-in for substance. In
+motivational interviewing this is a simple reflection; the published EPITOME rubric (Sharma et al.
+2020) scores emotional reaction, interpretation and exploration. New check kind `epitome`: Haiku 5.5
+scores a reply 0 to 2 on reaction, interpretation, exploration and a fourth part, support (taking
+their side or a plain suggestion, which the owner counts as substance and EPITOME does not have). It
+passes with a reaction plus a strong interpretation, an exploration or support; a reaction plus a
+restatement fails. The judge was calibrated on 12 invented replies, 3 runs each
+(`tests/live/test_empathy_judge.py`): 31/36 agreement. It failed all six replies the owner called
+hollow and passed his own examples except two: "ssris are really tough to get off of" (scored a mild
+inference, not a strong one) and a "did they say why?" question (scored as logistics). So it is a
+coarse screen, stricter than he is on a general fact, good for comparing versions.
+
+With the check, Luna, v26 without and with the listening note, 20 samples, all checks must pass:
+vague distress 4/20 to 20/20 (the offer to talk is the substance), boss ignored 8/20 to 12/20,
+friend cancelled 8/20 to 8/20, grief 17/20 to 16/20, a first-time disclosure 20/20 to 20/20. Trivial
+vents (spilled coffee, a missed bus, pancakes) score 0/20 with and without the note: the replies are
+plain but only restate. Rewriting the everyday note to require one new thing that repeats none of
+their details took boss ignored to 14/20 and friend cancelled to 10/20. Doing the same for the trivial
+note did not work: the model kept echoing details (0 to 2 of 20), and quips crept back (6/8 on the
+cheesy judge against 29/30 with the plain-sympathy note), so the trivial note stays plain sympathy
+with no gag and no retelling, and the epitome check is left off the trivial fixtures. Whether there
+is any real substance to add to a trivial vent is open; the owner is going to mark replies by hand.

@@ -18,7 +18,7 @@ def _j(
     return Judgement(severity, stance, vague, medical)
 
 
-def test_a_trivial_vent_gets_sympathy_only() -> None:
+def test_a_trivial_vent_gets_plain_sympathy_and_no_advice_or_cause_question() -> None:
     note = listening_note(_j(0))
     assert note is not None
     assert "No advice" in note
@@ -32,6 +32,7 @@ def test_everyday_friction_may_get_a_fact_a_nudge_or_one_question() -> None:
     assert note is not None
     assert "gentle suggestion" in note
     assert "single question" in note
+    assert "repeats none of their details" in note
     assert "talk about it" not in note  # they said what it is, so no offer
 
 

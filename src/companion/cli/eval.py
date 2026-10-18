@@ -18,7 +18,14 @@ from companion.core.replay import ReplayError
 from companion.core.talker import Talker
 from companion.daemon import load_dotenv
 from companion.evals import judge as judge_module
-from companion.evals.fixtures import Fixture, FixtureError, JudgeCheck, Script, load_fixtures
+from companion.evals.fixtures import (
+    EmpathyCheck,
+    Fixture,
+    FixtureError,
+    JudgeCheck,
+    Script,
+    load_fixtures,
+)
 from companion.evals.report import render_replies, render_table, save
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import parse_spec
@@ -94,7 +101,8 @@ def _listening_notes(fixtures: list[Fixture]) -> dict[str, str]:
 def estimate(fixtures: list[Fixture], variants: int, samples: int) -> float:
     calls = variants * samples
     return sum(
-        calls * (EST_TALKER + EST_JUDGE * sum(isinstance(c, JudgeCheck) for c in f.checks))
+        calls
+        * (EST_TALKER + EST_JUDGE * sum(isinstance(c, JudgeCheck | EmpathyCheck) for c in f.checks))
         for f in fixtures
     )
 

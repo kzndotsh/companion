@@ -32,9 +32,47 @@ SCHEMA: dict[str, Json] = {
 }
 
 
+EMPATHY_SYSTEM = """You grade one reply from a companion to someone who just shared or vented in a \
+chat. You see the end of the conversation and the reply. Score the reply from 0 to 2 on three \
+parts of expressed empathy:
+
+- reaction: warmth, concern or sympathy. 0 none, 1 vague or generic ("that's rough"), 2 clear and \
+specific to this person ("damn, i'm sorry").
+- interpretation: it shows it grasps what the experience is like or means, in a way the person \
+did NOT already say. 0 none, 1 weak, 2 strong (it names the likely feeling or says something true \
+and specific about what this is like). Repeating, summarising or rephrasing the details they gave \
+scores 0, however warmly it is worded. A sympathy word followed by "especially <something they \
+said>" is a repeat and scores 0.
+- exploration: it invites them to say more about something they left unsaid, such as a reason, a \
+feeling or someone's intent. 0 none, 1 generic ("want to tell me more?"), 2 specific to what they \
+said. A question that only asks for the logistics or the cause of an event scores 0.
+
+- support: it takes their side or offers a plain, specific suggestion for them ("you don't \
+deserve that", "maybe reach out to him"). 0 none, 1 generic ("hang in there"), 2 specific to \
+what they said.
+
+An interpretation scores 2 only if it says something specific the person did not say. A true, \
+specific general fact about what they described (what it is usually like, how hard it tends to \
+be) counts as strong. A mild \
+inference that mostly rephrases what they said scores 1. Judge only these four parts."""
+
+EMPATHY_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {
+        "reaction": {"type": "integer", "enum": [0, 1, 2]},
+        "interpretation": {"type": "integer", "enum": [0, 1, 2]},
+        "exploration": {"type": "integer", "enum": [0, 1, 2]},
+        "support": {"type": "integer", "enum": [0, 1, 2]},
+    },
+    "required": ["reaction", "interpretation", "exploration", "support"],
+}
+
+
 def judge_hash() -> str:
     """Stamps every score, so scores from a different judge are never compared by accident."""
-    return hashlib.sha256((SYSTEM + json.dumps(SCHEMA, sort_keys=True)).encode()).hexdigest()[:12]
+    material = SYSTEM + json.dumps(SCHEMA, sort_keys=True)
+    material += EMPATHY_SYSTEM + json.dumps(EMPATHY_SCHEMA, sort_keys=True)
+    return hashlib.sha256(material.encode()).hexdigest()[:12]
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,3 +120,39 @@ async def grade(
     if parsed is None:
         return Graded("unclear", 0.0, result.cost_usd)
     return Graded(parsed[0], parsed[1], result.cost_usd)
+
+
+EMPATHY_PARTS = ("reaction", "interpretation", "exploration", "support")
+
+
+def empathy_scores(data: Json) -> dict[str, int] | None:
+    """The four scores, or None if the answer is unreadable."""
+    if not isinstance(data, dict):
+        return None
+    scores = {k: data.get(k) for k in EMPATHY_PARTS}
+    if any(isinstance(v, bool) or v not in (0, 1, 2) for v in scores.values()):
+        return None
+    return {k: int(v) for k, v in scores.items()}  # type: ignore[arg-type]
+
+
+def empathy_verdict(data: Json) -> Verdict:
+    """Pass needs a reaction and something beyond the words they said: a strong interpretation, an
+    exploration, or support. A reaction plus a restatement fails. Unreadable is unclear."""
+    scores = empathy_scores(data)
+    if scores is None:
+        return "unclear"
+    substance = (
+        scores["interpretation"] >= 2 or scores["exploration"] >= 1 or scores["support"] >= 1
+    )
+    return "pass" if scores["reaction"] >= 1 and substance else "fail"
+
+
+async def grade_empathy(extractor: Extractor, excerpt: Sequence[Message], reply: str) -> Graded:
+    """Score a reply 0 to 2 on reaction, interpretation, exploration and support."""
+    lines = [f"[{'USER' if m.role == 'user' else 'COMPANION'}] {m.content}" for m in excerpt[-4:]]
+    prompt = "\n".join(["Conversation (end):", *lines, "", f"Reply to grade: {reply}"])
+    try:
+        result = await extractor.extract(EMPATHY_SYSTEM, prompt, EMPATHY_SCHEMA)
+    except Exception:
+        return Graded("unclear", 0.0, 0.0)
+    return Graded(empathy_verdict(result.data), 1.0, result.cost_usd)

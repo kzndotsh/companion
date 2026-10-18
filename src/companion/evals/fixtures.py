@@ -38,7 +38,13 @@ class JudgeCheck:
     criterion: str
 
 
-type Check = MaxWords | Regex | JudgeCheck
+@dataclass(frozen=True, slots=True)
+class EmpathyCheck:
+    """Scored 0 to 2 on reaction, interpretation and exploration (the EPITOME parts). Passes with
+    a reaction and at least one of the other two."""
+
+
+type Check = MaxWords | Regex | JudgeCheck | EmpathyCheck
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,6 +106,8 @@ def _check(raw: Json) -> Check:
         )
     if kind == "judge":
         return JudgeCheck(_text(d, "criterion"))
+    if kind == "epitome":
+        return EmpathyCheck()
     msg = f"unknown check kind {kind!r}"
     raise FixtureError(msg)
 

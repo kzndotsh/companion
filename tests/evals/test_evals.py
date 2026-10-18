@@ -190,6 +190,41 @@ def test_a_recorded_turn_can_carry_labels_too() -> None:
     assert parse_fixture(raw).labels == (0, "listening", False, False)
 
 
+@pytest.mark.parametrize(
+    ("scores", "verdict"),
+    [
+        ({"reaction": 2, "interpretation": 0, "exploration": 0, "support": 0}, "fail"),
+        ({"reaction": 2, "interpretation": 1, "exploration": 0, "support": 0}, "fail"),
+        ({"reaction": 2, "interpretation": 2, "exploration": 0, "support": 0}, "pass"),
+        ({"reaction": 2, "interpretation": 0, "exploration": 1, "support": 0}, "pass"),
+        ({"reaction": 1, "interpretation": 0, "exploration": 0, "support": 2}, "pass"),
+        ({"reaction": 0, "interpretation": 2, "exploration": 2, "support": 2}, "fail"),
+        ({"reaction": 3, "interpretation": 0, "exploration": 0, "support": 0}, "unclear"),
+        ({"reaction": True, "interpretation": 0, "exploration": 0, "support": 0}, "unclear"),
+        ({"reaction": 1, "interpretation": 0, "exploration": 0}, "unclear"),
+    ],
+)
+def test_an_empathy_reply_needs_a_reaction_and_something_beyond_their_words(
+    scores: Json, verdict: str
+) -> None:
+    from companion.evals.judge import empathy_verdict  # noqa: PLC0415
+
+    assert empathy_verdict(scores) == verdict
+    assert empathy_verdict(None) == "unclear"
+
+
+def test_the_epitome_check_parses_and_the_judge_hash_covers_it() -> None:
+    from companion.evals.fixtures import EmpathyCheck, parse_fixture  # noqa: PLC0415
+
+    raw: Json = {
+        "id": "x",
+        "description": "d",
+        "script": {"history": [], "user": "hi"},
+        "checks": [{"kind": "epitome"}],
+    }
+    assert parse_fixture(raw).checks == (EmpathyCheck(),)
+
+
 def test_a_history_variant_keeps_only_the_last_messages() -> None:
     base = _request()
     short = request_for(base, Variant("a", OTHER, history=2))

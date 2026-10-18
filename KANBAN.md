@@ -45,6 +45,10 @@ Ordered. The first three can stop the bot, so they go first.
       when the note is about a missing one). A flag would need to say what it refers to first.
 
 
+- [ ] T14 Trivial vents have no substance beyond restating a detail (0/20 on the epitome check). Waiting on
+      the owner's hand labels of replies across the fixtures (what is unrealistic or cheesy, what he would
+      send), then decide whether a short plain sympathy is the right answer or something can be added.
+
 ## Doing
 
 - [ ] D1 Watch the two-talker setup in real chat (Luna for everyday, DeepSeek V4 Flash for scenes).
@@ -56,6 +60,10 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] E1 `epitome` eval check (reaction, interpretation, exploration, support) calibrated 31/36; the everyday
+      listening note now requires one new thing that repeats none of their details (boss ignored 8/20 to
+      14/20). Trivial vents still score 0/20: the replies only restate, and the stronger note let quips back
+      in, so that note stays plain sympathy.
 - [x] T13 Cheesy quips in a real chat: the history was NOT the cause (shortening it or stripping old
       replies did not help, a tiny history was worse). A per-turn line in the listening note for trivial
       vents (no joke, no running gag, do not retell) took the real flagged turn from 16/30 to 29/30 under

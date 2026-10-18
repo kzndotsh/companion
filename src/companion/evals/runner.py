@@ -18,8 +18,8 @@ from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.talker import Reply, Talker
 from companion.evals.checks import Verdict, run_deterministic
-from companion.evals.fixtures import Fixture, JudgeCheck
-from companion.evals.judge import grade
+from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
+from companion.evals.judge import grade, grade_empathy
 
 CONCURRENCY = 4
 RETRIES = 3
@@ -141,6 +141,11 @@ async def run_eval(plan: Plan, models: Models) -> Results:
             for check in f.checks:
                 if isinstance(check, JudgeCheck):
                     graded = await grade(models.judge, req.messages, reply.text, check.criterion)
+                    results.spent += graded.cost_usd
+                    cost += graded.cost_usd
+                    verdicts.append(graded.verdict)
+                elif isinstance(check, EmpathyCheck):
+                    graded = await grade_empathy(models.judge, req.messages, reply.text)
                     results.spent += graded.cost_usd
                     cost += graded.cost_usd
                     verdicts.append(graded.verdict)
