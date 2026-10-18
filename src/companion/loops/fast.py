@@ -214,7 +214,7 @@ def _mark_reply(t: _Turn, reply: Reply) -> None:
 
 async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
     """A reaction if this short message only acknowledges. Logs every judgement it makes."""
-    if c.judge is None or not is_candidate(t.text, t.prior):
+    if c.judge is None or not is_candidate(t.text, t.prior, after_serious=_after_serious(c, t)):
         _mark(t, "ack judge skipped: not a candidate for a reaction")
         return None
     outcome = await judge(c.judge, t.prior, t.text)
@@ -247,6 +247,19 @@ async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
         )
     )
     return reaction
+
+
+def _after_serious(c: Conversation, t: _Turn) -> bool:
+    """Whether the listening judge found their previous message serious (severity 2 or more)."""
+    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
+    if not theirs:
+        return False
+    for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
+        labels = d.detail.get("labels") if d.detail else None
+        severity = labels.get("severity") if isinstance(labels, dict) else None
+        if isinstance(severity, int) and not isinstance(severity, bool) and severity >= SERIOUS:
+            return True
+    return False
 
 
 def _react_alongside(

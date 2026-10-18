@@ -1,9 +1,10 @@
 """Deciding whether a message needs a reply or only a reaction.
 
 Two stages. A cheap code prefilter decides whether the question is worth asking: short, no
-question mark, and the companion's last message did not ask anything. A small model then judges
-the meaning from the last few messages. Code applies a threshold; the reason that gets logged is
-rendered by code from the scores, never written by the model (ADR 0006).
+question mark, the companion's last message did not ask anything, and their message before this
+one was not judged serious (a bare "thanks" after something heavy deserves words, not an emoji).
+A small model then judges the meaning from the last few messages. Code applies a threshold; the
+reason that gets logged is rendered by code from the scores, never written by the model (ADR 0006).
 """
 
 from __future__ import annotations
@@ -74,9 +75,10 @@ def ends_with_question(text: str) -> bool:
     return text.rstrip().endswith("?")
 
 
-def is_candidate(text: str, history: Sequence[Utterance]) -> bool:
-    """Worth asking the model: a short message that follows a statement, not a question."""
-    if not history or history[-1].speaker is not Speaker.COMPANION:
+def is_candidate(text: str, history: Sequence[Utterance], *, after_serious: bool = False) -> bool:
+    """Worth asking the model: a short message that follows a statement, not a question, and not
+    right after a serious message of theirs."""
+    if after_serious or not history or history[-1].speaker is not Speaker.COMPANION:
         return False
     if ends_with_question(history[-1].text):
         return False

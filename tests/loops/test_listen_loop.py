@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from companion.core.ack import Reaction
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
@@ -126,3 +127,33 @@ async def test_a_serious_or_acute_message_gets_no_length_cap(
 ) -> None:
     talker = await _ask(store, Judge(_labels(severity)), text="my mom is in the hospital")
     assert (SHORT_NOTE in talker.seen[0].card) is capped
+
+
+class AckAndListen:
+    """Calls every short message a sure acknowledgement, and labels each message with the next
+    severity in the list."""
+
+    def __init__(self, *severities: int) -> None:
+        self.severities = list(severities)
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        del system, user
+        properties = schema["properties"]
+        assert isinstance(properties, dict)
+        if "kind" in properties and "emoji" in properties:
+            data: Json = {"kind": "ack", "confidence": 0.9, "emoji": "👍"}
+        elif "severity" in properties:
+            data = _labels(self.severities.pop(0))
+        else:
+            data = None
+        return Extraction(data=data, model="j", cost_usd=0.0, latency_ms=1)
+
+
+@pytest.mark.parametrize(("severity", "reacted"), [(0, True), (1, True), (2, False), (3, False)])
+async def test_after_a_serious_message_a_bare_thanks_gets_words_not_an_emoji(
+    store: Store, severity: int, *, reacted: bool
+) -> None:
+    convo = Conversation(store, Talker(), PREFIX, REL, judge=AckAndListen(severity, 0))
+    await convo.handle(SESSION, "my mom is in the hospital", "test", NOW)
+    answer = await convo.handle(SESSION, "thanks", "test", NOW + timedelta(minutes=1))
+    assert isinstance(answer, Reaction) is reacted
