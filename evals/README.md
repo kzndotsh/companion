@@ -32,7 +32,7 @@ uv run companion eval --variants v25.md,v26.md --samples 12 --cap 0.20 --show
   a measurement of the live talker. `@<model>:free` uses OpenRouter's free models (20 a minute, 1,000 a
   day on this account; some are blocked by the account's privacy guardrail). Either kind runs one call
   at a time. Public fixtures only: real turns are not sent to these providers. Judging stays on the
-  usual paid judge.
+  usual paid judge. Details, which models work and what the gateway changes: `evals/free-models.md`.
 - Checks are either deterministic (`max_words`, `regex`, `not_regex`) or model-graded. `judge` answers
   `pass`, `fail` or `unclear` for one criterion; `epitome` scores a reply 0 to 2 on reaction,
   interpretation, exploration and support and passes with a reaction plus a strong interpretation, an
