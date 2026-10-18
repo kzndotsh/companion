@@ -576,3 +576,43 @@ async def test_messages_far_apart_are_each_answered() -> None:
     assert handled == ["first", "second"]
     assert sent == ["answer one", "reply to both"]
     assert undelivered == []
+
+
+async def test_a_recovered_poll_says_so_in_the_log(caplog: pytest.LogCaptureFixture) -> None:
+    import asyncio  # noqa: PLC0415
+    import logging  # noqa: PLC0415
+
+    calls = 0
+
+    async def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        if str(req.url).endswith("getUpdates"):
+            calls += 1
+            if calls <= 2:
+                return httpx.Response(502, json={"ok": False, "description": "Bad Gateway"})
+            await asyncio.sleep(0.02)
+            return httpx.Response(200, json={"ok": True, "result": []})
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        return text
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram("t", ALLOWED, client)
+    real_sleep = asyncio.sleep
+
+    async def quick_sleep(seconds: float) -> None:
+        await real_sleep(min(seconds, 0.01))
+
+    with caplog.at_level(logging.INFO, logger="companion.telegram"):
+        asyncio.sleep = quick_sleep  # type: ignore[assignment]
+        try:
+            task = asyncio.create_task(tg.run(talk, {}))
+            await real_sleep(0.2)
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        finally:
+            asyncio.sleep = real_sleep  # type: ignore[assignment]
+    messages = [r.getMessage() for r in caplog.records]
+    assert sum("poll failed" in m for m in messages) == 2
+    assert "poll recovered after 2 failed attempt(s)" in messages

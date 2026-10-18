@@ -139,13 +139,18 @@ class Telegram:
     async def _poll(self, queue: asyncio.Queue[dict[str, object]], offset: int) -> None:
         """Fetch updates for ever and queue them. The offset moves past an update as soon as it is
         queued, so a restart can lose a message that was queued but not yet answered."""
+        failures = 0
         while True:
             try:
                 updates = await self._call("getUpdates", offset=offset, timeout=30)
             except TelegramError as err:
+                failures += 1
                 log.warning("poll failed, retrying: %s", err)
                 await asyncio.sleep(3)
                 continue
+            if failures:
+                log.info("poll recovered after %d failed attempt(s)", failures)
+                failures = 0
             if seq(updates):
                 log.debug("poll: %d update(s), offset %d", len(seq(updates)), offset)
             for update in seq(updates):
