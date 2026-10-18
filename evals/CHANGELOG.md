@@ -442,3 +442,19 @@ kind of show that's more of a background hum" (marked cheesy) is now "ha fair, w
 $0.066 in all. Rerun: copy `evals/fixtures/listening-serious-*.json` to a folder, then
 `COMPANION_PROMPT_OVERRIDES="notes/listening-serious=v4" uv run companion eval --variants
 v26.md+listen --samples 12 --cap 0.25 --fixtures-dir <folder>`.
+
+## 2026-10-18: everyday listening note v3 asks questions that assume nothing
+
+The owner marked bot questions on everyday vents as assumed ("was there something you needed them to
+respond to?") or about the cause ("did they say why?"). v3 keeps the one new thing but limits the
+question to what they think or feel, or what they think someone meant, assuming nothing they did not
+say, and no questions about the details or cause. Persona v26 with the note, 4 everyday and vague
+fixtures, 12 samples each, Luna. Judge totals tie, 35/48 for both (boss 8/12, friend-cancelled 3/12
+for both; the friend fails are mostly a statement that restates "three times in a month"). Read by
+eye: on boss-ignored, questions that guess what they wanted to say fell from 10 of 12 to about 2 of
+12, mostly replaced by "did it feel deliberate?" (the owner's own kind of example); on
+friend-cancelled, questions about why they cancelled fell from 4 of 12 to 1 of 12. v3 ships. One
+fixture pair and a by-eye count, so the size of the gain is rough. Not fixed: the friend-cancelled
+restatement, which is T14. Spent $0.031. Rerun: copy `evals/fixtures/listening-everyday-*.json` and
+`listening-vague-distress-*.json` to a folder, then `COMPANION_PROMPT_OVERRIDES="notes/listening-everyday=v3"
+uv run companion eval --variants v26.md+listen --samples 12 --cap 0.05 --fixtures-dir <folder>`.

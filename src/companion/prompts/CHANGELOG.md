@@ -420,7 +420,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## notes/listening-everyday
 - **notes/listening-everyday v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
-- **notes/listening-everyday v2** (current). From commit 7bbfebf on 2026-10-18: feat(evals): an epitome check scores reaction, interpretation, exploration and support; the everyday listening note requires one new thing; trivial vents still only restate (T14)
+- **notes/listening-everyday v2** (superseded). From commit 7bbfebf on 2026-10-18: feat(evals): an epitome check scores reaction, interpretation, exploration and support; the everyday listening note requires one new thing; trivial vents still only restate (T14)
+- **notes/listening-everyday v3** (current). The question option asks what they think or feel, or what they think someone meant, and must assume nothing they did not say; no questions about the details of what happened. Reason: the owner marked "was there something you needed them to respond to?" as obvious and assumed and "what made it especially boring?" as assuming. Measurement in `evals/CHANGELOG.md`.
 
 ## notes/listening-health
 - **notes/listening-health v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
