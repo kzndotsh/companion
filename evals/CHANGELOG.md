@@ -472,3 +472,16 @@ card. So about 1 in 6 beliefs needs a correction, and merging has nothing to mer
 yet. Design in `docs/inbox/2026-10-18-a-second-look-and-consolidation-pass-for-beliefs.md`. Spent
 $0.109. The script was a scratch file (read-only SQLite, `OpenRouterExtractor` with reasoning on and
 tool_choice auto); rerun by sampling live beliefs the same way.
+
+## 2026-10-18: persona v29 (texting voice from the owner's marks, cool reply to rudeness) is dropped
+
+v26 against v29 on all 71 public fixtures, 12 samples each, Luna, no notes. Totals: v26 718/852, v29
+729/852, within noise. What v29 targeted did not move: the new fixture `cool-reply-to-real-rudeness`
+("god you're useless. shut up") 1/12 for both, both owning the point ("fair, that was a useless
+answer") and offering new picks; replies with a stretched word or a doubled question mark 3 and 4 of
+852; therapy or writerly wording (here with you, sit with, heavy, less real) 44 and 46; emoji 150 and
+178; a wish of its own 2 and 5. Vague-distress fixtures rose 13 to 18 of 24, and boss-ignored fell 4 to
+0 of 12, every v29 reply opening "ugh, again?" and most guessing what they wanted to say. Read as: a
+persona sentence about style is a request Luna mostly ignores; the changes that worked today were
+code-chosen notes. Next: rudeness as a listening label with a note (ADR 0014). Spent $0.237. Rerun:
+`uv run companion eval --variants v26.md,v29.md --samples 12 --cap 0.6 --fixtures-dir evals/fixtures`.

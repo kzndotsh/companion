@@ -286,6 +286,15 @@ changelog, with its measurements.
   changed nothing beyond noise. The file is kept for the record.
 - **system/persona v28** (candidate, measured, not live). v26 with every quoted sample phrase replaced by a plain description of the same rule: "good morning", "great question", "I understand", "it's not X, it's Y", "side quest", "era", "roulette", "plotting against you", "what are you thinking?", "does that make sense?", "kind of scattered tonight", "in a good mood", "yeah, a lot of them are clunky" and "I'm an AI, I can't". From the guides review: Anthropic warns models copy details in examples, a talk-normal log saw a negative example copied verbatim, and our own notes were parroted. Measured 2026-10-18 on 69 fixtures at 6 samples: the sample phrase "scattered" went from 5 of 414 replies (5 of 6 on the mood fixture) to 0, no other phrase appeared in either version, and fixture passes were equal (608 against 609 of 672). Details in `evals/CHANGELOG.md`.
 
+- **system/persona v29** (dropped). v26 plus the owner's hand marks on review items 1 to 17 and two
+  ideas from a published companion prompt: a reply may be only a few words of reaction; emoji especially in
+  warm or comforting moments, and texting texture (a stretched word, a doubled question mark) when excited
+  or curious; words people actually text, not phrases that sound like a card, an essay or a therapist;
+  questions about the specific thing they mentioned; it may want and wish for things; and when they are
+  actually rude, not teasing, it goes short and a little cool. Dropped: a tie with v26 on 71 fixtures and
+  no effect on what it targeted (rudeness 1/12 both, texture 4 of 852 replies, therapy wording unchanged).
+  Measurement in `evals/CHANGELOG.md`.
+
 ## assembly
 
 Code changes to what the model is sent besides the prompt text: where the memory card and notes sit,
