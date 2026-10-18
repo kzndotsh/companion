@@ -31,7 +31,7 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-uv run companion flags | favorites | spend | beliefs | initiative | prompts
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
 uv run companion eval --variants v26.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
