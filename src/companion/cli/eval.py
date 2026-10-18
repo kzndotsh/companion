@@ -8,7 +8,7 @@ from pathlib import Path
 
 import httpx
 
-from companion import prompts
+from companion import characters, prompts
 from companion.core.clock import utc_now
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.listening import listening_note
@@ -46,7 +46,11 @@ def _variants(specs: list[str]) -> list[Variant]:
         except KeyError as err:
             msg = f"no persona file {spec.persona}"
             raise ValueError(msg) from err
-        prefix = build_prefix(persona.raw)
+        try:
+            character = characters.load(spec.character) if spec.character else None
+        except characters.CharacterError as err:
+            raise ValueError(str(err)) from err
+        prefix = build_prefix(characters.system_prompt(persona.raw, character))
         out.append(
             Variant(
                 spec.label,

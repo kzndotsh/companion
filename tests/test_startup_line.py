@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from companion import daemon, prompts
+from companion.characters import parse
 from companion.core.types import RelationshipId
 
 
@@ -21,7 +22,7 @@ def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
     line = daemon.startup_line(RelationshipId("telegram-1"), "abcdef0123456789", scene)  # type: ignore[arg-type]
     persona = prompts.get("system/persona").version
     assert line == (
-        f"up as telegram-1 | persona {persona} (prefix abcdef012345)"
+        f"up as telegram-1 | persona {persona} (prefix abcdef012345) | character none"
         f" | prompts {prompts.set_hash()}"
         f" | everyday {daemon.openrouter.DEFAULT_MODEL} | scenes {daemon.SCENE_MODEL}"
         " | daily cap $10.00 | pace natural | split on | listen on | initiative shadow"
@@ -71,3 +72,9 @@ def test_listen_is_on_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None
     assert " | listen off | " in daemon.startup_line(RelationshipId("t"), "a" * 12, None)
     monkeypatch.setenv("COMPANION_LISTEN", "on")
     assert " | listen on | " in daemon.startup_line(RelationshipId("t"), "a" * 12, None)
+
+
+def test_the_startup_line_names_the_character() -> None:
+    mika = parse("You are Mika. Bubbly.\n", "mika", "local")
+    line = daemon.startup_line(RelationshipId("t"), "a" * 12, None, mika)
+    assert " | character mika@local | " in line

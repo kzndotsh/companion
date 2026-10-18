@@ -96,7 +96,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - Settings are environment variables in `.env`: `COMPANION_MODEL`, `COMPANION_SCENE_MODEL`,
   `COMPANION_REFLECT_MODEL`, `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`,
   `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE` and
-  `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping it). The table is in `README.md`.
+  `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping it) and `COMPANION_CHARACTER` (a character
+  sheet laid over the persona, `companion/characters.py`). The table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`logsetup.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.

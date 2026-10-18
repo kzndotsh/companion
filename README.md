@@ -73,6 +73,7 @@ All optional. Set them in `.env`.
 | `COMPANION_LISTEN` | `off` turns off the listening note |
 | `COMPANION_INITIATIVE` | `off` disables the shadow-mode reach-out gate |
 | `COMPANION_PROMPT_OVERRIDES` | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
+| `COMPANION_CHARACTER` | Unset by default. `mika` lays the character sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona: name, age, look, voice, tastes and an authored past. It still says it is an AI when sincerely asked |
 
 ## Commands
 

@@ -11,7 +11,8 @@ from pathlib import Path
 
 import httpx
 
-from companion import logsetup, prompts
+from companion import characters, logsetup, prompts
+from companion.characters import Character
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
@@ -121,7 +122,9 @@ def cap_text(cap: float | None) -> str:
     return "off" if cap is None else f"${cap:.2f}"
 
 
-def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> str:
+def startup_line(
+    rel: RelationshipId, prefix_sha: str, scene: Talker | None, character: Character | None = None
+) -> str:
     """The line that says what is running: persona, prefix hash and which models talk."""
     if model := os.environ.get("COMPANION_MODEL"):
         everyday = model
@@ -134,7 +137,8 @@ def startup_line(rel: RelationshipId, prefix_sha: str, scene: Talker | None) -> 
     )
     persona = prompts.get("system/persona").version
     return (
-        f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]}) | prompts {prompts.set_hash()}"
+        f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]})"
+        f" | character {character.ref if character else 'none'} | prompts {prompts.set_hash()}"
         f" | everyday {everyday}"
         f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
         f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
@@ -247,7 +251,8 @@ async def run(data_dir: Path) -> None:
     token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
     rel = RelationshipId(f"telegram-{user}")
     store = Store(data_dir / f"{rel}.sqlite")
-    prefix = build_prefix(prompts.get("system/persona").raw)
+    character = characters.chosen(data_dir / "characters")
+    prefix = build_prefix(characters.system_prompt(prompts.get("system/persona").raw, character))
     async with httpx.AsyncClient() as client:
         talker, scene, judge, reflector = _metered_models(client, store, rel)
         convo = Conversation(
@@ -313,7 +318,9 @@ async def run(data_dir: Path) -> None:
             schedule_reflect()
             return reply
 
-        logging.getLogger("companion").info(startup_line(rel, prefix.sha256, convo.scene_talker))
+        logging.getLogger("companion").info(
+            startup_line(rel, prefix.sha256, convo.scene_talker, character)
+        )
         logging.getLogger("companion").info("full log: %s", log_file)
         initiative = _start_initiative(store, rel, judge)
         try:

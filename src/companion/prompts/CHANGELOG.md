@@ -457,6 +457,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/ack v1** (superseded). From commit 9622e19 on 2026-10-15: feat(ack): react instead of replying to acknowledgements, judged by a small model in parallel with the talker
 - **system/ack v2** (current). From commit ca3f4c3 on 2026-10-17: fix(ack): a lively reply in the middle of a chat is not an acknowledgement and gets a message
 
+## system/character-frame
+- **system/character-frame v1** (current). New. The lines between the persona and a character sheet when `COMPANION_CHARACTER` names one (`companion/characters.py`): the sheet is plain prompt text; the sheet wins on voice, taste, look and its own past; the honesty rule (an AI playing the character, said plainly when sincerely asked), memory, closeness, limits and danger still hold; its past is only what the sheet says. Decided by the owner on 2026-10-18: admit being an AI when sincerely asked, an authored past is allowed, sheets public in prompts or private in `data/characters/`. Not yet measured.
+
 ## system/extract
 - **system/extract v1** (superseded). From commit a4bd65f on 2026-10-15: feat(slow): extract beliefs behind the quote gate, with a cursor, CLI and background pass
 - **system/extract v2** (superseded). From commit c443185 on 2026-10-15: feat(slow): lasting flag, confidence floor, quote-overlap dedupe, retire and dedupe commands

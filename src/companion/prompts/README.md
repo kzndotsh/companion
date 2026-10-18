@@ -25,6 +25,9 @@ There is no single overall system prompt. The talker's request has three parts, 
    (`notes/scene-*`), the length note (`notes/length`) and the listening note (`notes/listening-*`).
    Notes and memory ride here and never in a user message, because anything in a user message can be read
    as something they said.
+   With `COMPANION_CHARACTER` set, block 1 is the persona, then `system/character-frame`, then the
+   character sheet (`companion/characters.py`). The sheet wins on voice, taste, look and its own past;
+   honesty, memory, closeness and limits still come from the persona.
 3. **The messages**: the last 40 messages of the conversation, then their new message exactly as typed.
 
 Everything else is a separate small model call with its own system prompt and a short excerpt of the

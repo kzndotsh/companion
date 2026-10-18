@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from companion import characters
+from companion.characters import CharacterError, load, parse, system_prompt
+from companion.evals.variants import parse_spec
+
+SHEET = "You are Mika, 19. Bubbly, loves indie music and small dogs.\n"
+
+
+def test_a_sheet_is_its_text_and_an_empty_one_is_refused() -> None:
+    mika = parse(SHEET, "mika", "local")
+    assert (mika.ref, mika.sheet) == ("mika@local", SHEET.strip())
+    with pytest.raises(CharacterError, match="empty sheet"):
+        parse("\n  \n", "mika", "local")
+
+
+def test_a_private_sheet_is_loaded_and_an_unknown_one_is_refused(tmp_path: Path) -> None:
+    (tmp_path / "mika.md").write_text(SHEET, encoding="utf-8")
+    assert load("mika", tmp_path).version == "local"
+    with pytest.raises(CharacterError, match="no character"):
+        load("nobody", tmp_path)
+    with pytest.raises(CharacterError, match="lowercase"):
+        load("../etc", tmp_path)
+
+
+def test_the_sheet_follows_the_persona_under_the_frame() -> None:
+    built = system_prompt("PERSONA\n", parse(SHEET, "mika", "local"))
+    assert built.index("PERSONA") < built.index("## Who you are") < built.index("You are Mika")
+    assert "say so plainly" in built
+    assert built.endswith("small dogs.\n")
+    assert system_prompt("PERSONA\n", None) == "PERSONA\n"
+
+
+def test_no_character_unless_the_setting_names_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv(characters.CHARACTER_ENV, raising=False)
+    assert characters.chosen(tmp_path) is None
+    (tmp_path / "mika.md").write_text(SHEET, encoding="utf-8")
+    monkeypatch.setenv(characters.CHARACTER_ENV, "mika")
+    chosen = characters.chosen(tmp_path)
+    assert chosen is not None
+    assert chosen.ref == "mika@local"
+
+
+def test_an_eval_variant_can_name_a_character() -> None:
+    spec = parse_spec("v26.md+listen+as-mika")
+    assert spec.character == "mika"
+    assert spec.label == "v26.md+listen+as-mika"
