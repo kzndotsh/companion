@@ -1,13 +1,12 @@
 # Companion
 
-A Telegram companion bot that tries to be the most human-like AI companion we can make, and the
-memory engine underneath it.
+An AI companion that tries to be as human-like as we can make it, and the memory engine underneath it.
 
 One person talks to it. When a reply feels off they send `/flag`; when one delights them they send
 `/fav`. Those marks, and measurements on recorded turns, decide what gets built next.
 
-It is a single-user, local-only project. The bot runs on the owner's machine and the repo has no
-remote.
+Today it is reached through Telegram, which is its only integration for now. It is a single-user,
+local-only project: it runs on the owner's machine and the repo has no remote.
 
 ## What it does
 
