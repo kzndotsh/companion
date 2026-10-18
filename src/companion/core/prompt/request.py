@@ -40,7 +40,9 @@ def build_request(
     volatile: str = "",
     card: str = "",
 ) -> TalkerRequest:
-    """The clock and scene note ride the final user message; the memory card rides the system.
+    """`volatile` rides the final user message. Live turns pass it empty and put the clock, the
+    memory card and the notes in `card`, the system block; replays of turns recorded before that
+    still carry their old volatile text.
 
     The prefix and every earlier message stay byte-identical turn to turn, so the cache holds
     for as long as the card does not change.

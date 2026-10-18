@@ -27,7 +27,8 @@ def describe_gap(gap: timedelta) -> str | None:
 
 
 def now_line(now: datetime, previous: datetime | None) -> str:
-    """`now` is shown in the machine's local zone; `previous` is the last message before it."""
+    """`now` is shown in the machine's local zone; `previous` is their own last message before
+    this one, not the companion's reply, so "their last message" in the line is true."""
     stamp = now.astimezone().strftime("%A %H:%M")
     gap = describe_gap(now - previous) if previous is not None else None
     line = get("notes/clock").render(stamp=stamp)

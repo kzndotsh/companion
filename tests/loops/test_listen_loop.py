@@ -115,3 +115,14 @@ async def test_listen_off_never_asks_the_judge_and_adds_no_note(store: Store) ->
     convo = Conversation(store, talker, PREFIX, REL, judge=Judge(_labels(2)), listen=False)
     await convo.handle(SESSION, "rough week", "test", NOW)
     assert "[They are" not in talker.seen[0].card
+
+
+SHORT_NOTE = "Their message was short"
+
+
+@pytest.mark.parametrize(("severity", "capped"), [(0, True), (1, True), (2, False), (3, False)])
+async def test_a_serious_or_acute_message_gets_no_length_cap(
+    store: Store, severity: int, *, capped: bool
+) -> None:
+    talker = await _ask(store, Judge(_labels(severity)), text="my mom is in the hospital")
+    assert (SHORT_NOTE in talker.seen[0].card) is capped

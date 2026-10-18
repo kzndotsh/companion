@@ -3,7 +3,9 @@
 On short, casual statements the replies ran three to four times longer than the message they
 answered (a 4-word message got a median of 15 words; see `evals/CHANGELOG.md`). When they wrote a
 lot, or asked something, the length was already about right, so the note only appears for a short
-statement. It rides in the system block with the clock, never in their message.
+statement. It rides in the system block with the clock, never in their message. A serious or acute
+message gets no length note: the listening note sets the length there, and a short "i want to die"
+must not be answered under a word cap.
 """
 
 from __future__ import annotations
@@ -22,10 +24,11 @@ def reply_limit(user_words: int) -> int:
     return max(FLOOR_WORDS, math.ceil(1.5 * user_words) + 4)
 
 
-def length_note(user_text: str) -> str | None:
-    """The note for a short statement, or None for a question, a long message or nothing."""
+def length_note(user_text: str, *, serious: bool = False) -> str | None:
+    """The note for a short statement, or None for a question, a long message, nothing, or a
+    message judged serious."""
     words = len(user_text.split())
-    if words == 0 or words > MAX_USER_WORDS or "?" in user_text:
+    if serious or words == 0 or words > MAX_USER_WORDS or "?" in user_text:
         return None
     unit = "word" if words == 1 else "words"
     return _NOTE.render(words=words, unit=unit, limit=reply_limit(words))

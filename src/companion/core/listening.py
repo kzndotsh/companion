@@ -18,6 +18,7 @@ from companion.core.types import Json
 from companion.prompts import Prompt, get
 
 SEVERITIES = (0, 1, 2, 3)
+SERIOUS = 2  # serious personal; 3 is acute
 STANCES = ("listening", "inviting", "other")
 OFFER_WINDOW = 4
 _OFFER_PHRASES = ("talk about it", "talk it through", "want to talk", "wanna talk")

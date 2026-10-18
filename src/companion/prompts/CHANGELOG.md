@@ -387,6 +387,16 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   (`tests/live/test_listening_judge.py`): severity exact 59/60, stance 56/60, medical 6/6, and no
   serious message read as trivial.
 
+- **No length note on a serious or acute message, and the clock gap counts from their last
+  message.** Found by the prompt audit of 2026-10-18 and fixed in code, not measured. A short message
+  judged severity 2 got the length note ("under about 12 words") beside the serious note ("under about
+  35 words"), two limits for one reply; a short acute message ("i want to die") got only the length
+  note, a word cap where the persona asks for a direct, caring answer. Now the length note is left out
+  at severity 2 and 3 (`core/length.py`, `loops/fast.py`). The clock line said "Their last message came
+  ... ago" but measured from the last message of either speaker, usually the companion's own reply; it
+  now measures from their last message, so a message the companion sent on its own in between does
+  not shorten the gap.
+
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
 

@@ -27,7 +27,11 @@ MAX_CLAIM_CHARS = 160
 SCALES = ("minutes", "hours", "days", "unknown")
 SAME_DAY_SCALES = ("minutes", "hours")
 _WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
-_SAME_DAY = ("today", "tonight", "this evening", "this afternoon", "later", "now", "this morning")
+# Whole words only: "now" must not match "know" or "snow", and "later this week" is not today.
+_SAME_DAY = re.compile(
+    r"\b(?:today|tonight|this evening|this afternoon|this morning|now"
+    r"|later(?! (?:this|next|in) ))\b"
+)
 
 
 class LoopState(StrEnum):
@@ -157,7 +161,7 @@ def _calendar_offset(when: str, said: datetime) -> int | None:
 
 def _event_offset(when: str, said: datetime) -> int | None:
     """How many days after they spoke the thing happens, or None when `when` does not say."""
-    if any(w in when for w in _SAME_DAY):
+    if _SAME_DAY.search(when):
         return 0
     dated = _calendar_offset(when, said)
     if dated is not None:

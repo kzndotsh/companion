@@ -35,3 +35,8 @@ def test_the_limit_grows_with_what_they_wrote_and_never_drops_below_the_floor() 
 
 def test_the_longest_message_that_still_counts_as_short_gets_a_note() -> None:
     assert length_note(" ".join(["word"] * MAX_USER_WORDS)) is not None
+
+
+def test_a_serious_message_gets_no_length_note_however_short() -> None:
+    assert length_note("i want to die", serious=True) is None
+    assert length_note("i want to die") is not None

@@ -168,6 +168,26 @@ async def test_clock_line_names_the_gap(store: Store) -> None:
     assert "Right now it is" not in talker.seen[1].messages[-1].content
 
 
+async def test_the_gap_counts_from_their_last_message_not_the_companions(store: Store) -> None:
+    talker = FakeTalker("a", "b")
+    convo = Conversation(store, talker, PREFIX, REL)
+    await convo.handle(SESSION, "first", "test", NOW)
+    later = Utterance(
+        UtteranceId("late"),
+        REL,
+        SESSION,
+        TurnId("late"),
+        Speaker.COMPANION,
+        "a late message of its own",
+        Frame.REAL,
+        "test",
+        NOW + timedelta(hours=4),
+    )
+    store.append_utterance(later)
+    await convo.handle(SESSION, "second", "test", NOW + timedelta(hours=5, minutes=1))
+    assert "Their last message came 5 hours ago." in talker.seen[1].card
+
+
 async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     store: Store, tmp_path: Path
 ) -> None:
