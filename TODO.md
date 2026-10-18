@@ -374,9 +374,11 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 
 ### J. From the research walk-through with the owner (2026-10-18)
 
-- [ ] J1 More attitude, in character: wants of its own, moods that change what it does, and an occasional
-      no or ignore with a reason the moment supplies, never rudeness. Through the character sheet and
-      fixtures (humanness research: stakes, Neuro-sama's defiance read as agency).
+- [ ] J1 More attitude, in character. **Partly done 2026-10-18:** a cool reply to real rudeness by a
+      listening label and a one-turn note (2 to 20 of 20, 89c1d81); picking for itself and holding a view
+      come from behaviour lines in the character sheet (9 to 19 and 11 to 17 of 20 with Ani), and a
+      reasoned no already passes. Open: without a character it still hands back a menu (5 of 20) and
+      caves (7 of 20); moods that change what it does wait for J5. Ignoring on purpose stays out (X10).
 - [ ] J2 Callback score: how often it brings up something minor from days ago unprompted, and whether it
       lands, as the main memory metric (humanness research: the first thing paying users stay for).
 - [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
