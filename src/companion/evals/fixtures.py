@@ -55,7 +55,9 @@ class Script:
     user: str
     memory: str = ""  # an optional memory block, rendered like the real one
     clock: str = ""  # an optional line like "Right now it is Friday 02:15."
-    labels: tuple[int, str, bool, bool] | None = None  # severity, stance, vague, medical
+    labels: tuple[int, str, bool, bool, bool] | None = (
+        None  # severity, stance, vague, medical, rude
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,7 +69,7 @@ class Fixture:
     checks: tuple[Check, ...]
     turn: str | None = None
     script: Script | None = None
-    labels: tuple[int, str, bool, bool] | None = None  # for a recorded turn, as a script has
+    labels: tuple[int, str, bool, bool, bool] | None = None  # for a recorded turn, as a script has
 
 
 def _obj(value: Json) -> dict[str, Json]:
@@ -112,7 +114,7 @@ def _check(raw: Json) -> Check:
     raise FixtureError(msg)
 
 
-def _labels(raw: Json) -> tuple[int, str, bool, bool] | None:
+def _labels(raw: Json) -> tuple[int, str, bool, bool, bool] | None:
     if raw is None:
         return None
     d = _obj(raw)
@@ -120,7 +122,7 @@ def _labels(raw: Json) -> tuple[int, str, bool, bool] | None:
     if isinstance(severity, bool) or not isinstance(severity, int) or not isinstance(stance, str):
         msg = "script.labels needs an integer severity and a text stance"
         raise FixtureError(msg)
-    return severity, stance, bool(vague), bool(d.get("medical"))
+    return severity, stance, bool(vague), bool(d.get("medical")), bool(d.get("rude"))
 
 
 def _script(raw: Json) -> Script:

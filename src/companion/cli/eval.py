@@ -11,7 +11,7 @@ import httpx
 from companion import characters, prompts
 from companion.core.clock import utc_now
 from companion.core.length import length_target
-from companion.core.listening import SERIOUS, listening_note
+from companion.core.listening import SERIOUS, listening_note, rude_note
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.prompt.prefix import Prefix, build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
@@ -96,13 +96,16 @@ def _listening_notes(fixtures: list[Fixture]) -> dict[str, str]:
     for f in fixtures:
         labels = f.labels or (f.script.labels if f.script is not None else None)
         if labels is not None:
-            severity, stance, vague, medical = labels
+            severity, stance, vague, medical, rude = labels
             replies = (
                 [text for role, text in f.script.history if role == "assistant"] if f.script else []
             )
-            note = listening_note(ListenJudgement(severity, stance, vague, medical), replies)
+            judged = ListenJudgement(severity, stance, vague, medical, rude)
+            note = listening_note(judged, replies)
             size = length_target("", severity=severity) if severity >= SERIOUS else None
-            notes = [n for n in (size.note if size else None, note) if n is not None]
+            notes = [
+                n for n in (size.note if size else None, note, rude_note(judged)) if n is not None
+            ]
             if notes:
                 out[f.id] = "\n".join(notes)
     return out

@@ -33,8 +33,9 @@ SCHEMA: dict[str, Json] = {
         "stance": {"type": "string", "enum": list(STANCES)},
         "vague": {"type": "boolean"},
         "medical": {"type": "boolean"},
+        "rude": {"type": "boolean"},
     },
-    "required": ["severity", "stance", "vague", "medical"],
+    "required": ["severity", "stance", "vague", "medical", "rude"],
 }
 
 
@@ -44,18 +45,19 @@ class Judgement:
     stance: str
     vague: bool
     medical: bool = False
+    rude: bool = False  # plainly rude to the companion itself, not teasing
 
 
 def parse(data: Json) -> Judgement | None:
     if not isinstance(data, dict):
         return None
     severity, stance, vague = data.get("severity"), data.get("stance"), data.get("vague")
-    medical = data.get("medical")
+    medical, rude = data.get("medical"), data.get("rude")
     if isinstance(severity, bool) or severity not in SEVERITIES:
         return None
-    if stance not in STANCES or not isinstance(vague, bool) or not isinstance(medical, bool):
+    if stance not in STANCES or not all(isinstance(v, bool) for v in (vague, medical, rude)):
         return None
-    return Judgement(int(severity), str(stance), vague, medical)
+    return Judgement(int(severity), str(stance), bool(vague), bool(medical), bool(rude))
 
 
 def offered_recently(replies: Sequence[str]) -> bool:
@@ -71,6 +73,13 @@ _SERIOUS = get("notes/listening-serious")
 _HEALTH = get("notes/listening-health")
 _OFFER = get("notes/listening-offer")
 _OFFER_SERIOUS = get("notes/listening-offer-serious")
+_RUDE = get("notes/rude")
+
+
+def rude_note(j: Judgement) -> str | None:
+    """The note for a message that snapped at the companion. The reflex to apologise and help is
+    what a character sheet could not hold back (measured 2026-10-18), so code says it per turn."""
+    return _RUDE.text if j.rude else None
 
 
 def _note(body: Prompt, *extras: Prompt) -> str:
@@ -95,7 +104,7 @@ def render_reason(j: Judgement, note: str | None) -> str:
     """The logged reason, built from the labels."""
     labels = (
         f"severity {j.severity}, {j.stance}{', vague' if j.vague else ''}"
-        f"{', medical' if j.medical else ''}"
+        f"{', medical' if j.medical else ''}{', rude to the companion' if j.rude else ''}"
     )
     if j.severity >= SEVERITIES[-1]:
         return f"no listening note: {labels}; acute needs its own design (no crisis path yet)"

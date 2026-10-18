@@ -174,7 +174,7 @@ def test_a_script_can_carry_the_labels_the_judge_would_give() -> None:
     }
     fixture = parse_fixture(raw)
     assert fixture.script is not None
-    assert fixture.script.labels == (2, "listening", False, True)
+    assert fixture.script.labels == (2, "listening", False, True, False)
 
 
 def test_a_recorded_turn_can_carry_labels_too() -> None:
@@ -187,7 +187,7 @@ def test_a_recorded_turn_can_carry_labels_too() -> None:
         "labels": {"severity": 0, "stance": "listening", "vague": False},
         "checks": [{"kind": "max_words", "n": 10}],
     }
-    assert parse_fixture(raw).labels == (0, "listening", False, False)
+    assert parse_fixture(raw).labels == (0, "listening", False, False, False)
 
 
 @pytest.mark.parametrize(

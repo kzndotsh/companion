@@ -471,6 +471,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/listening-trivial v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **notes/listening-trivial v2** (current). From commit 1171941 on 2026-10-18: feat(listening): the trivial-vent note forbids jokes, running gags and retelling; the real flagged cleanup turn goes from 16/30 to 29/30; the history was not the cause (T13)
 
+## notes/rude
+- **notes/rude v1** (current). Added by code for the one turn when the listening judge labels their message rude to the companion: a few flat words and leave it there, no apology, offer, suggestion or question. Measurement in `evals/CHANGELOG.md`.
+
 ## notes/scene-hypothetical
 - **notes/scene-hypothetical v1** (current). Moved here on 2026-10-18 from `core/frames.py`, text unchanged. Earlier history is in git.
 
@@ -511,7 +514,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/judge-empathy v1** (current). From commit 7bbfebf on 2026-10-18: feat(evals): an epitome check scores reaction, interpretation, exploration and support; the everyday listening note requires one new thing; trivial vents still only restate (T14)
 
 ## system/listening
-- **system/listening v1** (current). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
+- **system/listening v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
+- **system/listening v2** (current). v1 plus one label, rude: plainly rude or hostile toward the companion itself, false for teasing, banter, a light jab, blunt feedback or frustration at something else. It feeds `notes/rude`. Reason: the reflex to apologise and offer more after an insult held against a character sheet in 8 of 20 replies (J1, 2026-10-18).
 
 ## system/openloops
 - **system/openloops v1** (superseded). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing

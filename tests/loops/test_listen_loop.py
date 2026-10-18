@@ -49,7 +49,7 @@ class Judge:
 
 
 def _labels(severity: int, stance: str = "listening", *, vague: bool = False) -> Json:
-    return {"severity": severity, "stance": stance, "vague": vague, "medical": False}
+    return {"severity": severity, "stance": stance, "vague": vague, "medical": False, "rude": False}
 
 
 @pytest.fixture
@@ -81,7 +81,7 @@ async def test_the_labels_are_logged_as_a_decision_with_the_scorer(store: Store)
     assert any(r == "listening note added: severity 2, listening, vague" for r in reasons)
     detail = next(d.detail for d in store.decisions_for_turn(REL, turn) if "listening" in d.reason)
     assert detail is not None
-    assert detail["labels"] == {"severity": 2, "stance": "listening", "vague": True}
+    assert detail["labels"] == {"severity": 2, "stance": "listening", "vague": True, "rude": False}
     assert detail["scorer"] == "j"
 
 
@@ -158,3 +158,19 @@ async def test_after_a_serious_message_a_bare_thanks_gets_words_not_an_emoji(
     await convo.handle(SESSION, "my mom is in the hospital", "test", NOW)
     answer = await convo.handle(SESSION, "thanks", "test", NOW + timedelta(minutes=1))
     assert isinstance(answer, Reaction) is reacted
+
+
+@pytest.mark.parametrize("rude", [True, False])
+async def test_the_rude_note_rides_the_system_block_only_when_they_snapped(
+    store: Store, *, rude: bool
+) -> None:
+    labels: Json = {
+        "severity": 0,
+        "stance": "other",
+        "vague": False,
+        "medical": False,
+        "rude": rude,
+    }
+    talker = await _ask(store, Judge(labels), text="god you're useless. shut up")
+    assert ("They just snapped at you" in talker.seen[0].card) is rude
+    assert "snapped" not in talker.seen[0].messages[-1].content

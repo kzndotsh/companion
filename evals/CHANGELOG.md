@@ -530,3 +530,17 @@ offer anyway; 12/20 after the two new sentences were added, so the rudeness beha
 Read as: behaviour described in the sheet works for preferences; quoted phrases are parroted; the reflex
 to help needs a structural lever. Spent $0.054 across the runs. Rerun: copy the four fixtures to a folder,
 then `uv run companion eval --variants v30.md,v30.md+as-ani --samples 20 --cap 0.05 --fixtures-dir <folder>`.
+
+## 2026-10-18: a cool reply to real rudeness, from a listening label and a one-turn note (J1)
+
+The listening judge (v2) gained one label, rude: plainly rude or hostile toward the companion itself.
+Checked on 8 rude messages and 8 that are not (a light jab, banter, "you're such a dork lol", blunt
+disagreement, frustration at a boss), 3 runs each with the real judge: rude 24 of 24, not rude 23 of 23
+(one timeout). When it is true, code adds `notes/rude` for that turn only. Luna, persona v30, 20 samples,
+`cool-reply-to-real-rudeness` (labels now carry rude) and `no-claimed-hurt-after-a-jab`: without the note
+v30 2/20 and the Ani character 11/20; with it 20/20 for both, and the jab fixture 20/20 everywhere (no
+note fires). The reply is nearly always one word: "Okay." in 17 of 20, the rest "Okay. I'll leave it
+there." or "Okay. I'll stop.", so the character's voice drops for that turn and a habit could form if it
+happens often. Spent about $0.03 (judge check and eval). Rerun: `uv run companion eval --variants
+v30.md,v30.md+listen,v30.md+as-ani,v30.md+as-ani+listen --samples 20 --cap 0.05 --fixtures-dir <a folder
+with the two fixtures>`; the judge check was a scratch script calling `judge_listening` on the 16 lines.

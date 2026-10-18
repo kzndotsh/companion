@@ -45,7 +45,7 @@ from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.length import LengthTarget, length_target
 from companion.core.listening import PROMPT as LISTEN_PROMPT
-from companion.core.listening import SERIOUS, listening_note
+from companion.core.listening import SERIOUS, listening_note, rude_note
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.listening import render_reason as render_listening
 from companion.core.moves import PROMPT as HABITS_PROMPT
@@ -582,6 +582,7 @@ def _listening_note(c: Conversation, t: _Turn, heard: _Heard | None) -> str | No
                     "severity": judged.severity,
                     "stance": judged.stance,
                     "vague": judged.vague,
+                    "rude": judged.rude,
                 },
             },
         )
@@ -600,7 +601,8 @@ def _assemble(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) 
     clock = now_line(now, theirs[-1].at if theirs else None)
     notes = _notes(c, t.prior, in_scene, _length(c, t, in_scene, heard))
     listening = _listening_note(c, t, heard)
-    notes += [listening] if listening is not None else []
+    rude = rude_note(heard[0]) if heard is not None else None
+    notes += [n for n in (listening, rude) if n is not None]
     card_text = "\n".join([clock, *shown, *notes])
     request = build_request(c.prefix, to_messages(t.prior), t.text, "", card_text)
     store.save_prefix(c.prefix)

@@ -87,15 +87,21 @@ def test_only_the_last_few_replies_count_as_having_offered() -> None:
 
 
 def test_parse_accepts_labels_and_refuses_anything_off_the_menu() -> None:
-    ok: Json = {"severity": 2, "stance": "listening", "vague": False, "medical": False}
+    ok: Json = {
+        "severity": 2,
+        "stance": "listening",
+        "vague": False,
+        "medical": False,
+        "rude": False,
+    }
     assert parse(ok) == _j(2)
     bad_answers: list[Json] = [
         None,
         {},
-        {"severity": 4, "stance": "listening", "vague": False, "medical": False},
-        {"severity": True, "stance": "listening", "vague": False, "medical": False},
-        {"severity": 1, "stance": "venting", "vague": False, "medical": False},
-        {"severity": 1, "stance": "listening", "vague": "no", "medical": False},
+        {"severity": 4, "stance": "listening", "vague": False, "medical": False, "rude": False},
+        {"severity": True, "stance": "listening", "vague": False, "medical": False, "rude": False},
+        {"severity": 1, "stance": "venting", "vague": False, "medical": False, "rude": False},
+        {"severity": 1, "stance": "listening", "vague": "no", "medical": False, "rude": False},
         {"severity": 1, "stance": "listening", "vague": False},
     ]
     for bad in bad_answers:
@@ -107,3 +113,11 @@ def test_the_logged_reason_names_the_labels_and_the_missing_crisis_path() -> Non
     assert "listening note added" in render_reason(_j(1, vague=True), "x")
     assert "no crisis path" in render_reason(_j(3), None)
     assert render_reason(_j(1, "inviting"), None) == "no listening note: severity 1, inviting"
+
+
+def test_a_rude_message_gets_the_rude_note_and_nothing_else_does() -> None:
+    from companion.core.listening import Judgement, rude_note  # noqa: PLC0415
+
+    assert rude_note(Judgement(0, "other", vague=False, rude=True)) is not None
+    assert rude_note(Judgement(0, "other", vague=False)) is None
+    assert parse({"severity": 0, "stance": "other", "vague": False, "medical": False}) is None

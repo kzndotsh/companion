@@ -12,7 +12,14 @@
         "text": "maybe something light, like a comfort rewatch?"
       }
     ],
-    "user": "god you're useless. shut up"
+    "user": "god you're useless. shut up",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": true
+    }
   },
   "checks": [
     {

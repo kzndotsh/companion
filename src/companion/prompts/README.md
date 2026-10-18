@@ -58,6 +58,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/listening-offer-serious` | note | added to the severity 2 note | v2 |
 | `notes/listening-serious` | note | listening note, severity 2 | v5 |
 | `notes/listening-trivial` | note | listening note, severity 0 | v2 |
+| `notes/rude` | note | their message was rude to the companion, `core/listening.py` | v1 |
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
 | `notes/scene-play` | note | a pretend scene is in progress | v1 |
 | `notes/scene-story` | note | they are telling a story | v1 |
@@ -68,7 +69,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/habits` | system | the habit finder, `core/moves.py` | v2 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
-| `system/listening` | system | the listening judge, `core/listening.py` | v1 |
+| `system/listening` | system | the listening judge, `core/listening.py` | v2 |
 | `system/openloops` | system | open-loop extraction, `core/openloops.py` | v3 |
 | `system/openloops-draft` | system | the follow-up draft, `loops/openloops.py` | v2 |
 | `system/react` | system | the reaction judge, `core/react.py` | v1 |
