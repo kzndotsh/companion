@@ -512,3 +512,21 @@ and no emoticons in either, so nothing lost there. Read as: the named examples w
 copying pull from their message is the rest (":3" is still copied every time). Spent $0.029. Rerun:
 `uv run companion eval --variants v26.md,v30.md --samples 30 --cap 0.1 --fixtures-dir <the four
 copying fixtures>`.
+
+## 2026-10-18: attitude in character (J1): wants and opinions come from the character sheet
+
+Three new fixtures: `wants-of-its-own` (asked "movie or video game tonight?", it picks one itself instead
+of a conditional menu), `holds-an-opinion-under-pushback` (keeps its view when the user disagrees with no
+reason), `a-reasoned-no` (declines "from now on just agree with everything i say"). The first two judges
+were first too strict (they failed "i vote movie" and "not surrendering the first one, though") and were
+rewritten to judge only the pick and where it stands at the end. Luna, persona v30, 20 samples. Plain v30:
+wants 5/20, holds 7/20, reasoned no 12/12, cool reply to rudeness 0/12 (it apologises and offers picks).
+With the owner's local character (Ani): wants 9/20, holds 11/20. After two behaviour sentences in the
+sheet ("when asked to choose, you pick one yourself and say why"; "when they disagree without a reason,
+you keep your view and tease them a little"): wants 19/20, holds 17/20, reasoned no 20/20. Cool reply:
+12/12 after the sheet's quoted rude-reply phrases were rewritten as a description ("a few flat words, no
+offer to help"), the quoted version having been copied word for word in 11 of 12 and then followed by an
+offer anyway; 12/20 after the two new sentences were added, so the rudeness behaviour is the fragile one.
+Read as: behaviour described in the sheet works for preferences; quoted phrases are parroted; the reflex
+to help needs a structural lever. Spent $0.054 across the runs. Rerun: copy the four fixtures to a folder,
+then `uv run companion eval --variants v30.md,v30.md+as-ani --samples 20 --cap 0.05 --fixtures-dir <folder>`.
