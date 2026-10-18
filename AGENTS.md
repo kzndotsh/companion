@@ -67,10 +67,11 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 
 **The prompt and what the model reads**
 - The memory card, the clock and the notes go in the system block, never in the user's message.
-  Anything in the user's message can be read as something the user said, and it leaks into replies.
+  Anything in the user's message can be read as something the user said, and it leaks into replies
+  (ADR 0012). A note is chosen by code from a model's labels, never written by a model (ADR 0014).
 - Every prompt is a versioned file under `src/companion/prompts/`. Never edit a shipped version: add the
   next `vN.md`, an entry in `prompts/CHANGELOG.md` and a line in `manifest.toml` (`tests/test_prompts.py`
-  fails otherwise). A judge's or extractor's logged decision carries `name@version`.
+  fails otherwise). A judge's or extractor's logged decision carries `name@version` (ADR 0013).
 - Dropped and candidate persona versions stay as files. Each `vN.md` has a changelog entry and each
   entry has its file (`tests/test_persona_versions.py` fails otherwise). Never delete a version.
 - A prompt change, or a code change that alters what the model is sent, goes in
