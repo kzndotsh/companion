@@ -20,9 +20,9 @@ Every so often, read each item and give it one of these fates, then delete the f
 | Fate | Where it goes |
 |---|---|
 | Decide a design question | An ADR in `docs/adr/` |
-| Change how it talks | A new persona version and a line in `src/companion/prompts/CHANGELOG.md` |
-| A failure worth testing for | A fixture, once the eval harness exists. Until then keep the turn id |
-| Work to do | Do it, or write it as a GitHub issue |
+| Change how it talks | A new prompt version and a line in `src/companion/prompts/CHANGELOG.md` |
+| A failure worth testing for | A fixture in `evals/fixtures/` (a script) or `evals/local/` (a recorded turn) |
+| Work to do | Do it, or add a card to `TODO.md` |
 | Needs digging into | A report in `docs/research/` |
 | Not now, or no | Delete it. Git keeps it |
 

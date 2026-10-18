@@ -31,12 +31,14 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | replay <turn_id>
-uv run companion eval --variants v22.md@openai/gpt-6-luna --samples 12 --cap 0.2
+uv run companion flags | favorites | spend | beliefs | initiative | prompts
+uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
+uv run companion eval --variants v26.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
 Strict ruff and basedpyright, a lefthook pre-commit, and import-linter run on every commit. Layer
-rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`.
+rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`. `core` may import
+`companion.prompts`, which only reads packaged text.
 
 ## Principles
 
@@ -53,10 +55,13 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 ## Rules we learned the hard way
 
 **Git**
-- Commit with `just commit "msg" file...`, which stages only the files you name and refuses
-  directories, `.env`, `data/`, `evals/` private paths and attribution lines. Stage only your own files, by name. Never `git add -A`, `git add .` or `git add docs`: other
-  sessions drop unread research files into the tree and they get committed by accident. Leave
-  untracked files that are not yours alone.
+- Commit with `just commit "msg" file...`. It stages only the files you name and refuses directories,
+  `.env`, `data/`, private `evals/` paths, attribution lines, and a commit when something else is
+  already staged (after a `git mv`, add by name and use `git commit`). Never `git add -A`, `git add .`
+  or `git add docs`: other sessions drop unread research files into the tree and they get committed by
+  accident. Leave untracked files that are not yours alone.
+- The shell is zsh, which does not split an unquoted variable into words. Pass file lists with arrays or
+  `xargs`, and quote globs that may match nothing.
 - Commit messages are a conventional prefix and a plain sentence. No attribution lines.
 - Do not commit `.env`, `data/`, `evals/local/` or `evals/results/`.
 
@@ -87,6 +92,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   result and how to rerun it in `evals/CHANGELOG.md`.
 
 **Running the bot**
+- Settings are environment variables in `.env`: `COMPANION_MODEL`, `COMPANION_SCENE_MODEL`,
+  `COMPANION_REFLECT_MODEL`, `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`,
+  `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE` and
+  `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping it). The table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`logsetup.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.

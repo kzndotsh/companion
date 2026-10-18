@@ -72,6 +72,7 @@ All optional. Set them in `.env`.
 | `COMPANION_SPLIT` | `off` stops long replies being sent as several messages |
 | `COMPANION_LISTEN` | `off` turns off the listening note |
 | `COMPANION_INITIATIVE` | `off` disables the shadow-mode reach-out gate |
+| `COMPANION_PROMPT_OVERRIDES` | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
 
 ## Commands
 
@@ -97,7 +98,7 @@ Run an eval:
 
 ```bash
 uv run companion eval --list
-uv run companion eval --variants v22.md@openai/gpt-6-luna --samples 12 --cap 0.2
+uv run companion eval --variants v26.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
 See [evals/README.md](evals/README.md) for how fixtures, variants and judges work.

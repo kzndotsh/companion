@@ -4,8 +4,8 @@ Replay a recorded turn against a persona variant, score the reply, and print one
 
 ```bash
 uv run companion eval --list                         # the fixtures
-uv run companion eval --variants v9.md,v10.md --dry-run   # the plan and its estimated cost
-uv run companion eval --variants v9.md,v10.md --samples 3 --cap 0.20 --show
+uv run companion eval --variants v25.md,v26.md --dry-run   # the plan and its estimated cost
+uv run companion eval --variants v25.md,v26.md --samples 12 --cap 0.20 --show
 ```
 
 ## How it works
@@ -19,10 +19,17 @@ uv run companion eval --variants v9.md,v10.md --samples 3 --cap 0.20 --show
     and a generic description, never the conversation, and need your database. They live in
     `evals/local/`, which is **gitignored**, and are for private regression checks on your own
     real conversations. Their ids end in `-local` so the two sets never mix up in a table.
-- A **variant** is a persona file, optionally `+nocard` (drop the memory block) or `@model`. The
-  recorded history and the user's message are reused exactly, so only the thing under test changes.
-- Checks are either deterministic (`max_words`, `regex`, `not_regex`) or `judge`. A judge is a small
-  model that answers `pass`, `fail` or `unclear` for one criterion. `unclear` is unscored and never
+- A **variant** is a persona version (`v26.md`, from `src/companion/prompts/system/persona/`) with optional
+  flags, in any order, and `@model` last: `+nocard` drops the memory block, `+h10` keeps the last 10
+  messages of history, `+low`, `+medium` or `+high` turns reasoning on, `+len` adds the length note and
+  `+listen` adds the listening note the fixture's labels would produce. The recorded history and the
+  user's message are reused exactly, so only the thing under test changes. To try another version of a
+  non-persona prompt, set `COMPANION_PROMPT_OVERRIDES` for the run.
+- Checks are either deterministic (`max_words`, `regex`, `not_regex`) or model-graded. `judge` answers
+  `pass`, `fail` or `unclear` for one criterion; `epitome` scores a reply 0 to 2 on reaction,
+  interpretation, exploration and support and passes with a reaction plus a strong interpretation, an
+  exploration or support. A script (or a recorded turn) can carry `labels` (severity, stance, vague,
+  medical) so `+listen` can add the matching note. `unclear` is unscored and never
   counts as a failure. The judge prompt and schema are hashed into every result.
 - A sample passes only if every check passes. Cells read `passes/scored`, with `+k?` for unscored.
 - **A spend cap is mandatory.** The runner adds up the real cost each response reports and stops
@@ -38,6 +45,13 @@ uv run companion eval --variants v9.md,v10.md --samples 3 --cap 0.20 --show
   24 judged replies. Read the replies (`--show`) for anything that decides a change.
 - Fixtures marked as measuring "the talker alone" test the model without the live loop's other
   decisions, such as the acknowledgement route.
+
+## Live tests
+
+Opt-in tests call the real models, cost cents, and check that a judge agrees with a person on invented
+examples: `uv run pytest -m live tests/live/test_ack_judge.py -s`, and likewise
+`test_extraction_rules.py`, `test_listening_judge.py` and `test_empathy_judge.py`. They are skipped in
+`just check` and CI.
 
 ## Adding a fixture
 
