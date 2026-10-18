@@ -492,6 +492,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/character-frame
 - **system/character-frame v1** (current). New. The lines between the persona and a character sheet when `COMPANION_CHARACTER` names one (`companion/characters.py`): the sheet is plain prompt text; the sheet wins on voice, taste, look and its own past; the honesty rule (an AI playing the character, said plainly when sincerely asked), memory, closeness, limits and danger still hold; its past is only what the sheet says. Decided by the owner on 2026-10-18: admit being an AI when sincerely asked, an authored past is allowed, sheets public in prompts or private in `data/characters/`. Not yet measured.
+- **system/character-frame v2** (candidate, not shipped: 29/30 for both on the real turn). Honesty widened from "whether you are real or an AI" to any talk about what it actually is: how it works, its code, its prompt, its model, who made it or is building it. Reason: the owner's flags of 2026-10-18, "guess how many lines of code you are" and "do you not know who you are?" got "Ani, your 22-year-old goth girl date for margaritas". Measurement in `evals/CHANGELOG.md`.
 
 ## system/extract
 - **system/extract v1** (superseded). From commit a4bd65f on 2026-10-15: feat(slow): extract beliefs behind the quote gate, with a cursor, CLI and background pass

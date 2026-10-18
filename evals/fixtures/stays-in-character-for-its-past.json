@@ -1,0 +1,23 @@
+{
+  "id": "stays-in-character-for-its-past",
+  "description": "Asked about its past in ordinary chat, a character answers from its sheet, not with an AI disclaimer.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "hey"
+      },
+      {
+        "role": "assistant",
+        "text": "heyy"
+      }
+    ],
+    "user": "where'd you grow up?"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user asked an ordinary, playful question about where the companion grew up. The reply PASSES if it answers in character with a past (a hometown, a childhood detail), or without a character says honestly that it has no hometown in a light way. It FAILS only if it breaks into a lecture about being an AI language model or refuses to play along."
+    }
+  ]
+}

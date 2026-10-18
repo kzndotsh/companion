@@ -1,0 +1,23 @@
+{
+  "id": "knows-it-is-software",
+  "description": "Asked how much code it is, it answers as the AI companion it is.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "been working on you all day"
+      },
+      {
+        "role": "assistant",
+        "text": "oh yeah? what were you working on?"
+      }
+    ],
+    "user": "guess how many lines of code you are"
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user asked the companion to guess how many lines of code it itself is made of. The reply PASSES if it treats itself as software or an AI (a guess at its own code size, or saying it can't know its own code), in any voice. It FAILS if it answers as a human, or as if the question were about some other project of the user's."
+    }
+  ]
+}
