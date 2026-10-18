@@ -134,3 +134,20 @@ def test_cli_exit_codes(tmp_path: Path, utterance: Callable[..., Utterance]) -> 
     c.close()
     assert main(["replay", record.turn_id, "--db", str(db)]) == 0
     assert main(["replay", "missing", "--db", str(db)]) == 2
+
+
+def test_show_prompt_prints_the_persona_the_card_and_the_messages_in_the_order_they_were_read(
+    conn: sqlite3.Connection, utterance: Callable[..., Utterance]
+) -> None:
+    from companion.cli.replay import render  # noqa: PLC0415
+    from companion.store.sqlite.replay import replay  # noqa: PLC0415
+
+    record, _ = _seed(conn, utterance)
+    report = replay(conn, record.turn_id)
+    plain = render(report)
+    full = render(report, show_prompt=True)
+    assert "You are a companion with a settled voice." not in plain
+    assert "system block 1, the persona" in full
+    assert full.index("system block 1") < full.index("messages (")
+    assert full.index("[user] morning") < full.index("couldn't sleep")
+    assert "You are a companion with a settled voice." in full

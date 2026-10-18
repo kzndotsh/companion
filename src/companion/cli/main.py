@@ -34,6 +34,11 @@ def _parser() -> argparse.ArgumentParser:
 
     rp = sub.add_parser("replay", help="rebuild what the fast loop saw for one turn")
     rp.add_argument("turn_id")
+    rp.add_argument(
+        "--show-prompt",
+        action="store_true",
+        help="print everything the talker was sent, in order, with the persona in full",
+    )
     _db_args(rp, relationship=False)
 
     _db_args(sub.add_parser("flags", help="list the turns you flagged"))
@@ -94,7 +99,7 @@ def _out(text: str) -> int:
 
 
 def _replay(a: argparse.Namespace) -> int:
-    out, code = replay.run(resolve_db(a.db), str(a.turn_id))
+    out, code = replay.run(resolve_db(a.db), str(a.turn_id), show_prompt=bool(a.show_prompt))
     (sys.stdout if code != 2 else sys.stderr).write(out)
     return code
 
