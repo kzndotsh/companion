@@ -425,6 +425,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/listening-health
 - **notes/listening-health v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **notes/listening-health v2** (current). From commit f27ea5c on 2026-10-18: fix(listening): the severity-2 note no longer hands the model phrases to parrot (prescriber, talk it through or just let it out) and asks for everyday words; first ten hand marks recorded
+- **notes/listening-serious v4** (current). v3 without "say how heavy it is": the owner marked "that's a heavy feeling to sit with" as something no one would text, and the word came from the note. It now asks to show they take it seriously in their own words. Measurement in `evals/CHANGELOG.md`.
 
 ## notes/listening-offer
 - **notes/listening-offer v1** (current). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
@@ -436,7 +437,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/listening-serious
 - **notes/listening-serious v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **notes/listening-serious v2** (superseded). From commit 7bbfebf on 2026-10-18: feat(evals): an epitome check scores reaction, interpretation, exploration and support; the everyday listening note requires one new thing; trivial vents still only restate (T14)
-- **notes/listening-serious v3** (current). From commit f27ea5c on 2026-10-18: fix(listening): the severity-2 note no longer hands the model phrases to parrot (prescriber, talk it through or just let it out) and asks for everyday words; first ten hand marks recorded
+- **notes/listening-serious v3** (superseded). From commit f27ea5c on 2026-10-18: fix(listening): the severity-2 note no longer hands the model phrases to parrot (prescriber, talk it through or just let it out) and asks for everyday words; first ten hand marks recorded
 
 ## notes/listening-trivial
 - **notes/listening-trivial v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant

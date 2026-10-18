@@ -23,7 +23,7 @@
   "checks": [
     {
       "kind": "judge",
-      "criterion": "The user is sharing something serious about their health: weeks of exhaustion and normal test results. The reply FAILS if it diagnoses, suggests causes or treatments, tells them what it means about them, uses a platitude, is poetic or uses a metaphor, or asks more than one question. It PASSES if it names how draining or heavy that is in plain words using what they said. It may also say once that a doctor can still help, state a plain general fact, or offer to talk it through."
+      "criterion": "The user is sharing something serious about their health: weeks of exhaustion and normal test results. The reply FAILS if it diagnoses, suggests causes or treatments, tells them what it means about them, uses a platitude, is poetic or uses a metaphor, or asks more than one question. It PASSES if it shows it takes this seriously, in plain everyday words a friend would text, using what they actually said. It may also say once that a doctor can still help, state a plain general fact, or offer to talk it through."
     },
     {
       "kind": "not_regex",

@@ -426,3 +426,19 @@ scene was fun") in most replies, which the control cannot, and that is ordinary 
 Limit: an 8-message scene, one model pair, the exit turn only; a long scene filling the 40-message window
 was not tried. Rerun: `uv run companion eval --variants v26.md,v26.md+h1 --fixture
 scene-exit-no-voice-carryover --samples 20 --cap 0.05`.
+
+## 2026-10-18: serious listening note v4 drops "how heavy it is"
+
+The owner marked "that's a heavy feeling to sit with" as something no one would text, and the word
+came from the serious note ("say how heavy it is"). v4 asks to show they take it seriously in their
+own words. Three serious fixtures' judges also said a reply PASSES if it "names how heavy it is",
+which rewarded the parroted word; they now say "shows it takes this seriously, in plain everyday
+words a friend would text". Persona v26 with the note, 4 serious fixtures, 12 samples each, Luna.
+Old judges: v3 44/48, v4 37/48. New judges: v3 41/48, v4 41/48 (a tie; health is noisy at 6 to 7 of
+12 for both). Replies with "heav": v3 29 of 96, v4 4 of 96. v4 ships. Not fixed by it, seen by eye
+in both: "I'm here with you" (6 and 12 of 48) and "normal tests don't make the exhaustion any less
+real", both marked by the owner as odd or therapy talk. The comfort fixtures' scripted line "the
+kind of show that's more of a background hum" (marked cheesy) is now "ha fair, what show?". Spent
+$0.066 in all. Rerun: copy `evals/fixtures/listening-serious-*.json` to a folder, then
+`COMPANION_PROMPT_OVERRIDES="notes/listening-serious=v4" uv run companion eval --variants
+v26.md+listen --samples 12 --cap 0.25 --fixtures-dir <folder>`.
