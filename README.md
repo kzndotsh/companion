@@ -2,8 +2,10 @@
 
 An AI companion that tries to be as human-like as we can make it, and the memory engine underneath it.
 
-One person talks to it. When a reply feels off they send `/flag`; when one delights them they send
-`/fav`. Those marks, and measurements on recorded turns, decide what gets built next.
+It talks like a friend who knows you: it remembers what you told it and who said it, notices when
+something is serious, keeps pace like someone typing, and can tell the difference between a story,
+a game and the real you. Everything it does is logged with a reason, so any reply can be replayed
+and explained.
 
 Today it is reached through Telegram, which is its only integration for now. It is a single-user,
 local-only project: it runs on the owner's machine and the repo has no remote.
@@ -23,6 +25,8 @@ local-only project: it runs on the owner's machine and the repo has no remote.
 - **Remembers what is coming up.** Things the user says about their near future become open loops.
   A gate decides every 15 minutes whether to reach out. It runs in shadow mode only: it drafts and
   records, and sends nothing.
+- **Learns from one person's marks.** When a reply feels off they send `/flag`; when one delights
+  them they send `/fav`. Those marks, and measurements on recorded turns, decide what gets built next.
 - **Measures itself.** A small eval runner replays recorded and scripted turns against persona and
   model variants, with a spend cap on every run.
 
