@@ -19,6 +19,7 @@ dev = [
     "import-linter>=2",
     "lefthook>=1",
     "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
 ]
 
 [build-system]
@@ -30,7 +31,8 @@ packages = ["src/companion"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q -m 'not live'"
+addopts = "-q -m 'not live' --strict-markers --strict-config"
+xfail_strict = true
 asyncio_mode = "auto"
 markers = [
     "live: hits real endpoints; never in CI",
@@ -44,11 +46,11 @@ target-version = "py312"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PL", "S", "T20", "ANN"]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PL", "S", "T20", "ANN", "DTZ", "TRY", "PERF", "FURB", "ISC", "EM", "ARG"]
 ignore = ["PLR2004", "S101"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["ANN", "PLR", "S"]
+"tests/**" = ["ANN", "PLR", "S", "ARG", "TRY", "EM"]
 
 [tool.basedpyright]
 include = ["src", "tests"]

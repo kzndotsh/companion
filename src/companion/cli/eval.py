@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 
 import httpx
 
 from companion import prompts
+from companion.core.clock import utc_now
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.listening import listening_note
 from companion.core.prompt.prefix import Prefix, build_prefix
@@ -166,7 +166,7 @@ async def run(a: EvalArgs) -> str:
         listening = _listening_notes(fixtures)
         plan = Plan(fixtures, requests, variants, samples, cap, listening)
         results = await run_eval(plan, models)
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    stamp = utc_now().strftime("%Y%m%d-%H%M%S")
     path = Path("evals/results") / f"{stamp}.json"
     save(path, results, fixtures, variants, judge_module.judge_hash())
     body = render_table(results, fixtures, variants)

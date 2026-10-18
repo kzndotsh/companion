@@ -26,10 +26,10 @@ def render_table(results: Results, fixtures: Sequence[Fixture], variants: Sequen
     width = max([len(f.id) for f in fixtures] + [7]) + 2
     col = max([len(v.label) for v in variants] + [12]) + 2
     lines = ["fixture".ljust(width) + "".join(v.label.ljust(col) for v in variants)]
-    for f in fixtures:
-        lines.append(
-            f.id.ljust(width) + "".join(_cell(results, f.id, v.label).ljust(col) for v in variants)
-        )
+    lines.extend(
+        f.id.ljust(width) + "".join(_cell(results, f.id, v.label).ljust(col) for v in variants)
+        for f in fixtures
+    )
     total: list[str] = []
     for v in variants:
         cells = [results.cells[(f.id, v.label)] for f in fixtures]

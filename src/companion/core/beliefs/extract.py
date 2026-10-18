@@ -178,7 +178,7 @@ def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
         try:
             if fields is None:
                 msg = "item is not an object"
-                raise ValueError(msg)
+                raise ValueError(msg)  # noqa: TRY301 - one rejection path for every bad field
             ok.append(
                 Candidate(
                     ref=str(fields.get("ref")).strip(),
@@ -205,7 +205,7 @@ def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
 def _number(value: Json) -> float:
     if isinstance(value, bool) or not isinstance(value, int | float):
         msg = f"expected a number, got {value!r}"
-        raise ValueError(msg)
+        raise ValueError(msg)  # noqa: TRY004 - the caller catches ValueError for every bad field
     return float(value)
 
 

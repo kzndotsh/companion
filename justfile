@@ -44,3 +44,7 @@ commit message +files:
 # follow the full debug log (every stage of every turn, judges, model and Telegram calls)
 logs:
     tail -n 60 -f data/logs/companion.log
+
+# test coverage by file; a report only, no minimum enforced
+cov:
+    uv run pytest -m "not live" --cov=companion --cov-report=term-missing:skip-covered -n auto

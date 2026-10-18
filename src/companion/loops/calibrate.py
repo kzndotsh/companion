@@ -69,8 +69,10 @@ def report(rows: list[Reviewed]) -> str:
     agreed_no = [r for r in rows if not r.gates.eligible and r.verdict == "retired"]
     eligible = len(both) + len(wrong)
     lines = [
-        f"reviewed {len(rows)} views: {sum(r.verdict == 'approved' for r in rows)} approved, "
-        f"{sum(r.verdict == 'retired' for r in rows)} retired",
+        (
+            f"reviewed {len(rows)} views: {sum(r.verdict == 'approved' for r in rows)} approved, "
+            f"{sum(r.verdict == 'retired' for r in rows)} retired"
+        ),
         "",
         "                          you approved   you retired",
         f"gates would adopt         {len(both):>12}   {len(wrong):>11}",
