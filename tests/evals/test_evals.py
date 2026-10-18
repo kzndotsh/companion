@@ -177,6 +177,19 @@ def test_a_script_can_carry_the_labels_the_judge_would_give() -> None:
     assert fixture.script.labels == (2, "listening", False, True)
 
 
+def test_a_recorded_turn_can_carry_labels_too() -> None:
+    from companion.evals.fixtures import parse_fixture  # noqa: PLC0415
+
+    raw: Json = {
+        "id": "x",
+        "description": "d",
+        "turn": "abc123",
+        "labels": {"severity": 0, "stance": "listening", "vague": False},
+        "checks": [{"kind": "max_words", "n": 10}],
+    }
+    assert parse_fixture(raw).labels == (0, "listening", False, False)
+
+
 def test_a_history_variant_keeps_only_the_last_messages() -> None:
     base = _request()
     short = request_for(base, Variant("a", OTHER, history=2))

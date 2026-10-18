@@ -12,7 +12,13 @@
         "text": "oh no, is it everywhere?"
       }
     ],
-    "user": "been scrubbing for ten minutes, it got into every corner and i even had to use a toothbrush"
+    "user": "been scrubbing for ten minutes, it got into every corner and i even had to use a toothbrush",
+    "labels": {
+      "severity": 0,
+      "stance": "listening",
+      "vague": false,
+      "medical": false
+    }
   },
   "checks": [
     {

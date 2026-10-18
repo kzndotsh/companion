@@ -61,6 +61,7 @@ class Fixture:
     checks: tuple[Check, ...]
     turn: str | None = None
     script: Script | None = None
+    labels: tuple[int, str, bool, bool] | None = None  # for a recorded turn, as a script has
 
 
 def _obj(value: Json) -> dict[str, Json]:
@@ -155,6 +156,7 @@ def parse_fixture(raw: Json) -> Fixture:
         checks=tuple(_check(c) for c in cast("list[Json]", checks)),
         turn=_text(d, "turn") if turn is not None else None,
         script=_script(script) if script is not None else None,
+        labels=_labels(d.get("labels")),
     )
 
 

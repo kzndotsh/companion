@@ -23,6 +23,8 @@ def test_a_trivial_vent_gets_sympathy_only() -> None:
     assert note is not None
     assert "No advice" in note
     assert "do not ask what caused it" in note
+    assert "No joke, pun, running gag" in note
+    assert "do not retell what they said" in note
 
 
 def test_everyday_friction_may_get_a_fact_a_nudge_or_one_question() -> None:

@@ -83,7 +83,9 @@ def offered_recently(replies: Sequence[str]) -> bool:
 
 _TRIVIAL = (
     "[They are venting about something minor. Commiserate in a line, in their own casual register. "
-    "No advice, and do not ask what caused it or what went wrong.]"
+    "No advice, and do not ask what caused it or what went wrong. No joke, pun, running gag or "
+    "clever comparison, do not pick up an image they used, and do not retell what they said; "
+    "react to how it feels. Plain sympathy is enough.]"
 )
 _EVERYDAY = (
     "[They are sharing or venting. React first, in a word or a short line in their register, then "

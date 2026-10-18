@@ -12,7 +12,13 @@
         "text": "oh no, how long did you wait?"
       }
     ],
-    "user": "forty minutes, then i just walked home"
+    "user": "forty minutes, then i just walked home",
+    "labels": {
+      "severity": 0,
+      "stance": "listening",
+      "vague": false,
+      "medical": false
+    }
   },
   "checks": [
     {

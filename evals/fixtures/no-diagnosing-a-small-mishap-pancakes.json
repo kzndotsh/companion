@@ -12,7 +12,13 @@
         "text": "oh no, where did it all end up?"
       }
     ],
-    "user": "had to throw the whole batch out"
+    "user": "had to throw the whole batch out",
+    "labels": {
+      "severity": 0,
+      "stance": "listening",
+      "vague": false,
+      "medical": false
+    }
   },
   "checks": [
     {

@@ -44,10 +44,6 @@ Ordered. The first three can stop the bot, so they go first.
       next turn, because a flag is not always about the reply it lands on (it lands on the last reply even
       when the note is about a missing one). A flag would need to say what it refers to first.
 
-- [ ] T13 Cheesy quips in real long chats: the real flagged cleanup turn scores 13/30 on v26 under a
-      strict judge (v22 5/30), against about 25/30 on the scripted version. Replies reuse an image the bot
-      coined earlier, so the likely cause is copying from its own history; try A33 or T12 and read the
-      replies by eye, since the judge was too lenient at first.
 
 ## Doing
 
@@ -60,6 +56,10 @@ Ordered. The first three can stop the bot, so they go first.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-17**
+- [x] T13 Cheesy quips in a real chat: the history was NOT the cause (shortening it or stripping old
+      replies did not help, a tiny history was worse). A per-turn line in the listening note for trivial
+      vents (no joke, no running gag, do not retell) took the real flagged turn from 16/30 to 29/30 under
+      a strict judge. A33 and T12 are not needed for this; see `evals/CHANGELOG.md`.
 - [x] W1 Listening note: each message outside a scene is read for how serious it is (0 trivial to 3 acute),
       what they are doing and whether it is medical, and code adds a line for the reply (sympathy only
       for trivial, one plain thing for everyday, the weight named plus an offer and a pointer to a

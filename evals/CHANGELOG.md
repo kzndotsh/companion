@@ -323,3 +323,28 @@ someone already seeing one. The label itself was calibrated on 20 invented messa
 severity exact 59/60, stance 56/60, medical 6/6, serious never read as trivial. Not measured: how
 the replies feel in real chat, the added second of latency per turn, or acute messages (no crisis
 path).
+
+## 2026-10-17: T13, cheesy quips in a real chat (the history was not the cause)
+
+The hypothesis was that the bot copies jokes from its own earlier replies, so stripping stage
+directions and a short opening reaction from old replies in the history it reads (A33), or
+shortening the history (T12), would help. Measured on the real flagged cleanup turn under the strict
+judge (30 samples, Luna, v26): the full history 12 to 16/30; stage directions stripped 12/30; stripped
+plus the opening reaction removed 14/30; the last 12 messages only 14/30, the last 6 12/30, the last 2
+4/30. Shortening the history never helped and a tiny history made it clearly worse, so copying from
+the history is not what drives it. A judge-free echo score (repeated three-word runs, and words reused
+across earlier replies) found no repeated runs in any variant (about 0.003), and its "running bit"
+count flagged almost every reply because it counted ordinary topic words, so it was dropped along with
+the history-stripping code. One correction to my own earlier note: the "volcano" image came from the
+owner's first message in that chat, not from the bot, so the bot was repeating the user's image as a
+running gag.
+
+What worked was a per-turn line in the system block. The listening note for a trivial vent now also
+says: no joke, pun, running gag or clever comparison, do not pick up an image they used, do not
+retell what they said, plain sympathy is enough. Same real turn, strict judge, 30 samples, v26
+without and with the listening note: 16/30 to 29/30 (the first version of the note, without the
+quip clause, 14/30 to 13/30; with it but without "do not retell", 14/30 to 23/30). Scripted cleanup
+story 23/30 to 27/30, pancakes 30/30 both, missed bus 30/30 both. Read by eye the replies are plain
+and sympathetic with no running gag; they lean on one template ("ugh, that's such a frustrating
+..., especially ..."), which may become the new tic. Recorded-turn fixtures can now carry a `labels`
+field like scripts, so a real turn can be tested with the note.

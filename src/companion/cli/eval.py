@@ -79,9 +79,12 @@ def _listening_notes(fixtures: list[Fixture]) -> dict[str, str]:
     """The note each fixture's labels would produce, for the `+listen` variant."""
     out: dict[str, str] = {}
     for f in fixtures:
-        if f.script is not None and f.script.labels is not None:
-            severity, stance, vague, medical = f.script.labels
-            replies = [text for role, text in f.script.history if role == "assistant"]
+        labels = f.labels or (f.script.labels if f.script is not None else None)
+        if labels is not None:
+            severity, stance, vague, medical = labels
+            replies = (
+                [text for role, text in f.script.history if role == "assistant"] if f.script else []
+            )
             note = listening_note(ListenJudgement(severity, stance, vague, medical), replies)
             if note is not None:
                 out[f.id] = note
