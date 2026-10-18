@@ -458,3 +458,17 @@ fixture pair and a by-eye count, so the size of the gain is rough. Not fixed: th
 restatement, which is T14. Spent $0.031. Rerun: copy `evals/fixtures/listening-everyday-*.json` and
 `listening-vague-distress-*.json` to a folder, then `COMPANION_PROMPT_OVERRIDES="notes/listening-everyday=v3"
 uv run companion eval --variants v26.md+listen --samples 12 --cap 0.05 --fixtures-dir <folder>`.
+
+## 2026-10-18: audit of live beliefs, a second look with more context
+
+Read-only. 187 live beliefs after four days, none ever superseded. 40 sampled at random (seed 7,
+sensitivity 3 left out so it was not sent again), in batches of 10, to Sonnet 5.5 (reasoning low,
+since OpenRouter refuses it off) with each belief's quote, four messages either side and every other
+live belief. 30 correct, 6 overstated, 3 trivial, 1 wrong, 0 duplicates; every non-correct verdict
+read by eye and agreed with. Overstated: one-offs recorded as lasting ("always wants burger",
+"repeatedly" for twice) and once the companion's wording recorded as the user's. The one wrong
+belief is a passing companion remark recorded as its own view; it is not approved and not on the
+card. So about 1 in 6 beliefs needs a correction, and merging has nothing to merge
+yet. Design in `docs/inbox/2026-10-18-a-second-look-and-consolidation-pass-for-beliefs.md`. Spent
+$0.109. The script was a scratch file (read-only SQLite, `OpenRouterExtractor` with reasoning on and
+tool_choice auto); rerun by sampling live beliefs the same way.
