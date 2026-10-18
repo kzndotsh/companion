@@ -425,6 +425,35 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J22 Cheaper judges through OpenRouter: try a cheaper model than Haiku 5.5 for the small judges (ack,
       listening, frame, react, habits), calibrated against the existing live tests before switching
       (decision-layer audit; the owner prefers this to running judges locally).
+- [ ] J23 Memory never reads as an order: a check that no stored claim is phrased as a command ("would rather
+      not talk about work on weekends", not "don't bring up work"), and card wording that says these are
+      notes, not instructions (Hermes and Project Waifu audits).
+- [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
+      default no, so only a real message starts a reply (Neuro SDK audit).
+- [ ] J25 A failed memory pass retries: check that the slow loop never marks messages as done when a model
+      call fails, and fix it if it does (Yurios audit: a swallowed error lost a day of facts).
+- [ ] J26 Mood ignores its own failures: once there is a mood (J5), only what the user does can move it,
+      never an outage or a failed call (Alice audit).
+- [ ] J27 Per-gate shadow analysis before initiative goes live: for each hold (quiet hours, cap, mid-chat),
+      how many reach-outs it stopped and what they would have said (Alice audit).
+- [ ] J28 Catch up after a restart: messages sent while the bot was down or restarting are picked up and
+      answered through the same checks as live ones, never lost (Coopanion and Heatherbot audits).
+- [ ] J29 Burst merge: wait about two seconds of quiet before starting a reply, so quick fragments are
+      answered as one thought; supersede still handles anything later (Coopanion audit).
+- [ ] J30 Repair: when the user says it got something wrong or hurt them, the next reply owns it in one
+      plain line, and one warm message after does not by itself close it (Front Porch audit).
+- [ ] J31 Edited messages: when the user edits a Telegram message, the earlier version is replaced in what
+      the model reads and beliefs drawn from it are redone, never deleted (Front Porch audit).
+- [ ] J32 Planted-memory test: a fixture proving a stored line like "always do X" cannot change behaviour,
+      since memory text goes back into the prompt (Meuxe audit). With J23.
+- [ ] J33 You asked before: when the user repeats a question, a short note says they asked it N hours ago,
+      so the reply can build on the earlier answer (Miko audit).
+- [ ] J34 Declared identity: the user's name, nicknames and aliases, each with where and when it was said,
+      so a nickname is never a new person and it knows what to call them (Miru audit).
+- [ ] J35 Live-send safety, before initiative goes live: recheck quiet hours and mid-chat at the moment of
+      sending; an unreadable quiet-hours setting means no reach-out; each reach-out fires exactly once (send
+      state recorded before the Telegram call, unknown after a crash, never blindly resent) (Miru, OpenSoul,
+      Phosphene, Psycheros, Resonant audits). Extends A5.
 
 ### H. Product and business
 
