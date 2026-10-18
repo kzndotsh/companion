@@ -383,7 +383,9 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       reports precision first; four fixtures (one opening, three traps). First reading: about 2 genuine
       callbacks in 338 real replies, traps 24/24, the obvious opening taken 4/20. Raising how often is J15.
 - [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
-      wrong one (Kindroid's edge in the user research).
+      wrong one (Kindroid's edge in the user research). **Parked by the owner on 2026-10-18** after the
+      research (local notes: `docs/research/2026-10-18_user-visible-memory.md`); options were browse, search,
+      retire, correct, and how sensitive items show.
 - [ ] J4 Small imperfections in style, uneven punctuation and the odd casual spelling, through the
       character sheet, never by editing replies (HAL cue weights: polish is an AI tell).
 - [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
