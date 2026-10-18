@@ -93,15 +93,49 @@ def test_parse_accepts_labels_and_refuses_anything_off_the_menu() -> None:
         "vague": False,
         "medical": False,
         "rude": False,
+        "recall": False,
+        "topic": "",
     }
     assert parse(ok) == _j(2)
     bad_answers: list[Json] = [
         None,
         {},
-        {"severity": 4, "stance": "listening", "vague": False, "medical": False, "rude": False},
-        {"severity": True, "stance": "listening", "vague": False, "medical": False, "rude": False},
-        {"severity": 1, "stance": "venting", "vague": False, "medical": False, "rude": False},
-        {"severity": 1, "stance": "listening", "vague": "no", "medical": False, "rude": False},
+        {
+            "severity": 4,
+            "stance": "listening",
+            "vague": False,
+            "medical": False,
+            "rude": False,
+            "recall": False,
+            "topic": "",
+        },
+        {
+            "severity": True,
+            "stance": "listening",
+            "vague": False,
+            "medical": False,
+            "rude": False,
+            "recall": False,
+            "topic": "",
+        },
+        {
+            "severity": 1,
+            "stance": "venting",
+            "vague": False,
+            "medical": False,
+            "rude": False,
+            "recall": False,
+            "topic": "",
+        },
+        {
+            "severity": 1,
+            "stance": "listening",
+            "vague": "no",
+            "medical": False,
+            "rude": False,
+            "recall": False,
+            "topic": "",
+        },
         {"severity": 1, "stance": "listening", "vague": False},
     ]
     for bad in bad_answers:

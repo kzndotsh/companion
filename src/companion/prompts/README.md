@@ -58,6 +58,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/listening-offer-serious` | note | added to the severity 2 note | v2 |
 | `notes/listening-serious` | note | listening note, severity 2 | v5 |
 | `notes/listening-trivial` | note | listening note, severity 0 | v2 |
+| `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v1 |
 | `notes/rude` | note | their message was rude to the companion, `core/listening.py` | v1 |
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
 | `notes/scene-play` | note | a pretend scene is in progress | v1 |
@@ -69,10 +70,11 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/habits` | system | the habit finder, `core/moves.py` | v2 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
-| `system/listening` | system | the listening judge, `core/listening.py` | v2 |
+| `system/listening` | system | the listening judge, `core/listening.py` | v3 |
 | `system/openloops` | system | open-loop extraction, `core/openloops.py` | v3 |
 | `system/openloops-draft` | system | the follow-up draft, `loops/openloops.py` | v2 |
 | `system/react` | system | the reaction judge, `core/react.py` | v1 |
+| `system/recall` | system | the recall look-up, `core/recall.py` | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
 | `system/views-implicated` | system | which views a flag implicates, `core/beliefs/views_implicated.py` | v1 |

@@ -55,6 +55,8 @@ from companion.core.prompt.request import TalkerRequest, build_request, request_
 from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
 from companion.core.react import decide as decide_reaction
+from companion.core.recall import PROMPT as RECALL_PROMPT
+from companion.core.recall import recall_note
 from companion.core.replay import TurnRecord
 from companion.core.talker import Reply, Talker
 from companion.core.types import (
@@ -81,6 +83,7 @@ from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.listen import judge_listening
 from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.react import judge_reaction
+from companion.loops.recall import Recalled, look_up
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.store.sqlite.store import Store
 
@@ -590,7 +593,41 @@ def _listening_note(c: Conversation, t: _Turn, heard: _Heard | None) -> str | No
     return note
 
 
-def _assemble(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> _Assembled:
+async def _recall(c: Conversation, t: _Turn, heard: _Heard | None) -> Recalled | None:
+    """When they asked it to remember something, look it up across all of memory and log it."""
+    if c.judge is None or heard is None or not heard[0].recall or not heard[0].topic:
+        return None
+    _mark(t, f"recall look-up: {heard[0].topic!r}")
+    recalled = await look_up(c.judge, c.store.user_beliefs(c.rel), heard[0].topic)
+    found = recalled.picked if recalled is not None else ()
+    reason = f"recall: they asked about {heard[0].topic!r}; " + (
+        f"{len(found)} found" if recalled is not None else "the look-up failed"
+    )
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            reason,
+            t.now,
+            detail={
+                "topic": heard[0].topic,
+                "picked": [b.id for b in found],
+                "searched": recalled.searched if recalled is not None else 0,
+                "scorer": recalled.model if recalled is not None else "",
+                "prompt": RECALL_PROMPT.ref,
+            },
+        )
+    )
+    return recalled
+
+
+def _assemble(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, recalled: Recalled | None
+) -> _Assembled:
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
     views = card_views(store.self_beliefs(c.rel), view_state)
@@ -602,7 +639,8 @@ def _assemble(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) 
     notes = _notes(c, t.prior, in_scene, _length(c, t, in_scene, heard))
     listening = _listening_note(c, t, heard)
     rude = rude_note(heard[0]) if heard is not None else None
-    notes += [n for n in (listening, rude) if n is not None]
+    found = recall_note(recalled.picked) if recalled is not None else None
+    notes += [n for n in (listening, rude, found) if n is not None]
     card_text = "\n".join([clock, *shown, *notes])
     request = build_request(c.prefix, to_messages(t.prior), t.text, "", card_text)
     store.save_prefix(c.prefix)
@@ -635,7 +673,8 @@ async def _handle_turn(
         _mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
-    asm = _assemble(c, t, in_scene, heard)
+    recalled = await _recall(c, t, heard)
+    asm = _assemble(c, t, in_scene, heard, recalled)
     request, card_text, card, views, view_state = (
         asm.request,
         asm.card_text,

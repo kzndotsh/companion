@@ -471,6 +471,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/listening-trivial v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **notes/listening-trivial v2** (current). From commit 1171941 on 2026-10-18: feat(listening): the trivial-vent note forbids jokes, running gags and retelling; the real flagged cleanup turn goes from 16/30 to 29/30; the history was not the cause (T13)
 
+## notes/recall
+- **notes/recall v1** (current). The beliefs the recall look-up found, shown for that turn only, under "They asked you to remember this". Filled by `core/recall.py`.
+
 ## notes/rude
 - **notes/rude v1** (current). Added by code for the one turn when the listening judge labels their message rude to the companion: a few flat words and leave it there, no apology, offer, suggestion or question. Measurement in `evals/CHANGELOG.md`.
 
@@ -515,7 +518,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/listening
 - **system/listening v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
-- **system/listening v2** (current). v1 plus one label, rude: plainly rude or hostile toward the companion itself, false for teasing, banter, a light jab, blunt feedback or frustration at something else. It feeds `notes/rude`. Reason: the reflex to apologise and offer more after an insult held against a character sheet in 8 of 20 replies (J1, 2026-10-18).
+- **system/listening v2** (superseded). v1 plus one label, rude: plainly rude or hostile toward the companion itself, false for teasing, banter, a light jab, blunt feedback or frustration at something else. It feeds `notes/rude`. Reason: the reflex to apologise and offer more after an insult held against a character sheet in 8 of 20 replies (J1, 2026-10-18).
+- **system/listening v3** (current). v2 plus recall (they asked the companion to remember or already know something about them) and topic (what to look up, worked out from context when the message is vague). Reason: "come on, you know this one..." about their favourite food got a guess and a joke, with three burger beliefs in memory and none on the card (owner's flag, 2026-10-18).
 
 ## system/openloops
 - **system/openloops v1** (superseded). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing
@@ -528,6 +532,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/react
 - **system/react v1** (current). From commit 10b8404 on 2026-10-15: feat(react): a reaction can go with a reply, judged beside the talker, with a confidence bar, a cooldown and no reaction to heavy messages
+
+## system/recall
+- **system/recall v1** (current). New. The look-up when they ask it to remember: a topic and every candidate belief, labelled; it returns at most five labels that bear on the topic. Code keeps only labels it showed and never a crisis-level belief (`core/recall.py`).
 
 ## system/self-extract
 - **system/self-extract v1** (superseded). From commit 263e363 on 2026-10-15: feat(self): record the companion's own views, with grounding labels, an agreeing-opener guard and user approval before they reach the card

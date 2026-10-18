@@ -544,3 +544,18 @@ there." or "Okay. I'll stop.", so the character's voice drops for that turn and 
 happens often. Spent about $0.03 (judge check and eval). Rerun: `uv run companion eval --variants
 v30.md,v30.md+listen,v30.md+as-ani,v30.md+as-ani+listen --samples 20 --cap 0.05 --fixtures-dir <a folder
 with the two fixtures>`; the judge check was a scratch script calling `judge_listening` on the 16 lines.
+
+## 2026-10-18: recall when they ask it to remember (listening v3, system/recall v1)
+
+The owner's flag: on "come on, you know this one..." about their favourite food it guessed tacos and
+made a joke, with three burger beliefs in memory and none of them among the fifteen on the card (214 live
+beliefs). The listening judge now labels recall and a topic; on those turns a small model picks up to five
+beliefs that bear on the topic and they ride the system block for that turn. Judge, real Haiku, 3 runs on
+6 recall cues and 6 look-alikes ("what's your favorite color?", "i remember my first concert"): 18 of 18
+and 18 of 18, topics like "favorite food", "sister's name" worked out from context. Look-up over the 141
+candidate beliefs for "favorite food": it returns the burger and potato beliefs; the first version read
+none 2 times in 4 because the model wrote labels as "[r120]", which the parser now accepts. End to end on
+the real turn, rebuilt from the ledger, Luna, 12 replies each: as sent, 0 named a food it knew ("Tacos?
+...I'm guessing"); with the look-up, every reply answered from memory, burger in 6 and potatoes (also a
+stated favourite, listed first) in the rest. Spent about $0.02. Rerun: the scratch scripts call
+`judge_listening`, `look_up` and the talker on the replayed request; the turn is in the owner's ledger.

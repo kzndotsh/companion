@@ -123,7 +123,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   unanswered live reach-out it waits 72 h, after two it waits for them to write first.
 - Each message outside a scene is read for how serious it is before the reply, and code adds a
   listening note (`core/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity 3)
-  get no note and there is no crisis path yet.
+  get no note and there is no crisis path yet. The same judge labels a message rude to the companion (a one-turn note for a
+  cool reply) and a request to remember something; then a small model looks the topic up across every
+  belief and the finds ride that turn's system block (`core/recall.py`).
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 
 **Working with the owner**

@@ -21,6 +21,7 @@ SEVERITIES = (0, 1, 2, 3)
 SERIOUS = 2  # serious personal; 3 is acute
 STANCES = ("listening", "inviting", "other")
 OFFER_WINDOW = 4
+MAX_TOPIC_CHARS = 80
 _OFFER_PHRASES = ("talk about it", "talk it through", "want to talk", "wanna talk")
 
 PROMPT = get("system/listening")
@@ -34,8 +35,10 @@ SCHEMA: dict[str, Json] = {
         "vague": {"type": "boolean"},
         "medical": {"type": "boolean"},
         "rude": {"type": "boolean"},
+        "recall": {"type": "boolean"},
+        "topic": {"type": "string"},
     },
-    "required": ["severity", "stance", "vague", "medical", "rude"],
+    "required": ["severity", "stance", "vague", "medical", "rude", "recall", "topic"],
 }
 
 
@@ -46,6 +49,8 @@ class Judgement:
     vague: bool
     medical: bool = False
     rude: bool = False  # plainly rude to the companion itself, not teasing
+    recall: bool = False  # they asked it to remember or already know something
+    topic: str = ""  # what to look up when recall is true
 
 
 def parse(data: Json) -> Judgement | None:
@@ -53,11 +58,18 @@ def parse(data: Json) -> Judgement | None:
         return None
     severity, stance, vague = data.get("severity"), data.get("stance"), data.get("vague")
     medical, rude = data.get("medical"), data.get("rude")
+    recall, topic = data.get("recall"), data.get("topic")
     if isinstance(severity, bool) or severity not in SEVERITIES:
         return None
-    if stance not in STANCES or not all(isinstance(v, bool) for v in (vague, medical, rude)):
+    flags = (vague, medical, rude, recall)
+    if stance not in STANCES or not all(isinstance(v, bool) for v in flags):
         return None
-    return Judgement(int(severity), str(stance), bool(vague), bool(medical), bool(rude))
+    if not isinstance(topic, str):
+        return None
+    wanted = " ".join(topic.split())[:MAX_TOPIC_CHARS] if recall else ""
+    return Judgement(
+        int(severity), str(stance), bool(vague), bool(medical), bool(rude), bool(recall), wanted
+    )
 
 
 def offered_recently(replies: Sequence[str]) -> bool:

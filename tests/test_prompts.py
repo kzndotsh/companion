@@ -12,6 +12,7 @@ ROOT = Path(str(resources.files("companion.prompts")))
 PLACEHOLDERS = {
     "notes/length": {"words", "unit", "limit"},
     "notes/length-serious": {"limit"},
+    "notes/recall": {"items"},
     "notes/habit-opener": {"n", "total", "word"},
     "notes/habit-phrases": {"phrases"},
     "notes/habit-moves": {"habits"},

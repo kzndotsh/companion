@@ -49,7 +49,15 @@ class Judge:
 
 
 def _labels(severity: int, stance: str = "listening", *, vague: bool = False) -> Json:
-    return {"severity": severity, "stance": stance, "vague": vague, "medical": False, "rude": False}
+    return {
+        "severity": severity,
+        "stance": stance,
+        "vague": vague,
+        "medical": False,
+        "rude": False,
+        "recall": False,
+        "topic": "",
+    }
 
 
 @pytest.fixture
@@ -81,7 +89,12 @@ async def test_the_labels_are_logged_as_a_decision_with_the_scorer(store: Store)
     assert any(r == "listening note added: severity 2, listening, vague" for r in reasons)
     detail = next(d.detail for d in store.decisions_for_turn(REL, turn) if "listening" in d.reason)
     assert detail is not None
-    assert detail["labels"] == {"severity": 2, "stance": "listening", "vague": True, "rude": False}
+    assert detail["labels"] == {
+        "severity": 2,
+        "stance": "listening",
+        "vague": True,
+        "rude": False,
+    }
     assert detail["scorer"] == "j"
 
 
@@ -170,6 +183,8 @@ async def test_the_rude_note_rides_the_system_block_only_when_they_snapped(
         "vague": False,
         "medical": False,
         "rude": rude,
+        "recall": False,
+        "topic": "",
     }
     talker = await _ask(store, Judge(labels), text="god you're useless. shut up")
     assert ("They just snapped at you" in talker.seen[0].card) is rude
