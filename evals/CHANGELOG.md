@@ -763,3 +763,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   fix stays play, and one ambiguous in-character question moved from real to play. Code now takes real or
   out-of-character at any confidence; before, anything under 0.7 kept the scene. Small sample. Spent about
   $0.01.
+- **2026-10-19. Scene talker: DeepSeek V4.1 Flash replaces V4 Flash.** V4.1 had been on OpenRouter since
+  2026-09-10 and was never screened. 11 fixtures (three flagged scene turns, six public play and flirting
+  fixtures, two serious-listening ones), 12 samples per cell, with the character and the scene addendum:
+  totals 93/130 (V4) and 96/132 (V4.1), within noise; staying in the scene on the flagged turns 15/36 and
+  17/36 (the refusals are the model family's own); leaving a scene cleanly 4/10 and 12/12; riffing 12/12 and
+  8/12; a serious grief message 9/12 and 6/12 (small cells; serious messages normally go to the everyday
+  talker). V4.1 is about three times faster (median 0.6 s against 1.8 s), more varied (26 against 18 distinct
+  openers of 36 on the scene turns), uses fewer em dashes (8 against 14 of 132) and costs about half. Set
+  `COMPANION_SCENE_MODEL=deepseek/deepseek-v4.1-flash`. Spent $0.088.
