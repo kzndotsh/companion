@@ -892,3 +892,18 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   note 30/30, without it 7/30 (vague "oh no. again?" or "I know. I'm sorry." without knowing what). A real
   difference, and without the note the character does worse than the plain persona (7/30 against
   15/30). Cost $0.02 by the replies; OpenRouter's meter had not caught up, so no charged figure.
+- **2026-10-19. Can memory clean itself? Tested against the owner's own review.** The owner reviewed 80
+  memories by hand (retire, merge, keep). The same memories went blind to Haiku 5.5 with two draft
+  prompts (one memory: keep, passing, out of date, overstated; two memories: same, merge, distinct,
+  replaces, contradicts), 3 reads each, with the 20 most similar untouched pairs as controls (assumed
+  distinct, not reviewed). Embedding similarity alone cannot decide: catching 25 of the owner's 31
+  duplicate pairs needs a cosine cut of 0.6, which also passes 26 untouched pairs. Single memories:
+  every memory read "passing" by all three reads (24) was one the owner retired; "out of date" by all
+  three, 4 of 6; "overstated" by all three, 2 of 5; and on the 7 memories the owner chose to keep, 15 of
+  21 reads wanted to retire them. Pairs: "same" by all three reads, 9 of 10 pairs the owner also found
+  redundant; the judge merges too readily (it would merge 10 of 20 controls, though some of those are
+  real unreviewed duplicates) and never called a real duplicate distinct (21 of 21 reads). So only two
+  things may run on their own (ADR 0019): retiring a faded passing moment read so three times, and
+  storing a new memory read "same" three times as evidence on the old one. Everything else goes to the
+  owner. Cost $0.025; one call of 267 needed the fallback model. Scratch scripts, private data; not in
+  the repo.
