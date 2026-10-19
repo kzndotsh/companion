@@ -772,3 +772,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   talker). V4.1 is about three times faster (median 0.6 s against 1.8 s), more varied (26 against 18 distinct
   openers of 36 on the scene turns), uses fewer em dashes (8 against 14 of 132) and costs about half. Set
   `COMPANION_SCENE_MODEL=deepseek/deepseek-v4.1-flash`. Spent $0.088.
+- **2026-10-19. Persona v40: invited, Luna banters back a little more (shipped).** v40 adds two lines of
+  permission (tease back with a bit of attitude; take the lead now and then with a question of its own).
+  Eight playful turns (six real, two public) with a liveliness judge (banters back or takes a small lead),
+  12 samples, with the character: v36 60/96, v40 69/96, the gain on a kiss emoji (5 to 9), a "missy" tease
+  (2 to 4) and a public tease (5 to 9); by eye it plays with the user's words more but still rarely turns
+  the conversation with a question of its own, far from the scene talker's attitude. Regression, all
+  fixtures, 3 samples: v40 278 against v36's 282 on 137 shared fixtures; the three drops that mattered
+  (held memories, serious health, vague distress) rerun at 12 samples: 28/48 against 27/48, so noise.
+  Spent $0.14.
