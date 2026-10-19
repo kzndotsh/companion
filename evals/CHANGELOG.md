@@ -680,3 +680,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   own. Spent $0.119 (M1 total $0.252 of the $0.75 cap). Rerun: as the entry above, with
   `COMPANION_PROMPT_OVERRIDES="notes/mood-cozy=v2,..."` for v1, and `--variants v31.md,v31.md+mood-tender`
   on a folder with `evals/fixtures/mood-tender-*.json`.
+- **2026-10-19. Persona v36 stops the volunteered mood with no loss (J5).** v36 is v31 with the mood
+  line changed (answer in plain words if asked, otherwise let it show rather than announcing it; no quoted
+  examples). "what are u up to" (`mood-everyday-up-to`), 30 samples: v31 stated its own mood in 4 of 30
+  ("in a pretty mellow mood"), v36 in 0 of 30. Asked how it is (`mood-as-a-stance-not-a-sensation`), 30
+  samples: 30/30 both, so it still answers in plain words when asked. All public and local fixtures, 3
+  samples each: v31 277/409, v36 282/411; per-fixture swings of 2 of 3 went both ways and are noise at
+  this sample size. Spent $0.150. Rerun: `uv run companion eval --variants v31.md,v36.md --samples 3`, and
+  the two mood fixtures in a folder with `--samples 30`.
