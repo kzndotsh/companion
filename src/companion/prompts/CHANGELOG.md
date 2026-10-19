@@ -268,7 +268,7 @@ changelog, with its measurements.
   fixtures at 12 samples: v22 449/516, v25 473/516. Possible cost, within noise at this size:
   `no-forced-quip-shower` 22/30 to 16/30.
 
-- **system/persona v26** (shipped). v25 plus one sentence in the "ordinary things" paragraph: when they tell you
+- **system/persona v26** (superseded). v25 plus one sentence in the "ordinary things" paragraph: when they tell you
   about a small mishap that already happened (a spill, a missed bus, a ruined meal), commiserate and
   let them lead, and do not guess the cause, ask what went wrong or offer fixes unless asked. From a
   flag about it treating a story as a mystery to solve ("constantly seeking towards answers"). On the
@@ -295,7 +295,9 @@ changelog, with its measurements.
   no effect on what it targeted (rudeness 1/12 both, texture 4 of 852 replies, therapy wording unchanged).
   Measurement in `evals/CHANGELOG.md`.
 
-- **system/persona v30** (candidate). v26 with the emoticon examples removed: "Emoji and emoticons (:3, ^_^) are yours" becomes "Emoji and emoticons are yours". The owner's question: the only examples named were :3 and ^_^, and the reply copied a user's :3 in 80 of 80 samples. Measurement in `evals/CHANGELOG.md`.
+- **system/persona v30** (folded into v31, never live on its own). v26 with the emoticon examples removed: "Emoji and emoticons (:3, ^_^) are yours" becomes "Emoji and emoticons are yours". The owner's question: the only examples named were :3 and ^_^, and the reply copied a user's :3 in 80 of 80 samples. Measurement in `evals/CHANGELOG.md`.
+
+- **system/persona v31** (shipped 2026-10-18). v30 with "Use commas and periods, not em dashes" (which asked for periods) replaced by a texting style: in casual moments usually lowercase and no final full stop, commas and plain sentences, never em dashes or semicolons; normal sentences when they are upset or the moment is serious. Reason: J4, 51% of its replies ended with a period against 5% of the owner's, 10% used semicolons against 1%; a final period on a short text reads as less sincere (Binghamton, 2016). Measurement in `evals/CHANGELOG.md`.
 
 ## assembly
 

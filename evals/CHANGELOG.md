@@ -610,3 +610,19 @@ dots-3 rambles into therapy wording, xing drifts. Read as: Luna is a sound choic
 is a useful free second opinion. Spent $0.075 (judging only). Rerun: `uv run companion eval --variants
 "v26.md@kiro/claude-sonnet-4.6" --samples 3 --cap 0.15 --fixtures-dir evals/fixtures` with the gateway
 key in the environment, and the same with `@dots-studio/dots-3-note-preview:free,...@xingchen-agi/xing4.0-29b-a4b:free`.
+
+## 2026-10-18: persona v31 texts like a phone (J4), shipped
+
+Research first: uncorrected typos made a chatbot seem less human and errors cut trust (about 9 points each
+in one study), so no typos; a final period on a short text reads as less sincere (Binghamton, 2016), and
+lowercase reads casual and young. In the owner's last 472 real messages 5% end with a period and 43% start
+lowercase; the companion's 463 replies: 51% and 27%, with semicolons in 10%. v31 replaces v30's "Use
+commas and periods, not em dashes" (which asked for periods) with a texting style: in casual moments
+usually lowercase and no final full stop, commas and plain sentences, never em dashes or semicolons;
+normal sentences when they are upset or the moment is serious. All 84 public fixtures, 3 samples, Luna;
+casual replies, final period / lowercase start: v30 50% / 65%, v31 14% / 94%, the Ani character 52% / 66%,
+Ani with the same line in her sheet 10% / 91%. In serious fixtures v31 starts lowercase 63% of the time
+against 90% for the sheet version, so the persona keeps more of the switch. Pass rates 207, 206, 209 and
+210 of 252: no loss. v31 ships (it carries v30's removal of the emoticon examples). Spent $0.14. Rerun:
+`uv run companion eval --variants v30.md,v31.md --samples 3 --cap 0.6 --fixtures-dir evals/fixtures --show`
+and count final periods and lowercase starts in the replies.
