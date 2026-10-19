@@ -21,10 +21,9 @@ def _j(
 def test_a_trivial_vent_gets_plain_sympathy_and_no_advice_or_cause_question() -> None:
     note = listening_note(_j(0))
     assert note is not None
-    assert "No advice" in note
-    assert "do not ask what caused it" in note
-    assert "No joke, pun, running gag" in note
-    assert "do not retell what they said" in note
+    assert "a short reaction only" in note
+    assert "No advice, no question, no joke" in note
+    assert "nothing about their situation" in note
 
 
 def test_everyday_friction_may_get_a_fact_a_nudge_or_one_question() -> None:
