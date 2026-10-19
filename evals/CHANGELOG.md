@@ -810,3 +810,9 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   under v5 and 0/12 under v6; every health and medication reply but one still names one; grief and the
   secret got a referral 1/24 under v5 and 0/24 under v6. Cost about $0.03.
 
+- **2026-10-19. Follow-up: the short answers were mostly not lost.** The memory pass's decisions and the
+  belief table show five of the nine answers judged worth keeping were already in memory from longer
+  messages, so not storing them again was right; one was rejected as momentary (a game answer). About
+  four of the 69 short answers hold something memory still lacks. The v9 test above sent no
+  already-recorded list, so its keep counts include things already known. No change made. Read-only,
+  no spend.
