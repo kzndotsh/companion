@@ -688,3 +688,15 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   samples each: v31 277/409, v36 282/411; per-fixture swings of 2 of 3 went both ways and are noise at
   this sample size. Spent $0.150. Rerun: `uv run companion eval --variants v31.md,v36.md --samples 3`, and
   the two mood fixtures in a folder with `--samples 30`.
+- **2026-10-19. Cheesy add-on jokes: wording does not fix them (J45).** Five real flagged turns as local
+  fixtures (`flagged-cheesy-*-local`: fries, burger.fm, shower, potato, cleanup), a judge that fails a reply
+  adding a constructed joke, quip or personification on top of its reaction, 30 samples per cell, Luna.
+  v36 (live): 81 to 83 of 150 plain across three runs, so about 45% of replies on these turns still add a
+  joke (burger.fm rarely recurs, 28/30; the others about half). v37, the banned-joke list replaced by a
+  positive ending rule ("say the one thing you mean and end there"): 56/150, worse ("coffee archaeology",
+  "the shower-time vortex"); the priming hypothesis from the research did not hold here, and the list was
+  doing real work. v38, the list kept and the ending rule added: 87/150, within noise of v36. By eye the
+  judge is right on about seven in eight (it passed "officially became a whole crime scene" and failed a
+  plain shampoo question). Next: a check on the reply with one resample, since wording does not move it.
+  Spent $0.141. Rerun: copy `evals/local/flagged-cheesy-*-local.json` to a folder, then
+  `uv run companion eval --variants v36.md,v38.md --fixtures-dir DIR --samples 30`.
