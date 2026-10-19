@@ -522,3 +522,6 @@ def test_tags_keep_every_word_and_gather_the_notes() -> None:
     assert f"<memory>\n{memory}\n</memory>" in out
     assert out.endswith("<notes>\nA pretend scene is in progress.\n</notes>")
     assert parse_spec("v40.md+tags").label == "v40.md+tags"
+    kept = tagged(card, memory=False)
+    assert "[What you remember about them. Use it naturally, never recite it:\n- likes tea]" in kept
+    assert "<notes>" in kept

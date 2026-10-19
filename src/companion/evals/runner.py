@@ -45,6 +45,7 @@ class Variant:
     mood: tuple[str, ...] = ()  # candidate mood lines to add (ADR 0016), measured before building
     resample: bool = False  # one fresh reply when the quip check fires (J45)
     tags: bool = False  # the system block in XML-style sections instead of bracketed lines
+    tags_notes: bool = False  # only the clock and the notes in tags; memory stays as it is
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,8 +107,8 @@ def request_for(
     for state in variant.mood:
         line = prompts.get(f"notes/mood-{state}").text
         card = f"{card}\n{line}" if card else line
-    if variant.tags:
-        card = tagged(card)
+    if variant.tags or variant.tags_notes:
+        card = tagged(card, memory=variant.tags)
     return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card)
 
 
@@ -120,9 +121,10 @@ _SECTIONS = (
 )
 
 
-def tagged(card: str) -> str:
+def tagged(card: str, *, memory: bool = True) -> str:
     """The same system block with each part in a tag: the clock, each memory block, and every
-    other bracketed line gathered under notes. The words inside are unchanged (`+tags`)."""
+    other bracketed line gathered under notes. The words inside are unchanged (`+tags`). With
+    `memory` off the memory blocks stay bracketed as they are (`+tagsnotes`)."""
     parts: list[str] = []
     notes: list[str] = []
     rest = card
@@ -131,8 +133,10 @@ def tagged(card: str) -> str:
         tag = next((t for head, t in _SECTIONS if body.startswith(head)), None)
         if tag is None:
             notes.append(body)
-        else:
+        elif memory:
             parts.append(f"<{tag}>\n{body}\n</{tag}>")
+        else:
+            parts.append(m.group(0))
         rest = rest.replace(m.group(0), "", 1)
     plain = [line.strip() for line in rest.splitlines() if line.strip()]
     clock = [f"<clock>{line}</clock>" for line in plain]
