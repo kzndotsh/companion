@@ -48,6 +48,10 @@ uv run companion eval --variants v36.md,v40.md --samples 12 --cap 0.20 --show
   above it, because the bot shares the credits. After a run it reads OpenRouter's meter again and
   prints what was charged; that figure covers the whole account, so a running bot adds to it.
   `--dry-run` prints the plan, an upper estimate and the balance, and spends nothing.
+- **Bigger cards and longer history.** On a recorded turn, `+cardN` (or `+cardall`) rebuilds the card
+  with N memories from the database as it stood at that turn, and `+histN` rebuilds the history with
+  N earlier messages; the persona and the notes stay as recorded. They need `--db` and are ignored for
+  scripted fixtures, which carry their own card.
 - **Noise is in the table** (`evals/stats.py`). Each cell shows the 95% range the true pass rate probably
   sits in (Wilson; the textbook normal range is badly off at 12 to 30 samples). With two or more
   variants, each later one is compared with the first: per fixture by Fisher's exact test, adjusted for

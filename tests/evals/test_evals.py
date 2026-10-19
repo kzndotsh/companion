@@ -463,3 +463,29 @@ async def test_run_refuses_when_the_balance_is_below_the_cap(
     dry = await eval_cli.run(dataclasses.replace(args, dry_run=True))
     assert "balance" in dry
     assert "top up" not in dry
+
+
+def test_card_and_history_switches_parse_and_label() -> None:
+    spec = parse_spec("v40.md+card30+hist100")
+    assert (spec.card, spec.long_history) == (30, 100)
+    assert spec.label == "v40.md+card30+hist100"
+    assert parse_spec("v40.md+cardall").label == "v40.md+cardall"
+    with pytest.raises(ValueError, match="cardN"):
+        parse_spec("v40.md+card0")
+
+
+def test_the_memory_blocks_are_swapped_in_place_and_the_rest_kept() -> None:
+    from companion.evals.rebuild import swap_memory  # noqa: PLC0415
+
+    card = (
+        "Right now it is Monday 10:00.\n[How they want to be referred to: she/her]\n"
+        "[What you remember about them. Use it naturally, never recite it:\n- old]\n"
+        "[Older, and may be out of date. Do not assume these still hold:\n- older]\n"
+        "[A note that stays.]"
+    )
+    new = swap_memory(
+        card, "[What you remember about them. Use it naturally, never recite it:\n- new]"
+    )
+    assert "- old" not in new
+    assert "- older" not in new
+    assert new.index("referred to") < new.index("- new") < new.index("A note that stays")

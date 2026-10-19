@@ -116,6 +116,10 @@ class Plan:
     samples: int
     cap_usd: float
     listening: Mapping[str, str] = field(default_factory=dict[str, str])
+    # a request rebuilt for one variant of one recorded turn (+cardN, +histN), by (fixture, label)
+    rebuilt: Mapping[tuple[str, str], TalkerRequest] = field(
+        default_factory=dict[tuple[str, str], TalkerRequest]
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,7 +157,8 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 results.stopped_by_cap = True
                 cell.skipped += 1
                 return
-            req = request_for(plan.requests[f.id], v, plan.listening.get(f.id))
+            base = plan.rebuilt.get((f.id, v.label), plan.requests[f.id])
+            req = request_for(base, v, plan.listening.get(f.id))
             reply = await _reply_with_retry(models.talker_for(v.model, v.effort), req)
             if (v.model or "").endswith(":free"):
                 await asyncio.sleep(FREE_SPACING_SECONDS)  # OpenRouter allows 20 a minute

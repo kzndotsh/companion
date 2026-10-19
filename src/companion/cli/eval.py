@@ -27,6 +27,7 @@ from companion.evals.fixtures import (
     Script,
     load_fixtures,
 )
+from companion.evals.rebuild import rebuilt
 from companion.evals.report import render_replies, render_table, save
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import parse_spec
@@ -73,6 +74,36 @@ def _variants(specs: list[str]) -> list[Variant]:
             )
         )
     return out
+
+
+def _rebuilt(
+    fixtures: list[Fixture], specs: list[str], db: Path | None
+) -> dict[tuple[str, str], TalkerRequest] | str:
+    """Requests rebuilt for +cardN and +histN variants, one per recorded turn and variant. Those
+    switches need a recorded turn and its database; a scripted fixture keeps its own card."""
+    out: dict[tuple[str, str], TalkerRequest] = {}
+    for spec in map(parse_spec, specs):
+        if spec.card is None and spec.long_history is None:
+            continue
+        for f in fixtures:
+            if f.turn is None:
+                continue
+            if db is None:
+                return "+card and +hist rebuild recorded turns and need a database (--db)\n"
+            out[(f.id, spec.label)] = rebuilt(
+                db, f.turn, card_size=spec.card, history=spec.long_history
+            )
+    return out
+
+
+def _inputs(
+    fixtures: list[Fixture], specs: list[str], db: Path | None, prefix: Prefix
+) -> tuple[dict[str, TalkerRequest], dict[tuple[str, str], TalkerRequest]] | str:
+    requests = _requests(fixtures, db, prefix)
+    if isinstance(requests, str):
+        return requests
+    again = _rebuilt(fixtures, specs, db)
+    return again if isinstance(again, str) else (requests, again)
 
 
 def describe(fixtures: list[Fixture]) -> str:
@@ -186,9 +217,10 @@ async def run(a: EvalArgs) -> str:
                 header
                 + "the balance is below the cap and the bot shares it: top up or lower --cap\n"
             )
-        requests = _requests(fixtures, db, variants[0].prefix)
-        if isinstance(requests, str):
-            return requests
+        built = _inputs(fixtures, a.specs, db, variants[0].prefix)
+        if isinstance(built, str):
+            return built
+        requests, rebuilt_requests = built
 
         def talker_for(model: str | None, effort: str | None) -> Talker:
             if model is not None and model.startswith(KIRO):
@@ -203,7 +235,7 @@ async def run(a: EvalArgs) -> str:
 
         models = Models(talker_for, OpenRouterExtractor(key, client, JUDGE_MODEL))
         listening = _listening_notes(fixtures)
-        plan = Plan(fixtures, requests, variants, samples, cap, listening)
+        plan = Plan(fixtures, requests, variants, samples, cap, listening, rebuilt_requests)
         results = await run_eval(plan, models)
         if before is not None:
             results.charged = await charged_since(key, client, before, results.spent)

@@ -136,6 +136,15 @@ class Store:
         """Every current belief, about the user and about itself. Most callers want one of two."""
         return beliefs.current_beliefs(self._conn, rel)
 
+    def user_beliefs_as_of(self, rel: RelationshipId, at: datetime) -> list[Belief]:
+        """Every belief about the user that was in force at a moment: recorded by then and not yet
+        closed. For rebuilding a past turn's card (evals)."""
+        return [
+            b
+            for b in beliefs.all_beliefs(self._conn, rel, Subject.USER)
+            if b.recorded_at <= at and (b.valid_until is None or b.valid_until > at)
+        ]
+
     def user_beliefs(self, rel: RelationshipId) -> list[Belief]:
         return [
             b for b in beliefs.current_beliefs(self._conn, rel) if b.subject is not Subject.SELF

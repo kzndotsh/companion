@@ -36,6 +36,8 @@ class Spec:
     mood: tuple[str, ...] = ()
     resample: bool = False
     roleplay: bool = False
+    card: int | None = None  # rebuild a recorded turn's card with this many memories (+cardN)
+    long_history: int | None = None  # rebuild a recorded turn with this many messages (+histN)
 
     @property
     def label(self) -> str:
@@ -51,10 +53,15 @@ class Spec:
             + (f"+mood-{'.'.join(self.mood)}" if self.mood else "")
             + ("+resample" if self.resample else "")
             + ("+roleplay" if self.roleplay else "")
+            + ("" if self.card is None else f"+card{'all' if self.card >= ALL else self.card}")
+            + ("" if self.long_history is None else f"+hist{self.long_history}")
             + (f"@{self.model}" if self.model else "")
         )
 
 
+_CARD = re.compile(r"card(\d+)")
+_HIST = re.compile(r"hist(\d+)")
+ALL = 10_000  # +cardall: every memory in force at the time
 SWITCHES = ("nocard", "len", "listen", "echo", "resample", "roleplay")
 
 
@@ -65,6 +72,8 @@ def parse_spec(text: str) -> Spec:
     effort: str | None = None
     character: str | None = None
     mood: tuple[str, ...] = ()
+    card: int | None = None
+    long_history: int | None = None
     on: set[str] = set()
     ok = persona.endswith(".md")
     for flag in flags:
@@ -78,12 +87,19 @@ def parse_spec(text: str) -> Spec:
             effort = flag
         elif (m := _HISTORY.fullmatch(flag)) and int(m.group(1)) >= 1:
             history = int(m.group(1))
+        elif flag == "cardall":
+            card = ALL
+        elif (m := _CARD.fullmatch(flag)) and int(m.group(1)) >= 1:
+            card = int(m.group(1))
+        elif (m := _HIST.fullmatch(flag)) and int(m.group(1)) >= 1:
+            long_history = int(m.group(1))
         else:
             ok = False
     if not ok:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional +nocard, +hN, +low, +medium,"
-            " +high, +len, +listen, +echo, +mood-STATE, +resample, +roleplay, +as-CHARACTER"
+            " +high, +len, +listen, +echo, +mood-STATE, +resample, +roleplay, +as-CHARACTER,"
+            " +cardN or +cardall, +histN"
             " and @model"
         )
         raise ValueError(msg)
@@ -100,6 +116,8 @@ def parse_spec(text: str) -> Spec:
         mood,
         "resample" in on,
         "roleplay" in on,
+        card,
+        long_history,
     )
 
 
