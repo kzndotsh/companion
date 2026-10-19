@@ -153,6 +153,11 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   append-only table, the mood is worked out from them when read, and only what the user did can move it
   (no source for silence, goodbyes, gaps or failed calls). `COMPANION_MOOD` is shadow, on or off;
   `uv run companion mood --replay 7` rebuilds it over past messages from the same rules.
+- When a small topic has run its course (a short answer right after it asked something, read by its
+  own judge `system/topic-spent`, never the listening judge), one note says to react briefly and move on
+  (`core/topics.py`): to a plan of theirs offered that turn, else their day or evening, and late at night a
+  thought of its own. At most once in ten of their messages, casual turns only, never past a question.
+- Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash and an AI disclaimer nobody asked for by code, and a joke bolted onto an ordinary
   message by the quip judge; in a scene only the code checks. On a fail the same model is asked once more

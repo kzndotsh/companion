@@ -13,6 +13,7 @@ PLACEHOLDERS = {
     "notes/length": {"words", "unit", "limit"},
     "notes/length-serious": {"limit"},
     "notes/recall": {"items"},
+    "notes/topic-spent": {"move"},
     "notes/loop-follow-up": {"claim"},
     "notes/loop-celebrate": {"claim"},
     "notes/loop-encourage": {"claim"},
@@ -120,7 +121,7 @@ def test_a_note_is_one_bracketed_line_except_the_clock_and_the_listening_parts()
         if not prompt.name.startswith("notes/"):
             continue
         bracketed = prompt.text.startswith("[") and prompt.text.endswith("]")
-        plain = prompt.name.startswith(("notes/clock", "notes/listening-"))
+        plain = prompt.name.startswith(("notes/clock", "notes/listening-", "notes/topic-move-"))
         assert bracketed != plain, f"{prompt.ref} should {'not ' if plain else ''}be in [brackets]"
 
 

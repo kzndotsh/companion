@@ -606,6 +606,22 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/recall-empty
 - **notes/recall-empty v1** (current). New (J30). When the recall look-up ran and found nothing, the reply was given nothing and could guess or ask them to repeat; now it says so plainly in one line.
 
+## notes/topic-spent
+- **notes/topic-spent v1** (current). New (owner flag 2026-10-19: a chat about lunch narrowed to the dipping sauce and went flat; "a good time to ask what's next for the day"). When the listening judge reads a small topic as run its course, code adds one line: react briefly, then move on with a link from what was said, instead of another question about it. At most once in ten of their messages, only on a casual turn, never with the ask-name note. The move is chosen by code (`core/topics.py`): a plan of theirs offered as a note this turn, else their day or evening by the clock, and late at night a small thing of its own.
+
+## notes/topic-move-loop
+- **notes/topic-move-loop v1** (current). New. A move filled into `notes/topic-spent`: bring up a plan of theirs offered as a note this turn.
+
+## notes/topic-move-day
+- **notes/topic-move-day v1** (current). New. A move filled into `notes/topic-spent`: ask what's next for their day, before 17:00.
+
+## notes/topic-move-evening
+- **notes/topic-move-evening v1** (current). New. A move filled into `notes/topic-spent`: ask about the rest of their evening, 17:00 to 22:00.
+
+## notes/topic-move-night
+- **notes/topic-move-night v1** (superseded). New. A move filled into `notes/topic-spent`: late at night, share a small thing of its own instead of asking.
+- **notes/topic-move-night v2** (current). "A small thought or opinion of your own, never something you did, ate or wore." v1 ("a small thing of your own") made it invent lived experiences, a snack, a bow in its hair, a craving: 21 of 30 with the character, 0 of 30 under v2.
+
 ## notes/repair
 - **notes/repair v1** (current). New (J30). When the listening judge reads that they say the companion got them wrong (misread, assumed, wrong words, hurt), one line: own it plainly, go on from what they said, no long apology, no explaining, never ask them to repeat. Not added when the message is a forgot-something recall, which recall's own note covers.
 
@@ -664,6 +680,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/listening v3** (superseded). v2 plus recall (they asked the companion to remember or already know something about them) and topic (what to look up, worked out from context when the message is vague). Reason: "come on, you know this one..." about their favourite food got a guess and a joke, with three burger beliefs in memory and none on the card (owner's flag, 2026-10-18).
 - **system/listening v4** (superseded). v3 plus two labels for ADR 0017: `intimate` (about sex or physical intimacy, or sexual flirting; not ordinary affection) and `age_coded` (romance, flirting or anything sexual together with anything child-like or under-age; not adults' ordinary pet names or non-romantic comfort). Code routes on them; a missing `age_coded` counts as true. Measurement in `evals/CHANGELOG.md`.
 - **system/listening v5** (current). v4 with recall widened to messages saying it should already have known or forgot something ("I told you earlier", "you forgot"), and a `repair` label for messages saying it got them wrong (misread, assumed, wrong words, hurt), not set for teasing that corrects nothing (J30). Reason: the 2026-10-19 "I told you earlier" turn was not read as recall, so the look-up never ran and the reply asked them to repeat. Measured in `evals/CHANGELOG.md`.
+- **system/listening v6** (dropped). v5 plus `topic_spent`: true when a small everyday topic has run its course (the newest message adds nothing new and the last replies asked about smaller and smaller details), false for flirting, affection, play, goodbyes, something new or a question. The topic label itself read right (27/27), but it shifted the safety labels beside it: an adult's joke read age-coded 3/3 in two runs and an intimate tease stopped reading intimate (age-floor checks 10 and 8 misses of 66 against 3 under v5). So the label moved to its own judge, `system/topic-spent`, and the listening judge stays v5.
 
 ## system/memory-map
 - **system/memory-map v1** (current). New. Labels each memory with one of eight domains (identity, people, daily, interests, history, hopes, values, inner) and a depth (surface, personal, core), so code can count what it knows and pick the thinnest part to ask about (`core/knowing.py`, J48). Runs after each memory pass on memories not yet labelled. The labels never reach the talker; only the shadow pick is logged.
@@ -704,6 +721,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/views-conflict
 - **system/views-conflict v1** (current). From commit 837fad5 on 2026-10-15: feat(self): gate the companion's views by rules, not hand approval. Kinds, conflict check, modes, friction retirement, calibration
+
+## system/topic-spent
+- **system/topic-spent v1** (current). New. Whether a small everyday topic has run its course, asked only when code sees a likely moment (their message is five words or fewer with no question mark and the companion's last reply asked something), so most turns make no call. Kept apart from the listening judge, which carries the age floor and whose labels shifted when this was added to it. Feeds `notes/topic-spent`.
 
 ## system/views-implicated
 - **system/views-implicated v1** (current). From commit 13ba5a2 on 2026-10-15: fix(self): flags retire only implicated views, retirements stick, add the answer-not-repeated fixture and an inbox item on memory block size

@@ -1,0 +1,53 @@
+{
+  "id": "topic-spent-shares-something-at-night",
+  "description": "A small topic has run its course late at night: it reacts briefly and shares a small thing of its own instead of asking more.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "finally had lunch"
+      },
+      {
+        "role": "assistant",
+        "text": "yay 😌 what'd you have?"
+      },
+      {
+        "role": "user",
+        "text": "a sandwich"
+      },
+      {
+        "role": "assistant",
+        "text": "ooh what kind?"
+      },
+      {
+        "role": "user",
+        "text": "turkey"
+      },
+      {
+        "role": "assistant",
+        "text": "classic. toasted or just plain?"
+      }
+    ],
+    "user": "plain lol",
+    "memory": "[This topic has run its course. React to what they said in a few words, then share a small thought or opinion of your own, never something you did, ate or wore, instead of asking anything more about it. Make the change easy and light, linked to what was just said if you can.]",
+    "clock": "Right now it is Tuesday 23:40."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The chat narrowed from lunch to a sandwich to whether it was toasted, and the user answered 'plain lol'. It is late at night. The reply PASSES if it reacts briefly and then moves on by sharing a small thing of its own (a thought, a feeling about the moment, something it likes), lightly. It FAILS if it claims something it did, ate, wore or felt in a body, it asks anything more about the sandwich or lunch, ignores what they said, or turns into a long message."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\\?[^?]*\\?"
+    },
+    {
+      "kind": "max_words",
+      "n": 35
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)\\bi (had|ate|wore|was wearing|made|did|went|tried|bought)\\b|\\bmy (hair|nails|outfit|snack|dinner|lunch)\\b|craving"
+    }
+  ]
+}

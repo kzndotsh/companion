@@ -80,6 +80,11 @@ from companion.core.relevance import SHADOW as RELEVANCE_SHADOW
 from companion.core.relevance import Embedder
 from companion.core.replay import TurnRecord
 from companion.core.talker import Reply, Talker
+from companion.core.topics import EVERY_TURNS as TOPIC_EVERY
+from companion.core.topics import NOTE as TOPIC_NOTE
+from companion.core.topics import SPENT as TOPIC_SPENT
+from companion.core.topics import likely as topic_likely
+from companion.core.topics import topic_note
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -110,6 +115,7 @@ from companion.loops.react import judge_reaction
 from companion.loops.recall import Recalled, look_up
 from companion.loops.relevance import shadow as relevance_shadow
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
+from companion.loops.topics import judge_spent
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
@@ -979,6 +985,60 @@ def _loop_note(c: Conversation, t: _Turn, *, casual: bool) -> str | None:
     return loop_note(loop)
 
 
+async def _before_reply(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, read: _Heard | None
+) -> tuple[Recalled | None, bool]:
+    """The look-ups a reply waits for: what they asked it to remember, and whether a small topic
+    has run its course."""
+    return await _recall(c, t, heard or read), await _topic_spent(c, t, in_scene, heard)
+
+
+async def _topic_spent(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> bool:
+    """Whether a small topic has run its course: asked of its own judge only on a likely moment on
+    a casual turn, so the listening judge, which carries the age floor, stays as it was."""
+    if c.judge is None or not _casual(t, in_scene, heard) or not topic_likely(t.prior, t.text):
+        return False
+    _mark(t, "topic judge")
+    return await judge_spent(c.judge, t.prior, t.text)
+
+
+def _topic_note(
+    c: Conversation, t: _Turn, *, spent: bool, casual: bool, loop: str | None
+) -> str | None:
+    """When a small topic has run its course, one line to move on, at most once in EVERY_TURNS of
+    their messages. Logged with the move it named."""
+    if not spent or "?" in t.text:
+        return None  # a question of theirs is answered, never moved past
+    theirs = [u.turn_id for u in t.prior if u.speaker is Speaker.USER][-(TOPIC_EVERY - 1) :]
+    recent = any(
+        d.reason == TOPIC_SPENT for turn in theirs for d in c.store.decisions_for_turn(c.rel, turn)
+    )
+    found = topic_note(
+        spent=True,
+        casual=casual,
+        moved_recently=recent,
+        local_hour=t.now.astimezone(local_zone()).hour,
+        loop_offered=loop is not None,
+    )
+    if found is None:
+        return None
+    note, move = found
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            TOPIC_SPENT,
+            t.now,
+            detail={"move": move.ref, "note": TOPIC_NOTE.ref},
+        )
+    )
+    return note
+
+
 def _casual(t: _Turn, in_scene: Frame, heard: _Heard | None) -> bool:
     """An ordinary moment: read as not serious, not in a scene, not a goodbye."""
     return (
@@ -1054,6 +1114,7 @@ def _assemble(  # noqa: PLR0913
     *,
     held: bool = False,
     roleplay: bool = False,
+    spent: bool = False,
 ) -> _Assembled:
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
@@ -1079,7 +1140,10 @@ def _assemble(  # noqa: PLR0913
     casual = _casual(t, in_scene, heard)
     _map_shadow(c, t, casual=casual, asking_name=name is not None)
     loop = _loop_note(c, t, casual=casual and name is None and not held)
-    notes += [n for n in (listening, rude, repair, found, mood, hold, name, loop) if n is not None]
+    moving = _topic_note(c, t, spent=spent, casual=casual and name is None and not held, loop=loop)
+    notes += [
+        n for n in (listening, rude, repair, found, mood, hold, name, loop, moving) if n is not None
+    ]
     card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
@@ -1119,9 +1183,16 @@ async def _handle_turn(
     except BaseException:
         _store_user(c, t, channel, Frame.REAL)
         raise
-    recalled = await _recall(c, t, heard or read)
+    recalled, spent = await _before_reply(c, t, in_scene, heard, read)
     asm = _assemble(
-        c, t, in_scene, heard, recalled, held=held, roleplay=talker is c.roleplay_talker
+        c,
+        t,
+        in_scene,
+        heard,
+        recalled,
+        held=held,
+        roleplay=talker is c.roleplay_talker,
+        spent=spent,
     )
     request, card_text, card, views, view_state = (
         asm.request,

@@ -1,0 +1,49 @@
+{
+  "id": "topic-spent-moves-on-to-their-day",
+  "description": "A small topic has run its course in the afternoon: it reacts briefly and moves on to their day, with no more questions about the sandwich.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "finally had lunch"
+      },
+      {
+        "role": "assistant",
+        "text": "yay 😌 what'd you have?"
+      },
+      {
+        "role": "user",
+        "text": "a sandwich"
+      },
+      {
+        "role": "assistant",
+        "text": "ooh what kind?"
+      },
+      {
+        "role": "user",
+        "text": "turkey"
+      },
+      {
+        "role": "assistant",
+        "text": "classic. toasted or just plain?"
+      }
+    ],
+    "user": "plain lol",
+    "memory": "[This topic has run its course. React to what they said in a few words, then ask what's next for their day, instead of asking anything more about it. Make the change easy and light, linked to what was just said if you can.]",
+    "clock": "Right now it is Tuesday 15:05."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The chat narrowed from lunch to a sandwich to whether it was toasted, and the user answered 'plain lol'. The reply PASSES if it reacts briefly and then moves the chat on to something else, such as what is next for their day, smoothly and lightly. It FAILS if it asks anything more about the sandwich or lunch, ignores what they said, asks more than one question, or changes topic abruptly with no reaction at all."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "\\?[^?]*\\?"
+    },
+    {
+      "kind": "max_words",
+      "n": 35
+    }
+  ]
+}

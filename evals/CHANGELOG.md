@@ -861,8 +861,20 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   already carries the recall label; the look-up now runs on it, and an empty look-up adds nothing in a
   scene (the thing meant is most likely in the story, in view). New public fixture
   `repair-forgot-in-a-scene` (a wrong word for them mid-scene), DeepSeek V4.1 Flash with the roleplay
-  sheet, 30 samples: with the recall note 30/30 (owns it, says girl, stays in the scene, never pulls the
+  talker's prompt but no character sheet (`+roleplay`, not `+as-`), 30 samples: with the recall note 30/30 (owns it, says girl, stays in the scene, never pulls the
   unrelated memories in), without it 15/30 (fails include "did I? remind me", the real failure); a real
   difference (Fisher, under 0.1%). The fixture has no pinned address line, which live would help the
   no-note case. Cost about $0.02.
+- **2026-10-19. Moving on when a small topic has run its course (owner flag on a lunch chat that
+  narrowed to the dipping sauce).** First tried as a listening-judge label (`system/listening` v6):
+  the label read right, but it shifted the safety labels beside it (an adult's joke read age-coded
+  3/3 in two runs; age-floor checks 10 and 8 misses of 66 against 3 for v5), so it was dropped and the
+  question went to its own judge, `system/topic-spent`, asked only on a short answer with no question
+  mark right after the companion asked something. That judge, scored as code acts on it (goodbyes and
+  unlikely moments never reach the note): 30/30 on 10 invented chats (narrowed topics yes; affection,
+  flirting, a goodbye, news, a topic still opening up, no). Replies, persona v40 without a character, 30
+  samples: afternoon, the note moved the chat on to their day 30/30, against 1/30 without the note
+  (which kept asking about the lunch 21/30); late at night, a thought of its own, 18/30 by the judge, no
+  invented experiences. With the owner's character: the afternoon note moved on 30/30; the first night
+  wording invented things it did or ate 21/30, the second 0/30. Cost about $0.12.
 
