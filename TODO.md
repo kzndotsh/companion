@@ -242,6 +242,10 @@ Ordered. Pull from the top.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-19**
+- [x] J21 Talker fallback: an error goes to the fallback model at once, a reply missing after 10 s asks it
+      too and the first answer wins, and talker calls time out at 25 s instead of 60. Before, a failed call was a
+      silent turn. DeepSeek V4.1 Flash as the everyday fallback scored 89/120 against Luna's 90/120 on 20
+      everyday fixtures.
 - [x] J36 Backups: the database and character sheets are snapshotted at every start (before migrations),
       daily and by hand (`companion backup`), each copy integrity-checked and counted; 7 daily and 7 others
       kept; `--restore` refuses while the bot runs, keeps the current database, and swaps only a checked copy.
@@ -640,8 +644,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J20 Live-typed drafts: Telegram's sendMessageDraft shows the reply appearing as it is written, which
       could replace the held typing indicator with real typing. Test against pace, split and supersede first
       (speed-stack audit).
-- [ ] J21 Fallback model: when the talker's provider is down or stalls past a few seconds, answer with a
-      backup model instead of nothing, and log it (OpenRouter latency study: route with a fallback).
 - [ ] J44 Kiro judge calibration: re-grade about 200 replies already graded by the paid judge with a Kiro
       model (Sonnet 4.6) on the same criteria; compare agreement and read the disagreements by eye. At
       about 90% agreement with no one-sided bias, judging moves to Kiro and evals become nearly free. Free,

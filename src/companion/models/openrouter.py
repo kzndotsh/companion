@@ -48,7 +48,9 @@ class OpenRouterTalker:
         provider: str = DEFAULT_PROVIDER,
         max_tokens: int = 400,
         reasoning_effort: str | None = None,
+        timeout: float = 25,  # past this a reply is not coming; a backup model answers (J21)
     ) -> None:
+        self._timeout = timeout
         self._key = api_key
         self._client = client
         self._model = model
@@ -75,7 +77,10 @@ class OpenRouterTalker:
         body = self.body(request)
         resp = await retry_on_network_error(
             lambda: self._client.post(
-                URL, headers={"authorization": f"Bearer {self._key}"}, json=body, timeout=60
+                URL,
+                headers={"authorization": f"Bearer {self._key}"},
+                json=body,
+                timeout=self._timeout,
             ),
             what="talker",
         )

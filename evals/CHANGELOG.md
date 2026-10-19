@@ -877,4 +877,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   (which kept asking about the lunch 21/30); late at night, a thought of its own, 18/30 by the judge, no
   invented experiences. With the owner's character: the afternoon note moved on 30/30; the first night
   wording invented things it did or ate 21/30, the second 0/30. Cost about $0.12.
+- **2026-10-19. The talker fallback (J21).** Logs 2026-10-17 to 10-19: Luna answered 315 turns, median
+  1.3 s, 9 in 10 under 1.9 s, 4 over 6 s, 2 over 10 s (slowest 14.5 s); the talker never failed outright,
+  but a failure would have been a silent turn. As the everyday fallback, DeepSeek V4.1 Flash against
+  Luna on 20 everyday fixtures, persona v40 without a character, 6 samples: 89/120 against 90/120, no
+  fixture a real difference (weakest: a reasoned no 1/6, a settled thing re-asked 3/6; better at not
+  copying an emoticon 6/6 against 0/6). Cost $0.05 by the replies. The run's "OpenRouter charged $0.0000"
+  was the meter not having moved in time; the runner now prints no charged figure in that case rather
+  than a stale one.
 

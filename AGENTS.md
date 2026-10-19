@@ -96,7 +96,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `COMPANION_REFLECT_MODEL`, `COMPANION_FALLBACK_MODEL` (asked only when the judges' model refuses a
   call), `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`, `COMPANION_PACE`,
   `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`,
-  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_BACKUP_DIR`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
+  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_BACKUP_DIR`, `COMPANION_TALKER_FALLBACK`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
   it) and `COMPANION_CHARACTER` (a character sheet laid over the persona, `companion/characters.py`). The
   table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
@@ -157,6 +157,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   own judge `system/topic-spent`, never the listening judge), one note says to react briefly and move on
   (`core/topics.py`): to a plan of theirs offered that turn, else their day or evening, and late at night a
   thought of its own. At most once in ten of their messages, casual turns only, never past a question.
+- A talker that errors is answered by its fallback model at once, and one still silent after 10 s
+  has the fallback asked too, the first answer sent (`models/fallback.py` `TalkerFallback`, J21). The
+  reply carries the model that wrote it, and every check runs on it as usual. Talker calls time out at 25 s.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash and an AI disclaimer nobody asked for by code, and a joke bolted onto an ordinary

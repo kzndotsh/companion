@@ -49,6 +49,8 @@ def render_table(results: Results, fixtures: Sequence[Fixture], variants: Sequen
     note = f"spent ${results.spent:.4f} by the replies' own costs"
     if results.charged is not None:
         note += f", OpenRouter charged ${results.charged:.4f} (the whole account, the bot included)"
+    elif results.spent > 0:
+        note += ", OpenRouter's meter had not caught up, so no charged figure"
     if results.stopped_by_cap:
         note += "  STOPPED EARLY: the spend cap was reached, some samples were skipped"
     lines += [

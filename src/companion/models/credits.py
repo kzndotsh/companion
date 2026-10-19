@@ -50,7 +50,7 @@ async def charged_since(
 ) -> float | None:
     """What the account was charged since `before`. The meter can sit still for a while before it
     catches up, so a steady reading counts only once it has reached most of what the replies said
-    they cost; past the time limit the last reading is returned as it is."""
+    they cost. None when it never caught up in time: a stale figure is worse than none."""
     last: float | None = None
     for _ in range(TRIES):
         await asyncio.sleep(settle)
@@ -62,6 +62,9 @@ async def charged_since(
         if caught_up and last is not None and abs(charged - last) < 1e-9:
             return charged
         last = charged
+    if last is not None and last < expected * CAUGHT_UP:
+        log.warning("openrouter's meter had not caught up after the run; no charged figure")
+        return None
     return last
 
 

@@ -34,7 +34,7 @@ from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
 from companion.models import anthropic, embeddings, openrouter
-from companion.models.fallback import RefusalFallback
+from companion.models.fallback import RefusalFallback, TalkerFallback
 from companion.models.retry import retry_on_network_error
 from companion.store.sqlite.store import Store
 
@@ -201,6 +201,7 @@ def startup_line(
         f" | resample {'on' if resample_on() else 'off'}"
         f" | intimate {'may route' if route_intimate_on() else 'stays'}"
         f" | relevance {'shadow' if relevance_on() else 'off'}"
+        f" | talker fallback {talker_fallback() or 'off'}"
     )
 
 
@@ -214,19 +215,44 @@ def _roleplay_talker(client: httpx.AsyncClient) -> Talker | None:
     return openrouter.OpenRouterTalker(key, client, model)
 
 
+def talker_fallback() -> str | None:
+    """The model that answers when the everyday talker fails or stalls (J21):
+    COMPANION_TALKER_FALLBACK, by default the roleplay model; `none` turns it off. The roleplay
+    talker falls back to the everyday model. Needs OpenRouter."""
+    if not os.environ.get("OPENROUTER_API_KEY"):
+        return None
+    model = os.environ.get("COMPANION_TALKER_FALLBACK", "").strip()
+    if model.lower() == "none":
+        return None
+    return model or os.environ.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
+
+
+def _with_fallback(client: httpx.AsyncClient, talker: Talker, fallback: str | None) -> Talker:
+    key = os.environ.get("OPENROUTER_API_KEY")
+    if fallback is None or fallback.lower() == "none" or not key:
+        return talker
+    return TalkerFallback(talker, openrouter.OpenRouterTalker(key, client, fallback))
+
+
 def _metered_models(
     client: httpx.AsyncClient, store: Store, rel: RelationshipId
 ) -> tuple[Talker, Talker | None, Extractor, Extractor]:
-    """The talkers and extractors, each reporting what its calls cost to the spend ledger."""
+    """The talkers and extractors, each reporting what its calls cost to the spend ledger. Each
+    talker has a fallback: the everyday one the fallback model, the roleplay one the everyday
+    model."""
 
     def sink(event: SpendEvent) -> None:
         store.record_spend(rel, event, datetime.now(UTC))
 
     scene = _roleplay_talker(client)
     shared = extractor(client)
+    fallback = talker_fallback()
+    everyday = os.environ.get("COMPANION_MODEL") or openrouter.DEFAULT_MODEL
+    talker = _with_fallback(client, _talker(client), fallback)
+    roleplay = _with_fallback(client, scene, everyday if fallback else None) if scene else None
     return (
-        MeteredTalker(_talker(client), sink, "talker"),
-        MeteredTalker(scene, sink, "roleplay talker") if scene is not None else None,
+        MeteredTalker(talker, sink, "talker"),
+        MeteredTalker(roleplay, sink, "roleplay talker") if roleplay is not None else None,
         MeteredExtractor(shared, sink, "judge"),
         MeteredExtractor(shared, sink, "memory"),
     )

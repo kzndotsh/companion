@@ -36,12 +36,11 @@ async def test_charged_waits_for_the_meter_to_settle() -> None:
     assert charged == pytest.approx(0.05)
 
 
-async def test_a_meter_that_never_catches_up_gives_its_last_reading() -> None:
+async def test_a_meter_that_never_catches_up_gives_no_figure_rather_than_a_stale_one() -> None:
     async with _client([14.90, 14.91]) as client:
         before = await credits("k", client)
         assert before is not None
-        charged = await charged_since("k", client, before, 0.05, settle=0)
-    assert charged == pytest.approx(0.01)
+        assert await charged_since("k", client, before, 0.05, settle=0) is None
 
 
 async def test_unreadable_meter_is_none_not_an_error() -> None:
