@@ -500,6 +500,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   it used. The em dash check now runs on scene replies too (code checks only; the quip judge stays off in
   scenes).
 - **Recall in a pretend scene (2026-10-19).** When they say it forgot something mid-scene, the scene turn's routing read now triggers the recall look-up, and its finds reach the roleplay talker's system block. An empty look-up adds nothing in a scene. Measured in `evals/CHANGELOG.md` (15/30 to 30/30).
+- **The roleplay heading is found however it is written (2026-10-19).** The cut that keeps a sheet's `## In roleplay and intimate moments` section away from the everyday talker matched only that exact heading. A hand edit dropped the `##`, so from about 15:13 to 16:10 that day the everyday talker saw the whole section and the roleplay talker got no separate one. The heading now matches with or without `#`, with a colon, in any case (`characters.py`).
 
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.

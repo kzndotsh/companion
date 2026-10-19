@@ -28,6 +28,11 @@ CHARACTER_ENV = "COMPANION_CHARACTER"
 PRIVATE_DIR = Path("data/characters")
 _ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 ROLEPLAY_HEADING = "\n## In roleplay and intimate moments\n"
+# The heading as people write it: with or without the "##", a colon, any case. A sheet edited by
+# hand once lost its "##", and the whole section reached the everyday talker unnoticed.
+_ROLEPLAY_LINE = re.compile(
+    r"^[ \t]*(?:#+[ \t]*)?in roleplay and intimate moments:?[ \t]*$", re.IGNORECASE | re.MULTILINE
+)
 
 
 class CharacterError(ValueError):
@@ -50,7 +55,9 @@ class Character:
 
 def parse(text: str, char_id: str, version: str) -> Character:
     """A sheet from its file text. Refuses an empty one."""
-    sheet, _, scene = text.strip().partition(ROLEPLAY_HEADING)
+    text = text.strip()
+    heading = _ROLEPLAY_LINE.search(text)
+    sheet, scene = (text[: heading.start()], text[heading.end() :]) if heading else (text, "")
     if not sheet.strip():
         msg = f"character {char_id!r} has an empty sheet"
         raise CharacterError(msg)

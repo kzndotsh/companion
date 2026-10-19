@@ -65,3 +65,17 @@ def test_the_in_scenes_section_reaches_only_the_roleplay_talker() -> None:
     assert "Stay in the role." not in everyday
     assert scene.endswith("Stay in the role.\n")
     assert system_prompt("persona", None) == "persona"
+
+
+@pytest.mark.parametrize(
+    "heading",
+    [
+        "## In roleplay and intimate moments",
+        "In roleplay and intimate moments:",
+        "# in roleplay and intimate moments",
+    ],
+)
+def test_the_roleplay_section_is_cut_out_however_the_heading_is_written(heading: str) -> None:
+    c = parse(f"You are Mika.\n\n{heading}\nStay in the role.\n", "mika", "local")
+    assert c.sheet == "You are Mika."
+    assert c.roleplay_sheet == "Stay in the role."
