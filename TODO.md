@@ -60,6 +60,11 @@ Ordered. The first three can stop the bot, so they go first.
       reasoning made them worse and slower (9/30 to 4/30, 11/30 to 4/30), so reasoning stays off; likely a
       model limit, testable against another talker. "you seem sleepy" answered "haha, a little" (a body claim),
       not yet looked at.
+- [ ] J48 Getting to know them on purpose (owner flag 2026-10-19: it never asked their name). It asks plenty
+      (34% of replies) but only about the thing just said; memory has 17 beliefs about food and none about
+      values or their name. Design in `docs/inbox/2026-10-19-getting-to-know-them.md`: a map of them by
+      domain and depth, gaps and moments chosen by code, one note at a time with its own disclosure first,
+      depth by closeness (T17), backing off on deflection. First step: ask what to call them.
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
