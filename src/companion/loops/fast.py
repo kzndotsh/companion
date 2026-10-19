@@ -122,11 +122,20 @@ class _CardLog:
             )
         for b in card.older:
             self._one(DecisionKind.SURFACE, b, "in the card as older, possibly out of date")
-        for b in card.crowded:
-            self._one(
-                DecisionKind.WITHHOLD,
-                b,
-                f"crowded out: the card holds {len(card.usable) + len(card.held)}",
+        if card.crowded:
+            self.store.append_decision(
+                Decision(
+                    DecisionId(_id()),
+                    self.rel,
+                    self.session,
+                    self.turn,
+                    TraceId(self.turn),
+                    DecisionKind.POLICY,
+                    f"card: {len(card.crowded)} current beliefs crowded out, it holds "
+                    f"{len(card.usable) + len(card.held)}",
+                    self.at,
+                    detail={"crowded": [b.id for b in card.crowded]},
+                )
             )
         for b in card.dropped:
             self._one(DecisionKind.WITHHOLD, b, self._why_dropped(b, card))

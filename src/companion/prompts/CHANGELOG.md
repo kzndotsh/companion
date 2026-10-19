@@ -440,8 +440,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **How they want to be referred to, pinned (2026-10-19).** When set with `companion address --set`, the
   `notes/address` line goes right after the clock line on every turn, ahead of the memory card. The card
   shows 15 of the beliefs ranked by kind and recency, and on a busy day a belief about how they want to be
-  referred to fell off it and a reply got it wrong. Beliefs that do not fit are now logged as "crowded out" instead of
-  vanishing silently.
+  referred to fell off it and a reply got it wrong. Beliefs that do not fit are now logged, one decision
+  per turn listing them, instead of vanishing silently.
 
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
