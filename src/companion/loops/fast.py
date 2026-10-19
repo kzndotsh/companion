@@ -28,7 +28,7 @@ from companion.core.address import address_note
 from companion.core.basics import ASK_EVERY as ASK_NAME_EVERY
 from companion.core.basics import ASKED as ASKED_NAME
 from companion.core.basics import NAME_CAPTURE, ask_name, asked_for_name, knows_name, name_belief
-from companion.core.card import Card, build_card, render
+from companion.core.card import EVENT_SHOWN_DAYS, Card, build_card, render
 from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import Extractor, from_fallback
 from companion.core.floor import HOLD_NOTE, INTIMATE_CHECK
@@ -51,7 +51,7 @@ from companion.core.frames import resolve as frame_resolve
 from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
-from companion.core.knowing import MAP_EVERY, WOULD_ASK, pick_gap
+from companion.core.knowing import MAP_EVERY, WOULD_ASK, Depth, Domain, pick_gap
 from companion.core.length import LengthTarget, length_target
 from companion.core.listening import PROMPT as LISTEN_PROMPT
 from companion.core.listening import SERIOUS, listening_note, repair_note, rude_note
@@ -183,6 +183,11 @@ class _CardLog:
     def _why_dropped(b: Belief, card: Card) -> str:
         last = when_phrase(card.aged[b.id].last_supported, card.now)
         horizon = HORIZON_DAYS[b.kind]
+        if horizon is None:  # an event: history, only left out once it is an old one-day moment
+            return (
+                f"a one-day moment of daily life last mentioned {last}, not shown after"
+                f" {EVENT_SHOWN_DAYS} days; still in memory"
+            )
         return f"stale: last mentioned {last}, past its {horizon}-day horizon, so left out"
 
     def _one(self, kind: DecisionKind, belief: Belief, reason: str) -> None:
@@ -1121,7 +1126,18 @@ def _assemble(  # noqa: PLR0913
     views = card_views(store.self_beliefs(c.rel), view_state)
     assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
     sharing = heard is not None and heard[0].severity >= 1
-    card = build_card(assertable, store.last_support(c.rel), now, views=views, show_held=sharing)
+    labels = store.belief_labels(c.rel)
+    everyday = {
+        bid for bid, x in labels.items() if x.domain is Domain.DAILY and x.depth is Depth.SURFACE
+    }
+    card = build_card(
+        assertable,
+        store.last_support(c.rel),
+        now,
+        views=views,
+        show_held=sharing,
+        everyday=everyday,
+    )
     shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)

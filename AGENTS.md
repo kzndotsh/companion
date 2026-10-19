@@ -133,7 +133,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   cool reply) and a request to remember something; then a small model looks the topic up across every
   belief and the finds ride that turn's system block (`core/recall.py`). Sensitive (held) memories are
   in the card only on turns rated severity 1 or more; the beliefs the card has no room for are logged once
-  per turn.
+  per turn. A one-day moment of daily life (an event labelled daily and surface by the memory map) leaves
+  the card a week after it was last mentioned; it stays in memory.
 - How they want to be referred to is a setting (`companion address --set`) pinned after the clock on
   every turn. Until memory knows their name, a note on a casual turn (at most daily) asks for it, and their
   answer is stored as a belief quoting their words (`core/basics.py`, J48). Each memory is labelled

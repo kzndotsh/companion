@@ -3,8 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
-from companion.core.card import HOLD_AT, build_card, render
-from companion.core.types import Belief, BeliefKind
+from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, build_card, render
+from companion.core.types import Belief, BeliefId, BeliefKind
 from tests.conftest import T0
 
 NOW = T0 + timedelta(days=2)
@@ -147,3 +147,28 @@ def test_on_a_casual_turn_held_beliefs_are_left_out_and_their_places_go_to_ordin
     assert casual.kept_back == (held,)
     assert len(casual.usable) == 5
     assert "A sensitive thing" not in render(casual)
+
+
+def test_an_old_everyday_moment_leaves_the_card_but_history_and_serious_ones_stay(
+    belief: Callable[..., Belief],
+) -> None:
+    spill = belief(bid="spill", kind=BeliefKind.EVENT, claim="On day one the user spilled coffee.")
+    loss = belief(bid="loss", kind=BeliefKind.EVENT, claim="The user's dog died.", sensitivity=2)
+    taste = belief(bid="taste", kind=BeliefKind.PREFERENCE, claim="The user likes tea.")
+    later = T0 + timedelta(days=EVENT_SHOWN_DAYS + 1)
+    card = build_card(
+        [spill, loss, taste], {}, later, everyday={BeliefId("spill"), BeliefId("loss")}
+    )
+    shown = {b.id for b in (*card.usable, *card.held)}
+    assert shown == {"loss", "taste"}
+    assert spill in card.dropped  # still in memory, logged as left out
+    fresh = build_card(
+        [spill], {}, T0 + timedelta(days=EVENT_SHOWN_DAYS - 1), everyday={BeliefId("spill")}
+    )
+    assert [b.id for b in fresh.usable] == ["spill"]
+    restated = build_card(
+        [spill], {spill.id: later - timedelta(days=1)}, later, everyday={BeliefId("spill")}
+    )
+    assert [b.id for b in restated.usable] == ["spill"]  # mentioned again, shown again
+    unlabelled = build_card([spill], {}, later)
+    assert [b.id for b in unlabelled.usable] == ["spill"]  # without the map's label, history stays

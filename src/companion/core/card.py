@@ -9,9 +9,9 @@ companion can check naturally. Stale sensitive ones are left out entirely.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime, tzinfo
+from datetime import UTC, datetime, timedelta, tzinfo
 
 from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.types import Belief, BeliefId, BeliefKind
@@ -19,6 +19,11 @@ from companion.core.types import Belief, BeliefId, BeliefKind
 HOLD_AT = 2
 MAX_ITEMS = 15
 MAX_OLDER = 3
+# A one-day moment of daily life (a spill, a meal, a long shower: an event the memory map labels
+# daily life at surface depth) stops being shown a week after it was last mentioned. It stays in
+# memory and the look-ups still find it; it just stops taking one of the card's places. Other
+# events, such as starting a project or getting a job, are history and stay.
+EVENT_SHOWN_DAYS = 7
 KIND_ORDER = {
     kind: i
     for i, kind in enumerate(
@@ -67,6 +72,7 @@ def build_card(  # noqa: PLR0913
     views: Sequence[Belief] = (),
     *,
     show_held: bool = True,
+    everyday: Collection[BeliefId] = (),
 ) -> Card:
     """`support` is each belief's freshest evidence time, falling back to valid_from.
 
@@ -79,7 +85,8 @@ def build_card(  # noqa: PLR0913
         )
         for b in beliefs
     }
-    current = [b for b in beliefs if aged[b.id].status is not Freshness.STALE]
+    faded = [b for b in beliefs if b.id in everyday and _faded(b, aged[b.id].last_supported, now)]
+    current = [b for b in beliefs if aged[b.id].status is not Freshness.STALE and b not in faded]
     kept_back = [] if show_held else [b for b in current if b.sensitivity >= HOLD_AT]
     current = [b for b in current if b not in kept_back]
     stale = sorted(
@@ -96,12 +103,20 @@ def build_card(  # noqa: PLR0913
         usable=tuple(b for b in ranked if b.sensitivity < HOLD_AT),
         held=tuple(b for b in ranked if b.sensitivity >= HOLD_AT),
         older=older,
-        dropped=tuple(b for b in stale if b not in older),
+        dropped=tuple(b for b in [*stale, *faded] if b not in older),
         aged=aged,
         now=now,
         views=tuple(views),
         crowded=tuple(crowded),
         kept_back=tuple(kept_back),
+    )
+
+
+def _faded(b: Belief, last: datetime, now: datetime) -> bool:
+    return (
+        b.kind is BeliefKind.EVENT
+        and b.sensitivity == 0
+        and now - last > timedelta(days=EVENT_SHOWN_DAYS)
     )
 
 
