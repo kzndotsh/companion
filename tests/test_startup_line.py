@@ -19,6 +19,7 @@ def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
     monkeypatch.delenv("COMPANION_INITIATIVE", raising=False)
     monkeypatch.delenv("COMPANION_LISTEN", raising=False)
     monkeypatch.delenv("COMPANION_MOOD", raising=False)
+    monkeypatch.delenv("COMPANION_RESAMPLE", raising=False)
     scene = object()
     line = daemon.startup_line(RelationshipId("telegram-1"), "abcdef0123456789", scene)  # type: ignore[arg-type]
     persona = prompts.get("system/persona").version
@@ -27,7 +28,7 @@ def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
         f" | prompts {prompts.set_hash()}"
         f" | everyday {daemon.openrouter.DEFAULT_MODEL} | scenes {daemon.SCENE_MODEL}"
         " | daily cap $10.00 | pace natural | split on | listen on | initiative shadow"
-        " | mood shadow"
+        " | mood shadow | resample on"
     )
 
 
@@ -43,11 +44,11 @@ def test_the_pace_setting_is_shown_and_an_unknown_one_means_natural(
 def test_the_split_setting_is_shown_and_off_turns_it_off(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("COMPANION_SPLIT", "off")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
-        "split off | listen on | initiative shadow | mood shadow"
+        "split off | listen on | initiative shadow | mood shadow | resample on"
     )
     monkeypatch.setenv("COMPANION_SPLIT", "on")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
-        "split on | listen on | initiative shadow | mood shadow"
+        "split on | listen on | initiative shadow | mood shadow | resample on"
     )
 
 
@@ -64,15 +65,15 @@ def test_the_initiative_mode_is_shadow_unless_turned_off(monkeypatch: pytest.Mon
     monkeypatch.delenv("COMPANION_MOOD", raising=False)
     monkeypatch.delenv("COMPANION_INITIATIVE", raising=False)
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
-        "initiative shadow | mood shadow"
+        "initiative shadow | mood shadow | resample on"
     )
     monkeypatch.setenv("COMPANION_INITIATIVE", "off")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
-        "initiative off | mood shadow"
+        "initiative off | mood shadow | resample on"
     )
     monkeypatch.setenv("COMPANION_INITIATIVE", "live")  # there is no live mode yet
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
-        "initiative shadow | mood shadow"
+        "initiative shadow | mood shadow | resample on"
     )
 
 
@@ -96,4 +97,13 @@ def test_the_mood_is_shadow_unless_set_on_or_off(
     monkeypatch: pytest.MonkeyPatch, raw: str, shown: str
 ) -> None:
     monkeypatch.setenv("COMPANION_MOOD", raw)
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(f"mood {shown}")
+    assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
+        f"mood {shown} | resample on"
+    )
+
+
+def test_resample_is_on_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("COMPANION_RESAMPLE", "off")
+    assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith("resample off")
+    monkeypatch.delenv("COMPANION_RESAMPLE")
+    assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith("resample on")

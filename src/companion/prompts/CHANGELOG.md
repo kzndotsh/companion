@@ -443,6 +443,13 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   referred to fell off it and a reply got it wrong. Beliefs that do not fit are now logged, one decision
   per turn listing them, instead of vanishing silently.
 
+- **One resample on a failed check (2026-10-19, J45 and J47).** On an ordinary turn (the listening judge
+  read it, severity below 2, not a scene), the reply is checked before it is sent: an em dash by code, and a
+  joke bolted onto an ordinary message by `system/quip` v2. On a fail the same request goes to the same model
+  once more and the second reply is sent whatever it is; the discarded one is in the decision detail. What
+  the model is sent does not change. Measured on five flagged turns: 85 to 95 of 150 plain. On by default,
+  `COMPANION_RESAMPLE=off` to disable.
+
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
 

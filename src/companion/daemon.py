@@ -118,6 +118,16 @@ def mood_mode() -> str:
     return raw if raw in ("off", "on") else "shadow"
 
 
+def resample_on() -> bool:
+    """Whether a reply that fails a check is drawn once more: COMPANION_RESAMPLE, on unless off."""
+    return os.environ.get("COMPANION_RESAMPLE", "").strip().lower() not in (
+        "off",
+        "0",
+        "no",
+        "false",
+    )
+
+
 def split_on() -> bool:
     """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
     return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
@@ -152,6 +162,7 @@ def startup_line(
         f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
         f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
         f" | initiative {initiative_mode()} | mood {mood_mode()}"
+        f" | resample {'on' if resample_on() else 'off'}"
     )
 
 
@@ -274,6 +285,7 @@ async def run(data_dir: Path) -> None:
             daily_cap_usd=daily_cap(),
             listen=listen_on(),
             mood=mood_mode(),
+            resample=resample_on(),
         )
         pending: list[asyncio.Task[None]] = []
 

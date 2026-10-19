@@ -60,11 +60,14 @@ from companion.core.moves import PROMPT as HABITS_PROMPT
 from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
+from companion.core.quip import PROMPT as QUIP_PROMPT
 from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
 from companion.core.react import decide as decide_reaction
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import recall_note
+from companion.core.recheck import QUIP, code_checks
+from companion.core.recheck import eligible as recheck_eligible
 from companion.core.replay import TurnRecord
 from companion.core.talker import Reply, Talker
 from companion.core.types import (
@@ -90,6 +93,7 @@ from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.listen import judge_listening
 from companion.loops.moves import HabitMemory, find_habits
+from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
 from companion.loops.recall import Recalled, look_up
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
@@ -176,6 +180,7 @@ class Conversation:
     daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
     listen: bool = True  # ask how serious a message is before the reply
     mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
+    resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -458,6 +463,52 @@ def _start_beside(
         else None
     )
     return talk, framing, asyncio.ensure_future(judge_reaction(c.judge, t.prior, t.text))
+
+
+async def _recheck(  # noqa: PLR0913, PLR0917
+    c: Conversation,
+    t: _Turn,
+    request: TalkerRequest,
+    reply: Reply,
+    heard: _Heard | None,
+    in_scene: Frame,
+) -> Reply:
+    """The reply to send: the first, or one fresh draw when the first fails a check. Logged either
+    way on the turns that are checked."""
+    severity = heard[0].severity if heard is not None else None
+    if not c.resample or not recheck_eligible(
+        severity=severity, in_scene=in_scene is not Frame.REAL, reply=reply.text
+    ):
+        return reply
+    failed = code_checks(reply.text)
+    detail: dict[str, Json] = {}
+    if not failed and c.judge is not None:
+        judged = await judge_quip(c.judge, t.text, reply.text)
+        if judged is not None:
+            detail = {"scorer": judged[1], "prompt": QUIP_PROMPT.ref}
+            if judged[0]:
+                failed.append(QUIP)
+    _mark(t, f"recheck: {', '.join(failed) or 'passed'}")
+    again = None
+    if failed:
+        again = await _pick_talker(c, t, in_scene).reply(request)
+        _mark_reply(t, again)
+        detail |= {"discarded": reply.text, "checks": list[Json](failed)}
+    reason = f"resampled: {', '.join(failed)}" if failed else "kept: the reply passed its checks"
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            reason,
+            t.now,
+            detail=detail or None,
+        )
+    )
+    return again if again is not None and again.text else reply
 
 
 def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> None:
@@ -755,6 +806,7 @@ async def _handle_turn(
     talk, framing, feeling = _start_beside(c, t, request, in_scene)
     try:
         reply, outcome, felt = await _await_beside(t, talk, framing, feeling)
+        reply = await _recheck(c, t, request, reply, heard, in_scene)
     except BaseException:
         await _stop(talk, framing, feeling)
         _store_user(c, t, channel, Frame.REAL)

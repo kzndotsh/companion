@@ -95,7 +95,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 **Running the bot**
 - Settings are environment variables in `.env`: `COMPANION_MODEL`, `COMPANION_SCENE_MODEL`,
   `COMPANION_REFLECT_MODEL`, `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`,
-  `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD` and
+  `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE` and
   `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping it) and `COMPANION_CHARACTER` (a character
   sheet laid over the persona, `companion/characters.py`). The table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
@@ -131,6 +131,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   append-only table, the mood is worked out from them when read, and only what the user did can move it
   (no source for silence, goodbyes, gaps or failed calls). `COMPANION_MOOD` is shadow, on or off;
   `uv run companion mood --replay 7` rebuilds it over past messages from the same rules.
+- On an ordinary turn (not serious, not a scene) the reply is checked before it is sent (`core/recheck.py`):
+  an em dash by code, a joke bolted onto an ordinary message by the quip judge. On a fail the same model is
+  asked once more and the second reply goes out whatever it is; the first is kept in the decision detail.
+  Nothing is ever edited. `COMPANION_RESAMPLE=off` turns it off.
 
 **Working with the owner**
 - Plain English, short, and say what changed and what it was measured on. Lead with what matters.
