@@ -52,7 +52,7 @@ Today it is reached through Telegram, its only integration for now.
   go to a less restrictive model, above an age floor in code that no setting changes
   ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
 - **Checks its own replies.** A reply with a known habit (an em dash, a joke bolted onto an ordinary
-  message, an AI disclaimer nobody asked for) is drawn once more. Nothing is ever edited.
+  message, an AI disclaimer nobody asked for, the clock line copied from its own notes) is drawn once more. Nothing is ever edited.
 - **Never goes silent.** If the talker errors, or has not answered in ten seconds, a fallback model
   answers too and the first reply wins.
 

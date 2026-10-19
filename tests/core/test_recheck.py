@@ -33,3 +33,21 @@ def test_ordinary_replies_pass() -> None:
         code_checks("hi girlfriend 💕 you're cute when you say it like that", "Hi girlfriend") == []
     )
     assert code_checks("ugh—the worst", "laundry") == ["an em dash in a casual reply"]
+
+
+@pytest.mark.parametrize(
+    "reply",
+    [
+        "sounds good 😌 [right now it is Thursday 13:11]",
+        "Right now it is Friday 02:10. go to sleep",
+        "<notes>hi</notes>",
+        "ok <clock>",
+    ],
+)
+def test_the_clock_line_or_a_tag_copied_into_a_reply_fails(reply: str) -> None:
+    assert "the clock line or a tag copied from the system block" in code_checks(reply)
+
+
+def test_talking_about_the_time_is_fine() -> None:
+    assert code_checks("right now it is late, go to bed lol") == []
+    assert code_checks("it's thursday already?") == []

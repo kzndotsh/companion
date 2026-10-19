@@ -172,7 +172,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `companion memory review` asks the owner the questions the check raised; `companion merge` merges by hand.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
-  a scene) an em dash and an AI disclaimer nobody asked for by code, and a joke bolted onto an ordinary
+  a scene) an em dash, an AI disclaimer nobody asked for, and the clock line or a tag copied from the system
+  block, by code, and a joke bolted onto an ordinary
   message by the quip judge; in a scene only the code checks. On a fail the same model is asked once more
   and the second reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
   edited. `COMPANION_RESAMPLE=off` turns it off.

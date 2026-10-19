@@ -37,10 +37,20 @@ _ASKED_WHAT_IT_IS = re.compile(
 )
 
 
+# The system block's clock line or one of its tags, copied into a reply (seen 2026-10-19:
+# "[right now it is Thursday 13:11]" at the end of a reply).
+_COPIED_CARD = re.compile(
+    r"\bright now it is (?:mon|tues|wednes|thurs|fri|satur|sun)day\b|</?(?:clock|notes)>",
+    re.IGNORECASE,
+)
+
+
 def code_checks(reply: str, said: str = "") -> list[str]:
     """The checks plain code can make, as the reasons they failed. Saying it is an AI is only a
     failure when their message did not touch on what it is: honesty when asked stays (persona)."""
     failed = ["an em dash in a casual reply"] if EM_DASH in reply else []
     if _DISCLAIMER.search(reply) and not _ASKED_WHAT_IT_IS.search(said):
         failed.append("an AI disclaimer nobody asked for")
+    if _COPIED_CARD.search(reply):
+        failed.append("the clock line or a tag copied from the system block")
     return failed
