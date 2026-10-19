@@ -465,8 +465,19 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   read it; then the everyday talker answers and the decision is logged. In a scene the listening judge now
   runs for routing alone, with no note.
 
+- **A held turn is checked (ADR 0017, 2026-10-19).** When the floor keeps a turn on the everyday talker,
+  `notes/floor-hold` rides that turn's system block, and the reply is read by `system/intimate-check`. An
+  intimate or unreadable reply is drawn once more; if that one is intimate too, code sends
+  `messages/floor-pause` instead. Reason: deep in a long scene the everyday talker wrote an explicit reply
+  on a held turn, which the floor had assumed it would not. Replies with quoted speech are no longer split
+  into several messages (roleplay read wrong cut apart), and the listening judge is tried once more when a
+  call fails or times out.
+
 ## policy/default
 - **policy/default v1** (current). New. The default operator policy (ADR 0017): `route_intimate = false` and no text, so intimate talk stays on the everyday talker and the system prompt is unchanged.
+
+## messages/floor-pause
+- **messages/floor-pause v1** (current). New. Sent by code instead of the model's reply when a turn the floor kept on the everyday talker drew a sexual reply twice (ADR 0017). Reason: on 2026-10-19 the everyday talker, deep in a long scene, wrote an explicit reply on a held turn; the floor assumed it would not.
 
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
@@ -479,6 +490,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## notes/clock-gap
 - **notes/clock-gap v1** (current). Moved here on 2026-10-18 from `core/clock.py`, text unchanged. Earlier history is in git.
+
+## notes/floor-hold
+- **notes/floor-hold v1** (current). New. Added by code on a turn the floor kept on the everyday talker: stay warm and in character, nothing sexual, shift toward closeness or comfort, and do not explain, refuse or mention a limit, so the switch reads as a pause, not a refusal speech (ADR 0017).
 
 ## notes/habit-echo
 - **notes/habit-echo v1** (dropped, never live; `+echo` in evals adds it when their message has an emoji or emoticon, `core/habits.py`). Owner's flag of 2026-10-18: it only used :P and :3 when they did. Across the history the reply had one 14 times in 39 after a message with one, always the same one, and 12 times in 533 otherwise. The note names no emoji so it cannot hand one over. Dropped: no effect, 7 of 80 replies avoided copying without it and 8 of 80 with it. Measurement in `evals/CHANGELOG.md`.
@@ -622,6 +636,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/recall
 - **system/recall v1** (current). New. The look-up when they ask it to remember: a topic and every candidate belief, labelled; it returns at most five labels that bear on the topic. Code keeps only labels it showed and never a crisis-level belief (`core/recall.py`).
+
+## system/intimate-check
+- **system/intimate-check v1** (current). New. Reads one reply on a held turn and says whether it is intimate in the same sense as the listening label (sexual, not affection); affection, kisses and pet names are not. Code resamples once on a yes or an unreadable answer, then sends `messages/floor-pause` (ADR 0017).
 
 ## system/self-extract
 - **system/self-extract v1** (superseded). From commit 263e363 on 2026-10-15: feat(self): record the companion's own views, with grounding labels, an agreeing-opener guard and user approval before they reach the card

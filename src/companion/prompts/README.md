@@ -47,10 +47,12 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 |---|---|---|---|
 | `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v36 |
 | `policy/default` | policy | the operator content policy used when `COMPANION_POLICY` is unset: route nothing, add no text (ADR 0017) | v1 |
+| `messages/floor-pause` | message | sent by code when a turn the floor held drew a sexual reply twice (ADR 0017) | v1 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, `core/address.py` | v1 |
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |
+| `notes/floor-hold` | note | a turn the floor kept on the everyday talker: stay warm, nothing sexual, no explaining (ADR 0017) | v1 |
 | `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy, `core/habits.py` | v1 |
 | `notes/habit-moves` | note | the habit finder found a habit | v1 |
 | `notes/habit-opener` | note | an opening word is overused | v1 |
@@ -79,6 +81,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v8 |
 | `system/frames` | system | the frame judge, `core/frames.py` | v1 |
 | `system/habits` | system | the habit finder, `core/moves.py` | v2 |
+| `system/intimate-check` | system | reads whether a reply on a held turn is intimate (sexual, not affection) (ADR 0017) | v1 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
 | `system/listening` | system | the listening judge, `core/listening.py` | v4 |

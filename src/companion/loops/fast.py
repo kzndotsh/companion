@@ -28,6 +28,7 @@ from companion.core.address import address_note
 from companion.core.card import Card, build_card, render
 from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import Extractor
+from companion.core.floor import HOLD_NOTE, INTIMATE_CHECK, PAUSE
 from companion.core.floor import Talker as RouteTalker
 from companion.core.floor import choose as choose_route
 from companion.core.frames import (
@@ -90,6 +91,7 @@ from companion.core.types import (
 )
 from companion.core.views import ViewState, card_views, why
 from companion.loops.ack import judge
+from companion.loops.floor import judge_intimate
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
@@ -439,7 +441,9 @@ def _stopped_by_cap(
     return NOTICE if first_notice_today(c.store, c.rel, now) else ""
 
 
-async def _route(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> Talker:
+async def _route(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
+) -> tuple[Talker, bool]:
     """The talker for this turn (ADR 0017): the scene talker for a pretend scene, or for intimate
     talk when the policy allows it, unless the floor keeps it on the everyday talker. Logged when
     it is anything but the plain everyday choice.
@@ -449,7 +453,7 @@ async def _route(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
     everyday talker and the next ones by the scene talker.
     """
     if c.scene_talker is None:
-        return c.talker
+        return c.talker, False
     in_play = in_scene is Frame.PLAY
     read = heard
     if read is None and in_play and c.judge is not None:
@@ -474,7 +478,7 @@ async def _route(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
                 t.now,
             )
         )
-    return c.scene_talker if route.talker is RouteTalker.SCENE else c.talker
+    return (c.scene_talker if route.talker is RouteTalker.SCENE else c.talker), route.held
 
 
 def _start_beside(
@@ -542,6 +546,60 @@ async def _recheck(  # noqa: PLR0913, PLR0917
         )
     )
     return again if again is not None and again.text else reply
+
+
+async def _checked(  # noqa: PLR0913, PLR0917
+    c: Conversation,
+    t: _Turn,
+    request: TalkerRequest,
+    reply: Reply,
+    heard: _Heard | None,
+    in_scene: Frame,
+    talker: Talker,
+    *,
+    held: bool,
+) -> Reply:
+    """The reply after its checks: the habit checks on an ordinary turn, the floor's on a held
+    one."""
+    reply = await _recheck(c, t, request, reply, heard, in_scene, talker)
+    return await _hold_check(c, t, request, reply, talker) if held else reply
+
+
+async def _hold_check(
+    c: Conversation, t: _Turn, request: TalkerRequest, reply: Reply, talker: Talker
+) -> Reply:
+    """On a turn the floor held, the reply must not be sexual (ADR 0017). A sexual or unreadable
+    reply is drawn once more; if that one is sexual too, code sends a short pause instead. Each
+    step is logged with what was discarded."""
+    if c.judge is None:
+        return reply
+    discarded: list[Json] = []
+    for attempt in range(2):
+        sexual = await judge_intimate(c.judge, reply.text)
+        if sexual is False:
+            break
+        discarded.append(reply.text)
+        if attempt == 0:
+            reply = await talker.reply(request)
+            _mark_reply(t, reply)
+    else:
+        reply = Reply(text=PAUSE.text, model="code", latency_ms=1)
+    if discarded:
+        sent = "the pause line" if reply.model == "code" else "a second reply"
+        c.store.append_decision(
+            Decision(
+                DecisionId(_id()),
+                c.rel,
+                t.session,
+                t.turn,
+                TraceId(t.turn),
+                DecisionKind.POLICY,
+                f"floor: a reply on a held turn read as sexual, sent {sent}",
+                t.now,
+                detail={"discarded": discarded, "prompt": INTIMATE_CHECK.ref},
+            )
+        )
+    return reply
 
 
 def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> None:
@@ -777,8 +835,14 @@ def _mood(
     return (shown if c.mood == "on" else None), added
 
 
-def _assemble(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, recalled: Recalled | None
+def _assemble(  # noqa: PLR0913
+    c: Conversation,
+    t: _Turn,
+    in_scene: Frame,
+    heard: _Heard | None,
+    recalled: Recalled | None,
+    *,
+    held: bool = False,
 ) -> _Assembled:
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
@@ -795,7 +859,8 @@ def _assemble(
     rude = rude_note(heard[0]) if heard is not None else None
     found = recall_note(recalled.picked) if recalled is not None else None
     mood, mood_effects = _mood(c, t, in_scene, heard)
-    notes += [n for n in (listening, rude, found, mood) if n is not None]
+    hold = HOLD_NOTE.text if held else None
+    notes += [n for n in (listening, rude, found, mood, hold) if n is not None]
     card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
     request = build_request(c.prefix, to_messages(t.prior), t.text, "", card_text)
     store.save_prefix(c.prefix)
@@ -829,7 +894,12 @@ async def _handle_turn(
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
     recalled = await _recall(c, t, heard)
-    asm = _assemble(c, t, in_scene, heard, recalled)
+    try:
+        talker, held = await _route(c, t, in_scene, heard)
+    except BaseException:
+        _store_user(c, t, channel, Frame.REAL)
+        raise
+    asm = _assemble(c, t, in_scene, heard, recalled, held=held)
     request, card_text, card, views, view_state = (
         asm.request,
         asm.card_text,
@@ -837,15 +907,10 @@ async def _handle_turn(
         asm.views,
         asm.view_state,
     )
-    try:
-        talker = await _route(c, t, in_scene, heard)
-    except BaseException:
-        _store_user(c, t, channel, Frame.REAL)
-        raise
     talk, framing, feeling = _start_beside(c, t, request, talker)
     try:
         reply, outcome, felt = await _await_beside(t, talk, framing, feeling)
-        reply = await _recheck(c, t, request, reply, heard, in_scene, talker)
+        reply = await _checked(c, t, request, reply, heard, in_scene, talker, held=held)
     except BaseException:
         await _stop(talk, framing, feeling)
         _store_user(c, t, channel, Frame.REAL)

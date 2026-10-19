@@ -15,6 +15,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from companion.core.types import Json
+from companion.prompts import get
+
 
 class Talker(StrEnum):
     EVERYDAY = "everyday"
@@ -25,6 +28,29 @@ class Talker(StrEnum):
 class Route:
     talker: Talker
     reason: str | None  # logged when it is not the plain everyday choice
+
+    @property
+    def held(self) -> bool:
+        """The turn would have gone to the scene talker and the floor kept it on the everyday one,
+        so its reply is checked before it is sent."""
+        return self.talker is Talker.EVERYDAY and self.reason is not None
+
+
+INTIMATE_CHECK = get("system/intimate-check")
+HOLD_NOTE = get("notes/floor-hold")
+PAUSE = get("messages/floor-pause")
+INTIMATE_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"intimate": {"type": "boolean"}},
+    "required": ["intimate"],
+}
+
+
+def parse_intimate(data: Json) -> bool | None:
+    if not isinstance(data, dict):
+        return None
+    value = data.get("intimate")
+    return value if isinstance(value, bool) else None
 
 
 def choose(

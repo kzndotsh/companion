@@ -33,14 +33,18 @@ class Judge:
     """Says every message that needs a frame is play, reads every turn as ordinary and not
     age-coded unless told otherwise, and gives the other judges an inert answer."""
 
-    def __init__(self, *, age_coded: bool | None = False, intimate: bool = False) -> None:
-        self.age_coded, self.intimate = age_coded, intimate
+    def __init__(
+        self, *, age_coded: bool | None = False, intimate: bool = False, sexual_reply: bool = False
+    ) -> None:
+        self.age_coded, self.intimate, self.sexual_reply = age_coded, intimate, sexual_reply
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         del user
         if "label the frame" in system:
             return Extraction({"frame": "play", "confidence": 0.95}, "j", 0.0, 1)
         props = schema["properties"]
+        if isinstance(props, dict) and set(props) == {"intimate"}:
+            return Extraction({"intimate": self.sexual_reply}, "j", 0.0, 1)
         if isinstance(props, dict) and "age_coded" in props and self.age_coded is not None:
             labels: Json = {
                 "severity": 0,
@@ -143,3 +147,27 @@ async def test_intimate_talk_goes_to_the_scene_talker_only_when_allowed_and_abov
     )
     await convo.handle(SESSION, "i want you so bad", "t", NOW)
     assert (len(scene.seen), len(everyday.seen)) == ((1, 0) if routed else (0, 1))
+
+
+@pytest.mark.parametrize(("sexual", "sent"), [(False, "everyday"), (True, None)])
+async def test_a_held_turn_gets_the_note_and_a_sexual_reply_twice_becomes_the_pause(
+    store: Store, *, sexual: bool, sent: str | None
+) -> None:
+    scene, everyday = Talker("scene"), Talker("everyday")
+    convo = Conversation(
+        store,
+        everyday,
+        PREFIX,
+        REL,
+        judge=Judge(intimate=True, age_coded=True, sexual_reply=sexual),
+        scene_talker=scene,
+        route_intimate=True,
+    )
+    out = await convo.handle(SESSION, "i want you so bad", "t", NOW)
+    assert scene.seen == []
+    assert "keep this reply free of anything sexual" in everyday.seen[0].card
+    if sent is None:
+        assert out == "mm, come here. let's slow down and just stay close for a bit 🖤"
+        assert len(everyday.seen) == 2
+    else:
+        assert len(everyday.seen) == 1

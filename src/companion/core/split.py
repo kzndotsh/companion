@@ -19,6 +19,7 @@ MIN_PART_WORDS = 3
 _SENTENCE_END = re.compile(r"(?<=[.!?…])\s+")
 _ACTION = re.compile(r"\*[^*\n]{2,}\*")
 _LIST_LINE = re.compile(r"^\s*(?:[-•]|\d+[.)])\s", re.MULTILINE)
+_SPEECH = re.compile(r"[\"“”]")  # quoted speech: roleplay, which reads wrong cut apart
 
 
 def sentences(text: str) -> list[str]:
@@ -26,8 +27,9 @@ def sentences(text: str) -> list[str]:
 
 
 def eligible(text: str) -> bool:
-    """Long enough, more than one sentence, and plain: no paragraphs, lists or asterisk actions."""
-    if "\n" in text or _ACTION.search(text) or _LIST_LINE.search(text):
+    """Long enough, more than one sentence, and plain: no paragraphs, lists, asterisk actions or
+    quoted speech."""
+    if "\n" in text or _ACTION.search(text) or _LIST_LINE.search(text) or _SPEECH.search(text):
         return False
     return len(text.split()) >= MIN_WORDS and len(sentences(text)) >= 2
 

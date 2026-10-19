@@ -38,6 +38,7 @@ def test_a_roll_at_or_over_the_chance_sends_one_message() -> None:
         "short reply, only a few words. second sentence.",
         "one long sentence with no end punctuation inside it " * 4,
         "*tilts my head* " + TWO,
+        "I lean closer and keep my voice low. " + TWO + ' "stay right there for me."',
         TWO + "\n\nA second paragraph that is already structured on its own line.",
         "- one thing to try here and there and everywhere\n- another thing to try " + TWO,
     ],

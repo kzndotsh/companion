@@ -189,3 +189,36 @@ async def test_the_rude_note_rides_the_system_block_only_when_they_snapped(
     talker = await _ask(store, Judge(labels), text="god you're useless. shut up")
     assert ("They just snapped at you" in talker.seen[0].card) is rude
     assert "snapped" not in talker.seen[0].messages[-1].content
+
+
+async def test_a_judge_that_fails_once_is_asked_again() -> None:
+    from companion.core.extractor import Extraction  # noqa: PLC0415
+    from companion.loops.listen import judge_listening  # noqa: PLC0415
+
+    class Flaky:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+            del system, user, schema
+            self.calls += 1
+            if self.calls == 1:
+                msg = "provider hiccup"
+                raise RuntimeError(msg)
+            data: Json = {
+                "severity": 0,
+                "stance": "other",
+                "vague": False,
+                "medical": False,
+                "rude": False,
+                "recall": False,
+                "topic": "",
+                "intimate": False,
+                "age_coded": False,
+            }
+            return Extraction(data=data, model="j", cost_usd=0.0, latency_ms=1)
+
+    judge = Flaky()
+    got = await judge_listening(judge, [], "made pasta")
+    assert got is not None
+    assert judge.calls == 2
