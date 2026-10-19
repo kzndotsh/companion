@@ -711,3 +711,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   through by design. Not wired into the bot. Spent about $0.11. Rerun: as the entry above, with
   `--variants v36.md,v36.md+resample`; the offline rate comes from a scratch script that runs
   `loops/quip.py` over real ordinary turns.
+- **2026-10-19. The minor-vent retelling does not move with the note (T14).** The real flagged turn
+  ("ugh i hate waiting for ... laundry", flagged "repeating") as a local fixture with its listening labels
+  (`flagged-echo-laundry-local`, `+listen`), 30 samples per cell on v36: trivial note v2 0/30, v3 (names the
+  "when you..." clause and forbids it) 0/30, v4 (v3 plus "under about six words") 0/30; every reply is
+  "ugh, that's so annoying when you're ready to crash and the bed's still ..." or close to it. The three
+  public minor-vent fixtures pass 28 to 30 of 30 in every cell, so they do not test this. A resample cannot
+  help a habit that shows every time. Not shipped; the flag's meaning (retelling, or its own repeated "ugh
+  ... 😭" shape) is to be confirmed with the owner. Spent $0.058.

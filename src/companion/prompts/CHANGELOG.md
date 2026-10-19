@@ -506,6 +506,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/listening-trivial
 - **notes/listening-trivial v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **notes/listening-trivial v2** (current). From commit 1171941 on 2026-10-18: feat(listening): the trivial-vent note forbids jokes, running gags and retelling; the real flagged cleanup turn goes from 16/30 to 29/30; the history was not the cause (T13)
+- **notes/listening-trivial v3** (not shipped: no change on the flagged turn). "React in a few words of your own ... and stop there. Do not describe their situation back to them, not even as a \"when you...\" clause saying why it is annoying: they know why." Reason: a real minor vent was answered 30 of 30 times with "that's so annoying when you're ready to crash and the bed's still waiting on laundry" (owner flag "repeating", T14). Measurement in `evals/CHANGELOG.md`.
+- **notes/listening-trivial v4** (not shipped: no change on the flagged turn). v3 with "Keep the whole reply under about six words." to test whether a length limit removes the retelling clause. Measurement in `evals/CHANGELOG.md`.
 
 ## notes/mood-buzzing
 - **notes/mood-buzzing v1** (dropped). The buzzing line from ADR 0016 (quick and lively, stretched words, an exclamation mark or emoji), shown by the `+mood-buzzing` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
