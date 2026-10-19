@@ -886,3 +886,9 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   was the meter not having moved in time; the runner now prints no charged figure in that case rather
   than a stale one.
 
+- **2026-10-19. Scene recall with the owner's character, as a labelled second check.** The same
+  `repair-forgot-in-a-scene` turn on DeepSeek V4.1 Flash with the character sheet and its roleplay
+  section (`+roleplay+as-ani`, after the section was cut out properly again), 30 samples: with the recall
+  note 30/30, without it 7/30 (vague "oh no. again?" or "I know. I'm sorry." without knowing what). A real
+  difference, and without the note the character does worse than the plain persona (7/30 against
+  15/30). Cost $0.02 by the replies; OpenRouter's meter had not caught up, so no charged figure.
