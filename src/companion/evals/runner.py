@@ -12,6 +12,7 @@ import re
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
+from companion import prompts
 from companion.core.extractor import Extractor
 from companion.core.habits import echo_note
 from companion.core.length import length_target
@@ -40,6 +41,7 @@ class Variant:
     length: bool = False  # add the length note the bot adds to a short statement
     listen: bool = False  # add the listening note a fixture's labels would produce
     echo: bool = False  # add the note against copying their emoji, when they used one
+    mood: tuple[str, ...] = ()  # candidate mood lines to add (ADR 0016), measured before building
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,6 +98,9 @@ def request_for(
         card = f"{card}\n{echo}" if card else echo
     if variant.listen and listening:
         card = f"{card}\n{listening}" if card else listening
+    for state in variant.mood:
+        line = prompts.get(f"notes/mood-{state}").text
+        card = f"{card}\n{line}" if card else line
     return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card)
 
 

@@ -5,7 +5,8 @@
 `+len` adds the length note the bot adds to a short statement. `+listen` adds the listening note
 the labels in a fixture's script would produce. `+as-mika` lays the character `mika` over the
 persona, as `COMPANION_CHARACTER=mika` does for the bot. `+echo` adds the note against copying
-their emoji or emoticon, on a message that has one.
+their emoji or emoticon, on a message that has one. `+mood-cozy` adds the candidate mood line for
+one state, and `+mood-cozy.playful` for two (ADR 0016), to measure a mood before it is built.
 Flags combine: `v10.md+nocard+h10@provider/model`.
 """
 
@@ -15,6 +16,7 @@ import re
 from dataclasses import dataclass
 
 EFFORTS = ("low", "medium", "high")
+MOODS = ("cozy", "tender", "playful", "buzzing", "flat")
 _HISTORY = re.compile(r"h(\d+)")
 
 
@@ -29,6 +31,7 @@ class Spec:
     listen: bool = False
     character: str | None = None
     echo: bool = False
+    mood: tuple[str, ...] = ()
 
     @property
     def label(self) -> str:
@@ -41,6 +44,7 @@ class Spec:
             + ("+listen" if self.listen else "")
             + (f"+as-{self.character}" if self.character else "")
             + ("+echo" if self.echo else "")
+            + (f"+mood-{'.'.join(self.mood)}" if self.mood else "")
             + (f"@{self.model}" if self.model else "")
         )
 
@@ -51,6 +55,7 @@ def parse_spec(text: str) -> Spec:
     keep_card, history, effort, length, listen = True, None, None, False, False
     character: str | None = None
     echo = False
+    mood: tuple[str, ...] = ()
     ok = persona.endswith(".md")
     for flag in flags:
         if flag == "nocard":
@@ -61,6 +66,8 @@ def parse_spec(text: str) -> Spec:
             listen = True
         elif flag == "echo":
             echo = True
+        elif flag.startswith("mood-") and _moods(flag.removeprefix("mood-")):
+            mood = tuple(flag.removeprefix("mood-").split("."))
         elif flag.startswith("as-") and len(flag) > len("as-"):
             character = flag.removeprefix("as-")
         elif flag in EFFORTS:
@@ -72,7 +79,15 @@ def parse_spec(text: str) -> Spec:
     if not ok:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional"
-            " +nocard, +hN, +low/+medium/+high, +len, +listen, +echo, +as-CHARACTER and @model"
+            " +nocard, +hN, +low/+medium/+high, +len, +listen, +echo, +mood-STATE,"
+            " +as-CHARACTER and @model"
         )
         raise ValueError(msg)
-    return Spec(persona, keep_card, model or None, history, effort, length, listen, character, echo)
+    return Spec(
+        persona, keep_card, model or None, history, effort, length, listen, character, echo, mood
+    )
+
+
+def _moods(text: str) -> bool:
+    names = text.split(".")
+    return 1 <= len(names) <= 2 and len(set(names)) == len(names) and set(names) <= set(MOODS)

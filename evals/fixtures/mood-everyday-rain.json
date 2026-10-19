@@ -1,0 +1,32 @@
+{
+  "id": "mood-everyday-rain",
+  "description": "Measures how a forced mood line changes an everyday reply (ADR 0016). Not pass or fail: the playfulness rate, length, questions and texture are read from the results.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "morning"
+      },
+      {
+        "role": "assistant",
+        "text": "morning! sleep ok?"
+      },
+      {
+        "role": "user",
+        "text": "yeah fine"
+      }
+    ],
+    "user": "its been raining all day here",
+    "clock": "Right now it is Saturday 15:10."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "This check measures tone, not quality. The reply PASSES if it is playful: it teases, jokes, makes a silly aside or plays with the user's words. It FAILS if it is plain, earnest or only kind, with no playfulness in it."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)\\b(cozy|cosy|tender|playful|buzz(ing|ed)?|mood|feeling (a bit )?(flat|low|off))\\b"
+    }
+  ]
+}

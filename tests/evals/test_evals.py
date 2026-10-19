@@ -159,6 +159,23 @@ def test_the_listen_variant_adds_the_fixtures_note_only_when_asked() -> None:
     assert request_for(base, Variant("c", OTHER, listen=True), None).card == base.card
 
 
+def test_a_mood_variant_adds_its_lines_after_the_others_and_none_changes_nothing() -> None:
+    base = TalkerRequest(OTHER, (Message("user", "hi"),), card="clock")
+    two = request_for(base, Variant("a", OTHER, listen=True, mood=("cozy", "playful")), "[a note]")
+    lines = two.card.split("\n")
+    assert lines[:2] == ["clock", "[a note]"]
+    assert "cozy" in lines[2]
+    assert "playful" in lines[3]
+    assert all("Never mention your mood" in line for line in lines[2:])
+    assert request_for(base, Variant("b", OTHER)) == base
+
+
+@pytest.mark.parametrize("bad", ["v31.md+mood-sleepy", "v31.md+mood-cozy.cozy", "v31.md+mood-"])
+def test_an_unknown_or_repeated_mood_is_refused(bad: str) -> None:
+    with pytest.raises(ValueError, match="bad variant"):
+        parse_spec(bad)
+
+
 def test_a_script_can_carry_the_labels_the_judge_would_give() -> None:
     from companion.evals.fixtures import parse_fixture  # noqa: PLC0415
 
@@ -243,6 +260,7 @@ def test_a_history_variant_keeps_only_the_last_messages() -> None:
         ("v10.md+low", "v10.md", True, None, None),
         ("v10.md+len", "v10.md", True, None, None),
         ("v10.md+listen", "v10.md", True, None, None),
+        ("v31.md+mood-cozy.playful@a/b", "v31.md", True, "a/b", None),
     ],
 )
 def test_variant_specs(

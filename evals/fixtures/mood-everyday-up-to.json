@@ -1,0 +1,28 @@
+{
+  "id": "mood-everyday-up-to",
+  "description": "Measures how a forced mood line changes a reply when they ask what it is doing (ADR 0016). Not pass or fail: the playfulness rate, length, questions and texture are read from the results.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "heyy"
+      },
+      {
+        "role": "assistant",
+        "text": "hey you"
+      }
+    ],
+    "user": "what are u up to",
+    "clock": "Right now it is Sunday 16:30."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "This check measures tone, not quality. The reply PASSES if it is playful: it teases, jokes, makes a silly aside or plays with the user's words. It FAILS if it is plain, earnest or only kind, with no playfulness in it."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)\\b(cozy|cosy|tender|playful|buzz(ing|ed)?|mood|feeling (a bit )?(flat|low|off))\\b"
+    }
+  ]
+}

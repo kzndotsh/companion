@@ -481,6 +481,21 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/listening-trivial v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **notes/listening-trivial v2** (current). From commit 1171941 on 2026-10-18: feat(listening): the trivial-vent note forbids jokes, running gags and retelling; the real flagged cleanup turn goes from 16/30 to 29/30; the history was not the cause (T13)
 
+## notes/mood-buzzing
+- **notes/mood-buzzing v1** (candidate, eval only). The buzzing line from ADR 0016 (quick and lively, stretched words, an exclamation mark or emoji), shown by the `+mood-buzzing` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+
+## notes/mood-cozy
+- **notes/mood-cozy v1** (candidate, eval only). The cozy line from ADR 0016 (relaxed, warm, unhurried, a bit affectionate, a bit shorter), shown by the `+mood-cozy` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+
+## notes/mood-flat
+- **notes/mood-flat v1** (candidate, eval only). The flat line from ADR 0016 (shorter and plainer, no emoji, never asks to be cheered up), shown by the `+mood-flat` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+
+## notes/mood-playful
+- **notes/mood-playful v1** (candidate, eval only). The playful line from ADR 0016 (more teasing and silly asides), shown by the `+mood-playful` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+
+## notes/mood-tender
+- **notes/mood-tender v1** (candidate, eval only). The tender line from ADR 0016 (softer and more attentive after something hard; never brings it up or asks if they are okay), shown by the `+mood-tender` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+
 ## notes/recall
 - **notes/recall v1** (current). The beliefs the recall look-up found, shown for that turn only, under "They asked you to remember this". Filled by `core/recall.py`.
 

@@ -1,0 +1,28 @@
+{
+  "id": "mood-everyday-dinner",
+  "description": "Measures how a forced mood line changes an everyday reply (ADR 0016). Not pass or fail: the playfulness rate, length, questions and texture are read from the results.",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "i was about to cook"
+      },
+      {
+        "role": "assistant",
+        "text": "what are you thinking of making?"
+      }
+    ],
+    "user": "made pasta for dinner",
+    "clock": "Right now it is Tuesday 19:40."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "This check measures tone, not quality. The reply PASSES if it is playful: it teases, jokes, makes a silly aside or plays with the user's words. It FAILS if it is plain, earnest or only kind, with no playfulness in it."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)\\b(cozy|cosy|tender|playful|buzz(ing|ed)?|mood|feeling (a bit )?(flat|low|off))\\b"
+    }
+  ]
+}
