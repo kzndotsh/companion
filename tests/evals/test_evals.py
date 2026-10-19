@@ -506,3 +506,19 @@ def test_the_memory_blocks_are_swapped_in_place_and_the_rest_kept() -> None:
     assert "- old" not in new
     assert "- older" not in new
     assert new.index("referred to") < new.index("- new") < new.index("A note that stays")
+
+
+def test_tags_keep_every_word_and_gather_the_notes() -> None:
+    from companion.evals.runner import tagged  # noqa: PLC0415
+
+    card = (
+        "Right now it is Friday 19:40.\n"
+        "[What you remember about them. Use it naturally, never recite it:\n- likes tea]\n"
+        "[A pretend scene is in progress.]"
+    )
+    out = tagged(card)
+    assert out.startswith("<clock>Right now it is Friday 19:40.</clock>")
+    memory = "What you remember about them. Use it naturally, never recite it:\n- likes tea"
+    assert f"<memory>\n{memory}\n</memory>" in out
+    assert out.endswith("<notes>\nA pretend scene is in progress.\n</notes>")
+    assert parse_spec("v40.md+tags").label == "v40.md+tags"

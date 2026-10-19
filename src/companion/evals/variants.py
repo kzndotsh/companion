@@ -38,6 +38,7 @@ class Spec:
     roleplay: bool = False
     card: int | None = None  # rebuild a recorded turn's card with this many memories (+cardN)
     long_history: int | None = None  # rebuild a recorded turn with this many messages (+histN)
+    tags: bool = False
 
     @property
     def label(self) -> str:
@@ -55,6 +56,7 @@ class Spec:
             + ("+roleplay" if self.roleplay else "")
             + ("" if self.card is None else f"+card{'all' if self.card >= ALL else self.card}")
             + ("" if self.long_history is None else f"+hist{self.long_history}")
+            + ("+tags" if self.tags else "")
             + (f"@{self.model}" if self.model else "")
         )
 
@@ -62,7 +64,7 @@ class Spec:
 _CARD = re.compile(r"card(\d+)")
 _HIST = re.compile(r"hist(\d+)")
 ALL = 10_000  # +cardall: every memory in force at the time
-SWITCHES = ("nocard", "len", "listen", "echo", "resample", "roleplay")
+SWITCHES = ("nocard", "len", "listen", "echo", "resample", "roleplay", "tags")
 
 
 def parse_spec(text: str) -> Spec:
@@ -99,7 +101,7 @@ def parse_spec(text: str) -> Spec:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional +nocard, +hN, +low, +medium,"
             " +high, +len, +listen, +echo, +mood-STATE, +resample, +roleplay, +as-CHARACTER,"
-            " +cardN or +cardall, +histN"
+            " +cardN or +cardall, +histN, +tags"
             " and @model"
         )
         raise ValueError(msg)
@@ -118,6 +120,7 @@ def parse_spec(text: str) -> Spec:
         "roleplay" in on,
         card,
         long_history,
+        "tags" in on,
     )
 
 
