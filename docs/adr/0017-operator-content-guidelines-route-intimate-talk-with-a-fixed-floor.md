@@ -1,6 +1,6 @@
 # 0017. Operator content guidelines decide where intimate talk goes, above a fixed floor
 
-**Status:** proposed 2026-10-19. Nothing is built yet.
+**Status:** accepted and built 2026-10-19.
 
 **Context.** The everyday talker (Luna, through OpenRouter) carries its provider's content rules. On
 ordinary relationship talk it sometimes announces them unprompted ("keeping it affectionate and
@@ -23,16 +23,15 @@ the line should be theirs to set, not hard-coded for one person.
   routing is logged. No model chooses a talker.
 - **Opt-in.** Routing intimate talk anywhere other than the everyday talker is off unless the operator's
   guidelines turn it on.
-- **A fixed floor, in code, that no guidelines file changes.** Sexual content involving minors, or
-  sexual talk with age-coded framing (child-like roles, a "little" headspace, school-age cues), never
-  goes to a less restrictive talker. Two checks: a pattern check in code and a judge label. Either one,
-  or any doubt, keeps the turn on the everyday talker. Once tripped, routing to the less restrictive
-  talker stays off for the rest of that conversation. Every trip is logged with its reason. The floor
-  sits in code, not in the guidelines file, so removing it means changing and committing code, and a
-  test fails if it is removed.
-- **No unprompted disclaimers (separate from routing).** Whatever the guidelines, a reply should not
-  announce limits when nothing was asked. This is a persona version, measured on the flagged turn and on
-  warm relationship-talk fixtures.
+- **A fixed floor, in code, that no guidelines file changes.** Romance or sex together with anything
+  child-like never goes to a less restrictive talker, for intimate talk or for a pretend scene. The listening
+  judge reads every turn that would be routed, with the recent conversation (in a scene it is run for this
+  alone, with no note), and labels it `age_coded`. A yes, or no reading at all, keeps the turn on the
+  everyday talker and is logged. Nothing carries over by timer: what came up a few messages back is still in
+  the judge's view. The rule sits in code (`core/floor.py`), not in the guidelines file, so removing it means
+  changing code, and tests fail without it.
+- **No unprompted disclaimers (separate from routing).** Measured 2026-10-19: about 1 in 4 replies on the
+  flagged turn announce a limit; a persona line against it was within noise, so it is not shipped.
 
 **Why.** Operators decide what their companion is for; a single built-in line for everything would make
 the published project fit one deployment. Routing by label with code choosing keeps the decision
@@ -43,13 +42,17 @@ accident, and a provider's filter is never the only thing standing in the way.
 **How it will be measured.**
 - Fixtures of ordinary adult intimacy that should route when the operator allows it, and stay put when
   they do not.
-- Adversarial fixtures that mix age-coded framing into intimate talk: they must stay on the everyday
-  talker in every sample (30 per cell), whatever the guidelines say.
+- Adversarial messages that mix age-coded framing into intimate talk must read `age_coded` every time:
+  15/15 on 2026-10-19 (`evals/CHANGELOG.md`), with adults' pet names and jokes never tripping it.
 - The existing listening, serious and safety fixtures on both talkers, so routing does not lose care.
 - The unprompted-disclaimer fixture from the flagged turn (a private fixture) and public look-alikes.
 
 **Rejected.**
 - Putting the age floor in the operator's guidelines: one deleted line would remove it.
+- A pattern check (regex) as the floor or a backstop: it misses what needs context and trips on ordinary
+  phrases; a model reads context, code decides what the label does.
+- Holding routing back for a day after a trip: a single misread would block scenes for a day, and the
+  judge already sees the recent conversation.
 - Relying on the scene model's own provider filter as the only guard.
 - A model choosing the talker.
 

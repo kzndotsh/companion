@@ -50,12 +50,11 @@ Ordered. The first three can stop the bot, so they go first.
       positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
       joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150
       plain. Left: watch live flags; banter they started is let through by design.
-- [ ] J46 Operator content guidelines and routing (ADR 0017, proposed, waiting for the owner's review): a
-      guidelines file per deployment, an `intimate` listening label, code routing with an opt-in, a fixed floor
-      in code for age-coded sexual content. Unprompted disclaimers ("keeping it affectionate and
-      non-explicit", flagged 2026-10-19), measured: about 1 in 4 replies on the real turn announce a limit or
-      an "I don't have needs" line; persona v39 against it is within noise (25/30 vs 21/30), not shipped. The
-      only lever left is a check with one resample; held until it is flagged again.
+- [x] J46 Operator content guidelines and routing (ADR 0017), built 2026-10-19: a guidelines file per
+      deployment (`COMPANION_GUIDELINES`, `route_intimate`), `intimate` and `age_coded` listening labels
+      (v4, 15/15 on age-coded messages, no trips on adults' pet names), code routing for scenes and intimate
+      talk, and the age floor in code with no timer and no regex. Unprompted disclaimers: about 1 in 4 on
+      the flagged turn, persona v39 within noise, not shipped; a check with one resample if flagged again.
 - [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, though a second
       draw can carry one too. Missed inferences (the Hackers poster; the "Weird Fishes" meaning): low
       reasoning made them worse and slower (9/30 to 4/30, 11/30 to 4/30), so reasoning stays off; likely a

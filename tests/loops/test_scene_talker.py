@@ -30,12 +30,30 @@ class Talker:
 
 
 class Judge:
-    """Says every message that needs a frame is play; the other judges get an inert answer."""
+    """Says every message that needs a frame is play, reads every turn as ordinary and not
+    age-coded unless told otherwise, and gives the other judges an inert answer."""
+
+    def __init__(self, *, age_coded: bool | None = False, intimate: bool = False) -> None:
+        self.age_coded, self.intimate = age_coded, intimate
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         del user
         if "label the frame" in system:
             return Extraction({"frame": "play", "confidence": 0.95}, "j", 0.0, 1)
+        props = schema["properties"]
+        if isinstance(props, dict) and "age_coded" in props and self.age_coded is not None:
+            labels: Json = {
+                "severity": 0,
+                "stance": "other",
+                "vague": False,
+                "medical": False,
+                "rude": False,
+                "recall": False,
+                "topic": "",
+                "intimate": self.intimate,
+                "age_coded": self.age_coded,
+            }
+            return Extraction(labels, "j", 0.0, 1)
         return Extraction(None, "j", 0.0, 1)
 
 
@@ -44,9 +62,11 @@ def store(tmp_path: Path) -> Store:
     return Store(tmp_path / "rel.sqlite")
 
 
-async def _chat(store: Store, texts: list[str], scene: Talker | None) -> Talker:
+async def _chat(
+    store: Store, texts: list[str], scene: Talker | None, judge: Judge | None = None
+) -> Talker:
     everyday = Talker("everyday")
-    convo = Conversation(store, everyday, PREFIX, REL, judge=Judge(), scene_talker=scene)
+    convo = Conversation(store, everyday, PREFIX, REL, judge=judge or Judge(), scene_talker=scene)
     for i, text in enumerate(texts):
         await convo.handle(SESSION, text, "t", NOW + timedelta(minutes=i))
     return everyday
@@ -81,3 +101,45 @@ async def test_the_choice_is_logged_with_a_reason_written_by_code(store: Store) 
     assert turn is not None
     reasons = [d.reason for d in store.decisions_for_turn(REL, turn)]
     assert "replied with the scene talker: a pretend scene is in progress" in reasons
+
+
+@pytest.mark.parametrize(
+    ("age_coded", "reason"),
+    [
+        (True, "floor: kept on the everyday talker, the judge read age-coded content"),
+        (None, "kept on the everyday talker: the judge could not read the turn"),
+    ],
+)
+async def test_a_scene_stays_with_the_everyday_talker_when_the_floor_holds_or_it_was_not_read(
+    store: Store, age_coded: bool | None, reason: str
+) -> None:
+    scene = Talker("scene")
+    everyday = await _chat(
+        store, ["let's pretend you're a knight", "*bows*"], scene, Judge(age_coded=age_coded)
+    )
+    assert scene.seen == []
+    assert len(everyday.seen) == 2
+    turn = store.latest_turn(REL)
+    assert turn is not None
+    assert reason in [d.reason for d in store.decisions_for_turn(REL, turn)]
+
+
+@pytest.mark.parametrize(
+    ("allowed", "age_coded", "routed"),
+    [(True, False, True), (False, False, False), (True, True, False)],
+)
+async def test_intimate_talk_goes_to_the_scene_talker_only_when_allowed_and_above_the_floor(
+    store: Store, *, allowed: bool, age_coded: bool, routed: bool
+) -> None:
+    scene, everyday = Talker("scene"), Talker("everyday")
+    convo = Conversation(
+        store,
+        everyday,
+        PREFIX,
+        REL,
+        judge=Judge(intimate=True, age_coded=age_coded),
+        scene_talker=scene,
+        route_intimate=allowed,
+    )
+    await convo.handle(SESSION, "i want you so bad", "t", NOW)
+    assert (len(scene.seen), len(everyday.seen)) == ((1, 0) if routed else (0, 1))

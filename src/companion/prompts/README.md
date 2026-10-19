@@ -46,6 +46,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | Name | Kind | Used for | Current |
 |---|---|---|---|
 | `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v36 |
+| `guidelines/default` | guidelines | the operator content guidelines used when `COMPANION_GUIDELINES` is unset: route nothing, add no text (ADR 0017) | v1 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, `core/address.py` | v1 |
 | `notes/clock` | note | the clock line | v1 |
@@ -80,7 +81,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/habits` | system | the habit finder, `core/moves.py` | v2 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
-| `system/listening` | system | the listening judge, `core/listening.py` | v3 |
+| `system/listening` | system | the listening judge, `core/listening.py` | v4 |
 | `system/openloops` | system | open-loop extraction, `core/openloops.py` | v3 |
 | `system/openloops-draft` | system | the follow-up draft, `loops/openloops.py` | v2 |
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, `core/quip.py` | v2 |

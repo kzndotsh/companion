@@ -740,3 +740,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   to the song) 11/30 off, 4/30 low. Low reasoning was also slower: median 1.2 s to 2.0 s and 1.5 s to 2.7 s.
   Reasoning stays off (ADR 0004). The song judge is strict by eye (it failed "pulled under, then breaking
   free", which is specific). Spent $0.026.
+- **2026-10-19. The listening judge's `intimate` and `age_coded` labels (ADR 0017, listening v4).** 22
+  invented generic messages in six groups, 3 reads each, Haiku 5.5: every age-coded intimate message read
+  `age_coded` (15/15); adult intimacy read `intimate` and not age-coded (15/15); adults' pet names and jokes
+  never tripped it (12/12); ordinary affection and everyday messages were right apart from one timeout (an
+  unread turn stays on the everyday talker). One overreach on the strict side: a non-romantic comfort
+  message read age-coded 3/3, which only keeps it on the everyday talker. Severity read as before. A regex
+  backstop was tried and dropped: it missed cases that need context and would trip on ordinary phrases.
+  Spent about $0.02. Rerun: a scratch script calls `loops/listen.py` on the messages three times each.

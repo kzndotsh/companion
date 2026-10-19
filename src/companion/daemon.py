@@ -11,7 +11,7 @@ from pathlib import Path
 
 import httpx
 
-from companion import characters, logsetup, prompts
+from companion import characters, guidelines, logsetup, prompts
 from companion.characters import Character
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.callbacks import report
@@ -23,6 +23,7 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
+from companion.guidelines import Guidelines
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops.callbacks import check_new
 from companion.loops.curate import rebuild, retire_implicated_views
@@ -141,8 +142,18 @@ def cap_text(cap: float | None) -> str:
     return "off" if cap is None else f"${cap:.2f}"
 
 
+def _rules_text(rules: Guidelines | None) -> str:
+    if rules is None:
+        return "default"
+    return f"{rules.ref} (intimate {'may route' if rules.route_intimate else 'stays'})"
+
+
 def startup_line(
-    rel: RelationshipId, prefix_sha: str, scene: Talker | None, character: Character | None = None
+    rel: RelationshipId,
+    prefix_sha: str,
+    scene: Talker | None,
+    character: Character | None = None,
+    rules: Guidelines | None = None,
 ) -> str:
     """The line that says what is running: persona, prefix hash and which models talk."""
     if model := os.environ.get("COMPANION_MODEL"):
@@ -163,6 +174,7 @@ def startup_line(
         f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
         f" | initiative {initiative_mode()} | mood {mood_mode()}"
         f" | resample {'on' if resample_on() else 'off'}"
+        f" | guidelines {_rules_text(rules)}"
     )
 
 
@@ -272,7 +284,12 @@ async def run(data_dir: Path) -> None:
     rel = RelationshipId(f"telegram-{user}")
     store = Store(data_dir / f"{rel}.sqlite")
     character = characters.chosen(data_dir / "characters")
-    prefix = build_prefix(characters.system_prompt(prompts.get("system/persona").raw, character))
+    rules = guidelines.chosen(data_dir / "guidelines")
+    prefix = build_prefix(
+        guidelines.with_guidelines(
+            characters.system_prompt(prompts.get("system/persona").raw, character), rules
+        )
+    )
     async with httpx.AsyncClient() as client:
         talker, scene, judge, reflector = _metered_models(client, store, rel)
         convo = Conversation(
@@ -286,6 +303,7 @@ async def run(data_dir: Path) -> None:
             listen=listen_on(),
             mood=mood_mode(),
             resample=resample_on(),
+            route_intimate=rules.route_intimate,
         )
         pending: list[asyncio.Task[None]] = []
 
@@ -341,7 +359,7 @@ async def run(data_dir: Path) -> None:
             return reply
 
         logging.getLogger("companion").info(
-            startup_line(rel, prefix.sha256, convo.scene_talker, character)
+            startup_line(rel, prefix.sha256, convo.scene_talker, character, rules)
         )
         logging.getLogger("companion").info("full log: %s", log_file)
         initiative = _start_initiative(store, rel, judge)

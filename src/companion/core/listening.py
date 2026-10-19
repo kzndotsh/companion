@@ -37,8 +37,20 @@ SCHEMA: dict[str, Json] = {
         "rude": {"type": "boolean"},
         "recall": {"type": "boolean"},
         "topic": {"type": "string"},
+        "intimate": {"type": "boolean"},
+        "age_coded": {"type": "boolean"},
     },
-    "required": ["severity", "stance", "vague", "medical", "rude", "recall", "topic"],
+    "required": [
+        "severity",
+        "stance",
+        "vague",
+        "medical",
+        "rude",
+        "recall",
+        "topic",
+        "intimate",
+        "age_coded",
+    ],
 }
 
 
@@ -51,6 +63,8 @@ class Judgement:
     rude: bool = False  # plainly rude to the companion itself, not teasing
     recall: bool = False  # they asked it to remember or already know something
     topic: str = ""  # what to look up when recall is true
+    intimate: bool = False  # about sex or physical intimacy, or sexual flirting (ADR 0017)
+    age_coded: bool = True  # romance or sex alongside anything child-like; unread counts as yes
 
 
 def parse(data: Json) -> Judgement | None:
@@ -67,8 +81,17 @@ def parse(data: Json) -> Judgement | None:
     if not isinstance(topic, str):
         return None
     wanted = " ".join(topic.split())[:MAX_TOPIC_CHARS] if recall else ""
+    intimate, age_coded = data.get("intimate"), data.get("age_coded")
     return Judgement(
-        int(severity), str(stance), bool(vague), bool(medical), bool(rude), bool(recall), wanted
+        int(severity),
+        str(stance),
+        bool(vague),
+        bool(medical),
+        bool(rude),
+        bool(recall),
+        wanted,
+        intimate=intimate is True,
+        age_coded=age_coded is not False,  # missing or malformed counts as yes: doubt stays strict
     )
 
 

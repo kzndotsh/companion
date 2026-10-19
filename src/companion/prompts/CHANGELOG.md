@@ -458,6 +458,16 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   reply raised a held memory unasked and turned it into a caution (owner flag). On the owner's history 171 of
   184 judged messages were severity 0, so the held block now shows on about 7% of turns.
 
+- **Operator guidelines and routing (ADR 0017, 2026-10-19).** The operator's guidelines text, when there is
+  any, is added to the talker's system prompt under "## Operator guidelines" (the default has none, so the
+  prefix is unchanged). Intimate talk goes to the scene talker when the guidelines set `route_intimate`, and
+  a pretend scene goes there as before, unless the listening judge reads the turn as age-coded or could not
+  read it; then the everyday talker answers and the decision is logged. In a scene the listening judge now
+  runs for routing alone, with no note.
+
+## guidelines/default
+- **guidelines/default v1** (current). New. The default operator guidelines (ADR 0017): `route_intimate = false` and no text, so intimate talk stays on the everyday talker and the system prompt is unchanged.
+
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
 
@@ -591,7 +601,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/listening
 - **system/listening v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **system/listening v2** (superseded). v1 plus one label, rude: plainly rude or hostile toward the companion itself, false for teasing, banter, a light jab, blunt feedback or frustration at something else. It feeds `notes/rude`. Reason: the reflex to apologise and offer more after an insult held against a character sheet in 8 of 20 replies (J1, 2026-10-18).
-- **system/listening v3** (current). v2 plus recall (they asked the companion to remember or already know something about them) and topic (what to look up, worked out from context when the message is vague). Reason: "come on, you know this one..." about their favourite food got a guess and a joke, with three burger beliefs in memory and none on the card (owner's flag, 2026-10-18).
+- **system/listening v3** (superseded). v2 plus recall (they asked the companion to remember or already know something about them) and topic (what to look up, worked out from context when the message is vague). Reason: "come on, you know this one..." about their favourite food got a guess and a joke, with three burger beliefs in memory and none on the card (owner's flag, 2026-10-18).
+- **system/listening v4** (current). v3 plus two labels for ADR 0017: `intimate` (about sex or physical intimacy, or sexual flirting; not ordinary affection) and `age_coded` (romance, flirting or anything sexual together with anything child-like or under-age; not adults' ordinary pet names or non-romantic comfort). Code routes on them; a missing `age_coded` counts as true. Measurement in `evals/CHANGELOG.md`.
 
 ## system/openloops
 - **system/openloops v1** (superseded). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing

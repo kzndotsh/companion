@@ -28,6 +28,8 @@ from companion.core.address import address_note
 from companion.core.card import Card, build_card, render
 from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import Extractor
+from companion.core.floor import Talker as RouteTalker
+from companion.core.floor import choose as choose_route
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
 )
@@ -195,6 +197,7 @@ class Conversation:
     listen: bool = True  # ask how serious a message is before the reply
     mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
     resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
+    route_intimate: bool = False  # intimate talk may go to the scene talker (guidelines, ADR 0017)
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -436,31 +439,46 @@ def _stopped_by_cap(
     return NOTICE if first_notice_today(c.store, c.rel, now) else ""
 
 
-def _pick_talker(c: Conversation, t: _Turn, in_scene: Frame) -> Talker:
-    """The scene talker while a pretend scene is in progress, the everyday talker otherwise.
+async def _route(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> Talker:
+    """The talker for this turn (ADR 0017): the scene talker for a pretend scene, or for intimate
+    talk when the guidelines allow it, unless the floor keeps it on the everyday talker. Logged when
+    it is anything but the plain everyday choice.
 
-    The frame is the one the previous turn left, so the first message of a scene is answered by
-    the everyday talker and the next ones by the scene talker. The choice is logged.
+    The listening judge does not run in a scene, so a scene turn is read here, for routing only. The
+    frame is the one the previous turn left, so the first message of a scene is answered by the
+    everyday talker and the next ones by the scene talker.
     """
-    if c.scene_talker is None or in_scene is not Frame.PLAY:
+    if c.scene_talker is None:
         return c.talker
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            "replied with the scene talker: a pretend scene is in progress",
-            t.now,
-        )
+    in_play = in_scene is Frame.PLAY
+    read = heard
+    if read is None and in_play and c.judge is not None:
+        _mark(t, "floor: reading the scene turn")
+        read = await judge_listening(c.judge, t.prior, t.text)  # for routing only, no note
+    route = choose_route(
+        in_play=in_play,
+        intimate=read is not None and read[0].intimate,
+        allow_intimate=c.route_intimate,
+        judged_age_coded=read[0].age_coded if read is not None else None,
     )
-    return c.scene_talker
+    if route.reason is not None:
+        c.store.append_decision(
+            Decision(
+                DecisionId(_id()),
+                c.rel,
+                t.session,
+                t.turn,
+                TraceId(t.turn),
+                DecisionKind.POLICY,
+                route.reason,
+                t.now,
+            )
+        )
+    return c.scene_talker if route.talker is RouteTalker.SCENE else c.talker
 
 
 def _start_beside(
-    c: Conversation, t: _Turn, request: TalkerRequest, in_scene: Frame
+    c: Conversation, t: _Turn, request: TalkerRequest, talker: Talker
 ) -> tuple[
     asyncio.Future[Reply],
     asyncio.Future[tuple[Judgement, str, str] | None] | None,
@@ -468,7 +486,7 @@ def _start_beside(
 ]:
     """Start the reply, and beside it the frame judge and the reaction judge, so neither adds a
     wait. A confident acknowledgement cancels all of them."""
-    talk = asyncio.ensure_future(_pick_talker(c, t, in_scene).reply(request))
+    talk = asyncio.ensure_future(talker.reply(request))
     if c.judge is None:
         return talk, None, None
     framing = (
@@ -486,6 +504,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     reply: Reply,
     heard: _Heard | None,
     in_scene: Frame,
+    talker: Talker,
 ) -> Reply:
     """The reply to send: the first, or one fresh draw when the first fails a check. Logged either
     way on the turns that are checked."""
@@ -505,7 +524,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     _mark(t, f"recheck: {', '.join(failed) or 'passed'}")
     again = None
     if failed:
-        again = await _pick_talker(c, t, in_scene).reply(request)
+        again = await talker.reply(request)
         _mark_reply(t, again)
         detail |= {"discarded": reply.text, "checks": list[Json](failed)}
     reason = f"resampled: {', '.join(failed)}" if failed else "kept: the reply passed its checks"
@@ -818,10 +837,15 @@ async def _handle_turn(
         asm.views,
         asm.view_state,
     )
-    talk, framing, feeling = _start_beside(c, t, request, in_scene)
+    try:
+        talker = await _route(c, t, in_scene, heard)
+    except BaseException:
+        _store_user(c, t, channel, Frame.REAL)
+        raise
+    talk, framing, feeling = _start_beside(c, t, request, talker)
     try:
         reply, outcome, felt = await _await_beside(t, talk, framing, feeling)
-        reply = await _recheck(c, t, request, reply, heard, in_scene)
+        reply = await _recheck(c, t, request, reply, heard, in_scene, talker)
     except BaseException:
         await _stop(talk, framing, feeling)
         _store_user(c, t, channel, Frame.REAL)
