@@ -506,6 +506,17 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/address
 - **notes/address v1** (current). New. "How they want to be referred to: $address. Use it every time, without bringing it up." Filled by `core/address.py` from a setting they state (`companion address --set`), and placed right after the clock line on every turn. Reason: on 2026-10-19 the memory card (15 of 196 memories) crowded out how they want to be referred to, and a reply got it wrong.
 
+## notes/loop-follow-up
+- **notes/loop-follow-up v1** (current). New (J15). When a follow-up loop has fallen due (the morning after, or three hours after a same-day plan), the next time they write it may ask how it went, after answering what they said. Chosen by code (`core/openloops.py` `pick_note`): one per turn, at most one a day, on a casual turn (not serious, not a scene, not a goodbye, not when the name note is offered), never a sensitive loop, offered at most twice; the claim comes from the open-loop pass. Never says it remembered.
+- **notes/loop-follow-up v2** (dropped). v1 asking for the follow-up as the only question in the reply. On the casual-return fixture (30 samples) two questions in one reply fell from 23 to 11, a real difference, but the follow-up was asked in 16 rather than 23 (within noise), mostly keeping a reflexive "how was work?" instead.
+- **notes/loop-follow-up v3** (dropped). v1 asking for the follow-up instead of anything else: 25 of 30 asked, 23 of 30 still two questions, the same as v1. Wording does not move the habit, so v1 ships.
+
+## notes/loop-celebrate
+- **notes/loop-celebrate v1** (current). New (J15). On the day of a celebration loop, the next time they write it may wish them well. Chosen by code (`core/openloops.py` `pick_note`): one per turn, at most one a day, on a casual turn (not serious, not a scene, not a goodbye, not when the name note is offered), never a sensitive loop, offered at most twice; the claim comes from the open-loop pass. Never says it remembered.
+
+## notes/loop-encourage
+- **notes/loop-encourage v1** (current). New (J15). On the day of an encouragement loop, the next time they write it may wish them luck. Chosen by code (`core/openloops.py` `pick_note`): one per turn, at most one a day, on a casual turn (not serious, not a scene, not a goodbye, not when the name note is offered), never a sensitive loop, offered at most twice; the claim comes from the open-loop pass. Never says it remembered.
+
 ## notes/ask-name
 - **notes/ask-name v1** (current). New. Added by code on a casual turn (severity 0, not a scene, not a goodbye) when no belief says what they like to be called, at most once a day, until one does (J48). Reason: in about 700 messages the companion asked their name once, only after they pointed it out.
 

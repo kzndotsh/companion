@@ -242,6 +242,10 @@ Ordered. Pull from the top.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-19**
+- [x] J15 Bring it up next time, live: a due open loop becomes one quiet note when they next write (a casual
+      turn, at most daily, twice per loop, never sensitive), and a firm plan for later today is a note-only loop
+      three hours on. Fixtures: celebrate 30/30, left alone during their own trouble 30/30, asked on a casual
+      return 23/30 by eye, often as a second question.
 - [x] J17 Noise bars in eval reports: each cell shows its 95% Wilson range, and every later variant is
       compared with the first per fixture (Fisher, Holm-adjusted) and in total (Cochran-Mantel-Haenszel), with
       a plain "within noise" or "a real difference" and the samples a gap that size would need.
@@ -614,9 +618,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
       updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
       plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
-- [ ] J15 Bring it up next time: a due open loop that is not sent becomes a quiet note when they next write
-      ("you could ask how the vet went"), instead of a message first. Could ship before live reach-outs
-      (xinchao's "while you were away" fold, field survey).
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
 - [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check

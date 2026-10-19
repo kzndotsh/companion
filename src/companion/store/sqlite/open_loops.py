@@ -26,7 +26,8 @@ def add_loop(conn: sqlite3.Connection, loop: OpenLoop) -> None:
     with write_tx(conn):
         conn.execute(
             "INSERT INTO open_loops (id, relationship_id, claim, quote, source_utterance_id,"
-            " follow_up_at, sensitivity, created_at, kind) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " follow_up_at, sensitivity, created_at, kind, note_only)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 loop.id,
                 loop.relationship_id,
@@ -37,6 +38,7 @@ def add_loop(conn: sqlite3.Connection, loop: OpenLoop) -> None:
                 loop.sensitivity,
                 iso(loop.created_at),
                 loop.kind,
+                int(loop.note_only),
             ),
         )
         conn.execute(
@@ -53,6 +55,19 @@ def add_event(
             "INSERT INTO open_loop_events (loop_id, state, reason, at) VALUES (?, ?, ?, ?)",
             (loop_id, state, reason, iso(at)),
         )
+
+
+def events_with_reason(
+    conn: sqlite3.Connection, rel: RelationshipId, reason: str
+) -> dict[str, int]:
+    """How many events with this exact reason each loop has."""
+    rows = conn.execute(
+        "SELECT e.loop_id, COUNT(*) AS n FROM open_loop_events e"
+        " JOIN open_loops l ON l.id = e.loop_id"
+        " WHERE l.relationship_id = ? AND e.reason = ? GROUP BY e.loop_id",
+        (rel, reason),
+    ).fetchall()
+    return {str(r["loop_id"]): int(r["n"]) for r in rows}
 
 
 def loops(conn: sqlite3.Connection, rel: RelationshipId) -> list[OpenLoop]:
@@ -74,6 +89,7 @@ def loops(conn: sqlite3.Connection, rel: RelationshipId) -> list[OpenLoop]:
             created_at=parse_iso(str(r["created_at"])),
             state=LoopState(str(r["state"])),
             kind=LoopKind(str(r["kind"])),
+            note_only=bool(r["note_only"]),
         )
         for r in rows
     ]

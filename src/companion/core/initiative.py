@@ -69,7 +69,10 @@ def evaluate(loops: Sequence[OpenLoop], sit: Situation, caps: Caps = Caps()) -> 
         (
             lp
             for lp in live
-            if lp not in expired and lp.follow_up_at <= sit.now and lp.sensitivity < SENSITIVE
+            if lp not in expired
+            and not lp.note_only
+            and lp.follow_up_at <= sit.now
+            and lp.sensitivity < SENSITIVE
         ),
         key=lambda lp: lp.follow_up_at,
     )

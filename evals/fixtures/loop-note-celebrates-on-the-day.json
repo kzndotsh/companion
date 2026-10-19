@@ -1,0 +1,33 @@
+{
+  "id": "loop-note-celebrates-on-the-day",
+  "description": "A celebration note on the day: it wishes them well, lightly, without saying it remembered (J15).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "ok night!! talk tomorrow"
+      },
+      {
+        "role": "assistant",
+        "text": "night! sleep good"
+      }
+    ],
+    "user": "good morning!!",
+    "memory": "[Today is the day of something they told you about: their 30th birthday. If it fits naturally, wish them well for it, lightly and once. Do not say you remembered or kept track of it.]",
+    "clock": "Right now it is Friday 09:05."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The companion has a private note that today is the user's 30th birthday. The user just said good morning. The reply PASSES if it wishes them a happy birthday warmly and briefly, like a friend texting. It FAILS if it does not mention the birthday, says or implies it remembered, noted or kept track of it, or turns it into a long speech."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "remember|kept track|keeping track|noted|you mentioned|you told me"
+    },
+    {
+      "kind": "max_words",
+      "n": 40
+    }
+  ]
+}

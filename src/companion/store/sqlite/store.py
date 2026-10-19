@@ -171,6 +171,9 @@ class Store:
     def open_loop_event(self, loop_id: str, state: LoopState, reason: str, at: datetime) -> None:
         open_loops.add_event(self._conn, loop_id, state, reason, at)
 
+    def loop_events_with_reason(self, rel: RelationshipId, reason: str) -> dict[str, int]:
+        return open_loops.events_with_reason(self._conn, rel, reason)
+
     def open_loops(self, rel: RelationshipId) -> list[OpenLoop]:
         return open_loops.loops(self._conn, rel)
 

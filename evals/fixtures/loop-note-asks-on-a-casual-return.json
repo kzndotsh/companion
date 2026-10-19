@@ -1,0 +1,33 @@
+{
+  "id": "loop-note-asks-on-a-casual-return",
+  "description": "A due follow-up note on a casual message: it answers them, then asks how it went, lightly, without saying it remembered (J15).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "ok night!! talk tomorrow"
+      },
+      {
+        "role": "assistant",
+        "text": "night! sleep good"
+      }
+    ],
+    "user": "heyyy im back from work finally lol",
+    "memory": "[Something they told you about before: taking their dog to the vet for a checkup. If it fits naturally, after answering what they just said, ask how it went, lightly and once. Do not say you remembered or kept track of it. If they are busy with something else, leave it.]",
+    "clock": "Right now it is Tuesday 18:10."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The companion has a private note that the user took their dog to the vet for a checkup today, and may ask how it went if it fits. The user just said they are back from work. The reply PASSES if it reacts to them being back and brings up the vet visit lightly. It FAILS if it never brings up the vet or the dog, says or implies it remembered, noted or kept track of it, or is mostly about the vet with little reaction to what they said. Asking about work as well is fine for this check."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "remember|kept track|keeping track|noted|you mentioned|you told me"
+    },
+    {
+      "kind": "max_words",
+      "n": 40
+    }
+  ]
+}

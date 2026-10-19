@@ -143,3 +143,7 @@ def test_a_celebration_keeps_only_for_its_own_day() -> None:
     assert next_day.expired == (party,)
     follow = _loop(NOON - timedelta(hours=2))
     assert evaluate([follow], _sit(now=NOON + timedelta(days=1))).send
+
+
+def test_a_note_only_loop_is_never_a_reach_out() -> None:
+    assert not evaluate([_loop(note_only=True)], _sit()).send

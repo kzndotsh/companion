@@ -56,6 +56,9 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, `core/address.py` | v1 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
+| `notes/loop-follow-up` | note | a due open loop, offered when they next write: ask how it went (J15) | v1 |
+| `notes/loop-celebrate` | note | a celebration on its day, offered when they write (J15) | v1 |
+| `notes/loop-encourage` | note | an encouragement on its day, offered when they write (J15) | v1 |
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |
 | `notes/floor-hold` | note | a turn the floor kept on the everyday talker: stay warm, nothing sexual, no explaining (ADR 0017) | v1 |

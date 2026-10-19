@@ -28,6 +28,9 @@ MAX_PAST_DAYS = 3
 MAX_CLAIM_CHARS = 160
 SCALES = ("minutes", "hours", "days", "unknown")
 SAME_DAY_SCALES = ("minutes", "hours")
+NOTE_DELAY = timedelta(hours=3)  # a same-day plan is asked about when they write a few hours on
+NOTE_KEEPS = timedelta(days=3)  # a follow-up note is offered for this long after it falls due
+MAX_OFFERS = 2  # offered as a note at most twice, then let go
 CERTAINTIES = ("firm", "maybe", "wish")
 _WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 # Whole words only: "now" must not match "know" or "snow", and "later this week" is not today.
@@ -65,6 +68,7 @@ class OpenLoop:
     created_at: datetime
     state: LoopState = LoopState.OPEN
     kind: LoopKind = LoopKind.FOLLOW_UP
+    note_only: bool = False  # same-day: only ever a note when they next write, never a reach-out
 
 
 @dataclass(frozen=True, slots=True)
@@ -326,7 +330,7 @@ def _why_not(
             "not something they said for real",
         ),
         (source is not None and not _holds(source, raw.quote), "the quote is not in their message"),
-        (raw.scale in SAME_DAY_SCALES, "minute-scale or same-day, not worth asking about later"),
+        (raw.scale == "minutes", "minute-scale, not worth asking about later"),
         (raw.about_companion, "about the companion or this chat, not their life"),
         (raw.certainty != "firm", f"not a firm plan ({raw.certainty}), a friend would not ask"),
         (raw.kind not in set(LoopKind), f"unknown kind {raw.kind!r}"),
@@ -347,7 +351,13 @@ def _why_not(
 def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenLoop | str:
     """The loop to record, or the reason it must not be."""
     source = _source(raw, index)
-    when = follow_up_time(raw.when, raw.scale, source.at, made.tz, raw.kind) if source else None
+    same_day = raw.scale in SAME_DAY_SCALES
+    if source is None:
+        when = None
+    elif same_day:
+        when = source.at + NOTE_DELAY
+    else:
+        when = follow_up_time(raw.when, raw.scale, source.at, made.tz, raw.kind)
     problem = _why_not(raw, source, when, made.now)
     if problem is not None or source is None or when is None:
         return problem or "no source"
@@ -360,8 +370,51 @@ def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenL
         follow_up_at=when,
         sensitivity=max(raw.sensitivity, 0),
         created_at=made.now,
-        kind=LoopKind(raw.kind),
+        kind=LoopKind.FOLLOW_UP if same_day else LoopKind(raw.kind),
+        note_only=same_day,
     )
+
+
+_KIND_ORDER = {LoopKind.CELEBRATE: 0, LoopKind.ENCOURAGE: 1, LoopKind.FOLLOW_UP: 2}
+
+
+def _note_due(loop: OpenLoop, now: datetime, tz: tzinfo) -> bool:
+    """A follow-up from its time for a few days; a celebration or encouragement on its day only."""
+    if loop.kind is LoopKind.FOLLOW_UP:
+        return loop.follow_up_at <= now <= loop.follow_up_at + NOTE_KEEPS
+    return loop.follow_up_at.astimezone(tz).date() == now.astimezone(tz).date()
+
+
+def pick_note(
+    loops: Sequence[OpenLoop], offers: Mapping[str, int], now: datetime, tz: tzinfo
+) -> OpenLoop | None:
+    """The one loop to bring up as a note when they write (J15), or None. Open, or already offered
+    once as a note and still unsettled; never sensitive; due now. A celebration beats an
+    encouragement beats a follow-up, then the most recently due."""
+
+    def offerable(lp: OpenLoop) -> bool:
+        n = offers.get(lp.id, 0)
+        state_ok = lp.state is LoopState.OPEN or (lp.state is LoopState.ASKED and n > 0)
+        return state_ok and n < MAX_OFFERS and lp.sensitivity < SENSITIVE and _note_due(lp, now, tz)
+
+    due = [lp for lp in loops if offerable(lp)]
+    due.sort(key=lambda lp: (_KIND_ORDER[lp.kind], -lp.follow_up_at.timestamp()))
+    return due[0] if due else None
+
+
+_NOTES = {
+    LoopKind.FOLLOW_UP: get("notes/loop-follow-up"),
+    LoopKind.CELEBRATE: get("notes/loop-celebrate"),
+    LoopKind.ENCOURAGE: get("notes/loop-encourage"),
+}
+
+
+def loop_note(loop: OpenLoop) -> str:
+    return _NOTES[loop.kind].render(claim=loop.claim)
+
+
+def loop_note_ref(loop: OpenLoop) -> str:
+    return _NOTES[loop.kind].ref
 
 
 def normalise(claim: str) -> str:

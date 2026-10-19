@@ -122,6 +122,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   (labels, not prompt rules); its kind sets the time (follow_up the morning after, celebrate on the
   day, encourage early that morning); a loop they settle themselves is closed as resolved, and after an
   unanswered live reach-out it waits 72 h, after two it waits for them to write first.
+- A due open loop is also brought up when they next write (J15, `pick_note`): one note on a casual turn,
+  at most one a day, each loop offered at most twice, never a sensitive one; the loop is then marked
+  asked so it is never also a reach-out. A firm plan for later today becomes a note-only loop, due three
+  hours on, and is never a reach-out.
 - Each message outside a scene is read for how serious it is before the reply, and code adds a
   listening note (`core/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity 3)
   get no note and there is no crisis path yet. The same judge labels a message rude to the companion (a one-turn note for a

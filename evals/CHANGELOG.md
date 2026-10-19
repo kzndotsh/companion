@@ -830,4 +830,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   shipped on that basis. Gaps of those sizes need about 70, 390 and 850 samples a side to show. Gains
   that do hold, for comparison: the shower quip fix 4/30 to 24/30, the health note 0/20 to 19/20, the
   cheesy-quip note 16/30 to 29/30 (each under 0.1%).
+- **2026-10-19. Due open loops as a note when they write (J15), notes/loop-* v1 shipped live.** Three
+  new public fixtures, persona v40, 30 samples each. Celebration on the day: 30/30 wish them well, none
+  says it remembered. Their own urgent problem with a follow-up due: 30/30 stay on their problem, the
+  loop never raised. Casual return with a follow-up due: by eye, 23 of 30 ask how it went and the rest
+  ask only about their day; none says it remembered; 23 of 30 ask two questions ("how was work? and how
+  did the vet go?"). The Haiku judge passed and failed identical replies there under a loosely worded
+  criterion, so the criterion was rewritten and its verdicts were not used. Two rewordings were tried
+  for the double question (v2 and v3, dropped, see the prompts changelog). Cost about $0.03.
 

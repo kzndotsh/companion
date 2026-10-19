@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import timedelta
 
 import pytest
@@ -82,3 +83,15 @@ def test_a_loop_must_point_at_a_real_message(conn: sqlite3.Connection) -> None:
     ghost = OpenLoop("l9", REL, "x", "x", UtteranceId("nope"), T0, 0, T0)
     with pytest.raises(sqlite3.IntegrityError):
         open_loops.add_loop(conn, ghost)
+
+
+def test_note_only_reads_back_and_events_are_counted_by_reason(
+    conn: sqlite3.Connection, utterance: Callable[..., Utterance]
+) -> None:
+    base = _loop(conn, utterance)
+    open_loops.add_loop(conn, replace(base, id="l2", note_only=True))
+    assert [lp.note_only for lp in open_loops.loops(conn, REL)] == [False, True]
+    open_loops.add_event(conn, "l2", LoopState.ASKED, "offered", T0)
+    open_loops.add_event(conn, "l2", LoopState.ASKED, "offered", T0)
+    open_loops.add_event(conn, "l1", LoopState.ASKED, "shadow reach-out", T0)
+    assert open_loops.events_with_reason(conn, REL, "offered") == {"l2": 2}

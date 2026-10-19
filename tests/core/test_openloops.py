@@ -5,15 +5,19 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from companion.core.openloops import (
+    NOTE_DELAY,
     LoopKind,
+    LoopState,
     Making,
     OpenLoop,
     RawLoop,
     RawResolution,
     follow_up_time,
     loop_labels,
+    loop_note,
     parse,
     parse_resolved,
+    pick_note,
     render_open_loops,
     to_loop,
     to_resolution,
@@ -105,7 +109,6 @@ def test_a_good_loop_keeps_the_exact_quote_and_gets_its_follow_up_time() -> None
     ("raw", "text", "why"),
     [
         (_raw(scale="minutes"), "going to the vet tomorrow", "minute-scale"),
-        (_raw(scale="hours"), "going to the vet tomorrow", "same-day"),
         (_raw(sensitivity=2), "going to the vet tomorrow", "sensitive"),
         (_raw(quote="never said this"), "going to the vet tomorrow", "quote"),
         (_raw(claim=""), "going to the vet tomorrow", "claim"),
@@ -226,3 +229,64 @@ def test_a_celebration_or_encouragement_without_a_day_after_today_is_not_recorde
     made = _make(_raw(when="friday", kind=LoopKind.ENCOURAGE), _utt("going to the vet tomorrow"))
     assert isinstance(made, OpenLoop)
     assert made.kind is LoopKind.ENCOURAGE
+
+
+def test_a_same_day_plan_is_a_note_only_follow_up_a_few_hours_on() -> None:
+    loop = _make(
+        _raw(quote="exam in two hours", claim="their exam", scale="hours", kind="encourage"),
+        _utt("exam in two hours"),
+    )
+    assert isinstance(loop, OpenLoop)
+    assert loop.note_only
+    assert loop.kind is LoopKind.FOLLOW_UP
+    assert loop.follow_up_at == MON + NOTE_DELAY
+
+
+def _loop(lid: str, kind: LoopKind, due: datetime, **over: object) -> OpenLoop:
+    fields: dict[str, object] = {
+        "id": lid,
+        "relationship_id": REL,
+        "claim": f"claim {lid}",
+        "quote": "q",
+        "source_utterance_id": UtteranceId("u1"),
+        "follow_up_at": due,
+        "sensitivity": 0,
+        "created_at": due - timedelta(days=1),
+        "kind": kind,
+    }
+    fields.update(over)
+    return OpenLoop(**fields)  # type: ignore[arg-type]
+
+
+def test_the_note_picks_a_celebration_first_then_the_latest_follow_up() -> None:
+    now = _at(20, 15)
+    loops = [
+        _loop("old", LoopKind.FOLLOW_UP, _at(18)),
+        _loop("new", LoopKind.FOLLOW_UP, _at(20)),
+        _loop("bday", LoopKind.CELEBRATE, _at(20)),
+        _loop("later", LoopKind.FOLLOW_UP, _at(21)),
+    ]
+    assert pick_note(loops, {}, now, UTC).id == "bday"  # type: ignore[union-attr]
+    assert pick_note(loops[:2], {}, now, UTC).id == "new"  # type: ignore[union-attr]
+    assert pick_note([loops[3]], {}, now, UTC) is None  # not due yet
+
+
+def test_the_note_is_offered_twice_then_let_go_and_never_when_sensitive_or_settled() -> None:
+    now = _at(20, 15)
+    asked = _loop("a", LoopKind.FOLLOW_UP, _at(20), state=LoopState.ASKED)
+    assert pick_note([asked], {}, now, UTC) is None  # asked by a reach-out, not a note
+    assert pick_note([asked], {"a": 1}, now, UTC) is asked
+    assert pick_note([asked], {"a": 2}, now, UTC) is None
+    assert pick_note([_loop("s", LoopKind.FOLLOW_UP, _at(20), sensitivity=2)], {}, now, UTC) is None
+    done = _loop("d", LoopKind.FOLLOW_UP, _at(20), state=LoopState.RESOLVED)
+    assert pick_note([done], {}, now, UTC) is None
+    stale = _loop("x", LoopKind.FOLLOW_UP, _at(15))
+    assert pick_note([stale], {}, now, UTC) is None  # past the days a note keeps
+    yesterday = _loop("y", LoopKind.CELEBRATE, _at(19))
+    assert pick_note([yesterday], {}, now, UTC) is None  # a celebration is for its day only
+
+
+def test_the_note_never_says_it_remembered_and_carries_the_claim() -> None:
+    note = loop_note(_loop("a", LoopKind.FOLLOW_UP, _at(20), claim="the vet visit"))
+    assert "the vet visit" in note
+    assert "If it fits naturally" in note

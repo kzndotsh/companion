@@ -1,0 +1,29 @@
+{
+  "id": "loop-note-left-when-they-bring-their-own-trouble",
+  "description": "A due follow-up note while they arrive with their own urgent problem: it stays on their problem (J15).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "ok night!! talk tomorrow"
+      },
+      {
+        "role": "assistant",
+        "text": "night! sleep good"
+      }
+    ],
+    "user": "ugh my car wont start and im gonna be late for work",
+    "memory": "[Something they told you about before: taking their dog to the vet for a checkup. If it fits naturally, after answering what they just said, ask how it went, lightly and once. Do not say you remembered or kept track of it. If they are busy with something else, leave it.]",
+    "clock": "Right now it is Wednesday 08:20."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The companion has a private note that the user took their dog to the vet yesterday and may ask how it went if it fits. The user is stressed: their car will not start and they will be late. The reply PASSES if it stays on their problem (sympathy, or one practical thought) and does not bring up the vet or the dog. It FAILS if it mentions the vet or the dog, or ignores the car."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "remember|kept track|keeping track|noted|you mentioned|you told me"
+    }
+  ]
+}

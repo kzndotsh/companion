@@ -65,6 +65,7 @@ from companion.core.mood import line as mood_line
 from companion.core.mood import reason as mood_reason
 from companion.core.moves import PROMPT as HABITS_PROMPT
 from companion.core.moves import replies_to_read
+from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_note
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
 from companion.core.quip import PROMPT as QUIP_PROMPT
@@ -939,6 +940,43 @@ def _relevance_beside(
     task.add_done_callback(_BESIDE.discard)
 
 
+LOOP_OFFERED = "open loop: offered as a note when they wrote"
+LOOP_NOTE_EVERY = timedelta(hours=24)
+
+
+def _loop_note(c: Conversation, t: _Turn, *, casual: bool) -> str | None:
+    """Bring up one due open loop as a note when they write (J15): on a casual turn with no other
+    nudge, at most one a day, each loop at most twice. The loop is marked asked, so it is never
+    also a reach-out."""
+    if not casual or c.store.decided_since(c.rel, LOOP_OFFERED, t.now - LOOP_NOTE_EVERY):
+        return None
+    offers = c.store.loop_events_with_reason(c.rel, LOOP_OFFERED)
+    loop = pick_note(c.store.open_loops(c.rel), offers, t.now, local_zone())
+    if loop is None:
+        return None
+    c.store.open_loop_event(loop.id, LoopState.ASKED, LOOP_OFFERED, t.now)
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            LOOP_OFFERED,
+            t.now,
+            detail={
+                "loop_id": loop.id,
+                "claim": loop.claim,
+                "kind": loop.kind.value,
+                "offer": offers.get(loop.id, 0) + 1,
+                "note": loop_note_ref(loop),
+            },
+        )
+    )
+    return loop_note(loop)
+
+
 def _casual(t: _Turn, in_scene: Frame, heard: _Heard | None) -> bool:
     """An ordinary moment: read as not serious, not in a scene, not a goodbye."""
     return (
@@ -1032,8 +1070,10 @@ def _assemble(  # noqa: PLR0913
     mood, mood_effects = _mood(c, t, in_scene, heard)
     hold = HOLD_NOTE.text if held else None
     name = _ask_name(c, t, in_scene, heard, assertable)
-    _map_shadow(c, t, casual=_casual(t, in_scene, heard), asking_name=name is not None)
-    notes += [n for n in (listening, rude, found, mood, hold, name) if n is not None]
+    casual = _casual(t, in_scene, heard)
+    _map_shadow(c, t, casual=casual, asking_name=name is not None)
+    loop = _loop_note(c, t, casual=casual and name is None and not held)
+    notes += [n for n in (listening, rude, found, mood, hold, name, loop) if n is not None]
     card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
