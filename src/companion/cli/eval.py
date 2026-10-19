@@ -53,7 +53,9 @@ def _variants(specs: list[str]) -> list[Variant]:
             character = characters.load(spec.character) if spec.character else None
         except characters.CharacterError as err:
             raise ValueError(str(err)) from err
-        prefix = build_prefix(characters.system_prompt(persona.raw, character, scene=spec.scene))
+        prefix = build_prefix(
+            characters.system_prompt(persona.raw, character, roleplay=spec.roleplay)
+        )
         out.append(
             Variant(
                 spec.label,

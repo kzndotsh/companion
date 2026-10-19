@@ -40,7 +40,7 @@ FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
 FALLBACK_MODEL = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
-SCENE_MODEL = "deepseek/deepseek-v4.1-flash"
+ROLEPLAY_MODEL = "deepseek/deepseek-v4.1-flash"
 UPDATE_KEY = "telegram.last_update_id"
 DEFAULT_DAILY_CAP_USD = 10.0
 REFLECT_IDLE_SECONDS = 90
@@ -136,7 +136,7 @@ def resample_on() -> bool:
 
 
 def route_intimate_on() -> bool:
-    """COMPANION_ROUTE_INTIMATE (ADR 0017): `on` lets intimate talk go to the scene talker, above
+    """COMPANION_ROUTE_INTIMATE (ADR 0017): `on` lets intimate talk go to the roleplay talker, above
     the floor in code; anything else keeps it on the everyday talker."""
     return os.environ.get("COMPANION_ROUTE_INTIMATE", "").strip().lower() in (
         "on",
@@ -172,15 +172,17 @@ def startup_line(
         everyday = openrouter.DEFAULT_MODEL
     else:
         everyday = anthropic.DEFAULT_MODEL
-    scenes = (
-        "the same model" if scene is None else os.environ.get("COMPANION_SCENE_MODEL", SCENE_MODEL)
+    roleplay = (
+        "the same model"
+        if scene is None
+        else os.environ.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
     )
     persona = prompts.get("system/persona").version
     return (
         f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]})"
         f" | character {character.ref if character else 'none'} | prompts {prompts.set_hash()}"
         f" | everyday {everyday}"
-        f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
+        f" | roleplay {roleplay} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
         f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
         f" | initiative {initiative_mode()} | mood {mood_mode()}"
         f" | resample {'on' if resample_on() else 'off'}"
@@ -188,10 +190,10 @@ def startup_line(
     )
 
 
-def _scene_talker(client: httpx.AsyncClient) -> Talker | None:
-    """The model that answers while a pretend scene is in progress. Set COMPANION_SCENE_MODEL to
-    `none` to use the everyday model for scenes too. Scenes need OpenRouter."""
-    model = os.environ.get("COMPANION_SCENE_MODEL", SCENE_MODEL)
+def _roleplay_talker(client: httpx.AsyncClient) -> Talker | None:
+    """The model for pretend scenes and, when allowed, intimate talk (ADR 0017). Set
+    COMPANION_ROLEPLAY_MODEL to `none` to use the everyday model for those too. Needs OpenRouter."""
+    model = os.environ.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
     key = os.environ.get("OPENROUTER_API_KEY")
     if model.lower() == "none" or not key:
         return None
@@ -206,11 +208,11 @@ def _metered_models(
     def sink(event: SpendEvent) -> None:
         store.record_spend(rel, event, datetime.now(UTC))
 
-    scene = _scene_talker(client)
+    scene = _roleplay_talker(client)
     shared = extractor(client)
     return (
         MeteredTalker(_talker(client), sink, "talker"),
-        MeteredTalker(scene, sink, "scene talker") if scene is not None else None,
+        MeteredTalker(scene, sink, "roleplay talker") if scene is not None else None,
         MeteredExtractor(shared, sink, "judge"),
         MeteredExtractor(shared, sink, "memory"),
     )
@@ -295,8 +297,8 @@ async def run(data_dir: Path) -> None:
     store = Store(data_dir / f"{rel}.sqlite")
     character = characters.chosen(data_dir / "characters")
     prefix = build_prefix(characters.system_prompt(prompts.get("system/persona").raw, character))
-    scene_prefix = build_prefix(
-        characters.system_prompt(prompts.get("system/persona").raw, character, scene=True)
+    roleplay_prefix = build_prefix(
+        characters.system_prompt(prompts.get("system/persona").raw, character, roleplay=True)
     )
     async with httpx.AsyncClient() as client:
         talker, scene, judge, reflector = _metered_models(client, store, rel)
@@ -306,13 +308,13 @@ async def run(data_dir: Path) -> None:
             prefix,
             rel,
             judge=judge,
-            scene_talker=scene,
+            roleplay_talker=scene,
             daily_cap_usd=daily_cap(),
             listen=listen_on(),
             mood=mood_mode(),
             resample=resample_on(),
             route_intimate=route_intimate_on(),
-            scene_prefix=scene_prefix,
+            roleplay_prefix=roleplay_prefix,
         )
         pending: list[asyncio.Task[None]] = []
 
@@ -368,7 +370,7 @@ async def run(data_dir: Path) -> None:
             return reply
 
         logging.getLogger("companion").info(
-            startup_line(rel, prefix.sha256, convo.scene_talker, character)
+            startup_line(rel, prefix.sha256, convo.roleplay_talker, character)
         )
         logging.getLogger("companion").info("full log: %s", log_file)
         initiative = _start_initiative(store, rel, judge)

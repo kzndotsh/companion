@@ -25,9 +25,9 @@ REQUEST = TalkerRequest(build_prefix("x " * 3000), ())
 
 async def test_a_talker_call_is_reported_with_its_cost_and_fixed_purpose() -> None:
     seen: list[SpendEvent] = []
-    reply = await MeteredTalker(Talker(), seen.append, "scene talker").reply(REQUEST)
+    reply = await MeteredTalker(Talker(), seen.append, "roleplay talker").reply(REQUEST)
     assert reply.text == "hi"
-    assert seen == [SpendEvent("scene talker", "m-talk", 0.002, 300)]
+    assert seen == [SpendEvent("roleplay talker", "m-talk", 0.002, 300)]
 
 
 async def test_an_extractor_call_takes_the_purpose_the_judge_named() -> None:

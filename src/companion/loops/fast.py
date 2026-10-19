@@ -198,14 +198,14 @@ class Conversation:
     rel: RelationshipId
     judge: Extractor | None = None
     habits: HabitMemory = field(default_factory=HabitMemory)
-    scene_talker: Talker | None = None  # replies while a pretend scene is in progress
+    roleplay_talker: Talker | None = None  # replies while a pretend scene is in progress
     daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
     listen: bool = True  # ask how serious a message is before the reply
     mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
     resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
-    route_intimate: bool = False  # intimate talk may go to the scene talker (ADR 0017)
-    scene_prefix: Prefix | None = (
-        None  # the scene talker's system prompt, with the sheet's scene section
+    route_intimate: bool = False  # intimate talk may go to the roleplay talker (ADR 0017)
+    roleplay_prefix: Prefix | None = (
+        None  # the roleplay talker's system prompt, with the sheet's scene section
     )
 
     async def handle(
@@ -451,15 +451,15 @@ def _stopped_by_cap(
 async def _route(
     c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
 ) -> tuple[Talker, bool]:
-    """The talker for this turn (ADR 0017): the scene talker for a pretend scene, or for intimate
+    """The talker for this turn (ADR 0017): the roleplay talker for a pretend scene, or for intimate
     talk when COMPANION_ROUTE_INTIMATE allows it, unless the floor keeps it on the everyday talker.
     Logged when it is anything but the plain everyday choice.
 
     The listening judge does not run in a scene, so a scene turn is read here, for routing only.
     The frame is the one the previous turn left, so the first message of a scene is answered by
-    the everyday talker and the next ones by the scene talker.
+    the everyday talker and the next ones by the roleplay talker.
     """
-    if c.scene_talker is None:
+    if c.roleplay_talker is None:
         return c.talker, False
     in_play = in_scene is Frame.PLAY
     read = heard
@@ -487,7 +487,7 @@ async def _route(
                 t.now,
             )
         )
-    return (c.scene_talker if route.talker is RouteTalker.SCENE else c.talker), route.held
+    return (c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker), route.held
 
 
 def _start_beside(
@@ -523,7 +523,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     turn every check runs and the result is logged; in a scene only the code checks run, since play
     is expected there, and only a resample is logged."""
     severity = heard[0].severity if heard is not None else None
-    scene = talker is c.scene_talker or in_scene is not Frame.REAL
+    scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
     if not c.resample or not reply.text.strip():
         return reply
     if not scene and not recheck_eligible(severity=severity, in_scene=False, reply=reply.text):
@@ -925,7 +925,7 @@ def _assemble(  # noqa: PLR0913
     recalled: Recalled | None,
     *,
     held: bool = False,
-    scene: bool = False,
+    roleplay: bool = False,
 ) -> _Assembled:
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
@@ -946,7 +946,7 @@ def _assemble(  # noqa: PLR0913
     name = _ask_name(c, t, in_scene, heard, assertable)
     notes += [n for n in (listening, rude, found, mood, hold, name) if n is not None]
     card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
-    prefix = c.scene_prefix if scene and c.scene_prefix is not None else c.prefix
+    prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
     store.save_prefix(prefix)
     _mark_start(t, in_scene, card, card_text)
@@ -985,7 +985,9 @@ async def _handle_turn(
     except BaseException:
         _store_user(c, t, channel, Frame.REAL)
         raise
-    asm = _assemble(c, t, in_scene, heard, recalled, held=held, scene=talker is c.scene_talker)
+    asm = _assemble(
+        c, t, in_scene, heard, recalled, held=held, roleplay=talker is c.roleplay_talker
+    )
     request, card_text, card, views, view_state = (
         asm.request,
         asm.card_text,

@@ -70,13 +70,15 @@ async def _chat(
     store: Store, texts: list[str], scene: Talker | None, judge: Judge | None = None
 ) -> Talker:
     everyday = Talker("everyday")
-    convo = Conversation(store, everyday, PREFIX, REL, judge=judge or Judge(), scene_talker=scene)
+    convo = Conversation(
+        store, everyday, PREFIX, REL, judge=judge or Judge(), roleplay_talker=scene
+    )
     for i, text in enumerate(texts):
         await convo.handle(SESSION, text, "t", NOW + timedelta(minutes=i))
     return everyday
 
 
-async def test_the_scene_talker_takes_over_once_a_scene_is_in_progress(store: Store) -> None:
+async def test_the_roleplay_talker_takes_over_once_a_scene_is_in_progress(store: Store) -> None:
     scene = Talker("scene")
     everyday = await _chat(
         store, ["let's pretend you're a knight", "*bows*", "and then what"], scene
@@ -85,14 +87,14 @@ async def test_the_scene_talker_takes_over_once_a_scene_is_in_progress(store: St
     assert len(scene.seen) == 2
 
 
-async def test_without_a_scene_talker_everyone_is_answered_by_the_everyday_one(
+async def test_without_a_roleplay_talker_everyone_is_answered_by_the_everyday_one(
     store: Store,
 ) -> None:
     everyday = await _chat(store, ["let's pretend you're a knight", "*bows*", "and then?"], None)
     assert len(everyday.seen) == 3
 
 
-async def test_ordinary_chat_never_reaches_the_scene_talker(store: Store) -> None:
+async def test_ordinary_chat_never_reaches_the_roleplay_talker(store: Store) -> None:
     scene = Talker("scene")
     everyday = await _chat(store, ["i got a haircut", "it looks okay", "thanks"], scene)
     assert len(everyday.seen) == 3
@@ -104,7 +106,7 @@ async def test_the_choice_is_logged_with_a_reason_written_by_code(store: Store) 
     turn = store.latest_turn(REL)
     assert turn is not None
     reasons = [d.reason for d in store.decisions_for_turn(REL, turn)]
-    assert "replied with the scene talker: a pretend scene is in progress" in reasons
+    assert "replied with the roleplay talker: a pretend scene is in progress" in reasons
 
 
 @pytest.mark.parametrize(
@@ -132,7 +134,7 @@ async def test_a_scene_stays_with_the_everyday_talker_when_the_floor_holds_or_it
     ("allowed", "age_coded", "routed"),
     [(True, False, True), (False, False, False), (True, True, False)],
 )
-async def test_intimate_talk_goes_to_the_scene_talker_only_when_allowed_and_above_the_floor(
+async def test_intimate_talk_goes_to_the_roleplay_talker_only_when_allowed_and_above_the_floor(
     store: Store, *, allowed: bool, age_coded: bool, routed: bool
 ) -> None:
     scene, everyday = Talker("scene"), Talker("everyday")
@@ -142,7 +144,7 @@ async def test_intimate_talk_goes_to_the_scene_talker_only_when_allowed_and_abov
         PREFIX,
         REL,
         judge=Judge(intimate=True, age_coded=age_coded),
-        scene_talker=scene,
+        roleplay_talker=scene,
         route_intimate=allowed,
     )
     await convo.handle(SESSION, "i want you so bad", "t", NOW)
@@ -160,7 +162,7 @@ async def test_a_held_turn_gets_the_note_and_an_intimate_reply_three_times_sends
         PREFIX,
         REL,
         judge=Judge(intimate=True, age_coded=True, sexual_reply=sexual),
-        scene_talker=scene,
+        roleplay_talker=scene,
         route_intimate=True,
     )
     out = await convo.handle(SESSION, "i want you so bad", "t", NOW)
@@ -186,7 +188,7 @@ async def test_a_scene_reply_with_an_em_dash_is_drawn_once_more(store: Store) ->
 
     scene, everyday = Dashing(), Talker("everyday")
     convo = Conversation(
-        store, everyday, PREFIX, REL, judge=Judge(), scene_talker=scene, resample=True
+        store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene, resample=True
     )
     await convo.handle(SESSION, "let's pretend you're a knight", "t", NOW)
     out = await convo.handle(SESSION, "*bows*", "t", NOW + timedelta(minutes=1))

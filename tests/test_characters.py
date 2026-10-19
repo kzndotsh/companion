@@ -53,15 +53,15 @@ def test_an_eval_variant_can_name_a_character() -> None:
     assert spec.label == "v26.md+listen+as-mika"
 
 
-def test_the_in_scenes_section_reaches_only_the_scene_talker() -> None:
+def test_the_in_scenes_section_reaches_only_the_roleplay_talker() -> None:
     from companion.characters import system_prompt  # noqa: PLC0415
 
     char = parse(
-        "You are Mika.\n\n## In scenes and intimate moments\nStay in the role.\n", "mika", "local"
+        "You are Mika.\n\n## In roleplay and intimate moments\nStay in the role.\n", "mika", "local"
     )
-    assert (char.sheet, char.scene_sheet) == ("You are Mika.", "Stay in the role.")
+    assert (char.sheet, char.roleplay_sheet) == ("You are Mika.", "Stay in the role.")
     everyday = system_prompt("persona", char)
-    scene = system_prompt("persona", char, scene=True)
+    scene = system_prompt("persona", char, roleplay=True)
     assert "Stay in the role." not in everyday
     assert scene.endswith("Stay in the role.\n")
     assert system_prompt("persona", None) == "persona"

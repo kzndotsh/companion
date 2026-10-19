@@ -8,7 +8,7 @@ persona, as `COMPANION_CHARACTER=mika` does for the bot. `+echo` adds the note a
 their emoji or emoticon, on a message that has one. `+mood-cozy` adds the candidate mood line for
 one state, and `+mood-cozy.playful` for two (ADR 0016), to measure a mood before it is built.
 `+resample` draws one fresh reply when the quip check says the first bolted on a joke (J45).
-`+scene` builds the scene talker's prompt: with `+as-CHARACTER`, the sheet's scene section too.
+`+roleplay` builds the roleplay talker's prompt: with `+as-CHARACTER`, its sheet section too.
 Flags combine: `v10.md+nocard+h10@provider/model`.
 """
 
@@ -35,7 +35,7 @@ class Spec:
     echo: bool = False
     mood: tuple[str, ...] = ()
     resample: bool = False
-    scene: bool = False
+    roleplay: bool = False
 
     @property
     def label(self) -> str:
@@ -50,12 +50,12 @@ class Spec:
             + ("+echo" if self.echo else "")
             + (f"+mood-{'.'.join(self.mood)}" if self.mood else "")
             + ("+resample" if self.resample else "")
-            + ("+scene" if self.scene else "")
+            + ("+roleplay" if self.roleplay else "")
             + (f"@{self.model}" if self.model else "")
         )
 
 
-SWITCHES = ("nocard", "len", "listen", "echo", "resample", "scene")
+SWITCHES = ("nocard", "len", "listen", "echo", "resample", "roleplay")
 
 
 def parse_spec(text: str) -> Spec:
@@ -83,7 +83,8 @@ def parse_spec(text: str) -> Spec:
     if not ok:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional +nocard, +hN, +low, +medium,"
-            " +high, +len, +listen, +echo, +mood-STATE, +resample, +scene, +as-CHARACTER and @model"
+            " +high, +len, +listen, +echo, +mood-STATE, +resample, +roleplay, +as-CHARACTER"
+            " and @model"
         )
         raise ValueError(msg)
     return Spec(
@@ -98,7 +99,7 @@ def parse_spec(text: str) -> Spec:
         "echo" in on,
         mood,
         "resample" in on,
-        "scene" in on,
+        "roleplay" in on,
     )
 
 

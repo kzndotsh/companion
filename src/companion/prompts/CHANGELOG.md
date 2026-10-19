@@ -310,7 +310,7 @@ changelog, with its measurements.
 - **system/persona v37** (dropped: more jokes, not fewer). v36 with the banned-joke list for ordinary mentions ("Do not build a joke out of it: no personifying ... no 'side quest', 'era', 'roulette' or 'plotting against you' framings. A plain reaction beats a clever one.") replaced by a positive ending rule: "react plainly or ask a plain question, then stop. Say the one thing you mean and end there, on the reaction or the question, without a second line to round it off." Reason: J45, a joke tacked onto a fine reaction in about half the samples on five flagged turns; a 2026 preprint suggests naming forbidden framings primes them. Measurement in `evals/CHANGELOG.md`.
 - **system/persona v38** (dropped: within noise of v36). v36 keeping the banned-joke list, with the ending rule added after "A plain reaction beats a clever one.": "Say the one thing you mean and stop there, without a second line to round it off." Reason: v37 (the rule without the list) made the jokes worse, so this tests whether the rule helps on top of the list. Measurement in `evals/CHANGELOG.md`.
 - **system/persona v39** (not shipped: within noise of v36). v36 with a line in Limits: "Do not announce a limit before they ask for anything: when they are only telling you what they like or want, do not say what you will or will not do, what you would keep things to, or what you cannot be or need. Respond to what they said. If they do ask for something past a limit, say so once, in one short line." Reason: J46, ordinary relationship talk answered with "keeping it affectionate and non-explicit" (owner flag); on the real turn about 7 of 30 replies announced a limit or an "I don't have needs" disclaimer. Measurement in `evals/CHANGELOG.md`.
-- **system/persona v40** (shipped 2026-10-19). v36 with two lines of permission, not instructions, before "You are not a yes-man": it may tease back with a bit of attitude instead of agreeing, and may take the lead now and then by asking something it is curious about, with a twist of its own. Reason: the owner preferred the scene talker's livelier voice and asked to invite, not order, banter back and taking the lead, to see whether the everyday talker takes the chance. Measurement in `evals/CHANGELOG.md`.
+- **system/persona v40** (shipped 2026-10-19). v36 with two lines of permission, not instructions, before "You are not a yes-man": it may tease back with a bit of attitude instead of agreeing, and may take the lead now and then by asking something it is curious about, with a twist of its own. Reason: the owner preferred the roleplay talker's livelier voice and asked to invite, not order, banter back and taking the lead, to see whether the everyday talker takes the chance. Measurement in `evals/CHANGELOG.md`.
 
 ## assembly
 
@@ -362,12 +362,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 - **Two talkers.** While a pretend scene is in progress (the previous turn was tagged `play`),
   replies come from a scene model, DeepSeek V4 Flash by default; everything else comes from the
-  everyday model, GPT-6 Luna by default. `COMPANION_SCENE_MODEL=none` turns the split off, and
+  everyday model, GPT-6 Luna by default. `COMPANION_ROLEPLAY_MODEL=none` turns the split off, and
   `COMPANION_MODEL` still sets the everyday model. The first message of a scene is answered by
   the everyday model, because the frame is only known after the message. Reason: on the same
   persona, Luna led everyday chat (59/64 on the public fixtures against DeepSeek's 49/64) while
   DeepSeek kept a scripted scene going more (76% against 52% of escalating turns). Every use of
-  the scene talker is a logged decision, and each turn's record names the model that replied.
+  the roleplay talker is a logged decision, and each turn's record names the model that replied.
 
 - **Undelivered replies are left out of what the model reads.** A reply is stored as soon as it
   is written, before Telegram delivers it. When delivery fails the user never saw it, but the
@@ -461,12 +461,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 - **Operator policy and routing (ADR 0017, 2026-10-19).** The operator's policy text, when there is
   any, is added to the talker's system prompt under "## Operator policy" (the default has none, so the
-  prefix is unchanged). Intimate talk goes to the scene talker when the policy sets `route_intimate`, and
+  prefix is unchanged). Intimate talk goes to the roleplay talker when the policy sets `route_intimate`, and
   a pretend scene goes there as before, unless the listening judge reads the turn as age-coded or could not
   read it; then the everyday talker answers and the decision is logged. In a scene the listening judge now
   runs for routing alone, with no note.
   Simplified the same day: the policy file is gone. Routing is `COMPANION_ROUTE_INTIMATE=on`, and scene
-  guidance is an optional `## In scenes and intimate moments and intimate moments` section of the character sheet, which only the scene talker sees.
+  guidance is an optional `## In roleplay and intimate moments and intimate moments` section of the character sheet, which only the roleplay talker sees.
 - **No scene addendum and no pause line (2026-10-19).** `system/scene-intimate` is gone: measured within
   noise, and the scene section of the character sheet carries scene guidance, including the floor in words
   and that role talk is play. `messages/floor-pause` is gone too: on a held turn whose replies keep reading
@@ -494,7 +494,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   on a fallback answer: an age reading or an intimate check from it counts as unread (ADR 0017). The provider
   pin now applies to Anthropic models only, for the judges as for the talker.
 
-- **The scene talker's own system prompt (ADR 0017, 2026-10-19).** When the scene talker answers, its
+- **The roleplay talker's own system prompt (ADR 0017, 2026-10-19).** When the roleplay talker answers, its
   system prompt is the everyday one plus `system/scene-intimate`, then the operator's policy text including
   anything after a `## Scene` heading, which the everyday talker never sees. The turn records which prefix
   it used. The em dash check now runs on scene replies too (code checks only; the quip judge stays off in

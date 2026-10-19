@@ -15,10 +15,10 @@ def _route(**over: object) -> Talker:
     return choose(**{**base, **over}).talker  # pyright: ignore[reportArgumentType]
 
 
-def test_a_scene_goes_to_the_scene_talker_and_intimate_talk_only_when_allowed() -> None:
-    assert _route(in_play=True) is Talker.SCENE
+def test_a_scene_goes_to_the_roleplay_talker_and_intimate_talk_only_when_allowed() -> None:
+    assert _route(in_play=True) is Talker.ROLEPLAY
     assert _route(intimate=True) is Talker.EVERYDAY
-    assert _route(intimate=True, allow_intimate=True) is Talker.SCENE
+    assert _route(intimate=True, allow_intimate=True) is Talker.ROLEPLAY
     assert _route() is Talker.EVERYDAY
 
 
