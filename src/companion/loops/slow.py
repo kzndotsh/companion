@@ -54,7 +54,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.knowing import Labelled, label_new
-from companion.loops.openloops import LoopCounts, extract_open_loops
+from companion.loops.openloops import Reading, catch_up_loops
 from companion.loops.views import WANT_KINDS, check_views
 from companion.store.sqlite.store import Store
 
@@ -351,18 +351,8 @@ async def reflect_from(
         accepted=users.accepted,
         rejected=users.rejected,
     )
-    loops = (
-        await extract_open_loops(
-            store,
-            extractor,
-            rel,
-            window,
-            {u.id for u in user_targets},
-            (now, local),
-            run.log,
-        )
-        if user_targets
-        else LoopCounts()
+    loops = await catch_up_loops(
+        store, extractor, rel, (now, local), run.log, Reading(BATCH, CONTEXT)
     )
     wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
     new_wants = users.accepted_ids & wanted

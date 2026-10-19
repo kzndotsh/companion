@@ -14,7 +14,7 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, tzinfo
 
-from companion.core.beliefs.extract import build_user_prompt
+from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_midnight
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
@@ -81,9 +81,9 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
     targets: set[UtteranceId],
     when: tuple[datetime, tzinfo],
     note: Log,
-) -> LoopCounts:
-    """Record the open loops in the targeted messages, and close the ones they settle. A failure
-    here never stops the batch."""
+) -> LoopCounts | None:
+    """Record the open loops in the targeted messages, and close the ones they settle. None when
+    the call itself failed, so the caller can keep the batch for another try."""
     now, tz = when
     labels = loop_labels(store.open_loops(rel))
     prompt = build_user_prompt(window, targets, {}, tz) + render_open_loops(labels)
@@ -91,8 +91,8 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
         with purpose("loops"):
             result = await extractor.extract(SYSTEM, prompt, SCHEMA)
     except Exception:
-        log.warning("open-loop extraction failed; skipping this batch", exc_info=True)
-        return LoopCounts()
+        log.warning("open-loop extraction failed; the batch is kept for another try", exc_info=True)
+        return None
     raw = parse(result.data)
     if raw is None:
         note("open loops: the answer was malformed and was ignored", {"model": result.model})
@@ -282,3 +282,65 @@ def short_draft(message: str) -> str:
     first = re.split(r"(?<=[.!?])\s+", text)[0]
     short = len(first.split()) <= MAX_DRAFT_WORDS and first.endswith("?")
     return first if short else ""
+
+
+MAX_TRIES = 3  # a batch that keeps failing is let go, so plans can never block on one
+
+
+@dataclass(frozen=True, slots=True)
+class Reading:
+    """Where the open-loop pass reads from: its batch size, the context before it, and how many
+    batches one call may catch up."""
+
+    batch: int
+    context: int
+    batches: int = 3
+
+
+async def catch_up_loops(  # noqa: PLR0913, PLR0917
+    store: Store,
+    extractor: Extractor,
+    rel: RelationshipId,
+    when: tuple[datetime, tzinfo],
+    note: Log,
+    reading: Reading,
+) -> LoopCounts:
+    """Read their messages for plans from the open-loop pass's own bookmark (J25). A failed call
+    leaves the bookmark where it was, so the same messages are read again next pass; after
+    MAX_TRIES failures on one batch it is let go, with the reason logged."""
+    now = when[0]
+    total = LoopCounts()
+    for _ in range(reading.batches):
+        batch = store.utterances_after(rel, store.loop_cursor(rel), reading.batch)
+        if not batch:
+            break
+        upto = (batch[-1].at, batch[-1].id)
+        targets = {u.id for u in batch if u.speaker is Speaker.USER}
+        if not targets:
+            store.record_loop_run(rel, upto, ok=True, reason="none of their messages", at=now)
+            continue
+        window = index_window([*store.history_before(rel, batch[0].at, reading.context), *batch])
+        counts = await extract_open_loops(store, extractor, rel, window, targets, when, note)
+        if counts is not None:
+            store.record_loop_run(rel, upto, ok=True, reason="read", at=now)
+            total = _add(total, counts)
+            continue
+        tries = store.loop_failed_tries(rel, upto[1]) + 1
+        if tries >= MAX_TRIES:
+            reason = f"open loops: gave up on a batch after {tries} failed tries"
+            store.record_loop_run(rel, upto, ok=True, reason=reason, at=now)
+            note(reason, {"messages": len(batch), "upto": upto[1]})
+            continue
+        store.record_loop_run(rel, upto, ok=False, reason=f"failed try {tries}", at=now)
+        break
+    return total
+
+
+def _add(a: LoopCounts, b: LoopCounts) -> LoopCounts:
+    return LoopCounts(
+        a.candidates + b.candidates,
+        a.stored + b.stored,
+        a.rejected + b.rejected,
+        a.cost_usd + b.cost_usd,
+        a.resolved + b.resolved,
+    )

@@ -125,7 +125,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - A due open loop is also brought up when they next write (J15, `pick_note`): one note on a casual turn,
   at most one a day, each loop offered at most twice, never a sensitive one; the loop is then marked
   asked so it is never also a reach-out. A firm plan for later today becomes a note-only loop, due three
-  hours on, and is never a reach-out.
+  hours on, and is never a reach-out The open-loop pass keeps its own bookmark (`open_loop_runs`): a failed call is read again
+  next pass, and a batch that fails three times is let go with the reason logged.
 - Each message outside a scene is read for how serious it is before the reply, and code adds a
   listening note (`core/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity 3)
   get no note and there is no crisis path yet. The same judge labels a message rude to the companion (a one-turn note for a

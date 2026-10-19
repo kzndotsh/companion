@@ -19,7 +19,14 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.openloops import Ticker, extract_open_loops, short_draft, tick
+from companion.loops.openloops import (
+    Reading,
+    Ticker,
+    catch_up_loops,
+    extract_open_loops,
+    short_draft,
+    tick,
+)
 from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.store import Store
 
@@ -97,6 +104,7 @@ async def _extract(store: Store, u: Utterance, data: Json) -> tuple[int, int, li
         (SAID + timedelta(minutes=1), UTC),
         lambda reason, detail: notes.append(reason),
     )
+    assert counts is not None
     return counts.stored, counts.rejected, notes
 
 
@@ -132,7 +140,7 @@ async def test_a_malformed_answer_or_a_failing_model_records_nothing_and_does_no
     counts = await extract_open_loops(
         store, Boom(), REL, {"m1": u}, {u.id}, (SAID, UTC), lambda reason, detail: None
     )
-    assert counts.stored == 0
+    assert counts is None  # a failed call says so, so the batch can be read again
     assert store.open_loops(REL) == []
 
 
@@ -224,6 +232,7 @@ async def test_a_loop_they_settle_themselves_is_closed_and_never_asked_about(sto
     counts = await extract_open_loops(
         store, model, REL, {"m2": u}, {u.id}, (SAID, UTC), lambda r, d: notes.append(r)
     )
+    assert counts is not None
     assert counts.resolved == 1
     assert "[L1] vet visit" in model.prompts[0]
     assert store.open_loops(REL)[0].state is LoopState.RESOLVED
@@ -270,3 +279,50 @@ async def test_no_paid_draft_is_made_unless_every_cheap_gate_passes(store: Store
     assert calls == []
     assert (await tick(store, REL, LATER + timedelta(hours=2), UTC, counting, Ticker())).send
     assert len(calls) == 1
+
+
+class Flaky:
+    """Fails the first `fails` calls, then answers with one loop."""
+
+    def __init__(self, fails: int) -> None:
+        self.fails, self.calls = fails, 0
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        del system, user, schema
+        self.calls += 1
+        if self.calls <= self.fails:
+            msg = "down"
+            raise RuntimeError(msg)
+        return Extraction(data={"loops": [_item()]}, model="fake", cost_usd=0.0, latency_ms=1)
+
+
+async def _catch_up(store: Store, model: Flaky) -> list[str]:
+    notes: list[str] = []
+    await catch_up_loops(
+        store, model, REL, (LATER, UTC), lambda r, d: notes.append(r), Reading(40, 4, batches=1)
+    )
+    return notes
+
+
+async def test_a_failed_loop_pass_keeps_its_place_and_the_plan_is_read_next_time(
+    store: Store,
+) -> None:
+    _said(store)
+    model = Flaky(fails=1)
+    await _catch_up(store, model)
+    assert store.open_loops(REL) == []
+    assert store.loop_cursor(REL) is None  # the bookmark did not move past the failed batch
+    await _catch_up(store, model)
+    assert [lp.claim for lp in store.open_loops(REL)] == ["vet visit"]
+    assert store.loop_cursor(REL) is not None
+
+
+async def test_a_batch_that_keeps_failing_is_let_go_after_three_tries(store: Store) -> None:
+    _said(store)
+    model = Flaky(fails=99)
+    notes = [n for _ in range(3) for n in await _catch_up(store, model)]
+    assert store.loop_cursor(REL) is not None  # let go, so plans never block on one batch
+    assert any("gave up on a batch after 3 failed tries" in n for n in notes)
+    calls = model.calls
+    await _catch_up(store, model)
+    assert model.calls == calls  # nothing left to read

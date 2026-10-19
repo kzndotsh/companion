@@ -242,6 +242,10 @@ Ordered. Pull from the top.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-19**
+- [x] J25 A failed memory pass retries: the memory pass already kept its place on a failed call; the open-loop
+      pass did not (it ran after the bookmark moved, so a failed call lost that batch's plans). It now keeps its
+      own bookmark, a failed try is read again next pass, and a batch that fails three times is let go with the
+      reason logged, so plans can never block memory or themselves.
 - [x] J30 Repair: "you forgot" now triggers the look-up (listening v5), the reply is told to use what memory
       holds and never ask them to repeat (recall note v2), or to say so plainly when memory is empty; a `repair`
       label adds a one-line "own it" note when they say it got them wrong. Clean fixtures repair well without
@@ -646,8 +650,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       notes, not instructions (Hermes and Project Waifu audits).
 - [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
       default no, so only a real message starts a reply (Neuro SDK audit).
-- [ ] J25 A failed memory pass retries: check that the slow loop never marks messages as done when a model
-      call fails, and fix it if it does (Yurios audit: a swallowed error lost a day of facts).
 - [ ] J26 Mood ignores its own failures: once there is a mood (J5), only what the user does can move it,
       never an outage or a failed call (Alice audit).
 - [ ] J27 Per-gate shadow analysis before initiative goes live: for each hold (quiet hours, cap, mid-chat),

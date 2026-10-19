@@ -123,3 +123,45 @@ def reach_outs_since(
         )
         for r in rows
     ]
+
+
+def record_loop_run(  # noqa: PLR0913
+    conn: sqlite3.Connection,
+    rel: RelationshipId,
+    upto: tuple[datetime, UtteranceId],
+    *,
+    ok: bool,
+    reason: str,
+    at: datetime,
+) -> None:
+    with write_tx(conn):
+        conn.execute(
+            "INSERT INTO open_loop_runs (relationship_id, upto_at, upto_id, ok, reason, at)"
+            " VALUES (?, ?, ?, ?, ?, ?)",
+            (rel, iso(upto[0]), upto[1], int(ok), reason, iso(at)),
+        )
+
+
+def loop_cursor(
+    conn: sqlite3.Connection, rel: RelationshipId
+) -> tuple[datetime, UtteranceId] | None:
+    """Where the open-loop pass has read up to: its newest successful run."""
+    row = conn.execute(
+        "SELECT upto_at, upto_id FROM open_loop_runs WHERE relationship_id = ? AND ok = 1"
+        " ORDER BY id DESC LIMIT 1",
+        (rel,),
+    ).fetchone()
+    return (
+        None if row is None else (parse_iso(str(row["upto_at"])), UtteranceId(str(row["upto_id"])))
+    )
+
+
+def failed_tries(conn: sqlite3.Connection, rel: RelationshipId, upto_id: UtteranceId) -> int:
+    """Failed tries at the batch ending here since the bookmark last moved."""
+    row = conn.execute(
+        "SELECT COUNT(*) AS n FROM open_loop_runs WHERE relationship_id = ? AND ok = 0"
+        " AND upto_id = ? AND id > COALESCE((SELECT MAX(id) FROM open_loop_runs"
+        " WHERE relationship_id = ? AND ok = 1), 0)",
+        (rel, upto_id, rel),
+    ).fetchone()
+    return int(row["n"])

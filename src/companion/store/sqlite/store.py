@@ -174,6 +174,23 @@ class Store:
     def loop_events_with_reason(self, rel: RelationshipId, reason: str) -> dict[str, int]:
         return open_loops.events_with_reason(self._conn, rel, reason)
 
+    def record_loop_run(
+        self,
+        rel: RelationshipId,
+        upto: tuple[datetime, UtteranceId],
+        *,
+        ok: bool,
+        reason: str,
+        at: datetime,
+    ) -> None:
+        open_loops.record_loop_run(self._conn, rel, upto, ok=ok, reason=reason, at=at)
+
+    def loop_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
+        return open_loops.loop_cursor(self._conn, rel)
+
+    def loop_failed_tries(self, rel: RelationshipId, upto_id: UtteranceId) -> int:
+        return open_loops.failed_tries(self._conn, rel, upto_id)
+
     def open_loops(self, rel: RelationshipId) -> list[OpenLoop]:
         return open_loops.loops(self._conn, rel)
 
