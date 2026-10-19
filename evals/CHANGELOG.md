@@ -907,3 +907,15 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   storing a new memory read "same" three times as evidence on the old one. Everything else goes to the
   owner. Cost $0.025; one call of 267 needed the fallback model. Scratch scripts, private data; not in
   the repo.
+- **2026-10-19. A bigger card or a longer history: no measurable gain yet, no harm.** New switches rebuild
+  a recorded turn from the database as it stood (`+cardN`, `+cardall`, `+histN`). Twelve real everyday
+  turns, persona v40 without a character, 6 samples each, five setups: the card at 15 memories (rebuilt),
+  30, 60, every memory (about 150 then), and 15 with 100 messages of history instead of 40. The
+  fixtures' own checks: 24, 27, 25, 27 and 28 of 72, all within noise. A blind Claude judge then scored
+  the six replies of each setup on 11 turns (1 to 5; letters shuffled per turn, unblinded after): knowing
+  the person 3.09 (15), 3.00 (60), 3.09 (all), 3.36 (100 messages); reciting memory 1.09, 1.09, 1.18, 1.00;
+  saying something wrong about them 1.82, 1.73, 1.64, 1.73; best set on 2, 1, 3 and 5 turns. Within noise
+  at 11 turns; the longer history leaned best (more specific follow-ups that picked up earlier threads),
+  and with every memory in view it once got right what it is, where the others claimed to be another
+  assistant. Recitation stayed rare even with every memory shown. Cost $0.08 by the meter; the judge was
+  free.
