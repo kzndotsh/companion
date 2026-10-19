@@ -175,10 +175,16 @@ def load_fixtures(*directories: Path) -> list[Fixture]:
     found: list[Fixture] = []
     for path in sorted(p for d in directories for p in d.glob("*.json")):
         try:
-            found.append(parse_fixture(json.loads(path.read_text(encoding="utf-8"))))
+            fixture = parse_fixture(json.loads(path.read_text(encoding="utf-8")))
         except (FixtureError, json.JSONDecodeError) as err:
             msg = f"{path.name}: {err}"
             raise FixtureError(msg) from err
+        if (
+            fixture.id != path.stem
+        ):  # `--fixture NAME` matches the id; a different file name hides it
+            msg = f"{path.name}: its id is {fixture.id!r}; the file must be named {fixture.id}.json"
+            raise FixtureError(msg)
+        found.append(fixture)
     ids = [f.id for f in found]
     if len(ids) != len(set(ids)):
         msg = "fixture ids must be unique"

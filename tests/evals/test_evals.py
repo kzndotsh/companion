@@ -98,9 +98,26 @@ def test_duplicate_ids_are_refused(tmp_path: Path) -> None:
     body = json.dumps(
         {"id": "a", "description": "d", "turn": "t", "checks": [{"kind": "max_words", "n": 1}]}
     )
-    (tmp_path / "1.json").write_text(body)
-    (tmp_path / "2.json").write_text(body)
+    public, local = tmp_path / "public", tmp_path / "local"
+    public.mkdir()
+    local.mkdir()
+    (public / "a.json").write_text(body)
+    (local / "a.json").write_text(body)
     with pytest.raises(FixtureError, match="unique"):
+        load_fixtures(public, local)
+
+
+def test_a_file_named_other_than_its_id_is_refused(tmp_path: Path) -> None:
+    body = json.dumps(
+        {
+            "id": "a-local",
+            "description": "d",
+            "turn": "t",
+            "checks": [{"kind": "max_words", "n": 1}],
+        }
+    )
+    (tmp_path / "a.json").write_text(body)
+    with pytest.raises(FixtureError, match=r"must be named a-local\.json"):
         load_fixtures(tmp_path)
 
 
@@ -412,11 +429,11 @@ def test_a_script_becomes_a_request_shaped_like_a_real_one() -> None:
 def test_directories_that_do_not_exist_are_skipped_and_ids_must_stay_unique(
     tmp_path: Path,
 ) -> None:
-    (tmp_path / "a.json").write_text(json.dumps(_scripted()))
+    (tmp_path / "s.json").write_text(json.dumps(_scripted()))
     assert [f.id for f in load_fixtures(tmp_path, tmp_path / "missing")] == ["s"]
     other = tmp_path / "other"
     other.mkdir()
-    (other / "dup.json").write_text(json.dumps(_scripted()))
+    (other / "s.json").write_text(json.dumps(_scripted()))
     with pytest.raises(FixtureError, match="unique"):
         load_fixtures(tmp_path, other)
 

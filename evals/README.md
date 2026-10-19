@@ -80,6 +80,11 @@ examples: `uv run pytest -m live tests/live/test_ack_judge.py -s`, and likewise
 
 ## Adding a fixture
 
+A fixture file is named after its id (`<id>.json`), and ids are unique across `evals/fixtures/` and
+`evals/local/`; the loader refuses either mistake. `--fixture` takes the id, and an unknown one is an
+error that names the closest id.
+
+
 For a general failure class, write a script in `evals/fixtures/` with an invented conversation. To
 capture something from real use, flag the turn with `/flag`, find its id (`uv run companion flags`),
 and add a JSON file in `evals/local/`. Prefer writing the script version too, so the finding is

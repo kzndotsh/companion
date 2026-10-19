@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import difflib
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -106,6 +107,18 @@ def _inputs(
     return again if isinstance(again, str) else (requests, again)
 
 
+def _select(fixtures: list[Fixture], only: list[str]) -> list[Fixture] | str:
+    """The fixtures named with --fixture, or why one name matches none (with the closest id)."""
+    if not only:
+        return fixtures
+    known = {f.id for f in fixtures}
+    if unknown := [x for x in only if x not in known]:
+        hints = {x: difflib.get_close_matches(x, known, n=1) for x in unknown}
+        listed = ", ".join(f"{x} (did you mean {h[0]}?)" if h else x for x, h in hints.items())
+        return f"no fixture with the id {listed}\n"
+    return [f for f in fixtures if f.id in only]
+
+
 def describe(fixtures: list[Fixture]) -> str:
     lines = [
         f"{f.id:34} {'script' if f.script else 'local turn':10} {len(f.checks)} checks"
@@ -191,11 +204,9 @@ def _requests(
 async def run(a: EvalArgs) -> str:
     db, samples, cap = a.db, a.samples, a.cap
     load_dotenv(Path(".env"))
-    fixtures = load_fixtures(*a.fixtures_dirs)
-    if a.only:
-        fixtures = [f for f in fixtures if f.id in a.only]
-    if not fixtures:
-        return "no fixtures to run\n"
+    fixtures = _select(load_fixtures(*a.fixtures_dirs), a.only) or "no fixtures to run\n"
+    if isinstance(fixtures, str):
+        return fixtures
     variants = _variants(a.specs)
     plan_cost = estimate(fixtures, len(variants), samples)
     header = (
