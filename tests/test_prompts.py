@@ -107,3 +107,24 @@ def test_the_readme_lists_every_prompt_at_its_current_version() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     listed = dict(re.findall(r"^\| `([^`]+)` \|.*\| (v\d+) \|$", readme, re.MULTILINE))
     assert listed == prompts.manifest(), "prompts/README.md is out of step with manifest.toml"
+
+
+def test_a_note_is_one_bracketed_line_except_the_clock_and_the_listening_parts() -> None:
+    """The clock stays a plain sentence: bracketed, the model copied it into replies (persona v17
+    in CHANGELOG.md). Listening notes are parts that `listening_note` joins and brackets as one."""
+    for prompt in prompts.current():
+        if not prompt.name.startswith("notes/"):
+            continue
+        bracketed = prompt.text.startswith("[") and prompt.text.endswith("]")
+        plain = prompt.name.startswith(("notes/clock", "notes/listening-"))
+        assert bracketed != plain, f"{prompt.ref} should {'not ' if plain else ''}be in [brackets]"
+
+
+def test_a_listening_note_reaches_the_model_bracketed() -> None:
+    from companion.core.listening import Judgement, listening_note  # noqa: PLC0415
+
+    for severity in (0, 1, 2):
+        for vague in (False, True):
+            j = Judgement(severity, "listening", vague, medical=severity == 2, rude=False)
+            note = listening_note(j, [])
+            assert note is None or (note.startswith("[") and note.endswith("]")), note

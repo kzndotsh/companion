@@ -9,6 +9,9 @@ name (`from companion.prompts import get`).
 - Never edit a shipped version. Add the next `vN.md`, an entry in `CHANGELOG.md` and a line in
   `manifest.toml`. A test fails if any of those is missing.
 - Placeholders are written `$name` and filled in with `render`. A missing value is an error.
+- A note is one line in `[brackets]`, so the model reads it as an aside. Two exceptions: the clock lines
+  stay plain sentences (bracketed, the model copied them into replies), and the `listening-*` parts are
+  stored bare because `listening_note` joins and brackets them. A test enforces it.
 - A decision a judge or extractor logs carries `name@version`, so a flag can be traced to the exact text.
 - To try another version without shipping it: `COMPANION_PROMPT_OVERRIDES="system/ack=v2"` before the process starts.
 - `uv run companion prompts` lists the current versions.
@@ -58,6 +61,11 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/listening-offer-serious` | note | added to the severity 2 note | v2 |
 | `notes/listening-serious` | note | listening note, severity 2 | v5 |
 | `notes/listening-trivial` | note | listening note, severity 0 | v2 |
+| `notes/mood-buzzing` | note | candidate mood line for buzzing, read only by the `+mood-buzzing` eval flag until ADR 0016 is built | v1 |
+| `notes/mood-cozy` | note | candidate mood line for cozy, read only by the `+mood-cozy` eval flag until ADR 0016 is built | v1 |
+| `notes/mood-flat` | note | candidate mood line for flat, read only by the `+mood-flat` eval flag until ADR 0016 is built | v1 |
+| `notes/mood-playful` | note | candidate mood line for playful, read only by the `+mood-playful` eval flag until ADR 0016 is built | v1 |
+| `notes/mood-tender` | note | candidate mood line for tender, read only by the `+mood-tender` eval flag until ADR 0016 is built | v1 |
 | `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v1 |
 | `notes/rude` | note | their message was rude to the companion, `core/listening.py` | v1 |
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
