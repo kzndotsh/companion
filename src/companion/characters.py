@@ -81,13 +81,11 @@ def chosen(private_dir: Path = PRIVATE_DIR) -> Character | None:
 
 def system_prompt(persona: str, character: Character | None, *, scene: bool = False) -> str:
     """The persona, then the frame and the sheet. Without a character, the persona unchanged. The
-    scene talker's prompt (`scene`) adds the scene addendum and the part of the sheet after
-    SCENE_HEADING, which the everyday talker never sees (ADR 0017)."""
+    scene talker's prompt (`scene`) adds the part of the sheet after SCENE_HEADING, which the
+    everyday talker never sees (ADR 0017)."""
     parts = [persona.rstrip()]
     if character is not None:
         parts += [prompts.get("system/character-frame").text, character.sheet]
-    if scene:
-        parts.append(prompts.get("system/scene-intimate").text)
-        if character is not None and character.scene_sheet:
-            parts.append(character.scene_sheet)
+    if scene and character is not None and character.scene_sheet:
+        parts.append(character.scene_sheet)
     return "\n\n".join(parts) + "\n" if len(parts) > 1 else persona

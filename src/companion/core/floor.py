@@ -39,7 +39,6 @@ class Route:
 
 INTIMATE_CHECK = get("system/intimate-check")
 HOLD_NOTE = get("notes/floor-hold")
-PAUSE = get("messages/floor-pause")
 INTIMATE_SCHEMA: dict[str, Json] = {
     "type": "object",
     "properties": {"intimate": {"type": "boolean"}},

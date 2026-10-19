@@ -150,7 +150,7 @@ async def test_intimate_talk_goes_to_the_scene_talker_only_when_allowed_and_abov
 
 
 @pytest.mark.parametrize(("sexual", "sent"), [(False, "everyday"), (True, None)])
-async def test_a_held_turn_gets_the_note_and_a_sexual_reply_twice_becomes_the_pause(
+async def test_a_held_turn_gets_the_note_and_an_intimate_reply_three_times_sends_nothing(
     store: Store, *, sexual: bool, sent: str | None
 ) -> None:
     scene, everyday = Talker("scene"), Talker("everyday")
@@ -167,8 +167,9 @@ async def test_a_held_turn_gets_the_note_and_a_sexual_reply_twice_becomes_the_pa
     assert scene.seen == []
     assert "keep this reply free of anything sexual" in everyday.seen[0].card
     if sent is None:
-        assert out == "mm, come here. let's slow down and just stay close for a bit 🖤"
-        assert len(everyday.seen) == 2
+        assert out == ""  # nothing is sent: no reply is written by code
+        assert len(everyday.seen) == 3
+        assert len(everyday.seen[2].messages) == 1  # the last draw sees only their message
     else:
         assert len(everyday.seen) == 1
 
@@ -208,4 +209,6 @@ async def test_a_scene_reading_from_the_fallback_model_never_routes(store: Store
     assert turn is not None
     reasons = [d.reason for d in store.decisions_for_turn(REL, turn)]
     assert "kept on the everyday talker: the judge could not read the turn" in reasons
-    assert len(everyday.seen) == 3  # its intimate check is unread too, so the held reply is redrawn
+    assert (
+        len(everyday.seen) == 4
+    )  # its intimate checks are unread too, so the held reply is redrawn twice

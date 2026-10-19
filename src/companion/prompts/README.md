@@ -46,7 +46,6 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | Name | Kind | Used for | Current |
 |---|---|---|---|
 | `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v40 |
-| `messages/floor-pause` | message | sent by code when a turn the floor held drew a sexual reply twice (ADR 0017) | v1 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, `core/address.py` | v1 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
@@ -91,7 +90,6 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, `core/quip.py` | v2 |
 | `system/react` | system | the reaction judge, `core/react.py` | v1 |
 | `system/recall` | system | the recall look-up, `core/recall.py` | v1 |
-| `system/scene-intimate` | system | added to the scene talker's system prompt: follow their lead, stay in the role, no refusals inside it, role talk is play, vary the openings (ADR 0017) | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
 | `system/views-implicated` | system | which views a flag implicates, `core/beliefs/views_implicated.py` | v1 |

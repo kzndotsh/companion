@@ -64,5 +64,4 @@ def test_the_in_scenes_section_reaches_only_the_scene_talker() -> None:
     scene = system_prompt("persona", char, scene=True)
     assert "Stay in the role." not in everyday
     assert scene.endswith("Stay in the role.\n")
-    assert "## When you are in a scene" in scene
     assert system_prompt("persona", None) == "persona"

@@ -8,7 +8,7 @@ persona, as `COMPANION_CHARACTER=mika` does for the bot. `+echo` adds the note a
 their emoji or emoticon, on a message that has one. `+mood-cozy` adds the candidate mood line for
 one state, and `+mood-cozy.playful` for two (ADR 0016), to measure a mood before it is built.
 `+resample` draws one fresh reply when the quip check says the first bolted on a joke (J45).
-`+scene` adds the scene talker's addendum (`system/scene-intimate`, ADR 0017) to the system prompt.
+`+scene` builds the scene talker's prompt: with `+as-CHARACTER`, the sheet's scene section too.
 Flags combine: `v10.md+nocard+h10@provider/model`.
 """
 

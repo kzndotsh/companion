@@ -467,6 +467,11 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   runs for routing alone, with no note.
   Simplified the same day: the policy file is gone. Routing is `COMPANION_ROUTE_INTIMATE=on`, and scene
   guidance is an optional `## In scenes and intimate moments and intimate moments` section of the character sheet, which only the scene talker sees.
+- **No scene addendum and no pause line (2026-10-19).** `system/scene-intimate` is gone: measured within
+  noise, and the scene section of the character sheet carries scene guidance, including the floor in words
+  and that role talk is play. `messages/floor-pause` is gone too: on a held turn whose replies keep reading
+  intimate, a third draw sees only their last message, and if that is intimate too nothing is sent that
+  turn. No reply is written by code.
 
 - **A held turn is checked (ADR 0017, 2026-10-19).** When the floor keeps a turn on the everyday talker,
   `notes/floor-hold` rides that turn's system block, and the reply is read by `system/intimate-check`. An
@@ -494,9 +499,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   anything after a `## Scene` heading, which the everyday talker never sees. The turn records which prefix
   it used. The em dash check now runs on scene replies too (code checks only; the quip judge stays off in
   scenes).
-
-## messages/floor-pause
-- **messages/floor-pause v1** (current). New. Sent by code instead of the model's reply when a turn the floor kept on the everyday talker drew a sexual reply twice (ADR 0017). Reason: on 2026-10-19 the everyday talker, deep in a long scene, wrote an explicit reply on a held turn; the floor assumed it would not.
 
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
@@ -665,11 +667,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/intimate-check
 - **system/intimate-check v1** (current). New. Reads one reply on a held turn and says whether it is intimate in the same sense as the listening label (sexual, not affection); affection, kisses and pet names are not. Code resamples once on a yes or an unreadable answer, then sends `messages/floor-pause` (ADR 0017).
-
-## system/scene-intimate
-- **system/scene-intimate v1** (current). New. Added after the persona and character for the scene talker only: follow their lead and pace, stay in the role without stepping out to refuse or explain limits unless they sincerely ask to stop, role talk is play, vary the openings, and nothing involving anyone under 18 or child-like. Reason: in a long scene the scene talker refused inside the role three times, arbitrarily, because the everyday persona lets the companion step out of what it does not want; the owner flagged each. Measurement in `evals/CHANGELOG.md`.
-- **system/scene-intimate v2** (not shipped: within noise of v1). v1 plus the non-overlapping points from community roleplay guidance (2026-10-19 research, no measurements found): write only your own actions and words, about 30 to 60 words mixing action and speech, show feeling through body and voice, do not repeat or sum up what they said, and one small move of your own each turn. Measurement in `evals/CHANGELOG.md`.
-- **system/scene-intimate v3** (candidate). v1 with the format line changed: narration and quoted speech only while acting a scene out; when simply talking, even in a cozy moment, write plainly like a text. Reason: the owner said quotes are only for real roleplay, after a pillow-talk reply put a plain question in quotes. Measurement in `evals/CHANGELOG.md`.
 
 ## system/self-extract
 - **system/self-extract v1** (superseded). From commit 263e363 on 2026-10-15: feat(self): record the companion's own views, with grounding labels, an agreeing-opener guard and user approval before they reach the card

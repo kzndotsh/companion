@@ -31,7 +31,7 @@ from companion.core.basics import NAME_CAPTURE, ask_name, asked_for_name, knows_
 from companion.core.card import Card, build_card, render
 from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import Extractor, from_fallback
-from companion.core.floor import HOLD_NOTE, INTIMATE_CHECK, PAUSE
+from companion.core.floor import HOLD_NOTE, INTIMATE_CHECK
 from companion.core.floor import Talker as RouteTalker
 from companion.core.floor import choose as choose_route
 from companion.core.frames import (
@@ -205,7 +205,7 @@ class Conversation:
     resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
     route_intimate: bool = False  # intimate talk may go to the scene talker (ADR 0017)
     scene_prefix: Prefix | None = (
-        None  # the scene talker's system prompt, with system/scene-intimate
+        None  # the scene talker's system prompt, with the sheet's scene section
     )
 
     async def handle(
@@ -581,24 +581,26 @@ async def _checked(  # noqa: PLR0913, PLR0917
 async def _hold_check(
     c: Conversation, t: _Turn, request: TalkerRequest, reply: Reply, talker: Talker
 ) -> Reply:
-    """On a turn the floor held, the reply must not be sexual (ADR 0017). A sexual or unreadable
-    reply is drawn once more; if that one is sexual too, code sends a short pause instead. Each
-    step is logged with what was discarded."""
+    """On a turn the floor held, the reply must not be intimate (ADR 0017). An intimate or unread
+    reply is drawn again with the same request, then once more with only their last message in
+    view, so the history that pulled it along is gone. If all three read as intimate, nothing is
+    sent this turn. Every step is logged with what was discarded; no reply is written by code."""
     if c.judge is None:
         return reply
+    lean = TalkerRequest(prefix=request.prefix, messages=request.messages[-1:], card=request.card)
+    tries = (request, lean)
     discarded: list[Json] = []
-    for attempt in range(2):
-        sexual = await judge_intimate(c.judge, reply.text)
-        if sexual is False:
+    for attempt in range(len(tries) + 1):
+        if await judge_intimate(c.judge, reply.text) is False:
             break
         discarded.append(reply.text)
-        if attempt == 0:
-            reply = await talker.reply(request)
+        if attempt < len(tries):
+            reply = await talker.reply(tries[attempt])
             _mark_reply(t, reply)
     else:
-        reply = Reply(text=PAUSE.text, model="code", latency_ms=1)
+        reply = Reply(text="", model=reply.model, latency_ms=reply.latency_ms)
     if discarded:
-        sent = "the pause line" if reply.model == "code" else "a second reply"
+        sent = ["a second reply", "a reply drawn with only their last message", "nothing"]
         c.store.append_decision(
             Decision(
                 DecisionId(_id()),
@@ -607,7 +609,7 @@ async def _hold_check(
                 t.turn,
                 TraceId(t.turn),
                 DecisionKind.POLICY,
-                f"floor: a reply on a held turn read as sexual, sent {sent}",
+                f"floor: a reply on a held turn read as intimate, sent {sent[len(discarded) - 1]}",
                 t.now,
                 detail={"discarded": discarded, "prompt": INTIMATE_CHECK.ref},
             )
