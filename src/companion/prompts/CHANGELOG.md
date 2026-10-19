@@ -648,6 +648,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/memory-map
 - **system/memory-map v1** (current). New. Labels each memory with one of eight domains (identity, people, daily, interests, history, hopes, values, inner) and a depth (surface, personal, core), so code can count what it knows and pick the thinnest part to ask about (`core/knowing.py`, J48). Runs after each memory pass on memories not yet labelled. The labels never reach the talker; only the shadow pick is logged.
 
+## system/relevance
+- **system/relevance v1** (current). New, shadow only. On an ordinary turn, an embedding of their message finds the 15 nearest memories they may see that turn, and this prompt picks at most three a friend would have in mind, or none. Nothing reaches the talker: the embedding's top three and the picks are logged with whether each was already on the card (`core/relevance.py`). Reason: the card shows 15 memories out of about 135 ordinary ones, ranked by kind and recency, and the look-up ran only when they asked it to remember.
+
 ## system/name-capture
 - **system/name-capture v1** (current). New. When the companion's last message asked what to call them, reads their answer and gives the name as written, or nothing; code keeps it only if it is short and appears in their words, and stores it as a belief quoting their answer (J48). Reason: a bare one-word answer to "what name do you like being called?" was not picked up by the memory pass.
 

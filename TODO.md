@@ -105,7 +105,9 @@ Each item ends with the thing that tells us it is done. The cards are below.
    the trivial-vent question has an answer (T14).
 3. **Getting to know them on purpose** (J48): the map and the gap picker run in shadow. *Done when:* the
    map is kept by code and a week of shadow picks reads right to the owner.
-4. **A week of shadow mode** for open loops. *Done when:* the owner has read `companion initiative` and
+4. **Memories that bear on the moment** (ADR 0018), in shadow since 2026-10-19. *Done when:* a sample
+   of the shadow log is read by a Claude judge and the owner, and the next step it decides is taken.
+5. **A week of shadow mode** for open loops. *Done when:* the owner has read `companion initiative` and
    the caps are set. Going live also needs outcome recording and a slow re-probe.
 
 ### Next

@@ -9,13 +9,14 @@ no cost to report, which is a known gap, not an error.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 
 from companion.core.extractor import Extraction, Extractor
 from companion.core.prompt.request import TalkerRequest
+from companion.core.relevance import Embedded, Embedder
 from companion.core.talker import Reply, Talker
 from companion.core.types import Json
 
@@ -63,4 +64,16 @@ class MeteredExtractor:
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         result = await self._inner.extract(system, user, schema)
         self._sink(SpendEvent(_purpose.get() or self._default, result.model, result.cost_usd))
+        return result
+
+
+class MeteredEmbedder:
+    def __init__(self, inner: Embedder, sink: Sink, purpose_name: str = "relevance") -> None:
+        self._inner = inner
+        self._sink = sink
+        self._purpose = purpose_name
+
+    async def embed(self, texts: Sequence[str]) -> Embedded:
+        result = await self._inner.embed(texts)
+        self._sink(SpendEvent(_purpose.get() or self._purpose, result.model, result.cost_usd))
         return result

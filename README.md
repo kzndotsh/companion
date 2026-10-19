@@ -86,6 +86,8 @@ All optional. Set them in `.env`.
 | `COMPANION_MOOD` | `shadow` | a mood that carries (ADR 0016): `shadow` works it out and logs it without showing it to the model, `on` adds the mood line, `off` does neither. Read it with `companion mood`, or `companion mood --replay DAYS` |
 | `COMPANION_RESAMPLE` | on | on an ordinary turn, a reply with an em dash, or one the quip check says bolted a joke onto an ordinary message, is drawn once more and the second is sent; `off` disables it |
 | `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the roleplay model (ADR 0017), above an age floor in code that no setting changes. Guidance for it goes in the character sheet's `## In roleplay and intimate moments` section, which only the roleplay model sees |
+| `COMPANION_RELEVANCE` | shadow | the look-up of memories that bear on their message (ADR 0018); shadow logs it and sends nothing, `off` stops it |
+| `COMPANION_EMBED_MODEL` | `openai/text-embedding-3-small` | the embedding model for that look-up |
 | `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
 | `COMPANION_CHARACTER` | none | `mika` lays the character sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona: name, age, look, voice, tastes and an authored past. It still says it is an AI when sincerely asked |
 

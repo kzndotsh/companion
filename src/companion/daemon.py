@@ -20,7 +20,8 @@ from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.core.prompt.prefix import build_prefix
-from companion.core.spend import MeteredExtractor, MeteredTalker, SpendEvent
+from companion.core.relevance import Embedder
+from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Commands, Hooks, Telegram
@@ -32,7 +33,7 @@ from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
-from companion.models import anthropic, openrouter
+from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import RefusalFallback
 from companion.models.retry import retry_on_network_error
 from companion.store.sqlite.store import Store
@@ -147,6 +148,17 @@ def route_intimate_on() -> bool:
     )
 
 
+def relevance_on() -> bool:
+    """Whether the relevance look-up runs in shadow (`core/relevance.py`): COMPANION_RELEVANCE,
+    shadow unless off. It never reaches the talker yet."""
+    return os.environ.get("COMPANION_RELEVANCE", "").strip().lower() not in (
+        "off",
+        "0",
+        "no",
+        "false",
+    )
+
+
 def split_on() -> bool:
     """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
     return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
@@ -188,6 +200,7 @@ def startup_line(
         f" | initiative {initiative_mode()} | mood {mood_mode()}"
         f" | resample {'on' if resample_on() else 'off'}"
         f" | intimate {'may route' if route_intimate_on() else 'stays'}"
+        f" | relevance {'shadow' if relevance_on() else 'off'}"
     )
 
 
@@ -217,6 +230,19 @@ def _metered_models(
         MeteredExtractor(shared, sink, "judge"),
         MeteredExtractor(shared, sink, "memory"),
     )
+
+
+def _embedder(client: httpx.AsyncClient, store: Store, rel: RelationshipId) -> Embedder | None:
+    """The embedding model for the relevance look-up, metered, or None when it is off."""
+    key = os.environ.get("OPENROUTER_API_KEY")
+    if not key or not relevance_on():
+        return None
+
+    def sink(event: SpendEvent) -> None:
+        store.record_spend(rel, event, datetime.now(UTC))
+
+    model = os.environ.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL)
+    return MeteredEmbedder(embeddings.OpenRouterEmbedder(key, client, model), sink)
 
 
 def _hooks(store: Store, rel: RelationshipId) -> Hooks:
@@ -316,6 +342,8 @@ async def run(data_dir: Path) -> None:
             resample=resample_on(),
             route_intimate=route_intimate_on(),
             roleplay_prefix=roleplay_prefix,
+            embedder=_embedder(client, store, rel),
+            embed_model=os.environ.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
         )
         pending: list[asyncio.Task[None]] = []
 

@@ -93,6 +93,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/listening` | system | the listening judge, `core/listening.py` | v4 |
 | `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
 | `system/memory-map` | system | labels each memory with the part of their life it is about and how personal it is (J48) | v1 |
+| `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding (shadow) | v1 |
 | `system/openloops` | system | open-loop extraction, `core/openloops.py` | v3 |
 | `system/openloops-draft` | system | the follow-up draft, `loops/openloops.py` | v2 |
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, `core/quip.py` | v2 |

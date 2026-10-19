@@ -96,7 +96,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `COMPANION_REFLECT_MODEL`, `COMPANION_FALLBACK_MODEL` (asked only when the judges' model refuses a
   call), `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`, `COMPANION_PACE`,
   `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`,
-  `COMPANION_ROUTE_INTIMATE`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
+  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
   it) and `COMPANION_CHARACTER` (a character sheet laid over the persona, `companion/characters.py`). The
   table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
@@ -135,6 +135,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   with the part of their life it is about and how personal it is (`system/memory-map`, after each memory
   pass); code picks the thinnest part fine to ask about and, on a casual turn at most daily, only logs it
   (shadow, `core/knowing.py`). `uv run companion map` shows the map and the picks.
+- Which memories bear on the moment is looked up in shadow on every ordinary turn (ADR 0018,
+  `core/relevance.py`): their message is embedded, the nearest memories they may see that turn are
+  shortlisted, and a small model picks up to three or none. It is logged with whether each was already
+  on the card and runs beside the turn; nothing reaches the talker. `COMPANION_RELEVANCE=off` stops it.
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 - A mood that carries (ADR 0016, `core/mood.py`): each message adds effects to cozy, tender or playful in an
   append-only table, the mood is worked out from them when read, and only what the user did can move it

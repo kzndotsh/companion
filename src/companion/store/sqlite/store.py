@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 
@@ -14,6 +14,7 @@ from companion.core.mood import Effect, Said
 from companion.core.openloops import LoopState, OpenLoop
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
+from companion.core.relevance import Vector
 from companion.core.replay import TurnRecord
 from companion.core.spend import SpendEvent
 from companion.core.types import (
@@ -38,6 +39,7 @@ from companion.store.sqlite import (
     beliefs,
     callbacks,
     decisions,
+    embeddings,
     favorites,
     flags,
     labels,
@@ -209,6 +211,14 @@ class Store:
 
     def belief_labels(self, rel: RelationshipId) -> dict[BeliefId, Label]:
         return labels.latest(self._conn, rel)
+
+    def add_belief_embeddings(
+        self, rel: RelationshipId, vectors: Mapping[BeliefId, Vector], model: str, at: datetime
+    ) -> None:
+        embeddings.add(self._conn, rel, vectors, model=model, at=at)
+
+    def belief_embeddings(self, rel: RelationshipId, model: str) -> dict[BeliefId, Vector]:
+        return embeddings.latest(self._conn, rel, model)
 
     def add_mood_effects(self, rel: RelationshipId, effects: Sequence[Effect]) -> None:
         mood.add(self._conn, rel, effects)

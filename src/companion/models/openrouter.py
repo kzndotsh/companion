@@ -31,7 +31,7 @@ DEFAULT_PROVIDER = (
 )
 
 
-def _check(resp: httpx.Response, model: str) -> None:
+def check(resp: httpx.Response, model: str) -> None:
     """Raise on an error status, after logging what OpenRouter said. The body names the cause
     (a provider outage, a bad key, no credit) and the bare status error does not."""
     if resp.status_code >= 400:
@@ -79,7 +79,7 @@ class OpenRouterTalker:
             ),
             what="talker",
         )
-        _check(resp, self._model)
+        check(resp, self._model)
         data = obj(resp.json())
         first = obj(seq(data.get("choices"))[0]) if seq(data.get("choices")) else {}
         text = string(obj(first.get("message")).get("content")).strip()
@@ -144,7 +144,7 @@ class OpenRouterExtractor:
             json=self.body(system, user, schema),
             timeout=120,
         )
-        _check(resp, self._model)
+        check(resp, self._model)
         data = obj(resp.json())
         first = obj(seq(data.get("choices"))[0]) if seq(data.get("choices")) else {}
         calls = seq(obj(first.get("message")).get("tool_calls"))

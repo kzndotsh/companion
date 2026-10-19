@@ -75,6 +75,8 @@ from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import recall_note
 from companion.core.recheck import QUIP, code_checks
 from companion.core.recheck import eligible as recheck_eligible
+from companion.core.relevance import SHADOW as RELEVANCE_SHADOW
+from companion.core.relevance import Embedder
 from companion.core.replay import TurnRecord
 from companion.core.talker import Reply, Talker
 from companion.core.types import (
@@ -105,6 +107,7 @@ from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
 from companion.loops.recall import Recalled, look_up
+from companion.loops.relevance import shadow as relevance_shadow
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.store.sqlite.store import Store
 
@@ -208,6 +211,8 @@ class Conversation:
     roleplay_prefix: Prefix | None = (
         None  # the roleplay talker's system prompt, with the sheet's scene section
     )
+    embedder: Embedder | None = None  # the relevance look-up runs in shadow when set
+    embed_model: str = ""
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -887,6 +892,53 @@ def _mood(
     return (shown if c.mood == "on" else None), added
 
 
+_BESIDE: set[asyncio.Task[None]] = set()  # shadow look-ups still running, kept from collection
+
+
+def _relevance_beside(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, card: Card
+) -> None:
+    """Start the relevance look-up beside the turn on an ordinary message (shadow). It logs what it
+    would have kept in mind and never holds up or changes the reply."""
+    if c.embedder is None or c.judge is None or heard is None or in_scene is not Frame.REAL:
+        return
+    replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
+    on_card = [b.id for b in (*card.usable, *card.held, *card.older)]
+
+    async def run(embedder: Embedder, judge: Extractor) -> None:
+        found = await relevance_shadow(
+            c.store,
+            embedder,
+            judge,
+            c.rel,
+            model=c.embed_model,
+            said=t.text,
+            last_reply=replies[-1] if replies else None,
+            sharing=heard[0].severity >= 1,
+            on_card=on_card,
+            now=t.now,
+        )
+        if found is None:
+            return
+        c.store.append_decision(
+            Decision(
+                DecisionId(_id()),
+                c.rel,
+                t.session,
+                t.turn,
+                TraceId(t.turn),
+                DecisionKind.POLICY,
+                RELEVANCE_SHADOW,
+                t.now,
+                detail=found.detail,
+            )
+        )
+
+    task = asyncio.get_running_loop().create_task(run(c.embedder, c.judge))
+    _BESIDE.add(task)
+    task.add_done_callback(_BESIDE.discard)
+
+
 def _casual(t: _Turn, in_scene: Frame, heard: _Heard | None) -> bool:
     """An ordinary moment: read as not serious, not in a scene, not a goodbye."""
     return (
@@ -1032,6 +1084,7 @@ async def _handle_turn(
         asm.views,
         asm.view_state,
     )
+    _relevance_beside(c, t, in_scene, heard, card)
     talk, framing, feeling = _start_beside(c, t, request, talker)
     try:
         reply, outcome, felt = await _await_beside(t, talk, framing, feeling)
