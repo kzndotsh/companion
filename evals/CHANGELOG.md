@@ -794,3 +794,13 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   on. The dry-run estimate stays pessimistic (about $0.004 a reply against a measured $0.00014 for Luna
   and $0.00035 for DeepSeek V4.1 Flash), so it is labelled an upper estimate. Checked on the real
   account with no spend: a 12-sample run was refused at a $0.06 balance with a $0.20 cap.
+- **2026-10-19. Short answers to the companion's questions: extract v9 does not help.** The real
+  history has 69 short answers (5 words or fewer) right after a companion question; 17 were cited by a
+  belief. Of the other 52, 9 were judged by eye, before the run, worth keeping. Each answer was sent with
+  the four messages before it, only the answer marked as target, 6 samples per version on Haiku 5.5.
+  Worth keeping: v8 34/54, v9 34/54. Not worth keeping but stored: v8 24/258, v9 21/258. Within noise,
+  v9 dropped. Two answers whose meaning sits wholly in the question were never kept by either; the rest
+  are kept most of the time in isolation, so the misses in the live pass come from its batching or its
+  already-recorded list, not the prompt. Cost $0.19 by the responses. Scratch script, not in the repo;
+  rerun by building that window per answer and calling `extract.SCHEMA` with each version's text.
+

@@ -101,7 +101,7 @@ def test_overrides_pick_another_version_and_unknown_names_are_refused(
 
 
 def test_versions_are_listed_in_numeric_order() -> None:
-    assert prompts.versions("system/extract") == [f"v{n}" for n in range(1, 9)]
+    assert prompts.versions("system/extract") == [f"v{n}" for n in range(1, 10)]
 
 
 def test_the_readme_lists_every_prompt_at_its_current_version() -> None:

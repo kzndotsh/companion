@@ -622,6 +622,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/extract v6** (superseded). From commit 9aad7dd on 2026-10-15: feat(play): frame detection at the door, scene note, leak guards, persona v11 with a positive play stance
 - **system/extract v7** (superseded). From commit 1ca24e9 on 2026-10-15: feat(evals): public scripted fixtures, private recorded turns moved out of the repo; genericise persona v12 and an extraction line
 - **system/extract v8** (current). From commit a2b897f on 2026-10-17: feat(memory): romantic behaviour in the chat and refusals said in reply to a push are not recorded; the model labels, code decides; 13 live cases; the inbox note is acted on (T1, T11)
+- **system/extract v9** (dropped). v8 plus a paragraph on reading a short answer together with the companion's question before it, and the one-word skip narrowed to replies that answer nothing. On 52 real short answers (6 samples each, the answer alone as target), v8 already kept 34 of 54 samples on the answers worth keeping and v9 also 34; on the rest, 24 of 258 against 21. Within noise, not shipped: the model already reads the question, so the misses in real use come from elsewhere in the pass.
 
 ## system/frames
 - **system/frames v1** (superseded). From commit 9aad7dd on 2026-10-15: feat(play): frame detection at the door, scene note, leak guards, persona v11 with a positive play stance
