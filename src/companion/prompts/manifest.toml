@@ -1,5 +1,6 @@
 # The current version of every prompt. A change is a new vN.md and a line here.
 "messages/spend-cap" = "v1"
+"notes/address" = "v1"
 "notes/clock" = "v1"
 "notes/clock-gap" = "v1"
 "notes/habit-echo" = "v1"

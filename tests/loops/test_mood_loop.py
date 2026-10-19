@@ -142,3 +142,10 @@ async def test_a_goodbye_never_carries_the_mood_line(store: Store) -> None:
     talker = await _say(store, Judge(), "on", "ok gotta go, ttyl", NOW + timedelta(minutes=1))
     assert PLAYFUL not in talker.seen[0].card
     assert _mood_reasons(store) == ["mood: held, they are leaving [on]"]
+
+
+async def test_how_to_refer_to_them_is_pinned_after_the_clock_on_every_turn(store: Store) -> None:
+    store.set_setting(REL, "address", "she/her, a woman", NOW - timedelta(days=1))
+    talker = await _say(store, Judge(), "off", "made pasta")
+    lines = talker.seen[0].card.split("\n")
+    assert lines[1].startswith("[How they want to be referred to: she/her, a woman.")

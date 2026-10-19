@@ -23,6 +23,8 @@ from companion.core.ack import (
     render_reason,
     schema_hash,
 )
+from companion.core.address import KEY as ADDRESS_KEY
+from companion.core.address import address_note
 from companion.core.card import Card, build_card, render
 from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import Extractor
@@ -120,6 +122,12 @@ class _CardLog:
             )
         for b in card.older:
             self._one(DecisionKind.SURFACE, b, "in the card as older, possibly out of date")
+        for b in card.crowded:
+            self._one(
+                DecisionKind.WITHHOLD,
+                b,
+                f"crowded out: the card holds {len(card.usable) + len(card.held)}",
+            )
         for b in card.dropped:
             self._one(DecisionKind.WITHHOLD, b, self._why_dropped(b, card))
         for b in card.views:
@@ -687,13 +695,14 @@ def _assemble(
     shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)
+    pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
     notes = _notes(c, t.prior, in_scene, _length(c, t, in_scene, heard))
     listening = _listening_note(c, t, heard)
     rude = rude_note(heard[0]) if heard is not None else None
     found = recall_note(recalled.picked) if recalled is not None else None
     mood, mood_effects = _mood(c, t, in_scene, heard)
     notes += [n for n in (listening, rude, found, mood) if n is not None]
-    card_text = "\n".join([clock, *shown, *notes])
+    card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
     request = build_request(c.prefix, to_messages(t.prior), t.text, "", card_text)
     store.save_prefix(c.prefix)
     _mark_start(t, in_scene, card, card_text)

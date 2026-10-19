@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from companion import daemon
-from companion.cli import beliefs, favorites, flags, initiative, mood, replay, spend
+from companion.cli import address, beliefs, favorites, flags, initiative, mood, replay, spend
 from companion.cli import eval as eval_cli
 from companion.cli import prompts as prompts_cli
 from companion.cli.target import find_db, resolve_db, resolve_relationship
@@ -28,6 +28,18 @@ def _target(a: argparse.Namespace) -> tuple[Path, str]:
     return db, resolve_relationship(getattr(a, "relationship", None), db)
 
 
+def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
+    """The commands that read or set what the bot carries between turns."""
+    ad = add("address", help="how they want to be referred to, pinned in every card")
+    ad.add_argument(
+        "--set", dest="value", metavar="TEXT", help="record it; an empty text clears it"
+    )
+    _db_args(ad)
+    md = add("mood", help="the mood now, or --replay DAYS of what it would have been")
+    md.add_argument("--replay", type=int, metavar="DAYS", help="rebuild it over the last DAYS days")
+    _db_args(md)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="companion")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -45,9 +57,7 @@ def _parser() -> argparse.ArgumentParser:
     _db_args(sub.add_parser("favorites", help="list the turns you loved"))
     _db_args(sub.add_parser("spend", help="what the paid calls cost, by purpose"))
     _db_args(sub.add_parser("initiative", help="open loops and what shadow mode would send"))
-    md = sub.add_parser("mood", help="the mood now, or --replay DAYS of what it would have been")
-    md.add_argument("--replay", type=int, metavar="DAYS", help="rebuild it over the last DAYS days")
-    _db_args(md)
+    _state_commands(sub.add_parser)
     pr = sub.add_parser("prompts", help="the current version of every prompt, or the text of one")
     pr.add_argument("which", nargs="?", help="a prompt name, optionally name@version")
     _db_args(sub.add_parser("beliefs", help="what it currently believes, with quotes"))
@@ -168,6 +178,10 @@ def _prompts(a: argparse.Namespace) -> int:
     return _out(prompts_cli.run(a.which))
 
 
+def _address(a: argparse.Namespace) -> int:
+    return _out(address.run(*_target(a), a.value))
+
+
 def _mood(a: argparse.Namespace) -> int:
     return _out(mood.run(*_target(a), a.replay))
 
@@ -221,6 +235,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "favorites": _favorites,
     "initiative": _initiative,
     "mood": _mood,
+    "address": _address,
     "prompts": _prompts,
     "spend": _spend,
     "beliefs": _beliefs,

@@ -116,3 +116,16 @@ def test_an_event_never_goes_stale(belief: Callable[..., Belief]) -> None:
     b = _b(belief, "a", "Started the project on 2026-10-14", kind=BeliefKind.EVENT)
     card = _card([b], now=T0 + timedelta(days=900))
     assert [x.id for x in card.usable] == ["a"]
+
+
+def test_what_does_not_fit_on_the_card_is_kept_as_crowded_out(
+    belief: Callable[..., Belief],
+) -> None:
+    many = [
+        _b(belief, f"p{i}", f"pref {i}", kind=BeliefKind.PREFERENCE, valid_from=T0 + timedelta(i))
+        for i in range(8)
+    ]
+    card = build_card(many, {}, NOW + timedelta(days=9), max_items=5)
+    assert len(card.usable) == 5
+    assert len(card.crowded) == 3
+    assert not set(card.crowded) & set(card.usable)

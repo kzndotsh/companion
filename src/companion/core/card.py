@@ -51,6 +51,7 @@ class Card:
     aged: Mapping[BeliefId, Aged]
     now: datetime
     views: tuple[Belief, ...] = ()
+    crowded: tuple[Belief, ...] = ()  # current, but past the card's size
 
     @property
     def empty(self) -> bool:
@@ -77,9 +78,10 @@ def build_card(
         (b for b in beliefs if aged[b.id].status is Freshness.STALE),
         key=lambda b: -aged[b.id].last_supported.timestamp(),
     )
-    ranked = sorted(
+    ordered = sorted(
         current, key=lambda b: (KIND_ORDER[b.kind], -aged[b.id].last_supported.timestamp())
-    )[:max_items]
+    )
+    ranked, crowded = ordered[:max_items], ordered[max_items:]
     older_pool = [b for b in stale if b.sensitivity < HOLD_AT]
     older = tuple(older_pool[:MAX_OLDER])
     return Card(
@@ -90,6 +92,7 @@ def build_card(
         aged=aged,
         now=now,
         views=tuple(views),
+        crowded=tuple(crowded),
     )
 
 

@@ -17,6 +17,7 @@ PLACEHOLDERS = {
     "notes/habit-phrases": {"phrases"},
     "notes/habit-moves": {"habits"},
     "notes/clock": {"stamp"},
+    "notes/address": {"address"},
     "notes/clock-gap": {"gap"},
 }
 

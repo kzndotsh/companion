@@ -437,8 +437,17 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   "mood:" decision every turn but sends the model nothing new; `off` does neither. The lines are the v2
   candidates measured in `evals/CHANGELOG.md` (2026-10-19).
 
+- **How they want to be referred to, pinned (2026-10-19).** When set with `companion address --set`, the
+  `notes/address` line goes right after the clock line on every turn, ahead of the memory card. The card
+  shows 15 of the beliefs ranked by kind and recency, and on a busy day a belief about how they want to be
+  referred to fell off it and a reply got it wrong. Beliefs that do not fit are now logged as "crowded out" instead of
+  vanishing silently.
+
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
+
+## notes/address
+- **notes/address v1** (current). New. "How they want to be referred to: $address. Use it every time, without bringing it up." Filled by `core/address.py` from a setting they state (`companion address --set`), and placed right after the clock line on every turn. Reason: on 2026-10-19 the memory card (15 of 196 memories) crowded out how they want to be referred to, and a reply got it wrong.
 
 ## notes/clock
 - **notes/clock v1** (current). Moved here on 2026-10-18 from `core/clock.py`, text unchanged. Earlier history is in git.
