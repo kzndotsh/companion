@@ -13,7 +13,9 @@ from companion.models.wire import number, obj
 
 log = logging.getLogger("companion.openrouter")
 URL = "https://openrouter.ai/api/v1/credits"
-SETTLE_SECONDS = 5.0  # usage lags the last response by a few seconds
+SETTLE_SECONDS = 5.0
+TRIES = 18  # about a minute and a half
+CAUGHT_UP = 0.8
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,17 +41,25 @@ async def credits(key: str, client: httpx.AsyncClient) -> Credits | None:
 
 
 async def charged_since(
-    key: str, client: httpx.AsyncClient, before: Credits, *, settle: float = SETTLE_SECONDS
+    key: str,
+    client: httpx.AsyncClient,
+    before: Credits,
+    expected: float,
+    *,
+    settle: float = SETTLE_SECONDS,
 ) -> float | None:
-    """What the account was charged since `before`, read again until it stops moving."""
+    """What the account was charged since `before`. The meter can sit still for a while before it
+    catches up, so a steady reading counts only once it has reached most of what the replies said
+    they cost; past the time limit the last reading is returned as it is."""
     last: float | None = None
-    for _ in range(4):
+    for _ in range(TRIES):
         await asyncio.sleep(settle)
         now = await credits(key, client)
         if now is None:
             return last
         charged = now.used - before.used
-        if last is not None and abs(charged - last) < 1e-9:
+        caught_up = charged >= expected * CAUGHT_UP
+        if caught_up and last is not None and abs(charged - last) < 1e-9:
             return charged
         last = charged
     return last

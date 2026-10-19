@@ -29,11 +29,19 @@ async def test_credits_reads_balance() -> None:
 
 
 async def test_charged_waits_for_the_meter_to_settle() -> None:
-    async with _client([14.90, 14.93, 14.95, 14.95]) as client:
+    async with _client([14.90, 14.90, 14.90, 14.93, 14.95, 14.95]) as client:
         before = await credits("k", client)
         assert before is not None
-        charged = await charged_since("k", client, before, settle=0)
+        charged = await charged_since("k", client, before, 0.05, settle=0)
     assert charged == pytest.approx(0.05)
+
+
+async def test_a_meter_that_never_catches_up_gives_its_last_reading() -> None:
+    async with _client([14.90, 14.91]) as client:
+        before = await credits("k", client)
+        assert before is not None
+        charged = await charged_since("k", client, before, 0.05, settle=0)
+    assert charged == pytest.approx(0.01)
 
 
 async def test_unreadable_meter_is_none_not_an_error() -> None:
@@ -42,4 +50,4 @@ async def test_unreadable_meter_is_none_not_an_error() -> None:
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
         assert await credits("k", client) is None
-        assert await charged_since("k", client, Credits(15, 1), settle=0) is None
+        assert await charged_since("k", client, Credits(15, 1), 0.01, settle=0) is None

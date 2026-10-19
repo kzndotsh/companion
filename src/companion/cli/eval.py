@@ -206,7 +206,7 @@ async def run(a: EvalArgs) -> str:
         plan = Plan(fixtures, requests, variants, samples, cap, listening)
         results = await run_eval(plan, models)
         if before is not None:
-            results.charged = await charged_since(key, client, before)
+            results.charged = await charged_since(key, client, before, results.spent)
     stamp = utc_now().strftime("%Y%m%d-%H%M%S")
     path = Path("evals/results") / f"{stamp}.json"
     save(path, results, fixtures, variants, judge_module.judge_hash())
