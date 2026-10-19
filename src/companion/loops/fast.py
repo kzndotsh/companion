@@ -30,7 +30,7 @@ from companion.core.basics import ASKED as ASKED_NAME
 from companion.core.basics import NAME_CAPTURE, ask_name, asked_for_name, knows_name, name_belief
 from companion.core.card import Card, build_card, render
 from companion.core.clock import local_zone, now_line, utc_now
-from companion.core.extractor import Extractor
+from companion.core.extractor import Extractor, from_fallback
 from companion.core.floor import HOLD_NOTE, INTIMATE_CHECK, PAUSE
 from companion.core.floor import Talker as RouteTalker
 from companion.core.floor import choose as choose_route
@@ -470,7 +470,9 @@ async def _route(
         in_play=in_play,
         intimate=read is not None and read[0].intimate,
         allow_intimate=c.route_intimate,
-        judged_age_coded=read[0].age_coded if read is not None else None,
+        judged_age_coded=read[0].age_coded
+        if read is not None and not from_fallback(read[1])
+        else None,
     )
     if route.reason is not None:
         c.store.append_decision(

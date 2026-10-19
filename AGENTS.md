@@ -94,7 +94,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 
 **Running the bot**
 - Settings are environment variables in `.env`: `COMPANION_MODEL`, `COMPANION_SCENE_MODEL`,
-  `COMPANION_REFLECT_MODEL`, `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`,
+  `COMPANION_REFLECT_MODEL`, `COMPANION_FALLBACK_MODEL`, `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`,
   `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`, `COMPANION_POLICY` and
   `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping it) and `COMPANION_CHARACTER` (a character
   sheet laid over the persona, `companion/characters.py`). The table is in `README.md`.

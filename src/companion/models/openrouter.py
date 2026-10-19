@@ -26,7 +26,9 @@ from companion.models.wire import (
 log = logging.getLogger("companion.openrouter")
 URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "openai/gpt-6-luna"
-DEFAULT_PROVIDER = "Anthropic"
+DEFAULT_PROVIDER = (
+    "Anthropic"  # pinned only for anthropic/ models, so caching works; others route freely
+)
 
 
 def _check(resp: httpx.Response, model: str) -> None:
@@ -112,7 +114,7 @@ class OpenRouterExtractor:
         self._max_tokens = max_tokens
 
     def body(self, system: str, user: str, schema: dict[str, Json]) -> dict[str, object]:
-        return {
+        body: dict[str, object] = {
             "model": self._model,
             "max_tokens": self._max_tokens,
             "temperature": 0,
@@ -128,9 +130,11 @@ class OpenRouterExtractor:
                 }
             ],
             "tool_choice": {"type": "function", "function": {"name": "record"}},
-            "provider": {"order": [self._provider], "allow_fallbacks": False},
             "reasoning": {"enabled": False},
         }
+        if self._model.startswith("anthropic/"):
+            body["provider"] = {"order": [self._provider], "allow_fallbacks": False}
+        return body
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         started = time.perf_counter()

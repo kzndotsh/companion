@@ -480,6 +480,13 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   requires. Reason: "Ani is my girlfriend ❤️" was answered with "i should be honest: i'm an AI, so i can't
   be your real girlfriend" (owner: "don't ruin the mood"). On the owner's history it fires on 3 of 925 replies.
 
+- **A fallback model for refused judge and memory calls (2026-10-19).** The judges' model runs with its
+  provider's content moderation and refused the memory pass twice on explicit stretches. A refused call now
+  goes to `COMPANION_FALLBACK_MODEL` (default `deepseek/deepseek-v4.1-flash`, `none` to disable), and the
+  answer is marked; memories from it are stored like any other (sensitive ones held). The floor never relies
+  on a fallback answer: an age reading or an intimate check from it counts as unread (ADR 0017). The provider
+  pin now applies to Anthropic models only, for the judges as for the talker.
+
 - **The scene talker's own system prompt (ADR 0017, 2026-10-19).** When the scene talker answers, its
   system prompt is the everyday one plus `system/scene-intimate`, then the operator's policy text including
   anything after a `## Scene` heading, which the everyday talker never sees. The turn records which prefix

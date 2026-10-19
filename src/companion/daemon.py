@@ -32,12 +32,14 @@ from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
 from companion.models import anthropic, openrouter
+from companion.models.fallback import RefusalFallback
 from companion.models.retry import retry_on_network_error
 from companion.policy import Policy
 from companion.store.sqlite.store import Store
 
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
+FALLBACK_MODEL = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 SCENE_MODEL = "deepseek/deepseek-v4-flash"
 UPDATE_KEY = "telegram.last_update_id"
@@ -65,10 +67,15 @@ def _need(name: str) -> str:
 
 
 def extractor(client: httpx.AsyncClient) -> Extractor:
+    """The judges' and the memory pass's model, with a second model for calls the first refuses."""
     key = _need("OPENROUTER_API_KEY")
-    return openrouter.OpenRouterExtractor(
+    first = openrouter.OpenRouterExtractor(
         key, client, os.environ.get("COMPANION_REFLECT_MODEL", REFLECT_MODEL)
     )
+    second = os.environ.get("COMPANION_FALLBACK_MODEL", FALLBACK_MODEL)
+    if second.lower() == "none":
+        return first
+    return RefusalFallback(first, openrouter.OpenRouterExtractor(key, client, second))
 
 
 def _talker(client: httpx.AsyncClient) -> Talker:

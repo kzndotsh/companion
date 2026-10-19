@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import Extractor, from_fallback
 from companion.core.floor import INTIMATE_CHECK, INTIMATE_SCHEMA, parse_intimate
 from companion.core.spend import purpose
 
@@ -24,4 +24,6 @@ async def judge_intimate(extractor: Extractor, reply: str) -> bool | None:
     except Exception as err:
         log.warning("intimate check failed or timed out; treated as intimate: %r", err)
         return None
+    if from_fallback(result.model):
+        return None  # the floor never relies on the fallback model (ADR 0017)
     return parse_intimate(result.data)

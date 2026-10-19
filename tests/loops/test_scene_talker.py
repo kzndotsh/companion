@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.extractor import Extraction
+from companion.core.extractor import FALLBACK, Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
@@ -191,3 +191,21 @@ async def test_a_scene_reply_with_an_em_dash_is_drawn_once_more(store: Store) ->
     out = await convo.handle(SESSION, "*bows*", "t", NOW + timedelta(minutes=1))
     assert out == "I lean in, closer"
     assert len(scene.seen) == 2
+
+
+async def test_a_scene_reading_from_the_fallback_model_never_routes(store: Store) -> None:
+    class FallbackJudge(Judge):
+        async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+            got = await super().extract(system, user, schema)
+            return Extraction(got.data, got.model + FALLBACK, 0.0, 1)
+
+    scene = Talker("scene")
+    everyday = await _chat(
+        store, ["let's pretend you're a knight", "*bows*"], scene, FallbackJudge()
+    )
+    assert scene.seen == []
+    turn = store.latest_turn(REL)
+    assert turn is not None
+    reasons = [d.reason for d in store.decisions_for_turn(REL, turn)]
+    assert "kept on the everyday talker: the judge could not read the turn" in reasons
+    assert len(everyday.seen) == 3  # its intimate check is unread too, so the held reply is redrawn

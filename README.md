@@ -66,6 +66,7 @@ All optional. Set them in `.env`.
 | `COMPANION_MODEL` | `openai/gpt-6-luna` | model for everyday chat |
 | `COMPANION_SCENE_MODEL` | `deepseek/deepseek-v4-flash` | model for pretend scenes; `none` uses the everyday model |
 | `COMPANION_REFLECT_MODEL` | `anthropic/claude-haiku-5.5` | model for memory extraction |
+| `COMPANION_FALLBACK_MODEL` | `deepseek/deepseek-v4.1-flash` | asked only when the judges' or memory model refuses a call (a 403 from content moderation); the floor never relies on its answers; `none` disables it |
 | `COMPANION_DAILY_CAP_USD` | `10` | daily spend cap in dollars; `off` removes it |
 | `COMPANION_DB` | the one database in `data/` | path to the SQLite database, for the CLI commands |
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow`. Use `off` when timing a run by hand |
