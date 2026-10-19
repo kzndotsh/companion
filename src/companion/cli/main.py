@@ -62,6 +62,18 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     _db_args(md)
 
 
+def _memory_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
+    """The commands that close or merge beliefs by hand, each closure logged with its reason."""
+    mg = add("merge", help="merge beliefs that say one thing into one, keeping every quote")
+    mg.add_argument("id_prefix", nargs="+")
+    mg.add_argument("--claim", required=True, help="the merged wording")
+    _db_args(mg)
+    rt = add("retire", help="close one belief by id prefix, with a reason")
+    rt.add_argument("id_prefix")
+    rt.add_argument("--reason", required=True)
+    _db_args(rt)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="companion")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -95,10 +107,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     ap.add_argument("id_prefix")
     _db_args(ap)
-    rt = sub.add_parser("retire", help="close one belief by id prefix, with a reason")
-    rt.add_argument("id_prefix")
-    rt.add_argument("--reason", required=True)
-    _db_args(rt)
+    _memory_commands(sub.add_parser)
 
     _db_args(sub.add_parser("rebuild", help="restate every belief under the current rules"))
     cb = sub.add_parser("callbacks", help="judge recent replies for callbacks, then report")
@@ -257,6 +266,11 @@ def _approve(a: argparse.Namespace) -> int:
     return _out(beliefs.approve_one(db, rel, str(a.id_prefix)))
 
 
+def _merge(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    return _out(beliefs.merge_some(db, rel, [str(x) for x in a.id_prefix], str(a.claim)))
+
+
 def _retire(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     return _out(beliefs.retire_one(db, rel, str(a.id_prefix), str(a.reason)))
@@ -280,6 +294,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "dedupe": _dedupe,
     "approve": _approve,
     "retire": _retire,
+    "merge": _merge,
     "reflect": _reflect,
     "rebuild": _rebuild,
     "callbacks": _callbacks,

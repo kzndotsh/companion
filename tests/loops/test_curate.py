@@ -22,7 +22,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.curate import close_duplicates, rebuild, retire
+from companion.loops.curate import close_duplicates, merge, rebuild, retire
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -145,3 +145,15 @@ async def test_a_failed_rebuild_leaves_the_old_beliefs_in_force(store: Store) ->
     with pytest.raises(RuntimeError):
         await rebuild(store, _Ex(fail_on=1), REL)
     assert [b.id for b in store.current_beliefs(REL)] == ["old"]
+
+
+def test_merge_keeps_every_quote_and_closes_the_originals(store: Store) -> None:
+    store.insert_belief(_belief("m1", "Hates cooking.", "i hate cooking", 1))
+    store.insert_belief(_belief("m2", "Feels lazy.", "im so lazy lol", 2))
+    said = merge(store, REL, ["m1", "m2"], "The user hates cooking and calls themselves lazy.")
+    assert said.startswith("merged 2 into")
+    [now] = store.current_beliefs(REL)
+    assert now.claim == "The user hates cooking and calls themselves lazy."
+    assert {e.quote for e in now.evidence} == {"i hate cooking", "im so lazy lol"}
+    with pytest.raises(ValueError, match="two or more"):
+        merge(store, REL, [now.id], "x")

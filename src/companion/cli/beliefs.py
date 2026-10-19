@@ -9,7 +9,7 @@ from companion.core.freshness import status, when_phrase
 from companion.core.types import RelationshipId
 from companion.core.views import ViewMode, gates, is_settled, parse_mode
 from companion.loops.calibrate import report, reviewed_views
-from companion.loops.curate import approve, close_duplicates, retire
+from companion.loops.curate import approve, close_duplicates, merge, retire
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
 
 
@@ -44,6 +44,14 @@ def dedupe(db: Path, relationship: str) -> str:
     finally:
         store.close()
     return ("\n".join(report) + "\n") if report else "no duplicates\n"
+
+
+def merge_some(db: Path, relationship: str, id_prefixes: list[str], claim: str) -> str:
+    store = Store(db)
+    try:
+        return merge(store, RelationshipId(relationship), id_prefixes, claim) + "\n"
+    finally:
+        store.close()
 
 
 def retire_one(db: Path, relationship: str, id_prefix: str, reason: str) -> str:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import replace
 from datetime import datetime, tzinfo
 
 from companion.core.beliefs.dedupe import duplicate_groups
@@ -10,6 +11,7 @@ from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
 from companion.core.types import (
     Belief,
+    BeliefId,
     Decision,
     DecisionId,
     DecisionKind,
@@ -60,6 +62,46 @@ def retire(
         raise ValueError(msg)
     _close(store, matches[0], reason, now or utc_now())
     return f"closed  {matches[0].claim}"
+
+
+def merge(
+    store: Store,
+    rel: RelationshipId,
+    id_prefixes: list[str],
+    claim: str,
+    now: datetime | None = None,
+) -> str:
+    """Several beliefs that say one thing become one, worded by the owner, carrying every quote the
+    originals had (ADR 0001); the originals are closed as merged into it, never removed (ADR 0002).
+    The kind is the first original's; sensitivity and confidence the highest of them."""
+    now = now or utc_now()
+    current = store.current_beliefs(rel)
+    found: list[Belief] = []
+    for prefix in id_prefixes:
+        matches = [b for b in current if b.id.startswith(prefix)]
+        if len(matches) != 1:
+            msg = f"{len(matches)} current beliefs start with {prefix!r}; need exactly one"
+            raise ValueError(msg)
+        found.append(matches[0])
+    if len(found) < 2 or not claim.strip():
+        msg = "a merge needs two or more beliefs and the merged wording"
+        raise ValueError(msg)
+    first = found[0]
+    evidence = tuple(dict.fromkeys(e for b in found for e in b.evidence))
+    merged = replace(
+        first,
+        id=BeliefId(uuid.uuid4().hex),
+        claim=claim.strip(),
+        evidence=evidence,
+        confidence=max(b.confidence for b in found),
+        sensitivity=max(b.sensitivity for b in found),
+        valid_from=min(b.valid_from for b in found),
+        recorded_at=now,
+    )
+    store.insert_belief(merged)
+    for b in found:
+        _close(store, b, f"merged into {merged.id[:8]} at the owner's request", now)
+    return f"merged {len(found)} into {merged.id[:8]}  {merged.claim}"
 
 
 async def rebuild(
