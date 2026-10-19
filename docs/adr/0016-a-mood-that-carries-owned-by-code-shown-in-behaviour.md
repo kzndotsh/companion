@@ -6,21 +6,24 @@ before any code, as the audits advise for anything with state.
 **Decision.** The companion has a mood that changes with time and with how the conversation goes, carries
 across hours and into the next day, and shows only in how it replies.
 
-- **State.** A small set of named states, each with a strength and a timer, kept by code. The first six:
-  sleepy (tired: shorter, lets the chat fade), cozy (relaxed, warm, unhurried, a bit affectionate), tender
-  (softer and more attentive after they shared something hard), playful, buzzing and flat. Mellow was
-  folded into cozy and "gentle" is how tender behaves, not a separate mood: states that would not read
-  differently in replies are one state. Several can be active at once (sleepy and cozy is
-  normal); a few real opposites exclude each other (sleepy and buzzing cannot both be strong; flat damps
-  playful and buzzing), the way The Sims stops the low and high version of a mood stacking. More states
+- **State.** A small set of named states, each with a strength and a timer, kept by code. The first five,
+  matched to established terms where one exists: cozy (relaxed, serene: calm, warm, unhurried, a bit
+  affectionate), tender (softer and more attentive after they shared something hard; a stance toward them
+  more than a mood, close to attentiveness), playful (Sims "Playful", PANAS-X joviality), buzzing
+  (excited, energized) and flat (low, a bit down). States that would not read differently in replies are
+  one state: mellow and a calm "winding down" sit in the same low-energy, pleasant corner of the circumplex
+  as cozy and were folded into it; "sleepy" was dropped because it is a body word (the PANAS-X fatigue
+  items) the companion has no body for; "gentle" is how tender behaves. Several can be active at once
+  (cozy and playful is normal); a few real opposites exclude each other (cozy and buzzing cannot both be
+  strong; flat damps playful and buzzing), the way The Sims stops the low and high version of a mood stacking. More states
   (restless, nostalgic, affectionate) are added only when they prove they change behaviour. Mood never
   changes the persona or a character's temperament.
 - **Why states, not scales.** The first draft used two dials (energy, ease). Dials force false opposites
   (deadpan teasing is playful and dry at once) and leave no place for a feeling like nostalgia; states match
   how moods are felt, read plainly in the log ("cozy, from the long chat an hour ago"), and grow by adding
   one state instead of redesigning axes. The cost is more to tune and measure, so the set starts small.
-- **Baseline.** The time of day sets gentle background states (sleepy late at night, slow to warm up early
-  in the morning) that the rest add to; never a different person.
+- **Baseline.** The time of day sets gentle background states (leaning cozy late at night: calmer, unhurried,
+  a bit shorter; slow to warm up early in the morning; energy following the day, as in Thayer) that the rest add to; never a different person.
 - **Inputs, all turned into effects by code.** Minutes chatted today; the user's texting energy in a message
   (emoji, stretched words, exclamation marks, length), carried over only on the positive side (toward
   playful or buzzing, never mirroring distress); tone labels the existing judges already give (funny,
@@ -43,9 +46,9 @@ across hours and into the next day, and shows only in how it replies.
   talking.
 - **How it reaches the model.** One short line in the system block, a versioned prompt like the other
   notes (ADR 0012, 0013, 0014): the strongest one or two states in plain words, each with the concrete
-  behaviour that goes with it (sleepy: shorter replies, fewer questions, let quiet sit), and never to say
+  behaviour that goes with it (cozy late at night: shorter replies, fewer questions, let quiet sit), and never to say
   it. When no state is strong enough there is no line. No numbers, no
-  reasons, no inner monologue. Mild negatives are allowed (tired, flat, a bit off) and show as lower
+  reasons, no inner monologue. Mild negatives are allowed (flat, a bit off) and show as lower
   energy, never as guilt or a request to be cheered up.
 - **Logged.** Every change records the states before and after, the contributing effects, the mood
   parameters' version and the line shown, so a turn can be replayed and a stuck or flip-flopping mood found.
@@ -79,3 +82,8 @@ stick or flip every turn; the time-of-day baseline checked against the owner's o
 
 **Reverses if.** The forced-mood measurement shows no change in behaviour, or the owner's flags show the
 mood reads as fake, stuck or manipulative.
+
+**Terms.** Russell's circumplex of affect (1980; pleasant and energy axes, with calm, relaxed and serene
+in the low-energy pleasant corner); Thayer's energetic and tense arousal (energy follows the time of day);
+the PANAS-X subscales (serenity, joviality, attentiveness, fatigue); Mehrabian's PAD octants ("relaxed",
+"exuberant"); The Sims 4 emotions ("Playful", "Energized").
