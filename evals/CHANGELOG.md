@@ -719,3 +719,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   public minor-vent fixtures pass 28 to 30 of 30 in every cell, so they do not test this. A resample cannot
   help a habit that shows every time. Not shipped; the flag's meaning (retelling, or its own repeated "ugh
   ... 😭" shape) is to be confirmed with the owner. Spent $0.058.
+- **2026-10-19. The vent retelling: not history, not the model; examples move it but collapse it (T14).**
+  The flagged laundry turn, 30 samples per cell: v36 with the last 2 or 6 messages only, 0/30 and 0/30;
+  DeepSeek V4 Flash, 0/30 (it retells too, with more flourish). Trivial note v5 (a short reaction only,
+  with two examples of the size, "ugh noo 😭" and "that's so annoying"): 6/30 on the laundry turn, the
+  first movement, but replies collapse onto one line ("ugh, that's so frustrating 😭" 23 of 30 on the
+  bus fixture), which the owner has flagged as bland before. Research (2026-10-19): a 2026 preprint finds
+  one empathy template covers 83 to 90% of LLM replies while human supporters restate in about 7% of turns
+  (ESConv); few-shot examples bias output toward copying them. Next to test: a pool of varied short
+  reactions, a few drawn per turn by code, so no single example becomes the reply. Spent $0.04.
