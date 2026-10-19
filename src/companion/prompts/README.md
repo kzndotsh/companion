@@ -45,7 +45,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 
 | Name | Kind | Used for | Current |
 |---|---|---|---|
-| `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v31 |
+| `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v36 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |

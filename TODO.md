@@ -410,9 +410,8 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
       section 5: the model picks a label, code owns the size).
       **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
-      M3 wired it in shadow with `companion mood --replay`. Left: no mood line at a goodbye (a code guard), a
-      persona version without v31's "say a mood as a stance, in words" line (it contradicts the ADR and is why
-      v31 says "in a pretty mellow mood"), then `COMPANION_MOOD=on`, a few days of flags, and the ADR accepted.
+      M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
+      to 0/30) shipped 2026-10-19 with `COMPANION_MOOD=on`. Left: a few days of flags, then the ADR accepted.
 - [ ] J6 Its own time away: after a gap it has something of its own to say about the interval, recorded as
       lore so it stays consistent (greenfield "continuous" probe; ties to R3 and A22).
 - [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk
