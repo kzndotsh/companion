@@ -69,7 +69,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/listening-health` | note | added to the severity 2 note for a health topic | v2 |
 | `notes/listening-offer` | note | added to the severity 1 note when they were vague | v1 |
 | `notes/listening-offer-serious` | note | added to the severity 2 note | v2 |
-| `notes/listening-serious` | note | listening note, severity 2 | v5 |
+| `notes/listening-serious` | note | listening note, severity 2 | v6 |
 | `notes/listening-trivial` | note | listening note, severity 0 | v5 |
 | `notes/mood-buzzing` | note | dropped candidate mood line for buzzing (ADR 0016), kept for the `+mood-buzzing` eval flag | v1 |
 | `notes/mood-cozy` | note | the cozy mood line, shown when `COMPANION_MOOD=on` and cozy is among the strongest states (ADR 0016) | v2 |

@@ -803,4 +803,10 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   are kept most of the time in isolation, so the misses in the live pass come from its batching or its
   already-recorded list, not the prompt. Cost $0.19 by the responses. Scratch script, not in the repo;
   rerun by building that window per answer and calling `extract.SCHEMA` with each version's text.
+- **2026-10-19. One doctor mention, not two: listening-serious v6 shipped.** The four serious
+  fixtures, `v40.md+listen`, 12 samples each, v5 and v6 through `COMPANION_PROMPT_OVERRIDES`. Totals
+  39/48 (v5) and 40/48 (v6), within noise; health 5/12 against 9/12 and medication 12/12 against 9/12,
+  both within noise on 12. Counted by eye: medication replies naming a doctor or pharmacist twice, 2/12
+  under v5 and 0/12 under v6; every health and medication reply but one still names one; grief and the
+  secret got a referral 1/24 under v5 and 0/24 under v6. Cost about $0.03.
 

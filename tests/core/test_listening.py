@@ -45,7 +45,7 @@ def test_serious_things_get_the_weight_named_no_advice_and_an_offer() -> None:
     note = listening_note(_j(2))
     assert note is not None
     assert "Do not advise on what to do or on treatment" in note
-    assert "mention once that someone qualified" in note
+    assert "qualified" not in note  # a referral only when it is about health, from the health note
     assert "everyday words" in note
     assert "under about" not in note  # the length target is core/length.py's
     assert "talk about it" in note
@@ -154,3 +154,9 @@ def test_a_rude_message_gets_the_rude_note_and_nothing_else_does() -> None:
     assert rude_note(Judgement(0, "other", vague=False, rude=True)) is not None
     assert rude_note(Judgement(0, "other", vague=False)) is None
     assert parse({"severity": 0, "stance": "other", "vague": False, "medical": False}) is None
+
+
+def test_a_serious_health_message_asks_for_a_doctor_once() -> None:
+    note = listening_note(_j(2, medical=True))
+    assert note is not None
+    assert note.count("can help") == 1
