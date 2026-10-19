@@ -816,3 +816,10 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   four of the 69 short answers hold something memory still lacks. The v9 test above sent no
   already-recorded list, so its keep counts include things already known. No change made. Read-only,
   no spend.
+- **2026-10-19. The relevance look-up, first real run (ADR 0018).** Three invented messages against the
+  owner's real memories (148 they could see). A message about the dogs found the dog memories by
+  embedding alone; a message about needing a drink after a long day found the beer and the long day; on a
+  bare "lol ok" the embedding returned loose matches and the small model still picked two, where none
+  was wanted. Cost about $0.00014 a turn (the first embedded every memory once, $0.0001), so roughly a
+  cent or two a day at the owner's pace. Time: embedding 0.3 to 0.4 s, the pick 0.9 to 2.7 s. Shadow
+  only; the log will say how often it picks something on small talk.
