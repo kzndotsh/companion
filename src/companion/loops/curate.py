@@ -23,11 +23,20 @@ from companion.store.sqlite.store import Store
 
 
 def _close(store: Store, b: Belief, reason: str, now: datetime) -> None:
+    _log(store, b, f"closed belief: {reason}", now)
+    store.close_belief(b.id, now)
+
+
+def log_would_close(store: Store, b: Belief, reason: str, now: datetime) -> None:
+    """In shadow: what would have been closed, and why. Nothing changes."""
+    _log(store, b, f"would close belief (shadow): {reason}", now)
+
+
+def _log(store: Store, b: Belief, reason: str, now: datetime) -> None:
     source = store.get_utterance(b.evidence[0].utterance_id)
     if source is None:
         msg = f"belief {b.id} cites an utterance missing from the ledger"
         raise ValueError(msg)
-    store.close_belief(b.id, now)
     store.append_decision(
         Decision(
             DecisionId(uuid.uuid4().hex),
@@ -36,7 +45,7 @@ def _close(store: Store, b: Belief, reason: str, now: datetime) -> None:
             source.turn_id,
             TraceId(uuid.uuid4().hex),
             DecisionKind.POLICY,
-            f"closed belief: {reason}",
+            reason,
             now,
             detail={"belief_id": b.id, "claim": b.claim},
         )

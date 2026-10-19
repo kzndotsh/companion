@@ -724,6 +724,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/views-conflict
 - **system/views-conflict v1** (current). From commit 837fad5 on 2026-10-15: feat(self): gate the companion's views by rules, not hand approval. Kinds, conflict check, modes, friction retirement, calibration
 
+## system/memory-check
+- **system/memory-check v1** (current). New (ADR 0019). Labels one memory keep, passing, out of date or overstated. Read three times; code acts alone only on a passing moment read so three times that has faded from the card, and asks the owner about out of date and overstated. Tested against the owner's review, `evals/CHANGELOG.md`.
+
+## system/memory-pair
+- **system/memory-pair v1** (current). New (ADR 0019). Says how two memories relate: same, merge, distinct, replaces or contradicts. Read three times; a new memory read as the same as an existing one by all three becomes evidence on it, and nothing is merged automatically.
+
 ## system/topic-spent
 - **system/topic-spent v1** (current). New. Whether a small everyday topic has run its course, asked only when code sees a likely moment (their message is five words or fewer with no question mark and the companion's last reply asked something), so most turns make no call. Kept apart from the listening judge, which carries the age floor and whose labels shifted when this was added to it. Feeds `notes/topic-spent`.
 

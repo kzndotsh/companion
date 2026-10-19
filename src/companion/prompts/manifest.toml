@@ -57,6 +57,8 @@
 "system/react" = "v1"
 "system/recall" = "v1"
 "system/topic-spent" = "v1"
+"system/memory-check" = "v1"
+"system/memory-pair" = "v1"
 "system/self-extract" = "v4"
 "system/views-conflict" = "v1"
 "system/views-implicated" = "v1"

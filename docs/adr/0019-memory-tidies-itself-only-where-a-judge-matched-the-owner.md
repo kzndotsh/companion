@@ -19,7 +19,7 @@ and memory rewritten by a model again and again drifts (each pass drops detail a
   - a memory read as a **passing moment**: 24 of 24 were ones the owner retired;
   - two memories read as the **same**: 9 of 10 pairs the owner also found redundant.
 - **Only two actions run on their own**, and neither loses a quote:
-  - a passing moment that has already faded from the card (ADR-free rule in `core/card.py`: a one-day
+  - a passing moment that has already faded from the card (the rule in `core/card.py`: a one-day
     moment of daily life, a week after it was last mentioned) and is not sensitive is closed, reason logged;
   - a new memory the judge reads as the same as an existing one is not stored; its quote becomes
     evidence on the existing memory, the path a restatement already takes.

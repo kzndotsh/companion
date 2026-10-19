@@ -26,6 +26,7 @@ from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops.callbacks import check_new
+from companion.loops.consolidate import nightly
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.knowing import label_new
@@ -202,6 +203,7 @@ def startup_line(
         f" | intimate {'may route' if route_intimate_on() else 'stays'}"
         f" | relevance {'shadow' if relevance_on() else 'off'}"
         f" | talker fallback {talker_fallback() or 'off'}"
+        f" | memory check {consolidate_mode()}"
     )
 
 
@@ -213,6 +215,13 @@ def _roleplay_talker(client: httpx.AsyncClient) -> Talker | None:
     if model.lower() == "none" or not key:
         return None
     return openrouter.OpenRouterTalker(key, client, model)
+
+
+def consolidate_mode() -> str:
+    """COMPANION_CONSOLIDATE (ADR 0019): `shadow` (default) logs what the overnight memory check
+    would close, `on` closes it, `off` skips the check."""
+    raw = os.environ.get("COMPANION_CONSOLIDATE", "").strip().lower()
+    return raw if raw in ("on", "off") else "shadow"
 
 
 def talker_fallback() -> str | None:
@@ -318,6 +327,27 @@ def _commands(store: Store, rel: RelationshipId, reflector: Extractor) -> Comman
 
 
 INITIATIVE_TICK_SECONDS = 900
+
+
+NIGHTLY_HOUR = 4  # local time, when they are least likely to be chatting
+
+
+async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId) -> None:
+    """The memory check once a night (ADR 0019). A failure is logged and tried the next night."""
+    if consolidate_mode() == "off":
+        return
+    while True:
+        now = utc_now().astimezone(local_zone())
+        nxt = now.replace(hour=NIGHTLY_HOUR, minute=0, second=0, microsecond=0)
+        if nxt <= now:
+            nxt += timedelta(days=1)
+        await asyncio.sleep((nxt - now).total_seconds())
+        if over_cap(store, rel, daily_cap(), datetime.now(UTC)) is not None:
+            continue
+        try:
+            await nightly(store, judge, rel, utc_now(), local_zone(), mode=consolidate_mode())
+        except Exception:
+            logging.getLogger("companion.consolidate").exception("memory check failed")
 
 
 async def _daily_backups(data_dir: Path, db: Path) -> None:
@@ -439,10 +469,12 @@ async def run(data_dir: Path) -> None:
         logging.getLogger("companion").info("full log: %s", log_file)
         initiative = _start_initiative(store, rel, judge)
         daily = asyncio.create_task(_daily_backups(data_dir, db))
+        memory = asyncio.create_task(_nightly_memory(store, reflector, rel))
         try:
             await tg.run(handle, _commands(store, rel, reflector))
         finally:
             daily.cancel()
+            memory.cancel()
             if initiative is not None:
                 initiative.cancel()
 

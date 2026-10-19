@@ -44,6 +44,7 @@ from companion.store.sqlite import (
     flags,
     labels,
     ledger,
+    memory_checks,
     mood,
     open_loops,
     reflect,
@@ -223,6 +224,32 @@ class Store:
             (rel, turn),
         ).fetchone()
         return str(row["text"]) if row else ""
+
+    def add_memory_check(  # noqa: PLR0913
+        self,
+        rel: RelationshipId,
+        belief_id: BeliefId,
+        other_id: BeliefId | None,
+        reads: Sequence[str | None],
+        verdict: str,
+        *,
+        prompt: str,
+        at: datetime,
+    ) -> int:
+        return memory_checks.add(
+            self._conn, rel, belief_id, other_id, reads=reads, verdict=verdict, prompt=prompt, at=at
+        )
+
+    def checked_memories(self, rel: RelationshipId) -> set[BeliefId]:
+        return memory_checks.checked(self._conn, rel)
+
+    def unanswered_checks(
+        self, rel: RelationshipId, verdicts: Sequence[str]
+    ) -> list[memory_checks.MemoryCheck]:
+        return memory_checks.unanswered(self._conn, rel, verdicts)
+
+    def answer_check(self, check_id: int, said: str, at: datetime) -> None:
+        memory_checks.answer(self._conn, check_id, said, at)
 
     def add_belief_labels(
         self, rel: RelationshipId, found: Sequence[Label], model: str, prompt: str, at: datetime

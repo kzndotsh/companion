@@ -90,6 +90,7 @@ All optional. Set them in `.env`.
 | `COMPANION_EMBED_MODEL` | `openai/text-embedding-3-small` | the embedding model for that look-up |
 | `COMPANION_BACKUP_DIR` | `data/backups` | where database and character-sheet snapshots go; point it at another drive or a synced folder, since a copy on the same disk does not survive the disk |
 | `COMPANION_TALKER_FALLBACK` | the roleplay model | answers when the everyday talker errors, or alongside it when it has not replied in 10 s (first answer wins); the roleplay talker falls back to the everyday model; `none` turns it off |
+| `COMPANION_CONSOLIDATE` | shadow | the 04:00 memory check (ADR 0019): `shadow` logs what it would close, `on` closes faded passing moments, `off` skips it |
 | `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
 | `COMPANION_CHARACTER` | none | `mika` lays the character sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona: name, age, look, voice, tastes and an authored past. It still says it is an AI when sincerely asked |
 

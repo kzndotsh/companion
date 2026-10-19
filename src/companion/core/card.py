@@ -112,6 +112,11 @@ def build_card(  # noqa: PLR0913
     )
 
 
+def faded(b: Belief, last: datetime, now: datetime) -> bool:
+    """Whether a memory labelled a one-day moment of daily life is past its week on the card."""
+    return _faded(b, last, now)
+
+
 def _faded(b: Belief, last: datetime, now: datetime) -> bool:
     return (
         b.kind is BeliefKind.EVENT
