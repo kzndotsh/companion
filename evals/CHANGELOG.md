@@ -626,3 +626,18 @@ against 90% for the sheet version, so the persona keeps more of the switch. Pass
 210 of 252: no loss. v31 ships (it carries v30's removal of the emoticon examples). Spent $0.14. Rerun:
 `uv run companion eval --variants v30.md,v31.md --samples 3 --cap 0.6 --fixtures-dir evals/fixtures --show`
 and count final periods and lowercase starts in the replies.
+
+## 2026-10-18: expressive texture does not move with wording (J4)
+
+The owner's messages carry expressive texture in 17% (stretched words like a dragged-out "hmm" or "yay",
+trailing dots, doubled marks), the companion's in 5%, and two thirds of the companion's were copied from
+the owner's last message. Candidates on top of v31: v32 ("sometimes ... a stretched word, a teasing line
+that trails off, or a thinking noise"), v33 (about one message in three, drag out a vowel or the last
+letter, trail off with dots), v34 (identity: "you're expressive when you text"), v35 (v33 with a schematic
+"'so' becomes 'sooo'"), and the same idea as a line in the Ani character sheet. Measured first on all 84
+fixtures (v31 3%, v32 4%), then fairly on 10 playful fixtures, 6 samples, Luna: v31 10%, v32 10%, v33 12%,
+v34 12%, v35 10%, Ani 7%, Ani with the line 10%, v32 with Ani 12%; own stretched words 0 to 4 of 60 in every
+cell; "sooo" was never copied; pass rates 45 to 50 of 60. All within noise. Nearly all texture fell on the
+one excited fixture (a finished to-do list). Read as: texture follows the excited moment and the wording
+barely matters; v31 stays, v32 to v35 are dropped. Live on v31 the same evening it wrote "ohhh that sounds
+so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.

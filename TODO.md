@@ -386,8 +386,13 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       wrong one (Kindroid's edge in the user research). **Parked by the owner on 2026-10-18** after the
       research (local notes: `docs/research/2026-10-18_user-visible-memory.md`); options were browse, search,
       retire, correct, and how sensitive items show.
-- [ ] J4 Small imperfections in style, uneven punctuation and the odd casual spelling, through the
-      character sheet, never by editing replies (HAL cue weights: polish is an AI tell).
+- [x] J4 Small imperfections in style. Research first: no typos (they cut trust and humanness), a final
+      period reads as less sincere. Persona v31 shipped 2026-10-18: casual replies dropped final periods from
+      50% to 14% and start lowercase 94% of the time, no em dashes or semicolons, no loss on 84 fixtures.
+      Expressive texture (stretched words, trailing dots, thinking noises): four wordings (v32 to v35) and a
+      character-sheet line all landed within noise (10 to 12% on playful fixtures); it follows the excited
+      moment, and live it already says "ohhh", "okayyy". Follow-up if it still reads polished: a code note
+      for excited moments, measured on genuinely excited fixtures.
 - [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
       days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
       section 5: the model picks a label, code owns the size).

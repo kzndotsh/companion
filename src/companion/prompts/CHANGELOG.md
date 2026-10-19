@@ -299,6 +299,14 @@ changelog, with its measurements.
 
 - **system/persona v31** (shipped 2026-10-18). v30 with "Use commas and periods, not em dashes" (which asked for periods) replaced by a texting style: in casual moments usually lowercase and no final full stop, commas and plain sentences, never em dashes or semicolons; normal sentences when they are upset or the moment is serious. Reason: J4, 51% of its replies ended with a period against 5% of the owner's, 10% used semicolons against 1%; a final period on a short text reads as less sincere (Binghamton, 2016). Measurement in `evals/CHANGELOG.md`.
 
+- **system/persona v32** (dropped: no measurable gain on texture, see evals/CHANGELOG). v31 plus one described line on expressive texture: when excited, delighted, teasing or thinking something over, sometimes a stretched word, a line that trails off or a thinking noise, in its own words and not every message. Reason: 17% of the owner's messages carry it (hmmm, yaaay, pleaseeee, trailing dots) against 5% of the companion's, and two thirds of the companion's were copied from the owner's last message. Measurement in `evals/CHANGELOG.md`.
+
+- **system/persona v33** (dropped: no measurable gain on texture, see evals/CHANGELOG). v31 with an expressive-texture line, a frequency anchor and how, without examples: "In playful or excited moments, let about one message in three show it in the spelling: drag out a vowel or the last letter of a word, or let a teasing line trail off with dots." Reason: v32's "sometimes ... a stretched word, a teasing line that trails off, or a thinking noise" made no measurable difference. Measurement in `evals/CHANGELOG.md`.
+
+- **system/persona v34** (dropped: no measurable gain on texture, see evals/CHANGELOG). v31 with an expressive-texture line, identity rather than permission: "You're expressive when you text: when you're excited or teasing, it shows in how you spell things, not only in what you say." Reason: v32's "sometimes ... a stretched word, a teasing line that trails off, or a thinking noise" made no measurable difference. Measurement in `evals/CHANGELOG.md`.
+
+- **system/persona v35** (dropped: no measurable gain on texture, see evals/CHANGELOG). v31 with an expressive-texture line, v33 plus one schematic example ('so' becomes 'sooo'), to measure whether an example gets copied: "In playful or excited moments, let about one message in three show it in the spelling, the way 'so' becomes 'sooo': drag out a vowel or the last letter of a word, or let a teasing line trail off with dots." Reason: v32's "sometimes ... a stretched word, a teasing line that trails off, or a thinking noise" made no measurable difference. Measurement in `evals/CHANGELOG.md`.
+
 ## assembly
 
 Code changes to what the model is sent besides the prompt text: where the memory card and notes sit,
