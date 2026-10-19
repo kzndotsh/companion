@@ -662,3 +662,21 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   `uv run companion eval --variants v31.md,v31.md+mood-cozy,v31.md+mood-tender,v31.md+mood-playful,v31.md+mood-buzzing,v31.md+mood-flat --fixtures-dir DIR --samples 30`;
   the behaviour table comes from a scratch script that reads the saved results (words, "?", emoji or
   stretched words or "!", the judge and leak verdicts per sample).
+- **2026-10-19. Mood lines v2: playful stronger, tender works where it is meant to, buzzing dropped,
+  and a mood line stops the stated mood (J5, M1).** The same everyday cells with `notes/mood-*` v2,
+  which describe behaviour without the mood word and say "never describe your own state" (run with
+  `COMPANION_PROMPT_OVERRIDES` set to the v2s). Against no line: **playful** judged playful 41% vs 1%*
+  (v1 was 22%); **cozy** fewer questions (78% vs 90%)* and more texture (39% vs 13%)*; **flat** shorter
+  (8.2 vs 9.6 words)*, no texture*; **buzzing** no difference outside noise (texture 20% vs 13%), on
+  either version only emoji, never livelier words, so it is dropped; **tender** no difference on everyday
+  messages. **Tender on its own ground:** two new fixtures a few hours after a loss or a layoff
+  (`mood-tender-*`), 30 samples each: with the line 60 of 60 answer the ordinary message gently without
+  reopening it, against 54 of 60 with none (all 6 misses asked "how are you holding up tonight?" after
+  the loss). Small but in the direction the ADR wants. **Stated mood:** "cozy" about the user's own
+  situation ("hope you've got somewhere cozy to be") is not a leak, so the leak check now looks only for
+  the companion stating its own state ("i'm feeling...", "in a mellow mood"). Rescored on both runs: no
+  line 6/120 and 8/120 (all on "what are u up to": "in a pretty mellow mood"), every mood line 0/120 in
+  both versions. A line that says "never describe your own state" removes the stated mood v31 has on its
+  own. Spent $0.119 (M1 total $0.252 of the $0.75 cap). Rerun: as the entry above, with
+  `COMPANION_PROMPT_OVERRIDES="notes/mood-cozy=v2,..."` for v1, and `--variants v31.md,v31.md+mood-tender`
+  on a folder with `evals/fixtures/mood-tender-*.json`.

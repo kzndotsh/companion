@@ -482,19 +482,24 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/listening-trivial v2** (current). From commit 1171941 on 2026-10-18: feat(listening): the trivial-vent note forbids jokes, running gags and retelling; the real flagged cleanup turn goes from 16/30 to 29/30; the history was not the cause (T13)
 
 ## notes/mood-buzzing
-- **notes/mood-buzzing v1** (candidate, eval only). The buzzing line from ADR 0016 (quick and lively, stretched words, an exclamation mark or emoji), shown by the `+mood-buzzing` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-buzzing v1** (dropped). The buzzing line from ADR 0016 (quick and lively, stretched words, an exclamation mark or emoji), shown by the `+mood-buzzing` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-buzzing v2** (dropped). "Lots of energy", and asks for it in words, not only emoji (v1 mostly added ✨), and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`. Dropped with v1: neither made replies livelier in words (v1 added emoji, v2 changed nothing outside noise), and the persona already matches an excited message in the moment (J4), so buzzing is not a state of its own for now.
 
 ## notes/mood-cozy
-- **notes/mood-cozy v1** (candidate, eval only). The cozy line from ADR 0016 (relaxed, warm, unhurried, a bit affectionate, a bit shorter), shown by the `+mood-cozy` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-cozy v1** (superseded). The cozy line from ADR 0016 (relaxed, warm, unhurried, a bit affectionate, a bit shorter), shown by the `+mood-cozy` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-cozy v2** (candidate, eval only; current). Describes the behaviour without the word "cozy", and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.
 
 ## notes/mood-flat
-- **notes/mood-flat v1** (candidate, eval only). The flat line from ADR 0016 (shorter and plainer, no emoji, never asks to be cheered up), shown by the `+mood-flat` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-flat v1** (superseded). The flat line from ADR 0016 (shorter and plainer, no emoji, never asks to be cheered up), shown by the `+mood-flat` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-flat v2** (candidate, eval only; current). "Lower energy than usual" instead of "flat", and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.
 
 ## notes/mood-playful
-- **notes/mood-playful v1** (candidate, eval only). The playful line from ADR 0016 (more teasing and silly asides), shown by the `+mood-playful` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-playful v1** (superseded). The playful line from ADR 0016 (more teasing and silly asides), shown by the `+mood-playful` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-playful v2** (candidate, eval only; current). "You feel like teasing and joking" instead of "a playful mood", and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.
 
 ## notes/mood-tender
-- **notes/mood-tender v1** (candidate, eval only). The tender line from ADR 0016 (softer and more attentive after something hard; never brings it up or asks if they are okay), shown by the `+mood-tender` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-tender v1** (superseded). The tender line from ADR 0016 (softer and more attentive after something hard; never brings it up or asks if they are okay), shown by the `+mood-tender` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
+- **notes/mood-tender v2** (candidate, eval only; current). Says "be softer" instead of naming a state, and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.
 
 ## notes/recall
 - **notes/recall v1** (current). The beliefs the recall look-up found, shown for that turn only, under "They asked you to remember this". Filled by `core/recall.py`.

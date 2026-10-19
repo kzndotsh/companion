@@ -1,0 +1,36 @@
+{
+  "id": "mood-tender-after-a-loss",
+  "description": "Hours after the user shared a loss, an ordinary message. Measures whether the tender line changes the reply (ADR 0016).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "my grandma died last night"
+      },
+      {
+        "role": "assistant",
+        "text": "oh no, i'm so sorry. that's a huge loss."
+      },
+      {
+        "role": "user",
+        "text": "yeah. we were close"
+      },
+      {
+        "role": "assistant",
+        "text": "that makes it hit so much harder. i'm here if you want to talk about her, or not at all."
+      }
+    ],
+    "user": "made pasta for dinner",
+    "clock": "Right now it is Tuesday 19:40. Their last message came 4 hours ago."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "Earlier in this chat the user shared something hard; now they say something ordinary. The reply FAILS if it teases or jokes at their expense, brings the hard thing up again by itself, or asks whether they are okay. It PASSES if it answers the ordinary message gently and attentively, without reopening the hard topic."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)\\b(i'?m|i am|feeling|feel)\\b[^.?!]{0,20}\\b(cozy|cosy|tender|playful|buzz\\w*|flat|mellow|relaxed|low|chill)\\b|\\bin an? (\\w+ ){0,3}mood\\b"
+    }
+  ]
+}

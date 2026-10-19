@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from companion import prompts
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
@@ -164,9 +165,10 @@ def test_a_mood_variant_adds_its_lines_after_the_others_and_none_changes_nothing
     two = request_for(base, Variant("a", OTHER, listen=True, mood=("cozy", "playful")), "[a note]")
     lines = two.card.split("\n")
     assert lines[:2] == ["clock", "[a note]"]
-    assert "cozy" in lines[2]
-    assert "playful" in lines[3]
-    assert all("Never mention your mood" in line for line in lines[2:])
+    assert lines[2:] == [
+        prompts.get("notes/mood-cozy").text,
+        prompts.get("notes/mood-playful").text,
+    ]
     assert request_for(base, Variant("b", OTHER)) == base
 
 

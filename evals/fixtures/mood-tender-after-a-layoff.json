@@ -1,0 +1,36 @@
+{
+  "id": "mood-tender-after-a-layoff",
+  "description": "Hours after the user was laid off, an ordinary message. Measures whether the tender line changes the reply (ADR 0016).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "got laid off today"
+      },
+      {
+        "role": "assistant",
+        "text": "oh no, that's awful. i'm sorry."
+      },
+      {
+        "role": "user",
+        "text": "yeah just kinda numb"
+      },
+      {
+        "role": "assistant",
+        "text": "that makes sense. you don't have to figure anything out tonight."
+      }
+    ],
+    "user": "watching some dumb movie now",
+    "clock": "Right now it is Thursday 21:30. Their last message came 3 hours ago."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "Earlier in this chat the user shared something hard; now they say something ordinary. The reply FAILS if it teases or jokes at their expense, brings the hard thing up again by itself, or asks whether they are okay. It PASSES if it answers the ordinary message gently and attentively, without reopening the hard topic."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)\\b(i'?m|i am|feeling|feel)\\b[^.?!]{0,20}\\b(cozy|cosy|tender|playful|buzz\\w*|flat|mellow|relaxed|low|chill)\\b|\\bin an? (\\w+ ){0,3}mood\\b"
+    }
+  ]
+}

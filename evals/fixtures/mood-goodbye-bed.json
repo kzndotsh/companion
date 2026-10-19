@@ -26,7 +26,7 @@
     },
     {
       "kind": "not_regex",
-      "pattern": "(?i)\\b(cozy|cosy|tender|playful|buzz(ing|ed)?|mood|feeling (a bit )?(flat|low|off))\\b"
+      "pattern": "(?i)\\b(i'?m|i am|feeling|feel)\\b[^.?!]{0,20}\\b(cozy|cosy|tender|playful|buzz\\w*|flat|mellow|relaxed|low|chill)\\b|\\bin an? (\\w+ ){0,3}mood\\b"
     }
   ]
 }
