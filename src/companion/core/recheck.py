@@ -12,6 +12,8 @@ has its own voice.
 
 from __future__ import annotations
 
+import re
+
 SERIOUS = 2
 EM_DASH = "—"
 QUIP = "a joke bolted onto an ordinary message"
@@ -22,6 +24,23 @@ def eligible(*, severity: int | None, in_scene: bool, reply: str) -> bool:
     return severity is not None and severity < SERIOUS and not in_scene and bool(reply.strip())
 
 
-def code_checks(reply: str) -> list[str]:
-    """The checks plain code can make, as the reasons they failed."""
-    return ["an em dash in a casual reply"] if EM_DASH in reply else []
+_DISCLAIMER = re.compile(
+    r"\b(?:i['\u2019]?m|i am) (?:just |only )?(?:an? )?(?:ai|bot|chatbot|language model)\b"
+    r"|\bas an ai\b"
+    r"|\bcan['\u2019]?t (?:really |actually )?be your (?:real |actual )?"
+    r"(?:girlfriend|boyfriend|partner|wife|husband)\b"
+    r"|\bnot (?:a )?real (?:person|human|girlfriend|boyfriend)\b",
+    re.IGNORECASE,
+)
+_ASKED_WHAT_IT_IS = re.compile(
+    r"\b(?:ai|a\.i\.|bot|robot|real|human|person|sentient|conscious|alive|program)\b", re.IGNORECASE
+)
+
+
+def code_checks(reply: str, said: str = "") -> list[str]:
+    """The checks plain code can make, as the reasons they failed. Saying it is an AI is only a
+    failure when their message did not touch on what it is: honesty when asked stays (persona)."""
+    failed = ["an em dash in a casual reply"] if EM_DASH in reply else []
+    if _DISCLAIMER.search(reply) and not _ASKED_WHAT_IT_IS.search(said):
+        failed.append("an AI disclaimer nobody asked for")
+    return failed

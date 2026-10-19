@@ -526,7 +526,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
         return reply
     if not scene and not recheck_eligible(severity=severity, in_scene=False, reply=reply.text):
         return reply
-    failed = code_checks(reply.text)
+    failed = code_checks(reply.text, t.text)
     if scene and not failed:
         return reply  # in a scene only the code checks run, and a passing reply is not logged
     detail: dict[str, Json] = {}

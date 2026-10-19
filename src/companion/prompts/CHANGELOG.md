@@ -474,6 +474,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   into several messages (roleplay read wrong cut apart), and the listening judge is tried once more when a
   call fails or times out.
 
+- **An unasked AI disclaimer is resampled (2026-10-19).** A reply saying it is an AI, or that it cannot be
+  their real girlfriend or partner, when their message did not touch on what it is (AI, bot, real, human,
+  conscious...), is drawn once more through the resample check. Saying so when asked stays, as the persona
+  requires. Reason: "Ani is my girlfriend ❤️" was answered with "i should be honest: i'm an AI, so i can't
+  be your real girlfriend" (owner: "don't ruin the mood"). On the owner's history it fires on 3 of 925 replies.
+
 - **The scene talker's own system prompt (ADR 0017, 2026-10-19).** When the scene talker answers, its
   system prompt is the everyday one plus `system/scene-intimate`, then the operator's policy text including
   anything after a `## Scene` heading, which the everyday talker never sees. The turn records which prefix
