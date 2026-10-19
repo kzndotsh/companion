@@ -242,6 +242,10 @@ Ordered. Pull from the top.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-19**
+- [x] J36 Backups: the database and character sheets are snapshotted at every start (before migrations),
+      daily and by hand (`companion backup`), each copy integrity-checked and counted; 7 daily and 7 others
+      kept; `--restore` refuses while the bot runs, keeps the current database, and swaps only a checked copy.
+      Still on the same disk unless COMPANION_BACKUP_DIR points elsewhere.
 - [x] J25 A failed memory pass retries: the memory pass already kept its place on a failed call; the open-loop
       pass did not (it ran after the bookmark moved, so a failed call lost that batch's plans). It now keeps its
       own bookmark, a failed try is read again next pass, and a batch that fails three times is let go with the
@@ -672,8 +676,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       sending; an unreadable quiet-hours setting means no reach-out; each reach-out fires exactly once (send
       state recorded before the Telegram call, unknown after a crash, never blindly resent) (Miru, OpenSoul,
       Phosphene, Psycheros, Resonant audits). Extends A5.
-- [ ] J36 Backups: snapshot the database and the persona and character files before updates and model swaps,
-      plus a nightly copy, with a restore that never touches live data on failure (Sapphire audit).
 - [ ] J37 Checked merges: when a background pass proposes merging or retiring beliefs, code applies it only
       after checking the ids it was shown and a measured similarity, never on the model's word (Sapphire).
 - [ ] J38 Validated summaries: a new summary or card replaces the old one only if it passes checks (not empty,

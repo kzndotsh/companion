@@ -11,7 +11,7 @@ from pathlib import Path
 
 import httpx
 
-from companion import characters, logsetup, prompts
+from companion import backups, characters, logsetup, prompts
 from companion.characters import Character
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.callbacks import report
@@ -294,6 +294,13 @@ def _commands(store: Store, rel: RelationshipId, reflector: Extractor) -> Comman
 INITIATIVE_TICK_SECONDS = 900
 
 
+async def _daily_backups(data_dir: Path, db: Path) -> None:
+    """A snapshot once a day while the bot runs, besides the one at every start."""
+    while True:
+        await asyncio.sleep(backups.EVERY_SECONDS)
+        await asyncio.to_thread(backups.back_up_quietly, data_dir, db, "daily", utc_now())
+
+
 def _start_initiative(
     store: Store, rel: RelationshipId, judge: Extractor
 ) -> asyncio.Task[None] | None:
@@ -321,7 +328,9 @@ async def run(data_dir: Path) -> None:
     log_file = logsetup.configure(data_dir / "logs")
     token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
     rel = RelationshipId(f"telegram-{user}")
-    store = Store(data_dir / f"{rel}.sqlite")
+    db = data_dir / f"{rel}.sqlite"
+    backups.back_up_quietly(data_dir, db, "start", utc_now())  # before any migration runs
+    store = Store(db)
     character = characters.chosen(data_dir / "characters")
     prefix = build_prefix(characters.system_prompt(prompts.get("system/persona").raw, character))
     roleplay_prefix = build_prefix(
@@ -403,9 +412,11 @@ async def run(data_dir: Path) -> None:
         )
         logging.getLogger("companion").info("full log: %s", log_file)
         initiative = _start_initiative(store, rel, judge)
+        daily = asyncio.create_task(_daily_backups(data_dir, db))
         try:
             await tg.run(handle, _commands(store, rel, reflector))
         finally:
+            daily.cancel()
             if initiative is not None:
                 initiative.cancel()
 

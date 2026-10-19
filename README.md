@@ -88,6 +88,7 @@ All optional. Set them in `.env`.
 | `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the roleplay model (ADR 0017), above an age floor in code that no setting changes. Guidance for it goes in the character sheet's `## In roleplay and intimate moments` section, which only the roleplay model sees |
 | `COMPANION_RELEVANCE` | shadow | the look-up of memories that bear on their message (ADR 0018); shadow logs it and sends nothing, `off` stops it |
 | `COMPANION_EMBED_MODEL` | `openai/text-embedding-3-small` | the embedding model for that look-up |
+| `COMPANION_BACKUP_DIR` | `data/backups` | where database and character-sheet snapshots go; point it at another drive or a synced folder, since a copy on the same disk does not survive the disk |
 | `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
 | `COMPANION_CHARACTER` | none | `mika` lays the character sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona: name, age, look, voice, tastes and an authored past. It still says it is an AI when sincerely asked |
 
@@ -109,6 +110,7 @@ uv run companion initiative     # what the reach-out gate would have sent
 uv run companion spend          # model spend
 uv run companion prompts        # every prompt and its current version
 uv run companion mood           # the mood now; --replay DAYS rebuilds it over past messages
+uv run companion backup         # snapshot now; --list, or --restore FILE with the bot stopped
 uv run companion map            # what it knows by part of their life, and the gap it would ask about
 uv run companion address        # how they want to be referred to; --set TEXT changes it
 uv run companion callbacks      # judge recent replies for callbacks to memories, then report

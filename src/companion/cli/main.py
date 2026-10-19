@@ -9,6 +9,7 @@ from pathlib import Path
 from companion import daemon
 from companion.cli import (
     address,
+    backup,
     beliefs,
     favorites,
     flags,
@@ -45,6 +46,14 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
         "--set", dest="value", metavar="TEXT", help="record it; an empty text clears it"
     )
     _db_args(ad)
+    bk = add(
+        "backup", help="snapshot the database and character sheets now, or list or restore one"
+    )
+    bk.add_argument("--list", action="store_true", dest="listing", help="list the snapshots")
+    bk.add_argument(
+        "--restore", type=Path, metavar="FILE", help="put a snapshot back (bot stopped)"
+    )
+    _db_args(bk)
     mp = add("map", help="what it knows about them by part of their life, and the gap it would ask")
     mp.add_argument("--label", action="store_true", help="label new memories first (a model call)")
     _db_args(mp)
@@ -195,6 +204,11 @@ def _address(a: argparse.Namespace) -> int:
     return _out(address.run(*_target(a), a.value))
 
 
+def _backup(a: argparse.Namespace) -> int:
+    db, _ = _target(a)
+    return _out(backup.run(db, listing=bool(a.listing), restore_from=a.restore) + "\n")
+
+
 def _map(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     first = asyncio.run(daemon.label_now(db, rel)) if a.label else ""
@@ -255,6 +269,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "initiative": _initiative,
     "mood": _mood,
     "map": _map,
+    "backup": _backup,
     "address": _address,
     "prompts": _prompts,
     "spend": _spend,

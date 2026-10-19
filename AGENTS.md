@@ -30,7 +30,7 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
 uv run companion eval --variants v40.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
@@ -96,7 +96,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `COMPANION_REFLECT_MODEL`, `COMPANION_FALLBACK_MODEL` (asked only when the judges' model refuses a
   call), `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`, `COMPANION_PACE`,
   `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`,
-  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
+  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_BACKUP_DIR`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
   it) and `COMPANION_CHARACTER` (a character sheet laid over the persona, `companion/characters.py`). The
   table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
@@ -145,6 +145,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   shortlisted, and a small model picks up to three or none. It is logged with whether each was already
   on the card and runs beside the turn; nothing reaches the talker. `COMPANION_RELEVANCE=off` stops it.
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
+- The database and the character sheets are snapshotted at every start (before migrations) and daily
+  (`companion/backups.py`, J36), each copy checked; the newest 7 daily and 7 others are kept in
+  `data/backups/` (`COMPANION_BACKUP_DIR`). `companion backup --restore FILE` refuses while the bot runs,
+  keeps the current database first, and replaces nothing unless the copy passes its check.
 - A mood that carries (ADR 0016, `core/mood.py`): each message adds effects to cozy, tender or playful in an
   append-only table, the mood is worked out from them when read, and only what the user did can move it
   (no source for silence, goodbyes, gaps or failed calls). `COMPANION_MOOD` is shadow, on or off;
