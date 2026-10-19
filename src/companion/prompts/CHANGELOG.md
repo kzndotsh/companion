@@ -645,6 +645,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/listening v3** (superseded). v2 plus recall (they asked the companion to remember or already know something about them) and topic (what to look up, worked out from context when the message is vague). Reason: "come on, you know this one..." about their favourite food got a guess and a joke, with three burger beliefs in memory and none on the card (owner's flag, 2026-10-18).
 - **system/listening v4** (current). v3 plus two labels for ADR 0017: `intimate` (about sex or physical intimacy, or sexual flirting; not ordinary affection) and `age_coded` (romance, flirting or anything sexual together with anything child-like or under-age; not adults' ordinary pet names or non-romantic comfort). Code routes on them; a missing `age_coded` counts as true. Measurement in `evals/CHANGELOG.md`.
 
+## system/memory-map
+- **system/memory-map v1** (current). New. Labels each memory with one of eight domains (identity, people, daily, interests, history, hopes, values, inner) and a depth (surface, personal, core), so code can count what it knows and pick the thinnest part to ask about (`core/knowing.py`, J48). Runs after each memory pass on memories not yet labelled. The labels never reach the talker; only the shadow pick is logged.
+
 ## system/name-capture
 - **system/name-capture v1** (current). New. When the companion's last message asked what to call them, reads their answer and gives the name as written, or nothing; code keeps it only if it is short and appears in their words, and stores it as a belief quoting their answer (J48). Reason: a bare one-word answer to "what name do you like being called?" was not picked up by the memory pass.
 

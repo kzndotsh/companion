@@ -30,7 +30,7 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
 uv run companion eval --variants v40.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
@@ -131,7 +131,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   per turn.
 - How they want to be referred to is a setting (`companion address --set`) pinned after the clock on
   every turn. Until memory knows their name, a note on a casual turn (at most daily) asks for it, and their
-  answer is stored as a belief quoting their words (`core/basics.py`, J48).
+  answer is stored as a belief quoting their words (`core/basics.py`, J48). Each memory is labelled
+  with the part of their life it is about and how personal it is (`system/memory-map`, after each memory
+  pass); code picks the thinnest part fine to ask about and, on a casual turn at most daily, only logs it
+  (shadow, `core/knowing.py`). `uv run companion map` shows the map and the picks.
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 - A mood that carries (ADR 0016, `core/mood.py`): each message adds effects to cozy, tender or playful in an
   append-only table, the mood is worked out from them when read, and only what the user did can move it

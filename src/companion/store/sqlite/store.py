@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.callbacks import Check
+from companion.core.knowing import Label
 from companion.core.mood import Effect, Said
 from companion.core.openloops import LoopState, OpenLoop
 from companion.core.prompt.prefix import Prefix
@@ -39,6 +40,7 @@ from companion.store.sqlite import (
     decisions,
     favorites,
     flags,
+    labels,
     ledger,
     mood,
     open_loops,
@@ -199,6 +201,14 @@ class Store:
             (rel, turn),
         ).fetchone()
         return str(row["text"]) if row else ""
+
+    def add_belief_labels(
+        self, rel: RelationshipId, found: Sequence[Label], model: str, prompt: str, at: datetime
+    ) -> None:
+        labels.add(self._conn, rel, found, model=model, prompt=prompt, at=at)
+
+    def belief_labels(self, rel: RelationshipId) -> dict[BeliefId, Label]:
+        return labels.latest(self._conn, rel)
 
     def add_mood_effects(self, rel: RelationshipId, effects: Sequence[Effect]) -> None:
         mood.add(self._conn, rel, effects)

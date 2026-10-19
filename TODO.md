@@ -103,7 +103,7 @@ Each item ends with the thing that tells us it is done. The cards are below.
 2. **Hand labels for replies.** The owner marks replies from the review sheet in batches of ten
    (`evals/local/`); items 1 to 10 are in. *Done when:* the judges are calibrated against the marks and
    the trivial-vent question has an answer (T14).
-3. **Getting to know them on purpose** (J48): label each memory's domain and depth, and a gap picker runs in shadow. *Done when:* the
+3. **Getting to know them on purpose** (J48): the map and the gap picker run in shadow. *Done when:* the
    map is kept by code and a week of shadow picks reads right to the owner.
 4. **A week of shadow mode** for open loops. *Done when:* the owner has read `companion initiative` and
    the caps are set. Going live also needs outcome recording and a slow re-probe.
@@ -198,7 +198,10 @@ Ordered. Pull from the top.
       measured within noise of v8 on 52 real answers and dropped: the live pass's decisions show most of the
       answers judged worth keeping were already in memory from longer messages (their beer, their dogs, a
       film, a fantasy), so they were rightly not stored twice; about four of 69 short answers hold
-      something memory still lacks. Not worth a change on its own. Next, the pass labels each memory's domain and depth, with a gap picker in shadow.
+      something memory still lacks. Not worth a change on its own. Map built 2026-10-19: every memory labelled by
+      part of their life and depth after each memory pass (219 labelled for $0.004; read by eye, mostly
+      right), and the thinnest askable part logged on a casual turn at most daily, in shadow
+      (`companion map`). Next: a week of shadow picks read by the owner, then the note on a small budget.
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two

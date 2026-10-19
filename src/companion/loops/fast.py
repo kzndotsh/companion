@@ -51,6 +51,7 @@ from companion.core.frames import resolve as frame_resolve
 from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
+from companion.core.knowing import MAP_EVERY, WOULD_ASK, pick_gap
 from companion.core.length import LengthTarget, length_target
 from companion.core.listening import PROMPT as LISTEN_PROMPT
 from companion.core.listening import SERIOUS, listening_note, rude_note
@@ -886,16 +887,51 @@ def _mood(
     return (shown if c.mood == "on" else None), added
 
 
-def _ask_name(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, beliefs: Sequence[Belief]
-) -> str | None:
-    """Offer to ask what to call them on a casual turn, at most once a day, until memory knows."""
-    casual = (
+def _casual(t: _Turn, in_scene: Frame, heard: _Heard | None) -> bool:
+    """An ordinary moment: read as not serious, not in a scene, not a goodbye."""
+    return (
         heard is not None
         and heard[0].severity == 0
         and in_scene is Frame.REAL
         and held_because(severity=0, text=t.text, in_scene=False) is None
     )
+
+
+def _map_shadow(c: Conversation, t: _Turn, *, casual: bool, asking_name: bool) -> None:
+    """Log the gap it would ask about on a casual turn, at most once a day (J48, shadow). Nothing
+    reaches the talker. The name comes first, so nothing is picked while that note is offered."""
+    if not casual or asking_name:
+        return
+    if c.store.decided_since(c.rel, WOULD_ASK, t.now - MAP_EVERY):
+        return
+    gap = pick_gap(c.store.user_beliefs(c.rel), c.store.belief_labels(c.rel))
+    if gap is None:
+        return
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            WOULD_ASK,
+            t.now,
+            detail={
+                "why": gap.reason,
+                "domain": gap.domain.value,
+                "depth": gap.depth.value,
+                "counts": {d.value: n for d, n in gap.counts.items()},
+            },
+        )
+    )
+
+
+def _ask_name(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, beliefs: Sequence[Belief]
+) -> str | None:
+    """Offer to ask what to call them on a casual turn, at most once a day, until memory knows."""
+    casual = _casual(t, in_scene, heard)
     note = ask_name(
         known=knows_name(beliefs),
         casual=casual,
@@ -944,6 +980,7 @@ def _assemble(  # noqa: PLR0913
     mood, mood_effects = _mood(c, t, in_scene, heard)
     hold = HOLD_NOTE.text if held else None
     name = _ask_name(c, t, in_scene, heard, assertable)
+    _map_shadow(c, t, casual=_casual(t, in_scene, heard), asking_name=name is not None)
     notes += [n for n in (listening, rude, found, mood, hold, name) if n is not None]
     card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix

@@ -27,6 +27,7 @@ from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops.callbacks import check_new
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
+from companion.loops.knowing import label_new
 from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
@@ -397,6 +398,20 @@ async def callbacks_now(db: Path, relationship: str, days: int, cap_usd: float) 
     shown = [(replies[t], c) for t, c in verdicts if c.callback][-8:]
     head = f"judged {judged} new replies for ${spent:.4f}\n"
     return head + report([c for _, c in verdicts], days, shown)
+
+
+async def label_now(db: Path, relationship: str) -> str:
+    """Label memories that have no label yet, for `companion map --label`."""
+    load_dotenv(Path(".env"))
+    store = Store(db)
+    try:
+        async with httpx.AsyncClient() as client:
+            done = await label_new(
+                store, extractor(client), RelationshipId(relationship), utc_now(), batches=10
+            )
+    finally:
+        store.close()
+    return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"
 
 
 async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) -> str:

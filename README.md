@@ -107,6 +107,7 @@ uv run companion initiative     # what the reach-out gate would have sent
 uv run companion spend          # model spend
 uv run companion prompts        # every prompt and its current version
 uv run companion mood           # the mood now; --replay DAYS rebuilds it over past messages
+uv run companion map            # what it knows by part of their life, and the gap it would ask about
 uv run companion address        # how they want to be referred to; --set TEXT changes it
 uv run companion callbacks      # judge recent replies for callbacks to memories, then report
 uv run companion replay <turn_id>

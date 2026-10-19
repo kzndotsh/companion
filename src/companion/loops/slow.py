@@ -53,6 +53,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.knowing import Labelled, label_new
 from companion.loops.openloops import LoopCounts, extract_open_loops
 from companion.loops.views import WANT_KINDS, check_views
 from companion.store.sqlite.store import Store
@@ -366,13 +367,14 @@ async def reflect_from(
     wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
     new_wants = users.accepted_ids & wanted
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
+    mapped = await label_new(store, extractor, rel, now) if users.accepted else Labelled()
     return ReflectResult(
         True,
         users.accepted,
         users.rejected,
         users.duplicates,
         users.confirmed,
-        users.cost + own.cost + check.cost_usd + loops.cost_usd,
+        users.cost + own.cost + check.cost_usd + loops.cost_usd + mapped.cost_usd,
         upto,
         views_accepted=own.accepted,
         views_confirmed=own.confirmed,

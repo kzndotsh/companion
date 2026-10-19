@@ -7,7 +7,17 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 from companion import daemon
-from companion.cli import address, beliefs, favorites, flags, initiative, mood, replay, spend
+from companion.cli import (
+    address,
+    beliefs,
+    favorites,
+    flags,
+    initiative,
+    knowing,
+    mood,
+    replay,
+    spend,
+)
 from companion.cli import eval as eval_cli
 from companion.cli import prompts as prompts_cli
 from companion.cli.target import find_db, resolve_db, resolve_relationship
@@ -35,6 +45,9 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
         "--set", dest="value", metavar="TEXT", help="record it; an empty text clears it"
     )
     _db_args(ad)
+    mp = add("map", help="what it knows about them by part of their life, and the gap it would ask")
+    mp.add_argument("--label", action="store_true", help="label new memories first (a model call)")
+    _db_args(mp)
     md = add("mood", help="the mood now, or --replay DAYS of what it would have been")
     md.add_argument("--replay", type=int, metavar="DAYS", help="rebuild it over the last DAYS days")
     _db_args(md)
@@ -182,6 +195,12 @@ def _address(a: argparse.Namespace) -> int:
     return _out(address.run(*_target(a), a.value))
 
 
+def _map(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    first = asyncio.run(daemon.label_now(db, rel)) if a.label else ""
+    return _out(first + knowing.run(db, rel) + "\n")
+
+
 def _mood(a: argparse.Namespace) -> int:
     return _out(mood.run(*_target(a), a.replay))
 
@@ -235,6 +254,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "favorites": _favorites,
     "initiative": _initiative,
     "mood": _mood,
+    "map": _map,
     "address": _address,
     "prompts": _prompts,
     "spend": _spend,
