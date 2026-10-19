@@ -34,8 +34,9 @@ REL = RelationshipId("rel")
 SESSION = SessionId("s")
 NOW = datetime(2026, 10, 19, 17, 0, tzinfo=UTC)
 PREFIX = build_prefix("You are a companion. " * 300)
-PLAYFUL = prompts.get("notes/mood-playful").text
-TENDER = prompts.get("notes/mood-tender").text
+# notes reach the model inside <notes>, without their brackets (core/prompt/sections.py)
+PLAYFUL = prompts.get("notes/mood-playful").text.strip("[]")
+TENDER = prompts.get("notes/mood-tender").text.strip("[]")
 
 
 class Talker:
@@ -164,8 +165,8 @@ async def test_a_goodbye_never_carries_the_mood_line(store: Store) -> None:
 async def test_how_to_refer_to_them_is_pinned_after_the_clock_on_every_turn(store: Store) -> None:
     store.set_setting(REL, "address", "she/her, a woman", NOW - timedelta(days=1))
     talker = await _say(store, Judge(), "off", "made pasta")
-    lines = talker.seen[0].card.split("\n")
-    assert lines[1].startswith("[How they want to be referred to: she/her, a woman.")
+    notes = talker.seen[0].card.split("<notes>\n", 1)[1]
+    assert notes.startswith("How they want to be referred to: she/her, a woman.")  # the first note
 
 
 @pytest.mark.parametrize(("severity", "shown"), [(0, False), (1, True)])

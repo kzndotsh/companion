@@ -18,6 +18,7 @@ from companion.core.habits import echo_note
 from companion.core.length import length_target
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
+from companion.core.prompt.sections import tagged
 from companion.core.talker import Reply, Talker
 from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
@@ -110,38 +111,6 @@ def request_for(
     if variant.tags or variant.tags_notes:
         card = tagged(card, memory=variant.tags)
     return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card)
-
-
-_BRACKETED = re.compile(r"\[(.*?)\]", re.DOTALL)
-_SECTIONS = (
-    ("What you remember", "memory"),
-    ("Also known", "held"),
-    ("Older, and may be out of date", "older"),
-    ("Views of your own", "views"),
-)
-
-
-def tagged(card: str, *, memory: bool = True) -> str:
-    """The same system block with each part in a tag: the clock, each memory block, and every
-    other bracketed line gathered under notes. The words inside are unchanged (`+tags`). With
-    `memory` off the memory blocks stay bracketed as they are (`+tagsnotes`)."""
-    parts: list[str] = []
-    notes: list[str] = []
-    rest = card
-    for m in _BRACKETED.finditer(card):
-        body = m.group(1).strip()
-        tag = next((t for head, t in _SECTIONS if body.startswith(head)), None)
-        if tag is None:
-            notes.append(body)
-        elif memory:
-            parts.append(f"<{tag}>\n{body}\n</{tag}>")
-        else:
-            parts.append(m.group(0))
-        rest = rest.replace(m.group(0), "", 1)
-    plain = [line.strip() for line in rest.splitlines() if line.strip()]
-    clock = [f"<clock>{line}</clock>" for line in plain]
-    notes_block = ["<notes>\n" + "\n".join(notes) + "\n</notes>"] if notes else []
-    return "\n".join([*clock, *parts, *notes_block])
 
 
 @dataclass(frozen=True, slots=True)

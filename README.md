@@ -227,8 +227,8 @@ what it gets to see.
    it to remember or say it got them wrong, and whether a small topic has run its course.
 2. **Build the card.** Code turns those labels into short notes and adds the clock, how they want to
    be referred to, the memories in view, anything looked up, a due plan of theirs and the mood. The
-   persona is the first system block and the card is the second. Nothing from the card ever goes in
-   the user's message.
+   persona is the first system block and the card is the second, with the clock and the notes in
+   `<clock>` and `<notes>` tags. Nothing from the card ever goes in the user's message.
 3. **Write the reply.** The talker sees the persona, the card, the last 40 messages and the new
    message exactly as typed. Pretend scenes, and intimate talk when allowed, go to the roleplay model,
    unless the floor keeps them on the everyday one. A stall or an error goes to the fallback model.

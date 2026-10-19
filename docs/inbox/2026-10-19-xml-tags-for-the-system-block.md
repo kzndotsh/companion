@@ -1,6 +1,7 @@
 # XML tags for the system block
 
-Added 2026-10-19. An idea, not a task.
+Added 2026-10-19. **Acted on the same day:** measured and shipped for the clock and the notes, not the memory
+blocks (`evals/CHANGELOG.md`, `core/prompt/sections.py`).
 
 ## The idea
 

@@ -65,7 +65,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - Do not commit `.env`, `data/`, `evals/local/` or `evals/results/`.
 
 **The prompt and what the model reads**
-- The memory card, the clock and the notes go in the system block, never in the user's message.
+- The memory card, the clock and the notes go in the system block, never in the user's message. The clock
+  and the notes are wrapped in `<clock>` and `<notes>` tags; the memory blocks stay bracketed text
+  (`core/prompt/sections.py`, measured).
   Anything in the user's message can be read as something the user said, and it leaks into replies
   (ADR 0012). A note is chosen by code from a model's labels, never written by a model (ADR 0014).
 - Every prompt is a versioned file under `src/companion/prompts/`. Never edit a shipped version: add the

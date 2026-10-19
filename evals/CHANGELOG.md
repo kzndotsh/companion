@@ -927,3 +927,19 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   gain, so the window stays at 40. One reply of 200 (under 40 messages) ended with the clock line copied
   from the system block ("[right now it is Thursday 13:11]"); no message in the ledger carries one, so it
   came from the card. Cost $0.04 by the meter.
+- **2026-10-19. Tags in the system block: the clock and the notes tagged, memory left as text, shipped.**
+  Research first (prompt format matters most on smaller models and varies by model and task; forced JSON
+  hurts reasoning but not classification). A reason before the label in the judges did not help: the
+  memory pair judge, on the owner's review, merged less but missed real duplicates it used to catch
+  (unanimous "same" 5/6 right against 11/13, real duplicates read distinct 6 against 0); the eval judge
+  agreed with a code check on 90 of 90 replies either way once its criterion was clear. Then the talker's
+  system block, 12 public fixtures that lean on it, persona v40, 12 samples. On Luna: as now 125/144, every
+  part tagged 131/144, clock and notes tagged with memory left as bracketed text 133/144 (a real
+  difference, 2%); reading the clock at 02:10 9/12, 10/12, 12/12; asking how a due plan went 8/12,
+  12/12, 12/12; replies mentioning a remembered fact 9, 0, 12 (tagging memory all but stopped small
+  callbacks such as asking whether the dog is coming on a walk, which the owner prefers to keep); tags
+  copied into a reply 0 in all. On DeepSeek V4.1 Flash: 111/144 against 110/144, no difference. On 25
+  real turns, Luna: 85/120 against 88/120 tagged, within noise; the clock line was copied into a reply
+  once untagged, never tagged. An earlier run had the held-facts fixture judge failing a single fitting
+  memory; its criterion now says one fitting fact passes. Cost about $0.30 across the runs.
+

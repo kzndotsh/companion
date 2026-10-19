@@ -68,6 +68,7 @@ from companion.core.moves import replies_to_read
 from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_note
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
+from companion.core.prompt.sections import tagged
 from companion.core.quip import PROMPT as QUIP_PROMPT
 from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
@@ -1160,7 +1161,9 @@ def _assemble(  # noqa: PLR0913
     notes += [
         n for n in (listening, rude, repair, found, mood, hold, name, loop, moving) if n is not None
     ]
-    card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
+    card_text = tagged(
+        "\n".join([clock, *([pinned] if pinned else []), *shown, *notes]), memory=False
+    )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
     store.save_prefix(prefix)
