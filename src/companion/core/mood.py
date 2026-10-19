@@ -11,6 +11,7 @@ call or an undelivered reply, so none of them can lower or raise a state.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
@@ -202,19 +203,38 @@ def baseline(now: datetime, zone: tzinfo) -> dict[State, float]:
     return {State.COZY: NIGHT_COZY} if now.astimezone(zone).hour in NIGHT_HOURS else {}
 
 
-def line(mood: Mood, *, serious_now: bool) -> str | None:
-    """The note for the system block, or None when no state is strong enough or the turn is
-    serious."""
-    if serious_now:
+_LEAVING = re.compile(
+    r"\b(?:bye+|goodbye|cya|see ya|ttyl|talk (?:to you )?later|gtg|g2g|gotta (?:go|run|head)"
+    r"|got to go|have to go|heading (?:to bed|out|off)|(?:going|off) to (?:bed|sleep)|sleep well)\b"
+    r"|(?:^|[,.!]\s*|\b(?:ok|okay|alright|well)\s+)(?:good ?night|night night|nite|night|gn)\b",
+    re.IGNORECASE,
+)
+
+
+def held_because(*, severity: int | None, text: str, in_scene: bool) -> str | None:
+    """Why no mood line is shown this turn, or None. A serious turn has the listening note, a
+    goodbye must never get a mood that could read as a pull to stay, and a scene has its voice."""
+    if severity is not None and severity >= SERIOUS:
+        return "the turn is serious"
+    if in_scene:
+        return "a scene is in progress"
+    if _LEAVING.search(text):
+        return "they are leaving"
+    return None
+
+
+def line(mood: Mood, *, held: str | None) -> str | None:
+    """The note for the system block, or None when no state is strong enough or it is held."""
+    if held is not None:
         return None
     shown = mood.shown()
     return "\n".join(get(f"notes/mood-{s.value}").text for s in shown) or None
 
 
-def reason(mood: Mood, *, serious_now: bool) -> str:
+def reason(mood: Mood, *, held: str | None) -> str:
     """The logged reason, written by code: `mood: cozy 0.42 (chat_span, tone_sweet)`."""
-    if serious_now:
-        return "mood: held, the turn is serious"
+    if held is not None:
+        return f"mood: held, {held}"
     parts = [f"{s.value} {mood.strengths[s]:.2f} ({_held_by(mood, s)})" for s in mood.shown()]
     return "mood: " + ("; ".join(parts) or "none strong enough")
 
@@ -270,7 +290,7 @@ def replay(said: Sequence[Said], times: Sequence[datetime], zone: tzinfo) -> lis
         added = effects_for(inputs_for(s, previous, chat_minutes(times, s.at, zone)))
         effects += added
         mood = mood_at(effects, s.at, zone)
-        serious = s.severity is not None and s.severity >= SERIOUS
-        out.append(Replayed(s, mood, line(mood, serious_now=serious), tuple(added)))
+        held = held_because(severity=s.severity, text=s.text, in_scene=False)
+        out.append(Replayed(s, mood, line(mood, held=held), tuple(added)))
         previous = s.tone
     return out

@@ -135,3 +135,10 @@ async def test_their_previous_message_tone_moves_the_next_turn(store: Store) -> 
     await _say(store, Judge(), "shadow", "anyway", NOW + timedelta(minutes=2))
     sources = [e.source for e in store.mood_effects_since(REL, NOW)]
     assert Source.TONE_FUNNY in sources
+
+
+async def test_a_goodbye_never_carries_the_mood_line(store: Store) -> None:
+    store.add_mood_effects(REL, [effect(Source.TONE_FUNNY, 0.4, NOW, TurnId("t0"))])
+    talker = await _say(store, Judge(), "on", "ok gotta go, ttyl", NOW + timedelta(minutes=1))
+    assert PLAYFUL not in talker.seen[0].card
+    assert _mood_reasons(store) == ["mood: held, they are leaving [on]"]

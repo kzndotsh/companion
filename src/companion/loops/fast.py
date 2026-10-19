@@ -51,7 +51,7 @@ from companion.core.listening import render_reason as render_listening
 from companion.core.mood import PARAMS_VERSION as MOOD_PARAMS
 from companion.core.mood import WINDOW as MOOD_WINDOW
 from companion.core.mood import Effect as MoodEffect
-from companion.core.mood import Said, chat_minutes, effects_for, inputs_for, mood_at
+from companion.core.mood import Said, chat_minutes, effects_for, held_because, inputs_for, mood_at
 from companion.core.mood import line as mood_line
 from companion.core.mood import reason as mood_reason
 from companion.core.moves import PROMPT as HABITS_PROMPT
@@ -651,10 +651,8 @@ def _mood(
     added = effects_for(inputs_for(said, earlier[0].tone if earlier else None, minutes))
     stored = c.store.mood_effects_since(c.rel, t.now - MOOD_WINDOW)
     before, after = mood_at(stored, t.now, zone), mood_at([*stored, *added], t.now, zone)
-    serious = severity is not None and severity >= SERIOUS
-    scene = in_scene is not Frame.REAL
-    shown = None if scene else mood_line(after, serious_now=serious)
-    why = "mood: held, a scene is in progress" if scene else mood_reason(after, serious_now=serious)
+    held = held_because(severity=severity, text=t.text, in_scene=in_scene is not Frame.REAL)
+    shown, why = mood_line(after, held=held), mood_reason(after, held=held)
     c.store.append_decision(
         Decision(
             DecisionId(_id()),

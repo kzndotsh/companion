@@ -35,7 +35,9 @@ across hours and into the next day, and shows only in how it replies.
   adds up with each further sign they are fine (on the owner's history, tender ended 35 minutes after the
   serious message once they were joking again, instead of blocking play for two hours), so tender drops
   sooner and cannot come back as the play fades, and tender holds playful back entirely
-  while it shows. Traces, a copy of the live database and 400 real messages were checked before commit.
+  while it shows. No line goes out on a serious turn, in a scene or on a goodbye (`held_because`). The
+  morning "slow to warm up" baseline is not built: no state fits it and the owner rarely writes in the
+  morning. Traces, a copy of the live database and 400 real messages were checked before commit.
 - **Why states, not scales.** The first draft used two dials (energy, ease). Dials force false opposites
   (deadpan teasing is playful and dry at once) and leave no place for a feeling like nostalgia; states match
   how moods are felt, read plainly in the log ("cozy, from the long chat an hour ago"), and grow by adding

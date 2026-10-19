@@ -34,9 +34,7 @@ def _now(mood: Mood) -> str:
         f"  {s.value:8} {v:.2f}  {', '.join(x.value for x in mood.sources[s]) or '-'}"
         for s, v in mood.strengths.items()
     ]
-    return "\n".join(
-        ["mood now (strength, what holds it up)", *rows, reason(mood, serious_now=False)]
-    )
+    return "\n".join(["mood now (strength, what holds it up)", *rows, reason(mood, held=None)])
 
 
 def _shown(r: Replayed) -> str:
@@ -50,7 +48,7 @@ def _replayed(rows: list[Replayed], days: int) -> str:
     out = [f"mood replayed over {len(rows)} messages; a row when what would show changes"]
     last = None
     for r in rows:
-        shown = "held (serious)" if r.line is None and r.mood.shown() else _shown(r)
+        shown = "held" if r.line is None and r.mood.shown() else _shown(r)
         if shown != last:
             added = ",".join(e.source.value for e in r.added) or "-"
             sev = "-" if r.said.severity is None else str(r.said.severity)

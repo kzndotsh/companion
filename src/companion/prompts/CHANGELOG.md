@@ -429,7 +429,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 - **A mood line, when the mood is on (ADR 0016).** With `COMPANION_MOOD=on`, the strongest one or two
   mood states at or above 0.3 add their `notes/mood-*` line to the system block, after the recall note;
-  none on a serious turn or in a scene. The default is `shadow`, which works the mood out and logs a
+  none on a serious turn, in a scene, or on a goodbye (a pattern check in `core/mood.py`: 2 real goodnights
+  and 1 harmless false match in the owner's 716 messages). The default is `shadow`, which works the mood out and logs a
   "mood:" decision every turn but sends the model nothing new; `off` does neither. The lines are the v2
   candidates measured in `evals/CHANGELOG.md` (2026-10-19).
 

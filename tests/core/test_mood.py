@@ -15,6 +15,7 @@ from companion.core.mood import (
     State,
     effect,
     effects_for,
+    held_because,
     line,
     mood_at,
     reason,
@@ -117,7 +118,7 @@ def test_silence_only_fades_toward_the_baseline_and_never_below() -> None:
 def test_late_at_night_it_leans_cozy_and_by_day_there_is_no_line() -> None:
     assert mood_at([], NIGHT, UTC).shown() == [State.COZY]
     assert mood_at([], DAY, UTC).shown() == []
-    assert line(mood_at([], DAY, UTC), serious_now=False) is None
+    assert line(mood_at([], DAY, UTC), held=None) is None
 
 
 def test_a_long_warm_chat_leaves_a_little_cozy_into_the_next_day() -> None:
@@ -130,20 +131,18 @@ def test_a_long_warm_chat_leaves_a_little_cozy_into_the_next_day() -> None:
 def test_the_line_shows_the_strongest_states_as_their_notes_and_never_on_a_serious_turn() -> None:
     mood = mood_at(effects_for(_in(NIGHT, tone="funny")), NIGHT, UTC)
     assert mood.shown() == [State.PLAYFUL, State.COZY]
-    assert line(mood, serious_now=False) == "\n".join(
+    assert line(mood, held=None) == "\n".join(
         [prompts.get("notes/mood-playful").text, prompts.get("notes/mood-cozy").text]
     )
-    assert line(mood, serious_now=True) is None
-    assert reason(mood, serious_now=True) == "mood: held, the turn is serious"
-    assert (
-        reason(mood, serious_now=False) == "mood: playful 0.40 (tone_funny); cozy 0.35 (baseline)"
-    )
+    assert line(mood, held="the turn is serious") is None
+    assert reason(mood, held="the turn is serious") == "mood: held, the turn is serious"
+    assert reason(mood, held=None) == "mood: playful 0.40 (tone_funny); cozy 0.35 (baseline)"
 
 
 def test_a_weak_state_shows_nothing() -> None:
     mood = mood_at([effect(Source.TONE_SWEET, 0.1, DAY, T)], DAY, UTC)
     assert mood.strengths[State.COZY] < LINE_AT
-    assert reason(mood, serious_now=False) == "mood: none strong enough"
+    assert reason(mood, held=None) == "mood: none strong enough"
 
 
 def test_the_mood_is_the_same_whatever_order_the_effects_are_read_in() -> None:
@@ -255,3 +254,37 @@ def test_something_hard_still_to_come_does_not_change_the_mood_before_it() -> No
     later_hard = effects_for(_in(DAY + timedelta(hours=5), severity=2))
     at = DAY + timedelta(hours=2)
     assert mood_at([*hard, *fun, *later_hard], at, UTC) == mood_at([*hard, *fun], at, UTC)
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "ok i gotta go, talk later",
+        "heading to bed now, night",
+        "byeee",
+        "gn!",
+        "ttyl",
+        "going to sleep, sleep well",
+        "goodnight 💜",
+        "ok goodnight",
+    ],
+)
+def test_a_goodbye_gets_no_mood_line(text: str) -> None:
+    mood = mood_at(effects_for(_in(NIGHT, tone="funny")), NIGHT, UTC)
+    held = held_because(severity=0, text=text, in_scene=False)
+    assert held == "they are leaving"
+    assert line(mood, held=held) is None
+    assert reason(mood, held=held) == "mood: held, they are leaving"
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["last night was fun", "i had a good night", "what are you up to tonight", "nightmare lol"],
+)
+def test_talk_about_the_night_is_not_a_goodbye(text: str) -> None:
+    assert held_because(severity=0, text=text, in_scene=False) is None
+
+
+def test_serious_comes_first_then_a_scene() -> None:
+    assert held_because(severity=2, text="bye", in_scene=True) == "the turn is serious"
+    assert held_because(severity=0, text="bye", in_scene=True) == "a scene is in progress"
