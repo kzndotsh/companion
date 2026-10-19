@@ -13,8 +13,7 @@ local-only project: the git repo has no remote and the bot runs on the owner's m
 
 | Where | What |
 |---|---|
-| `TODO.md` | the work board: Todo, Doing, Done, Canceled, Backlog. Pull work from here |
-| `docs/ROADMAP.md` | principles, current state, measured facts, the reasoning behind the order |
+| `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, then the cards (Todo, Doing, Done, Canceled, Backlog). Pull work from here |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
@@ -93,11 +92,13 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   result and how to rerun it in `evals/CHANGELOG.md`.
 
 **Running the bot**
-- Settings are environment variables in `.env`: `COMPANION_MODEL`, `COMPANION_SCENE_MODEL`,
-  `COMPANION_REFLECT_MODEL`, `COMPANION_FALLBACK_MODEL`, `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`,
-  `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`, `COMPANION_ROUTE_INTIMATE` and
-  `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping it) and `COMPANION_CHARACTER` (a character
-  sheet laid over the persona, `companion/characters.py`). The table is in `README.md`.
+- Settings are environment variables in `.env`: `COMPANION_MODEL`, `COMPANION_ROLEPLAY_MODEL`,
+  `COMPANION_REFLECT_MODEL`, `COMPANION_FALLBACK_MODEL` (asked only when the judges' model refuses a
+  call), `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`, `COMPANION_PACE`,
+  `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`,
+  `COMPANION_ROUTE_INTIMATE`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
+  it) and `COMPANION_CHARACTER` (a character sheet laid over the persona, `companion/characters.py`). The
+  table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`logsetup.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.
@@ -109,7 +110,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   Set `off` when timing a run by hand. Commands are never held.
 - A long, plain reply is sometimes sent as two or three messages (`COMPANION_SPLIT`, on unless `off`).
   The ledger and the history keep it as one reply, so the model never sees the splitting. Cuts fall at
-  sentence boundaries only (`core/split.py`).
+  sentence boundaries only, and a reply with quoted speech (roleplay) is never split (`core/split.py`).
 - A plain message that arrives while the previous one is still being answered (written or held)
   replaces that answer, and the dropped reply is marked undelivered, so the new reply sees both
   messages. Commands never supersede. The poll offset moves past a message when it is queued, so a
@@ -125,19 +126,29 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   listening note (`core/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity 3)
   get no note and there is no crisis path yet. The same judge labels a message rude to the companion (a one-turn note for a
   cool reply) and a request to remember something; then a small model looks the topic up across every
-  belief and the finds ride that turn's system block (`core/recall.py`).
+  belief and the finds ride that turn's system block (`core/recall.py`). Sensitive (held) memories are
+  in the card only on turns rated severity 1 or more; the beliefs the card has no room for are logged once
+  per turn.
+- How they want to be referred to is a setting (`companion address --set`) pinned after the clock on
+  every turn. Until memory knows their name, a note on a casual turn (at most daily) asks for it, and their
+  answer is stored as a belief quoting their words (`core/basics.py`, J48).
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
 - A mood that carries (ADR 0016, `core/mood.py`): each message adds effects to cozy, tender or playful in an
   append-only table, the mood is worked out from them when read, and only what the user did can move it
   (no source for silence, goodbyes, gaps or failed calls). `COMPANION_MOOD` is shadow, on or off;
   `uv run companion mood --replay 7` rebuilds it over past messages from the same rules.
-- On an ordinary turn (not serious, not a scene) the reply is checked before it is sent (`core/recheck.py`):
-  an em dash by code, a joke bolted onto an ordinary message by the quip judge. On a fail the same model is
-  asked once more and the second reply goes out whatever it is; the first is kept in the decision detail.
-  Nothing is ever edited. `COMPANION_RESAMPLE=off` turns it off.
-- Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the scene talker for a pretend scene,
-  or for intimate talk when `COMPANION_ROUTE_INTIMATE=on` allows it, unless the listening
-  judge reads the turn as age-coded or could not read it. That floor is code, not a setting.
+- Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
+  a scene) an em dash and an AI disclaimer nobody asked for by code, and a joke bolted onto an ordinary
+  message by the quip judge; in a scene only the code checks. On a fail the same model is asked once more
+  and the second reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
+  edited. `COMPANION_RESAMPLE=off` turns it off.
+- Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the roleplay talker for a pretend
+  scene, or for intimate talk when `COMPANION_ROUTE_INTIMATE=on`, unless the listening judge reads the turn
+  as age-coded or could not read it (a fallback model's reading counts as unread). That floor is code, not a
+  setting. A held turn gets a note, its reply is read by an intimate check and redrawn (the last draw sees
+  only their message), and if all read intimate nothing is sent; no reply is written by code. The roleplay
+  talker also sees the character sheet's `## In roleplay and intimate moments` section; the everyday one
+  never does. "Scene" means only a pretend scene in progress (the frame judge's label).
 
 **Working with the owner**
 - Plain English, short, and say what changed and what it was measured on. Lead with what matters.

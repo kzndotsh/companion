@@ -1,7 +1,7 @@
 # 0016. A mood that carries: a few named states, owned by code, shown only in behaviour
 
-**Status:** proposed 2026-10-18 (TODO J5). Nothing is built yet; this records the design and its rules
-before any code, as the audits advise for anything with state.
+**Status:** proposed 2026-10-18 (TODO J5); built 2026-10-19 (`core/mood.py`, `COMPANION_MOOD`, shadow by
+default), and soaking in real use before it is accepted.
 
 **Decision.** The companion has a mood that changes with time and with how the conversation goes, carries
 across hours and into the next day, and shows only in how it replies.

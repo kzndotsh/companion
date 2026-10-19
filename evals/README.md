@@ -4,8 +4,8 @@ Replay a recorded turn against a persona variant, score the reply, and print one
 
 ```bash
 uv run companion eval --list                         # the fixtures
-uv run companion eval --variants v25.md,v26.md --dry-run   # the plan and its estimated cost
-uv run companion eval --variants v25.md,v26.md --samples 12 --cap 0.20 --show
+uv run companion eval --variants v36.md,v40.md --dry-run   # the plan and its estimated cost
+uv run companion eval --variants v36.md,v40.md --samples 12 --cap 0.20 --show
 ```
 
 ## How it works
@@ -19,10 +19,13 @@ uv run companion eval --variants v25.md,v26.md --samples 12 --cap 0.20 --show
     and a generic description, never the conversation, and need your database. They live in
     `evals/local/`, which is **gitignored**, and are for private regression checks on your own
     real conversations. Their ids end in `-local` so the two sets never mix up in a table.
-- A **variant** is a persona version (`v26.md`, from `src/companion/prompts/system/persona/`) with optional
+- A **variant** is a persona version (`v40.md`, from `src/companion/prompts/system/persona/`) with optional
   flags, in any order, and `@model` last: `+nocard` drops the memory block, `+h10` keeps the last 10
   messages of history, `+low`, `+medium` or `+high` turns reasoning on, `+len` adds the length note and
-  `+listen` adds the listening note the fixture's labels would produce. The recorded history and the
+  `+listen` adds the listening note the fixture's labels would produce, `+echo` the note against
+  copying their emoji, `+as-NAME` lays a character sheet over the persona, `+mood-STATE` (or two joined
+  with a dot) adds a mood line, `+resample` draws once more when the quip check fires, and `+roleplay`
+  builds the roleplay talker's prompt (with `+as-NAME`, its sheet section too). The recorded history and the
   user's message are reused exactly, so only the thing under test changes. To try another version of a
   non-persona prompt, set `COMPANION_PROMPT_OVERRIDES` for the run.
 - Free models for cross-model checks. `@kiro/claude-sonnet-4.6` (or another Kiro model) sends the talker

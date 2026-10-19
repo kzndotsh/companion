@@ -23,7 +23,17 @@ Today it is reached through Telegram, which is its only integration for now.
 - **Feels typed.** Replies are paced like a person typing, and long plain replies are sometimes sent
   as two or three messages.
 - **Listens.** Each message is read for how serious it is before the reply, and code adds a matching
-  note to what the model sees.
+  note to what the model sees. Sensitive memories only come into view when they are sharing something.
+- **Has a mood that carries.** A few named states (cozy, tender, playful), kept by code from what
+  happened, fading over hours and shown only in how it replies
+  ([ADR 0016](docs/adr/0016-a-mood-that-carries-owned-by-code-shown-in-behaviour.md)).
+- **Gets to know them.** It asks what to call them and keeps the answer pinned in every turn, and more
+  of that is on the way (TODO J48).
+- **Checks its own replies.** A reply with a known habit (an em dash, a joke bolted onto an ordinary
+  message, an AI disclaimer nobody asked for) is drawn once more; nothing is ever edited.
+- **Routes roleplay to a second model.** Pretend scenes, and intimate talk if the operator allows it,
+  go to a less restrictive model, above an age floor in code that no setting changes
+  ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
 - **Remembers what is coming up.** Things the user says about their near future become open loops.
   A gate decides every 15 minutes whether to reach out. It runs in shadow mode only: it drafts and
   records, and sends nothing.
@@ -64,7 +74,7 @@ All optional. Set them in `.env`.
 | Variable | Default | What it does |
 |---|---|---|
 | `COMPANION_MODEL` | `openai/gpt-6-luna` | model for everyday chat |
-| `COMPANION_SCENE_MODEL` | `deepseek/deepseek-v4-flash` | model for pretend scenes; `none` uses the everyday model |
+| `COMPANION_ROLEPLAY_MODEL` | `deepseek/deepseek-v4.1-flash` | the roleplay model: pretend scenes, and intimate talk when allowed; `none` uses the everyday model |
 | `COMPANION_REFLECT_MODEL` | `anthropic/claude-haiku-5.5` | model for memory extraction |
 | `COMPANION_FALLBACK_MODEL` | `deepseek/deepseek-v4.1-flash` | asked only when the judges' or memory model refuses a call (a 403 from content moderation); the floor never relies on its answers; `none` disables it |
 | `COMPANION_DAILY_CAP_USD` | `10` | daily spend cap in dollars; `off` removes it |
@@ -75,7 +85,7 @@ All optional. Set them in `.env`.
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
 | `COMPANION_MOOD` | `shadow` | a mood that carries (ADR 0016): `shadow` works it out and logs it without showing it to the model, `on` adds the mood line, `off` does neither. Read it with `companion mood`, or `companion mood --replay DAYS` |
 | `COMPANION_RESAMPLE` | on | on an ordinary turn, a reply with an em dash, or one the quip check says bolted a joke onto an ordinary message, is drawn once more and the second is sent; `off` disables it |
-| `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the scene model (ADR 0017), above an age floor in code that no setting changes. Scene guidance goes in the character sheet's `## In scenes and intimate moments` section |
+| `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the roleplay model (ADR 0017), above an age floor in code that no setting changes. Guidance for it goes in the character sheet's `## In roleplay and intimate moments` section, which only the roleplay model sees |
 | `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
 | `COMPANION_CHARACTER` | none | `mika` lays the character sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona: name, age, look, voice, tastes and an authored past. It still says it is an AI when sincerely asked |
 
@@ -96,6 +106,9 @@ uv run companion beliefs        # what it holds about the user
 uv run companion initiative     # what the reach-out gate would have sent
 uv run companion spend          # model spend
 uv run companion prompts        # every prompt and its current version
+uv run companion mood           # the mood now; --replay DAYS rebuilds it over past messages
+uv run companion address        # how they want to be referred to; --set TEXT changes it
+uv run companion callbacks      # judge recent replies for callbacks to memories, then report
 uv run companion replay <turn_id>
 ```
 
@@ -103,7 +116,7 @@ Run an eval:
 
 ```bash
 uv run companion eval --list
-uv run companion eval --variants v26.md@openai/gpt-6-luna --samples 12 --cap 0.2
+uv run companion eval --variants v40.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
 See [evals/README.md](evals/README.md) for how fixtures, variants and judges work.
@@ -133,12 +146,14 @@ what it gets to see.
 1. **Read the message.** Small models label it before the reply starts: how serious it is, whether
    it is real talk, a story, a game or a what-if, and whether it only needs a reaction instead of
    a reply.
-2. **Build the card.** Code turns those labels into short notes and adds the clock and the
-   relevant memory. The persona is the first system block, the card is the second, and nothing from
+2. **Build the card.** Code turns those labels into short notes and adds the clock, how they want to
+   be referred to, the relevant memory and the mood. The persona is the first system block, the card is the second, and nothing from
    the card ever goes in the user's message.
 3. **Write the reply.** The talker sees the persona, the card, the last 40 messages and the new
-   message exactly as typed. Pretend scenes are answered by a different model than everyday chat.
-4. **Deliver it.** The reply is paced, sometimes split, and sent.
+   message exactly as typed. Pretend scenes, and intimate talk when allowed, go to the roleplay model,
+   unless the floor keeps them on the everyday one.
+4. **Check and deliver it.** A reply that fails a check is drawn once more; then it is paced, sometimes
+   split (never roleplay), and sent.
 5. **Learn afterwards.** In the background, extractors record what the user said, with quotes, and
    what the companion itself holds as a view. A habit check notices phrases and moves it keeps
    repeating and tells the next turn to vary.
@@ -163,8 +178,7 @@ list of prompts and how they fit together is in [src/companion/prompts/](src/com
 | Where | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) | the working rules for anyone, human or agent, changing this repo |
-| [TODO.md](TODO.md) | the work board |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | current state, measured facts, and why the work is in this order |
+| [TODO.md](TODO.md) | the work board and the plan: where we are, measured facts, what comes next |
 | [docs/adr/](docs/adr) | decisions and their reasons |
 | [docs/inbox/](docs/inbox) | ideas that are not yet tasks |
 | `docs/research/` | audits and studies (local only, not committed) |

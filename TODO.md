@@ -1,7 +1,9 @@
 # Todo
 
-The work board. `docs/ROADMAP.md` keeps the principles, the current state and the measured facts.
-This file keeps the cards. Created 2026-10-16.
+The work board and the plan: where we are, what we measured, what comes next, and the cards. Created
+2026-10-16; the roadmap was folded in on 2026-10-19 so there is one file to keep current. The principles
+are in `AGENTS.md`. Update this file when something ships, when a measurement changes the plan, or when a
+decision is made; it may be wrong, but never stale.
 
 **How to use it**
 
@@ -15,12 +17,143 @@ This file keeps the cards. Created 2026-10-16.
   (`docs/research/2026-10-15_greenfield-design.md`, numbered as in the review of 2026-10-16),
   `R` from the roadmap and inbox notes. Done cards keep their IDs.
 - Items marked **needs decision** are blocked on an answer from the user.
+- **One thing at a time.** Pick one item from Now, finish it with its measure, then move.
+- **Every change ships with a fixture or a measurement** and a line in the prompts CHANGELOG when it
+  changes how it talks.
+- **A spend cap on every eval**, stated before the run.
+- **Flags set the order.** If a flag contradicts this file, the flag wins and the file changes.
+- **End of session:** update this file, empty the parts of the inbox that were acted on, and note
+  the spend.
+
+---
+
+## Where we are (2026-10-19)
+
+Live: persona **v40** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
+(when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
+**Claude Haiku 5.5** with a fallback model for calls it refuses. 17 ADRs, 93 public eval fixtures plus the
+private recorded ones, and about 870 tests with strict lint and types.
+
+Built and working:
+
+- **Memory.** Quoted beliefs with frames and times, freshness and "older, may be out of date",
+  confirmation by restatement, the companion's own views with gates and approval, the rejected list
+  so retirements stick. Scene and romantic behaviour in the chat and refusals said in reply to a push
+  are not recorded. Flags retire only the views they implicate.
+- **Reply path.** No thinking on the talker. Small judges run before the talker: ack (react instead of
+  replying), frame (real, play, story, what-if), and listening (how serious it is, what they are
+  doing, whether it is medical). Code turns the labels into notes in the system block: a listening
+  note by severity, a length note for short statements, a scene note, habit notes. The reaction judge
+  and the habit check run beside or after the reply. A scene is answered by a different model.
+- **Since 2026-10-18.** A mood that carries (ADR 0016: cozy, tender, playful, kept by code, shown only
+  in behaviour; proposed and soaking). A pinned line for how they want to be referred to, asked for on a
+  casual turn until known, and kept from their own answer. Sensitive memories only on turns where they
+  are sharing something. One resample when a reply fails a check (an em dash, a joke bolted onto an
+  ordinary message, an AI disclaimer nobody asked for). Routing in code (ADR 0017): scenes and, when the
+  operator allows it, intimate talk go to the roleplay model, above an age floor no setting changes; a held
+  turn's reply is checked and redrawn, and never written by code. Leaving a scene is easier (frames v2).
+- **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
+  messages, and a new message that arrives before the last answer is out replaces it. A reply
+  Telegram never delivered is recorded as undelivered and left out of what the model reads.
+- **Initiative.** Things they say about their near future become open loops, and a pure gate decides
+  every 15 minutes whether to reach out. Shadow mode only: it drafts and records, and sends nothing.
+- **Prompts.** Every prompt, the persona included, is versioned text under `src/companion/prompts/`
+  with a manifest, one changelog and tests. Decisions log `name@version`. `companion prompts` lists
+  them and `companion replay <turn_id> --show-prompt` prints what a turn sent.
+- **Observability and cost.** A rotating debug log with per-stage timings, a spend ledger, and a daily
+  cap ($10 by default).
+- **Evals.** Scripted and recorded fixtures, deterministic and judged checks, an empathy rubric check,
+  variants by persona, model, card, history window, reasoning, length note and listening note, a spend
+  cap, a runner that survives a failing provider, and opt-in live tests that calibrate each judge.
+- **Feedback.** `/flag` and `/fav`, listed with `companion flags` and `companion favorites`, each
+  replayable with `companion replay`.
+
+### Measured facts that drive the plan
+
+| Finding | Number | Where |
+|---|---|---|
+| Luna leads everyday chat | 59/64 on the public fixtures, DeepSeek 49/64 | prompts CHANGELOG |
+| DeepSeek keeps a scene going | 76% of escalating turns, Luna 52% | prompts CHANGELOG |
+| Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | prompts CHANGELOG, assembly |
+| The memory block in the user's message made it recite | held facts surfaced 8/24, now 0/24 | prompts CHANGELOG, assembly |
+| Diagnosing a small mishap (v25 made it worse than v22) | pancakes fixture 9/30, v26 30/30 | `evals/CHANGELOG.md` |
+| The listening judge labels severity correctly | 59 of 60, and no serious message read as trivial | `evals/CHANGELOG.md` |
+| A health note makes it point to a doctor | medication fixture 0/20 to 19/20 | `evals/CHANGELOG.md` |
+| Cheesy quips on a real flagged turn were not copied from the history | shorter history did not help; a per-turn note took it from 16/30 to 29/30 | `evals/CHANGELOG.md` |
+| A shorter history window loses what is beyond it | 12/12 in view, 0/12 out; the card updates only after 90 s quiet | `evals/CHANGELOG.md` |
+| Trivial vents get only a restated detail | 0/20 on the empathy check; unsolved | `evals/CHANGELOG.md` |
+| Only a "do it like this" quoted sample is parroted | "scattered" 5 of 6 on the mood fixture to 0 without it | `evals/CHANGELOG.md` |
+| A model finds a real afterthought rarely | about 1 reply in 20; open loops about 8 in 3 days | `evals/CHANGELOG.md` |
+| Scene voice does not carry over to Luna | 20/20 plain after a scripted scene | `evals/CHANGELOG.md` |
+| Wording does not fix habits (cheesy add-ons, minor-vent retelling, announced limits) | v37/v38 within noise or worse; vent note 0/30 under three wordings | `evals/CHANGELOG.md` |
+| A resample on a code or judge check does help | cheesy add-ons 85 to 95 of 150 plain | `evals/CHANGELOG.md` |
+| The age-coded label is reliable | 15/15 on age-coded messages, no trips on adults' pet names | `evals/CHANGELOG.md` |
+| DeepSeek V4.1 Flash beats V4 for scenes | as willing, about 3 times faster, more varied | `evals/CHANGELOG.md` |
+| The bot is cheap; eval runs are not | the bot about $0.67 a week; most of a month's $10.69 was evals | TODO H5 |
+
+## Plan
+
+### Now
+
+Each item ends with the thing that tells us it is done. The cards are below.
+
+1. **Watch the live setup in real chat.** Flag and favourite as usual. *Done when:* a week of marks
+   shows whether the roleplay model helps, where the voice changes at the boundary hurt, and how the
+   listening note and the pacing feel (D1).
+2. **Hand labels for replies.** The owner marks replies from the review sheet in batches of ten
+   (`evals/local/`); items 1 to 10 are in. *Done when:* the judges are calibrated against the marks and
+   the trivial-vent question has an answer (T14).
+3. **Getting to know them on purpose** (J48): the memory pass pairs a short answer with the question
+   before it, labels each memory's domain and depth, and a gap picker runs in shadow. *Done when:* the
+   map is kept by code and a week of shadow picks reads right to the owner.
+4. **A week of shadow mode** for open loops. *Done when:* the owner has read `companion initiative` and
+   the caps are set. Going live also needs outcome recording and a slow re-probe.
+
+### Next
+
+- **A crisis path for acute messages** (R16, on hold). The listening judge already labels them and does
+  nothing. Needs the owner's design.
+- **A language guard** that regenerates once when a reply uses a script the user has not.
+- **Pacing ADR** (T2), **provider routing for DeepSeek** (T8), the two DeepSeek-only gaps (T4, T5).
+- **Looking up older messages** when the user says "remember" (R2), **recording the lore it invents**
+  (R3), **reactions** beyond acknowledgements, **calibrating the view gates**, and **eval tooling**
+  (favourites to fixtures, a gate on synthetic-only data).
+- **History hygiene:** a flag does not always say which reply it is about, so dropping flagged replies
+  was tried and reverted (T9).
+- **Cache:** the 40-message window slides each turn, so the history is never cached.
+
+### Later
+
+- A persona-change gate: hash-bound proposals, paired evaluation, a drift cap per revision,
+  rollback (the shape in the Alicization audit).
+- Mood and style profile, belief confidence from independent days of evidence, game state (whose
+  turn, what was just asked).
+- A seconds-level afterthought, if a better source than a model's guess appears. A prototype found
+  almost no real material.
+- Voice, if ever: commit only what was heard.
+- Productising: onboarding, an adults-only gate and consent record, provider and data policy,
+  billing. No audited project has a working consent layer, so this is ours to design.
+
+### Housekeeping that can stop the bot
+
+- [ ] **Check the OpenRouter balance.** The bot goes quiet at zero, and the daily cap is $10. Paid eval
+      runs share it: state the real cost before one, and fix the runner's spend figure (`TODO.md` H5).
+- [ ] **Revoke the Telegram bot token** in BotFather. Parked by the owner; do not raise it again until
+      asked.
+- [ ] **Triage `docs/research/2026-10-16_sapphire-audit/`.** It is untracked and unread (`TODO.md` H3).
+
+### Not doing
+
+- Forking or depending on any audited project. None is a base we would trust.
+- Hand approval as the end-user product. It stays as an override only.
+- A model that has to be "told" not to recite. Fix where the data sits instead.
+- More models for the sake of it. A model gets tested when a flag or a measurement points at a gap.
 
 ---
 
 ## Todo
 
-Ordered. The first three can stop the bot, so they go first.
+Ordered. Pull from the top.
 
 - [ ] H3 Triage the untracked `docs/research/2026-10-16_sapphire-audit/` folder. Unread, not ours.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
@@ -50,11 +183,6 @@ Ordered. The first three can stop the bot, so they go first.
       positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
       joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150
       plain. Left: watch live flags; banter they started is let through by design.
-- [x] J46 Operator routing for intimate talk (ADR 0017), built 2026-10-19: `COMPANION_ROUTE_INTIMATE`,
-      scene guidance in the character sheet's `## In scenes and intimate moments` section, `intimate` and `age_coded` listening labels
-      (v4, 15/15 on age-coded messages, no trips on adults' pet names), code routing for scenes and intimate
-      talk, and the age floor in code with no timer and no regex. Unprompted disclaimers: about 1 in 4 on
-      the flagged turn, persona v39 within noise, not shipped; a check with one resample if flagged again.
 - [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, though a second
       draw can carry one too. Missed inferences (the Hackers poster; the "Weird Fishes" meaning): low
       reasoning made them worse and slower (9/30 to 4/30, 11/30 to 4/30), so reasoning stays off; likely a
@@ -87,8 +215,8 @@ Ordered. The first three can stop the bot, so they go first.
       parrot audit of quoted sample phrases in the persona and notes, a trimmed persona against v26, positive
       rewrites of the notes, a stock-phrase note from the owner's marks, and a read of the Luna model page. Each
       is a prompt version plus a measured eval. Hypotheses only; the sources are mostly assertion. Experiment 1
-      (parrot audit) done: persona v28 removes the quoted samples, and only the follow-examples were parroted
-      ("scattered", 5 of 6 on the mood fixture to 0); v28 is not live, awaiting the owner's say.
+      (parrot audit) done: persona v28 removed the quoted samples ("scattered", 5 of 6 on the mood fixture to
+      0); superseded by v36 and v40, which dropped the quoted mood examples too.
 - [ ] T16 Randomized reply length. **Built 2026-10-18, not measured:** `core/length.py` scales a short
       statement's limit by 0.6 to 1.5 from the turn id; the eval's `+len` still sends the unvaried limit, so
       measuring it needs a seeded `+len`. The length note gives the same limit for the same message length, so
@@ -105,13 +233,35 @@ Ordered. The first three can stop the bot, so they go first.
 
 ## Doing
 
-- [ ] D1 Watch the two-talker setup in real chat (Luna for everyday, DeepSeek V4 Flash for scenes).
+- [ ] D1 Watch the two-talker setup in real chat (Luna for everyday, DeepSeek V4.1 Flash for roleplay).
       Split `/flag` and `/fav` by the model that wrote each turn. Done when a week of marks shows
-      whether the scene model helps and where the voice change at the boundary hurts.
+      whether the roleplay model helps and where the voice change at the boundary hurts.
 
 ## Done
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
+
+**2026-10-19**
+- [x] J46 Operator routing for intimate talk (ADR 0017), built 2026-10-19: `COMPANION_ROUTE_INTIMATE`,
+      scene guidance in the character sheet's `## In scenes and intimate moments` section, `intimate` and `age_coded` listening labels
+      (v4, 15/15 on age-coded messages, no trips on adults' pet names), code routing for scenes and intimate
+      talk, and the age floor in code with no timer and no regex. Unprompted disclaimers: about 1 in 4 on
+      the flagged turn, persona v39 within noise, not shipped; a check with one resample if flagged again.
+- [x] J5 stages M1 to M3: mood lines measured (four of five states move replies), the engine (cozy,
+      tender, playful) and its append-only table, wired in shadow with `companion mood --replay`; the
+      goodbye guard; persona v36 (no announced mood) then v40 (an invitation to banter back).
+- [x] J45 partial: one resample when a reply bolts a joke onto an ordinary message (85 to 95 of 150), plus
+      the em dash and unasked AI disclaimer checks (`core/recheck.py`).
+- [x] The pinned line for how they want to be referred to (`companion address`), the ask-name note and
+      the name capture (J48 step 1); sensitive memories only on turns where they share something; crowded
+      out beliefs logged once per turn.
+- [x] Roleplay model DeepSeek V4.1 Flash (as willing as V4, about three times faster); frames v2 (leaving
+      a scene is easier); a fallback model for judge and memory calls the first refuses; replies with
+      quoted speech never split; the listening judge retried once.
+
+**2026-10-18**
+- [x] J4 texting style (persona v31), J2 callback score, J1 rude note, the recall look-up, the
+      initiative fixes (firm plans only, kinds, back-off), the single length owner and ADRs 0012 to 0016.
 
 **2026-10-17**
 - [x] PR1 Prompts as versioned files (done 2026-10-18): every system prompt, note and message, and the persona,
@@ -184,7 +334,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 - [x] G-retry Network blips are retried for the talker and the memory step
 - [x] G-v18 Persona v18: no "not X, it's Y", no em dashes, short plain reactions to personal shares;
       six new fixtures. The restatement habit is not fixed (T10)
-- [x] R-roadmap `docs/ROADMAP.md` and the model screens in the eval results log (5f5af28)
+- [x] R-roadmap the roadmap and the model screens in the eval results log (5f5af28; the roadmap now lives in this file)
 - [x] G-delivery A reply Telegram never delivered is recorded as undelivered and left out of what
       the model and the memory step read; sends retry once (9799be2)
 - [x] G-two-talkers A scene model (DeepSeek V4 Flash) answers while a pretend scene is in progress,
@@ -246,13 +396,15 @@ Decided against, with the reason.
 
 ## Decisions needed from the user
 
-1. **Pacing (T2):** evidence-based, the user dial ("quick", "natural", "slow burn"), or both? What is
+1. **The mood (ADR 0016):** accept it after a few days of plain use, or retune it.
+2. **Pacing (T2):** evidence-based, the user dial ("quick", "natural", "slow burn"), or both? What is
    the default friction?
-2. **Intimacy limits:** where the character's own pace ends and the model's hard limits begin, and how
-   a model refusal is shown.
-3. **Body and appearance question** (inbox, parked since the start).
-4. **Provider routing (T8).**
-5. **Flagged turns in history (T9).**
+3. **A crisis path** for acute messages (R16, on hold).
+4. **Going live with reach-outs:** after a week of shadow mode, with the caps (23:00 to 08:00 quiet,
+   one a day) confirmed.
+5. **Body and appearance question** (inbox, parked since the start).
+6. **Provider routing (T8).**
+7. **Flagged turns in history (T9).**
 
 ---
 
@@ -433,7 +585,7 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       section 5: the model picks a label, code owns the size).
       **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
       M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
-      to 0/30) shipped 2026-10-19 with `COMPANION_MOOD=on`. Left: a few days of flags, then the ADR accepted.
+      to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). Left: a few days of flags, then the ADR accepted.
 - [ ] J6 Its own time away: after a gap it has something of its own to say about the interval, recorded as
       lore so it stays consistent (greenfield "continuous" probe; ties to R3 and A22).
 - [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk

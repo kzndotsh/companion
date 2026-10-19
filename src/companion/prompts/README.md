@@ -23,19 +23,26 @@ There is no single overall system prompt. The talker's request has three parts, 
 1. **System block 1, the persona** (`system/persona`, about 1,800 words). It is the same on every turn,
    so the provider caches it.
 2. **System block 2, the card**, rebuilt each turn: the clock line (`notes/clock`, `notes/clock-gap`),
-   the memory lines (what is known about them, with how old each is, and the companion's own approved
-   views), then any notes that apply this turn: the habit notes (`notes/habit-*`), the scene note
-   (`notes/scene-*`), the length note (`notes/length`) and the listening note (`notes/listening-*`).
+   how they want to be referred to (`notes/address`), the memory lines (what is known about them, with
+   how old each is; sensitive ones only on turns rated severity 1 or more; and the companion's own
+   approved views), then any notes that apply this turn: the habit notes (`notes/habit-*`), the scene note
+   (`notes/scene-*`), the length note (`notes/length*`), the listening note (`notes/listening-*`), the
+   rude note, the recall finds (`notes/recall`), the mood line (`notes/mood-*`), the floor's hold note on
+   a held turn (`notes/floor-hold`) and the ask-name note (`notes/ask-name`).
    Notes and memory ride here and never in a user message, because anything in a user message can be read
    as something they said.
    With `COMPANION_CHARACTER` set, block 1 is the persona, then `system/character-frame`, then the
    character sheet (`companion/characters.py`). The sheet wins on voice, taste, look and its own past;
    honesty, memory, closeness and limits still come from the persona.
+   The roleplay talker (pretend scenes, and intimate talk when allowed; ADR 0017) gets the same block 1
+   plus the sheet's `## In roleplay and intimate moments` section, which the everyday talker never sees.
 3. **The messages**: the last 40 messages of the conversation, then their new message exactly as typed.
 
 Everything else is a separate small model call with its own system prompt and a short excerpt of the
-chat, and none of them sees the persona: the ack, frame, reaction, listening and habit judges, the
-extractors for memory, the open-loop extractor and the follow-up draft, and the view checks. Each logs
+chat, and none of them sees the persona: the ack, frame, reaction, listening and habit judges, the quip
+check, the intimate check on held turns, the name capture, the recall look-up, the extractors for memory,
+the open-loop extractor and the follow-up draft, the callback judge, and the view checks. A call the
+judges' model refuses goes to a fallback model, whose answers the floor never relies on. Each logs
 `name@version` in its decision.
 
 To see exactly what a past turn sent: `uv run companion replay <turn_id> --show-prompt`. How the
@@ -65,10 +72,10 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/listening-serious` | note | listening note, severity 2 | v5 |
 | `notes/listening-trivial` | note | listening note, severity 0 | v5 |
 | `notes/mood-buzzing` | note | dropped candidate mood line for buzzing (ADR 0016), kept for the `+mood-buzzing` eval flag | v1 |
-| `notes/mood-cozy` | note | candidate mood line for cozy, read only by the `+mood-cozy` eval flag until ADR 0016 is built | v2 |
-| `notes/mood-flat` | note | candidate mood line for flat, read only by the `+mood-flat` eval flag until ADR 0016 is built | v2 |
-| `notes/mood-playful` | note | candidate mood line for playful, read only by the `+mood-playful` eval flag until ADR 0016 is built | v2 |
-| `notes/mood-tender` | note | candidate mood line for tender, read only by the `+mood-tender` eval flag until ADR 0016 is built | v2 |
+| `notes/mood-cozy` | note | the cozy mood line, shown when `COMPANION_MOOD=on` and cozy is among the strongest states (ADR 0016) | v2 |
+| `notes/mood-flat` | note | the flat mood line; measured, but the engine has no source for flat yet (waits for J6), so it is not shown | v2 |
+| `notes/mood-playful` | note | the playful mood line, shown when `COMPANION_MOOD=on` and playful is among the strongest states (ADR 0016) | v2 |
+| `notes/mood-tender` | note | the tender mood line, shown when `COMPANION_MOOD=on` and tender is among the strongest states (ADR 0016) | v2 |
 | `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v1 |
 | `notes/rude` | note | their message was rude to the companion, `core/listening.py` | v1 |
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
