@@ -198,7 +198,7 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
         SESSION,
         TurnId("t0"),
         Speaker.USER,
-        "i have ocd and i like climbing",
+        "i have asthma and i like climbing",
         Frame.REAL,
         "test",
         NOW - timedelta(days=1),
@@ -223,14 +223,14 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
         )
 
     store.insert_belief(believe("b1", "Likes climbing", "i like climbing", 0))
-    store.insert_belief(believe("b2", "Has OCD", "i have ocd", 2))
+    store.insert_belief(believe("b2", "Has asthma", "i have asthma", 2))
     talker = FakeTalker("nice")
     convo = Conversation(store, talker, PREFIX, REL)
     await convo.handle(SESSION, "hey", "test", NOW)
     sent = talker.seen[0].card
     assert "Likes climbing" not in talker.seen[0].messages[-1].content
     assert "Likes climbing" in sent
-    assert "Has OCD" not in sent  # no listening judgement reads as casual: held beliefs stay out
+    assert "Has asthma" not in sent  # no listening judgement reads as casual: held beliefs stay out
     store.close()
     db = tmp_path / "rel.sqlite"
     [turn_id] = _turn_ids(db)

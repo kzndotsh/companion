@@ -22,11 +22,11 @@ def test_sensitive_beliefs_are_held_not_surfaced(belief: Callable[..., Belief]) 
     card = _card(
         [
             _b(belief, "a", "Likes climbing", sensitivity=0),
-            _b(belief, "b", "Has OCD", sensitivity=2),
+            _b(belief, "b", "Has asthma", sensitivity=2),
         ]
     )
     assert [b.claim for b in card.usable] == ["Likes climbing"]
-    assert [b.claim for b in card.held] == ["Has OCD"]
+    assert [b.claim for b in card.held] == ["Has asthma"]
     assert HOLD_AT == 2
 
 
@@ -34,12 +34,12 @@ def test_the_rendering_separates_the_lists_and_never_leaks_held_into_usable(
     belief: Callable[..., Belief],
 ) -> None:
     text = render(
-        _card([_b(belief, "a", "Likes climbing"), _b(belief, "b", "Has OCD", sensitivity=3)])
+        _card([_b(belief, "a", "Likes climbing"), _b(belief, "b", "Has asthma", sensitivity=3)])
     )
     usable, held = text.split("[Also known")
     assert "Likes climbing" in usable
-    assert "Has OCD" not in usable
-    assert "Has OCD" in held
+    assert "Has asthma" not in usable
+    assert "Has asthma" in held
 
 
 def test_an_empty_card_renders_nothing() -> None:

@@ -9,7 +9,7 @@ CARD = (
     "- The user always wants burger. (mentioned 2 days ago)\n"
     "- The user dreads a call with their landlord. (mentioned 3 days ago; may have changed)]\n"
     "[Also known, but only touch it if they bring it up:\n"
-    "- The user has ADHD. (mentioned yesterday)]\n"
+    "- The user has asthma. (mentioned yesterday)]\n"
     "[Views of your own that you have expressed and they have approved. Hold to them:\n"
     "- The companion thinks laziness is a preference.]\n"
     "[Their message was short (3 words), so keep your reply short too.]"
@@ -20,7 +20,7 @@ def test_the_memories_about_them_are_read_from_a_stored_card_without_its_own_vie
     assert memories_from_card(CARD) == [
         "The user always wants burger.",
         "The user dreads a call with their landlord.",
-        "The user has ADHD.",
+        "The user has asthma.",
     ]
 
 

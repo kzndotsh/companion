@@ -25,14 +25,14 @@ from companion.core.types import (
 from tests.conftest import REL
 
 NOW = datetime(2026, 10, 15, 18, 0, tzinfo=UTC)
-TEXT = "i have ocd and adhd and i've been job hunting for months"
+TEXT = "i have asthma and a bad knee and i've been job hunting for months"
 
 
 def _candidate(**over: object) -> Candidate:
     base: dict[str, object] = {
         "ref": "m1",
-        "quote": "i have ocd and adhd",
-        "claim": "Has OCD and ADHD",
+        "quote": "i have asthma and a bad knee",
+        "claim": "Has asthma and a bad knee",
         "subject": Subject.USER,
         "kind": BeliefKind.TRAIT,
         "provenance": Provenance.STATED,
@@ -50,7 +50,7 @@ def _make(c: Candidate, u: Utterance) -> Belief | Rejection:
 def test_a_verbatim_quote_becomes_a_belief(utterance: Callable[..., Utterance]) -> None:
     got = _make(_candidate(), utterance(text=TEXT, uid="u1"))
     assert isinstance(got, Belief)
-    assert got.evidence[0].quote == "i have ocd and adhd"
+    assert got.evidence[0].quote == "i have asthma and a bad knee"
     assert got.speaker is Speaker.USER
 
 
@@ -172,7 +172,7 @@ def test_parse_keeps_good_items_and_rejects_bad_ones() -> None:
 
 
 def test_normalise_ignores_case_and_punctuation() -> None:
-    assert normalise("Has OCD, and ADHD.") == normalise("has ocd and adhd")
+    assert normalise("Has asthma, and a bad knee.") == normalise("has asthma and a bad knee")
 
 
 def test_a_momentary_want_is_rejected(utterance: Callable[..., Utterance]) -> None:
