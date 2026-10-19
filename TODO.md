@@ -246,7 +246,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       holds and never ask them to repeat (recall note v2), or to say so plainly when memory is empty; a `repair`
       label adds a one-line "own it" note when they say it got them wrong. Clean fixtures repair well without
       the notes; the live log decides whether the repair note stays. Next if flagged: a carry-over note so the
-      turn after a repair does not rush back to teasing; and recall does not run in a pretend scene yet.
+      turn after a repair does not rush back to teasing. Recall now also runs in a pretend scene (15/30 to 30/30).
 - [x] J15 Bring it up next time, live: a due open loop becomes one quiet note when they next write (a casual
       turn, at most daily, twice per loop, never sensitive), and a firm plan for later today is a note-only loop
       three hours on. Fixtures: celebrate 30/30, left alone during their own trouble 30/30, asked on a casual

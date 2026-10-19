@@ -499,6 +499,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   anything after a `## Scene` heading, which the everyday talker never sees. The turn records which prefix
   it used. The em dash check now runs on scene replies too (code checks only; the quip judge stays off in
   scenes).
+- **Recall in a pretend scene (2026-10-19).** When they say it forgot something mid-scene, the scene turn's routing read now triggers the recall look-up, and its finds reach the roleplay talker's system block. An empty look-up adds nothing in a scene. Measured in `evals/CHANGELOG.md` (15/30 to 30/30).
 
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.

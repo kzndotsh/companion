@@ -857,4 +857,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   the user; 5 had been answered already (8%): 4 in the last few messages in view, 1 only in memory. None
   drew an explicit complaint in the next message, though unsampled replies did. The fix, if any, is a
   check against the last few messages, not better memory. Free.
+- **2026-10-19. "You forgot" inside a pretend scene now looks it up.** The scene turn's routing read
+  already carries the recall label; the look-up now runs on it, and an empty look-up adds nothing in a
+  scene (the thing meant is most likely in the story, in view). New public fixture
+  `repair-forgot-in-a-scene` (a wrong word for them mid-scene), DeepSeek V4.1 Flash with the roleplay
+  sheet, 30 samples: with the recall note 30/30 (owns it, says girl, stays in the scene, never pulls the
+  unrelated memories in), without it 15/30 (fails include "did I? remind me", the real failure); a real
+  difference (Fisher, under 0.1%). The fixture has no pinned address line, which live would help the
+  no-note case. Cost about $0.02.
 

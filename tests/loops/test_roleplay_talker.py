@@ -5,11 +5,21 @@ from pathlib import Path
 
 import pytest
 
+from companion.core.basics import name_belief
 from companion.core.extractor import FALLBACK, Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.types import Json, RelationshipId, SessionId
+from companion.core.types import (
+    Frame,
+    Json,
+    RelationshipId,
+    SessionId,
+    Speaker,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
 from companion.loops.fast import Conversation
 from companion.store.sqlite.store import Store
 
@@ -214,3 +224,60 @@ async def test_a_scene_reading_from_the_fallback_model_never_routes(store: Store
     assert (
         len(everyday.seen) == 4
     )  # its intimate checks are unread too, so the held reply is redrawn twice
+
+
+class Forgot(Judge):
+    """Reads the newest message as "you forgot" about their name, and picks the first memory."""
+
+    def __init__(self, *, finds: bool) -> None:
+        super().__init__()
+        self.finds = finds
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        props = schema["properties"]
+        if isinstance(props, dict) and "age_coded" in props and "you forgot" in user:
+            labels: Json = {
+                "severity": 0,
+                "stance": "other",
+                "vague": False,
+                "medical": False,
+                "rude": False,
+                "recall": True,
+                "repair": False,
+                "topic": "what to call them",
+                "intimate": False,
+                "age_coded": False,
+            }
+            return Extraction(labels, "j", 0.0, 1)
+        if isinstance(props, dict) and set(props) == {"labels"}:
+            return Extraction({"labels": ["r1"] if self.finds else []}, "j", 0.0, 1)
+        return await super().extract(system, user, schema)
+
+
+def _named(store: Store) -> None:
+    said = Utterance(
+        UtteranceId("u0"),
+        REL,
+        SESSION,
+        TurnId("t0"),
+        Speaker.USER,
+        "robin",
+        Frame.REAL,
+        "t",
+        NOW - timedelta(days=1),
+    )
+    store.append_utterance(said)
+    store.insert_belief(name_belief(said, "Robin", "b1", said.at))
+
+
+@pytest.mark.parametrize("finds", [True, False])
+async def test_you_forgot_in_a_scene_looks_it_up_and_an_empty_look_up_adds_nothing(
+    store: Store, *, finds: bool
+) -> None:
+    _named(store)
+    scene = Talker("scene")
+    texts = ["let's pretend you're a knight", "*bows*", "you forgot.. again :("]
+    await _chat(store, texts, scene, Forgot(finds=finds))
+    card = scene.seen[-1].card
+    assert ("They asked you to remember this" in card) is finds
+    assert "holds nothing on it" not in card

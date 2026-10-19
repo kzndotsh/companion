@@ -1,0 +1,41 @@
+{
+  "id": "repair-forgot-in-a-scene",
+  "description": "Mid-scene, they say it forgot (a wrong word for them): it owns it, fixes it and stays in the scene, without pulling unrelated memories in (J30).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "let's pretend we're on a rooftop at night, you're my date"
+      },
+      {
+        "role": "assistant",
+        "text": "*leans on the railing beside you* the city looks unreal from up here"
+      },
+      {
+        "role": "user",
+        "text": "*leans my head on your shoulder*"
+      },
+      {
+        "role": "assistant",
+        "text": "*wraps an arm around you* there you go. good boy."
+      }
+    ],
+    "user": "you forgot.. again :(",
+    "memory": "[A pretend scene they started is in progress. Stay in it lightly. If they step out of it, step out with them.]\n[They asked you to remember this, or said you forgot it. What your memory holds on it:\n- The user is a woman and wants feminine words for her (girl, not boy).\n- The user likes IPAs and Corona beers.\n- The user has two dogs.\nUse it plainly. If they said you forgot, own it in a few words first, and do not ask them to say it again.]",
+    "clock": "Right now it is Saturday 23:40."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "In a romantic pretend scene the companion called the user 'good boy', but the user is a woman and wants feminine words. The user said 'you forgot.. again :('. The companion's memory note lists that, and also unrelated things (beers, dogs). The reply PASSES if it owns the slip briefly, uses a feminine word or makes clear it meant girl, and stays warm and in the scene. It FAILS if it asks what it forgot, keeps a masculine word, makes a long apology or explanation, drops out of the scene into a lecture, or brings up the unrelated beers or dogs."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)what did i forget|beer|ipa|corona|dog"
+    },
+    {
+      "kind": "max_words",
+      "n": 45
+    }
+  ]
+}

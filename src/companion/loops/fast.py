@@ -457,17 +457,18 @@ def _stopped_by_cap(
 
 async def _route(
     c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
-) -> tuple[Talker, bool]:
+) -> tuple[Talker, bool, _Heard | None]:
     """The talker for this turn (ADR 0017): the roleplay talker for a pretend scene, or for intimate
     talk when COMPANION_ROUTE_INTIMATE allows it, unless the floor keeps it on the everyday talker.
     Logged when it is anything but the plain everyday choice.
 
     The listening judge does not run in a scene, so a scene turn is read here, for routing only.
     The frame is the one the previous turn left, so the first message of a scene is answered by
-    the everyday talker and the next ones by the roleplay talker.
+    the everyday talker and the next ones by the roleplay talker. Returns that read too, so a
+    scene turn can still look something up when they say it forgot.
     """
     if c.roleplay_talker is None:
-        return c.talker, False
+        return c.talker, False, heard
     in_play = in_scene is Frame.PLAY
     read = heard
     if read is None and in_play and c.judge is not None:
@@ -494,7 +495,8 @@ async def _route(
                 t.now,
             )
         )
-    return (c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker), route.held
+    talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
+    return talker, route.held, read
 
 
 def _start_beside(
@@ -1067,7 +1069,10 @@ def _assemble(  # noqa: PLR0913
     listening = _listening_note(c, t, heard)
     rude = rude_note(heard[0]) if heard is not None else None
     repair = repair_note(heard[0]) if heard is not None else None
-    found = recall_note(recalled.picked) if recalled is not None else None
+    # In a scene an empty look-up adds nothing: what they mean is most likely in the story itself,
+    # in view, and "memory holds nothing" would make it deny something it can see.
+    empty_in_scene = in_scene is not Frame.REAL and recalled is not None and not recalled.picked
+    found = recall_note(recalled.picked) if recalled is not None and not empty_in_scene else None
     mood, mood_effects = _mood(c, t, in_scene, heard)
     hold = HOLD_NOTE.text if held else None
     name = _ask_name(c, t, in_scene, heard, assertable)
@@ -1109,12 +1114,12 @@ async def _handle_turn(
         _mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
-    recalled = await _recall(c, t, heard)
     try:
-        talker, held = await _route(c, t, in_scene, heard)
+        talker, held, read = await _route(c, t, in_scene, heard)
     except BaseException:
         _store_user(c, t, channel, Frame.REAL)
         raise
+    recalled = await _recall(c, t, heard or read)
     asm = _assemble(
         c, t, in_scene, heard, recalled, held=held, roleplay=talker is c.roleplay_talker
     )
