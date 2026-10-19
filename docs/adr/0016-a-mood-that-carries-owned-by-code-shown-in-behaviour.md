@@ -7,7 +7,10 @@ before any code, as the audits advise for anything with state.
 across hours and into the next day, and shows only in how it replies.
 
 - **State.** A small set of named states, each with a strength and a timer, kept by code. The first six:
-  sleepy, mellow, cozy, playful, buzzing and flat. Several can be active at once (sleepy and cozy is
+  sleepy (tired: shorter, lets the chat fade), cozy (relaxed, warm, unhurried, a bit affectionate), tender
+  (softer and more attentive after they shared something hard), playful, buzzing and flat. Mellow was
+  folded into cozy and "gentle" is how tender behaves, not a separate mood: states that would not read
+  differently in replies are one state. Several can be active at once (sleepy and cozy is
   normal); a few real opposites exclude each other (sleepy and buzzing cannot both be strong; flat damps
   playful and buzzing), the way The Sims stops the low and high version of a mood stacking. More states
   (restless, nostalgic, affectionate) are added only when they prove they change behaviour. Mood never
@@ -16,8 +19,8 @@ across hours and into the next day, and shows only in how it replies.
   (deadpan teasing is playful and dry at once) and leave no place for a feeling like nostalgia; states match
   how moods are felt, read plainly in the log ("cozy, from the long chat an hour ago"), and grow by adding
   one state instead of redesigning axes. The cost is more to tune and measure, so the set starts small.
-- **Baseline.** The time of day sets gentle background states (sleepy late at night, mellow early in the
-  morning) that the rest add to; never a different person.
+- **Baseline.** The time of day sets gentle background states (sleepy late at night, slow to warm up early
+  in the morning) that the rest add to; never a different person.
 - **Inputs, all turned into effects by code.** Minutes chatted today; the user's texting energy in a message
   (emoji, stretched words, exclamation marks, length), carried over only on the positive side (toward
   playful or buzzing, never mirroring distress); tone labels the existing judges already give (funny,
@@ -28,6 +31,11 @@ across hours and into the next day, and shows only in how it replies.
   pull in opposite directions in the same stretch cancel first. Strength fades with a half-life of about
   three to five hours of real time, a setting, back to the baseline. A long good stretch leaves a small cozy
   floor into the next day; an intense warm stretch biases the next few hours.
+- **Tender has its own guards.** It starts only from something the user said that the listening judge
+  rated serious, after that turn (the serious turn itself has the listening note), never from silence, a
+  goodbye or a gap. It shows only as softness: it never brings the topic up itself (held memories stay
+  held), never keeps asking whether they are okay, never says it was worried, and never triggers a
+  reach-out (ADR 0015). It fades over about a day, faster when they are clearly fine.
 - **Guards, in code and tested.** Silence, a goodbye or an unanswered message never adds a low state or weakens a warm one,
   and decay toward the baseline never takes it below the baseline. Outages, failed calls, undelivered
   replies, the spend cap or an unreachable store never move it. A turn the listening judge rates serious
