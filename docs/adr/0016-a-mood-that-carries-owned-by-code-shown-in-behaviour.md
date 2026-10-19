@@ -25,6 +25,15 @@ across hours and into the next day, and shows only in how it replies.
   carried mood would matter (an "afterglow" state, in `docs/inbox/`). The
   line describes behaviour and never names the mood word, and it says never to describe its own state,
   which also removed the stated mood ("in a pretty mellow mood") v31 has without any line.
+- **The engine as built (M2, `core/mood.py`).** Effects live in an append-only table
+  (`mood_effects`) and the mood is worked out from them when asked, never stored. Inputs: minutes chatted
+  today and a long chat's residue (cozy), the react judge's sweet (cozy) or funny (playful) tone on their
+  previous message, typing energy on a message judged not serious (playful; a sad or annoyed mark or a
+  pasted block counts nothing), and a serious listening label (tender, and nothing else that turn).
+  Without a listening judgement a turn adds nothing. A repeat restarts the timer at the larger of what is
+  left and what it brings. Play after something hard adds an easing effect that fades at tender's pace,
+  so tender drops sooner and cannot come back as the play fades, and tender holds playful back entirely
+  while it shows. Traces, a copy of the live database and 400 real messages were checked before commit.
 - **Why states, not scales.** The first draft used two dials (energy, ease). Dials force false opposites
   (deadpan teasing is playful and dry at once) and leave no place for a feeling like nostalgia; states match
   how moods are felt, read plainly in the log ("cozy, from the long chat an hour ago"), and grow by adding

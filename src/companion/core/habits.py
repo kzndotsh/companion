@@ -35,10 +35,10 @@ _FUNCTION_TEXT = (
     "really can could would should will about up out all any some"
 )
 _FUNCTION_WORDS = frozenset(_FUNCTION_TEXT.split())
-_EMOTICON = re.compile(
+EMOTICON = re.compile(
     r"(?<![\w/:])(?:[:;=][-']?[)(DPpOo3*/\\|\]\[]|\^[_.]?\^|[xX][Dd]\b|<3|T_T|uwu|owo|>_<|-_-)"
 )
-_EMOJI = re.compile("[\U0001f000-\U0001faff\u2600-\u27bf\u2764\u2b50]")
+EMOJI = re.compile("[\U0001f000-\U0001faff\u2600-\u27bf\u2764\u2b50]")
 _ECHO_NOTE = get("notes/habit-echo")
 
 
@@ -95,7 +95,7 @@ def habit_note(prior: Sequence[Utterance]) -> str | None:
 
 def has_marks(text: str) -> bool:
     """Whether a message has an emoji or a text emoticon in it."""
-    return bool(_EMOTICON.search(text) or _EMOJI.search(text))
+    return bool(EMOTICON.search(text) or EMOJI.search(text))
 
 
 def echo_note(user_text: str) -> str | None:

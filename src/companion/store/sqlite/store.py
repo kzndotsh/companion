@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 
 from companion.core.callbacks import Check
+from companion.core.mood import Effect
 from companion.core.openloops import LoopState, OpenLoop
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
@@ -38,6 +40,7 @@ from companion.store.sqlite import (
     favorites,
     flags,
     ledger,
+    mood,
     open_loops,
     reflect,
     settings,
@@ -196,6 +199,12 @@ class Store:
             (rel, turn),
         ).fetchone()
         return str(row["text"]) if row else ""
+
+    def add_mood_effects(self, rel: RelationshipId, effects: Sequence[Effect]) -> None:
+        mood.add(self._conn, rel, effects)
+
+    def mood_effects_since(self, rel: RelationshipId, start: datetime) -> list[Effect]:
+        return mood.since(self._conn, rel, start)
 
     def callback_checks_since(
         self, rel: RelationshipId, start: datetime
