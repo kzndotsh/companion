@@ -44,9 +44,22 @@ Ordered. The first three can stop the bot, so they go first.
       when the note is about a missing one). A flag would need to say what it refers to first.
 
 
+- [ ] J45 Cheesy closing quips. A fine reply gets a witty tag line bolted on the end ("too-crispy fries are
+      basically edible sticks 😭 the sandwich had to carry the meal on its own"); at least five flags
+      2026-10-16 to 10-19. Persona v31 already bans building jokes and names the banned framings, and a 2026
+      preprint suggests naming them primes them. Plan: (1) the real flagged turns as local fixtures with a
+      judge on the last clause, measured on the live setup; (2) a persona version with a positive ending rule
+      ("stop when the point is made, end on the reaction or a question") and plain examples instead of the
+      banned list; (3) if that fails, a closer check with one resample (the inbox note on resampling).
+      Research 2026-10-19: nothing measures this exact failure; sampler bans and anti-slop fine-tuning work
+      but need control we do not have.
 - [ ] T14 Trivial vents have no substance beyond restating a detail (0/20 on the epitome check). Waiting on
       the owner's hand labels of replies across the fixtures (what is unrealistic or cheesy, what he would
       send), then decide whether a short plain sympathy is the right answer or something can be added.
+      Flagged live 2026-10-19 ("repeating"): "ugh i hate waiting for … laundry" answered with "ugh, that's the
+      worst … the bed's still waiting on laundry 😭". The trivial note asks to "commiserate in a line, in their
+      own casual register", which invites the echo; a v3 that adds one thing of its own (as the everyday note
+      did) is the first thing to measure, with this turn as a local fixture.
 
 - [ ] T15 Prompt experiments from the guides review (`docs/research/2026-10-18_prompting-guides-review.md`): a
       parrot audit of quoted sample phrases in the persona and notes, a trimmed persona against v26, positive
@@ -396,6 +409,10 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
       days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
       section 5: the model picks a label, code owns the size).
+      **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
+      M3 wired it in shadow with `companion mood --replay`. Left: no mood line at a goodbye (a code guard), a
+      persona version without v31's "say a mood as a stance, in words" line (it contradicts the ADR and is why
+      v31 says "in a pretty mellow mood"), then `COMPANION_MOOD=on`, a few days of flags, and the ADR accepted.
 - [ ] J6 Its own time away: after a gap it has something of its own to say about the interval, recorded as
       lore so it stays consistent (greenfield "continuous" probe; ties to R3 and A22).
 - [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk
