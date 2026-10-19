@@ -919,3 +919,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   and with every memory in view it once got right what it is, where the others claimed to be another
   assistant. Recitation stayed rare even with every memory shown. Cost $0.08 by the meter; the judge was
   free.
+- **2026-10-19. History of 100 messages against 40: within noise; stays at 40.** 25 real everyday turns,
+  persona v40 without a character, 4 samples each (the recorded request against the same turn with 100
+  earlier messages rebuilt from the ledger). The fixtures' own checks: 32/100 against 42/100 for 100
+  messages, chance of noise 6% (just over the line). A blind Claude judge on 23 of the turns, sets
+  shuffled per turn and unblinded after: 100 messages better on 9, 40 on 8, 6 ties. Together, no shown
+  gain, so the window stays at 40. One reply of 200 (under 40 messages) ended with the clock line copied
+  from the system block ("[right now it is Thursday 13:11]"); no message in the ledger carries one, so it
+  came from the card. Cost $0.04 by the meter.
