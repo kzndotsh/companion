@@ -19,6 +19,7 @@ from companion.prompts import get
 PROMPT = get("system/recall")
 SYSTEM = PROMPT.text
 _NOTE = get("notes/recall")
+_EMPTY = get("notes/recall-empty")
 MAX_PICKS = 5
 MAX_SENSITIVITY = 2  # never look up crisis-level beliefs on its own
 
@@ -51,8 +52,9 @@ def parse(data: Json, labelled: Mapping[str, Belief]) -> list[Belief]:
     return picked[:MAX_PICKS]
 
 
-def recall_note(picked: Sequence[Belief]) -> str | None:
-    """The block for the system block, or None when nothing was found."""
+def recall_note(picked: Sequence[Belief]) -> str:
+    """The block for the system block. When nothing was found it says so, so the reply owns the
+    gap instead of guessing (J30)."""
     if not picked:
-        return None
+        return _EMPTY.text
     return _NOTE.render(items="\n".join(f"- {b.claim}" for b in picked))

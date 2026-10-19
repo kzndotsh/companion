@@ -8,6 +8,7 @@ from companion.core.listening import (
     offered_recently,
     parse,
     render_reason,
+    repair_note,
 )
 from companion.core.types import Json
 
@@ -160,3 +161,28 @@ def test_a_serious_health_message_asks_for_a_doctor_once() -> None:
     note = listening_note(_j(2, medical=True))
     assert note is not None
     assert note.count("can help") == 1
+
+
+def test_a_got_me_wrong_message_gets_the_repair_note_unless_it_is_a_recall() -> None:
+    base: dict[str, Json] = {
+        "severity": 0,
+        "stance": "other",
+        "vague": False,
+        "medical": False,
+        "rude": False,
+        "recall": False,
+        "topic": "",
+        "intimate": False,
+        "age_coded": False,
+    }
+    wrong = parse({**base, "repair": True})
+    assert wrong is not None
+    assert wrong.repair
+    assert repair_note(wrong) is not None
+    assert "says it got them wrong" in render_reason(wrong, None)
+    forgot = parse({**base, "repair": True, "recall": True, "topic": "their beer"})
+    assert forgot is not None
+    assert repair_note(forgot) is None  # recall's own note owns a forgotten thing
+    unlabelled = parse(base)
+    assert unlabelled is not None
+    assert not unlabelled.repair  # an older prompt without the label never adds the note

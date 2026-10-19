@@ -79,7 +79,9 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/mood-flat` | note | the flat mood line; measured, but the engine has no source for flat yet (waits for J6), so it is not shown | v2 |
 | `notes/mood-playful` | note | the playful mood line, shown when `COMPANION_MOOD=on` and playful is among the strongest states (ADR 0016) | v2 |
 | `notes/mood-tender` | note | the tender mood line, shown when `COMPANION_MOOD=on` and tender is among the strongest states (ADR 0016) | v2 |
-| `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v1 |
+| `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v2 |
+| `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |
+| `notes/repair` | note | they say it got them wrong: own it in one line, go on from what they said (J30) | v1 |
 | `notes/rude` | note | their message was rude to the companion, `core/listening.py` | v1 |
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
 | `notes/scene-play` | note | a pretend scene is in progress | v1 |
@@ -93,7 +95,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/intimate-check` | system | reads whether a reply on a held turn is intimate (sexual, not affection) (ADR 0017) | v1 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
-| `system/listening` | system | the listening judge, `core/listening.py` | v4 |
+| `system/listening` | system | the listening judge, `core/listening.py` | v5 |
 | `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
 | `system/memory-map` | system | labels each memory with the part of their life it is about and how personal it is (J48) | v1 |
 | `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding (shadow) | v1 |

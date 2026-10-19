@@ -599,7 +599,14 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/mood-tender v2** (candidate, eval only; current). Says "be softer" instead of naming a state, and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.
 
 ## notes/recall
-- **notes/recall v1** (current). The beliefs the recall look-up found, shown for that turn only, under "They asked you to remember this". Filled by `core/recall.py`.
+- **notes/recall v1** (superseded). The beliefs the recall look-up found, shown for that turn only, under "They asked you to remember this". Filled by `core/recall.py`.
+- **notes/recall v2** (current). v1 that also covers "you forgot": use what memory holds plainly, own a miss in a few words, and never ask them to say it again (J30). Measured in `evals/CHANGELOG.md`.
+
+## notes/recall-empty
+- **notes/recall-empty v1** (current). New (J30). When the recall look-up ran and found nothing, the reply was given nothing and could guess or ask them to repeat; now it says so plainly in one line.
+
+## notes/repair
+- **notes/repair v1** (current). New (J30). When the listening judge reads that they say the companion got them wrong (misread, assumed, wrong words, hurt), one line: own it plainly, go on from what they said, no long apology, no explaining, never ask them to repeat. Not added when the message is a forgot-something recall, which recall's own note covers.
 
 ## notes/rude
 - **notes/rude v1** (current). Added by code for the one turn when the listening judge labels their message rude to the companion: a few flat words and leave it there, no apology, offer, suggestion or question. Measurement in `evals/CHANGELOG.md`.
@@ -654,7 +661,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/listening v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
 - **system/listening v2** (superseded). v1 plus one label, rude: plainly rude or hostile toward the companion itself, false for teasing, banter, a light jab, blunt feedback or frustration at something else. It feeds `notes/rude`. Reason: the reflex to apologise and offer more after an insult held against a character sheet in 8 of 20 replies (J1, 2026-10-18).
 - **system/listening v3** (superseded). v2 plus recall (they asked the companion to remember or already know something about them) and topic (what to look up, worked out from context when the message is vague). Reason: "come on, you know this one..." about their favourite food got a guess and a joke, with three burger beliefs in memory and none on the card (owner's flag, 2026-10-18).
-- **system/listening v4** (current). v3 plus two labels for ADR 0017: `intimate` (about sex or physical intimacy, or sexual flirting; not ordinary affection) and `age_coded` (romance, flirting or anything sexual together with anything child-like or under-age; not adults' ordinary pet names or non-romantic comfort). Code routes on them; a missing `age_coded` counts as true. Measurement in `evals/CHANGELOG.md`.
+- **system/listening v4** (superseded). v3 plus two labels for ADR 0017: `intimate` (about sex or physical intimacy, or sexual flirting; not ordinary affection) and `age_coded` (romance, flirting or anything sexual together with anything child-like or under-age; not adults' ordinary pet names or non-romantic comfort). Code routes on them; a missing `age_coded` counts as true. Measurement in `evals/CHANGELOG.md`.
+- **system/listening v5** (current). v4 with recall widened to messages saying it should already have known or forgot something ("I told you earlier", "you forgot"), and a `repair` label for messages saying it got them wrong (misread, assumed, wrong words, hurt), not set for teasing that corrects nothing (J30). Reason: the 2026-10-19 "I told you earlier" turn was not read as recall, so the look-up never ran and the reply asked them to repeat. Measured in `evals/CHANGELOG.md`.
 
 ## system/memory-map
 - **system/memory-map v1** (current). New. Labels each memory with one of eight domains (identity, people, daily, interests, history, hopes, values, inner) and a depth (surface, personal, core), so code can count what it knows and pick the thinnest part to ask about (`core/knowing.py`, J48). Runs after each memory pass on memories not yet labelled. The labels never reach the talker; only the shadow pick is logged.

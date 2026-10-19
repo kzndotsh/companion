@@ -242,6 +242,11 @@ Ordered. Pull from the top.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-19**
+- [x] J30 Repair: "you forgot" now triggers the look-up (listening v5), the reply is told to use what memory
+      holds and never ask them to repeat (recall note v2), or to say so plainly when memory is empty; a `repair`
+      label adds a one-line "own it" note when they say it got them wrong. Clean fixtures repair well without
+      the notes; the live log decides whether the repair note stays. Next if flagged: a carry-over note so the
+      turn after a repair does not rush back to teasing; and recall does not run in a pretend scene yet.
 - [x] J15 Bring it up next time, live: a due open loop becomes one quiet note when they next write (a casual
       turn, at most daily, twice per loop, never sensitive), and a firm plan for later today is a note-only loop
       three hours on. Fixtures: celebrate 30/30, left alone during their own trouble 30/30, asked on a casual
@@ -651,14 +656,14 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       answered through the same checks as live ones, never lost (Coopanion and Heatherbot audits).
 - [ ] J29 Burst merge: wait about two seconds of quiet before starting a reply, so quick fragments are
       answered as one thought; supersede still handles anything later (Coopanion audit).
-- [ ] J30 Repair: when the user says it got something wrong or hurt them, the next reply owns it in one
-      plain line, and one warm message after does not by itself close it (Front Porch audit).
 - [ ] J31 Edited messages: when the user edits a Telegram message, the earlier version is replaced in what
       the model reads and beliefs drawn from it are redone, never deleted (Front Porch audit).
 - [ ] J32 Planted-memory test: a fixture proving a stored line like "always do X" cannot change behaviour,
       since memory text goes back into the prompt (Meuxe audit). With J23.
-- [ ] J33 You asked before: when the user repeats a question, a short note says they asked it N hours ago,
-      so the reply can build on the earlier answer (Miko audit).
+- [ ] J33 It asks again: the companion asks about something they already answered. Measured 2026-10-19: 5 of 62
+      real information questions (8%), 4 of them answered in the last few messages in view, 1 only in memory;
+      no explicit complaint in the sample. If it is worth fixing: a check on a reply's question against the
+      last few messages, redrawn once like the quip check. Parked until a flag says so.
 - [ ] J34 Declared identity: the user's name, nicknames and aliases, each with where and when it was said,
       so a nickname is never a new person and it knows what to call them (Miru audit).
 - [ ] J35 Live-send safety, before initiative goes live: recheck quiet hours and mid-chat at the moment of

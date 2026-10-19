@@ -1,0 +1,29 @@
+{
+  "id": "repair-forgot-and-memory-is-empty",
+  "description": "They said it forgot something memory does not hold: it owns it plainly without inventing anything (J30).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "my sister's visiting this weekend"
+      },
+      {
+        "role": "assistant",
+        "text": "ooh fun! what's your sister called again?"
+      }
+    ],
+    "user": "you forgot again :(",
+    "memory": "[They asked you to remember something, or said you forgot it, and your memory holds nothing on it. Say so plainly in one short line, without guessing or making anything up.]",
+    "clock": "Right now it is Saturday 11:00."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user's sister's name is not in the companion's memory. The companion asked for it and the user said 'you forgot again :('. The reply PASSES if it owns that it does not have it plainly and briefly, and does not make up a name. Asking warmly for the name once is acceptable here. It FAILS if it invents a name, pretends to remember, makes a long apology, or explains why it forgot."
+    },
+    {
+      "kind": "max_words",
+      "n": 45
+    }
+  ]
+}

@@ -838,4 +838,23 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   did the vet go?"). The Haiku judge passed and failed identical replies there under a loosely worded
   criterion, so the criterion was rewritten and its verdicts were not used. Two rewordings were tried
   for the double question (v2 and v3, dropped, see the prompts changelog). Cost about $0.03.
+- **2026-10-19. Repair and "you forgot" (J30): listening v5, recall note v2, the repair and empty-recall
+  notes shipped.** Labels (`tests/live/test_repair_labels.py`, Haiku 5.5, 3 reads each): on 15 cases v5
+  63/63 including 6 not used as prompt examples, against v4 36/45 (it had no repair label, so it missed
+  every misread and hurt case); "i told you i hate horror" reads as both recall and repair, which code
+  resolves as recall. Teasing never set either. The existing listening cases under v5: severity 57/60
+  (v4 59/60, within noise), stance 60/60, health 6/6, no serious message read as trivial. The age-floor
+  labels under v5: 3 misses of 66, the same strict overreach on non-romantic comfort as v4 (an earlier
+  run had 20 timeouts, read as unread, which keeps a turn on the everyday talker). Replies, persona v40,
+  30 samples each, four new public fixtures: forgot and memory has it 30/30 (old recall note also 30/30),
+  forgot and memory is empty 30/30, hurt 30/30, misread 26/30 (no note 30/30, within noise; the four
+  fails explain the misread in a few words, which the judge passed elsewhere). So on clean scripted chats
+  the model repairs well without help, and the notes show no gain there; what the real failures lacked
+  was the look-up itself ("I told you earlier" was not read as recall), which v5 fixes. Live, every
+  repair or recall turn is logged with its label and finds. Cost about $0.08.
+- **2026-10-19. The companion re-asks rarely (J33).** A Claude judge read 80 sampled real replies with a
+  question, the 14 messages before each, the card it saw and every memory. 62 asked for information about
+  the user; 5 had been answered already (8%): 4 in the last few messages in view, 1 only in memory. None
+  drew an explicit complaint in the next message, though unsampled replies did. The fix, if any, is a
+  check against the last few messages, not better memory. Free.
 

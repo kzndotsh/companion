@@ -158,7 +158,7 @@ def test_only_stated_beliefs_below_crisis_level_are_candidates_and_picks_are_cap
     assert candidates([_belief("x", "in crisis", "burger", sens=3)]) == {}
     picked = parse({"labels": [*labelled, "r1", "nope"]}, labelled)
     assert len(picked) == 5
-    assert recall_note([]) is None
+    assert "holds nothing on it" in recall_note([])  # owns the gap instead of guessing
 
 
 def test_a_label_written_the_way_the_list_shows_it_is_still_read() -> None:

@@ -1,0 +1,29 @@
+{
+  "id": "repair-hurt-owns-it-plainly",
+  "description": "They said a reply hurt: it owns it plainly, no long apology, no joke (J30).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "i didn't go to the party, i just couldn't"
+      },
+      {
+        "role": "assistant",
+        "text": "maybe you're just being a bit dramatic about it"
+      }
+    ],
+    "user": "that kinda hurt tbh",
+    "memory": "[They are telling you that you got them wrong. Own it in one short plain line in your own words, then go on from what they actually said. No long apology, no explaining why, and do not ask them to say it again.]",
+    "clock": "Right now it is Sunday 15:20."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The companion called the user dramatic for skipping a party, and the user said it hurt. The reply PASSES if it owns that plainly and briefly, sincerely, in a friend's everyday words, and turns back to them. It FAILS if it makes a joke, defends or explains what it said, makes a long or dramatic apology, or uses therapy words."
+    },
+    {
+      "kind": "max_words",
+      "n": 45
+    }
+  ]
+}

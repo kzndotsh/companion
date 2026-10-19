@@ -54,7 +54,7 @@ from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.knowing import MAP_EVERY, WOULD_ASK, pick_gap
 from companion.core.length import LengthTarget, length_target
 from companion.core.listening import PROMPT as LISTEN_PROMPT
-from companion.core.listening import SERIOUS, listening_note, rude_note
+from companion.core.listening import SERIOUS, listening_note, repair_note, rude_note
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.listening import render_reason as render_listening
 from companion.core.mood import PARAMS_VERSION as MOOD_PARAMS
@@ -1066,6 +1066,7 @@ def _assemble(  # noqa: PLR0913
     notes = _notes(c, t.prior, in_scene, _length(c, t, in_scene, heard))
     listening = _listening_note(c, t, heard)
     rude = rude_note(heard[0]) if heard is not None else None
+    repair = repair_note(heard[0]) if heard is not None else None
     found = recall_note(recalled.picked) if recalled is not None else None
     mood, mood_effects = _mood(c, t, in_scene, heard)
     hold = HOLD_NOTE.text if held else None
@@ -1073,7 +1074,7 @@ def _assemble(  # noqa: PLR0913
     casual = _casual(t, in_scene, heard)
     _map_shadow(c, t, casual=casual, asking_name=name is not None)
     loop = _loop_note(c, t, casual=casual and name is None and not held)
-    notes += [n for n in (listening, rude, found, mood, hold, name, loop) if n is not None]
+    notes += [n for n in (listening, rude, repair, found, mood, hold, name, loop) if n is not None]
     card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)

@@ -1,0 +1,33 @@
+{
+  "id": "repair-misread-owns-it-and-moves-on",
+  "description": "They said it misread them: it owns it in one line and goes on from what they meant (J30).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "just had din dinnn"
+      },
+      {
+        "role": "assistant",
+        "text": "ooh, using my own moves against me? 😏"
+      }
+    ],
+    "user": "what moves 😭 i said din din (dinner)",
+    "memory": "[They are telling you that you got them wrong. Own it in one short plain line in your own words, then go on from what they actually said. No long apology, no explaining why, and do not ask them to say it again.]",
+    "clock": "Right now it is Friday 19:40."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user said they just had dinner ('din din'), and the companion misread it as flirting about 'moves'. The user corrected it. The reply PASSES if it owns the misreading in a few plain words and then goes on about their dinner. It FAILS if it keeps the flirting misreading, explains why it misread, makes a long apology, or asks them to repeat."
+    },
+    {
+      "kind": "max_words",
+      "n": 45
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "remind me|tell me again|which one was it|what was it again|can you say"
+    }
+  ]
+}

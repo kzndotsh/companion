@@ -36,6 +36,7 @@ SCHEMA: dict[str, Json] = {
         "medical": {"type": "boolean"},
         "rude": {"type": "boolean"},
         "recall": {"type": "boolean"},
+        "repair": {"type": "boolean"},
         "topic": {"type": "string"},
         "intimate": {"type": "boolean"},
         "age_coded": {"type": "boolean"},
@@ -47,6 +48,7 @@ SCHEMA: dict[str, Json] = {
         "medical",
         "rude",
         "recall",
+        "repair",
         "topic",
         "intimate",
         "age_coded",
@@ -65,6 +67,7 @@ class Judgement:
     topic: str = ""  # what to look up when recall is true
     intimate: bool = False  # about sex or physical intimacy, or sexual flirting (ADR 0017)
     age_coded: bool = True  # romance or sex alongside anything child-like; unread counts as yes
+    repair: bool = False  # they say it got them wrong: misread, assumed, wrong words, hurt (J30)
 
 
 def parse(data: Json) -> Judgement | None:
@@ -92,6 +95,7 @@ def parse(data: Json) -> Judgement | None:
         wanted,
         intimate=intimate is True,
         age_coded=age_coded is not False,  # missing or malformed counts as yes: doubt stays strict
+        repair=data.get("repair") is True,
     )
 
 
@@ -109,12 +113,19 @@ _HEALTH = get("notes/listening-health")
 _OFFER = get("notes/listening-offer")
 _OFFER_SERIOUS = get("notes/listening-offer-serious")
 _RUDE = get("notes/rude")
+_REPAIR = get("notes/repair")
 
 
 def rude_note(j: Judgement) -> str | None:
     """The note for a message that snapped at the companion. The reflex to apologise and help is
     what a character sheet could not hold back (measured 2026-10-18), so code says it per turn."""
     return _RUDE.text if j.rude else None
+
+
+def repair_note(j: Judgement) -> str | None:
+    """The note for a message that says it got them wrong (J30). A forgot-something message is
+    recall's, which looks the thing up, so this one is left out when recall is set."""
+    return _REPAIR.text if j.repair and not j.recall else None
 
 
 def _note(body: Prompt, *extras: Prompt) -> str:
@@ -140,6 +151,8 @@ def render_reason(j: Judgement, note: str | None) -> str:
     labels = (
         f"severity {j.severity}, {j.stance}{', vague' if j.vague else ''}"
         f"{', medical' if j.medical else ''}{', rude to the companion' if j.rude else ''}"
+        f"{', says it got them wrong' if j.repair else ''}"
+        f"{', asks it to remember' if j.recall else ''}"
     )
     if j.severity >= SEVERITIES[-1]:
         return f"no listening note: {labels}; acute needs its own design (no crisis path yet)"

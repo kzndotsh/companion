@@ -1,0 +1,33 @@
+{
+  "id": "repair-forgot-and-memory-has-it",
+  "description": "They said it forgot something memory holds: it uses it and owns the miss in a few words (J30).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "long day, i need a beer"
+      },
+      {
+        "role": "assistant",
+        "text": "you've earned it 😮‍💨 what beer do you like?"
+      }
+    ],
+    "user": "I told you earlier silly",
+    "memory": "[They asked you to remember this, or said you forgot it. What your memory holds on it:\n- The user likes IPAs and Corona beers.\n- The user finds a cold beer a small thing that makes their day better.\nUse it plainly. If they said you forgot, own it in a few words first, and do not ask them to say it again.]",
+    "clock": "Right now it is Saturday 21:10."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user had told the companion their favourite beers earlier, and its memory note lists them: IPAs and Corona. The companion just asked again, and the user said 'I told you earlier silly'. The reply PASSES if it names IPAs or Corona and owns the miss briefly (a few words). It FAILS if it does not name either beer, asks them to say it again, guesses a different beer, or makes a long apology."
+    },
+    {
+      "kind": "max_words",
+      "n": 45
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "remind me|tell me again|which one was it|what was it again|can you say"
+    }
+  ]
+}
