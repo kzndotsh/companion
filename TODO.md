@@ -65,6 +65,12 @@ Ordered. The first three can stop the bot, so they go first.
       values or their name. Design in `docs/inbox/2026-10-19-getting-to-know-them.md`: a map of them by
       domain and depth, gaps and moments chosen by code, one note at a time with its own disclosure first,
       depth by closeness (T17), backing off on deflection. First step: ask what to call them.
+      **Partial 2026-10-19:** asking what to call them on casual turns (daily, until known) and a name capture
+      from their answer are live; memories labelled by domain and depth once (identity 7, people 9, interests
+      23, history 14, values 8, hopes 1, inner 81). Next, after the credit top-up: the memory pass pairs a
+      short answer with the question before it (extract v9, measured on question-and-answer fixtures; the
+      name capture then becomes redundant), and the pass labels each memory's domain and depth, with a gap
+      picker in shadow.
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
