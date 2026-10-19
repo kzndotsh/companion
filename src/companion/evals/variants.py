@@ -8,6 +8,7 @@ persona, as `COMPANION_CHARACTER=mika` does for the bot. `+echo` adds the note a
 their emoji or emoticon, on a message that has one. `+mood-cozy` adds the candidate mood line for
 one state, and `+mood-cozy.playful` for two (ADR 0016), to measure a mood before it is built.
 `+resample` draws one fresh reply when the quip check says the first bolted on a joke (J45).
+`+scene` adds the scene talker's addendum (`system/scene-intimate`, ADR 0017) to the system prompt.
 Flags combine: `v10.md+nocard+h10@provider/model`.
 """
 
@@ -34,6 +35,7 @@ class Spec:
     echo: bool = False
     mood: tuple[str, ...] = ()
     resample: bool = False
+    scene: bool = False
 
     @property
     def label(self) -> str:
@@ -48,30 +50,26 @@ class Spec:
             + ("+echo" if self.echo else "")
             + (f"+mood-{'.'.join(self.mood)}" if self.mood else "")
             + ("+resample" if self.resample else "")
+            + ("+scene" if self.scene else "")
             + (f"@{self.model}" if self.model else "")
         )
+
+
+SWITCHES = ("nocard", "len", "listen", "echo", "resample", "scene")
 
 
 def parse_spec(text: str) -> Spec:
     rest, _, model = text.partition("@")
     persona, *flags = rest.split("+")
-    keep_card, history, effort, length, listen = True, None, None, False, False
+    history: int | None = None
+    effort: str | None = None
     character: str | None = None
-    echo = False
     mood: tuple[str, ...] = ()
-    resample = False
+    on: set[str] = set()
     ok = persona.endswith(".md")
     for flag in flags:
-        if flag == "nocard":
-            keep_card = False
-        elif flag == "len":
-            length = True
-        elif flag == "listen":
-            listen = True
-        elif flag == "echo":
-            echo = True
-        elif flag == "resample":
-            resample = True
+        if flag in SWITCHES:
+            on.add(flag)
         elif flag.startswith("mood-") and _moods(flag.removeprefix("mood-")):
             mood = tuple(flag.removeprefix("mood-").split("."))
         elif flag.startswith("as-") and len(flag) > len("as-"):
@@ -84,23 +82,23 @@ def parse_spec(text: str) -> Spec:
             ok = False
     if not ok:
         msg = (
-            f"bad variant {text!r}: expected NAME.md with optional"
-            " +nocard, +hN, +low/+medium/+high, +len, +listen, +echo, +mood-STATE, +resample,"
-            " +as-CHARACTER and @model"
+            f"bad variant {text!r}: expected NAME.md with optional +nocard, +hN, +low, +medium,"
+            " +high, +len, +listen, +echo, +mood-STATE, +resample, +scene, +as-CHARACTER and @model"
         )
         raise ValueError(msg)
     return Spec(
         persona,
-        keep_card,
+        "nocard" not in on,
         model or None,
         history,
         effort,
-        length,
-        listen,
+        "len" in on,
+        "listen" in on,
         character,
-        echo,
+        "echo" in on,
         mood,
-        resample,
+        "resample" in on,
+        "scene" in on,
     )
 
 

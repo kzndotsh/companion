@@ -200,6 +200,9 @@ class Conversation:
     mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
     resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
     route_intimate: bool = False  # intimate talk may go to the scene talker (policy, ADR 0017)
+    scene_prefix: Prefix | None = (
+        None  # the scene talker's system prompt, with system/scene-intimate
+    )
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -510,14 +513,18 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     in_scene: Frame,
     talker: Talker,
 ) -> Reply:
-    """The reply to send: the first, or one fresh draw when the first fails a check. Logged either
-    way on the turns that are checked."""
+    """The reply to send: the first, or one fresh draw when the first fails a check. On an ordinary
+    turn every check runs and the result is logged; in a scene only the code checks run, since play
+    is expected there, and only a resample is logged."""
     severity = heard[0].severity if heard is not None else None
-    if not c.resample or not recheck_eligible(
-        severity=severity, in_scene=in_scene is not Frame.REAL, reply=reply.text
-    ):
+    scene = talker is c.scene_talker or in_scene is not Frame.REAL
+    if not c.resample or not reply.text.strip():
+        return reply
+    if not scene and not recheck_eligible(severity=severity, in_scene=False, reply=reply.text):
         return reply
     failed = code_checks(reply.text)
+    if scene and not failed:
+        return reply  # in a scene only the code checks run, and a passing reply is not logged
     detail: dict[str, Json] = {}
     if not failed and c.judge is not None:
         judged = await judge_quip(c.judge, t.text, reply.text)
@@ -843,6 +850,7 @@ def _assemble(  # noqa: PLR0913
     recalled: Recalled | None,
     *,
     held: bool = False,
+    scene: bool = False,
 ) -> _Assembled:
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
@@ -862,8 +870,9 @@ def _assemble(  # noqa: PLR0913
     hold = HOLD_NOTE.text if held else None
     notes += [n for n in (listening, rude, found, mood, hold) if n is not None]
     card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
-    request = build_request(c.prefix, to_messages(t.prior), t.text, "", card_text)
-    store.save_prefix(c.prefix)
+    prefix = c.scene_prefix if scene and c.scene_prefix is not None else c.prefix
+    request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
+    store.save_prefix(prefix)
     _mark_start(t, in_scene, card, card_text)
     return _Assembled(request, card_text, card, views, view_state, mood_effects)
 
@@ -871,7 +880,7 @@ def _assemble(  # noqa: PLR0913
 async def _handle_turn(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
 ) -> str | Reaction | ReactAndReply:
-    store, prefix, rel = c.store, c.prefix, c.rel
+    store, rel = c.store, c.rel
     now = now or utc_now()
     turn = TurnId(_id())
     prior = store.history_before(rel, now, HISTORY_LIMIT)
@@ -899,7 +908,7 @@ async def _handle_turn(
     except BaseException:
         _store_user(c, t, channel, Frame.REAL)
         raise
-    asm = _assemble(c, t, in_scene, heard, recalled, held=held)
+    asm = _assemble(c, t, in_scene, heard, recalled, held=held, scene=talker is c.scene_talker)
     request, card_text, card, views, view_state = (
         asm.request,
         asm.card_text,
@@ -926,7 +935,7 @@ async def _handle_turn(
             turn,
             rel,
             session,
-            prefix.sha256,
+            request.prefix.sha256,
             "",
             request_sha256(request),
             reply.model,

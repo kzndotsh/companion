@@ -30,6 +30,14 @@ the line should be theirs to set, not hard-coded for one person.
   everyday talker and is logged. Nothing carries over by timer: what came up a few messages back is still in
   the judge's view. The rule sits in code (`core/floor.py`), not in the policy file, so removing it means
   changing code, and tests fail without it.
+- **The scene talker's prompt.** When the scene talker answers, it gets the everyday system prompt plus
+  `system/scene-intimate` (follow their lead, stay in the role, role talk is play, the floor in words), then
+  the policy text; a policy's `## Scene` section reaches only the scene talker. Measured: it does not move
+  the scene model's own limits (`evals/CHANGELOG.md`).
+- **A held turn is checked.** When the floor keeps a turn on the everyday talker, a note asks for nothing
+  sexual and no explaining, a small judge reads the reply, an intimate reply is drawn once more, and if it
+  is intimate again code sends a short pause line instead. The everyday talker once wrote an explicit reply
+  on a held turn deep in a long scene; the switch alone is not the floor.
 - **No unprompted disclaimers (separate from routing).** Measured 2026-10-19: about 1 in 4 replies on the
   flagged turn announce a limit; a persona line against it was within noise, so it is not shipped.
 

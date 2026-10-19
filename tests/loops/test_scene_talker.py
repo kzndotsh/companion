@@ -171,3 +171,23 @@ async def test_a_held_turn_gets_the_note_and_a_sexual_reply_twice_becomes_the_pa
         assert len(everyday.seen) == 2
     else:
         assert len(everyday.seen) == 1
+
+
+async def test_a_scene_reply_with_an_em_dash_is_drawn_once_more(store: Store) -> None:
+    class Dashing:
+        def __init__(self) -> None:
+            self.seen: list[TalkerRequest] = []
+
+        async def reply(self, request: TalkerRequest) -> Reply:
+            self.seen.append(request)
+            text = "I lean in\u2014closer" if len(self.seen) == 1 else "I lean in, closer"
+            return Reply(text=text, model="scene", latency_ms=1)
+
+    scene, everyday = Dashing(), Talker("everyday")
+    convo = Conversation(
+        store, everyday, PREFIX, REL, judge=Judge(), scene_talker=scene, resample=True
+    )
+    await convo.handle(SESSION, "let's pretend you're a knight", "t", NOW)
+    out = await convo.handle(SESSION, "*bows*", "t", NOW + timedelta(minutes=1))
+    assert out == "I lean in, closer"
+    assert len(scene.seen) == 2

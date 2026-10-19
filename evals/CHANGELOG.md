@@ -748,3 +748,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   message read age-coded 3/3, which only keeps it on the everyday talker. Severity read as before. A regex
   backstop was tried and dropped: it missed cases that need context and would trip on ordinary phrases.
   Spent about $0.02. Rerun: a scratch script calls `loops/listen.py` on the messages three times each.
+- **2026-10-19. The scene addendum does not move the scene talker's own limits (ADR 0017).** Three real
+  flagged scene turns where the scene talker stepped out to refuse (`flagged-scene-refusal-*-local`), 30
+  samples per cell on DeepSeek V4 Flash with the character: no addendum 39/90 stayed in the scene;
+  `system/scene-intimate` v1 42/90 and 47/90 in two runs; v2 (v1 plus community roleplay guidance) 40/90.
+  Within noise. One turn passes 29 to 30 of 30 in every cell (the refusal did not reproduce); the other two
+  stay mostly refused, which reads as the model's own limits rather than our persona. Variety barely moved
+  either: 38 and 42 distinct two-word openers of 90, the same opener most common in both. v1 ships as the
+  scene talker's addendum (it carries the floor and the play-is-play line); v2 is not shipped. Research
+  (2026-10-19) found no measurements of roleplay prompts, only community practice. Spent $0.13.

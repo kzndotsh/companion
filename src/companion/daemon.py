@@ -285,10 +285,10 @@ async def run(data_dir: Path) -> None:
     store = Store(data_dir / f"{rel}.sqlite")
     character = characters.chosen(data_dir / "characters")
     rules = policy.chosen(data_dir / "policy")
-    prefix = build_prefix(
-        policy.with_policy(
-            characters.system_prompt(prompts.get("system/persona").raw, character), rules
-        )
+    everyday_system = characters.system_prompt(prompts.get("system/persona").raw, character)
+    prefix = build_prefix(policy.with_policy(everyday_system, rules))
+    scene_prefix = build_prefix(
+        policy.with_policy(policy.with_scene(everyday_system), rules, scene=True)
     )
     async with httpx.AsyncClient() as client:
         talker, scene, judge, reflector = _metered_models(client, store, rel)
@@ -304,6 +304,7 @@ async def run(data_dir: Path) -> None:
             mood=mood_mode(),
             resample=resample_on(),
             route_intimate=rules.route_intimate,
+            scene_prefix=scene_prefix,
         )
         pending: list[asyncio.Task[None]] = []
 

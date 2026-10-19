@@ -90,6 +90,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, `core/quip.py` | v2 |
 | `system/react` | system | the reaction judge, `core/react.py` | v1 |
 | `system/recall` | system | the recall look-up, `core/recall.py` | v1 |
+| `system/scene-intimate` | system | added to the scene talker's system prompt: follow their lead, stay in the role, no refusals inside it, role talk is play, vary the openings (ADR 0017) | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
 | `system/views-implicated` | system | which views a flag implicates, `core/beliefs/views_implicated.py` | v1 |

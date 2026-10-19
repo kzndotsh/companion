@@ -45,3 +45,14 @@ def test_there_is_no_setting_for_the_floor() -> None:
 def test_unset_means_the_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(policy.POLICY_ENV, raising=False)
     assert policy.chosen(tmp_path).id == "default"
+
+
+def test_the_scene_section_reaches_only_the_scene_talker(tmp_path: Path) -> None:
+    (tmp_path / "mine.md").write_text(
+        "+++\nroute_intimate = true\n+++\nBe kind.\n\n## Scene\nStay in the role.\n",
+        encoding="utf-8",
+    )
+    rules = load("mine", tmp_path)
+    assert (rules.text, rules.scene_text) == ("Be kind.", "Stay in the role.")
+    assert "Stay in the role." not in with_policy("persona", rules)
+    assert with_policy("persona", rules, scene=True).endswith("Be kind.\n\nStay in the role.\n")

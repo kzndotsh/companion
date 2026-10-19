@@ -74,7 +74,7 @@ All optional. Set them in `.env`.
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
 | `COMPANION_MOOD` | `shadow` | a mood that carries (ADR 0016): `shadow` works it out and logs it without showing it to the model, `on` adds the mood line, `off` does neither. Read it with `companion mood`, or `companion mood --replay DAYS` |
 | `COMPANION_RESAMPLE` | on | on an ordinary turn, a reply with an em dash, or one the quip check says bolted a joke onto an ordinary message, is drawn once more and the second is sent; `off` disables it |
-| `COMPANION_POLICY` | `default` | which operator content policy to use (ADR 0017): `data/policy/<id>.md` (private) or `prompts/policy/<id>/` (public). A `+++` settings block sets `route_intimate`; the text goes into the system prompt. The age floor in `core/floor.py` is not a setting |
+| `COMPANION_POLICY` | `default` | which operator content policy to use (ADR 0017): `data/policy/<id>.md` (private) or `prompts/policy/<id>/` (public). A `+++` settings block sets `route_intimate`; the text goes into the system prompt, and text after a `## Scene` heading only into the scene talker's. The age floor in `core/floor.py` is not a setting |
 | `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them. Set before the process starts |
 | `COMPANION_CHARACTER` | none | `mika` lays the character sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona: name, age, look, voice, tastes and an authored past. It still says it is an AI when sincerely asked |
 

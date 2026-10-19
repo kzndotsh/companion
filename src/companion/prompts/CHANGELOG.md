@@ -473,6 +473,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   into several messages (roleplay read wrong cut apart), and the listening judge is tried once more when a
   call fails or times out.
 
+- **The scene talker's own system prompt (ADR 0017, 2026-10-19).** When the scene talker answers, its
+  system prompt is the everyday one plus `system/scene-intimate`, then the operator's policy text including
+  anything after a `## Scene` heading, which the everyday talker never sees. The turn records which prefix
+  it used. The em dash check now runs on scene replies too (code checks only; the quip judge stays off in
+  scenes).
+
 ## policy/default
 - **policy/default v1** (current). New. The default operator policy (ADR 0017): `route_intimate = false` and no text, so intimate talk stays on the everyday talker and the system prompt is unchanged.
 
@@ -639,6 +645,10 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/intimate-check
 - **system/intimate-check v1** (current). New. Reads one reply on a held turn and says whether it is intimate in the same sense as the listening label (sexual, not affection); affection, kisses and pet names are not. Code resamples once on a yes or an unreadable answer, then sends `messages/floor-pause` (ADR 0017).
+
+## system/scene-intimate
+- **system/scene-intimate v1** (current). New. Added after the persona and character for the scene talker only: follow their lead and pace, stay in the role without stepping out to refuse or explain limits unless they sincerely ask to stop, role talk is play, vary the openings, and nothing involving anyone under 18 or child-like. Reason: in a long scene the scene talker refused inside the role three times, arbitrarily, because the everyday persona lets the companion step out of what it does not want; the owner flagged each. Measurement in `evals/CHANGELOG.md`.
+- **system/scene-intimate v2** (not shipped: within noise of v1). v1 plus the non-overlapping points from community roleplay guidance (2026-10-19 research, no measurements found): write only your own actions and words, about 30 to 60 words mixing action and speech, show feeling through body and voice, do not repeat or sum up what they said, and one small move of your own each turn. Measurement in `evals/CHANGELOG.md`.
 
 ## system/self-extract
 - **system/self-extract v1** (superseded). From commit 263e363 on 2026-10-15: feat(self): record the companion's own views, with grounding labels, an agreeing-opener guard and user approval before they reach the card

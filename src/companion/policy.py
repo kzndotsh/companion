@@ -2,7 +2,8 @@
 
 A policy file has a short settings block between `+++` lines, then plain text. The settings say
 what code does (today only `route_intimate`: whether intimate talk may go to the scene talker). The
-text, if any, is added to the talker's system prompt under its own heading. The floor in
+text, if any, is added to the talker's system prompt under its own heading; anything after a
+`## Scene` heading goes to the scene talker only, never the everyday one. The floor in
 `core/floor.py` is not a setting and no file changes it.
 
 Public files are versioned prompts at `prompts/policy/<id>/vN.md` (ADR 0013); private ones live
@@ -24,6 +25,7 @@ POLICY_ENV = "COMPANION_POLICY"
 PRIVATE_DIR = Path("data/policy")
 DEFAULT = "default"
 HEADING = "## Operator policy"
+SCENE_HEADING = "\n## Scene\n"
 _ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 _BLOCK = re.compile(r"\A\+\+\+\n(.*?)\n\+\+\+\n?(.*)\Z", re.DOTALL)
 
@@ -37,7 +39,8 @@ class Policy:
     id: str
     version: str  # "vN" for a public file, "local" for a private one
     route_intimate: bool
-    text: str
+    text: str  # for both talkers
+    scene_text: str = ""  # for the scene talker only, after a "## Scene" heading in the file
 
     @property
     def ref(self) -> str:
@@ -59,7 +62,8 @@ def parse(raw: str, gid: str, version: str) -> Policy:
     if unknown or not isinstance(route, bool):
         msg = f"policy {gid!r}: the only setting is route_intimate = true or false"
         raise PolicyError(msg)
-    return Policy(gid, version, route, m.group(2).strip())
+    general, _, scene = m.group(2).partition(SCENE_HEADING)
+    return Policy(gid, version, route, general.strip(), scene.strip())
 
 
 def load(gid: str, private_dir: Path = PRIVATE_DIR) -> Policy:
@@ -83,8 +87,19 @@ def chosen(private_dir: Path = PRIVATE_DIR) -> Policy:
     return load(os.environ.get(POLICY_ENV, "").strip() or DEFAULT, private_dir)
 
 
-def with_policy(system: str, policy: Policy) -> str:
-    """The system prompt with the operator's text under its heading, or unchanged without text."""
-    if not policy.text:
+def with_policy(system: str, policy: Policy, *, scene: bool = False) -> str:
+    """The system prompt with the operator's text under its heading, or unchanged without text.
+    The scene talker also gets the part after "## Scene"; the everyday talker never does."""
+    text = "\n\n".join(t for t in (policy.text, policy.scene_text if scene else "") if t)
+    if not text:
         return system
-    return f"{system.rstrip()}\n\n{HEADING}\n\n{policy.text}\n"
+    return f"{system.rstrip()}\n\n{HEADING}\n\n{text}\n"
+
+
+SCENE = prompts.get("system/scene-intimate")
+
+
+def with_scene(system: str) -> str:
+    """The scene talker's system prompt: the everyday one plus the addendum for scenes and intimate
+    moments (ADR 0017). The operator's policy text, if any, goes after it."""
+    return f"{system.rstrip()}\n\n{SCENE.text}\n"

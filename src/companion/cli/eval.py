@@ -33,6 +33,7 @@ from companion.evals.variants import parse_spec
 from companion.models.kiro import PREFIX as KIRO
 from companion.models.kiro import KiroTalker, kiro_key
 from companion.models.openrouter import DEFAULT_MODEL, OpenRouterExtractor, OpenRouterTalker
+from companion.policy import with_scene
 from companion.store.sqlite.replay import replay_file
 
 JUDGE_MODEL = "anthropic/claude-haiku-5.5"
@@ -53,7 +54,10 @@ def _variants(specs: list[str]) -> list[Variant]:
             character = characters.load(spec.character) if spec.character else None
         except characters.CharacterError as err:
             raise ValueError(str(err)) from err
-        prefix = build_prefix(characters.system_prompt(persona.raw, character))
+        system = characters.system_prompt(persona.raw, character)
+        if spec.scene:
+            system = with_scene(system)
+        prefix = build_prefix(system)
         out.append(
             Variant(
                 spec.label,
