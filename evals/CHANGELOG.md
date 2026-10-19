@@ -787,3 +787,10 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   answer to "what name do you like being called?"; run once on that message, the capture read the name and
   stored it with the user's own words as the quote. Tests cover the gating, the parse (short, present in
   their words) and the loop.
+- **2026-10-19. The runner reports what OpenRouter charged.** On 2026-10-19 OpenRouter's meter showed
+  $1.74 for the day while the runner had logged $1.67 and the bot's ledger $0.22 over overlapping
+  windows, $1.89 together, so the responses' own costs do not add up to the bill. The runner now reads `/api/v1/credits`
+  before and after each run and prints both figures; the charged one is the one to record here from now
+  on. The dry-run estimate stays pessimistic (about $0.004 a reply against a measured $0.00014 for Luna
+  and $0.00035 for DeepSeek V4.1 Flash), so it is labelled an upper estimate. Checked on the real
+  account with no spend: a 12-sample run was refused at a $0.06 balance with a $0.20 cap.

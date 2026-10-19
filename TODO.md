@@ -89,7 +89,7 @@ Built and working:
 | A resample on a code or judge check does help | cheesy add-ons 85 to 95 of 150 plain | `evals/CHANGELOG.md` |
 | The age-coded label is reliable | 15/15 on age-coded messages, no trips on adults' pet names | `evals/CHANGELOG.md` |
 | DeepSeek V4.1 Flash beats V4 for scenes | as willing, about 3 times faster, more varied | `evals/CHANGELOG.md` |
-| The bot is cheap; eval runs are not | the bot about $0.67 a week; most of a month's $10.69 was evals | TODO H5 |
+| The bot is cheap; eval runs are not | the bot about $0.67 a week; most of a month's $10.69 was evals | `evals/CHANGELOG.md` |
 
 ## Plan
 
@@ -137,7 +137,7 @@ Each item ends with the thing that tells us it is done. The cards are below.
 ### Housekeeping that can stop the bot
 
 - [ ] **Check the OpenRouter balance.** The bot goes quiet at zero, and the daily cap is $10. Paid eval
-      runs share it: state the real cost before one, and fix the runner's spend figure (`TODO.md` H5).
+      runs share it: the runner shows the balance first and refuses a run whose cap is above it.
 - [ ] **Revoke the Telegram bot token** in BotFather. Parked by the owner; do not raise it again until
       asked.
 - [ ] **Triage `docs/research/2026-10-16_sapphire-audit/`.** It is untracked and unread (`TODO.md` H3).
@@ -199,11 +199,6 @@ Ordered. Pull from the top.
       short answer with the question before it (extract v9, measured on question-and-answer fixtures; the
       name capture then becomes redundant), and the pass labels each memory's domain and depth, with a gap
       picker in shadow.
-- [ ] H5 Eval spend reads true. OpenRouter charged $1.74 on 2026-10-19 (UTC) while the eval runner logged
-      $1.67 and the bot ledger $0.22 for overlapping windows, so a counter overstates. Make the runner report
-      what OpenRouter charged (the key's usage before and after a run, or each response's cost, never an
-      estimate), show the balance before a run, and write the real figure in `evals/CHANGELOG.md`. The bot
-      itself was $0.67 for the week; nearly all of the month's $10.69 was eval runs.
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
@@ -242,8 +237,11 @@ Ordered. Pull from the top.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-19**
+- [x] H5 Eval spend reads true: the runner reads OpenRouter's meter before and after a run and reports
+      what was charged next to the replies' own costs, shows the balance first, and refuses a run whose
+      cap is above the balance. The dry-run figure is labelled an upper estimate.
 - [x] J46 Operator routing for intimate talk (ADR 0017), built 2026-10-19: `COMPANION_ROUTE_INTIMATE`,
-      scene guidance in the character sheet's `## In scenes and intimate moments` section, `intimate` and `age_coded` listening labels
+      scene guidance in the character sheet's `## In roleplay and intimate moments` section, `intimate` and `age_coded` listening labels
       (v4, 15/15 on age-coded messages, no trips on adults' pet names), code routing for scenes and intimate
       talk, and the age floor in code with no timer and no regex. Unprompted disclaimers: about 1 in 4 on
       the flagged turn, persona v39 within noise, not shipped; a check with one resample if flagged again.

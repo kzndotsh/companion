@@ -4,7 +4,7 @@ Replay a recorded turn against a persona variant, score the reply, and print one
 
 ```bash
 uv run companion eval --list                         # the fixtures
-uv run companion eval --variants v36.md,v40.md --dry-run   # the plan and its estimated cost
+uv run companion eval --variants v36.md,v40.md --dry-run   # the plan, an upper estimate and the balance
 uv run companion eval --variants v36.md,v40.md --samples 12 --cap 0.20 --show
 ```
 
@@ -43,8 +43,11 @@ uv run companion eval --variants v36.md,v40.md --samples 12 --cap 0.20 --show
   medical) so `+listen` can add the matching note. `unclear` is unscored and never
   counts as a failure. The judge prompt and schema are hashed into every result.
 - A sample passes only if every check passes. Cells read `passes/scored`, with `+k?` for unscored.
-- **A spend cap is mandatory.** The runner adds up the real cost each response reports and stops
-  at the cap, saying so in the table. Always run `--dry-run` first.
+- **A spend cap is mandatory.** The runner adds up the cost each response reports and stops at the
+  cap, saying so in the table. Before a run it shows the OpenRouter balance and refuses when the cap is
+  above it, because the bot shares the credits. After a run it reads OpenRouter's meter again and
+  prints what was charged; that figure covers the whole account, so a running bot adds to it.
+  `--dry-run` prints the plan, an upper estimate and the balance, and spends nothing.
 - Results (every reply and every verdict) are saved to `evals/results/`, which is gitignored
   because it holds conversation text.
 

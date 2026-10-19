@@ -77,6 +77,7 @@ class Results:
     cells: dict[tuple[str, str], Cell]
     spent: float = 0.0
     stopped_by_cap: bool = False
+    charged: float | None = None  # what OpenRouter's meter moved by, read after the run
 
 
 def strip_card(content: str) -> str:

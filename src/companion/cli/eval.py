@@ -30,6 +30,7 @@ from companion.evals.fixtures import (
 from companion.evals.report import render_replies, render_table, save
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import parse_spec
+from companion.models.credits import charged_since, credits
 from companion.models.kiro import PREFIX as KIRO
 from companion.models.kiro import KiroTalker, kiro_key
 from companion.models.openrouter import DEFAULT_MODEL, OpenRouterExtractor, OpenRouterTalker
@@ -138,6 +139,24 @@ class EvalArgs:
     dry_run: bool
 
 
+def _requests(
+    fixtures: list[Fixture], db: Path | None, prefix: Prefix
+) -> dict[str, TalkerRequest] | str:
+    """Each fixture's request, or why one cannot be built."""
+    out: dict[str, TalkerRequest] = {}
+    for f in fixtures:
+        if f.script is not None:
+            out[f.id] = script_request(f.script, prefix)
+        elif db is None or f.turn is None:
+            return f"fixture {f.id} replays a recorded turn and needs a local database (--db)\n"
+        else:
+            try:
+                out[f.id] = replay_file(db, f.turn).request
+            except ReplayError as err:
+                return f"fixture {f.id}: {err}\n"
+    return out
+
+
 async def run(a: EvalArgs) -> str:
     db, samples, cap = a.db, a.samples, a.cap
     load_dotenv(Path(".env"))
@@ -150,26 +169,26 @@ async def run(a: EvalArgs) -> str:
     plan_cost = estimate(fixtures, len(variants), samples)
     header = (
         f"{len(fixtures)} fixtures x {len(variants)} variants x {samples} samples"
-        f" = {len(fixtures) * len(variants) * samples} replies, about ${plan_cost:.3f}"
+        f" = {len(fixtures) * len(variants) * samples} replies, at most about ${plan_cost:.3f}"
         f" (cap ${cap:.2f})\n"
     )
-    if a.dry_run:
-        return header
-    requests: dict[str, TalkerRequest] = {}
-    for f in fixtures:
-        if f.script is not None:
-            requests[f.id] = script_request(f.script, variants[0].prefix)
-        elif db is None or f.turn is None:
-            return f"fixture {f.id} replays a recorded turn and needs a local database (--db)\n"
-        else:
-            try:
-                requests[f.id] = replay_file(db, f.turn).request
-            except ReplayError as err:
-                return f"fixture {f.id}: {err}\n"
     key = os.environ.get("OPENROUTER_API_KEY")
-    if not key:
-        return "OPENROUTER_API_KEY is not set (put it in .env)\n"
     async with httpx.AsyncClient() as client:
+        before = await credits(key, client) if key else None
+        if before is not None:
+            header += f"OpenRouter balance ${before.balance:.4f}\n"
+        if a.dry_run:
+            return header
+        if not key:
+            return "OPENROUTER_API_KEY is not set (put it in .env)\n"
+        if before is not None and before.balance < cap:
+            return (
+                header
+                + "the balance is below the cap and the bot shares it: top up or lower --cap\n"
+            )
+        requests = _requests(fixtures, db, variants[0].prefix)
+        if isinstance(requests, str):
+            return requests
 
         def talker_for(model: str | None, effort: str | None) -> Talker:
             if model is not None and model.startswith(KIRO):
@@ -186,6 +205,8 @@ async def run(a: EvalArgs) -> str:
         listening = _listening_notes(fixtures)
         plan = Plan(fixtures, requests, variants, samples, cap, listening)
         results = await run_eval(plan, models)
+        if before is not None:
+            results.charged = await charged_since(key, client, before)
     stamp = utc_now().strftime("%Y%m%d-%H%M%S")
     path = Path("evals/results") / f"{stamp}.json"
     save(path, results, fixtures, variants, judge_module.judge_hash())

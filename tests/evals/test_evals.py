@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import json
 from pathlib import Path
 
@@ -435,3 +436,30 @@ async def test_a_failing_provider_costs_samples_not_the_run(
 
     got = await runner_module._reply_with_retry(Down(), object())  # type: ignore[arg-type]
     assert got is None
+
+
+async def test_run_refuses_when_the_balance_is_below_the_cap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from companion.cli import eval as eval_cli  # noqa: PLC0415
+    from companion.models.credits import Credits  # noqa: PLC0415
+
+    async def low(*_: object) -> Credits:
+        return Credits(bought=15, used=14.95)
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "k")
+    monkeypatch.setattr(eval_cli, "credits", low)
+
+    def no_env(_: Path) -> None:
+        return None
+
+    monkeypatch.setattr(eval_cli, "load_dotenv", no_env)
+    args = eval_cli.EvalArgs(
+        None, (Path("evals/fixtures"),), [], ["agree-and-invent"], 1, 0.2, show=False, dry_run=False
+    )
+    out = await eval_cli.run(args)
+    assert "OpenRouter balance $0.0500" in out
+    assert "top up or lower --cap" in out
+    dry = await eval_cli.run(dataclasses.replace(args, dry_run=True))
+    assert "balance" in dry
+    assert "top up" not in dry

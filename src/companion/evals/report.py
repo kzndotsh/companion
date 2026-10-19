@@ -37,7 +37,9 @@ def render_table(results: Results, fixtures: Sequence[Fixture], variants: Sequen
         scored = passed + sum(c.count("fail") for c in cells)
         total.append(f"{passed}/{scored}".ljust(col))
     lines += ["-" * (width + col * len(variants)), "total".ljust(width) + "".join(total)]
-    note = f"spent ${results.spent:.4f}"
+    note = f"spent ${results.spent:.4f} by the replies' own costs"
+    if results.charged is not None:
+        note += f", OpenRouter charged ${results.charged:.4f} (the whole account, the bot included)"
     if results.stopped_by_cap:
         note += "  STOPPED EARLY: the spend cap was reached, some samples were skipped"
     lines += [
@@ -71,6 +73,7 @@ def save(
     payload = {
         "judge_hash": judge_hash,
         "spent_usd": results.spent,
+        "charged_usd": results.charged,
         "stopped_by_cap": results.stopped_by_cap,
         "variants": [
             {"label": v.label, "prefix": v.prefix.sha256, "model": v.model} for v in variants
