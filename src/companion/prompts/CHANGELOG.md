@@ -606,7 +606,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/extract v8** (current). From commit a2b897f on 2026-10-17: feat(memory): romantic behaviour in the chat and refusals said in reply to a push are not recorded; the model labels, code decides; 13 live cases; the inbox note is acted on (T1, T11)
 
 ## system/frames
-- **system/frames v1** (current). From commit 9aad7dd on 2026-10-15: feat(play): frame detection at the door, scene note, leak guards, persona v11 with a positive play stance
+- **system/frames v1** (superseded). From commit 9aad7dd on 2026-10-15: feat(play): frame detection at the door, scene note, leak guards, persona v11 with a positive play stance
+- **system/frames v2** (current). v1 plus: a scene can wind down; reacting to it as themselves (how it felt, that they will sleep well), a real question, or talk about their real day is real even mid-scene, and a quick typo fix inside the scene is still play. Reason: the owner wanted leaving a scene to be easier. Measured on 11 of their real messages with real context, 3 reads each: v1 24/33, v2 30/33. Code now also takes real or out-of-character at any confidence, so stepping out never needs the 0.7 bar.
 
 ## system/habits
 - **system/habits v1** (superseded). From commit 005c5b4 on 2026-10-15: feat(moves): a model reads the last replies in the background and names what repeats; the next turns get a note

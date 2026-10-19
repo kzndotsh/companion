@@ -757,3 +757,9 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   either: 38 and 42 distinct two-word openers of 90, the same opener most common in both. v1 ships as the
   scene talker's addendum (it carries the floor and the play-is-play line); v2 is not shipped. Research
   (2026-10-19) found no measurements of roleplay prompts, only community practice. Spent $0.13.
+- **2026-10-19. Leaving a scene is easier (system/frames v2).** 11 of the owner's real messages with
+  their real context, 3 reads each, Haiku 5.5: 5 that step out of a scene or wind it down, 6 that continue
+  it (a typo fix included). v1 24/33, v2 30/33: the wind-down and a real question now read as real, the typo
+  fix stays play, and one ambiguous in-character question moved from real to play. Code now takes real or
+  out-of-character at any confidence; before, anything under 0.7 kept the scene. Small sample. Spent about
+  $0.01.

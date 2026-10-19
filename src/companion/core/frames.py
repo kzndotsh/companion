@@ -104,10 +104,13 @@ def parse(data: Json) -> Judgement | None:
 
 
 def resolve(judgement: Judgement | None, fallback: Frame = Frame.REAL) -> Frame:
-    """The frame to store. Unsure, missing or low confidence means the fallback."""
-    if judgement is None or judgement.confidence < MIN_CONFIDENCE:
+    """The frame to store. Missing or low confidence means the fallback, except that real talk and
+    stepping out of character are taken at any confidence, so leaving a scene is easy."""
+    if judgement is None:
         return fallback
-    return judgement.frame
+    if judgement.frame in {Frame.REAL, Frame.OOC}:
+        return judgement.frame
+    return judgement.frame if judgement.confidence >= MIN_CONFIDENCE else fallback
 
 
 def render_reason(judgement: Judgement | None, stored: Frame) -> str:

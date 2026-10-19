@@ -79,7 +79,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/callback-judge` | system | the callback check, `core/callbacks.py`, `companion callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v8 |
-| `system/frames` | system | the frame judge, `core/frames.py` | v1 |
+| `system/frames` | system | the frame judge, `core/frames.py` | v2 |
 | `system/habits` | system | the habit finder, `core/moves.py` | v2 |
 | `system/intimate-check` | system | reads whether a reply on a held turn is intimate (sexual, not affection) (ADR 0017) | v1 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |

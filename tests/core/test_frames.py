@@ -147,3 +147,9 @@ def test_played_and_joked_beliefs_are_never_assertable(belief: Callable[..., Bel
     assert not is_assertable(belief(bid="c", provenance=Provenance.JOKED))
     assert not is_assertable(belief(bid="d", provenance=Provenance.HYPOTHETICAL))
     assert is_assertable(belief(bid="e", provenance=Provenance.THIRD_PARTY))
+
+
+def test_real_talk_or_stepping_out_ends_a_scene_at_any_confidence() -> None:
+    assert resolve(Judgement(Frame.REAL, 0.6), fallback=Frame.PLAY) is Frame.REAL
+    assert resolve(Judgement(Frame.OOC, 0.6), fallback=Frame.PLAY) is Frame.OOC
+    assert resolve(Judgement(Frame.STORY, 0.6), fallback=Frame.PLAY) is Frame.PLAY
