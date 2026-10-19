@@ -44,30 +44,29 @@ Ordered. The first three can stop the bot, so they go first.
       when the note is about a missing one). A flag would need to say what it refers to first.
 
 
-- [ ] J45 Cheesy closing quips. A fine reply gets a witty tag line bolted on the end ("too-crispy fries are
-      basically edible sticks 😭 the sandwich had to carry the meal on its own"); at least five flags
-      2026-10-16 to 10-19. Persona v31 already bans building jokes and names the banned framings, and a 2026
-      preprint suggests naming them primes them. Plan: (1) the real flagged turns as local fixtures with a
-      judge on the last clause, measured on the live setup; (2) a persona version with a positive ending rule
-      ("stop when the point is made, end on the reaction or a question") and plain examples instead of the
-      banned list; (3) if that fails, a closer check with one resample (the inbox note on resampling).
-      Research 2026-10-19: nothing measures this exact failure; sampler bans and anti-slop fine-tuning work
-      but need control we do not have.
-- [ ] J46 Operator content guidelines and routing (ADR 0017, proposed): a guidelines file per deployment,
-      an `intimate` listening label, code routing with an opt-in, a fixed floor in code for age-coded sexual
-      content, and no unprompted disclaimers ("keeping it affectionate and non-explicit" on plain
-      relationship talk, flagged 2026-10-19). Measure first: the flagged turn as a private fixture.
-- [ ] J47 Small flags 2026-10-19: missed an obvious inference (a "movie poster" in a thread about the
-      Hackers DVD; also the 2026-10-18 "reasoning would help" flag), worth a `+low` reasoning eval on the
-      real turns; an em dash slipped past v31's rule (1 of 23 replies), a first case for a resample on a
-      code check; "you seem sleepy" answered "haha, a little" (a body claim).
-- [ ] T14 Trivial vents have no substance beyond restating a detail (0/20 on the epitome check). Waiting on
-      the owner's hand labels of replies across the fixtures (what is unrealistic or cheesy, what he would
-      send), then decide whether a short plain sympathy is the right answer or something can be added.
-      Flagged live 2026-10-19 ("repeating"): "ugh i hate waiting for … laundry" answered with "ugh, that's the
-      worst … the bed's still waiting on laundry 😭". The trivial note asks to "commiserate in a line, in their
-      own casual register", which invites the echo; a v3 that adds one thing of its own (as the everyday note
-      did) is the first thing to measure, with this turn as a local fixture.
+- [ ] J45 Cheesy add-on jokes. A fine reply gets a witty line bolted on ("the sandwich had to carry the meal
+      on its own"); at least five flags 2026-10-16 to 10-19. **Partial 2026-10-19:** five real turns as local
+      fixtures; about 45% of replies add a joke on v36; wording does not fix it (v37, the ban replaced by a
+      positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
+      joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150
+      plain. Left: watch live flags; banter they started is let through by design.
+- [ ] J46 Operator content guidelines and routing (ADR 0017, proposed, waiting for the owner's review): a
+      guidelines file per deployment, an `intimate` listening label, code routing with an opt-in, a fixed floor
+      in code for age-coded sexual content. Unprompted disclaimers ("keeping it affectionate and
+      non-explicit", flagged 2026-10-19), measured: about 1 in 4 replies on the real turn announce a limit or
+      an "I don't have needs" line; persona v39 against it is within noise (25/30 vs 21/30), not shipped. The
+      only lever left is a check with one resample; held until it is flagged again.
+- [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, though a second
+      draw can carry one too. Missed inferences (the Hackers poster; the "Weird Fishes" meaning): low
+      reasoning made them worse and slower (9/30 to 4/30, 11/30 to 4/30), so reasoning stays off; likely a
+      model limit, testable against another talker. "you seem sleepy" answered "haha, a little" (a body claim),
+      not yet looked at.
+- [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
+      flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
+      bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
+      size examples) shipped 2026-10-19: 6/30 on that turn and short reactions elsewhere, plainer and more
+      alike, which the owner accepted. Ideas for varied reactions in
+      `docs/inbox/2026-10-19-varied-short-reactions-to-minor-vents.md`.
 
 - [ ] T15 Prompt experiments from the guides review (`docs/research/2026-10-18_prompting-guides-review.md`): a
       parrot audit of quoted sample phrases in the persona and notes, a trimmed persona against v26, positive
