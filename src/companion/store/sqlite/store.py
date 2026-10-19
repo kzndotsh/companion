@@ -26,6 +26,7 @@ from companion.core.types import (
     Evidence,
     Favorite,
     Flag,
+    FlagId,
     Json,
     RelationshipId,
     Subject,
@@ -122,7 +123,11 @@ class Store:
         return favorites.list_favorites(self._conn, rel)
 
     def flags(self, rel: RelationshipId) -> list[Flag]:
+        """The owner's flags, without the ones they took back."""
         return flags.list_flags(self._conn, rel)
+
+    def withdraw_flag(self, flag_id: FlagId, reason: str, at: datetime) -> None:
+        flags.withdraw_flag(self._conn, flag_id, reason, at)
 
     def utterances_after(
         self, rel: RelationshipId, cursor: tuple[datetime, UtteranceId] | None, limit: int

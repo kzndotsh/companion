@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime
 
 from companion.core.types import Flag, FlagId, FlagKind, RelationshipId, TurnId
 from companion.store.sqlite.db import iso, parse_iso, write_tx
@@ -17,9 +18,19 @@ def add_flag(conn: sqlite3.Connection, f: Flag) -> None:
         )
 
 
+def withdraw_flag(conn: sqlite3.Connection, flag_id: FlagId, reason: str, at: datetime) -> None:
+    with write_tx(conn):
+        conn.execute(
+            "INSERT INTO flag_withdrawals (flag_id, reason, at) VALUES (?, ?, ?)",
+            (flag_id, reason, iso(at)),
+        )
+
+
 def list_flags(conn: sqlite3.Connection, relationship_id: RelationshipId) -> list[Flag]:
     rows = conn.execute(
-        "SELECT * FROM flags WHERE relationship_id = ? ORDER BY at, id", (relationship_id,)
+        "SELECT * FROM flags f WHERE relationship_id = ?"
+        " AND NOT EXISTS (SELECT 1 FROM flag_withdrawals w WHERE w.flag_id = f.id) ORDER BY at, id",
+        (relationship_id,),
     ).fetchall()
     return [
         Flag(

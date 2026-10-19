@@ -118,3 +118,11 @@ def test_added_evidence_is_still_checked_by_the_database(
     beliefs.insert_belief(conn, b)
     with pytest.raises(sqlite3.DatabaseError):
         beliefs.add_evidence(conn, b.id, Evidence(UtteranceId("u2"), "not in that message"))
+
+
+def test_a_withdrawn_flag_leaves_the_list_but_stays_in_the_ledger(conn: sqlite3.Connection) -> None:
+    t = _turn(conn, "t1")
+    flags.add_flag(conn, Flag(FlagId("f1"), REL, t, FlagKind.OFF, "meant as a fav", T0))
+    flags.withdraw_flag(conn, FlagId("f1"), "moved to a favourite", T0)
+    assert flags.list_flags(conn, REL) == []
+    assert conn.execute("SELECT COUNT(*) FROM flags").fetchone()[0] == 1

@@ -91,7 +91,9 @@ def _parser() -> argparse.ArgumentParser:
     )
     _db_args(rp, relationship=False)
 
-    _db_args(sub.add_parser("flags", help="list the turns you flagged"))
+    fl = sub.add_parser("flags", help="list the turns you flagged")
+    fl.add_argument("--to-fav", metavar="ID", help="move a flag (by flag or turn id) to favourites")
+    _db_args(fl)
     _db_args(sub.add_parser("favorites", help="list the turns you loved"))
     _db_args(sub.add_parser("spend", help="what the paid calls cost, by purpose"))
     _db_args(sub.add_parser("initiative", help="open loops and what shadow mode would send"))
@@ -241,6 +243,8 @@ def _favorites(a: argparse.Namespace) -> int:
 
 
 def _flags(a: argparse.Namespace) -> int:
+    if a.to_fav:
+        return _out(flags.to_favorite(*_target(a), str(a.to_fav)))
     return _out(flags.run(*_target(a)))
 
 
