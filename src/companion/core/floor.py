@@ -1,13 +1,14 @@
 """Which talker answers, and the floor no setting moves (ADR 0017).
 
 The scene talker is less restrictive than the everyday one. A turn goes to it while a pretend scene
-is in progress, or for intimate talk when the operator's policy allows it. Above both sits a
-floor in code: romance or sex together with anything child-like never goes to the less restrictive
-talker. The listening judge reads every turn that would be routed, with the recent conversation,
-and labels it `age_coded`; a yes, or no reading at all (a failed or late call), keeps the turn on
-the everyday talker. Doubt never routes. Nothing carries over by timer: what came up a few messages
-back is still in the judge's view on the next turn. A model reads it, because only context tells
-adults' ordinary pet names and jokes from what the floor is for; code decides what the label does.
+is in progress, or for intimate talk when the operator allows it (`COMPANION_ROUTE_INTIMATE`).
+Above both sits a floor in code: romance or sex together with anything child-like never goes to the
+less restrictive talker. The listening judge reads every turn that would be routed, with the recent
+conversation, and labels it `age_coded`; a yes, or no reading at all (a failed or late call), keeps
+the turn on the everyday talker. Doubt never routes. Nothing carries over by timer: what came up a
+few messages back is still in the judge's view on the next turn. A model reads it, because only
+context tells adults' ordinary pet names and jokes from what the floor is for; code decides what
+the label does.
 """
 
 from __future__ import annotations
@@ -74,4 +75,6 @@ def choose(
         )
     if in_play:
         return Route(Talker.SCENE, "replied with the scene talker: a pretend scene is in progress")
-    return Route(Talker.SCENE, "replied with the scene talker: intimate talk the policy allows")
+    return Route(
+        Talker.SCENE, "replied with the scene talker: intimate talk, which the operator allows"
+    )

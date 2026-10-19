@@ -11,7 +11,7 @@ from pathlib import Path
 
 import httpx
 
-from companion import characters, logsetup, policy, prompts
+from companion import characters, logsetup, prompts
 from companion.characters import Character
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.callbacks import report
@@ -34,7 +34,6 @@ from companion.loops.views import views_implicated
 from companion.models import anthropic, openrouter
 from companion.models.fallback import RefusalFallback
 from companion.models.retry import retry_on_network_error
-from companion.policy import Policy
 from companion.store.sqlite.store import Store
 
 FLAG_REACTION = "✍"
@@ -136,6 +135,17 @@ def resample_on() -> bool:
     )
 
 
+def route_intimate_on() -> bool:
+    """COMPANION_ROUTE_INTIMATE (ADR 0017): `on` lets intimate talk go to the scene talker, above
+    the floor in code; anything else keeps it on the everyday talker."""
+    return os.environ.get("COMPANION_ROUTE_INTIMATE", "").strip().lower() in (
+        "on",
+        "1",
+        "yes",
+        "true",
+    )
+
+
 def split_on() -> bool:
     """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
     return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
@@ -149,18 +159,11 @@ def cap_text(cap: float | None) -> str:
     return "off" if cap is None else f"${cap:.2f}"
 
 
-def _rules_text(rules: Policy | None) -> str:
-    if rules is None:
-        return "default"
-    return f"{rules.ref} (intimate {'may route' if rules.route_intimate else 'stays'})"
-
-
 def startup_line(
     rel: RelationshipId,
     prefix_sha: str,
     scene: Talker | None,
     character: Character | None = None,
-    rules: Policy | None = None,
 ) -> str:
     """The line that says what is running: persona, prefix hash and which models talk."""
     if model := os.environ.get("COMPANION_MODEL"):
@@ -181,7 +184,7 @@ def startup_line(
         f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
         f" | initiative {initiative_mode()} | mood {mood_mode()}"
         f" | resample {'on' if resample_on() else 'off'}"
-        f" | policy {_rules_text(rules)}"
+        f" | intimate {'may route' if route_intimate_on() else 'stays'}"
     )
 
 
@@ -291,11 +294,9 @@ async def run(data_dir: Path) -> None:
     rel = RelationshipId(f"telegram-{user}")
     store = Store(data_dir / f"{rel}.sqlite")
     character = characters.chosen(data_dir / "characters")
-    rules = policy.chosen(data_dir / "policy")
-    everyday_system = characters.system_prompt(prompts.get("system/persona").raw, character)
-    prefix = build_prefix(policy.with_policy(everyday_system, rules))
+    prefix = build_prefix(characters.system_prompt(prompts.get("system/persona").raw, character))
     scene_prefix = build_prefix(
-        policy.with_policy(policy.with_scene(everyday_system), rules, scene=True)
+        characters.system_prompt(prompts.get("system/persona").raw, character, scene=True)
     )
     async with httpx.AsyncClient() as client:
         talker, scene, judge, reflector = _metered_models(client, store, rel)
@@ -310,7 +311,7 @@ async def run(data_dir: Path) -> None:
             listen=listen_on(),
             mood=mood_mode(),
             resample=resample_on(),
-            route_intimate=rules.route_intimate,
+            route_intimate=route_intimate_on(),
             scene_prefix=scene_prefix,
         )
         pending: list[asyncio.Task[None]] = []
@@ -367,7 +368,7 @@ async def run(data_dir: Path) -> None:
             return reply
 
         logging.getLogger("companion").info(
-            startup_line(rel, prefix.sha256, convo.scene_talker, character, rules)
+            startup_line(rel, prefix.sha256, convo.scene_talker, character)
         )
         logging.getLogger("companion").info("full log: %s", log_file)
         initiative = _start_initiative(store, rel, judge)

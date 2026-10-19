@@ -203,7 +203,7 @@ class Conversation:
     listen: bool = True  # ask how serious a message is before the reply
     mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
     resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
-    route_intimate: bool = False  # intimate talk may go to the scene talker (policy, ADR 0017)
+    route_intimate: bool = False  # intimate talk may go to the scene talker (ADR 0017)
     scene_prefix: Prefix | None = (
         None  # the scene talker's system prompt, with system/scene-intimate
     )
@@ -452,12 +452,12 @@ async def _route(
     c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
 ) -> tuple[Talker, bool]:
     """The talker for this turn (ADR 0017): the scene talker for a pretend scene, or for intimate
-    talk when the policy allows it, unless the floor keeps it on the everyday talker. Logged when
-    it is anything but the plain everyday choice.
+    talk when COMPANION_ROUTE_INTIMATE allows it, unless the floor keeps it on the everyday talker.
+    Logged when it is anything but the plain everyday choice.
 
-    The listening judge does not run in a scene, so a scene turn is read here, for routing only. The
-    frame is the one the previous turn left, so the first message of a scene is answered by the
-    everyday talker and the next ones by the scene talker.
+    The listening judge does not run in a scene, so a scene turn is read here, for routing only.
+    The frame is the one the previous turn left, so the first message of a scene is answered by
+    the everyday talker and the next ones by the scene talker.
     """
     if c.scene_talker is None:
         return c.talker, False

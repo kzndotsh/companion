@@ -11,7 +11,8 @@ written.
 
 Public sheets are versioned prompts at `prompts/characters/<id>/vN.md` (ADR 0013). Private sheets
 live at `data/characters/<id>.md`, are never committed, and win over a public sheet of the same id.
-`COMPANION_CHARACTER=<id>` picks one; unset means no character.
+`COMPANION_CHARACTER=<id>` picks one; unset means no character. A sheet may end with an
+`## In scenes and intimate moments` section, which only the scene talker sees.
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ from companion import prompts
 CHARACTER_ENV = "COMPANION_CHARACTER"
 PRIVATE_DIR = Path("data/characters")
 _ID = re.compile(r"[a-z0-9][a-z0-9-]*")
+SCENE_HEADING = "\n## In scenes and intimate moments\n"
 
 
 class CharacterError(ValueError):
@@ -37,6 +39,9 @@ class Character:
     id: str
     version: str  # "vN" for a public sheet, "local" for a private one
     sheet: str
+    scene_sheet: str = (
+        ""  # after an "## In scenes and intimate moments" heading: for the scene talker only
+    )
 
     @property
     def ref(self) -> str:
@@ -45,11 +50,11 @@ class Character:
 
 def parse(text: str, char_id: str, version: str) -> Character:
     """A sheet from its file text. Refuses an empty one."""
-    sheet = text.strip()
-    if not sheet:
+    sheet, _, scene = text.strip().partition(SCENE_HEADING)
+    if not sheet.strip():
         msg = f"character {char_id!r} has an empty sheet"
         raise CharacterError(msg)
-    return Character(char_id, version, sheet)
+    return Character(char_id, version, sheet.strip(), scene.strip())
 
 
 def load(char_id: str, private_dir: Path = PRIVATE_DIR) -> Character:
@@ -74,9 +79,15 @@ def chosen(private_dir: Path = PRIVATE_DIR) -> Character | None:
     return load(char_id, private_dir) if char_id else None
 
 
-def system_prompt(persona: str, character: Character | None) -> str:
-    """The persona, then the frame and the sheet. Without a character, the persona unchanged."""
-    if character is None:
-        return persona
-    frame = prompts.get("system/character-frame").text
-    return f"{persona.rstrip()}\n\n{frame}\n\n{character.sheet}\n"
+def system_prompt(persona: str, character: Character | None, *, scene: bool = False) -> str:
+    """The persona, then the frame and the sheet. Without a character, the persona unchanged. The
+    scene talker's prompt (`scene`) adds the scene addendum and the part of the sheet after
+    SCENE_HEADING, which the everyday talker never sees (ADR 0017)."""
+    parts = [persona.rstrip()]
+    if character is not None:
+        parts += [prompts.get("system/character-frame").text, character.sheet]
+    if scene:
+        parts.append(prompts.get("system/scene-intimate").text)
+        if character is not None and character.scene_sheet:
+            parts.append(character.scene_sheet)
+    return "\n\n".join(parts) + "\n" if len(parts) > 1 else persona

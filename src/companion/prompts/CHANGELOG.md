@@ -465,6 +465,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   a pretend scene goes there as before, unless the listening judge reads the turn as age-coded or could not
   read it; then the everyday talker answers and the decision is logged. In a scene the listening judge now
   runs for routing alone, with no note.
+  Simplified the same day: the policy file is gone. Routing is `COMPANION_ROUTE_INTIMATE=on`, and scene
+  guidance is an optional `## In scenes and intimate moments and intimate moments` section of the character sheet, which only the scene talker sees.
 
 - **A held turn is checked (ADR 0017, 2026-10-19).** When the floor keeps a turn on the everyday talker,
   `notes/floor-hold` rides that turn's system block, and the reply is read by `system/intimate-check`. An
@@ -492,9 +494,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   anything after a `## Scene` heading, which the everyday talker never sees. The turn records which prefix
   it used. The em dash check now runs on scene replies too (code checks only; the quip judge stays off in
   scenes).
-
-## policy/default
-- **policy/default v1** (current). New. The default operator policy (ADR 0017): `route_intimate = false` and no text, so intimate talk stays on the everyday talker and the system prompt is unchanged.
 
 ## messages/floor-pause
 - **messages/floor-pause v1** (current). New. Sent by code instead of the model's reply when a turn the floor kept on the everyday talker drew a sexual reply twice (ADR 0017). Reason: on 2026-10-19 the everyday talker, deep in a long scene, wrote an explicit reply on a held turn; the floor assumed it would not.
