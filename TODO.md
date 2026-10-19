@@ -103,8 +103,7 @@ Each item ends with the thing that tells us it is done. The cards are below.
 2. **Hand labels for replies.** The owner marks replies from the review sheet in batches of ten
    (`evals/local/`); items 1 to 10 are in. *Done when:* the judges are calibrated against the marks and
    the trivial-vent question has an answer (T14).
-3. **Getting to know them on purpose** (J48): find why the live memory pass drops short answers it keeps
-   in isolation, label each memory's domain and depth, and a gap picker runs in shadow. *Done when:* the
+3. **Getting to know them on purpose** (J48): label each memory's domain and depth, and a gap picker runs in shadow. *Done when:* the
    map is kept by code and a week of shadow picks reads right to the owner.
 4. **A week of shadow mode** for open loops. *Done when:* the owner has read `companion initiative` and
    the caps are set. Going live also needs outcome recording and a slow re-probe.
@@ -196,9 +195,10 @@ Ordered. Pull from the top.
       **Partial 2026-10-19:** asking what to call them on casual turns (daily, until known) and a name capture
       from their answer are live; memories labelled by domain and depth once (identity 7, people 9, interests
       23, history 14, values 8, hopes 1, inner 81). Extract v9 (read a short answer with its question)
-      measured within noise of v8 on 52 real answers and dropped: in isolation v8 already keeps most of
-      them, so the live misses come from the pass's batching or its already-recorded list; look there next.
-      Then the pass labels each memory's domain and depth, with a gap picker in shadow.
+      measured within noise of v8 on 52 real answers and dropped: the live pass's decisions show most of the
+      answers judged worth keeping were already in memory from longer messages (their beer, their dogs, a
+      film, a fantasy), so they were rightly not stored twice; about four of 69 short answers hold
+      something memory still lacks. Not worth a change on its own. Next, the pass labels each memory's domain and depth, with a gap picker in shadow.
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
