@@ -37,7 +37,8 @@ scene are never taken as its views. The extraction prompts mark which messages a
   virtual hug in a real emotional moment read as real, and "ok you got me" in a detective scene read as
   stepping out.
 - v2 (wind down a scene, real talk mid-scene, a typo fix stays play), on 11 real messages with real
-  context, 3 reads each: v1 24/33, v2 30/33 (`prompts/CHANGELOG.md`).
+  context, 3 reads each: v1 24/33, v2 30/33 (`prompts/CHANGELOG.md`), within noise by Fisher's test (11%); v2 shipped for no
+  loss, not a shown gain.
 - The judge has 2.5 seconds. A judge that times out stores the scene's frame, or real when there is
   none: the reply still goes out and the message is not lost. Every judgement is logged with its
   scores, so it can be checked against use.

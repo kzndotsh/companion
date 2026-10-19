@@ -823,3 +823,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   was wanted. Cost about $0.00014 a turn (the first embedded every memory once, $0.0001), so roughly a
   cent or two a day at the owner's pace. Time: embedding 0.3 to 0.4 s, the pick 0.9 to 2.7 s. Shadow
   only; the log will say how often it picks something on small talk.
+- **2026-10-19. Correction: three gains reported earlier are within noise.** Checked with Fisher's
+  exact test once the report gained noise bars (J17): frames v2 against v1, 30/33 against 24/33, chance
+  of noise 11%; persona v40 against v36 on liveliness, 69/96 against 60/96, 22%; the quip resample, 95
+  against 85 of 150, 29%. None is a shown gain; what holds is that none made things worse. They stay
+  shipped on that basis. Gaps of those sizes need about 70, 390 and 850 samples a side to show. Gains
+  that do hold, for comparison: the shower quip fix 4/30 to 24/30, the health note 0/20 to 19/20, the
+  cheesy-quip note 16/30 to 29/30 (each under 0.1%).
+

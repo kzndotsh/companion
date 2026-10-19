@@ -86,7 +86,7 @@ Built and working:
 | A model finds a real afterthought rarely | about 1 reply in 20; open loops about 8 in 3 days | `evals/CHANGELOG.md` |
 | Scene voice does not carry over to Luna | 20/20 plain after a scripted scene | `evals/CHANGELOG.md` |
 | Wording does not fix habits (cheesy add-ons, minor-vent retelling, announced limits) | v37/v38 within noise or worse; vent note 0/30 under three wordings | `evals/CHANGELOG.md` |
-| A resample on a code or judge check does help | cheesy add-ons 85 to 95 of 150 plain | `evals/CHANGELOG.md` |
+| A resample on a code or judge check does not hurt; a gain is not shown | cheesy add-ons 85 to 95 of 150 plain, within noise (Fisher 29%) | `evals/CHANGELOG.md` |
 | The age-coded label is reliable | 15/15 on age-coded messages, no trips on adults' pet names | `evals/CHANGELOG.md` |
 | DeepSeek V4.1 Flash beats V4 for scenes | as willing, about 3 times faster, more varied | `evals/CHANGELOG.md` |
 | The bot is cheap; eval runs are not | the bot about $0.67 a week; most of a month's $10.69 was evals | `evals/CHANGELOG.md` |
@@ -182,7 +182,7 @@ Ordered. Pull from the top.
       on its own"); at least five flags 2026-10-16 to 10-19. **Partial 2026-10-19:** five real turns as local
       fixtures; about 45% of replies add a joke on v36; wording does not fix it (v37, the ban replaced by a
       positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
-      joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150
+      joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150 (within noise)
       plain. Left: watch live flags; banter they started is let through by design.
 - [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, though a second
       draw can carry one too. Missed inferences (the Hackers poster; the "Weird Fishes" meaning): low
@@ -242,6 +242,9 @@ Ordered. Pull from the top.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-19**
+- [x] J17 Noise bars in eval reports: each cell shows its 95% Wilson range, and every later variant is
+      compared with the first per fixture (Fisher, Holm-adjusted) and in total (Cochran-Mantel-Haenszel), with
+      a plain "within noise" or "a real difference" and the samples a gap that size would need.
 - [x] H5 Eval spend reads true: the runner reads OpenRouter's meter before and after a run and reports
       what was charged next to the replies' own costs, shows the balance first, and refuses a run whose
       cap is above the balance. The dry-run figure is labelled an upper estimate.
@@ -253,7 +256,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 - [x] J5 stages M1 to M3: mood lines measured (four of five states move replies), the engine (cozy,
       tender, playful) and its append-only table, wired in shadow with `companion mood --replay`; the
       goodbye guard; persona v36 (no announced mood) then v40 (an invitation to banter back).
-- [x] J45 partial: one resample when a reply bolts a joke onto an ordinary message (85 to 95 of 150), plus
+- [x] J45 partial: one resample when a reply bolts a joke onto an ordinary message (85 to 95 of 150, within noise), plus
       the em dash and unasked AI disclaimer checks (`core/recheck.py`).
 - [x] The pinned line for how they want to be referred to (`companion address`), the ask-name note and
       the name capture (J48 step 1); sensitive memories only on turns where they share something; crowded
@@ -616,8 +619,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       (xinchao's "while you were away" fold, field survey).
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
-- [ ] J17 Noise bars in eval reports: each cell shows its margin of error (Wilson interval) and the report
-      says when two variants are within noise (eval-harness audit, promptfoo).
 - [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
       does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change

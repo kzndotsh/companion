@@ -9,12 +9,21 @@ from pathlib import Path
 
 from companion.evals.fixtures import Fixture
 from companion.evals.runner import Results, Variant
+from companion.evals.stats import Comparison, cmh, fisher, holm, wilson
+
+
+def _counts(results: Results, fixture: str, variant: str) -> tuple[int, int]:
+    cell = results.cells[(fixture, variant)]
+    return cell.count("pass"), cell.count("pass") + cell.count("fail")
 
 
 def _cell(results: Results, fixture: str, variant: str) -> str:
     cell = results.cells[(fixture, variant)]
-    scored = cell.count("pass") + cell.count("fail")
-    text = f"{cell.count('pass')}/{scored}"
+    passed, scored = _counts(results, fixture, variant)
+    text = f"{passed}/{scored}"
+    if scored:
+        lo, hi = wilson(passed, scored)
+        text += f" {lo:.0%}-{hi:.0%}"
     if cell.count("unclear"):
         text += f" (+{cell.count('unclear')}?)"
     if cell.skipped:
@@ -45,9 +54,48 @@ def render_table(results: Results, fixtures: Sequence[Fixture], variants: Sequen
     lines += [
         "",
         note,
-        "(n/m = passes out of scored samples. +k? = unscored because the judge was unclear)",
+        (
+            "(n/m = passes out of scored samples, then the 95% range the true rate probably sits"
+            " in. +k? = unscored because the judge was unclear)"
+        ),
+        *compare(results, fixtures, variants),
     ]
     return "\n".join(lines)
+
+
+def compare(
+    results: Results, fixtures: Sequence[Fixture], variants: Sequence[Variant]
+) -> list[str]:
+    """Every later variant against the first: per fixture, then the total compared within each
+    fixture. Chances are adjusted for how many comparisons the run made."""
+    if len(variants) < 2:
+        return []
+    base = variants[0].label
+    pairs = [(f.id, v.label) for v in variants[1:] for f in fixtures]
+    raw = [fisher(*_counts(results, f, base), *_counts(results, f, v)) for f, v in pairs]
+    per_fixture = [
+        Comparison(f"{f} ({v})", _counts(results, f, base), _counts(results, f, v), chance)
+        for (f, v), chance in zip(pairs, holm(raw), strict=True)
+    ]
+    totals_raw = [
+        cmh([(*_counts(results, f.id, base), *_counts(results, f.id, v.label)) for f in fixtures])
+        for v in variants[1:]
+    ]
+    totals = [
+        Comparison(
+            f"total ({v.label})",
+            _total(results, fixtures, base),
+            _total(results, fixtures, v.label),
+            chance,
+        )
+        for v, chance in zip(variants[1:], holm(totals_raw), strict=True)
+    ]
+    return ["", f"compared with {base}:", *(f"  {c.line()}" for c in [*per_fixture, *totals])]
+
+
+def _total(results: Results, fixtures: Sequence[Fixture], variant: str) -> tuple[int, int]:
+    counts = [_counts(results, f.id, variant) for f in fixtures]
+    return sum(p for p, _ in counts), sum(n for _, n in counts)
 
 
 def render_replies(

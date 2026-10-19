@@ -48,6 +48,13 @@ uv run companion eval --variants v36.md,v40.md --samples 12 --cap 0.20 --show
   above it, because the bot shares the credits. After a run it reads OpenRouter's meter again and
   prints what was charged; that figure covers the whole account, so a running bot adds to it.
   `--dry-run` prints the plan, an upper estimate and the balance, and spends nothing.
+- **Noise is in the table** (`evals/stats.py`). Each cell shows the 95% range the true pass rate probably
+  sits in (Wilson; the textbook normal range is badly off at 12 to 30 samples). With two or more
+  variants, each later one is compared with the first: per fixture by Fisher's exact test, adjusted for
+  how many fixtures were compared (Holm), and in total by the Cochran-Mantel-Haenszel test, which
+  compares within each fixture because samples of one fixture are alike. Under 5% chance of noise reads
+  "a real difference"; anything else reads "within noise", with the samples per side a gap that size
+  would need. Report a change as a gain only when it reads real.
 - Results (every reply and every verdict) are saved to `evals/results/`, which is gitignored
   because it holds conversation text.
 
