@@ -492,6 +492,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/address
 - **notes/address v1** (current). New. "How they want to be referred to: $address. Use it every time, without bringing it up." Filled by `core/address.py` from a setting they state (`companion address --set`), and placed right after the clock line on every turn. Reason: on 2026-10-19 the memory card (15 of 196 memories) crowded out how they want to be referred to, and a reply got it wrong.
 
+## notes/ask-name
+- **notes/ask-name v1** (current). New. Added by code on a casual turn (severity 0, not a scene, not a goodbye) when no belief says what they like to be called, at most once a day, until one does (J48). Reason: in about 700 messages the companion asked their name once, only after they pointed it out.
+
 ## notes/clock
 - **notes/clock v1** (current). Moved here on 2026-10-18 from `core/clock.py`, text unchanged. Earlier history is in git.
 
@@ -625,6 +628,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/listening v2** (superseded). v1 plus one label, rude: plainly rude or hostile toward the companion itself, false for teasing, banter, a light jab, blunt feedback or frustration at something else. It feeds `notes/rude`. Reason: the reflex to apologise and offer more after an insult held against a character sheet in 8 of 20 replies (J1, 2026-10-18).
 - **system/listening v3** (superseded). v2 plus recall (they asked the companion to remember or already know something about them) and topic (what to look up, worked out from context when the message is vague). Reason: "come on, you know this one..." about their favourite food got a guess and a joke, with three burger beliefs in memory and none on the card (owner's flag, 2026-10-18).
 - **system/listening v4** (current). v3 plus two labels for ADR 0017: `intimate` (about sex or physical intimacy, or sexual flirting; not ordinary affection) and `age_coded` (romance, flirting or anything sexual together with anything child-like or under-age; not adults' ordinary pet names or non-romantic comfort). Code routes on them; a missing `age_coded` counts as true. Measurement in `evals/CHANGELOG.md`.
+
+## system/name-capture
+- **system/name-capture v1** (current). New. When the companion's last message asked what to call them, reads their answer and gives the name as written, or nothing; code keeps it only if it is short and appears in their words, and stores it as a belief quoting their answer (J48). Reason: a bare one-word answer to "what name do you like being called?" was not picked up by the memory pass.
 
 ## system/openloops
 - **system/openloops v1** (superseded). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing

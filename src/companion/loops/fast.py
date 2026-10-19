@@ -25,6 +25,9 @@ from companion.core.ack import (
 )
 from companion.core.address import KEY as ADDRESS_KEY
 from companion.core.address import address_note
+from companion.core.basics import ASK_EVERY as ASK_NAME_EVERY
+from companion.core.basics import ASKED as ASKED_NAME
+from companion.core.basics import NAME_CAPTURE, ask_name, asked_for_name, knows_name, name_belief
 from companion.core.card import Card, build_card, render
 from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import Extractor
@@ -91,6 +94,7 @@ from companion.core.types import (
 )
 from companion.core.views import ViewState, card_views, why
 from companion.loops.ack import judge
+from companion.loops.basics import judge_name
 from companion.loops.floor import judge_intimate
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
@@ -609,18 +613,54 @@ async def _hold_check(
     return reply
 
 
-def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> None:
-    c.store.append_utterance(
-        Utterance(
-            UtteranceId(_id()),
+def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> Utterance:
+    said = Utterance(
+        UtteranceId(_id()),
+        c.rel,
+        t.session,
+        t.turn,
+        Speaker.USER,
+        t.text,
+        frame,
+        channel,
+        t.now,
+    )
+    c.store.append_utterance(said)
+    return said
+
+
+def _with_reaction(
+    c: Conversation, t: _Turn, felt: tuple[ReactJudgement, str, str] | None, sent: str
+) -> str | ReactAndReply:
+    reacted = _react_alongside(c, t, felt)
+    _mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to Telegram")
+    return ReactAndReply(reacted, sent) if reacted is not None else sent
+
+
+async def _capture_name(c: Conversation, t: _Turn, said: Utterance) -> None:
+    """When its last message asked what to call them, read their answer and remember the name,
+    quoting their own words. Logged either way."""
+    asked = next((u.text for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), "")
+    if c.judge is None or not asked_for_name(asked):
+        return
+    if knows_name(c.store.user_beliefs(c.rel)):
+        return
+    name = await judge_name(c.judge, asked, t.text)
+    reason = "basics: no name in their answer"
+    if name is not None:
+        c.store.insert_belief(name_belief(said, name, _id(), t.now))
+        reason = f"basics: remembered what to call them ({name})"
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
             c.rel,
             t.session,
             t.turn,
-            Speaker.USER,
-            t.text,
-            frame,
-            channel,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            reason,
             t.now,
+            detail={"prompt": NAME_CAPTURE.ref},
         )
     )
 
@@ -842,6 +882,37 @@ def _mood(
     return (shown if c.mood == "on" else None), added
 
 
+def _ask_name(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, beliefs: Sequence[Belief]
+) -> str | None:
+    """Offer to ask what to call them on a casual turn, at most once a day, until memory knows."""
+    casual = (
+        heard is not None
+        and heard[0].severity == 0
+        and in_scene is Frame.REAL
+        and held_because(severity=0, text=t.text, in_scene=False) is None
+    )
+    note = ask_name(
+        known=knows_name(beliefs),
+        casual=casual,
+        asked_recently=c.store.decided_since(c.rel, ASKED_NAME, t.now - ASK_NAME_EVERY),
+    )
+    if note is not None:
+        c.store.append_decision(
+            Decision(
+                DecisionId(_id()),
+                c.rel,
+                t.session,
+                t.turn,
+                TraceId(t.turn),
+                DecisionKind.POLICY,
+                ASKED_NAME,
+                t.now,
+            )
+        )
+    return note
+
+
 def _assemble(  # noqa: PLR0913
     c: Conversation,
     t: _Turn,
@@ -868,7 +939,8 @@ def _assemble(  # noqa: PLR0913
     found = recall_note(recalled.picked) if recalled is not None else None
     mood, mood_effects = _mood(c, t, in_scene, heard)
     hold = HOLD_NOTE.text if held else None
-    notes += [n for n in (listening, rude, found, mood, hold) if n is not None]
+    name = _ask_name(c, t, in_scene, heard, assertable)
+    notes += [n for n in (listening, rude, found, mood, hold, name) if n is not None]
     card_text = "\n".join([clock, *([pinned] if pinned else []), *shown, *notes])
     prefix = c.scene_prefix if scene and c.scene_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
@@ -898,7 +970,8 @@ async def _handle_turn(
         raise
     if reaction is not None:
         await _stop(listening)
-        _store_user(c, t, channel, in_scene)
+        said = _store_user(c, t, channel, in_scene)
+        await _capture_name(c, t, said)
         _mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
@@ -925,7 +998,7 @@ async def _handle_turn(
         _store_user(c, t, channel, Frame.REAL)
         raise
     user_frame = frame_resolve(outcome[0] if outcome else None, fallback=in_scene)
-    _store_user(c, t, channel, user_frame)
+    said = _store_user(c, t, channel, user_frame)
     if asm.mood:
         store.add_mood_effects(rel, asm.mood)
     if framing is not None:
@@ -957,6 +1030,5 @@ async def _handle_turn(
         reply.text or "(no reply)",
     )
     sent = _persist_reply(c, t, reply, user_frame, channel)
-    reacted = _react_alongside(c, t, felt)
-    _mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to Telegram")
-    return ReactAndReply(reacted, sent) if reacted is not None else sent
+    await _capture_name(c, t, said)
+    return _with_reaction(c, t, felt, sent)

@@ -781,3 +781,9 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   fixtures, 3 samples: v40 278 against v36's 282 on 137 shared fixtures; the three drops that mattered
   (held memories, serious health, vague distress) rerun at 12 samples: 28/48 against 27/48, so noise.
   Spent $0.14.
+- **2026-10-19. Asking what to call them, and keeping the answer (J48 step 1).** No measurement of the
+  talker yet; this is code: an ask-name note on casual turns at most once a day while memory has no name,
+  and a name-capture judge on the turn after the companion asked. The memory pass had missed a bare one-word
+  answer to "what name do you like being called?"; run once on that message, the capture read the name and
+  stored it with the user's own words as the quote. Tests cover the gating, the parse (short, present in
+  their words) and the loop.

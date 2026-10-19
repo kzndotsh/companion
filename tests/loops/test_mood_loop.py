@@ -72,6 +72,8 @@ class Judge:
                 "recall": False,
                 "topic": "",
             }
+        elif set(props) == {"name"}:
+            data = {"name": "Kai"}
         elif "tone" in props:
             data = {"tone": self.tone, "confidence": 0.9, "emoji": "🤣"}
         return Extraction(data=data, model="j", cost_usd=0.0, latency_ms=1)
@@ -201,3 +203,32 @@ async def test_held_memories_are_in_view_only_when_they_are_sharing_something(
     )
     talker = await _say(store, Judge(severity=severity), "off", "i want a beer lol")
     assert ("The user sometimes slips up." in talker.seen[0].card) is shown
+
+
+async def test_what_to_call_them_is_asked_once_a_day_on_a_casual_turn(store: Store) -> None:
+    first = await _say(store, Judge(), "off", "made pasta")
+    later = await _say(store, Judge(), "off", "it was good", NOW + timedelta(hours=2))
+    next_day = await _say(store, Judge(), "off", "morning", NOW + timedelta(hours=25))
+    asks = [t.seen[0].card.count("You do not know their name") for t in (first, later, next_day)]
+    assert asks == [1, 0, 1]
+
+
+async def test_their_answer_to_what_to_call_them_is_remembered_in_their_words(store: Store) -> None:
+    asked = Utterance(
+        UtteranceId("c0"),
+        REL,
+        SESSION,
+        TurnId("t0"),
+        Speaker.COMPANION,
+        "what name do you like being called?",
+        Frame.REAL,
+        "test",
+        NOW - timedelta(minutes=1),
+    )
+    store.append_utterance(asked)
+    await _say(store, Judge(), "off", "Kai")
+    [b] = [b for b in store.user_beliefs(REL) if "name" in b.claim]
+    assert b.claim == "The user's name is Kai."
+    assert b.evidence[0].quote == "Kai"
+    later = await _say(store, Judge(), "off", "made pasta", NOW + timedelta(days=2))
+    assert "You do not know their name" not in later.seen[0].card

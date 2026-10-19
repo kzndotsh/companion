@@ -50,6 +50,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `messages/floor-pause` | message | sent by code when a turn the floor held drew a sexual reply twice (ADR 0017) | v1 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, `core/address.py` | v1 |
+| `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |
 | `notes/floor-hold` | note | a turn the floor kept on the everyday talker: stay warm, nothing sexual, no explaining (ADR 0017) | v1 |
@@ -85,6 +86,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
 | `system/listening` | system | the listening judge, `core/listening.py` | v4 |
+| `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
 | `system/openloops` | system | open-loop extraction, `core/openloops.py` | v3 |
 | `system/openloops-draft` | system | the follow-up draft, `loops/openloops.py` | v2 |
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, `core/quip.py` | v2 |

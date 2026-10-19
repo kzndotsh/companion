@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from datetime import datetime
 
 from companion.core.types import (
     BeliefId,
@@ -118,3 +119,14 @@ def closure_reasons(
         (relationship_id,),
     ).fetchall()
     return {BeliefId(str(r["bid"])): str(r["reason"]) for r in rows}
+
+
+def decided_since(
+    conn: sqlite3.Connection, rel: RelationshipId, reason: str, since: datetime
+) -> bool:
+    """Whether a decision with this exact reason was logged at or after a time."""
+    row = conn.execute(
+        "SELECT 1 FROM decisions WHERE relationship_id = ? AND reason = ? AND at >= ? LIMIT 1",
+        (rel, reason, iso(since)),
+    ).fetchone()
+    return row is not None

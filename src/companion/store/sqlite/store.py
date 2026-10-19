@@ -225,6 +225,9 @@ class Store:
     def turns_since_reaction(self, rel: RelationshipId) -> int | None:
         return decisions.turns_since_reaction(self._conn, rel)
 
+    def decided_since(self, rel: RelationshipId, reason: str, since: datetime) -> bool:
+        return decisions.decided_since(self._conn, rel, reason, since)
+
     def decisions_for_turn(self, rel: RelationshipId, turn: TurnId) -> list[Decision]:
         return decisions.decisions_for_turn(self._conn, rel, turn)
 
