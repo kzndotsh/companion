@@ -627,7 +627,10 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       belief audit found. With A15.
 - [ ] J11 Ask the owner when unsure: when the second look cannot decide, or a new statement contradicts a
       belief, the question is queued for the owner instead of guessed (taosmd's pending-decisions queue).
-      With J3.
+      With J3. **Owner flag 2026-10-19** ("when it confused something and I correct it, does it go back and
+      adjust the memory?"): no. Only the user's words become memories, so a misread in a reply is not
+      stored, but a wrong memory that a later message corrects stays beside the correction; nothing retires it
+      or asks. A scan of all current memories for contradictions, stale and duplicate ones is the first step.
 - [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
       jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
 - [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
@@ -635,8 +638,16 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
       updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
       plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
+- [ ] J49 Today so far (owner flag 2026-10-19, "it isn't remembering what happened today"): at bedtime they
+      said "it was an intense day" and the reply knew nothing of it; the day's events had left the 40-message
+      window and memory held only "had an intense day". A few plain facts about their day, from that day's
+      memories, on the first turn after a long gap or when they sum up their day. Smaller than J14.
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
+      **Owner flag 2026-10-19:** "you know what time it is?" was answered with the clock; they meant coffee
+      time. Their coffee mentions are spread over the day (8:30 to 17:00 over five days), so an hourly pattern
+      would not have caught it; knowing coffee is their most repeated ritual (13 memories) and playing along
+      with a guess ("coffee time? 👀") would have.
 - [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
       does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change
