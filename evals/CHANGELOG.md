@@ -700,3 +700,14 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   plain shampoo question). Next: a check on the reply with one resample, since wording does not move it.
   Spent $0.141. Rerun: copy `evals/local/flagged-cheesy-*-local.json` to a folder, then
   `uv run companion eval --variants v36.md,v38.md --fixtures-dir DIR --samples 30`.
+- **2026-10-19. A quip check with one resample: a real but modest gain (J45).** `system/quip` reads the
+  user's message and the reply and says whether the reply bolted a joke onto an ordinary message. v1 fired
+  on 27 of 100 real ordinary turns and about half were fine (playing along with flirting, plain questions);
+  v2 looks at the user's message first and never fires when it was playful: 5 of 100, 4 right by eye (the
+  sandwich, "very rude of the rules", "a tiny goth", "gothic menace in a glass"), 1 wrong (a plain
+  question). On the five flagged turns, 30 samples each, `+resample` (one fresh reply when it fires): 85 to
+  95 of 150 plain. It fired on fries (10 of 30) and shower (5 of 30) and never on cleanup and potato, where
+  the user's own message was playful ("Lmao", "😭"), so the remaining jokes there are banter v2 lets
+  through by design. Not wired into the bot. Spent about $0.11. Rerun: as the entry above, with
+  `--variants v36.md,v36.md+resample`; the offline rate comes from a scratch script that runs
+  `loops/quip.py` over real ordinary turns.

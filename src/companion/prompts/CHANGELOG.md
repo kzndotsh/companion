@@ -575,6 +575,10 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/openloops-draft v1** (superseded). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing
 - **system/openloops-draft v2** (current). The draft is told the loop's kind: follow_up asks how it went, celebrate wishes them well for the day, encourage cheers them on before it. Same limits as v1.
 
+## system/quip
+- **system/quip v1** (superseded, never live). New. Reads one exchange and says whether the reply added a constructed joke on top of reacting (a quip, pun, punchline, wry aside, personification); playing along with their own joke does not count. Used by `core/quip.py` to choose one fresh reply instead (J45). Measurement in `evals/CHANGELOG.md`.
+- **system/quip v2** (current). Looks at the user's message first: anything playful, flirty, teasing or joking is false, so banter they started is never resampled; only a joke bolted onto an ordinary message counts, and doubt is false. Reason: v1 fired on 27 of 100 real ordinary turns and about half were fine (playing along with flirting, plain questions). Measurement in `evals/CHANGELOG.md`.
+
 ## system/react
 - **system/react v1** (current). From commit 10b8404 on 2026-10-15: feat(react): a reaction can go with a reply, judged beside the talker, with a confidence bar, a cooldown and no reaction to heavy messages
 

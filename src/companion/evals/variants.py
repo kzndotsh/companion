@@ -7,6 +7,7 @@ the labels in a fixture's script would produce. `+as-mika` lays the character `m
 persona, as `COMPANION_CHARACTER=mika` does for the bot. `+echo` adds the note against copying
 their emoji or emoticon, on a message that has one. `+mood-cozy` adds the candidate mood line for
 one state, and `+mood-cozy.playful` for two (ADR 0016), to measure a mood before it is built.
+`+resample` draws one fresh reply when the quip check says the first bolted on a joke (J45).
 Flags combine: `v10.md+nocard+h10@provider/model`.
 """
 
@@ -32,6 +33,7 @@ class Spec:
     character: str | None = None
     echo: bool = False
     mood: tuple[str, ...] = ()
+    resample: bool = False
 
     @property
     def label(self) -> str:
@@ -45,6 +47,7 @@ class Spec:
             + (f"+as-{self.character}" if self.character else "")
             + ("+echo" if self.echo else "")
             + (f"+mood-{'.'.join(self.mood)}" if self.mood else "")
+            + ("+resample" if self.resample else "")
             + (f"@{self.model}" if self.model else "")
         )
 
@@ -56,6 +59,7 @@ def parse_spec(text: str) -> Spec:
     character: str | None = None
     echo = False
     mood: tuple[str, ...] = ()
+    resample = False
     ok = persona.endswith(".md")
     for flag in flags:
         if flag == "nocard":
@@ -66,6 +70,8 @@ def parse_spec(text: str) -> Spec:
             listen = True
         elif flag == "echo":
             echo = True
+        elif flag == "resample":
+            resample = True
         elif flag.startswith("mood-") and _moods(flag.removeprefix("mood-")):
             mood = tuple(flag.removeprefix("mood-").split("."))
         elif flag.startswith("as-") and len(flag) > len("as-"):
@@ -79,12 +85,22 @@ def parse_spec(text: str) -> Spec:
     if not ok:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional"
-            " +nocard, +hN, +low/+medium/+high, +len, +listen, +echo, +mood-STATE,"
+            " +nocard, +hN, +low/+medium/+high, +len, +listen, +echo, +mood-STATE, +resample,"
             " +as-CHARACTER and @model"
         )
         raise ValueError(msg)
     return Spec(
-        persona, keep_card, model or None, history, effort, length, listen, character, echo, mood
+        persona,
+        keep_card,
+        model or None,
+        history,
+        effort,
+        length,
+        listen,
+        character,
+        echo,
+        mood,
+        resample,
     )
 
 

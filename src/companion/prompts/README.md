@@ -82,6 +82,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/listening` | system | the listening judge, `core/listening.py` | v3 |
 | `system/openloops` | system | open-loop extraction, `core/openloops.py` | v3 |
 | `system/openloops-draft` | system | the follow-up draft, `loops/openloops.py` | v2 |
+| `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, `core/quip.py` | v2 |
 | `system/react` | system | the reaction judge, `core/react.py` | v1 |
 | `system/recall` | system | the recall look-up, `core/recall.py` | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |

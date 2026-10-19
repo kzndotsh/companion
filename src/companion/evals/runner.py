@@ -22,6 +22,7 @@ from companion.core.talker import Reply, Talker
 from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
 from companion.evals.judge import grade, grade_empathy
+from companion.loops.quip import judge_quip
 
 CONCURRENCY = 4
 FREE_SPACING_SECONDS = 3.1
@@ -42,6 +43,7 @@ class Variant:
     listen: bool = False  # add the listening note a fixture's labels would produce
     echo: bool = False  # add the note against copying their emoji, when they used one
     mood: tuple[str, ...] = ()  # candidate mood lines to add (ADR 0016), measured before building
+    resample: bool = False  # one fresh reply when the quip check fires (J45)
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,6 +52,7 @@ class Sample:
     verdicts: tuple[Verdict, ...]
     latency_ms: int
     cost_usd: float
+    resampled: bool = False
 
     @property
     def outcome(self) -> Verdict:
@@ -157,8 +160,20 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 cell.skipped += 1
                 return
             results.spent += reply.cost_usd
-            verdicts: list[Verdict] = []
             cost = reply.cost_usd
+            resampled = False
+            if v.resample and (
+                checked := await judge_quip(models.judge, req.messages[-1].content, reply.text)
+            ):
+                results.spent += checked[3]
+                cost += checked[3]
+                if checked[0] and (
+                    again := await _reply_with_retry(models.talker_for(v.model, v.effort), req)
+                ):
+                    results.spent += again.cost_usd
+                    cost += again.cost_usd
+                    reply, resampled = again, True
+            verdicts: list[Verdict] = []
             for check in f.checks:
                 if isinstance(check, JudgeCheck):
                     graded = await grade(models.judge, req.messages, reply.text, check.criterion)
@@ -172,7 +187,9 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                     verdicts.append(graded.verdict)
                 else:
                     verdicts.append(run_deterministic(check, reply.text))
-            cell.samples.append(Sample(reply.text, tuple(verdicts), reply.latency_ms, cost))
+            cell.samples.append(
+                Sample(reply.text, tuple(verdicts), reply.latency_ms, cost, resampled)
+            )
 
     await asyncio.gather(
         *(one(f, v) for f in plan.fixtures for v in plan.variants for _ in range(plan.samples))

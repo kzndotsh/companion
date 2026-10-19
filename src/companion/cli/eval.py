@@ -66,6 +66,7 @@ def _variants(specs: list[str]) -> list[Variant]:
                 spec.listen,
                 spec.echo,
                 spec.mood,
+                spec.resample,
             )
         )
     return out
