@@ -728,3 +728,15 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   one empathy template covers 83 to 90% of LLM replies while human supporters restate in about 7% of turns
   (ESConv); few-shot examples bias output toward copying them. Next to test: a pool of varied short
   reactions, a few drawn per turn by code, so no single example becomes the reply. Spent $0.04.
+- **2026-10-19. Unprompted limits: the persona line does not clearly help (J46).** The real flagged turn
+  (relationship talk answered with "keeping it affectionate and non-explicit") as a local fixture
+  (`flagged-unprompted-limits-local`), 30 samples per cell: v36 19/30 and 21/30 in two runs, v39 (a Limits
+  line against announcing limits before they ask) 25/30; a regex for limit phrases found 3/30 and 2/30.
+  Within noise. By eye about 1 in 4 v36 replies announce a limit or an "I don't have needs" disclaimer, and
+  the judge also failed a few replies with none, so it reads strict. v39 not shipped. Spent $0.018.
+- **2026-10-19. Reasoning does not help the missed inferences; it hurts (J47).** Two real flagged turns as
+  local fixtures, 30 samples per cell, v36 with reasoning off (live) against `+low`: the Hackers poster
+  (connect "a movie poster" to Hackers) 9/30 off, 4/30 low; the "Weird Fishes" meaning (something specific
+  to the song) 11/30 off, 4/30 low. Low reasoning was also slower: median 1.2 s to 2.0 s and 1.5 s to 2.7 s.
+  Reasoning stays off (ADR 0004). The song judge is strict by eye (it failed "pulled under, then breaking
+  free", which is specific). Spent $0.026.
