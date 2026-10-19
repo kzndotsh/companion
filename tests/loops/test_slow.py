@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from companion.core.extractor import Extraction
+from companion.core.relevance import Embedded, unit
 from companion.core.types import (
     Frame,
     Json,
@@ -16,6 +18,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.consolidate import SameCheck
 from companion.loops.slow import reflect_once
 from companion.store.sqlite.store import Store
 
@@ -229,3 +232,36 @@ async def test_a_fabricated_restatement_quote_never_attaches(store: Store) -> No
     assert (result.confirmed, result.rejected) == (0, 1)
     [b] = store.current_beliefs(REL)
     assert len(b.evidence) == 1
+
+
+class _Embedder:
+    async def embed(self, texts: Sequence[str]) -> Embedded:
+        return Embedded(tuple(unit([1.0, 0.0]) for _ in texts), "fake-embed", 0.0)
+
+
+class _PairJudge:
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        del system, user, schema
+        return Extraction({"relation": "same"}, "j", 0.0, 1)
+
+
+@pytest.mark.parametrize(("mode", "stored"), [("shadow", 2), ("on", 1)])
+async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
+    store: Store, mode: str, stored: int
+) -> None:
+    _say(store, 1, Speaker.USER, "i drink my coffee black")
+    await reflect_once(
+        store,
+        FakeExtractor({"beliefs": [_belief("m1", "coffee black", "Drinks coffee black")]}),
+        REL,
+        T0 + timedelta(hours=1),
+    )
+    _say(store, 2, Speaker.USER, "black coffee always, no sugar")
+    same = SameCheck(_PairJudge(), _Embedder(), "fake-embed", mode)
+    ex = FakeExtractor({"beliefs": [_belief("m2", "black coffee always", "Takes coffee black")]})
+    result = await reflect_once(store, ex, REL, T0 + timedelta(hours=2), same=same)
+    assert len(store.current_beliefs(REL)) == stored
+    if mode == "on":
+        assert result.confirmed == 1
+        [b] = store.current_beliefs(REL)
+        assert {e.quote for e in b.evidence} == {"coffee black", "black coffee always"}

@@ -12,6 +12,7 @@ import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import datetime, tzinfo
+from typing import TYPE_CHECKING
 
 from companion.core.beliefs.dedupe import is_duplicate_candidate
 from companion.core.beliefs.extract import (
@@ -58,6 +59,9 @@ from companion.loops.openloops import Reading, catch_up_loops
 from companion.loops.views import WANT_KINDS, check_views
 from companion.store.sqlite.store import Store
 
+if TYPE_CHECKING:  # a type only: consolidate imports curate, which imports this module
+    from companion.loops.consolidate import SameCheck
+
 log = logging.getLogger("companion.slow")
 BATCH = 40
 CONTEXT = 4
@@ -72,6 +76,7 @@ class ReflectOptions:
     now: datetime | None = None
     ignore: frozenset[BeliefId] = frozenset()
     tz: tzinfo | None = None
+    same: SameCheck | None = None  # write-time check against existing memories (ADR 0019)
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,9 +144,14 @@ class _Pass:
 
 
 async def reflect_once(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime | None = None
+    store: Store,
+    extractor: Extractor,
+    rel: RelationshipId,
+    now: datetime | None = None,
+    same: SameCheck | None = None,
 ) -> ReflectResult:
-    return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), ReflectOptions(now))
+    options = ReflectOptions(now, same=same)
+    return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), options)
 
 
 @dataclass(frozen=True, slots=True)
@@ -202,6 +212,24 @@ class _Ctx:
     run: _Pass
     window: Mapping[str, Utterance]
     tz: tzinfo
+    same: SameCheck | None = None
+
+
+async def _stored_as_evidence(ctx: _Ctx, spec: _Spec, made: Belief) -> bool:
+    """When a new memory of theirs is the same as an existing one (three pair reads, ADR 0019):
+    `on` adds its quote to the existing memory instead of storing it; shadow only logs that."""
+    if ctx.same is None or spec is not USER_SPEC or ctx.same.mode == "off":
+        return False
+    older = await ctx.same.find(ctx.store, ctx.run.rel, made, ctx.run.now)
+    if older is None:
+        return False
+    detail: dict[str, Json] = {"belief_id": older.id, "claim": older.claim, "new": made.claim}
+    if ctx.same.mode != "on":
+        ctx.run.log("would store as evidence on an existing memory (shadow)", detail)
+        return False
+    ctx.store.add_evidence(older.id, made.evidence[0])
+    ctx.run.log("confirmed: the same as an existing memory, stored as evidence on it", detail)
+    return True
 
 
 async def _extract_pass(
@@ -255,6 +283,9 @@ async def _extract_pass(
             duplicates += 1
             continue
         seen.add(normalise(made.claim))
+        if await _stored_as_evidence(ctx, spec, made):
+            confirmed += 1
+            continue
         store.insert_belief(made)
         stored.append(made)
         accepted += 1
@@ -328,7 +359,7 @@ async def reflect_from(
         return ReflectResult(ran=True, upto=upto)
     window = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
     local = options.tz or local_zone()
-    ctx = _Ctx(store, extractor, run, window, local)
+    ctx = _Ctx(store, extractor, run, window, local, options.same)
     users = _Counts()
     own = _Counts()
     if user_targets:

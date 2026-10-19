@@ -242,6 +242,12 @@ Ordered. Pull from the top.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-19**
+- [x] Memory tidies itself where a judge matched the owner (ADR 0019, proposed, in shadow): the owner's review
+      of 80 memories as the test; a 04:00 check closes faded passing moments read so three times; a new memory
+      read as the same as an existing one three times becomes its evidence; the rest are questions for the
+      owner (`companion memory review`), and `companion merge` merges by hand. Covers most of J10, J11 and A15.
+      Left: a week of the shadow log, then `COMPANION_CONSOLIDATE=on`; pair questions (merge, replaces,
+      contradicts) in the review; a Telegram command (J3).
 - [x] J21 Talker fallback: an error goes to the fallback model at once, a reply missing after 10 s asks it
       too and the first answer wins, and talker calls time out at 25 s instead of 60. Before, a failed call was a
       silent turn. DeepSeek V4.1 Flash as the everyday fallback scored 89/120 against Luna's 90/120 on 20

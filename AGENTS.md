@@ -164,7 +164,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - Memory tidies itself only where a judge matched the owner's own review (ADR 0019,
   `core/consolidate.py`): at 04:00 each memory a week old is read three times; a faded passing moment
   read so three times is closed, and out of date or overstated findings become questions for the owner.
+  When the memory pass writes a new memory, the nearest existing one (by embedding, at 0.55 or more) is
+  read as a pair three times; read as the same, the new quote becomes evidence on the old memory instead.
   `COMPANION_CONSOLIDATE` is shadow (log only) unless `on` or `off`. Nothing is merged automatically.
+  `companion memory review` asks the owner the questions the check raised; `companion merge` merges by hand.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash and an AI disclaimer nobody asked for by code, and a joke bolted onto an ordinary

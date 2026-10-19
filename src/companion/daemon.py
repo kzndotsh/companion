@@ -26,7 +26,7 @@ from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops.callbacks import check_new
-from companion.loops.consolidate import nightly
+from companion.loops.consolidate import SameCheck, nightly
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.knowing import label_new
@@ -410,6 +410,11 @@ async def run(data_dir: Path) -> None:
             embedder=_embedder(client, store, rel),
             embed_model=os.environ.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
         )
+        same = (
+            SameCheck(reflector, convo.embedder, convo.embed_model, consolidate_mode())
+            if convo.embedder is not None and consolidate_mode() != "off"
+            else None
+        )
         pending: list[asyncio.Task[None]] = []
 
         async def reflect_after_idle() -> None:
@@ -422,7 +427,9 @@ async def run(data_dir: Path) -> None:
                 return
             try:
                 result = await retry_on_network_error(
-                    lambda: reflect_once(store, reflector, rel), REFLECT_RETRY_DELAYS, "reflect"
+                    lambda: reflect_once(store, reflector, rel, same=same),
+                    REFLECT_RETRY_DELAYS,
+                    "reflect",
                 )
             except httpx.TransportError as err:
                 logging.getLogger("companion.slow").warning(

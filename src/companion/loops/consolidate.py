@@ -13,17 +13,24 @@ from companion.core.card import faded
 from companion.core.consolidate import (
     CHECK,
     CHECK_SCHEMA,
+    PAIR,
+    PAIR_SCHEMA,
     READS,
     check_prompt,
+    pair_prompt,
     plan_for,
     read_label,
+    read_relation,
+    same_as,
     verdict,
 )
 from companion.core.extractor import Extractor
 from companion.core.knowing import Depth, Domain
+from companion.core.relevance import Embedder, nearest
 from companion.core.spend import purpose
 from companion.core.types import Belief, RelationshipId
 from companion.loops.curate import log_would_close, retire
+from companion.loops.relevance import embed_missing
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.consolidate")
@@ -104,3 +111,48 @@ async def nightly(  # noqa: PLR0913
         cost,
     )
     return Night(len(due), closed, questions, cost)
+
+
+GATE = 0.55  # below this the nearest memory is not worth asking about (at 0.6, 25 of 31 caught)
+
+
+@dataclass(frozen=True, slots=True)
+class SameCheck:
+    """At write time: is a new memory the same as an existing one? Three pair reads on the nearest
+    memory by embedding; in shadow it only logs, `on` stores the new one as evidence instead."""
+
+    judge: Extractor
+    embedder: Embedder
+    model: str
+    mode: str
+
+    async def find(
+        self, store: Store, rel: RelationshipId, new: Belief, now: datetime
+    ) -> Belief | None:
+        try:
+            return await self._find(store, rel, new, now)
+        except Exception as err:  # the memory is stored as usual
+            log.warning("same check failed: %r", err)
+            return None
+
+    async def _find(
+        self, store: Store, rel: RelationshipId, new: Belief, now: datetime
+    ) -> Belief | None:
+        await embed_missing(store, self.embedder, rel, self.model, now)
+        pool = [b for b in store.user_beliefs(rel) if b.id != new.id]
+        with purpose("consolidate"):
+            query = await self.embedder.embed([new.claim])
+        near = nearest(query.vectors[0], pool, store.belief_embeddings(rel, self.model), k=1)
+        if not near or near[0][1] < GATE:
+            return None
+        older = near[0][0]
+
+        async def one() -> str | None:
+            with purpose("consolidate"):
+                got = await self.judge.extract(PAIR.text, pair_prompt(older, new), PAIR_SCHEMA)
+            return read_relation(got.data)
+
+        reads = tuple(await asyncio.gather(*(one() for _ in range(READS))))
+        found = verdict(reads)
+        store.add_memory_check(rel, older.id, new.id, reads, found, prompt=PAIR.ref, at=now)
+        return older if same_as(found) else None
