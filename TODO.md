@@ -71,6 +71,11 @@ Ordered. The first three can stop the bot, so they go first.
       short answer with the question before it (extract v9, measured on question-and-answer fixtures; the
       name capture then becomes redundant), and the pass labels each memory's domain and depth, with a gap
       picker in shadow.
+- [ ] H5 Eval spend reads true. OpenRouter charged $1.74 on 2026-10-19 (UTC) while the eval runner logged
+      $1.67 and the bot ledger $0.22 for overlapping windows, so a counter overstates. Make the runner report
+      what OpenRouter charged (the key's usage before and after a run, or each response's cost, never an
+      estimate), show the balance before a run, and write the real figure in `evals/CHANGELOG.md`. The bot
+      itself was $0.67 for the week; nearly all of the month's $10.69 was eval runs.
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
