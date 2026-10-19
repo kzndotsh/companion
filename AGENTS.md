@@ -95,7 +95,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 **Running the bot**
 - Settings are environment variables in `.env`: `COMPANION_MODEL`, `COMPANION_SCENE_MODEL`,
   `COMPANION_REFLECT_MODEL`, `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`,
-  `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`, `COMPANION_GUIDELINES` and
+  `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`, `COMPANION_POLICY` and
   `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping it) and `COMPANION_CHARACTER` (a character
   sheet laid over the persona, `companion/characters.py`). The table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
@@ -136,7 +136,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   asked once more and the second reply goes out whatever it is; the first is kept in the decision detail.
   Nothing is ever edited. `COMPANION_RESAMPLE=off` turns it off.
 - Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the scene talker for a pretend scene,
-  or for intimate talk when the operator's guidelines (`COMPANION_GUIDELINES`) allow it, unless the listening
+  or for intimate talk when the operator's policy (`COMPANION_POLICY`) allow it, unless the listening
   judge reads the turn as age-coded or could not read it. That floor is code, not a setting.
 
 **Working with the owner**

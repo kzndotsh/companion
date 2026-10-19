@@ -458,15 +458,15 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   reply raised a held memory unasked and turned it into a caution (owner flag). On the owner's history 171 of
   184 judged messages were severity 0, so the held block now shows on about 7% of turns.
 
-- **Operator guidelines and routing (ADR 0017, 2026-10-19).** The operator's guidelines text, when there is
-  any, is added to the talker's system prompt under "## Operator guidelines" (the default has none, so the
-  prefix is unchanged). Intimate talk goes to the scene talker when the guidelines set `route_intimate`, and
+- **Operator policy and routing (ADR 0017, 2026-10-19).** The operator's policy text, when there is
+  any, is added to the talker's system prompt under "## Operator policy" (the default has none, so the
+  prefix is unchanged). Intimate talk goes to the scene talker when the policy sets `route_intimate`, and
   a pretend scene goes there as before, unless the listening judge reads the turn as age-coded or could not
   read it; then the everyday talker answers and the decision is logged. In a scene the listening judge now
   runs for routing alone, with no note.
 
-## guidelines/default
-- **guidelines/default v1** (current). New. The default operator guidelines (ADR 0017): `route_intimate = false` and no text, so intimate talk stays on the everyday talker and the system prompt is unchanged.
+## policy/default
+- **policy/default v1** (current). New. The default operator policy (ADR 0017): `route_intimate = false` and no text, so intimate talk stays on the everyday talker and the system prompt is unchanged.
 
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.

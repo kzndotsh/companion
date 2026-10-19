@@ -197,7 +197,7 @@ class Conversation:
     listen: bool = True  # ask how serious a message is before the reply
     mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
     resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
-    route_intimate: bool = False  # intimate talk may go to the scene talker (guidelines, ADR 0017)
+    route_intimate: bool = False  # intimate talk may go to the scene talker (policy, ADR 0017)
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -441,7 +441,7 @@ def _stopped_by_cap(
 
 async def _route(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> Talker:
     """The talker for this turn (ADR 0017): the scene talker for a pretend scene, or for intimate
-    talk when the guidelines allow it, unless the floor keeps it on the everyday talker. Logged when
+    talk when the policy allows it, unless the floor keeps it on the everyday talker. Logged when
     it is anything but the plain everyday choice.
 
     The listening judge does not run in a scene, so a scene turn is read here, for routing only. The

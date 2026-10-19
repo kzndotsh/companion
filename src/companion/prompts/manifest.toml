@@ -1,5 +1,5 @@
 # The current version of every prompt. A change is a new vN.md and a line here.
-"guidelines/default" = "v1"
+"policy/default" = "v1"
 "messages/spend-cap" = "v1"
 "notes/address" = "v1"
 "notes/clock" = "v1"

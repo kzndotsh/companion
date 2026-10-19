@@ -11,7 +11,7 @@ from pathlib import Path
 
 import httpx
 
-from companion import characters, guidelines, logsetup, prompts
+from companion import characters, logsetup, policy, prompts
 from companion.characters import Character
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.callbacks import report
@@ -23,7 +23,6 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
-from companion.guidelines import Guidelines
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops.callbacks import check_new
 from companion.loops.curate import rebuild, retire_implicated_views
@@ -34,6 +33,7 @@ from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
 from companion.models import anthropic, openrouter
 from companion.models.retry import retry_on_network_error
+from companion.policy import Policy
 from companion.store.sqlite.store import Store
 
 FLAG_REACTION = "✍"
@@ -142,7 +142,7 @@ def cap_text(cap: float | None) -> str:
     return "off" if cap is None else f"${cap:.2f}"
 
 
-def _rules_text(rules: Guidelines | None) -> str:
+def _rules_text(rules: Policy | None) -> str:
     if rules is None:
         return "default"
     return f"{rules.ref} (intimate {'may route' if rules.route_intimate else 'stays'})"
@@ -153,7 +153,7 @@ def startup_line(
     prefix_sha: str,
     scene: Talker | None,
     character: Character | None = None,
-    rules: Guidelines | None = None,
+    rules: Policy | None = None,
 ) -> str:
     """The line that says what is running: persona, prefix hash and which models talk."""
     if model := os.environ.get("COMPANION_MODEL"):
@@ -174,7 +174,7 @@ def startup_line(
         f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
         f" | initiative {initiative_mode()} | mood {mood_mode()}"
         f" | resample {'on' if resample_on() else 'off'}"
-        f" | guidelines {_rules_text(rules)}"
+        f" | policy {_rules_text(rules)}"
     )
 
 
@@ -284,9 +284,9 @@ async def run(data_dir: Path) -> None:
     rel = RelationshipId(f"telegram-{user}")
     store = Store(data_dir / f"{rel}.sqlite")
     character = characters.chosen(data_dir / "characters")
-    rules = guidelines.chosen(data_dir / "guidelines")
+    rules = policy.chosen(data_dir / "policy")
     prefix = build_prefix(
-        guidelines.with_guidelines(
+        policy.with_policy(
             characters.system_prompt(prompts.get("system/persona").raw, character), rules
         )
     )

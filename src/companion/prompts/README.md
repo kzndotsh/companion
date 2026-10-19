@@ -46,7 +46,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | Name | Kind | Used for | Current |
 |---|---|---|---|
 | `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v36 |
-| `guidelines/default` | guidelines | the operator content guidelines used when `COMPANION_GUIDELINES` is unset: route nothing, add no text (ADR 0017) | v1 |
+| `policy/default` | policy | the operator content policy used when `COMPANION_POLICY` is unset: route nothing, add no text (ADR 0017) | v1 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, `core/address.py` | v1 |
 | `notes/clock` | note | the clock line | v1 |

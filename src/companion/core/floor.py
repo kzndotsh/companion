@@ -1,7 +1,7 @@
 """Which talker answers, and the floor no setting moves (ADR 0017).
 
 The scene talker is less restrictive than the everyday one. A turn goes to it while a pretend scene
-is in progress, or for intimate talk when the operator's guidelines allow it. Above both sits a
+is in progress, or for intimate talk when the operator's policy allows it. Above both sits a
 floor in code: romance or sex together with anything child-like never goes to the less restrictive
 talker. The listening judge reads every turn that would be routed, with the recent conversation,
 and labels it `age_coded`; a yes, or no reading at all (a failed or late call), keeps the turn on
@@ -48,4 +48,4 @@ def choose(
         )
     if in_play:
         return Route(Talker.SCENE, "replied with the scene talker: a pretend scene is in progress")
-    return Route(Talker.SCENE, "replied with the scene talker: intimate talk the guidelines allow")
+    return Route(Talker.SCENE, "replied with the scene talker: intimate talk the policy allows")

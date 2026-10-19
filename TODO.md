@@ -50,8 +50,8 @@ Ordered. The first three can stop the bot, so they go first.
       positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
       joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150
       plain. Left: watch live flags; banter they started is let through by design.
-- [x] J46 Operator content guidelines and routing (ADR 0017), built 2026-10-19: a guidelines file per
-      deployment (`COMPANION_GUIDELINES`, `route_intimate`), `intimate` and `age_coded` listening labels
+- [x] J46 Operator content policy and routing (ADR 0017), built 2026-10-19: a policy file per
+      deployment (`COMPANION_POLICY`, `route_intimate`), `intimate` and `age_coded` listening labels
       (v4, 15/15 on age-coded messages, no trips on adults' pet names), code routing for scenes and intimate
       talk, and the age floor in code with no timer and no regex. Unprompted disclaimers: about 1 in 4 on
       the flagged turn, persona v39 within noise, not shipped; a check with one resample if flagged again.

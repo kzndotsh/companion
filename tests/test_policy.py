@@ -4,14 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from companion import guidelines
-from companion.guidelines import GuidelinesError, load, parse, with_guidelines
+from companion import policy
+from companion.policy import PolicyError, load, parse, with_policy
 
 
 def test_the_default_routes_nothing_and_adds_no_text(tmp_path: Path) -> None:
     rules = load("default", tmp_path)
     assert (rules.route_intimate, rules.text, rules.version) == (False, "", "v1")
-    assert with_guidelines("persona", rules) == "persona"
+    assert with_policy("persona", rules) == "persona"
 
 
 def test_a_private_file_wins_and_its_text_goes_under_its_heading(tmp_path: Path) -> None:
@@ -20,10 +20,7 @@ def test_a_private_file_wins_and_its_text_goes_under_its_heading(tmp_path: Path)
     )
     rules = load("default", tmp_path)
     assert (rules.route_intimate, rules.version) == (True, "local")
-    assert (
-        with_guidelines("persona", rules)
-        == "persona\n\n## Operator guidelines\n\nKeep it grown-up.\n"
-    )
+    assert with_policy("persona", rules) == "persona\n\n## Operator policy\n\nKeep it grown-up.\n"
 
 
 @pytest.mark.parametrize(
@@ -36,15 +33,15 @@ def test_a_private_file_wins_and_its_text_goes_under_its_heading(tmp_path: Path)
     ],
 )
 def test_a_bad_file_is_refused_in_plain_words(raw: str) -> None:
-    with pytest.raises(GuidelinesError):
+    with pytest.raises(PolicyError):
         parse(raw, "x", "local")
 
 
 def test_there_is_no_setting_for_the_floor() -> None:
-    with pytest.raises(GuidelinesError, match="the only setting is route_intimate"):
+    with pytest.raises(PolicyError, match="the only setting is route_intimate"):
         parse("+++\nroute_intimate = true\nage_floor = false\n+++\n", "x", "local")
 
 
 def test_unset_means_the_default(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv(guidelines.GUIDELINES_ENV, raising=False)
-    assert guidelines.chosen(tmp_path).id == "default"
+    monkeypatch.delenv(policy.POLICY_ENV, raising=False)
+    assert policy.chosen(tmp_path).id == "default"
