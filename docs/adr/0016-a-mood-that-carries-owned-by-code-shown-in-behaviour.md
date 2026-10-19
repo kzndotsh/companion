@@ -20,8 +20,9 @@ across hours and into the next day, and shows only in how it replies.
   changes the persona or a character's temperament.
 - **What M1 measured (2026-10-19, `evals/CHANGELOG.md`).** A forced line moves replies mildly, so the
   ADR stands. Built first: cozy, tender and playful. Flat changes replies (shorter, plainer) but has no
-  input until the companion's own events (J6), so it waits for J6. Buzzing is dropped: its line added
-  emoji, never livelier words, and the persona already matches an excited message in the moment. The
+  input until the companion's own events (J6), so it waits for J6. Buzzing is set aside: on everyday
+  messages its line added emoji, never livelier words, but it was never tested after good news, where a
+  carried mood would matter (an "afterglow" state, in `docs/inbox/`). The
   line describes behaviour and never names the mood word, and it says never to describe its own state,
   which also removed the stated mood ("in a pretty mellow mood") v31 has without any line.
 - **Why states, not scales.** The first draft used two dials (energy, ease). Dials force false opposites
