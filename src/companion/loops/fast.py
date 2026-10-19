@@ -24,7 +24,7 @@ from companion.core.ack import (
     schema_hash,
 )
 from companion.core.card import Card, build_card, render
-from companion.core.clock import now_line, utc_now
+from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import Extractor
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
@@ -48,6 +48,12 @@ from companion.core.listening import PROMPT as LISTEN_PROMPT
 from companion.core.listening import SERIOUS, listening_note, rude_note
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.listening import render_reason as render_listening
+from companion.core.mood import PARAMS_VERSION as MOOD_PARAMS
+from companion.core.mood import WINDOW as MOOD_WINDOW
+from companion.core.mood import Effect as MoodEffect
+from companion.core.mood import Said, chat_minutes, effects_for, inputs_for, mood_at
+from companion.core.mood import line as mood_line
+from companion.core.mood import reason as mood_reason
 from companion.core.moves import PROMPT as HABITS_PROMPT
 from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
@@ -152,6 +158,7 @@ class Conversation:
     scene_talker: Talker | None = None  # replies while a pretend scene is in progress
     daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
     listen: bool = True  # ask how serious a message is before the reply
+    mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -551,6 +558,9 @@ class _Assembled:
     card: Card
     views: Sequence[Belief]
     view_state: ViewState
+    mood: Sequence[
+        MoodEffect
+    ] = ()  # written once their message is stored, so a dropped turn adds none
 
 
 async def _listening(c: Conversation, t: _Turn, in_scene: Frame) -> _Heard | None:
@@ -625,6 +635,49 @@ async def _recall(c: Conversation, t: _Turn, heard: _Heard | None) -> Recalled |
     return recalled
 
 
+def _mood(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
+) -> tuple[str | None, list[MoodEffect]]:
+    """The mood line for the system block when the mood is on, and what this message adds to it.
+    The decision is logged in shadow mode too, so the replay and the live log can be compared."""
+    if c.mood == "off":
+        return None, []
+    zone = local_zone()
+    severity = heard[0].severity if heard is not None else None
+    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
+    earlier = c.store.said_since(c.rel, theirs[-1].at)[:1] if theirs else []
+    minutes = chat_minutes([u.at for u in t.prior], t.now, zone)
+    said = Said(t.turn, t.now, t.text, severity, None)
+    added = effects_for(inputs_for(said, earlier[0].tone if earlier else None, minutes))
+    stored = c.store.mood_effects_since(c.rel, t.now - MOOD_WINDOW)
+    before, after = mood_at(stored, t.now, zone), mood_at([*stored, *added], t.now, zone)
+    serious = severity is not None and severity >= SERIOUS
+    scene = in_scene is not Frame.REAL
+    shown = None if scene else mood_line(after, serious_now=serious)
+    why = "mood: held, a scene is in progress" if scene else mood_reason(after, serious_now=serious)
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            f"{why} [{c.mood}]",
+            t.now,
+            detail={
+                "mode": c.mood,
+                "params": MOOD_PARAMS,
+                "before": {s.value: round(v, 3) for s, v in before.strengths.items()},
+                "after": {s.value: round(v, 3) for s, v in after.strengths.items()},
+                "added": [[e.source.value, round(e.amount, 3)] for e in added],
+                "line": shown,
+            },
+        )
+    )
+    return (shown if c.mood == "on" else None), added
+
+
 def _assemble(
     c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, recalled: Recalled | None
 ) -> _Assembled:
@@ -640,12 +693,13 @@ def _assemble(
     listening = _listening_note(c, t, heard)
     rude = rude_note(heard[0]) if heard is not None else None
     found = recall_note(recalled.picked) if recalled is not None else None
-    notes += [n for n in (listening, rude, found) if n is not None]
+    mood, mood_effects = _mood(c, t, in_scene, heard)
+    notes += [n for n in (listening, rude, found, mood) if n is not None]
     card_text = "\n".join([clock, *shown, *notes])
     request = build_request(c.prefix, to_messages(t.prior), t.text, "", card_text)
     store.save_prefix(c.prefix)
     _mark_start(t, in_scene, card, card_text)
-    return _Assembled(request, card_text, card, views, view_state)
+    return _Assembled(request, card_text, card, views, view_state, mood_effects)
 
 
 async def _handle_turn(
@@ -691,6 +745,8 @@ async def _handle_turn(
         raise
     user_frame = frame_resolve(outcome[0] if outcome else None, fallback=in_scene)
     _store_user(c, t, channel, user_frame)
+    if asm.mood:
+        store.add_mood_effects(rel, asm.mood)
     if framing is not None:
         _log_frame(c, t, outcome, user_frame)
     store.record_turn(

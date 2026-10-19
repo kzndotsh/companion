@@ -200,12 +200,25 @@ def test_a_milder_repeat_never_lowers_what_is_left() -> None:
     assert kept == pytest.approx(strong.left(later))
 
 
-def test_after_play_tender_drops_below_the_line_hours_sooner() -> None:
+def test_one_joke_after_something_hard_softens_tender_but_does_not_end_it() -> None:
     hard = effects_for(_in(severity=2))
     fun = effects_for(_in(DAY + timedelta(hours=1), tone="funny"))
-    at = DAY + timedelta(hours=6)
-    assert State.TENDER in mood_at(hard, at, UTC).shown()
-    assert State.TENDER not in mood_at([*hard, *fun], at, UTC).shown()
+    at = DAY + timedelta(hours=1)
+    assert State.TENDER in mood_at([*hard, *fun], at, UTC).shown()
+
+
+def test_each_further_sign_they_are_fine_eases_tender_more_until_it_is_gone() -> None:
+    hard = effects_for(_in(severity=2))
+    jokes = [
+        e
+        for k in range(5)
+        for e in effects_for(_in(DAY + timedelta(minutes=30 + 5 * k), tone="funny"))
+    ]
+    at = DAY + timedelta(hours=1)
+    levels = [mood_at([*hard, *jokes[: 2 * k]], at, UTC).strengths[State.TENDER] for k in range(6)]
+    assert all(b < a for a, b in pairwise(levels[:4]))
+    assert State.TENDER not in mood_at([*hard, *jokes], at, UTC).shown()
+    assert State.PLAYFUL in mood_at([*hard, *jokes], at, UTC).shown()
 
 
 def test_the_night_is_read_in_the_local_zone() -> None:

@@ -427,6 +427,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   with the target and why. The variation is not measured yet (T16): the eval's `+len` uses no seed, so it
   still sends the unvaried limit.
 
+- **A mood line, when the mood is on (ADR 0016).** With `COMPANION_MOOD=on`, the strongest one or two
+  mood states at or above 0.3 add their `notes/mood-*` line to the system block, after the recall note;
+  none on a serious turn or in a scene. The default is `shadow`, which works the mood out and logs a
+  "mood:" decision every turn but sends the model nothing new; `off` does neither. The lines are the v2
+  candidates measured in `evals/CHANGELOG.md` (2026-10-19).
+
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
 

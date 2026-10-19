@@ -111,6 +111,13 @@ def listen_on() -> bool:
     return os.environ.get("COMPANION_LISTEN", "").strip().lower() not in ("off", "0", "no", "false")
 
 
+def mood_mode() -> str:
+    """COMPANION_MOOD (ADR 0016): `shadow` (the default) works the mood out and logs it without
+    showing it to the model, `on` adds the mood line, `off` does neither."""
+    raw = os.environ.get("COMPANION_MOOD", "").strip().lower()
+    return raw if raw in ("off", "on") else "shadow"
+
+
 def split_on() -> bool:
     """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
     return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
@@ -144,7 +151,7 @@ def startup_line(
         f" | everyday {everyday}"
         f" | scenes {scenes} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
         f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
-        f" | initiative {initiative_mode()}"
+        f" | initiative {initiative_mode()} | mood {mood_mode()}"
     )
 
 
@@ -266,6 +273,7 @@ async def run(data_dir: Path) -> None:
             scene_talker=scene,
             daily_cap_usd=daily_cap(),
             listen=listen_on(),
+            mood=mood_mode(),
         )
         pending: list[asyncio.Task[None]] = []
 

@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.callbacks import Check
-from companion.core.mood import Effect
+from companion.core.mood import Effect, Said
 from companion.core.openloops import LoopState, OpenLoop
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
@@ -205,6 +205,12 @@ class Store:
 
     def mood_effects_since(self, rel: RelationshipId, start: datetime) -> list[Effect]:
         return mood.since(self._conn, rel, start)
+
+    def said_since(self, rel: RelationshipId, start: datetime) -> list[Said]:
+        return mood.said_since(self._conn, rel, start)
+
+    def times_since(self, rel: RelationshipId, start: datetime) -> list[datetime]:
+        return mood.times_since(self._conn, rel, start)
 
     def callback_checks_since(
         self, rel: RelationshipId, start: datetime

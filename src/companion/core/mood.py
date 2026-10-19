@@ -11,11 +11,13 @@ call or an undelivered reply, so none of them can lower or raise a state.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
+from itertools import pairwise
 
+from companion.core.energy import texting_energy
 from companion.core.types import TurnId
 from companion.prompts import get
 
@@ -57,12 +59,13 @@ RULES: Mapping[Source, Rule] = {
     Source.TONE_FUNNY: Rule(State.PLAYFUL, 2, 0.4),
     Source.ENERGY: Rule(State.PLAYFUL, 2, 0.3),
     Source.SERIOUS: Rule(State.TENDER, 12, 0.8),
-    Source.EASED: Rule(State.TENDER, 12, 0.4),
+    Source.EASED: Rule(State.TENDER, 12, 0.2),
 }
 
 # A source that takes away from its state instead of adding. It fades at the same pace as what it
 # eases, so the state cannot come back once it has eased, and it counts only after the latest effect
-# that raised that state, so play before something hard does not soften the next one.
+# that raised that state, so play before something hard does not soften the next one. Unlike every
+# other source, easing adds up: each further sign that they are fine takes off a little more.
 EASING = frozenset({Source.EASED})
 
 # The first state holds the second back: weakened by it, and gone while the first shows, so there
@@ -75,6 +78,7 @@ NIGHT_COZY = 0.35  # late at night it leans cozy: calmer, unhurried, a bit short
 CHAT_SPAN_FROM_MINUTES = 15
 LONG_CHAT_MINUTES = 60
 ENERGY_FROM = 2
+CHAT_GAP = timedelta(minutes=10)  # a longer pause ends a stretch of chatting
 WINDOW = timedelta(days=5)  # how far back a caller reads effects; the longest half-life is a day
 
 
@@ -160,8 +164,8 @@ def mood_at(effects: Iterable[Effect], now: datetime, zone: tzinfo) -> Mood:
     """The mood at `now`. A repeat from the same source restarts the timer at the larger of what
     was left and what it brings, never adding to it; with one half-life per source that comes to
     the strongest single effect still left, so the order effects are read in cannot matter. Easing
-    only takes away what came after the latest effect that raised the state, a state holds back
-    its opposite, and nothing falls below the time of day's baseline."""
+    adds up, and only what came after the latest effect that raised the state takes it away. A
+    state holds back its opposite, and nothing falls below the time of day's baseline."""
     past = [e for e in effects if e.at <= now]
     raised: dict[State, datetime] = {}
     for e in past:
@@ -172,7 +176,9 @@ def mood_at(effects: Iterable[Effect], now: datetime, zone: tzinfo) -> Mood:
         if e.source in EASING and (e.state not in raised or e.at < raised[e.state]):
             continue
         value = e.left(now)
-        if e.source not in left or value > left[e.source][0]:
+        if e.source in EASING:
+            left[e.source] = (left.get(e.source, (0.0, e.state))[0] + value, e.state)
+        elif e.source not in left or value > left[e.source][0]:
             left[e.source] = (value, e.state)
     after = dict.fromkeys(State, 0.0)
     for source in sorted(left, key=lambda x: x.value):
@@ -215,3 +221,56 @@ def reason(mood: Mood, *, serious_now: bool) -> str:
 
 def _held_by(mood: Mood, state: State) -> str:
     return ", ".join(x.value for x in mood.sources[state]) or "baseline"
+
+
+@dataclass(frozen=True, slots=True)
+class Said:
+    """One message from them, with what the judges logged about it: the listening severity (None
+    when it was not read) and the react judge's tone (None when not judged)."""
+
+    turn: TurnId
+    at: datetime
+    text: str
+    severity: int | None
+    tone: str | None
+
+
+def chat_minutes(times: Sequence[datetime], now: datetime, zone: tzinfo) -> float:
+    """Minutes spent chatting today up to `now`: the gaps between messages that are no longer than
+    a pause, counted from local midnight."""
+    today = now.astimezone(zone).date()
+    stamps = sorted(t for t in times if t <= now and t.astimezone(zone).date() == today)
+    stamps.append(now)
+    gaps = (b - a for a, b in pairwise(stamps))
+    return sum((g for g in gaps if g <= CHAT_GAP), timedelta()) / timedelta(minutes=1)
+
+
+def inputs_for(said: Said, previous_tone: str | None, minutes: float) -> Inputs:
+    """What a message brings to the mood. The tone is the one judged on their previous message,
+    because a message's own tone is judged beside the reply, after the mood is read."""
+    return Inputs(
+        said.at, said.turn, minutes, texting_energy(said.text), previous_tone, said.severity
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class Replayed:
+    said: Said
+    mood: Mood
+    line: str | None
+    added: tuple[Effect, ...]
+
+
+def replay(said: Sequence[Said], times: Sequence[datetime], zone: tzinfo) -> list[Replayed]:
+    """What the mood would have been on each of their messages, from the same rules the bot uses."""
+    effects: list[Effect] = []
+    out: list[Replayed] = []
+    previous: str | None = None
+    for s in sorted(said, key=lambda s: s.at):
+        added = effects_for(inputs_for(s, previous, chat_minutes(times, s.at, zone)))
+        effects += added
+        mood = mood_at(effects, s.at, zone)
+        serious = s.severity is not None and s.severity >= SERIOUS
+        out.append(Replayed(s, mood, line(mood, serious_now=serious), tuple(added)))
+        previous = s.tone
+    return out

@@ -31,8 +31,10 @@ across hours and into the next day, and shows only in how it replies.
   previous message, typing energy on a message judged not serious (playful; a sad or annoyed mark or a
   pasted block counts nothing), and a serious listening label (tender, and nothing else that turn).
   Without a listening judgement a turn adds nothing. A repeat restarts the timer at the larger of what is
-  left and what it brings. Play after something hard adds an easing effect that fades at tender's pace,
-  so tender drops sooner and cannot come back as the play fades, and tender holds playful back entirely
+  left and what it brings. Play after something hard adds an easing effect that fades at tender's pace and
+  adds up with each further sign they are fine (on the owner's history, tender ended 35 minutes after the
+  serious message once they were joking again, instead of blocking play for two hours), so tender drops
+  sooner and cannot come back as the play fades, and tender holds playful back entirely
   while it shows. Traces, a copy of the live database and 400 real messages were checked before commit.
 - **Why states, not scales.** The first draft used two dials (energy, ease). Dials force false opposites
   (deadpan teasing is playful and dry at once) and leave no place for a feeling like nostalgia; states match

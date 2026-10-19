@@ -95,7 +95,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 **Running the bot**
 - Settings are environment variables in `.env`: `COMPANION_MODEL`, `COMPANION_SCENE_MODEL`,
   `COMPANION_REFLECT_MODEL`, `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`,
-  `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE` and
+  `COMPANION_PACE`, `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD` and
   `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping it) and `COMPANION_CHARACTER` (a character
   sheet laid over the persona, `companion/characters.py`). The table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
@@ -127,6 +127,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   cool reply) and a request to remember something; then a small model looks the topic up across every
   belief and the finds ride that turn's system block (`core/recall.py`).
 - A message is answered at most once: Telegram updates are recorded before the turn runs.
+- A mood that carries (ADR 0016, `core/mood.py`): each message adds effects to cozy, tender or playful in an
+  append-only table, the mood is worked out from them when read, and only what the user did can move it
+  (no source for silence, goodbyes, gaps or failed calls). `COMPANION_MOOD` is shadow, on or off;
+  `uv run companion mood --replay 7` rebuilds it over past messages from the same rules.
 
 **Working with the owner**
 - Plain English, short, and say what changed and what it was measured on. Lead with what matters.
