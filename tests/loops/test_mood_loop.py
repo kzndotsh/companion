@@ -73,7 +73,7 @@ class Judge:
                 "topic": "",
             }
         elif set(props) == {"name"}:
-            data = {"name": "Kai"}
+            data = {"name": "Robin"}
         elif "tone" in props:
             data = {"tone": self.tone, "confidence": 0.9, "emoji": "🤣"}
         return Extraction(data=data, model="j", cost_usd=0.0, latency_ms=1)
@@ -226,9 +226,9 @@ async def test_their_answer_to_what_to_call_them_is_remembered_in_their_words(st
         NOW - timedelta(minutes=1),
     )
     store.append_utterance(asked)
-    await _say(store, Judge(), "off", "Kai")
+    await _say(store, Judge(), "off", "Robin")
     [b] = [b for b in store.user_beliefs(REL) if "name" in b.claim]
-    assert b.claim == "The user's name is Kai."
-    assert b.evidence[0].quote == "Kai"
+    assert b.claim == "The user's name is Robin."
+    assert b.evidence[0].quote == "Robin"
     later = await _say(store, Judge(), "off", "made pasta", NOW + timedelta(days=2))
     assert "You do not know their name" not in later.seen[0].card

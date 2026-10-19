@@ -28,7 +28,7 @@ def test_a_belief_that_says_what_they_are_called_counts(
 @pytest.mark.parametrize(
     "claim",
     [
-        "The user has two dogs named Juju and Foxy.",
+        "The user has two dogs named Pepper and Biscuit.",
         "The user wants the companion's name to be witty.",
         "The user says being called the wrong word is complex for them.",
     ],
@@ -67,8 +67,8 @@ def test_it_knows_when_it_asked_what_to_call_them(reply: str, *, asked: bool) ->
 @pytest.mark.parametrize(
     ("data", "said", "name"),
     [
-        ({"name": "Kai"}, "Kai", "Kai"),
-        ({"name": "Kai."}, "it's kai lol", "Kai"),
+        ({"name": "Robin"}, "Robin", "Robin"),
+        ({"name": "Robin."}, "it's robin lol", "Robin"),
         ({"name": ""}, "not telling you yet 😏", None),
         ({"name": "Alexandra"}, "call me alex", None),
         ({"name": "the one and only queen"}, "the one and only queen", None),
