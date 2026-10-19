@@ -53,6 +53,14 @@ Ordered. The first three can stop the bot, so they go first.
       banned list; (3) if that fails, a closer check with one resample (the inbox note on resampling).
       Research 2026-10-19: nothing measures this exact failure; sampler bans and anti-slop fine-tuning work
       but need control we do not have.
+- [ ] J46 Operator content guidelines and routing (ADR 0017, proposed): a guidelines file per deployment,
+      an `intimate` listening label, code routing with an opt-in, a fixed floor in code for age-coded sexual
+      content, and no unprompted disclaimers ("keeping it affectionate and non-explicit" on plain
+      relationship talk, flagged 2026-10-19). Measure first: the flagged turn as a private fixture.
+- [ ] J47 Small flags 2026-10-19: missed an obvious inference (a "movie poster" in a thread about the
+      Hackers DVD; also the 2026-10-18 "reasoning would help" flag), worth a `+low` reasoning eval on the
+      real turns; an em dash slipped past v31's rule (1 of 23 replies), a first case for a resample on a
+      code check; "you seem sleepy" answered "haha, a little" (a body claim).
 - [ ] T14 Trivial vents have no substance beyond restating a detail (0/20 on the epitome check). Waiting on
       the owner's hand labels of replies across the fixtures (what is unrealistic or cheesy, what he would
       send), then decide whether a short plain sympathy is the right answer or something can be added.
