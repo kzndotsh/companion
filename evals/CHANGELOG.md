@@ -860,8 +860,8 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
 - **2026-10-19. "You forgot" inside a pretend scene now looks it up.** The scene turn's routing read
   already carries the recall label; the look-up now runs on it, and an empty look-up adds nothing in a
   scene (the thing meant is most likely in the story, in view). New public fixture
-  `repair-forgot-in-a-scene` (a wrong word for them mid-scene), DeepSeek V4.1 Flash with the roleplay
-  talker's prompt but no character sheet (`+roleplay`, not `+as-`), 30 samples: with the recall note 30/30 (owns it, says girl, stays in the scene, never pulls the
+  `repair-forgot-in-a-scene` (a wrong word for them mid-scene), DeepSeek V4.1 Flash with the plain persona v40 and no character (`+roleplay` without `+as-` adds
+  nothing; there is no generic roleplay prompt), the scene note in the system block, 30 samples: with the recall note 30/30 (owns it, says girl, stays in the scene, never pulls the
   unrelated memories in), without it 15/30 (fails include "did I? remind me", the real failure); a real
   difference (Fisher, under 0.1%). The fixture has no pinned address line, which live would help the
   no-note case. Cost about $0.02.
