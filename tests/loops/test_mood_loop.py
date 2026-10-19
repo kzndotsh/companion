@@ -11,7 +11,22 @@ from companion.core.mood import Source, State, effect
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.types import Json, RelationshipId, SessionId, TurnId
+from companion.core.types import (
+    Belief,
+    BeliefId,
+    BeliefKind,
+    Evidence,
+    Frame,
+    Json,
+    Provenance,
+    RelationshipId,
+    SessionId,
+    Speaker,
+    Subject,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
 from companion.loops.fast import Conversation
 from companion.store.sqlite.store import Store
 
@@ -149,3 +164,40 @@ async def test_how_to_refer_to_them_is_pinned_after_the_clock_on_every_turn(stor
     talker = await _say(store, Judge(), "off", "made pasta")
     lines = talker.seen[0].card.split("\n")
     assert lines[1].startswith("[How they want to be referred to: she/her, a woman.")
+
+
+@pytest.mark.parametrize(("severity", "shown"), [(0, False), (1, True)])
+async def test_held_memories_are_in_view_only_when_they_are_sharing_something(
+    store: Store, severity: int, *, shown: bool
+) -> None:
+    said = Utterance(
+        UtteranceId("u0"),
+        REL,
+        SESSION,
+        TurnId("t0"),
+        Speaker.USER,
+        "i slip up sometimes",
+        Frame.REAL,
+        "test",
+        NOW - timedelta(days=1),
+    )
+    store.append_utterance(said)
+    store.insert_belief(
+        Belief(
+            id=BeliefId("b1"),
+            relationship_id=REL,
+            subject=Subject.USER,
+            kind=BeliefKind.TRAIT,
+            claim="The user sometimes slips up.",
+            evidence=(Evidence(said.id, "i slip up sometimes"),),
+            provenance=Provenance.STATED,
+            speaker=Speaker.USER,
+            frame=Frame.REAL,
+            confidence=0.7,
+            valid_from=said.at,
+            recorded_at=said.at,
+            sensitivity=2,
+        )
+    )
+    talker = await _say(store, Judge(severity=severity), "off", "i want a beer lol")
+    assert ("The user sometimes slips up." in talker.seen[0].card) is shown

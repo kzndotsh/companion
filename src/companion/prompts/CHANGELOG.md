@@ -450,6 +450,13 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   the model is sent does not change. Measured on five flagged turns: 85 to 95 of 150 plain. On by default,
   `COMPANION_RESAMPLE=off` to disable.
 
+- **Held memories only when they are sharing something (2026-10-19).** The "Also known, but only touch it
+  if they bring it up" block is now sent only on turns the listening judge rated severity 1 or more; on a
+  casual turn (or when the judge failed, or in a scene) sensitive beliefs are left out and their places go to
+  ordinary ones, with one logged decision saying how many. Reason: on a casual turn about wanting a beer the
+  reply raised a held memory unasked and turned it into a caution (owner flag). On the owner's history 171 of
+  184 judged messages were severity 0, so the held block now shows on about 7% of turns.
+
 ## messages/spend-cap
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
 

@@ -126,6 +126,20 @@ class _CardLog:
             )
         for b in card.older:
             self._one(DecisionKind.SURFACE, b, "in the card as older, possibly out of date")
+        if card.kept_back:
+            self.store.append_decision(
+                Decision(
+                    DecisionId(_id()),
+                    self.rel,
+                    self.session,
+                    self.turn,
+                    TraceId(self.turn),
+                    DecisionKind.POLICY,
+                    f"card: {len(card.kept_back)} held beliefs left out, the turn is casual",
+                    self.at,
+                    detail={"kept_back": [b.id for b in card.kept_back]},
+                )
+            )
         if card.crowded:
             self.store.append_decision(
                 Decision(
@@ -751,7 +765,8 @@ def _assemble(
     view_state = store.view_state(c.rel)
     views = card_views(store.self_beliefs(c.rel), view_state)
     assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
-    card = build_card(assertable, store.last_support(c.rel), now, views=views)
+    sharing = heard is not None and heard[0].severity >= 1
+    card = build_card(assertable, store.last_support(c.rel), now, views=views, show_held=sharing)
     shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)

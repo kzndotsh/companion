@@ -52,20 +52,26 @@ class Card:
     now: datetime
     views: tuple[Belief, ...] = ()
     crowded: tuple[Belief, ...] = ()  # current, but past the card's size
+    kept_back: tuple[Belief, ...] = ()  # sensitive, left out on a casual turn
 
     @property
     def empty(self) -> bool:
         return not (self.usable or self.held or self.older or self.views)
 
 
-def build_card(
+def build_card(  # noqa: PLR0913
     beliefs: Sequence[Belief],
     support: Mapping[BeliefId, datetime],
     now: datetime,
     max_items: int = MAX_ITEMS,
     views: Sequence[Belief] = (),
+    *,
+    show_held: bool = True,
 ) -> Card:
-    """`support` is each belief's freshest evidence time, falling back to valid_from."""
+    """`support` is each belief's freshest evidence time, falling back to valid_from.
+
+    With `show_held` off (a casual turn) sensitive beliefs are left out entirely and their places go
+    to ordinary ones: in view, a model links them to unrelated banter and raises them unasked."""
     aged = {
         b.id: Aged(
             (last := support.get(b.id, b.valid_from)),
@@ -74,6 +80,8 @@ def build_card(
         for b in beliefs
     }
     current = [b for b in beliefs if aged[b.id].status is not Freshness.STALE]
+    kept_back = [] if show_held else [b for b in current if b.sensitivity >= HOLD_AT]
+    current = [b for b in current if b not in kept_back]
     stale = sorted(
         (b for b in beliefs if aged[b.id].status is Freshness.STALE),
         key=lambda b: -aged[b.id].last_supported.timestamp(),
@@ -93,6 +101,7 @@ def build_card(
         now=now,
         views=tuple(views),
         crowded=tuple(crowded),
+        kept_back=tuple(kept_back),
     )
 
 

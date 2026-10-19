@@ -229,15 +229,18 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     await convo.handle(SESSION, "hey", "test", NOW)
     sent = talker.seen[0].card
     assert "Likes climbing" not in talker.seen[0].messages[-1].content
-    assert "Likes climbing" in sent.split("Also known")[0]
-    assert "Has OCD" in sent.split("Also known")[1]
+    assert "Likes climbing" in sent
+    assert "Has OCD" not in sent  # no listening judgement reads as casual: held beliefs stay out
     store.close()
     db = tmp_path / "rel.sqlite"
     [turn_id] = _turn_ids(db)
     report = store_replay.replay_file(db, turn_id)
     assert report.matched
     kinds = {d.belief_id: d.kind for d in report.decisions if d.belief_id}
-    assert kinds == {"b1": DecisionKind.SURFACE, "b2": DecisionKind.WITHHOLD}
+    assert kinds == {"b1": DecisionKind.SURFACE}
+    assert any(
+        d.reason == "card: 1 held beliefs left out, the turn is casual" for d in report.decisions
+    )
 
 
 async def test_stale_beliefs_reach_the_model_as_older_and_every_placement_is_logged(

@@ -129,3 +129,21 @@ def test_what_does_not_fit_on_the_card_is_kept_as_crowded_out(
     assert len(card.usable) == 5
     assert len(card.crowded) == 3
     assert not set(card.crowded) & set(card.usable)
+
+
+def test_on_a_casual_turn_held_beliefs_are_left_out_and_their_places_go_to_ordinary_ones(
+    belief: Callable[..., Belief],
+) -> None:
+    ordinary = [
+        _b(belief, f"p{i}", f"pref {i}", kind=BeliefKind.PREFERENCE, valid_from=T0 + timedelta(i))
+        for i in range(6)
+    ]
+    held = _b(belief, "h", "A sensitive thing", kind=BeliefKind.TRAIT, sensitivity=HOLD_AT)
+    now = NOW + timedelta(days=7)
+    sharing = build_card([*ordinary, held], {}, now, max_items=5)
+    casual = build_card([*ordinary, held], {}, now, max_items=5, show_held=False)
+    assert held in sharing.held
+    assert casual.held == ()
+    assert casual.kept_back == (held,)
+    assert len(casual.usable) == 5
+    assert "A sensitive thing" not in render(casual)
