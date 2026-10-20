@@ -950,3 +950,10 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   note (and no memory in view) 0/12, all read out the clock, the owner's flagged failure. A lunch guess
   with the note, 12/12. Cost about $0.03.
 
+- **2026-10-20. Attitude without a character (J1): persona v41, a candidate.** v40 plus the two behaviour
+  lines that worked in a character sheet (pick one yourself and say why; keep your view under pushback
+  with no reason, and tease a little). Luna, no character, 20 samples: picks one itself instead of a menu
+  1/20 to 20/20, keeps its view 8/20 to 16/20 (both real differences), a reasoned no 20/20 both. On 20
+  everyday fixtures, 6 samples: 98/120 against 95/120, within noise; the one dip there (vague distress
+  "today", 3/6 to 1/6) rerun at 20 samples went the other way, 3/20 to 11/20, with the "week" version
+  19/20 and 20/20. Cost about $0.08. Not shipped until the owner says so.
