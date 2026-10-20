@@ -49,6 +49,10 @@ from companion.core.frames import (
 from companion.core.frames import render_reason as frame_reason
 from companion.core.frames import resolve as frame_resolve
 from companion.core.freshness import HORIZON_DAYS, when_phrase
+from companion.core.guess import INVITED as GUESS_INVITED
+from companion.core.guess import NOTE as GUESS_NOTE
+from companion.core.guess import likely as guess_likely
+from companion.core.guess import note as guess_note
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.knowing import MAP_EVERY, WOULD_ASK, Depth, Domain, pick_gap
@@ -109,6 +113,7 @@ from companion.loops.floor import judge_intimate
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
+from companion.loops.guess import Invited, invited_guess
 from companion.loops.listen import judge_listening
 from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.quip import judge_quip
@@ -991,12 +996,53 @@ def _loop_note(c: Conversation, t: _Turn, *, casual: bool) -> str | None:
     return loop_note(loop)
 
 
+@dataclass(frozen=True, slots=True)
+class _Lookups:
+    """What a reply waits for besides the judges: a recall, whether a topic is spent, a guess."""
+
+    recalled: Recalled | None = None
+    spent: bool = False
+    guess: Invited | None = None
+
+
 async def _before_reply(
     c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, read: _Heard | None
-) -> tuple[Recalled | None, bool]:
-    """The look-ups a reply waits for: what they asked it to remember, and whether a small topic
-    has run its course."""
-    return await _recall(c, t, heard or read), await _topic_spent(c, t, in_scene, heard)
+) -> _Lookups:
+    recalled = await _recall(c, t, heard or read)
+    spent = await _topic_spent(c, t, in_scene, heard)
+    asked_to_recall = heard is not None and heard[0].recall
+    guess = None if asked_to_recall else await _invited_guess(c, t, in_scene, heard)
+    return _Lookups(recalled, spent, guess)
+
+
+async def _invited_guess(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
+) -> Invited | None:
+    """When their short question invites a guess about them (J16), what memory holds that may fit.
+    Casual turns only; logged with what was offered, so guesses can later be scored by kind."""
+    if c.judge is None or not _casual(t, in_scene, heard) or not guess_likely(t.text):
+        return None
+    _mark(t, "guess judge")
+    found = await invited_guess(c.judge, t.prior, t.text, c.store.user_beliefs(c.rel))
+    if found is not None:
+        c.store.append_decision(
+            Decision(
+                DecisionId(_id()),
+                c.rel,
+                t.session,
+                t.turn,
+                TraceId(t.turn),
+                DecisionKind.POLICY,
+                GUESS_INVITED,
+                t.now,
+                detail={
+                    "about": found.about,
+                    "offered": [b.claim for b in found.offered],
+                    "note": GUESS_NOTE.ref,
+                },
+            )
+        )
+    return found
 
 
 async def _topic_spent(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> bool:
@@ -1121,6 +1167,7 @@ def _assemble(  # noqa: PLR0913
     held: bool = False,
     roleplay: bool = False,
     spent: bool = False,
+    guess: Invited | None = None,
 ) -> _Assembled:
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
@@ -1158,8 +1205,11 @@ def _assemble(  # noqa: PLR0913
     _map_shadow(c, t, casual=casual, asking_name=name is not None)
     loop = _loop_note(c, t, casual=casual and name is None and not held)
     moving = _topic_note(c, t, spent=spent, casual=casual and name is None and not held, loop=loop)
+    guessing = guess_note(guess.about, guess.offered) if guess is not None else None
     notes += [
-        n for n in (listening, rude, repair, found, mood, hold, name, loop, moving) if n is not None
+        n
+        for n in (listening, rude, repair, found, mood, hold, name, loop, moving, guessing)
+        if n is not None
     ]
     card_text = tagged(
         "\n".join([clock, *([pinned] if pinned else []), *shown, *notes]), memory=False
@@ -1202,16 +1252,17 @@ async def _handle_turn(
     except BaseException:
         _store_user(c, t, channel, Frame.REAL)
         raise
-    recalled, spent = await _before_reply(c, t, in_scene, heard, read)
+    looked = await _before_reply(c, t, in_scene, heard, read)
     asm = _assemble(
         c,
         t,
         in_scene,
         heard,
-        recalled,
+        looked.recalled,
         held=held,
         roleplay=talker is c.roleplay_talker,
-        spent=spent,
+        spent=looked.spent,
+        guess=looked.guess,
     )
     request, card_text, card, views, view_state = (
         asm.request,

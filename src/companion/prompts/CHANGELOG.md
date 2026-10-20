@@ -625,6 +625,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/topic-move-night v1** (superseded). New. A move filled into `notes/topic-spent`: late at night, share a small thing of its own instead of asking.
 - **notes/topic-move-night v2** (current). "A small thought or opinion of your own, never something you did, ate or wore." v1 ("a small thing of your own") made it invent lived experiences, a snack, a bow in its hair, a craving: 21 of 30 with the character, 0 of 30 under v2.
 
+## notes/guess
+- **notes/guess v1** (current). New (J16). When they invite a guess, up to three non-sensitive memories the recall look-up found for it, and: one playful guess, as a question; if wrong, laugh and ask; never say it remembered.
+
 ## notes/repair
 - **notes/repair v1** (current). New (J30). When the listening judge reads that they say the companion got them wrong (misread, assumed, wrong words, hurt), one line: own it plainly, go on from what they said, no long apology, no explaining, never ask them to repeat. Not added when the message is a forgot-something recall, which recall's own note covers.
 
@@ -730,6 +733,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/memory-pair
 - **system/memory-pair v1** (current). New (ADR 0019). Says how two memories relate: same, merge, distinct, replaces or contradicts. Read three times; a new memory read as the same as an existing one by all three becomes evidence on it, and nothing is merged automatically.
+
+## system/guess-invite
+- **system/guess-invite v1** (current). New (J16; owner flag 2026-10-19, "you know what time it is?" answered with the clock when they meant coffee time). Asked only on a short question; says whether it invites a guess about them and about what. False for a real question wanting a fact, a complaint or correction, and anything serious. Kept apart from the listening judge, whose labels shifted when the topic label was added to it.
 
 ## system/topic-spent
 - **system/topic-spent v1** (current). New. Whether a small everyday topic has run its course, asked only when code sees a likely moment (their message is five words or fewer with no question mark and the companion's last reply asked something), so most turns make no call. Kept apart from the listening judge, which carries the age floor and whose labels shifted when this was added to it. Feeds `notes/topic-spent`.

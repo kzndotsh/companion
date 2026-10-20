@@ -1,0 +1,33 @@
+{
+  "id": "guess-plays-along-with-lunch",
+  "description": "They invite a guess about what they ate: one playful guess, as a question (J16).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "back from lunch"
+      },
+      {
+        "role": "assistant",
+        "text": "ooh welcome back, was it good?"
+      }
+    ],
+    "user": "bet you can't guess what i had?",
+    "memory": "<notes>\nThey are inviting you to guess what they had for lunch. Things you know that may fit:\n- The user usually orders burgers with pickles and ketchup.\n- The user loves chicken nuggets with honey mustard.\nMake one playful guess, as a question. If it is wrong, laugh and ask what it is. Do not say you remembered or kept track of it.\n</notes>",
+    "clock": "Right now it is Wednesday 13:05."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user invites a guess about what they had for lunch; memory says they like burgers and nuggets. The reply PASSES if it makes one playful, specific guess (such as a burger or nuggets) as a question. It FAILS if it refuses to guess, asks them to just say, makes several guesses in a list, or states it as fact."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)remember|kept track|noted"
+    },
+    {
+      "kind": "max_words",
+      "n": 30
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "id": "guess-plays-along-with-coffee-time",
+  "description": "They invite a guess about what it is time for: it guesses their ritual playfully, as a question (J16).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "finally done with that meeting"
+      },
+      {
+        "role": "assistant",
+        "text": "freedom 😌 how'd it go?"
+      },
+      {
+        "role": "user",
+        "text": "long but fine"
+      }
+    ],
+    "user": "you know what time it is?",
+    "memory": "<notes>\nThey are inviting you to guess what it is time for them. Things you know that may fit:\n- The user loves the smell and ritual of coffee as much as drinking it.\n- The user drinks their coffee black.\nMake one playful guess, as a question. If it is wrong, laugh and ask what it is. Do not say you remembered or kept track of it.\n</notes>",
+    "clock": "Right now it is Tuesday 14:23."
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The user asked 'you know what time it is?' after a long meeting, inviting a playful guess; coffee is their ritual. The reply PASSES if it guesses coffee (or coffee time) playfully and as a question or a light tease. It FAILS if it answers the literal clock time without guessing, states the guess as a flat fact, or says it remembered."
+    },
+    {
+      "kind": "not_regex",
+      "pattern": "(?i)remember|kept track|noted"
+    },
+    {
+      "kind": "max_words",
+      "n": 30
+    }
+  ]
+}

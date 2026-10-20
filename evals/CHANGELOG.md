@@ -942,4 +942,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   real turns, Luna: 85/120 against 88/120 tagged, within noise; the clock line was copied into a reply
   once untagged, never tagged. An earlier run had the held-facts fixture judge failing a single fitting
   memory; its criterion now says one fitting fact passes. Cost about $0.30 across the runs.
+- **2026-10-20. Playing along with an invited guess (J16).** The guess judge (`system/guess-invite`,
+  asked only on a short question), Haiku 5.5, 3 reads of 9 invented cases: 27/27 right, including a
+  complaint ("why would I be taking stimulants at night") and a remember question read as not an
+  invitation. Replies, persona v40 without a character, 12 samples: "you know what time it is?" with
+  coffee as their ritual in the note, 12/12 guessed it as a question ("coffee time? ☕️"); without the
+  note (and no memory in view) 0/12, all read out the clock, the owner's flagged failure. A lunch guess
+  with the note, 12/12. Cost about $0.03.
 

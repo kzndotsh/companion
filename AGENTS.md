@@ -170,6 +170,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   read as a pair three times; read as the same, the new quote becomes evidence on the old memory instead.
   `COMPANION_CONSOLIDATE` is shadow (log only) unless `on` or `off`. Nothing is merged automatically.
   `companion memory review` asks the owner the questions the check raised; `companion merge` merges by hand.
+- When a short question of theirs invites a guess about them ("you know what time it is?"), its own judge
+  says so, the recall look-up picks what may fit (never sensitive), and one note asks for a single
+  playful guess as a question (`core/guess.py`, J16). It never guesses unasked.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash, an AI disclaimer nobody asked for, and the clock line or a tag copied from the system

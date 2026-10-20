@@ -82,6 +82,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v2 |
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |
 | `notes/repair` | note | they say it got them wrong: own it in one line, go on from what they said (J30) | v1 |
+| `notes/guess` | note | they invite a guess: what memory holds that may fit, guess once as a question (J16) | v1 |
 | `notes/topic-spent` | note | a small topic has run its course: react briefly, then move on with `$move` | v1 |
 | `notes/topic-move-loop` | part | the move: bring up a plan of theirs offered this turn | v1 |
 | `notes/topic-move-day` | part | the move: ask what's next for their day | v1 |
@@ -112,6 +113,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |
+| `system/guess-invite` | system | whether their short question invites a guess about them, and about what (J16) | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
 | `system/views-implicated` | system | which views a flag implicates, `core/beliefs/views_implicated.py` | v1 |

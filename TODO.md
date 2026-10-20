@@ -654,6 +654,11 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       time. Their coffee mentions are spread over the day (8:30 to 17:00 over five days), so an hourly pattern
       would not have caught it; knowing coffee is their most repeated ritual (13 memories) and playing along
       with a guess ("coffee time? 👀") would have.
+      **Partial 2026-10-20:** invited guesses are live: a small judge on short questions, the recall
+      look-up picks what may fit (never anything sensitive), one note to guess once as a question; every
+      one is logged with what was offered (reason "guess: they invited a guess"). Left: once that log
+      holds enough guesses, score them by kind from the next message (confirmed, corrected, ignored)
+      and only then consider guesses it forms on its own.
 - [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
       does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change
