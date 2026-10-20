@@ -10,6 +10,8 @@ from pathlib import Path
 
 from companion.core.callbacks import Check
 from companion.core.knowing import Label
+from companion.core.lore import Kind as ViewKind
+from companion.core.lore import Labelled as ViewLabel
 from companion.core.mood import Effect, Said
 from companion.core.names import Row as NameRow
 from companion.core.openloops import LoopState, OpenLoop
@@ -55,6 +57,7 @@ from companion.store.sqlite import (
     reflect,
     settings,
     turns,
+    view_kinds,
 )
 from companion.store.sqlite.db import connect, migrate
 from companion.store.sqlite.open_loops import ReachOut
@@ -287,6 +290,20 @@ class Store:
 
     def names_read(self, rel: RelationshipId) -> set[BeliefId]:
         return names.read(self._conn, rel)
+
+    def add_view_kinds(
+        self,
+        rel: RelationshipId,
+        labels: Sequence[ViewLabel],
+        *,
+        model: str,
+        prompt: str,
+        at: datetime,
+    ) -> None:
+        view_kinds.add(self._conn, rel, labels, model=model, prompt=prompt, at=at)
+
+    def view_kinds(self, rel: RelationshipId) -> dict[BeliefId, ViewKind]:
+        return view_kinds.kinds(self._conn, rel)
 
     def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
         promises.add(self._conn, p, model=model, prompt=prompt, at=at)

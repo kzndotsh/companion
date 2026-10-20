@@ -735,6 +735,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/memory-pair
 - **system/memory-pair v1** (current). New (ADR 0019). Says how two memories relate: same, merge, distinct, replaces or contradicts. Read three times; a new memory read as the same as an existing one by all three becomes evidence on it, and nothing is merged automatically.
 
+## system/lore-label
+- **system/lore-label v1** (current). New (ADR 0020 phase 1). Labels each of the companion's own views with one kind: taste (a personal preference, quirk or name it likes: its lore), stance (advice or an opinion on a topic), rule (how it treats the user), self (what it is or can do) or lived (a claim that something happened to it in the world, or about a body or senses). Code reads only taste as lore and never counts lived (A22). Shadow: listed by `companion lore`, never shown to the talker yet. Read by eye on the 78 current views in `evals/CHANGELOG.md`.
+
 ## system/memory-names
 - **system/memory-names v1** (current). New (fetch on mention, from a roleplay memory guide; the owner asked to measure it in shadow rather than drop it on six days of data). Reads memories in batches of 60 once each and lists the named things in them (a person, pet, place, band, song, show, game, project or brand) with the other words for each and the memories about it; known names are shown so they are reused. Code keeps only words worth matching and matches their message as whole words. Shadow only: each turn that names something logs the memories the card left out; nothing reaches the talker.
 

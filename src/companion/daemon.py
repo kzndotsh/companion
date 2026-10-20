@@ -30,6 +30,7 @@ from companion.loops.consolidate import SameCheck, nightly
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.knowing import label_new
+from companion.loops.lore import label_views
 from companion.loops.names import read_names
 from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.slow import reflect_from, reflect_once
@@ -522,6 +523,20 @@ async def label_now(db: Path, relationship: str) -> str:
     try:
         async with httpx.AsyncClient() as client:
             done = await label_new(
+                store, extractor(client), RelationshipId(relationship), utc_now(), batches=10
+            )
+    finally:
+        store.close()
+    return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"
+
+
+async def lore_now(db: Path, relationship: str) -> str:
+    """Label its views that have no kind yet, for `companion lore --label`."""
+    load_dotenv(Path(".env"))
+    store = Store(db)
+    try:
+        async with httpx.AsyncClient() as client:
+            done = await label_views(
                 store, extractor(client), RelationshipId(relationship), utc_now(), batches=10
             )
     finally:

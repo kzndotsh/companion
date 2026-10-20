@@ -172,6 +172,8 @@ Each item ends with the thing that tells us it is done. The cards are below.
 - [ ] D1 Watch the two-talker setup in real chat (Luna for everyday, DeepSeek V4.1 Flash for roleplay).
       Split `/flag` and `/fav` by the model that wrote each turn. Done when a week of marks shows
       whether the roleplay model helps and where the voice change at the boundary hurts.
+- [ ] L1 Its own lore labelled by kind (ADR 0020 phase 1): taste, stance, rule, self or lived, on every
+      view it holds, in shadow; `companion lore` lists the tastes. Done when the labels read right by eye.
 
 ## Todo
 
@@ -271,7 +273,7 @@ Unordered within each group. Pull a card into Todo when it is next.
       was already in the 40 messages in view on 16, and a keyword search of older messages picked by the
       recall model helped on 2 cases and added off-topic or pretend-as-real exchanges on 13. Worth another
       look only when flags show recall misses on things outside the window; the replay is the test.
-- [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
+- [ ] R14 (waits on ADR 0020 phase 2) Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
       with the rest growing as recorded lore. Test that they surface without being asked and do not
       become talking points. From the Grok review.
 - [ ] R17 Show gaps under a minute in seconds on the clock line. Not needed so far: the persona sentence
@@ -281,7 +283,7 @@ Unordered within each group. Pull a card into Todo when it is next.
       are protected. (A20 in the audit synthesis)
 - [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
       fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
-- [ ] R3 Record the lore it invents, through the same filter as the memory rules. (G23)
+- [ ] R3 Record the lore it invents, through the same filter as the memory rules. (G23) Now ADR 0020, L1 to L4.
 - [ ] R4 No reaction alongside a reply while a scene is in progress, send the reaction as soon as the
       judge returns, and record the user's reactions to its messages.
 - [ ] R5 A command that turns favourites into "must still pass" fixtures.
@@ -422,7 +424,7 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
       M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
       to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). Left: a few days of flags, then the ADR accepted.
-- [ ] J6 Its own time away: after a gap it has something of its own to say about the interval, recorded as
+- [ ] J6 (ADR 0020 phase 4, L4) Its own time away: after a gap it has something of its own to say about the interval, recorded as
       lore so it stays consistent (greenfield "continuous" probe; ties to R3 and A22).
 - [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk
       about that") so marks sort by failure type (greenfield section 10).
@@ -528,6 +530,15 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       a miss reads "not proof of never" (Tamanitomo audit, A16).
 - [ ] J43 Retry cooldown: after a judge or memory call fails, wait about two minutes before trying again
       instead of every turn (Waifu-companion audit).
+
+### L. The companion's own lore (ADR 0020)
+
+- [ ] L2 Its tastes nearest their message, at most two, shown to it on ordinary turns; settled or approved
+      first. Measured on a fixture asking what it likes on different days, 30 samples, with and without.
+- [ ] L3 A new taste read as a pair with its nearest taste; a contradiction is a question for the owner.
+- [ ] L4 One thread of its own as a low-priority open loop, at most daily on a casual turn, "I was
+      thinking about", never "I did", never at a goodbye or after silence (J6, small). Shadow first.
+- [ ] L5 One source for promises: the J12 promise read and the views' promise kind overlap (10 of 12).
 
 ## Done
 

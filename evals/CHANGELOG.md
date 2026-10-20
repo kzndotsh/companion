@@ -1015,3 +1015,10 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   film poster, bands from a play count list) and one false one (a song title that is also an everyday
   word, inside "wake up" talk). The replay cannot count misses fairly, since the names come from today's
   memories; the shadow log does from here (`companion names`).
+- **2026-10-20. Its own lore sorted from its views (ADR 0020 phase 1).** `system/lore-label` v1 on Haiku
+  5.5 labelled all 78 current views of the companion in one call for $0.0014: 35 stance, 19 taste, 13
+  rule, 10 self, 1 lived. By eye, about 17 of the 19 tastes are its own (a name it likes, naps, music for
+  a Friday, a band, no bitter beer, a burger, a song, its voice, a first date, a film); two are opinions
+  about the user's interests. One or two tastes were read as stances (laziness as a preference). The one
+  "lived" was a slip in the conversation, not a claimed life; harmless, since lived never counts as lore.
+  About half of what it records is advice, which is why lore needs its own label before it is shown back.

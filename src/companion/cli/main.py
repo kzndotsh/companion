@@ -15,6 +15,7 @@ from companion.cli import (
     flags,
     initiative,
     knowing,
+    lore,
     memory,
     mood,
     names,
@@ -60,6 +61,9 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     mp = add("map", help="what it knows about them by part of their life, and the gap it would ask")
     mp.add_argument("--label", action="store_true", help="label new memories first (a model call)")
     _db_args(mp)
+    lr = add("lore", help="its own lore: the views it holds that are tastes (ADR 0020)")
+    lr.add_argument("--label", action="store_true", help="label its new views first (a model call)")
+    _db_args(lr)
     nm = add(
         "names", help="things named in memory and the words for each (fetch on mention, shadow)"
     )
@@ -251,6 +255,12 @@ def _initiative(a: argparse.Namespace) -> int:
     return _out(initiative.run(*_target(a)))
 
 
+def _lore(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    first = asyncio.run(daemon.lore_now(db, rel)) if a.label else ""
+    return _out(first + lore.run(db, rel))
+
+
 def _names(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     first = asyncio.run(daemon.names_now(db, rel)) if a.read else ""
@@ -320,6 +330,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "mood": _mood,
     "promises": _promises,
     "names": _names,
+    "lore": _lore,
     "map": _map,
     "backup": _backup,
     "address": _address,
