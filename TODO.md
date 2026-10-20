@@ -266,6 +266,8 @@ Ordered. Pull from the top.
       meter, which swaps one voice line per stage. Needs a design and the owner's say before code.
       Detail (Utsuwa, aituber-onair audits): it steps down only well below where it rose, and only after a
       long quiet spell, so it does not flicker; a step-down never guilts them.
+      **2026-10-20:** rethought as a mirror of what they have shown that sets ceilings on other features,
+      not a ladder or a note; `docs/inbox/2026-10-20-closeness-as-a-mirror-not-a-ladder.md`. Could answer T2.
 
 ## Backlog
 
