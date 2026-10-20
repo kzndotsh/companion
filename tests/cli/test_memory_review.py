@@ -42,6 +42,59 @@ def test_retire_and_keep_are_recorded_and_not_asked_again(
     assert review(db, REL, ask=lambda _: "r") == "no questions about memory right now\n"
 
 
+def _pairs(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> Path:
+    path = tmp_path / "rel.sqlite"
+    store = Store(path)
+    store.append_utterance(utterance(text="my dog is a pom. no wait, a papillon mix", uid="u1"))
+    for bid, quote in (("pom", "my dog is a pom"), ("mix", "a papillon mix")):
+        store.insert_belief(belief(bid=bid, utterance_id="u1", quote=quote, claim=f"dog {bid}"))
+    store.add_memory_check(
+        REL,
+        belief(bid="pom").id,
+        belief(bid="mix").id,
+        ["replaces"] * 3,
+        "replaces",
+        prompt="p",
+        at=T0,
+    )
+    store.close()
+    return path
+
+
+def test_a_conflicting_pair_keeps_the_one_the_owner_picks_and_retires_the_other(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    db = _pairs(tmp_path, utterance, belief)
+    asked: list[str] = []
+    out = review(db, REL, ask=lambda q: asked.append(q) or "2")
+    assert "1. dog pom" in asked[0] and "2. dog mix" in asked[0]
+    assert "kept     dog mix" in out and "retired  dog pom" in out
+    assert [b.id for b in Store(db).user_beliefs(REL)] == ["mix"]
+    assert review(db, REL, ask=lambda _: "1") == "no questions about memory right now\n"
+
+
+def test_keeping_both_of_a_pair_retires_nothing(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    db = _pairs(tmp_path, utterance, belief)
+    review(db, REL, ask=lambda _: "b")
+    assert sorted(b.id for b in Store(db).user_beliefs(REL)) == ["mix", "pom"]
+    assert Store(db).unanswered_checks(REL, ["replaces"]) == []
+
+
+def test_a_pair_whose_memory_has_closed_is_not_asked(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    db = _pairs(tmp_path, utterance, belief)
+    store = Store(db)
+    store.close_belief(belief(bid="pom").id, T0)
+    store.close()
+    assert "0 questions left" in review(db, REL, ask=lambda _: "1")
+    assert [b.id for b in Store(db).user_beliefs(REL)] == ["mix"]
+
+
 def test_skip_and_quit_leave_the_question_for_later(
     tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
 ) -> None:

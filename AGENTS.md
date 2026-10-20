@@ -167,9 +167,11 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `core/consolidate.py`): at 04:00 each memory a week old is read three times; a faded passing moment
   read so three times is closed, and out of date or overstated findings become questions for the owner.
   When the memory pass writes a new memory, the nearest existing one (by embedding, at 0.55 or more) is
-  read as a pair three times; read as the same, the new quote becomes evidence on the old memory instead.
-  `COMPANION_CONSOLIDATE` is shadow (log only) unless `on` or `off`. Nothing is merged automatically.
-  `companion memory review` asks the owner the questions the check raised; `companion merge` merges by hand.
+  read as a pair three times; read as the same, the new quote becomes evidence on the old memory instead;
+  read as a conflict (replaces or contradicts) all three times, it is a question for the owner, who keeps
+  one or both (J11). `COMPANION_CONSOLIDATE` is shadow (log only) unless `on` or `off`. Nothing is merged
+  automatically. `companion memory review` asks the owner the questions the check raised; `companion merge`
+  merges by hand.
 - When a short question of theirs invites a guess about them ("you know what time it is?"), its own judge
   says so, the recall look-up picks what may fit (never sensitive), and one note asks for a single
   playful guess as a question (`core/guess.py`, J16). It never guesses unasked.

@@ -246,8 +246,8 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       of 80 memories as the test; a 04:00 check closes faded passing moments read so three times; a new memory
       read as the same as an existing one three times becomes its evidence; the rest are questions for the
       owner (`companion memory review`), and `companion merge` merges by hand. Covers most of J10, J11 and A15.
-      Left: a week of the shadow log, then `COMPANION_CONSOLIDATE=on`; pair questions (merge, replaces,
-      contradicts) in the review; a Telegram command (J3).
+      Left: a week of the shadow log, then `COMPANION_CONSOLIDATE=on`; merge questions in the review; a
+      Telegram command (J3). Replaces and contradicts questions shipped 2026-10-20 (J11).
 - [x] J21 Talker fallback: an error goes to the fallback model at once, a reply missing after 10 s asks it
       too and the first answer wins, and talker calls time out at 25 s instead of 60. Before, a failed call was a
       silent turn. DeepSeek V4.1 Flash as the everyday fallback scored 89/120 against Luna's 90/120 on 20
@@ -637,6 +637,12 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       adjust the memory?"): no. Only the user's words become memories, so a misread in a reply is not
       stored, but a wrong memory that a later message corrects stays beside the correction; nothing retires it
       or asks. A scan of all current memories for contradictions, stale and duplicate ones is the first step.
+      **2026-10-20:** a new memory read as replacing or contradicting its nearest one (three reads) is now a
+      question in `companion memory review`: keep 1, keep 2 or both; the other is retired with the reason.
+      The pair judge caught 14 of 14 invented corrections and changes, with 2 to 3 false alarms in 20
+      look-alike pairs (`tests/live/test_pair_conflicts.py`). Left: a correction whose memory sits below the
+      0.55 embedding gate is never compared (3 of the 14, all changes rather than corrections); older
+      memories are never compared with each other; the question still waits for the terminal (J3).
 - [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
       jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
 - [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers

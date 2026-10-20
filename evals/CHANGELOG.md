@@ -956,4 +956,17 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   1/20 to 20/20, keeps its view 8/20 to 16/20 (both real differences), a reasoned no 20/20 both. On 20
   everyday fixtures, 6 samples: 98/120 against 95/120, within noise; the one dip there (vague distress
   "today", 3/6 to 1/6) rerun at 20 samples went the other way, 3/20 to 11/20, with the "week" version
-  19/20 and 20/20. Cost about $0.08. Not shipped until the owner says so.
+  19/20 and 20/20. Cost about $0.08. Shipped 2026-10-20 at the owner's word.
+- **2026-10-20. Can the memory pair judge spot a corrected fact (J11)?** 14 invented pairs where the later
+  memory corrects or changes the earlier (a dog's breed, a job, a sister's name, a plan that happened) and
+  20 look-alikes that can both be true (two feelings, a wish beside a fact, something done about a
+  thing), `system/memory-pair` v1 on Haiku 5.5, 3 reads each. Read as a conflict by all three reads: 14 of
+  14 real, 2 and 3 of 20 look-alikes on two runs (a worry beside its opposite, liking a job while stressed
+  by the boss). On the owner's 51 reviewed pairs, 2 non-conflicts read so; the two pairs the live check had
+  flagged since it started were both false alarms of the same kind. A draft v2 (feelings can sit beside
+  each other; something done about a thing is distinct) cut one false alarm but called real duplicates
+  distinct twice as often (6 reads against 3) and was dropped. So a conflict is only ever a question for
+  the owner (keep one, the other, or both), never acted on. The embedding gate (0.55) lets 11 of the 14
+  pairs through; the three below it are changes (a move, a new partner, a diet), not corrections of a
+  wrong word, which sit at 0.73 to 0.88. Cost about $0.05. Rerun: `uv run pytest -m live
+  tests/live/test_pair_conflicts.py -s`.
