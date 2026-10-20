@@ -184,6 +184,7 @@ Look after memory:
 ```bash
 uv run companion beliefs        # what it holds about the user, with quotes
 uv run companion memory review  # answer the memory check's questions, a few at a time
+uv run companion invented --days 7 --cap 0.2 --dump out.json   # made-up facts about them: candidates, confirm by a stronger reader
 uv run companion lore           # its own tastes (lore); --label labels new views first
 uv run companion names          # things named in memory; --read reads new memories for names first
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID

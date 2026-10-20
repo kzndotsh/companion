@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import uuid
@@ -18,6 +19,7 @@ from companion.core.callbacks import report
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
+from companion.core.invented import report as invented_report
 from companion.core.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.core.prompt.prefix import build_prefix
 from companion.core.relevance import Embedder
@@ -29,6 +31,7 @@ from companion.loops.callbacks import check_new
 from companion.loops.consolidate import SameCheck, nightly
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
+from companion.loops.invented import check_new as check_invented
 from companion.loops.knowing import label_new
 from companion.loops.lore import label_views
 from companion.loops.names import read_names
@@ -525,6 +528,27 @@ async def callbacks_now(db: Path, relationship: str, days: int, cap_usd: float) 
     shown = [(replies[t], c) for t, c in verdicts if c.callback][-8:]
     head = f"judged {judged} new replies for ${spent:.4f}\n"
     return head + report([c for _, c in verdicts], days, shown)
+
+
+async def invented_now(
+    db: Path, relationship: str, days: int, cap_usd: float, dump: Path | None = None
+) -> str:
+    """Judge recent replies for made-up facts about the user, then report (G42)."""
+    load_dotenv(Path(".env"))
+    store = Store(db)
+    rel = RelationshipId(relationship)
+    start = utc_now() - timedelta(days=days)
+    try:
+        async with httpx.AsyncClient() as client:
+            judged, spent = await check_invented(store, extractor(client), rel, start, cap_usd)
+        checks = store.invented_since(rel, start)
+        if dump is not None:
+            dump.write_text(
+                json.dumps(store.invented_candidates(rel, start), ensure_ascii=False, indent=1)
+            )
+    finally:
+        store.close()
+    return f"judged {judged} new replies for ${spent:.4f}\n" + invented_report(checks, days)
 
 
 async def label_now(db: Path, relationship: str) -> str:

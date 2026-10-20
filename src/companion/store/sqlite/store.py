@@ -9,6 +9,7 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.callbacks import Check
+from companion.core.invented import Statement
 from companion.core.knowing import Label
 from companion.core.lore import Kind as ViewKind
 from companion.core.lore import Labelled as ViewLabel
@@ -47,6 +48,7 @@ from companion.store.sqlite import (
     embeddings,
     favorites,
     flags,
+    invented,
     labels,
     ledger,
     memory_checks,
@@ -304,6 +306,29 @@ class Store:
 
     def view_kinds(self, rel: RelationshipId) -> dict[BeliefId, ViewKind]:
         return view_kinds.kinds(self._conn, rel)
+
+    def invented_unchecked(self, rel: RelationshipId, since: datetime) -> list[invented.Unchecked]:
+        return invented.unchecked(self._conn, rel, since)
+
+    def add_invented_check(  # noqa: PLR0913
+        self,
+        rel: RelationshipId,
+        turn: TurnId,
+        statements: list[Statement],
+        *,
+        judge: str,
+        prompt: str,
+        at: datetime,
+    ) -> None:
+        invented.add(self._conn, rel, turn, statements, judge=judge, prompt=prompt, at=at)
+
+    def invented_candidates(self, rel: RelationshipId, start: datetime) -> list[dict[str, object]]:
+        return invented.candidates(self._conn, rel, start)
+
+    def invented_since(
+        self, rel: RelationshipId, start: datetime
+    ) -> list[tuple[str, list[Statement]]]:
+        return invented.since(self._conn, rel, start)
 
     def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
         promises.add(self._conn, p, model=model, prompt=prompt, at=at)

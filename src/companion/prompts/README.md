@@ -113,6 +113,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/recall` | system | the recall look-up, `core/recall.py` | v1 |
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |
+| `system/invented-judge` | system | statements in a reply about the user and what supports each, for the made-up facts rate (G42); flags are candidates | v1 |
 | `system/lore-label` | system | the kind of each of the companion's own views: taste (its lore), stance, rule, self or lived (ADR 0020) | v1 |
 | `system/memory-names` | system | the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |

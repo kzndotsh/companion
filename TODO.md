@@ -371,7 +371,9 @@ Unordered within each group. Pull a card into Todo when it is next.
 
 ### G. Evaluation
 
-- [ ] G42 Fabrication rate: facts in replies with no belief behind them, target zero. (new)
+- [ ] G42 Fabrication rate: facts in replies with no belief behind them, target zero. (built 2026-10-20 as
+      `companion invented`: a cheap judge finds candidates, a Claude judge confirms; first reading 5 of 367
+      replies, about 1.4%)
 - [ ] G43 Date-aware probes the day before and after a thread's date. (new)
 - [ ] G44 Style distance (must not converge on the user's), self-similarity over time, and a
       slop-phrase rate. (new)
@@ -440,7 +442,7 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       about that") so marks sort by failure type (greenfield section 10).
 - [ ] J8 Model-swap protocol: probe the old model, diff the new one against it, tell the owner in
       character, reversible for a window (greenfield section 9: the top reason users quit). With F.
-- [ ] J9 Made-up facts rate: count replies that state a fact about the user with no recorded belief behind
+- [ ] J9 (built as G42, `companion invented`) Made-up facts rate: count replies that state a fact about the user with no recorded belief behind
       it, target zero, as an automatic eval metric (greenfield section 10).
 - [ ] J10 Refuse-to-overwrite rules for the second look: a one-off never replaces a habit, an occasion
       never replaces a standing fact, a vaguer statement never replaces a precise one, someone else's value

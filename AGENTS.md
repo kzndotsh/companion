@@ -32,6 +32,7 @@ just restart      # stop the running bot, wait for it to exit, start the new one
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup
 uv run companion memory review | promises | names | lore   # questions for the owner, and the shadow lists
+uv run companion invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
 uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```

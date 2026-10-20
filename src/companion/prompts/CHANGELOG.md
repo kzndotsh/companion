@@ -738,6 +738,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/memory-pair
 - **system/memory-pair v1** (current). New (ADR 0019). Says how two memories relate: same, merge, distinct, replaces or contradicts. Read three times; a new memory read as the same as an existing one by all three becomes evidence on it, and nothing is merged automatically.
 
+## system/invented-judge
+- **system/invented-judge v1** (current). New (G42, J9: the made-up facts rate). Reads a reply with the 40 messages before it and the memory card it had, and lists each statement asserting a fact about the user's own life with what supports it (conversation, memory or none). Code keeps only quotes from the reply that are said to them (you, your). Never on the reply path: `companion invented`. On 367 real replies a stronger reader confirmed only about one flag in twelve, so its flags are candidates; the rate is what the stronger reader confirms (`--dump`).
+
 ## system/lore-label
 - **system/lore-label v1** (current). New (ADR 0020 phase 1). Labels each of the companion's own views with one kind: taste (a personal preference, quirk or name it likes: its lore), stance (advice or an opinion on a topic), rule (how it treats the user), self (what it is or can do) or lived (a claim that something happened to it in the world, or about a body or senses). Code reads only taste as lore and never counts lived (A22). Shadow: listed by `companion lore`, never shown to the talker yet. Read by eye on the 78 current views in `evals/CHANGELOG.md`. Since 2026-10-20 each batch is read three times and a view is a taste only when all three say so (code, `core/lore.py` `agreed`), after the owner found three wrong tastes: a joke, a reflection on their conversation, and one worded harsher than meant. A v2 naming jokes and reflections caught the joke but called four real tastes jokes or advice, so it was not made.
 

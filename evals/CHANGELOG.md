@@ -1042,3 +1042,16 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   not made. The harsh one is the memory pass's summary; the talker is only ever shown the quote, its own
   words. Now each batch is read three times and a taste needs all three; relabelled every view for
   $0.0039: 16 tastes. The judge sees each view's summary and quote only, not the conversation.
+- **2026-10-20. The made-up facts rate (G42, J9): about 1.4% of replies, and the cheap judge cannot
+  measure it alone.** `companion invented` reads each everyday reply with the messages before it and its
+  memory card, and lists statements about the user's own life with what supports them. On the last two
+  days (367 replies, $0.09): a first prompt flagged 83 (mostly the companion's own wishes, facts about
+  music, a remark about the world); a tighter prompt plus a code rule that the quote must be said to
+  them ("you", "your") flagged 63. A Claude judge (sonnet) read all 63 against 40 messages and the card:
+  6 statements in 5 replies were invented (a statement it said they had made earlier, a stop request
+  that is not in view, a health detail, a dress they never mentioned, a facial expression it cannot have
+  seen, a ritual known only from older talk), 12 were supported by older messages in view, and 49 were
+  not claims at all (questions, reactions, compliments, its own wishes). So the cheap judge is right
+  about one time in twelve and its flags are candidates; the judge now reads 40 messages, and `--dump`
+  writes the candidates with their context for a Claude judge to confirm. Rerun: `uv run companion
+  invented --days 7 --cap 0.2 --dump out.json`, then a Claude subagent on the file.

@@ -96,6 +96,19 @@ def _memory_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     _db_args(rt)
 
 
+def _judging_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
+    """The commands that judge recent replies within a spend cap, then report."""
+    iv = add("invented", help="judge recent replies for made-up facts about them (G42)")
+    iv.add_argument("--days", type=int, default=7)
+    iv.add_argument("--cap", type=float, default=0.10, help="stop judging at this much spend")
+    iv.add_argument("--dump", type=Path, help="write the candidates with their context, to confirm")
+    _db_args(iv)
+    cb = add("callbacks", help="judge recent replies for callbacks, then report")
+    cb.add_argument("--days", type=int, default=7)
+    cb.add_argument("--cap", type=float, default=0.10, help="stop judging at this much spend")
+    _db_args(cb)
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="companion")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -134,10 +147,7 @@ def _parser() -> argparse.ArgumentParser:
     _memory_commands(sub.add_parser)
 
     _db_args(sub.add_parser("rebuild", help="restate every belief under the current rules"))
-    cb = sub.add_parser("callbacks", help="judge recent replies for callbacks, then report")
-    cb.add_argument("--days", type=int, default=7)
-    cb.add_argument("--cap", type=float, default=0.10, help="stop judging at this much spend")
-    _db_args(cb)
+    _judging_commands(sub.add_parser)
     rf = sub.add_parser("reflect", help="run one slow-loop pass now")
     rf.add_argument("--from-start", action="store_true", help="re-read the whole conversation")
     _db_args(rf)
@@ -187,6 +197,11 @@ def _run(a: argparse.Namespace) -> int:
     except KeyboardInterrupt:
         sys.stderr.write("stopped\n")
     return 0
+
+
+def _invented(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    return _out(asyncio.run(daemon.invented_now(db, rel, int(a.days), float(a.cap), a.dump)))
 
 
 def _callbacks(a: argparse.Namespace) -> int:
@@ -349,6 +364,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "reflect": _reflect,
     "rebuild": _rebuild,
     "callbacks": _callbacks,
+    "invented": _invented,
     "eval": _eval,
     "run": _run,
 }
