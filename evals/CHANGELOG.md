@@ -1001,3 +1001,9 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   name"); one real promise ("I'll keep that one straight from now on") was missed by the tighter prompt.
   So it runs in shadow with the owner marking false ones; nothing reaches the talker. Cost $0.066 for
   both prompts. Scratch script and private data, not in the repo.
+- **2026-10-20. Fetch on a mentioned name: rare, not built.** An idea from a roleplay memory guide: when
+  their message names a person, pet or title memory knows, code pulls every memory about it. Counted over
+  every recorded turn (1,040): their message named something memory held 16 times, and the card lacked it
+  on 11, but 9 of those were false matches on ordinary words (a capitalised "God", "Sun", "Weird"). Two
+  real misses in six days (a song title, a pet's name). They mostly say "my dogs", not names. Not worth a
+  step on its own; the relevance shadow (ADR 0018) covers the same ground by meaning. Free, a count by code.
