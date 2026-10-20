@@ -1055,3 +1055,9 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   about one time in twelve and its flags are candidates; the judge now reads 40 messages, and `--dump`
   writes the candidates with their context for a Claude judge to confirm. Rerun: `uv run companion
   invented --days 7 --cap 0.2 --dump out.json`, then a Claude subagent on the file.
+- **2026-10-20. T5 re-measured: the time skip after a sign-off is gone on DeepSeek V4.1 Flash.** Persona
+  v41, `signoff-then-time-skip`, 30 samples each: Luna 30/30, DeepSeek V4.1 Flash 25/30 plain and 25/29
+  with the roleplay prompt (one empty reply). Read by eye, none of the ten DeepSeek "fails" asked whether
+  they had done it or acted as if time had passed; they were "*waits*", "hurry back", "back in twenty",
+  which the judge read too strictly. So by the fixture's intent, 60 of 60 (V4 on persona v25 was 21/30).
+  The criterion now names what fails and what passes. Cost $0.013.

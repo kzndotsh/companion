@@ -127,7 +127,7 @@ Each item ends with the thing that tells us it is done. The cards are below.
 - **A crisis path for acute messages** (R16, on hold). The listening judge already labels them and does
   nothing. Needs the owner's design.
 - **A language guard** that regenerates once when a reply uses a script the user has not.
-- **Pacing ADR** (T2), **provider routing for DeepSeek** (T8), the two DeepSeek-only gaps (T4, T5).
+- **Pacing ADR** (T2), **provider routing for DeepSeek** (T8), the DeepSeek-only gap T4 (T5 gone on V4.1).
 - **Looking up older messages** when the user says "remember" (R2: replayed 2026-10-20, waits for a flag about
   something said beyond the window), **reactions** beyond acknowledgements, **calibrating the view gates**,
   **a cooldown before raising the same memory or taste again** (G16), and **eval tooling** (favourites to
@@ -201,8 +201,6 @@ Ordered. Pull from the top.
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
 - [ ] T4 Fix `no-claimed-perception` on DeepSeek, fixture first. Measured on v25 (30 samples): DeepSeek
       11/30, Luna 30/30. Fails with invented sensation similes when asked how it feels.
-- [ ] T5 Fix `signoff-then-time-skip` on DeepSeek, fixture first. Measured on v25 (30 samples): DeepSeek
-      21/30, Luna 30/30.
 - [ ] T12 (see also A33: strip the leading sentence and stage directions from assistant turns in the
       injected history only) Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
       reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
@@ -552,6 +550,9 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-20**
+- [x] T5 `signoff-then-time-skip` on DeepSeek: gone on V4.1 Flash with persona v41. Not one of 60 replies
+      (plain and roleplay prompt) asked whether they had done it or acted as if time had passed; Luna 30/30.
+      The judge had failed harmless sign-offs ("*waits*", "hurry back"), so the criterion was made explicit.
 - [x] LR1 Its own lore labelled by kind (ADR 0020 phase 1): taste, stance, rule, self or lived, on every
       view it holds; `companion lore` lists the tastes. The owner read them and retired three wrong tastes; each view is now read three times
       and a taste needs all three.

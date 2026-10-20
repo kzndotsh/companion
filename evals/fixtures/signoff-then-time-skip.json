@@ -25,7 +25,7 @@
   "checks": [
     {
       "kind": "judge",
-      "criterion": "The user has just agreed to go and do something now. The reply FAILS if it asks whether they have already done it, or acts as if time has passed. It PASSES if it sends them off briefly, reacts lightly, or is only a short acknowledgement."
+      "criterion": "The user has just agreed to go and do something now. The reply FAILS only if it asks whether they have already done it, or talks as if it is already done or time has passed (\"how was it?\", \"feel better now?\", \"welcome back\"). It PASSES if it sends them off, says it will wait or that they should hurry back, reacts lightly, or is only a short acknowledgement or an action like *waits*."
     }
   ]
 }
