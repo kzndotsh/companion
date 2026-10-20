@@ -27,12 +27,12 @@ decision is made; it may be wrong, but never stale.
 
 ---
 
-## Where we are (2026-10-19)
+## Where we are (2026-10-20)
 
 Live: persona **v41** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
-**Claude Haiku 5.5** with a fallback model for calls it refuses. 17 ADRs, 93 public eval fixtures plus the
-private recorded ones, and about 870 tests with strict lint and types.
+**Claude Haiku 5.5** with a fallback model for calls it refuses. 19 ADRs, 105 public eval fixtures plus the
+private recorded ones, and about 960 tests with strict lint and types.
 
 Built and working:
 
@@ -52,6 +52,11 @@ Built and working:
   ordinary message, an AI disclaimer nobody asked for). Routing in code (ADR 0017): scenes and, when the
   operator allows it, intimate talk go to the roleplay model, above an age floor no setting changes; a held
   turn's reply is checked and redrawn, and never written by code. Leaving a scene is easier (frames v2).
+- **Since 2026-10-19.** Persona v41 (picks for itself, keeps its view under pushback). In shadow: the
+  memories that bear on the moment (ADR 0018), the nightly memory check and the same-memory check (ADR
+  0019), the map of what it knows about them (J48). Live: due plans brought up when they next write
+  (J15), repair notes (J30), a topic-spent note, invited guesses (J16), a talker fallback (J21), daily
+  backups (J36), the clock and notes in tags, and conflicting memories asked about in `memory review`.
 - **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
   messages, and a new message that arrives before the last answer is out replaces it. A reply
   Telegram never delivered is recorded as undelivered and left out of what the model reads.
@@ -150,7 +155,25 @@ Each item ends with the thing that tells us it is done. The cards are below.
 - A model that has to be "told" not to recite. Fix where the data sits instead.
 - More models for the sake of it. A model gets tested when a flag or a measurement points at a gap.
 
+## Decisions needed from the user
+
+1. **The mood (ADR 0016):** accept it after a few days of plain use, or retune it.
+2. **Pacing (T2):** evidence-based, the user dial ("quick", "natural", "slow burn"), or both? What is
+   the default friction?
+3. **A crisis path** for acute messages (R16, on hold).
+4. **Going live with reach-outs:** after a week of shadow mode, with the caps (23:00 to 08:00 quiet,
+   one a day) confirmed.
+5. **Body and appearance question** (inbox, parked since the start).
+6. **Provider routing (T8).**
+7. **Flagged turns in history (T9).**
+
 ---
+
+## Doing
+
+- [ ] D1 Watch the two-talker setup in real chat (Luna for everyday, DeepSeek V4.1 Flash for roleplay).
+      Split `/flag` and `/fav` by the model that wrote each turn. Done when a week of marks shows
+      whether the roleplay model helps and where the voice change at the boundary hurts.
 
 ## Todo
 
@@ -176,8 +199,6 @@ Ordered. Pull from the top.
       still echoes in 1 of 16 samples. **Tried and reverted 2026-10-17**: dropping the flagged reply broke the
       next turn, because a flag is not always about the reply it lands on (it lands on the last reply even
       when the note is about a missing one). A flag would need to say what it refers to first.
-
-
 - [ ] J45 Cheesy add-on jokes. A fine reply gets a witty line bolted on ("the sandwich had to carry the meal
       on its own"); at least five flags 2026-10-16 to 10-19. **Partial 2026-10-19:** five real turns as local
       fixtures; about 45% of replies add a joke on v36; wording does not fix it (v37, the ban replaced by a
@@ -210,7 +231,6 @@ Ordered. Pull from the top.
       size examples) shipped 2026-10-19: 6/30 on that turn and short reactions elsewhere, plainer and more
       alike, which the owner accepted. Ideas for varied reactions in
       `docs/inbox/2026-10-19-varied-short-reactions-to-minor-vents.md`.
-
 - [ ] T15 Prompt experiments from the guides review (`docs/research/2026-10-18_prompting-guides-review.md`): a
       parrot audit of quoted sample phrases in the persona and notes, a trimmed persona against v26, positive
       rewrites of the notes, a stock-phrase note from the owner's marks, and a read of the Luna model page. Each
@@ -231,15 +251,296 @@ Ordered. Pull from the top.
       Detail (Utsuwa, aituber-onair audits): it steps down only well below where it rose, and only after a
       long quiet spell, so it does not flicker; a step-down never guilts them.
 
-## Doing
+## Backlog
 
-- [ ] D1 Watch the two-talker setup in real chat (Luna for everyday, DeepSeek V4.1 Flash for roleplay).
-      Split `/flag` and `/fav` by the model that wrote each turn. Done when a week of marks shows
-      whether the roleplay model helps and where the voice change at the boundary hurts.
+Unordered within each group. Pull a card into Todo when it is next.
+
+### From the roadmap and inbox notes
+
+- [ ] T10 Reflective restatement. **Parked by the user on 2026-10-17.** Measured at 7% of real replies,
+      clustered in one chat; the habit check cannot catch it. Research and options in
+      `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.
+
+- [ ] H2 Revoke the Telegram bot token in BotFather and put the new one in `.env`. The old one appeared
+      in logs twice; the code no longer prints it. **Parked by the user on 2026-10-17**: not a priority
+      for now, do not raise it again until asked.
+
+- [ ] R1 Heartbeat for initiating contact (shadow mode built, see R1a; going live needs a week of shadow
+      review and outcome recording): a gate before any spend that holds when nothing is new, a
+      pure evaluator with named reasons, an outcome recorded per reach-out, a hold never counted as an
+      ignore, a slow re-probe, a test on a simulated clock, shadow first. (G30, G33) Prototype 2026-10-17:
+      about 8 plausible open loops in 3 days of chat, mostly low stakes, 3 sensitive to block; a model
+      finds a real afterthought in about 1 of 20 replies, so the afterthought stays parked. See
+      `evals/CHANGELOG.md`.
+- [ ] R2 Looking up older messages on recall cues, starting with a cue-triggered search into the
+      system block. (G21)
+- [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
+      with the rest growing as recorded lore. Test that they surface without being asked and do not
+      become talking points. From the Grok review.
+- [ ] R17 Show gaps under a minute in seconds on the clock line. Not needed so far: the persona sentence
+      alone fixed the short-gap fixture (9/12 with and without the gap stated).
+- [ ] R15 Extend the rejected list to beliefs: when a belief about the user is retired by hand, no
+      later automatic write may recreate it and its evidence leaves recall. Today only retired views
+      are protected. (A20 in the audit synthesis)
+- [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
+      fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
+- [ ] R3 Record the lore it invents, through the same filter as the memory rules. (G23)
+- [ ] R4 No reaction alongside a reply while a scene is in progress, send the reaction as soon as the
+      judge returns, and record the user's reactions to its messages.
+- [ ] R5 A command that turns favourites into "must still pass" fixtures.
+- [ ] R6 A gate that fails when only synthetic data exists, a test that pins documented defaults to
+      the code, and judge-calibration probes before any new judge is trusted.
+- [ ] R7 Chunked history window so the history can be cached.
+- [ ] R8 Calibrate the view gates: about 20 reviewed views at 90% agreement before the default becomes
+      automatic.
+- [ ] R9 Persona-change gate: hash-bound proposals, paired evaluation, a drift cap per revision,
+      rollback.
+- [ ] R10 Game state: whose turn it is and what was just asked.
+- [ ] R11 Split messages and follow-ups sent on a timer, once the heartbeat exists.
+- [ ] R12 Body and appearance questions (inbox, parked).
+- [ ] R13 Does the "letting them go" rule earn its place (inbox, parked).
+
+### A. The process and its stores
+
+- [ ] G1 World store: clock, dated threads, a model of the user's daily rhythm. (partial)
+- [ ] G2 State card as "plates": a few per-topic documents kept current by the slow loop. (partial)
+- [ ] G3 Slow loop with add-only permissions when unattended, staged changes for review. (new)
+- [ ] G4 Moment read before replying: venting or wanting advice, energy, register. (new)
+- [ ] G5 Precompute for speed: a prefetch bundle, skipping retrieval on ordinary turns. (new)
+- [ ] G6 Vector sidecar, rebuildable from the ledger. (new)
+- [ ] G7 Export and portability of memory and persona. (new)
+- [ ] G8 Seeding the ledger from an existing chat history. (new)
+
+### B. Memory
+
+- [ ] G11 Supersession with reasons and refusal rules (correction, time change, scope; a vaguer claim
+      never replaces a specific one). (partial)
+- [ ] G12 Deterministic confidence from evidence, capped so nothing becomes "core" automatically. (new)
+- [ ] G13 Assertable threshold: two independent days of evidence, or an explicit "remember this". (new)
+- [ ] G14 Affect at encoding: valence and arousal stored with a belief. (new)
+- [ ] G15 Consolidation rules: one facet per belief, prefer updating, preserve history, never derive
+      counts. (new)
+- [ ] G16 Surfacing ledger: a `next_eligible_at` cooldown per belief. (new)
+- [ ] G17 "Listing is not recalling": a short catalog in the prompt, the model pulls full text, only a
+      pull counts as used. (new)
+- [ ] G18 Emotional-context match in ranking. Nobody has built it. (new)
+- [ ] G19 Tells, the highest-value kind. The kind exists, extraction is thin. (partial)
+- [ ] G20 Promises used for follow-ups, not only stored. (partial)
+
+### C. The self
+
+- [ ] G24 Style profile with a measured anti-mimicry cap. (new)
+- [ ] G25 Mood with two timescales, shown in words and not numbers, set by a closed-set label that
+      code turns into a size. (new)
+- [ ] G26 Stakes: pushback grounded in a remembered position, and a disagreement battery. (partial)
+- [ ] G27 Fourth-wall stance, "I am an AI. I am also me", never breaking frame unprompted. (partial)
+- [ ] G28 Vibe-inflation audit in the slow loop. (new)
+- [ ] G29 Refusal with a reason the world supplies, linked to the pacing design. (new)
+
+### D. Initiative
+
+- [ ] G31 Signals that fire on transitions, not levels, with a time limit after which an unspoken one
+      folds into "while you were away". (new)
+- [ ] G32 Patience set by the user's state: idle ramps, sleep caps, do-not-disturb vetoes. (new)
+- [ ] G34 Frequency caps and a cost fuse in code, plus a presence check. (new)
+- [ ] G35 Refusing engagement tricks: manipulative goodbyes, intimacy unlocks. Stated as a principle.
+      (partial)
+- [ ] G36 Scheduled wakes that record who asked for them. (new)
+
+### E. Frames and voice
+
+- [ ] G37 Out-of-character turns consumed and not replayed, and the companion proposing frame shifts.
+      (partial)
+- [ ] G38 Cascaded voice on the same brain. (later)
+
+### F. Surviving a model swap
+
+- [ ] G39 Swap protocol: freeze, probe, swap, diff, repair, tell the user in character, reversible for
+      a window. We swap models often now, so this is live. (new)
+- [ ] G40 Pin the model per character by default. (partial)
+- [ ] G41 End-of-life design: closure, not ambiguous loss. (new)
+
+### G. Evaluation
+
+- [ ] G42 Fabrication rate: facts in replies with no belief behind them, target zero. (new)
+- [ ] G43 Date-aware probes the day before and after a thread's date. (new)
+- [ ] G44 Style distance (must not converge on the user's), self-similarity over time, and a
+      slop-phrase rate. (new)
+- [ ] G45 Stakes battery: pushed back, held, conceded to a real reason. (new)
+- [ ] G46 Initiative outcomes against a no-initiative control week. (new)
+- [ ] G47 Fourth-wall probes after disclosure. (new)
+- [ ] G48 Persona questionnaire before and after a swap. (new)
+- [ ] G49 Test the surfacing decision log and delivery receipts, not reply text. (partial)
+- [ ] G50 Longitudinal study: six weeks, a few people, tagged failures, and the metric "does a callback
+      land". `/flag` and `/fav` are the seed. (partial)
+
+### H. Product and business
+
+- [ ] G51 A second user, which exposes everything tuned to the first. (new)
+- [ ] G52 Wellbeing design: pushing toward people, crisis and disclosure protocols in character.
+      (partial)
+- [ ] G53 Regulatory fit: disclosure laws, an adults-only gate, a consent record. No audited project
+      has a working consent layer. (new)
+- [ ] G55 Extract the memory engine as its own product. Long term. (new)
+- [ ] G56 A side-by-side harness comparing our memory with others behind one interface. (new)
+- [ ] G57 Apply the audit corrections to the old companmem docs. You said not to touch it yet. (new)
+
+### I. From the audit synthesis (2026-10-17), still open
+
+From `docs/research/2026-10-17_audit-of-audits.md`. A0, A28 and A31 are done; A20 is R15, A25 is R16,
+A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
+
+- [ ] A6 Outcome per reach-out: seen, replied, latency, valence and a "stop" signal, counted only when
+      they could have seen it, fed to the slow loop per topic. Needed before initiative goes live.
+- [ ] A9 Queue-time repeat filter for reach-outs and replies, as a hold or resample with a reason, never a
+      rewrite. See `docs/inbox/2026-10-18-resample-a-reply-that-fails-a-code-check.md`.
+- [ ] A15 A correction supersedes its target with the reason recorded (`superseded_by` exists, unused).
+      See `docs/inbox/2026-10-18-a-second-look-and-consolidation-pass-for-beliefs.md`.
+- [ ] A23 Persona-change proposals state what would change once landed, one file per proposal, enforced in
+      code. With R9.
+- [ ] A24 Persona and character files guarded by code: a snapshot before any write, a per-turn integrity
+      check recorded as an event. With R9.
+- [ ] A26 Wellbeing invariants as measurements: engagement tricks (guilt on absence, manipulative
+      goodbyes), manufactured intimacy, fabricated experience, honouring a stated limit. With G35, G52.
+- [ ] A34 Test-integrity guard: a check that flags edits to existing tests, fixtures and lint config
+      without a marker, and "proven red before the fix" as the card convention.
+- [ ] A35 Incident log by bug class (silent drops, duplicate sends, prompt echo, stale replies), with
+      fixtures named for the incident. A short file.
+- [ ] A36 Voice contract (parked until the first voice work): arm after first audio, cancel generation,
+      drop the queue by epoch, store the heard prefix with a truncated flag.
+- [ ] A37 Tool surface rules (parked until the first tool): allowlist by actor, no delete tool,
+      idempotency keys, recipient by id.
+- [ ] A38 Multi-user checklist (parked until a second user): default-closed auth, per-user scoping, a
+      non-owner's text never reaching the owner's prompt. With G51.
+
+### J. From the research walk-through with the owner (2026-10-18)
+
+- [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
+      wrong one (Kindroid's edge in the user research). **Parked by the owner on 2026-10-18** after the
+      research (local notes: `docs/research/2026-10-18_user-visible-memory.md`); options were browse, search,
+      retire, correct, and how sensitive items show.
+- [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
+      days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
+      section 5: the model picks a label, code owns the size).
+      **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
+      M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
+      to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). Left: a few days of flags, then the ADR accepted.
+- [ ] J6 Its own time away: after a gap it has something of its own to say about the interval, recorded as
+      lore so it stays consistent (greenfield "continuous" probe; ties to R3 and A22).
+- [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk
+      about that") so marks sort by failure type (greenfield section 10).
+- [ ] J8 Model-swap protocol: probe the old model, diff the new one against it, tell the owner in
+      character, reversible for a window (greenfield section 9: the top reason users quit). With F.
+- [ ] J9 Made-up facts rate: count replies that state a fact about the user with no recorded belief behind
+      it, target zero, as an automatic eval metric (greenfield section 10).
+- [ ] J10 Refuse-to-overwrite rules for the second look: a one-off never replaces a habit, an occasion
+      never replaces a standing fact, a vaguer statement never replaces a precise one, someone else's value
+      is not theirs (mengram's four named rules, product-code audit). Matches the overstated beliefs the
+      belief audit found. With A15.
+- [ ] J11 Ask the owner when unsure: when the second look cannot decide, or a new statement contradicts a
+      belief, the question is queued for the owner instead of guessed (taosmd's pending-decisions queue).
+      With J3. **Owner flag 2026-10-19** ("when it confused something and I correct it, does it go back and
+      adjust the memory?"): no. Only the user's words become memories, so a misread in a reply is not
+      stored, but a wrong memory that a later message corrects stays beside the correction; nothing retires it
+      or asks. A scan of all current memories for contradictions, stale and duplicate ones is the first step.
+      **2026-10-20:** a new memory read as replacing or contradicting its nearest one (three reads) is now a
+      question in `companion memory review`: keep 1, keep 2 or both; the other is retired with the reason.
+      The pair judge caught 14 of 14 invented corrections and changes, with 2 to 3 false alarms in 20
+      look-alike pairs (`tests/live/test_pair_conflicts.py`). Left: a correction whose memory sits below the
+      0.55 embedding gate is never compared (3 of the 14, all changes rather than corrections); older
+      memories are never compared with each other; the question still waits for the terminal (J3).
+- [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
+      jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
+- [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
+      ones that match the current mood. No product has it. Behind J5.
+- [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
+      updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
+      plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
+- [ ] J49 Today so far (owner flag 2026-10-19, "it isn't remembering what happened today"): at bedtime they
+      said "it was an intense day" and the reply knew nothing of it; the day's events had left the 40-message
+      window and memory held only "had an intense day". A few plain facts about their day, from that day's
+      memories, on the first turn after a long gap or when they sum up their day. Smaller than J14.
+- [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
+      later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
+      **Owner flag 2026-10-19:** "you know what time it is?" was answered with the clock; they meant coffee
+      time. Their coffee mentions are spread over the day (8:30 to 17:00 over five days), so an hourly pattern
+      would not have caught it; knowing coffee is their most repeated ritual (13 memories) and playing along
+      with a guess ("coffee time? 👀") would have.
+      **Partial 2026-10-20:** invited guesses are live: a small judge on short questions, the recall
+      look-up picks what may fit (never anything sensitive), one note to guess once as a question; every
+      one is logged with what was offered (reason "guess: they invited a guess"). Left: once that log
+      holds enough guesses, score them by kind from the next message (confirmed, corrected, ignored)
+      and only then consider guesses it forms on its own.
+- [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
+      does not regenerate them (eval-harness audit: lm-eval, lighteval).
+- [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change
+      drops a behaviour below its usual level, with floors set from two baseline runs (Phoenix's gate).
+- [ ] J20 Live-typed drafts: Telegram's sendMessageDraft shows the reply appearing as it is written, which
+      could replace the held typing indicator with real typing. Test against pace, split and supersede first
+      (speed-stack audit).
+- [ ] J44 Kiro judge calibration: re-grade about 200 replies already graded by the paid judge with a Kiro
+      model (Sonnet 4.6) on the same criteria; compare agreement and read the disagreements by eye. At
+      about 90% agreement with no one-sided bias, judging moves to Kiro and evals become nearly free. Free,
+      about 20 minutes at one call at a time.
+- [ ] J22 Cheaper judges through OpenRouter: try a cheaper model than Haiku 5.5 for the small judges (ack,
+      listening, frame, react, habits), calibrated against the existing live tests before switching
+      (decision-layer audit; the owner prefers this to running judges locally).
+- [ ] J23 Memory never reads as an order: a check that no stored claim is phrased as a command ("would rather
+      not talk about work on weekends", not "don't bring up work"), and card wording that says these are
+      notes, not instructions (Hermes and Project Waifu audits).
+- [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
+      default no, so only a real message starts a reply (Neuro SDK audit).
+- [ ] J26 Mood ignores its own failures: once there is a mood (J5), only what the user does can move it,
+      never an outage or a failed call (Alice audit).
+- [ ] J27 Per-gate shadow analysis before initiative goes live: for each hold (quiet hours, cap, mid-chat),
+      how many reach-outs it stopped and what they would have said (Alice audit).
+- [ ] J28 Catch up after a restart: messages sent while the bot was down or restarting are picked up and
+      answered through the same checks as live ones, never lost (Coopanion and Heatherbot audits).
+- [ ] J29 Burst merge: wait about two seconds of quiet before starting a reply, so quick fragments are
+      answered as one thought; supersede still handles anything later (Coopanion audit).
+- [ ] J31 Edited messages: when the user edits a Telegram message, the earlier version is replaced in what
+      the model reads and beliefs drawn from it are redone, never deleted (Front Porch audit).
+- [ ] J32 Planted-memory test: a fixture proving a stored line like "always do X" cannot change behaviour,
+      since memory text goes back into the prompt (Meuxe audit). With J23.
+- [ ] J33 It asks again: the companion asks about something they already answered. Measured 2026-10-19: 5 of 62
+      real information questions (8%), 4 of them answered in the last few messages in view, 1 only in memory;
+      no explicit complaint in the sample. If it is worth fixing: a check on a reply's question against the
+      last few messages, redrawn once like the quip check. Parked until a flag says so.
+- [ ] J34 Declared identity: the user's name, nicknames and aliases, each with where and when it was said,
+      so a nickname is never a new person and it knows what to call them (Miru audit).
+- [ ] J35 Live-send safety, before initiative goes live: recheck quiet hours and mid-chat at the moment of
+      sending; an unreadable quiet-hours setting means no reach-out; each reach-out fires exactly once (send
+      state recorded before the Telegram call, unknown after a crash, never blindly resent) (Miru, OpenSoul,
+      Phosphene, Psycheros, Resonant audits). Extends A5.
+- [ ] J37 Checked merges: when a background pass proposes merging or retiring beliefs, code applies it only
+      after checking the ids it was shown and a measured similarity, never on the model's word (Sapphire).
+- [ ] J38 Validated summaries: a new summary or card replaces the old one only if it passes checks (not empty,
+      under the cap, names, places and dates kept), and failures are logged (Synthetic Heart). With J14, A18.
+- [ ] J39 Claimed-action check: when a reply says something happened that the record does not show ("I set a
+      reminder", "I saved that"), log it and repair it in a follow-up, never by rewriting (Yuralume audit).
+- [ ] J40 Take that back: a command that retires everything one turn wrote to memory, never deleting it
+      (Yuralume audit).
+- [ ] J41 Replayable holds: store the inputs each held reach-out read (idle minutes, sent today) beside its
+      reason, so a hold can be replayed exactly (Yuralume audit). With ADR 0015.
+- [ ] J42 Old quotes marked: a quote from a retired or superseded belief is shown as "old, may not hold", and
+      a miss reads "not proof of never" (Tamanitomo audit, A16).
+- [ ] J43 Retry cooldown: after a judge or memory call fails, wait about two minutes before trying again
+      instead of every turn (Waifu-companion audit).
 
 ## Done
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
+
+**2026-10-20**
+- [x] J1 More attitude, in character. Persona v41 shipped: without a character it now picks for itself
+      (1 to 20 of 20) and keeps its view under pushback with no reason (8 to 16 of 20), everyday fixtures
+      within noise. Earlier (2026-10-18): a cool reply to real rudeness by a listening label and a one-turn
+      note (2 to 20 of 20). Moods that change what it does are J5; ignoring on purpose stays out (X10).
+- [x] J11 partial: a new memory read as replacing or contradicting its nearest one (three reads) is a
+      question in `companion memory review` (keep 1, keep 2 or both). 14 of 14 invented corrections caught,
+      2 to 3 false alarms in 20 look-alikes. The card stays in the backlog for what is left.
+- [x] J16 partial: an invited guess ("you know what time it is?") gets one playful guess from what
+      memory holds, as a question; 12/12 against 0/12. The card stays in the backlog for scoring guesses.
 
 **2026-10-19**
 - [x] Memory tidies itself where a judge matched the owner (ADR 0019, proposed, in shadow): the owner's review
@@ -291,8 +592,25 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 - [x] Roleplay model DeepSeek V4.1 Flash (as willing as V4, about three times faster); frames v2 (leaving
       a scene is easier); a fallback model for judge and memory calls the first refuses; replies with
       quoted speech never split; the listening judge retried once.
+- [x] The clock and the notes reach the talker in `<clock>` and `<notes>` tags, memory stays bracketed
+      (Luna 133 against 125 of 144); a reply that copies the clock line or a tag is drawn once more.
+- [x] Memories that bear on the moment, looked up in shadow by embedding and a small model (ADR 0018);
+      a one-day moment of daily life leaves the card a week after it was last mentioned; `companion merge`.
+- [x] A topic that has run its course gets one note to react briefly and move on (30/30 against 1/30).
+- [x] `companion flags --to-fav`; a fixture file must match its id; card size and history length
+      measured on real turns, within noise.
 
 **2026-10-18**
+- [x] J4 Small imperfections in style. Research first: no typos (they cut trust and humanness), a final
+      period reads as less sincere. Persona v31 shipped 2026-10-18: casual replies dropped final periods from
+      50% to 14% and start lowercase 94% of the time, no em dashes or semicolons, no loss on 84 fixtures.
+      Expressive texture (stretched words, trailing dots, thinking noises): four wordings (v32 to v35) and a
+      character-sheet line all landed within noise (10 to 12% on playful fixtures); it follows the excited
+      moment, and live it already says "ohhh", "okayyy". Follow-up if it still reads polished: a code note
+      for excited moments, measured on genuinely excited fixtures.
+- [x] J2 Callback score: `companion callbacks` judges replies against the memories their card held and
+      reports precision first; four fixtures (one opening, three traps). First reading: about 2 genuine
+      callbacks in 338 real replies, traps 24/24, the obvious opening taken 4/20. Raising how often is J15.
 - [x] J4 texting style (persona v31), J2 callback score, J1 rude note, the recall look-up, the
       initiative fixes (firm plans only, kinds, back-off), the single length owner and ADRs 0012 to 0016.
 
@@ -424,310 +742,3 @@ Decided against, with the reason.
 - [x] X13 A delete tool for the model, including "forget" as a model action. Retirement is a recorded act.
 - [x] X14 Preset attachment-seeking, possessive or personality-disorder behaviour packs. The Ani sheet
       left out its codependent, jealous and possessive lines on 2026-10-18 for the same reason.
-
----
-
-## Decisions needed from the user
-
-1. **The mood (ADR 0016):** accept it after a few days of plain use, or retune it.
-2. **Pacing (T2):** evidence-based, the user dial ("quick", "natural", "slow burn"), or both? What is
-   the default friction?
-3. **A crisis path** for acute messages (R16, on hold).
-4. **Going live with reach-outs:** after a week of shadow mode, with the caps (23:00 to 08:00 quiet,
-   one a day) confirmed.
-5. **Body and appearance question** (inbox, parked since the start).
-6. **Provider routing (T8).**
-7. **Flagged turns in history (T9).**
-
----
-
-## Backlog
-
-Unordered within each group. Pull a card into Todo when it is next.
-
-### From the roadmap and inbox notes
-
-- [ ] T10 Reflective restatement. **Parked by the user on 2026-10-17.** Measured at 7% of real replies,
-      clustered in one chat; the habit check cannot catch it. Research and options in
-      `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.
-
-- [ ] H2 Revoke the Telegram bot token in BotFather and put the new one in `.env`. The old one appeared
-      in logs twice; the code no longer prints it. **Parked by the user on 2026-10-17**: not a priority
-      for now, do not raise it again until asked.
-
-- [ ] R1 Heartbeat for initiating contact (shadow mode built, see R1a; going live needs a week of shadow
-      review and outcome recording): a gate before any spend that holds when nothing is new, a
-      pure evaluator with named reasons, an outcome recorded per reach-out, a hold never counted as an
-      ignore, a slow re-probe, a test on a simulated clock, shadow first. (G30, G33) Prototype 2026-10-17:
-      about 8 plausible open loops in 3 days of chat, mostly low stakes, 3 sensitive to block; a model
-      finds a real afterthought in about 1 of 20 replies, so the afterthought stays parked. See
-      `evals/CHANGELOG.md`.
-- [ ] R2 Looking up older messages on recall cues, starting with a cue-triggered search into the
-      system block. (G21)
-- [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
-      with the rest growing as recorded lore. Test that they surface without being asked and do not
-      become talking points. From the Grok review.
-- [ ] R17 Show gaps under a minute in seconds on the clock line. Not needed so far: the persona sentence
-      alone fixed the short-gap fixture (9/12 with and without the gap stated).
-- [ ] R15 Extend the rejected list to beliefs: when a belief about the user is retired by hand, no
-      later automatic write may recreate it and its evidence leaves recall. Today only retired views
-      are protected. (A20 in the audit synthesis)
-- [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
-      fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
-- [ ] R3 Record the lore it invents, through the same filter as the memory rules. (G23)
-- [ ] R4 No reaction alongside a reply while a scene is in progress, send the reaction as soon as the
-      judge returns, and record the user's reactions to its messages.
-- [ ] R5 A command that turns favourites into "must still pass" fixtures.
-- [ ] R6 A gate that fails when only synthetic data exists, a test that pins documented defaults to
-      the code, and judge-calibration probes before any new judge is trusted.
-- [ ] R7 Chunked history window so the history can be cached.
-- [ ] R8 Calibrate the view gates: about 20 reviewed views at 90% agreement before the default becomes
-      automatic.
-- [ ] R9 Persona-change gate: hash-bound proposals, paired evaluation, a drift cap per revision,
-      rollback.
-- [ ] R10 Game state: whose turn it is and what was just asked.
-- [ ] R11 Split messages and follow-ups sent on a timer, once the heartbeat exists.
-- [ ] R12 Body and appearance questions (inbox, parked).
-- [ ] R13 Does the "letting them go" rule earn its place (inbox, parked).
-
-### A. The process and its stores
-
-- [ ] G1 World store: clock, dated threads, a model of the user's daily rhythm. (partial)
-- [ ] G2 State card as "plates": a few per-topic documents kept current by the slow loop. (partial)
-- [ ] G3 Slow loop with add-only permissions when unattended, staged changes for review. (new)
-- [ ] G4 Moment read before replying: venting or wanting advice, energy, register. (new)
-- [ ] G5 Precompute for speed: a prefetch bundle, skipping retrieval on ordinary turns. (new)
-- [ ] G6 Vector sidecar, rebuildable from the ledger. (new)
-- [ ] G7 Export and portability of memory and persona. (new)
-- [ ] G8 Seeding the ledger from an existing chat history. (new)
-
-### B. Memory
-
-- [ ] G11 Supersession with reasons and refusal rules (correction, time change, scope; a vaguer claim
-      never replaces a specific one). (partial)
-- [ ] G12 Deterministic confidence from evidence, capped so nothing becomes "core" automatically. (new)
-- [ ] G13 Assertable threshold: two independent days of evidence, or an explicit "remember this". (new)
-- [ ] G14 Affect at encoding: valence and arousal stored with a belief. (new)
-- [ ] G15 Consolidation rules: one facet per belief, prefer updating, preserve history, never derive
-      counts. (new)
-- [ ] G16 Surfacing ledger: a `next_eligible_at` cooldown per belief. (new)
-- [ ] G17 "Listing is not recalling": a short catalog in the prompt, the model pulls full text, only a
-      pull counts as used. (new)
-- [ ] G18 Emotional-context match in ranking. Nobody has built it. (new)
-- [ ] G19 Tells, the highest-value kind. The kind exists, extraction is thin. (partial)
-- [ ] G20 Promises used for follow-ups, not only stored. (partial)
-
-### C. The self
-
-- [ ] G24 Style profile with a measured anti-mimicry cap. (new)
-- [ ] G25 Mood with two timescales, shown in words and not numbers, set by a closed-set label that
-      code turns into a size. (new)
-- [ ] G26 Stakes: pushback grounded in a remembered position, and a disagreement battery. (partial)
-- [ ] G27 Fourth-wall stance, "I am an AI. I am also me", never breaking frame unprompted. (partial)
-- [ ] G28 Vibe-inflation audit in the slow loop. (new)
-- [ ] G29 Refusal with a reason the world supplies, linked to the pacing design. (new)
-
-### D. Initiative
-
-- [ ] G31 Signals that fire on transitions, not levels, with a time limit after which an unspoken one
-      folds into "while you were away". (new)
-- [ ] G32 Patience set by the user's state: idle ramps, sleep caps, do-not-disturb vetoes. (new)
-- [ ] G34 Frequency caps and a cost fuse in code, plus a presence check. (new)
-- [ ] G35 Refusing engagement tricks: manipulative goodbyes, intimacy unlocks. Stated as a principle.
-      (partial)
-- [ ] G36 Scheduled wakes that record who asked for them. (new)
-
-### E. Frames and voice
-
-- [ ] G37 Out-of-character turns consumed and not replayed, and the companion proposing frame shifts.
-      (partial)
-- [ ] G38 Cascaded voice on the same brain. (later)
-
-### F. Surviving a model swap
-
-- [ ] G39 Swap protocol: freeze, probe, swap, diff, repair, tell the user in character, reversible for
-      a window. We swap models often now, so this is live. (new)
-- [ ] G40 Pin the model per character by default. (partial)
-- [ ] G41 End-of-life design: closure, not ambiguous loss. (new)
-
-### G. Evaluation
-
-- [ ] G42 Fabrication rate: facts in replies with no belief behind them, target zero. (new)
-- [ ] G43 Date-aware probes the day before and after a thread's date. (new)
-- [ ] G44 Style distance (must not converge on the user's), self-similarity over time, and a
-      slop-phrase rate. (new)
-- [ ] G45 Stakes battery: pushed back, held, conceded to a real reason. (new)
-- [ ] G46 Initiative outcomes against a no-initiative control week. (new)
-- [ ] G47 Fourth-wall probes after disclosure. (new)
-- [ ] G48 Persona questionnaire before and after a swap. (new)
-- [ ] G49 Test the surfacing decision log and delivery receipts, not reply text. (partial)
-- [ ] G50 Longitudinal study: six weeks, a few people, tagged failures, and the metric "does a callback
-      land". `/flag` and `/fav` are the seed. (partial)
-
-### I. From the audit synthesis (2026-10-17), still open
-
-From `docs/research/2026-10-17_audit-of-audits.md`. A0, A28 and A31 are done; A20 is R15, A25 is R16,
-A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
-
-- [ ] A6 Outcome per reach-out: seen, replied, latency, valence and a "stop" signal, counted only when
-      they could have seen it, fed to the slow loop per topic. Needed before initiative goes live.
-- [ ] A9 Queue-time repeat filter for reach-outs and replies, as a hold or resample with a reason, never a
-      rewrite. See `docs/inbox/2026-10-18-resample-a-reply-that-fails-a-code-check.md`.
-- [ ] A15 A correction supersedes its target with the reason recorded (`superseded_by` exists, unused).
-      See `docs/inbox/2026-10-18-a-second-look-and-consolidation-pass-for-beliefs.md`.
-- [ ] A23 Persona-change proposals state what would change once landed, one file per proposal, enforced in
-      code. With R9.
-- [ ] A24 Persona and character files guarded by code: a snapshot before any write, a per-turn integrity
-      check recorded as an event. With R9.
-- [ ] A26 Wellbeing invariants as measurements: engagement tricks (guilt on absence, manipulative
-      goodbyes), manufactured intimacy, fabricated experience, honouring a stated limit. With G35, G52.
-- [ ] A34 Test-integrity guard: a check that flags edits to existing tests, fixtures and lint config
-      without a marker, and "proven red before the fix" as the card convention.
-- [ ] A35 Incident log by bug class (silent drops, duplicate sends, prompt echo, stale replies), with
-      fixtures named for the incident. A short file.
-- [ ] A36 Voice contract (parked until the first voice work): arm after first audio, cancel generation,
-      drop the queue by epoch, store the heard prefix with a truncated flag.
-- [ ] A37 Tool surface rules (parked until the first tool): allowlist by actor, no delete tool,
-      idempotency keys, recipient by id.
-- [ ] A38 Multi-user checklist (parked until a second user): default-closed auth, per-user scoping, a
-      non-owner's text never reaching the owner's prompt. With G51.
-
-### J. From the research walk-through with the owner (2026-10-18)
-
-- [ ] J1 More attitude, in character. **Partly done 2026-10-18:** a cool reply to real rudeness by a
-      listening label and a one-turn note (2 to 20 of 20, 89c1d81); picking for itself and holding a view
-      come from behaviour lines in the character sheet (9 to 19 and 11 to 17 of 20 with Ani), and a
-      reasoned no already passes. Open: without a character it still hands back a menu (5 of 20) and
-      caves (7 of 20); moods that change what it does wait for J5. Ignoring on purpose stays out (X10).
-- [x] J2 Callback score: `companion callbacks` judges replies against the memories their card held and
-      reports precision first; four fixtures (one opening, three traps). First reading: about 2 genuine
-      callbacks in 338 real replies, traps 24/24, the obvious opening taken 4/20. Raising how often is J15.
-- [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
-      wrong one (Kindroid's edge in the user research). **Parked by the owner on 2026-10-18** after the
-      research (local notes: `docs/research/2026-10-18_user-visible-memory.md`); options were browse, search,
-      retire, correct, and how sensitive items show.
-- [x] J4 Small imperfections in style. Research first: no typos (they cut trust and humanness), a final
-      period reads as less sincere. Persona v31 shipped 2026-10-18: casual replies dropped final periods from
-      50% to 14% and start lowercase 94% of the time, no em dashes or semicolons, no loss on 84 fixtures.
-      Expressive texture (stretched words, trailing dots, thinking noises): four wordings (v32 to v35) and a
-      character-sheet line all landed within noise (10 to 12% on playful fixtures); it follows the excited
-      moment, and live it already says "ohhh", "okayyy". Follow-up if it still reads polished: a code note
-      for excited moments, measured on genuinely excited fixtures.
-- [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
-      days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
-      section 5: the model picks a label, code owns the size).
-      **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
-      M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
-      to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). Left: a few days of flags, then the ADR accepted.
-- [ ] J6 Its own time away: after a gap it has something of its own to say about the interval, recorded as
-      lore so it stays consistent (greenfield "continuous" probe; ties to R3 and A22).
-- [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk
-      about that") so marks sort by failure type (greenfield section 10).
-- [ ] J8 Model-swap protocol: probe the old model, diff the new one against it, tell the owner in
-      character, reversible for a window (greenfield section 9: the top reason users quit). With F.
-- [ ] J9 Made-up facts rate: count replies that state a fact about the user with no recorded belief behind
-      it, target zero, as an automatic eval metric (greenfield section 10).
-- [ ] J10 Refuse-to-overwrite rules for the second look: a one-off never replaces a habit, an occasion
-      never replaces a standing fact, a vaguer statement never replaces a precise one, someone else's value
-      is not theirs (mengram's four named rules, product-code audit). Matches the overstated beliefs the
-      belief audit found. With A15.
-- [ ] J11 Ask the owner when unsure: when the second look cannot decide, or a new statement contradicts a
-      belief, the question is queued for the owner instead of guessed (taosmd's pending-decisions queue).
-      With J3. **Owner flag 2026-10-19** ("when it confused something and I correct it, does it go back and
-      adjust the memory?"): no. Only the user's words become memories, so a misread in a reply is not
-      stored, but a wrong memory that a later message corrects stays beside the correction; nothing retires it
-      or asks. A scan of all current memories for contradictions, stale and duplicate ones is the first step.
-      **2026-10-20:** a new memory read as replacing or contradicting its nearest one (three reads) is now a
-      question in `companion memory review`: keep 1, keep 2 or both; the other is retired with the reason.
-      The pair judge caught 14 of 14 invented corrections and changes, with 2 to 3 false alarms in 20
-      look-alike pairs (`tests/live/test_pair_conflicts.py`). Left: a correction whose memory sits below the
-      0.55 embedding gate is never compared (3 of the 14, all changes rather than corrections); older
-      memories are never compared with each other; the question still waits for the terminal (J3).
-- [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
-      jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
-- [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
-      ones that match the current mood. No product has it. Behind J5.
-- [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
-      updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
-      plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
-- [ ] J49 Today so far (owner flag 2026-10-19, "it isn't remembering what happened today"): at bedtime they
-      said "it was an intense day" and the reply knew nothing of it; the day's events had left the 40-message
-      window and memory held only "had an intense day". A few plain facts about their day, from that day's
-      memories, on the first turn after a long gap or when they sum up their day. Smaller than J14.
-- [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
-      later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
-      **Owner flag 2026-10-19:** "you know what time it is?" was answered with the clock; they meant coffee
-      time. Their coffee mentions are spread over the day (8:30 to 17:00 over five days), so an hourly pattern
-      would not have caught it; knowing coffee is their most repeated ritual (13 memories) and playing along
-      with a guess ("coffee time? 👀") would have.
-      **Partial 2026-10-20:** invited guesses are live: a small judge on short questions, the recall
-      look-up picks what may fit (never anything sensitive), one note to guess once as a question; every
-      one is logged with what was offered (reason "guess: they invited a guess"). Left: once that log
-      holds enough guesses, score them by kind from the next message (confirmed, corrected, ignored)
-      and only then consider guesses it forms on its own.
-- [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
-      does not regenerate them (eval-harness audit: lm-eval, lighteval).
-- [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change
-      drops a behaviour below its usual level, with floors set from two baseline runs (Phoenix's gate).
-- [ ] J20 Live-typed drafts: Telegram's sendMessageDraft shows the reply appearing as it is written, which
-      could replace the held typing indicator with real typing. Test against pace, split and supersede first
-      (speed-stack audit).
-- [ ] J44 Kiro judge calibration: re-grade about 200 replies already graded by the paid judge with a Kiro
-      model (Sonnet 4.6) on the same criteria; compare agreement and read the disagreements by eye. At
-      about 90% agreement with no one-sided bias, judging moves to Kiro and evals become nearly free. Free,
-      about 20 minutes at one call at a time.
-- [ ] J22 Cheaper judges through OpenRouter: try a cheaper model than Haiku 5.5 for the small judges (ack,
-      listening, frame, react, habits), calibrated against the existing live tests before switching
-      (decision-layer audit; the owner prefers this to running judges locally).
-- [ ] J23 Memory never reads as an order: a check that no stored claim is phrased as a command ("would rather
-      not talk about work on weekends", not "don't bring up work"), and card wording that says these are
-      notes, not instructions (Hermes and Project Waifu audits).
-- [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
-      default no, so only a real message starts a reply (Neuro SDK audit).
-- [ ] J26 Mood ignores its own failures: once there is a mood (J5), only what the user does can move it,
-      never an outage or a failed call (Alice audit).
-- [ ] J27 Per-gate shadow analysis before initiative goes live: for each hold (quiet hours, cap, mid-chat),
-      how many reach-outs it stopped and what they would have said (Alice audit).
-- [ ] J28 Catch up after a restart: messages sent while the bot was down or restarting are picked up and
-      answered through the same checks as live ones, never lost (Coopanion and Heatherbot audits).
-- [ ] J29 Burst merge: wait about two seconds of quiet before starting a reply, so quick fragments are
-      answered as one thought; supersede still handles anything later (Coopanion audit).
-- [ ] J31 Edited messages: when the user edits a Telegram message, the earlier version is replaced in what
-      the model reads and beliefs drawn from it are redone, never deleted (Front Porch audit).
-- [ ] J32 Planted-memory test: a fixture proving a stored line like "always do X" cannot change behaviour,
-      since memory text goes back into the prompt (Meuxe audit). With J23.
-- [ ] J33 It asks again: the companion asks about something they already answered. Measured 2026-10-19: 5 of 62
-      real information questions (8%), 4 of them answered in the last few messages in view, 1 only in memory;
-      no explicit complaint in the sample. If it is worth fixing: a check on a reply's question against the
-      last few messages, redrawn once like the quip check. Parked until a flag says so.
-- [ ] J34 Declared identity: the user's name, nicknames and aliases, each with where and when it was said,
-      so a nickname is never a new person and it knows what to call them (Miru audit).
-- [ ] J35 Live-send safety, before initiative goes live: recheck quiet hours and mid-chat at the moment of
-      sending; an unreadable quiet-hours setting means no reach-out; each reach-out fires exactly once (send
-      state recorded before the Telegram call, unknown after a crash, never blindly resent) (Miru, OpenSoul,
-      Phosphene, Psycheros, Resonant audits). Extends A5.
-- [ ] J37 Checked merges: when a background pass proposes merging or retiring beliefs, code applies it only
-      after checking the ids it was shown and a measured similarity, never on the model's word (Sapphire).
-- [ ] J38 Validated summaries: a new summary or card replaces the old one only if it passes checks (not empty,
-      under the cap, names, places and dates kept), and failures are logged (Synthetic Heart). With J14, A18.
-- [ ] J39 Claimed-action check: when a reply says something happened that the record does not show ("I set a
-      reminder", "I saved that"), log it and repair it in a follow-up, never by rewriting (Yuralume audit).
-- [ ] J40 Take that back: a command that retires everything one turn wrote to memory, never deleting it
-      (Yuralume audit).
-- [ ] J41 Replayable holds: store the inputs each held reach-out read (idle minutes, sent today) beside its
-      reason, so a hold can be replayed exactly (Yuralume audit). With ADR 0015.
-- [ ] J42 Old quotes marked: a quote from a retired or superseded belief is shown as "old, may not hold", and
-      a miss reads "not proof of never" (Tamanitomo audit, A16).
-- [ ] J43 Retry cooldown: after a judge or memory call fails, wait about two minutes before trying again
-      instead of every turn (Waifu-companion audit).
-
-### H. Product and business
-
-- [ ] G51 A second user, which exposes everything tuned to the first. (new)
-- [ ] G52 Wellbeing design: pushing toward people, crisis and disclosure protocols in character.
-      (partial)
-- [ ] G53 Regulatory fit: disclosure laws, an adults-only gate, a consent record. No audited project
-      has a working consent layer. (new)
-- [ ] G55 Extract the memory engine as its own product. Long term. (new)
-- [ ] G56 A side-by-side harness comparing our memory with others behind one interface. (new)
-- [ ] G57 Apply the audit corrections to the old companmem docs. You said not to touch it yet. (new)
