@@ -239,6 +239,10 @@ Ordered. Pull from the top.
       part of their life and depth after each memory pass (219 labelled for $0.004; read by eye, mostly
       right), and the thinnest askable part logged on a casual turn at most daily, in shadow
       (`companion map`). Next: a week of shadow picks read by the owner, then the note on a small budget.
+      **2026-10-20, the hook (shadow):** when their words touch a basic without giving it (age, work, home,
+      place), three agreeing reads, the memory checked strictly, at most daily and twice per basic. Replayed
+      over six days: no question would have been asked; the flagged "getting old" found their birthday in
+      memory. No sharing first to draw them out (an engagement lever).
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two

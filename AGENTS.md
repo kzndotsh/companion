@@ -144,7 +144,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   answer is stored as a belief quoting their words (`core/basics.py`, J48). Each memory is labelled
   with the part of their life it is about and how personal it is (`system/memory-map`, after each memory
   pass); code picks the thinnest part fine to ask about and, on a casual turn at most daily, only logs it
-  (shadow, `core/knowing.py`). `uv run companion map` shows the map and the picks.
+  (shadow, `core/knowing.py`). `uv run companion map` shows the map and the picks. When their own words
+  touch a basic fact without giving it (age, work, who they live with, where they live; three agreeing reads
+  of `system/basics-hook`), code checks memory with `system/basics-known` and, at most once a day and twice
+  per basic, logs whether it would ask (the hook, `core/hooks.py`, shadow beside the turn).
 - Which memories bear on the moment is looked up in shadow on every ordinary turn (ADR 0018,
   `core/relevance.py`): their message is embedded, the nearest memories they may see that turn are
   shortlisted, and a small model picks up to three or none. It is logged with whether each was already

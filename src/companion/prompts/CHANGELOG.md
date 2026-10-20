@@ -744,6 +744,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/memory-pair
 - **system/memory-pair v1** (current). New (ADR 0019). Says how two memories relate: same, merge, distinct, replaces or contradicts. Read three times; a new memory read as the same as an existing one by all three becomes evidence on it, and nothing is merged automatically.
 
+## system/basics-hook
+- **system/basics-hook v1** (current). New (J48 hook; owner flag 2026-10-20: "im getting old" was the moment to ask their age). On a casual turn, read three times beside the reply: which basic fact (age, work, home, place) their own words touch without giving it. A basic counts only when all three reads name it; one read labelled small talk too often ("mmmmmmm" as work, laundry as home). Shadow: nothing reaches the talker.
+
+## system/basics-known
+- **system/basics-known v1** (current). New (J48 hook). Before the hook would ask, whether any memory states the basic outright (an age, a birth year or birthday for age). The recall look-up was too loose for this (it counted their name as knowing where they live).
+
 ## system/invented-judge
 - **system/invented-judge v1** (current). New (G42, J9: the made-up facts rate). Reads a reply with the 40 messages before it and the memory card it had, and lists each statement asserting a fact about the user's own life with what supports it (conversation, memory or none). Code keeps only quotes from the reply that are said to them (you, your). Never on the reply path: `companion invented`. On 367 real replies a stronger reader confirmed only about one flag in twelve, so its flags are candidates; the rate is what the stronger reader confirms (`--dump`).
 

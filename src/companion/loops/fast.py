@@ -55,6 +55,13 @@ from companion.core.guess import likely as guess_likely
 from companion.core.guess import note as guess_note
 from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
+from companion.core.hooks import KNEW as HOOK_KNEW
+from companion.core.hooks import PROMPT as HOOK_PROMPT
+from companion.core.hooks import READS as HOOK_READS
+from companion.core.hooks import SCHEMA as HOOK_SCHEMA
+from companion.core.hooks import TOPIC as HOOK_TOPIC
+from companion.core.hooks import WOULD_ASK as HOOK_WOULD_ASK
+from companion.core.hooks import agreed, may_ask, read_basic
 from companion.core.knowing import MAP_EVERY, WOULD_ASK, Depth, Domain, pick_gap
 from companion.core.length import LengthTarget, length_target
 from companion.core.listening import PROMPT as LISTEN_PROMPT
@@ -89,6 +96,7 @@ from companion.core.recheck import eligible as recheck_eligible
 from companion.core.relevance import SHADOW as RELEVANCE_SHADOW
 from companion.core.relevance import Embedder
 from companion.core.replay import TurnRecord
+from companion.core.spend import purpose
 from companion.core.talker import Reply, Talker
 from companion.core.topics import EVERY_TURNS as TOPIC_EVERY
 from companion.core.topics import NOTE as TOPIC_NOTE
@@ -119,6 +127,7 @@ from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.guess import Invited, invited_guess
+from companion.loops.hooks import stated
 from companion.loops.listen import judge_listening
 from companion.loops.lore import nearest_tastes
 from companion.loops.moves import HabitMemory, find_habits
@@ -975,10 +984,67 @@ def _relevance_beside(
 
 
 def _shadows(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, card: Card) -> None:
-    """What runs in shadow on a turn and never changes the reply: the relevance look-up and the
-    names it was told."""
+    """What runs in shadow on a turn and never changes the reply: the relevance look-up, the names
+    it was told, and the basic it would ask about."""
     _relevance_beside(c, t, in_scene, heard, card)
     _names_shadow(c, t, in_scene, heard, card)
+    _hook_beside(c, t, in_scene, heard)
+
+
+def _hook_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> None:
+    """On a casual turn, ask a small judge which basic their message touches and log whether code
+    would ask about it (J48 hook, shadow). Runs beside the turn; nothing reaches the talker."""
+    if c.judge is None or not _casual(t, in_scene, heard):
+        return
+    beliefs = c.store.user_beliefs(c.rel)
+    asked = [
+        (str(d.detail.get("basic")), d.at)
+        for d in c.store.decisions_of_kind(c.rel, DecisionKind.POLICY)
+        if d.reason in (HOOK_WOULD_ASK, HOOK_KNEW) and isinstance(d.detail, dict)
+    ]
+
+    async def run(judge: Extractor) -> None:
+        last = [u.text for u in t.prior if u.speaker is Speaker.COMPANION][-1:]
+        said = (f"COMPANION: {last[0]}\n" if last else "") + f"USER: {t.text}"
+        try:
+            with purpose("hook"):
+                reads = await asyncio.gather(
+                    *(judge.extract(HOOK_PROMPT.text, said, HOOK_SCHEMA) for _ in range(HOOK_READS))
+                )
+        except Exception as err:  # a failed read only means no shadow pick this turn
+            log.debug("hook read failed: %r", err)
+            return
+        got = reads[0]
+        basic = agreed(read_basic(r.data) for r in reads)
+        if basic is None or not may_ask(basic, asked, t.now):
+            return
+        found = await stated(judge, beliefs, HOOK_TOPIC[basic])
+        if found is None:
+            return
+        knew = bool(found)
+        c.store.append_decision(
+            Decision(
+                DecisionId(_id()),
+                c.rel,
+                t.session,
+                t.turn,
+                TraceId(t.turn),
+                DecisionKind.POLICY,
+                HOOK_KNEW if knew else HOOK_WOULD_ASK,
+                t.now,
+                detail={
+                    "basic": basic.value,
+                    "said": t.text,
+                    "known": [b.claim for b in found],
+                    "model": got.model,
+                    "prompt": HOOK_PROMPT.ref,
+                },
+            )
+        )
+
+    task = asyncio.get_running_loop().create_task(run(c.judge))
+    _BESIDE.add(task)
+    task.add_done_callback(_BESIDE.discard)
 
 
 def _names_shadow(

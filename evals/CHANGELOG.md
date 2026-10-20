@@ -1078,3 +1078,19 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
     times against 24), still 30/30. The real flagged laundry turn still retells their situation, 3/30
     without a retelling both ways, re-measured on v41 (it was 6/30 on v36). Shipped for the variety.
   Cost about $0.09 in all.
+- **2026-10-20. Two flags on one reply: a running gag, and a moment to ask their age.**
+  - **Running gags:** code found replies that reuse a rare two- or three-word phrase from its own last
+    ten replies that they never said: 91 of 859 everyday replies. A Claude judge read all 91: 4 were a
+    joke or image it made up and kept bringing back unasked (the flagged "battle soundtrack" among them),
+    12 were jokes they had picked up, 75 were the same subject continuing. About 0.5% of replies; a third
+    use only (11 replies) missed the flagged one. Not built: a check would need a judge on the 10% of
+    candidates to catch 0.5%.
+  - **The hook (J48, shadow):** a judge reads which basic their message touches without giving it, code
+    gates it, a strict check reads memory first. Replayed over all 341 casual messages: one read labelled
+    small talk as a basic too often ("mmmmmmm" as work); three agreeing reads still let some through, but
+    the daily gate and the memory check stop them, and no question would have been asked in six days. The
+    flagged "im getting old" found their birthday already in memory, so the miss there was the card not
+    holding it, which the relevance look-up is for. The recall look-up was too loose for "is it known"
+    (their name counted as where they live); a strict prompt replaced it. Research (Huang et al. 2017):
+    follow-up questions on what someone just said make them better liked; no measured safe rate; a stated
+    age is weak self-report, never age assurance. Cost about $0.16.

@@ -65,6 +65,8 @@
 "system/memory-names" = "v1"
 "system/lore-label" = "v1"
 "system/invented-judge" = "v1"
+"system/basics-hook" = "v1"
+"system/basics-known" = "v1"
 "system/guess-invite" = "v1"
 "system/promise-read" = "v1"
 "system/self-extract" = "v4"
