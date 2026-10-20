@@ -1022,3 +1022,14 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   about the user's interests. One or two tastes were read as stances (laziness as a preference). The one
   "lived" was a slip in the conversation, not a claimed life; harmless, since lived never counts as lore.
   About half of what it records is advice, which is why lore needs its own label before it is shown back.
+- **2026-10-20. Its own tastes shown back (ADR 0020 phase 2): shipped on.** Five public fixtures with two
+  invented tastes of its own (`lore-*`), persona v41 on Luna, no character, 20 samples, without and with
+  the `+lore` note: asked what music it is into 4/20 to 20/20 (without it, a different made-up list every
+  time: trip-hop, Portishead, Slowdive, indie folk); asked its favourite weather 0/20 to 17/20 (the three
+  misses kept the taste but claimed to hear rain against a window, a body claim the judge rightly failed);
+  an ordinary vent and a dinner plan 20/20 both ways (it never brought its tastes up when they did not
+  fit); rain coming up 20/20 both ways, often a light "i'm a sucker for a rainy day". Checked by eye. The
+  pick is by embedding: their last 60 messages against its 20 real tastes put 9 at 0.3 or more, about 5
+  fitting (ketchup on a meal and its burger opinion, a film it had talked about, listening to music) and
+  about 4 loose (a playful message and its voice), which the fixtures show it does not recite. Cost $0.03.
+  Rerun: `uv run companion eval --variants v41.md,v41.md+lore --fixture lore-asked-what-music ...`.

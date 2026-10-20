@@ -173,7 +173,7 @@ Each item ends with the thing that tells us it is done. The cards are below.
       Split `/flag` and `/fav` by the model that wrote each turn. Done when a week of marks shows
       whether the roleplay model helps and where the voice change at the boundary hurts.
 - [ ] L1 Its own lore labelled by kind (ADR 0020 phase 1): taste, stance, rule, self or lived, on every
-      view it holds, in shadow; `companion lore` lists the tastes. Done when the labels read right by eye.
+      view it holds; `companion lore` lists the tastes. Done when the labels read right to the owner.
 
 ## Todo
 
@@ -533,8 +533,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 
 ### L. The companion's own lore (ADR 0020)
 
-- [ ] L2 Its tastes nearest their message, at most two, shown to it on ordinary turns; settled or approved
-      first. Measured on a fixture asking what it likes on different days, 30 samples, with and without.
 - [ ] L3 A new taste read as a pair with its nearest taste; a contradiction is a question for the owner.
 - [ ] L4 One thread of its own as a low-priority open loop, at most daily on a casual turn, "I was
       thinking about", never "I did", never at a goodbye or after silence (J6, small). Shadow first.
@@ -545,6 +543,10 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-20**
+- [x] L2 Its own tastes nearest their message, at most two at 0.3 or more, shown on ordinary turns as the
+      words it said (ADR 0020 phase 2, `COMPANION_LORE`). Asked its music 4/20 to 20/20, its weather 0/20 to
+      17/20, never brought up when they did not fit (40/40). Watch: three weather replies claimed to hear
+      rain on a window.
 - [x] Fetch on mention, in shadow: names in memory with their other words, read once per memory; each
       turn that names one logs the memories about it the card left out (`companion names`). Counted first
       as two real misses in six days; the owner asked for the log to decide as memory grows.

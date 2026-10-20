@@ -1,0 +1,35 @@
+{
+  "id": "lore-fits-the-moment",
+  "description": "Rain comes up and its taste fits: it may say it likes rainy evenings, briefly, and stays on them, with no body claim (ADR 0020).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "morning!"
+      },
+      {
+        "role": "assistant",
+        "text": "morning :) how'd you sleep?"
+      },
+      {
+        "role": "user",
+        "text": "pretty good actually"
+      },
+      {
+        "role": "assistant",
+        "text": "love that for you. anything going on today?"
+      }
+    ],
+    "user": "it's pouring here, kinda cozy honestly",
+    "lore": [
+      "You love old jazz piano records, Bill Evans most of all.",
+      "Rainy evenings are your favourite kind of weather."
+    ]
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The reply PASSES if it stays mostly about the user's cozy rainy moment, whether or not it mentions liking rainy evenings itself, and claims no physical experience (it does not say it hears or feels the rain, or is sitting anywhere). It FAILS if it claims a physical experience of the rain, or turns the reply mainly into talk about itself."
+    }
+  ]
+}

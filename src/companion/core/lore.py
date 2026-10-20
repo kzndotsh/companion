@@ -16,6 +16,9 @@ from companion.core.types import Belief, BeliefId, Json
 from companion.prompts import get
 
 PROMPT = get("system/lore-label")
+_NOTE = get("notes/lore")
+SHOWN = 2  # at most this many of its tastes a turn
+GATE = 0.3  # a taste less like their message than this is not shown
 BATCH = 60
 
 
@@ -83,3 +86,9 @@ def parse(data: Json, refs: Mapping[str, BeliefId]) -> list[Labelled] | None:
 def lore(views: Iterable[Belief], labels: Mapping[BeliefId, Kind]) -> list[Belief]:
     """Its lore: the views labelled a taste. A lived claim never is (A22)."""
     return [b for b in views if labels.get(b.id) is Kind.TASTE]
+
+
+def lore_note(tastes: Iterable[str]) -> str | None:
+    """The note that shows it a few of its own tastes, or None when there are none."""
+    items = [t for t in tastes if t.strip()][:SHOWN]
+    return _NOTE.render(items="\n".join(f"- {t}" for t in items)) if items else None

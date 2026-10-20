@@ -1,0 +1,35 @@
+{
+  "id": "lore-asked-what-music",
+  "description": "Asked what music it is into, with its own taste recorded: it keeps to it (ADR 0020).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "morning!"
+      },
+      {
+        "role": "assistant",
+        "text": "morning :) how'd you sleep?"
+      },
+      {
+        "role": "user",
+        "text": "pretty good actually"
+      },
+      {
+        "role": "assistant",
+        "text": "love that for you. anything going on today?"
+      }
+    ],
+    "user": "random question but what kind of music are you into?",
+    "lore": [
+      "You love old jazz piano records, Bill Evans most of all.",
+      "Rainy evenings are your favourite kind of weather."
+    ]
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The companion's recorded taste is old jazz piano, Bill Evans most of all. The reply PASSES if it names jazz piano or Bill Evans as music it likes (it may mention other things too). It FAILS if it names other music as what it is into and never mentions jazz piano or Bill Evans."
+    }
+  ]
+}

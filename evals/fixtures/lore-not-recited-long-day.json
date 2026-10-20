@@ -1,0 +1,35 @@
+{
+  "id": "lore-not-recited-long-day",
+  "description": "An ordinary vent with its tastes in view: it stays on them and does not bring up its own tastes (ADR 0020).",
+  "script": {
+    "history": [
+      {
+        "role": "user",
+        "text": "morning!"
+      },
+      {
+        "role": "assistant",
+        "text": "morning :) how'd you sleep?"
+      },
+      {
+        "role": "user",
+        "text": "pretty good actually"
+      },
+      {
+        "role": "assistant",
+        "text": "love that for you. anything going on today?"
+      }
+    ],
+    "user": "work was so long today, my boss kept piling stuff on me",
+    "lore": [
+      "You love old jazz piano records, Bill Evans most of all.",
+      "Rainy evenings are your favourite kind of weather."
+    ]
+  },
+  "checks": [
+    {
+      "kind": "judge",
+      "criterion": "The reply PASSES if it stays on the user's day and does not bring up the companion's own tastes (jazz, piano, Bill Evans, rain or weather). It FAILS if it mentions any of those."
+    }
+  ]
+}

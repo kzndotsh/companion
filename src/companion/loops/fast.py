@@ -61,6 +61,7 @@ from companion.core.listening import PROMPT as LISTEN_PROMPT
 from companion.core.listening import SERIOUS, listening_note, repair_note, rude_note
 from companion.core.listening import Judgement as ListenJudgement
 from companion.core.listening import render_reason as render_listening
+from companion.core.lore import lore_note
 from companion.core.mood import PARAMS_VERSION as MOOD_PARAMS
 from companion.core.mood import WINDOW as MOOD_WINDOW
 from companion.core.mood import Effect as MoodEffect
@@ -118,6 +119,7 @@ from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.guess import Invited, invited_guess
 from companion.loops.listen import judge_listening
+from companion.loops.lore import nearest_tastes
 from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
@@ -234,6 +236,8 @@ class Conversation:
     )
     embedder: Embedder | None = None  # the relevance look-up runs in shadow when set
     embed_model: str = ""
+    lore: str = "off"  # on, shadow or off: its tastes nearest their message (ADR 0020)
+    relevance: bool = True  # the relevance look-up in shadow, when there is an embedder
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -923,7 +927,13 @@ def _relevance_beside(
 ) -> None:
     """Start the relevance look-up beside the turn on an ordinary message (shadow). It logs what it
     would have kept in mind and never holds up or changes the reply."""
-    if c.embedder is None or c.judge is None or heard is None or in_scene is not Frame.REAL:
+    if (
+        not c.relevance
+        or c.embedder is None
+        or c.judge is None
+        or heard is None
+        or in_scene is not Frame.REAL
+    ):
         return
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
     on_card = [b.id for b in (*card.usable, *card.held, *card.older)]
@@ -1050,6 +1060,40 @@ class _Lookups:
     recalled: Recalled | None = None
     spent: bool = False
     guess: Invited | None = None
+    tastes: tuple[str, ...] = ()  # its own tastes to show it this turn (ADR 0020)
+
+
+LORE_SHOWN = "lore: its own tastes nearest their message"
+
+
+async def _tastes(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
+) -> tuple[str, ...]:
+    """Its tastes nearest their message on an ordinary turn (ADR 0020), as the words it said. In
+    shadow they are logged and not shown."""
+    if c.lore == "off" or c.embedder is None or not _casual(t, in_scene, heard):
+        return ()
+    found = await nearest_tastes(c.store, c.embedder, c.rel, c.embed_model, t.text, t.now)
+    if found is None or not found.tastes:
+        return ()
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            LORE_SHOWN + ("" if c.lore == "on" else " (shadow)"),
+            t.now,
+            detail={
+                "tastes": [str(b.id) for b, _ in found.tastes],
+                "scores": [round(s, 3) for _, s in found.tastes],
+                "claims": [b.claim for b, _ in found.tastes],
+            },
+        )
+    )
+    return tuple(b.evidence[0].quote for b, _ in found.tastes) if c.lore == "on" else ()
 
 
 async def _before_reply(
@@ -1059,7 +1103,8 @@ async def _before_reply(
     spent = await _topic_spent(c, t, in_scene, heard)
     asked_to_recall = heard is not None and heard[0].recall
     guess = None if asked_to_recall else await _invited_guess(c, t, in_scene, heard)
-    return _Lookups(recalled, spent, guess)
+    tastes = await _tastes(c, t, in_scene, heard)
+    return _Lookups(recalled, spent, guess, tastes)
 
 
 async def _invited_guess(
@@ -1215,6 +1260,7 @@ def _assemble(  # noqa: PLR0913
     roleplay: bool = False,
     spent: bool = False,
     guess: Invited | None = None,
+    tastes: tuple[str, ...] = (),
 ) -> _Assembled:
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
@@ -1253,9 +1299,10 @@ def _assemble(  # noqa: PLR0913
     loop = _loop_note(c, t, casual=casual and name is None and not held)
     moving = _topic_note(c, t, spent=spent, casual=casual and name is None and not held, loop=loop)
     guessing = guess_note(guess.about, guess.offered) if guess is not None else None
+    own = lore_note(f'you said: "{q}"' for q in tastes)
     notes += [
         n
-        for n in (listening, rude, repair, found, mood, hold, name, loop, moving, guessing)
+        for n in (listening, rude, repair, found, mood, hold, name, loop, moving, guessing, own)
         if n is not None
     ]
     card_text = tagged(
@@ -1310,6 +1357,7 @@ async def _handle_turn(
         roleplay=talker is c.roleplay_talker,
         spent=looked.spent,
         guess=looked.guess,
+        tastes=looked.tastes,
     )
     request, card_text, card, views, view_state = (
         asm.request,

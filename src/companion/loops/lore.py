@@ -3,14 +3,16 @@ and from the CLI. A failed call labels nothing and is tried again next pass."""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.extractor import Extractor
-from companion.core.lore import BATCH, PROMPT, SCHEMA, parse, prompt
+from companion.core.lore import BATCH, GATE, PROMPT, SCHEMA, SHOWN, lore, parse, prompt
+from companion.core.relevance import Embedder, nearest
 from companion.core.spend import purpose
-from companion.core.types import RelationshipId
+from companion.core.types import Belief, RelationshipId
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.lore")
@@ -50,3 +52,43 @@ async def label_views(
     left = sum(b.id not in have for b in store.self_beliefs(rel))
     log.debug("view kinds: %d labelled, %d left, $%.4f", done, left, cost)
     return KindsRead(done, left, cost)
+
+
+LOOK_SECONDS = 2.0  # a slow embedding only means no tastes are shown this turn
+
+
+@dataclass(frozen=True, slots=True)
+class Nearest:
+    tastes: tuple[tuple[Belief, float], ...]
+    cost_usd: float
+
+
+async def nearest_tastes(  # noqa: PLR0913, PLR0917
+    store: Store,
+    embedder: Embedder,
+    rel: RelationshipId,
+    model: str,
+    said: str,
+    now: datetime,
+) -> Nearest | None:
+    """Its tastes nearest their message, at most SHOWN and none below GATE, embedding any taste that
+    has no vector yet in the same call. None when the call failed or was slow."""
+    tastes = lore(store.self_beliefs(rel), store.view_kinds(rel))
+    if not tastes:
+        return Nearest((), 0.0)
+    have = store.belief_embeddings(rel, model)
+    missing = [b for b in tastes if b.id not in have]
+    try:
+        with purpose("lore"):
+            got = await asyncio.wait_for(
+                embedder.embed([said, *(b.claim for b in missing)]), LOOK_SECONDS
+            )
+    except Exception as err:
+        log.warning("lore look-up failed or was slow; no tastes shown: %r", err)
+        return None
+    if missing:
+        fresh = dict(zip((b.id for b in missing), got.vectors[1:], strict=True))
+        store.add_belief_embeddings(rel, fresh, model, now)
+        have = {**have, **fresh}
+    near = nearest(got.vectors[0], tastes, have, k=SHOWN)
+    return Nearest(tuple((b, s) for b, s in near if s >= GATE), got.cost_usd)

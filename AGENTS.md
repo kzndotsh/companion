@@ -98,7 +98,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `COMPANION_REFLECT_MODEL`, `COMPANION_FALLBACK_MODEL` (asked only when the judges' model refuses a
   call), `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`, `COMPANION_PACE`,
   `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`,
-  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_BACKUP_DIR`, `COMPANION_TALKER_FALLBACK`, `COMPANION_CONSOLIDATE`, `COMPANION_PROMISES`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
+  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_BACKUP_DIR`, `COMPANION_TALKER_FALLBACK`, `COMPANION_CONSOLIDATE`, `COMPANION_PROMISES`, `COMPANION_LORE`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
   it) and `COMPANION_CHARACTER` (a character sheet laid over the persona, `companion/characters.py`). The
   table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
@@ -177,8 +177,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   playful guess as a question (`core/guess.py`, J16). It never guesses unasked.
 - The companion's own lore lives in its views (ADR 0020): after each memory pass a small model labels each
   new view of its own as taste, stance, rule, self or lived (`system/lore-label`, `core/lore.py`); only a
-  taste is lore, a lived claim never is. Phase 1 is shadow: `companion lore` lists the tastes, nothing
-  reaches the talker. Next: the tastes nearest their message shown to it, then a consistency check.
+  taste is lore, a lived claim never is; `companion lore` lists the tastes. On an ordinary turn (not
+  serious, not a scene, not a goodbye) code embeds their message and shows it at most two of its tastes
+  at 0.3 or more, as the words it said (`notes/lore`, `COMPANION_LORE` on, shadow or off). Next: a
+  consistency check on new tastes.
 - Things they name are matched in shadow (fetch on mention, `core/names.py`): after each memory pass a
   small model lists the names in new memories with the other words for each (`system/memory-names`), and
   on every ordinary turn code matches their message as whole words and logs the memories about each name

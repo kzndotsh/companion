@@ -14,6 +14,7 @@ from companion.core.clock import utc_now
 from companion.core.length import length_target
 from companion.core.listening import SERIOUS, listening_note, rude_note
 from companion.core.listening import Judgement as ListenJudgement
+from companion.core.lore import lore_note
 from companion.core.prompt.prefix import Prefix, build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.replay import ReplayError
@@ -74,6 +75,7 @@ def _variants(specs: list[str]) -> list[Variant]:
                 spec.resample,
                 spec.tags,
                 spec.tags_notes,
+                lore=spec.lore,
             )
         )
     return out
@@ -248,7 +250,14 @@ async def run(a: EvalArgs) -> str:
 
         models = Models(talker_for, OpenRouterExtractor(key, client, JUDGE_MODEL))
         listening = _listening_notes(fixtures)
-        plan = Plan(fixtures, requests, variants, samples, cap, listening, rebuilt_requests)
+        lore = {
+            f.id: note
+            for f in fixtures
+            if f.script is not None and (note := lore_note(f.script.lore))
+        }
+        plan = Plan(
+            fixtures, requests, variants, samples, cap, listening, rebuilt_requests, lore=lore
+        )
         results = await run_eval(plan, models)
         if before is not None:
             results.charged = await charged_since(key, client, before, results.spent)

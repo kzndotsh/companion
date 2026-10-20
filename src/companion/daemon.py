@@ -207,6 +207,7 @@ def startup_line(
         f" | talker fallback {talker_fallback() or 'off'}"
         f" | memory check {consolidate_mode()}"
         f" | promises {promises_mode()}"
+        f" | lore {lore_mode()}"
     )
 
 
@@ -225,6 +226,13 @@ def consolidate_mode() -> str:
     would close, `on` closes it, `off` skips the check."""
     raw = os.environ.get("COMPANION_CONSOLIDATE", "").strip().lower()
     return raw if raw in ("on", "off") else "shadow"
+
+
+def lore_mode() -> str:
+    """COMPANION_LORE (ADR 0020): `on` (default) shows it its own tastes nearest their message on
+    ordinary turns, `shadow` only logs them, `off` skips the look-up."""
+    raw = os.environ.get("COMPANION_LORE", "").strip().lower()
+    return raw if raw in ("shadow", "off") else "on"
 
 
 def promises_mode() -> str:
@@ -278,9 +286,10 @@ def _metered_models(
 
 
 def _embedder(client: httpx.AsyncClient, store: Store, rel: RelationshipId) -> Embedder | None:
-    """The embedding model for the relevance look-up, metered, or None when it is off."""
+    """The embedding model for the relevance look-up and its tastes, metered, or None when both
+    are off."""
     key = os.environ.get("OPENROUTER_API_KEY")
-    if not key or not relevance_on():
+    if not key or (not relevance_on() and lore_mode() == "off"):
         return None
 
     def sink(event: SpendEvent) -> None:
@@ -419,6 +428,8 @@ async def run(data_dir: Path) -> None:
             roleplay_prefix=roleplay_prefix,
             embedder=_embedder(client, store, rel),
             embed_model=os.environ.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
+            lore=lore_mode(),
+            relevance=relevance_on(),
         )
         same = (
             SameCheck(reflector, convo.embedder, convo.embed_model, consolidate_mode())

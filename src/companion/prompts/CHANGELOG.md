@@ -603,6 +603,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/mood-tender v1** (superseded). The tender line from ADR 0016 (softer and more attentive after something hard; never brings it up or asks if they are okay), shown by the `+mood-tender` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
 - **notes/mood-tender v2** (candidate, eval only; current). Says "be softer" instead of naming a state, and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.
 
+## notes/lore
+- **notes/lore v1** (current). New (ADR 0020 phase 2). On an ordinary turn (not serious, not a scene, not a goodbye), code embeds their message and shows the companion at most two of its own tastes (views labelled taste by `system/lore-label`) at 0.3 or more, as the words it said: keep to them if it comes up, do not bring them up just to mention them. Without it, asked what music it likes, it named a different made-up list every time. Measured in `evals/CHANGELOG.md`: asked its music 4/20 to 20/20, its weather 0/20 to 17/20 (the three misses claimed to hear rain on a window), and it never brought them up when they did not fit (40/40 both ways). `COMPANION_LORE` (on, shadow or off).
+
 ## notes/recall
 - **notes/recall v1** (superseded). The beliefs the recall look-up found, shown for that turn only, under "They asked you to remember this". Filled by `core/recall.py`.
 - **notes/recall v2** (current). v1 that also covers "you forgot": use what memory holds plainly, own a miss in a few words, and never ask them to say it again (J30). Measured in `evals/CHANGELOG.md`.

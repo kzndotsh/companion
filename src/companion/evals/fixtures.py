@@ -58,6 +58,7 @@ class Script:
     labels: tuple[int, str, bool, bool, bool] | None = (
         None  # severity, stance, vague, medical, rude
     )
+    lore: tuple[str, ...] = ()  # its own tastes, shown by the +lore variant (ADR 0020)
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,7 +148,18 @@ def _script(raw: Json) -> Script:
     if not isinstance(clock, str):
         msg = "script.clock must be text"
         raise FixtureError(msg)
-    return Script(tuple(turns), _text(d, "user"), memory, clock, _labels(d.get("labels")))
+    lore = d.get("lore", [])
+    if not isinstance(lore, list) or not all(isinstance(x, str) for x in lore):
+        msg = "script.lore must be a list of text"
+        raise FixtureError(msg)
+    return Script(
+        tuple(turns),
+        _text(d, "user"),
+        memory,
+        clock,
+        _labels(d.get("labels")),
+        lore=tuple(str(x) for x in cast("list[Json]", lore)),
+    )
 
 
 def parse_fixture(raw: Json) -> Fixture:

@@ -40,6 +40,7 @@ class Spec:
     long_history: int | None = None  # rebuild a recorded turn with this many messages (+histN)
     tags: bool = False
     tags_notes: bool = False
+    lore: bool = False
 
     @property
     def label(self) -> str:
@@ -59,6 +60,7 @@ class Spec:
             + ("" if self.long_history is None else f"+hist{self.long_history}")
             + ("+tags" if self.tags else "")
             + ("+tagsnotes" if self.tags_notes else "")
+            + ("+lore" if self.lore else "")
             + (f"@{self.model}" if self.model else "")
         )
 
@@ -66,7 +68,17 @@ class Spec:
 _CARD = re.compile(r"card(\d+)")
 _HIST = re.compile(r"hist(\d+)")
 ALL = 10_000  # +cardall: every memory in force at the time
-SWITCHES = ("nocard", "len", "listen", "echo", "resample", "roleplay", "tags", "tagsnotes")
+SWITCHES = (
+    "nocard",
+    "len",
+    "listen",
+    "echo",
+    "resample",
+    "roleplay",
+    "tags",
+    "tagsnotes",
+    "lore",
+)
 
 
 def parse_spec(text: str) -> Spec:
@@ -103,7 +115,7 @@ def parse_spec(text: str) -> Spec:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional +nocard, +hN, +low, +medium,"
             " +high, +len, +listen, +echo, +mood-STATE, +resample, +roleplay, +as-CHARACTER,"
-            " +cardN or +cardall, +histN, +tags, +tagsnotes"
+            " +cardN or +cardall, +histN, +tags, +tagsnotes, +lore"
             " and @model"
         )
         raise ValueError(msg)
@@ -124,6 +136,7 @@ def parse_spec(text: str) -> Spec:
         long_history,
         "tags" in on,
         "tagsnotes" in on,
+        lore="lore" in on,
     )
 
 

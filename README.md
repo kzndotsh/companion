@@ -81,7 +81,7 @@ once its log has been read.
 | The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` |
 | The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` |
 | Memories about a name they mention, left off the card | always shadow for now | `companion names` |
-| Its own lore: the views it holds that are tastes (ADR 0020) | always shadow for now | `companion lore` |
+| Its own tastes shown to it when the moment touches them (ADR 0020) | `COMPANION_LORE` | `companion lore`, the decision log |
 
 ## Quick start
 
@@ -143,6 +143,7 @@ All optional. Set them in `.env`.
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
 | `COMPANION_RELEVANCE` | `shadow` | the look-up of memories that bear on each message (ADR 0018); `off` stops it |
 | `COMPANION_CONSOLIDATE` | `shadow` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
+| `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 
 **Running**

@@ -40,7 +40,7 @@ def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
         " | daily cap $10.00 | pace natural | split on | listen on | initiative shadow"
         " | mood shadow | resample on | intimate stays"
         " | relevance shadow | talker fallback deepseek/deepseek-v4.1-flash | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
 
 
@@ -58,13 +58,13 @@ def test_the_split_setting_is_shown_and_off_turns_it_off(monkeypatch: pytest.Mon
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "split off | listen on | initiative shadow | mood shadow | resample on | intimate stays"
         " | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
     monkeypatch.setenv("COMPANION_SPLIT", "on")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "split on | listen on | initiative shadow | mood shadow | resample on | intimate stays"
         " | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
 
 
@@ -83,19 +83,19 @@ def test_the_initiative_mode_is_shadow_unless_turned_off(monkeypatch: pytest.Mon
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "initiative shadow | mood shadow | resample on | intimate stays"
         " | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
     monkeypatch.setenv("COMPANION_INITIATIVE", "off")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "initiative off | mood shadow | resample on | intimate stays"
         " | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
     monkeypatch.setenv("COMPANION_INITIATIVE", "live")  # there is no live mode yet
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "initiative shadow | mood shadow | resample on | intimate stays"
         " | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
 
 
@@ -122,7 +122,7 @@ def test_the_mood_is_shadow_unless_set_on_or_off(
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         f"mood {shown} | resample on | intimate stays"
         " | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
 
 
@@ -131,13 +131,13 @@ def test_resample_is_on_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> No
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "resample off | intimate stays"
         " | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
     monkeypatch.delenv("COMPANION_RESAMPLE")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "resample on | intimate stays"
         " | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
 
 
@@ -145,24 +145,34 @@ def test_intimate_talk_stays_unless_routing_is_turned_on(monkeypatch: pytest.Mon
     monkeypatch.setenv("COMPANION_ROUTE_INTIMATE", "on")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "intimate may route | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
     monkeypatch.setenv("COMPANION_ROUTE_INTIMATE", "off")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
         "intimate stays | relevance shadow | talker fallback off | memory check shadow"
-        " | promises shadow"
+        " | promises shadow | lore on"
     )
 
 
 def test_the_relevance_look_up_is_shadow_unless_off(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("COMPANION_RELEVANCE", "off")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
-        "relevance off | talker fallback off | memory check shadow | promises shadow"
+        "relevance off | talker fallback off | memory check shadow | promises shadow | lore on"
     )
 
 
 def test_the_promise_read_is_shadow_unless_off(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("COMPANION_PROMISES", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith("| promises off")
+    assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
+        "| promises off | lore on"
+    )
     monkeypatch.setenv("COMPANION_PROMISES", "on")  # nothing live yet, so on reads as shadow
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith("| promises shadow")
+    assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(
+        "| promises shadow | lore on"
+    )
+
+
+def test_the_lore_note_is_on_unless_shadow_or_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    for raw, shown in (("shadow", "shadow"), ("off", "off"), ("x", "on")):
+        monkeypatch.setenv("COMPANION_LORE", raw)
+        assert daemon.startup_line(RelationshipId("t"), "a" * 12, None).endswith(f"| lore {shown}")

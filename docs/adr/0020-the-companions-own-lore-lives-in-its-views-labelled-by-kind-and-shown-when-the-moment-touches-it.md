@@ -1,6 +1,6 @@
 # 0020. The companion's own lore lives in its views, labelled by kind, and is shown when the moment touches it
 
-**Status:** proposed 2026-10-20. Phase 1 (the labels) built in shadow the same day. Accepted, or changed,
+**Status:** proposed 2026-10-20. Phase 1 (the labels) and phase 2 (tastes shown, measured, on) built the same day. Accepted, or changed,
 once phase 2 is measured.
 
 **Context.** A personality forms from small invented details: what it likes, what it finds funny, a name

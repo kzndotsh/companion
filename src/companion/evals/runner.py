@@ -47,6 +47,7 @@ class Variant:
     resample: bool = False  # one fresh reply when the quip check fires (J45)
     tags: bool = False  # the system block in XML-style sections instead of bracketed lines
     tags_notes: bool = False  # only the clock and the notes in tags; memory stays as it is
+    lore: bool = False  # show the fixture's own tastes as the lore note (ADR 0020)
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,7 +90,10 @@ def strip_card(content: str) -> str:
 
 
 def request_for(
-    base: TalkerRequest, variant: Variant, listening: str | None = None
+    base: TalkerRequest,
+    variant: Variant,
+    listening: str | None = None,
+    lore: str | None = None,
 ) -> TalkerRequest:
     messages = list(base.messages)
     if variant.history is not None:
@@ -105,6 +109,8 @@ def request_for(
         card = f"{card}\n{echo}" if card else echo
     if variant.listen and listening:
         card = f"{card}\n{listening}" if card else listening
+    if variant.lore and lore:
+        card = f"{card}\n{lore}" if card else lore
     for state in variant.mood:
         line = prompts.get(f"notes/mood-{state}").text
         card = f"{card}\n{line}" if card else line
@@ -125,6 +131,7 @@ class Plan:
     rebuilt: Mapping[tuple[str, str], TalkerRequest] = field(
         default_factory=dict[tuple[str, str], TalkerRequest]
     )
+    lore: Mapping[str, str] = field(default_factory=dict[str, str])  # the lore note per fixture
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,7 +170,7 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 cell.skipped += 1
                 return
             base = plan.rebuilt.get((f.id, v.label), plan.requests[f.id])
-            req = request_for(base, v, plan.listening.get(f.id))
+            req = request_for(base, v, plan.listening.get(f.id), plan.lore.get(f.id))
             reply = await _reply_with_retry(models.talker_for(v.model, v.effort), req)
             if (v.model or "").endswith(":free"):
                 await asyncio.sleep(FREE_SPACING_SECONDS)  # OpenRouter allows 20 a minute
