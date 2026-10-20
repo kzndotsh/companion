@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import logging
 import uuid
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 
 from companion.core.callbacks import Check
 from companion.core.knowing import Label
 from companion.core.mood import Effect, Said
+from companion.core.names import Row as NameRow
 from companion.core.openloops import LoopState, OpenLoop
 from companion.core.promises import Promise
 from companion.core.prompt.prefix import Prefix
@@ -48,6 +49,7 @@ from companion.store.sqlite import (
     ledger,
     memory_checks,
     mood,
+    names,
     open_loops,
     promises,
     reflect,
@@ -267,6 +269,24 @@ class Store:
 
     def answer_check(self, check_id: int, said: str, at: datetime) -> None:
         memory_checks.answer(self._conn, check_id, said, at)
+
+    def add_names(  # noqa: PLR0913
+        self,
+        rel: RelationshipId,
+        rows: Sequence[NameRow],
+        read: Iterable[BeliefId],
+        *,
+        model: str,
+        prompt: str,
+        at: datetime,
+    ) -> None:
+        names.add(self._conn, rel, rows, read, model=model, prompt=prompt, at=at)
+
+    def name_rows(self, rel: RelationshipId) -> list[NameRow]:
+        return names.rows(self._conn, rel)
+
+    def names_read(self, rel: RelationshipId) -> set[BeliefId]:
+        return names.read(self._conn, rel)
 
     def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
         promises.add(self._conn, p, model=model, prompt=prompt, at=at)

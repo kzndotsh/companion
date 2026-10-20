@@ -28,7 +28,7 @@ from companion.core.address import address_note
 from companion.core.basics import ASK_EVERY as ASK_NAME_EVERY
 from companion.core.basics import ASKED as ASKED_NAME
 from companion.core.basics import NAME_CAPTURE, ask_name, asked_for_name, knows_name, name_belief
-from companion.core.card import EVENT_SHOWN_DAYS, Card, build_card, render
+from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, Card, build_card, render
 from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import Extractor, from_fallback
 from companion.core.floor import HOLD_NOTE, INTIMATE_CHECK
@@ -69,6 +69,9 @@ from companion.core.mood import line as mood_line
 from companion.core.mood import reason as mood_reason
 from companion.core.moves import PROMPT as HABITS_PROMPT
 from companion.core.moves import replies_to_read
+from companion.core.names import SHADOW as NAMES_SHADOW
+from companion.core.names import index as name_index
+from companion.core.names import mentioned
 from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_note
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
@@ -959,6 +962,50 @@ def _relevance_beside(
     task.add_done_callback(_BESIDE.discard)
 
 
+def _shadows(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, card: Card) -> None:
+    """What runs in shadow on a turn and never changes the reply: the relevance look-up and the
+    names it was told."""
+    _relevance_beside(c, t, in_scene, heard, card)
+    _names_shadow(c, t, in_scene, heard, card)
+
+
+def _names_shadow(
+    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, card: Card
+) -> None:
+    """When their message names something memory knows, log the memories about it that the card
+    left out (shadow, code only). Nothing reaches the talker."""
+    if heard is None or in_scene is not Frame.REAL:
+        return
+    sharing = heard[0].severity >= 1
+    visible = {
+        b.id
+        for b in c.store.user_beliefs(c.rel)
+        if is_assertable(b) and (sharing or b.sensitivity < HOLD_AT)
+    }
+    named = mentioned(t.text, name_index(c.store.name_rows(c.rel), visible))
+    if not named:
+        return
+    on_card = {b.id for b in (*card.usable, *card.held, *card.older)}
+    about = {bid for n in named for bid in n.beliefs}
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            NAMES_SHADOW,
+            t.now,
+            detail={
+                "names": [str(n.name) for n in named],
+                "would_add": [str(b) for b in sorted(about - on_card)],
+                "on_card": [str(b) for b in sorted(about & on_card)],
+            },
+        )
+    )
+
+
 LOOP_OFFERED = "open loop: offered as a note when they wrote"
 LOOP_NOTE_EVERY = timedelta(hours=24)
 
@@ -1271,7 +1318,7 @@ async def _handle_turn(
         asm.views,
         asm.view_state,
     )
-    _relevance_beside(c, t, in_scene, heard, card)
+    _shadows(c, t, in_scene, heard, card)
     talk, framing, feeling = _start_beside(c, t, request, talker)
     try:
         reply, outcome, felt = await _await_beside(t, talk, framing, feeling)

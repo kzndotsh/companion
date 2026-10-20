@@ -80,6 +80,7 @@ once its log has been read.
 | The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review`, the decision log |
 | The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` |
 | The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` |
+| Memories about a name they mention, left off the card | always shadow for now | `companion names` |
 
 ## Quick start
 
@@ -181,6 +182,7 @@ Look after memory:
 ```bash
 uv run companion beliefs        # what it holds about the user, with quotes
 uv run companion memory review  # answer the memory check's questions, a few at a time
+uv run companion names          # things named in memory; --read reads new memories for names first
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
 uv run companion retire <id> --reason "..."      # close one memory
 uv run companion merge <id> <id> --claim "..."   # merge memories that say one thing, keeping every quote

@@ -60,6 +60,7 @@
 "system/topic-spent" = "v1"
 "system/memory-check" = "v1"
 "system/memory-pair" = "v1"
+"system/memory-names" = "v1"
 "system/guess-invite" = "v1"
 "system/promise-read" = "v1"
 "system/self-extract" = "v4"

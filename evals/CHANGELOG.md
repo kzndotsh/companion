@@ -1007,3 +1007,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   on 11, but 9 of those were false matches on ordinary words (a capitalised "God", "Sun", "Weird"). Two
   real misses in six days (a song title, a pet's name). They mostly say "my dogs", not names. Not worth a
   step on its own; the relevance shadow (ADR 0018) covers the same ground by meaning. Free, a count by code.
+- **2026-10-20. Fetch on mention, built in shadow at the owner's call.** The count above was six days of
+  data and a crude match on capital letters; the card covers a shrinking share as memory grows, so the
+  rate will rise. Built properly instead: `system/memory-names` read all 199 current memories for $0.0014
+  and listed 21 names (two dogs, bands, songs, a film, a game, a person, a site), each with its other
+  words. Replayed over every past message, the whole-word match found real mentions (the dogs by name, the
+  film poster, bands from a play count list) and one false one (a song title that is also an everyday
+  word, inside "wake up" talk). The replay cannot count misses fairly, since the names come from today's
+  memories; the shadow log does from here (`companion names`).

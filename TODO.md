@@ -534,6 +534,9 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-20**
+- [x] Fetch on mention, in shadow: names in memory with their other words, read once per memory; each
+      turn that names one logs the memories about it the card left out (`companion names`). Counted first
+      as two real misses in six days; the owner asked for the log to decide as memory grows.
 - [x] J1 More attitude, in character. Persona v41 shipped: without a character it now picks for itself
       (1 to 20 of 20) and keeps its view under pushback with no reason (8 to 16 of 20), everyday fixtures
       within noise. Earlier (2026-10-18): a cool reply to real rudeness by a listening label and a one-turn

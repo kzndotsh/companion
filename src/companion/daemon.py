@@ -30,6 +30,7 @@ from companion.loops.consolidate import SameCheck, nightly
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.knowing import label_new
+from companion.loops.names import read_names
 from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
@@ -526,6 +527,22 @@ async def label_now(db: Path, relationship: str) -> str:
     finally:
         store.close()
     return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"
+
+
+async def names_now(db: Path, relationship: str) -> str:
+    """List the names in memories not read yet, for `companion names --read`."""
+    load_dotenv(Path(".env"))
+    store = Store(db)
+    try:
+        async with httpx.AsyncClient() as client:
+            done = await read_names(
+                store, extractor(client), RelationshipId(relationship), utc_now(), batches=10
+            )
+    finally:
+        store.close()
+    return (
+        f"read {done.read} memories, {done.names} names, {done.left} left, ${done.cost_usd:.4f}\n"
+    )
 
 
 async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) -> str:

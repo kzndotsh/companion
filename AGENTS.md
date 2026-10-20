@@ -175,6 +175,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - When a short question of theirs invites a guess about them ("you know what time it is?"), its own judge
   says so, the recall look-up picks what may fit (never sensitive), and one note asks for a single
   playful guess as a question (`core/guess.py`, J16). It never guesses unasked.
+- Things they name are matched in shadow (fetch on mention, `core/names.py`): after each memory pass a
+  small model lists the names in new memories with the other words for each (`system/memory-names`), and
+  on every ordinary turn code matches their message as whole words and logs the memories about each name
+  that the card left out. Nothing reaches the talker; `companion names` shows the list and the count.
 - The promises the companion makes in its own replies are read in the open-loop batch (J12,
   `core/promises.py`, `system/promise-read`): a model labels standing or once and a word it said it would
   stop using; code keeps one only if its quote is in that message, said for real, not hedged and forward

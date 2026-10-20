@@ -17,6 +17,7 @@ from companion.cli import (
     knowing,
     memory,
     mood,
+    names,
     promises,
     replay,
     spend,
@@ -59,6 +60,13 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     mp = add("map", help="what it knows about them by part of their life, and the gap it would ask")
     mp.add_argument("--label", action="store_true", help="label new memories first (a model call)")
     _db_args(mp)
+    nm = add(
+        "names", help="things named in memory and the words for each (fetch on mention, shadow)"
+    )
+    nm.add_argument(
+        "--read", action="store_true", help="read new memories for names first (a model call)"
+    )
+    _db_args(nm)
     pr = add("promises", help="the promises it made in its own replies (shadow), newest first")
     pr.add_argument("--not", dest="wrong", metavar="ID", help="mark one as not a promise")
     pr.add_argument("--retire", metavar="ID", help="retire one")
@@ -243,6 +251,12 @@ def _initiative(a: argparse.Namespace) -> int:
     return _out(initiative.run(*_target(a)))
 
 
+def _names(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    first = asyncio.run(daemon.names_now(db, rel)) if a.read else ""
+    return _out(first + names.run(db, rel))
+
+
 def _promises(a: argparse.Namespace) -> int:
     return _out(promises.run(*_target(a), wrong=a.wrong, retire=a.retire))
 
@@ -305,6 +319,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "initiative": _initiative,
     "mood": _mood,
     "promises": _promises,
+    "names": _names,
     "map": _map,
     "backup": _backup,
     "address": _address,

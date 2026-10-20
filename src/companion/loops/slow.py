@@ -55,6 +55,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.knowing import Labelled, label_new
+from companion.loops.names import NamesRead, read_names
 from companion.loops.openloops import Reading, catch_up_loops
 from companion.loops.views import WANT_KINDS, check_views
 from companion.store.sqlite.store import Store
@@ -397,13 +398,14 @@ async def reflect_from(
     new_wants = users.accepted_ids & wanted
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
     mapped = await label_new(store, extractor, rel, now) if users.accepted else Labelled()
+    named = await read_names(store, extractor, rel, now) if users.accepted else NamesRead()
     return ReflectResult(
         True,
         users.accepted,
         users.rejected,
         users.duplicates,
         users.confirmed,
-        users.cost + own.cost + check.cost_usd + loops.cost_usd + mapped.cost_usd,
+        users.cost + own.cost + check.cost_usd + loops.cost_usd + mapped.cost_usd + named.cost_usd,
         upto,
         views_accepted=own.accepted,
         views_confirmed=own.confirmed,
