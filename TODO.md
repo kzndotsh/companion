@@ -144,8 +144,6 @@ Each item ends with the thing that tells us it is done. The cards are below.
 
 - [ ] **Check the OpenRouter balance.** The bot goes quiet at zero, and the daily cap is $10. Paid eval
       runs share it: the runner shows the balance first and refuses a run whose cap is above it.
-- [ ] **Revoke the Telegram bot token** in BotFather. Parked by the owner; do not raise it again until
-      asked.
 - [ ] **Triage `docs/research/2026-10-16_sapphire-audit/`.** It is untracked and unread (`TODO.md` H3).
 
 ### Not doing
@@ -260,10 +258,6 @@ Unordered within each group. Pull a card into Todo when it is next.
 - [ ] T10 Reflective restatement. **Parked by the user on 2026-10-17.** Measured at 7% of real replies,
       clustered in one chat; the habit check cannot catch it. Research and options in
       `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.
-
-- [ ] H2 Revoke the Telegram bot token in BotFather and put the new one in `.env`. The old one appeared
-      in logs twice; the code no longer prints it. **Parked by the user on 2026-10-17**: not a priority
-      for now, do not raise it again until asked.
 
 - [ ] R1 Heartbeat for initiating contact (shadow mode built, see R1a; going live needs a week of shadow
       review and outcome recording): a gate before any spend that holds when nothing is new, a
