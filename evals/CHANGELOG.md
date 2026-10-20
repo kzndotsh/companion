@@ -982,3 +982,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   messages in view, so the misses there were in how the reply used what it could see, not in reach. Not
   built; R2 waits for flags about things said beyond the window. Cost $0.015; the judge was free. Scratch
   script and private data, not in the repo.
+- **2026-10-20. How the replies on those 23 recall cues actually went.** A Claude judge read each with the
+  40 messages it could see, its reply and the next message; its "made something up" calls were then checked
+  against memory as it stood, and three of four came from memory or the character sheet, not invention.
+  8 of the 23 were not recall asks (teasing, a test, a new topic). Of the 15 that were, the reply missed
+  something in view on 3, misapplied a memory to the moment on 1, and re-asked an answered question on 1
+  (J33); 2 misread the cue. 17 of the 23 came before the repair and recall-note changes of 2026-10-19
+  (J30); of the 6 after, one narrowed what they meant and none missed something in view. Nothing to build
+  from this; the live log after J30 decides. Free (Claude judge).
