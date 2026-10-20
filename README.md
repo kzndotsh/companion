@@ -30,7 +30,10 @@ Today it is reached through Telegram, its only integration for now.
   old one becomes evidence on it, but only where a judge matched the owner's own review. Everything else
   is a question for the owner ([ADR 0019](docs/adr/0019-memory-tidies-itself-only-where-a-judge-matched-the-owner.md)).
 - **Gets to know them.** It asks what to call them, keeps how they want to be referred to pinned in
-  every turn, labels each memory by part of their life, and works out (in shadow) what it knows least.
+  every turn, labels each memory by part of their life, and works out (in shadow) what it knows least
+  and when their own words open the door to asking a basic it does not know.
+- **Asks about conflicts.** A new memory that may replace or contradict an older one is a question for
+  the owner, who keeps one or both.
 
 **Conversation**
 
@@ -41,6 +44,14 @@ Today it is reached through Telegram, its only integration for now.
   brought up lightly the next time they write. Reaching out first runs in shadow only.
 - **Moves on.** When a small topic has run its course, it reacts and moves the chat on instead of
   asking about smaller and smaller details.
+- **Has tastes of its own.** It picks for itself and keeps its view under pushback without a reason
+  (persona v41). The views it states about itself are sorted, and the tastes among them are shown back
+  to it when a message touches them, so what it likes stays the same from day to day
+  ([ADR 0020](docs/adr/0020-the-companions-own-lore-lives-in-its-views-labelled-by-kind-and-shown-when-the-moment-touches-it.md)).
+- **Plays along with a guess.** When a short question invites one ("you know what time it is?"), it
+  makes one playful guess from what memory holds, as a question.
+- **Reacts like a person to small vents.** A short reaction, with varied size examples drawn per turn so
+  it does not say the same line every time.
 - **Has a mood that carries.** Cozy, tender or playful, kept by code from what happened, shown only in
   how it replies ([ADR 0016](docs/adr/0016-a-mood-that-carries-owned-by-code-shown-in-behaviour.md)).
 - **Feels typed.** Replies are paced like a person typing, and long plain replies are sometimes sent
@@ -51,8 +62,9 @@ Today it is reached through Telegram, its only integration for now.
 - **Routes roleplay to a second model.** Pretend scenes, and intimate talk if the operator allows it,
   go to a less restrictive model, above an age floor in code that no setting changes
   ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
-- **Checks its own replies.** A reply with a known habit (an em dash, a joke bolted onto an ordinary
-  message, an AI disclaimer nobody asked for, the clock line copied from its own notes) is drawn once more. Nothing is ever edited.
+- **Checks its own replies.** A reply with a known habit (an em dash, an AI disclaimer nobody asked for,
+  the clock line copied from its own notes, the stock "that sounds X, especially when" line, and on
+  ordinary turns a joke bolted onto an ordinary message) is drawn once more. Nothing is ever edited.
 - **Never goes silent.** If the talker errors, or has not answered in ten seconds, a fallback model
   answers too and the first reply wins.
 
@@ -65,7 +77,9 @@ Today it is reached through Telegram, its only integration for now.
 - **Learns from one person's marks.** `/flag` a reply that feels off, `/fav` one that delights. Those
   marks, and measurements on recorded turns, decide what gets built next.
 - **Measures itself.** An eval runner replays recorded and scripted turns against persona and model
-  variants, with a spend cap, the real OpenRouter charge, and a margin of error on every result.
+  variants, with a spend cap, the real OpenRouter charge, and a margin of error on every result. The
+  made-up facts rate (`companion invented`) counts replies that state something about them that
+  nothing supports.
 
 ## What runs in shadow
 
@@ -77,11 +91,11 @@ once its log has been read.
 | Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` |
 | The look-up of memories that bear on each message | `COMPANION_RELEVANCE` | the decision log |
 | What it would ask to get to know them | always shadow for now | `companion map` |
+| A light question when their words touch a basic it does not know (age, work, home, place) | always shadow for now | the decision log |
 | The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review`, the decision log |
 | The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` |
 | The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` |
 | Memories about a name they mention, left off the card | always shadow for now | `companion names` |
-| Its own tastes shown to it when the moment touches them (ADR 0020) | `COMPANION_LORE` | `companion lore`, the decision log |
 
 ## Quick start
 
@@ -135,6 +149,7 @@ All optional. Set them in `.env`.
 | `COMPANION_RESAMPLE` | on | a reply that fails a check is drawn once more; `off` disables it |
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow` |
 | `COMPANION_SPLIT` | on | long plain replies are sometimes sent as two or three messages; `off` stops it |
+| `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 
 **Shadow features**
 
@@ -143,7 +158,6 @@ All optional. Set them in `.env`.
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
 | `COMPANION_RELEVANCE` | `shadow` | the look-up of memories that bear on each message (ADR 0018); `off` stops it |
 | `COMPANION_CONSOLIDATE` | `shadow` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
-| `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 
 **Running**
@@ -176,6 +190,7 @@ uv run companion initiative     # open loops, and what reaching out would have s
 uv run companion mood           # the mood now; --replay DAYS rebuilds it over past messages
 uv run companion map            # what it knows by part of their life; --label labels new memories
 uv run companion callbacks      # judge recent replies for callbacks to memories
+uv run companion invented --days 7 --cap 0.2 --dump out.json   # made-up facts about them: candidates, to confirm by a stronger reader
 uv run companion prompts        # every prompt and its current version
 ```
 
@@ -184,8 +199,7 @@ Look after memory:
 ```bash
 uv run companion beliefs        # what it holds about the user, with quotes
 uv run companion memory review  # answer the memory check's questions, a few at a time
-uv run companion invented --days 7 --cap 0.2 --dump out.json   # made-up facts about them: candidates, confirm by a stronger reader
-uv run companion lore           # its own tastes (lore); --label labels new views first
+uv run companion lore           # its own tastes (lore); --label labels new views, --relabel all of them
 uv run companion names          # things named in memory; --read reads new memories for names first
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
 uv run companion retire <id> --reason "..."      # close one memory
@@ -212,7 +226,8 @@ range, and two variants are compared for whether the gap is real or within noise
 ```
 src/companion/
   core/        pure logic: memory, the card, listening, frames, the floor, mood, open loops,
-               relevance, consolidation, pacing and splitting
+               relevance, consolidation, its lore, promises, names, the hook, the reply checks,
+               pacing and splitting
   prompts/     every prompt as versioned text, with a manifest and a changelog
   models/      OpenRouter and Anthropic clients, embeddings, the fallbacks, the credits meter
   loops/       the fast loop (one turn) and the slow loop (memory, open loops, the nightly check)
@@ -233,16 +248,19 @@ what it gets to see.
 
 1. **Read the message.** Small models label it before the reply starts: how serious it is, whether
    it is real talk, a story, a game or a what-if, whether it only needs a reaction, whether they ask
-   it to remember or say it got them wrong, and whether a small topic has run its course.
+   it to remember or say it got them wrong, whether a small topic has run its course, and whether a
+   short question invites a guess.
 2. **Build the card.** Code turns those labels into short notes and adds the clock, how they want to
-   be referred to, the memories in view, anything looked up, a due plan of theirs and the mood. The
+   be referred to, the memories in view, anything looked up, a due plan of theirs, its own tastes that
+   the message touches, and the mood. The
    persona is the first system block and the card is the second, with the clock and the notes in
    `<clock>` and `<notes>` tags. Nothing from the card ever goes in the user's message.
 3. **Write the reply.** The talker sees the persona, the card, the last 40 messages and the new
    message exactly as typed. Pretend scenes, and intimate talk when allowed, go to the roleplay model,
    unless the floor keeps them on the everyday one. A stall or an error goes to the fallback model.
 4. **Check and deliver it.** A reply that fails a check is drawn once more. Then it is paced,
-   sometimes split (never roleplay), and sent.
+   sometimes split (never roleplay), and sent. Beside it, in shadow, the relevance look-up, the names
+   it was told and the basics hook log what they would have done.
 
 The judges never see the persona, and each logs `name@version` with its decision. The full list of
 prompts and how a request is assembled is in [src/companion/prompts/](src/companion/prompts/README.md).
@@ -250,8 +268,10 @@ prompts and how a request is assembled is in [src/companion/prompts/](src/compan
 ### What happens in the background
 
 - **After 90 seconds of quiet,** the memory pass reads the new messages and records what the user said,
-  with quotes, and the companion's own views. A new memory that repeats an old one is checked against
-  it. A separate pass, with its own bookmark, records the plans they mention.
+  with quotes, and the companion's own views. A new memory that repeats, replaces or contradicts an old
+  one is checked against it. New memories are labelled by part of their life and read for names; its
+  new views are sorted (taste, stance, rule, self, lived). A separate pass, with its own bookmark,
+  records the plans they mention and the promises it made in its replies.
 - **Every 15 minutes,** the reach-out gate looks at due plans (shadow).
 - **At 04:00,** the memory check reads each settled memory (shadow).
 - **At every start and once a day,** the database and character sheets are backed up.
