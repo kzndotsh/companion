@@ -116,6 +116,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |
 | `system/basics-hook` | system | which basic fact their own words touch without giving it (age, work, home, place), read three times (J48 hook) | v1 |
 | `system/basics-known` | system | whether a memory states a basic fact outright, before the hook would ask (J48 hook) | v1 |
+| `system/away` | system | whether their message leaves the chat now (brief, back, goodbye) and for about how long, for the nudge (shadow) | v1 |
+| `system/nudge-draft` | system | the one light nudge after they stayed away much longer than they said (shadow) | v1 |
 | `system/invented-judge` | system | statements in a reply about the user and what supports each, for the made-up facts rate (G42); flags are candidates | v1 |
 | `system/lore-label` | system | the kind of each of the companion's own views: taste (its lore), stance, rule, self or lived (ADR 0020) | v1 |
 | `system/memory-names` | system | the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |

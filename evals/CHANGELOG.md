@@ -1094,3 +1094,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
     (their name counted as where they live); a strict prompt replaced it. Research (Huang et al. 2017):
     follow-up questions on what someone just said make them better liked; no measured safe rate; a stated
     age is weak self-report, never age assurance. Cost about $0.16.
+- **2026-10-20. Nudges after stepping away (R1b), built in shadow.** The owner chose the looser rule: also
+  when they did not say they would be back. `system/away` read all 855 real, not serious messages: a first
+  wording found 37 times away but also read things already done, "I'm back" and wishes ("I'm hungry") as
+  leaving; the second found 18, nearly all real (shower, dinner, coffee, an errand). Replayed with the gate
+  (twice the time and an hour, six hours at most, two a day, quiet hours): no nudge in six days, because
+  they always wrote again sooner, often while still away. Research (2025 HBS working paper, interruptibility
+  studies, texting advice): a single light message that refers to what they said is the welcome kind;
+  messages at goodbyes, "I miss you", "you up?" and a second try after no reply are the disliked kinds. No
+  survey measures how long friends wait. Cost about $0.18 for both readings.

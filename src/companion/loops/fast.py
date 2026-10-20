@@ -80,6 +80,10 @@ from companion.core.moves import replies_to_read
 from companion.core.names import SHADOW as NAMES_SHADOW
 from companion.core.names import index as name_index
 from companion.core.names import mentioned
+from companion.core.nudges import AWAY as AWAY_REASON
+from companion.core.nudges import PROMPT as AWAY_PROMPT
+from companion.core.nudges import SCHEMA as AWAY_SCHEMA
+from companion.core.nudges import parse as parse_away
 from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_note
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
@@ -989,6 +993,50 @@ def _shadows(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, c
     _relevance_beside(c, t, in_scene, heard, card)
     _names_shadow(c, t, in_scene, heard, card)
     _hook_beside(c, t, in_scene, heard)
+    _away_beside(c, t, in_scene, heard)
+
+
+def _away_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> None:
+    """Record when they say they are stepping away and for about how long, so the tick can nudge
+    if they stay gone (shadow). Runs beside any real, not serious turn, not only casual ones:
+    "gotta run" is exactly the message to read, and the judge tells a goodbye apart."""
+    serious = heard is None or heard[0].severity >= RECHECK_SERIOUS
+    if c.judge is None or serious or in_scene is not Frame.REAL:
+        return
+
+    async def run(judge: Extractor) -> None:
+        try:
+            with purpose("nudge"):
+                got = await judge.extract(AWAY_PROMPT.text, f"USER: {t.text}", AWAY_SCHEMA)
+        except Exception as err:  # a failed read only means no nudge for this message
+            log.debug("away read failed: %r", err)
+            return
+        read = parse_away(got.data)
+        if read is None:
+            return
+        c.store.append_decision(
+            Decision(
+                DecisionId(_id()),
+                c.rel,
+                t.session,
+                t.turn,
+                TraceId(t.turn),
+                DecisionKind.POLICY,
+                AWAY_REASON,
+                t.now,
+                detail={
+                    "kind": read[0].value,
+                    "minutes": read[1],
+                    "said": t.text,
+                    "model": got.model,
+                    "prompt": AWAY_PROMPT.ref,
+                },
+            )
+        )
+
+    task = asyncio.get_running_loop().create_task(run(c.judge))
+    _BESIDE.add(task)
+    task.add_done_callback(_BESIDE.discard)
 
 
 def _hook_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> None:

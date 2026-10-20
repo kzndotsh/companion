@@ -1,9 +1,11 @@
-"""`companion initiative`: the open loops and what shadow mode would have sent."""
+"""`companion initiative`: the open loops, what shadow mode would have sent, and the nudges after
+they stepped away (times away it read, and the nudges it would have sent)."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from companion.core.nudges import AWAY, WOULD_NUDGE
 from companion.core.types import DecisionKind, RelationshipId
 from companion.store.sqlite.store import Store
 
@@ -16,6 +18,12 @@ def run(db: Path, relationship: str) -> str:
         reach = store.reach_outs(rel)
         held = store.decisions_of_kind(rel, DecisionKind.DO_NOTHING)
         held = [d for d in held if d.reason.startswith("held, would otherwise")]
+        away = [d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.reason == AWAY]
+        nudges = [
+            d
+            for d in store.decisions_of_kind(rel, DecisionKind.INITIATE)
+            if d.reason.startswith(WOULD_NUDGE)
+        ]
     finally:
         store.close()
     out = ["open loops (state, kind, when to reach out, what they said)"]
@@ -30,4 +38,10 @@ def run(db: Path, relationship: str) -> str:
     ]
     out += ["", "held (due, but something was in the way)"]
     out += [f"  {d.at:%m-%d %H:%M}  {d.reason}" for d in held] or ["  none"]
+    out += ["", f"stepped away ({len(away)} read), and the nudges it would have sent (shadow)"]
+    out += [
+        f"  {d.at:%m-%d %H:%M}  {(d.detail or {}).get('draft') or '(no draft)'}"
+        f"  [after {(d.detail or {}).get('said', '')!r:.60}]"
+        for d in nudges
+    ] or ["  none yet"]
     return "\n".join(out) + "\n"

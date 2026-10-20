@@ -750,6 +750,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/basics-known
 - **system/basics-known v1** (current). New (J48 hook). Before the hook would ask, whether any memory states the basic outright (an age, a birth year or birthday for age). The recall look-up was too loose for this (it counted their name as knowing where they live).
 
+## system/away
+- **system/away v1** (current). New (owner, 2026-10-20: "gonna shower" and then hours of quiet is when a friend sends "long shower 👀"; the looser rule, also without them saying they would be back, to see how it does). Read beside any real, not serious turn: whether they are leaving the chat now (brief, back, goodbye or none) and about how many minutes. A first wording also read things already done, "I'm back" and wishes as leaving (37 times away in six days); this one names those as none (18).
+
+## system/nudge-draft
+- **system/nudge-draft v1** (current). New. The shadow draft of the one nudge: light and warm, fits what they went to do, under about twelve words, no guilt, no "I missed you", nothing about their silence and no question that demands an answer.
+
 ## system/invented-judge
 - **system/invented-judge v1** (current). New (G42, J9: the made-up facts rate). Reads a reply with the 40 messages before it and the memory card it had, and lists each statement asserting a fact about the user's own life with what supports it (conversation, memory or none). Code keeps only quotes from the reply that are said to them (you, your). Never on the reply path: `companion invented`. On 367 real replies a stronger reader confirmed only about one flag in twelve, so its flags are candidates; the rate is what the stronger reader confirms (`--dump`).
 

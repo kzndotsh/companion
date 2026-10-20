@@ -290,6 +290,10 @@ Unordered within each group. Pull a card into Todo when it is next.
       about 8 plausible open loops in 3 days of chat, mostly low stakes, 3 sensitive to block; a model
       finds a real afterthought in about 1 of 20 replies, so the afterthought stays parked. See
       `evals/CHANGELOG.md`.
+- [ ] R1b Nudges after stepping away (owner's choice: the looser rule B, also without "brb"). Built in
+      shadow 2026-10-20: when they say they are leaving now and stay quiet twice as long and an hour, one
+      light drafted nudge, logged. Replayed over six days: 18 times away, none nudged, since they always
+      wrote again sooner. If it reads needy, tighten to rule A (only after they said they would be back).
 - [ ] R2 Looking up older messages on recall cues, starting with a cue-triggered search into the
       system block. (G21) **Replayed 2026-10-20, not built:** on the 23 real recall cues so far, the answer
       was already in the 40 messages in view on 16, and a keyword search of older messages picked by the

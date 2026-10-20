@@ -89,6 +89,7 @@ once its log has been read.
 | Feature | Setting | Read it with |
 |---|---|---|
 | Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` |
+| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` |
 | The look-up of memories that bear on each message | `COMPANION_RELEVANCE` | the decision log |
 | What it would ask to get to know them | always shadow for now | `companion map` |
 | A light question when their words touch a basic it does not know (age, work, home, place) | always shadow for now | the decision log |

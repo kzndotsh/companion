@@ -35,6 +35,7 @@ from companion.loops.invented import check_new as check_invented
 from companion.loops.knowing import label_new
 from companion.loops.lore import label_views
 from companion.loops.names import read_names
+from companion.loops.nudges import tick_nudge
 from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
@@ -395,6 +396,7 @@ def _start_initiative(
                 continue
             try:
                 await tick(store, rel, utc_now(), local_zone(), draft, ticker)
+                await tick_nudge(store, rel, utc_now(), local_zone(), judge)
             except Exception:
                 log.exception("initiative tick failed; will try again next time")
 
