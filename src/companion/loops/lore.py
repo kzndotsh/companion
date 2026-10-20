@@ -9,10 +9,21 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.extractor import Extractor
-from companion.core.lore import BATCH, GATE, PROMPT, SCHEMA, SHOWN, lore, parse, prompt
+from companion.core.lore import (
+    BATCH,
+    GATE,
+    PROMPT,
+    READS,
+    SCHEMA,
+    SHOWN,
+    agreed,
+    lore,
+    parse,
+    prompt,
+)
 from companion.core.relevance import Embedder, nearest
 from companion.core.spend import purpose
-from companion.core.types import Belief, RelationshipId
+from companion.core.types import Belief, BeliefId, RelationshipId
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.lore")
@@ -25,28 +36,38 @@ class KindsRead:
     cost_usd: float = 0.0
 
 
-async def label_views(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime, *, batches: int = 1
+async def label_views(  # noqa: PLR0913
+    store: Store,
+    extractor: Extractor,
+    rel: RelationshipId,
+    now: datetime,
+    *,
+    batches: int = 1,
+    again: bool = False,
 ) -> KindsRead:
+    """Label views with no kind yet, READS times each, keeping a taste only where every read
+    agrees. `again` labels every current view anew (the newest label wins)."""
     done = 0
     cost = 0.0
+    redo = {b.id for b in store.self_beliefs(rel)} if again else set[BeliefId]()
     for _ in range(batches):
         have = store.view_kinds(rel)
-        todo = [b for b in store.self_beliefs(rel) if b.id not in have][:BATCH]
+        todo = [b for b in store.self_beliefs(rel) if b.id in redo or b.id not in have][:BATCH]
         if not todo:
             break
+        redo -= {b.id for b in todo}
         text, refs = prompt(todo)
         try:
             with purpose("lore"):
-                result = await extractor.extract(PROMPT.text, text, SCHEMA)
+                results = await asyncio.gather(
+                    *(extractor.extract(PROMPT.text, text, SCHEMA) for _ in range(READS))
+                )
         except Exception as err:
             log.warning("view kinds failed: %r", err)
             break
-        cost += result.cost_usd
-        found = parse(result.data, refs)
-        if not found:
-            break
-        store.add_view_kinds(rel, found, model=result.model, prompt=PROMPT.ref, at=now)
+        cost += sum(r.cost_usd for r in results)
+        found = agreed([parse(r.data, refs) for r in results], refs.values())
+        store.add_view_kinds(rel, found, model=results[0].model, prompt=PROMPT.ref, at=now)
         done += len(found)
     have = store.view_kinds(rel)
     left = sum(b.id not in have for b in store.self_beliefs(rel))

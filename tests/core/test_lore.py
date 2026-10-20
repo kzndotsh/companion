@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from companion.core.lore import Kind, Labelled, lore, parse, prompt
-from companion.core.types import Belief, Json, Subject
+from companion.core.lore import Kind, Labelled, agreed, lore, parse, prompt
+from companion.core.types import Belief, BeliefId, Json, Subject
 
 
 def test_each_view_is_shown_with_its_words_and_labels_come_back_by_ref(
@@ -26,3 +26,12 @@ def test_only_a_taste_is_lore_and_a_lived_claim_never_is(belief: Callable[..., B
     taste, lived, advice = (belief(bid=b, subject=Subject.SELF) for b in ("t", "l", "a"))
     kinds = {taste.id: Kind.TASTE, lived.id: Kind.LIVED, advice.id: Kind.STANCE}
     assert lore([taste, lived, advice], kinds) == [taste]
+
+
+def test_a_view_is_a_taste_only_when_every_read_agrees() -> None:
+    a, b, c = BeliefId("a"), BeliefId("b"), BeliefId("c")
+    taste = [Labelled(a, Kind.TASTE), Labelled(b, Kind.TASTE), Labelled(c, Kind.TASTE)]
+    split = [Labelled(a, Kind.TASTE), Labelled(b, Kind.RULE)]  # c missing from this read
+    got = agreed([taste, taste, split], [a, b, c])
+    assert got == [Labelled(a, Kind.TASTE), Labelled(b, Kind.RULE), Labelled(c, Kind.STANCE)]
+    assert agreed([taste, taste, None], [a]) == [Labelled(a, Kind.STANCE)]  # a failed read

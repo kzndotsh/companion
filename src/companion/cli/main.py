@@ -63,6 +63,7 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     _db_args(mp)
     lr = add("lore", help="its own lore: the views it holds that are tastes (ADR 0020)")
     lr.add_argument("--label", action="store_true", help="label its new views first (a model call)")
+    lr.add_argument("--relabel", action="store_true", help="label every view again (model calls)")
     _db_args(lr)
     nm = add(
         "names", help="things named in memory and the words for each (fetch on mention, shadow)"
@@ -257,7 +258,7 @@ def _initiative(a: argparse.Namespace) -> int:
 
 def _lore(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(daemon.lore_now(db, rel)) if a.label else ""
+    first = asyncio.run(daemon.lore_now(db, rel, again=a.relabel)) if a.label or a.relabel else ""
     return _out(first + lore.run(db, rel))
 
 

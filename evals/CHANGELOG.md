@@ -1033,3 +1033,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   fitting (ketchup on a meal and its burger opinion, a film it had talked about, listening to music) and
   about 4 loose (a playful message and its voice), which the fixtures show it does not recite. Cost $0.03.
   Rerun: `uv run companion eval --variants v41.md,v41.md+lore --fixture lore-asked-what-music ...`.
+- **2026-10-20. Lore labels: three reads, a taste only when all agree.** The owner marked 3 of the 20
+  tastes wrong: a joke taken as a view, a reflection on their own conversation, and a summary worded
+  harsher than the playful thing it said. Three reads each on the original 20: the reflection was advice
+  in all three reads of `system/lore-label` v1 (the single live read had said taste: variance, not the
+  prompt); a draft v2 that names jokes and reflections caught the joke in two of three reads but called
+  about four real tastes jokes or advice (music for a Friday, its own voice, a scrapbook idea), so it was
+  not made. The harsh one is the memory pass's summary; the talker is only ever shown the quote, its own
+  words. Now each batch is read three times and a taste needs all three; relabelled every view for
+  $0.0039: 16 tastes. The judge sees each view's summary and quote only, not the conversation.

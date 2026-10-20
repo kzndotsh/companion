@@ -8,7 +8,8 @@ small model labels each view with one kind; code reads only `taste` as lore and 
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections import Counter
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -20,6 +21,7 @@ _NOTE = get("notes/lore")
 SHOWN = 2  # at most this many of its tastes a turn
 GATE = 0.3  # a taste less like their message than this is not shown
 BATCH = 60
+READS = 3  # a view is a taste only when every read says so (as in ADR 0019)
 
 
 class Kind(StrEnum):
@@ -81,6 +83,22 @@ def parse(data: Json, refs: Mapping[str, BeliefId]) -> list[Labelled] | None:
             continue
         out[bid] = Labelled(bid, Kind(str(kind)))
     return list(out.values())
+
+
+def agreed(reads: Sequence[Sequence[Labelled] | None], shown: Iterable[BeliefId]) -> list[Labelled]:
+    """One label per view from several reads. A taste needs every read to say taste; a failed read
+    is never agreement. Otherwise the commonest other kind, or stance when no read gave one."""
+    out: list[Labelled] = []
+    for bid in shown:
+        kinds = [
+            next((x.kind for x in r if x.belief_id == bid), None) if r else None for r in reads
+        ]
+        if kinds and all(k is Kind.TASTE for k in kinds):
+            out.append(Labelled(bid, Kind.TASTE))
+            continue
+        other = Counter(k for k in kinds if k is not None and k is not Kind.TASTE)
+        out.append(Labelled(bid, other.most_common(1)[0][0] if other else Kind.STANCE))
+    return out
 
 
 def lore(views: Iterable[Belief], labels: Mapping[BeliefId, Kind]) -> list[Belief]:

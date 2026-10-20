@@ -541,14 +541,19 @@ async def label_now(db: Path, relationship: str) -> str:
     return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"
 
 
-async def lore_now(db: Path, relationship: str) -> str:
-    """Label its views that have no kind yet, for `companion lore --label`."""
+async def lore_now(db: Path, relationship: str, *, again: bool = False) -> str:
+    """Label its views that have no kind yet (or all of them, `again`), for `companion lore`."""
     load_dotenv(Path(".env"))
     store = Store(db)
     try:
         async with httpx.AsyncClient() as client:
             done = await label_views(
-                store, extractor(client), RelationshipId(relationship), utc_now(), batches=10
+                store,
+                extractor(client),
+                RelationshipId(relationship),
+                utc_now(),
+                batches=10,
+                again=again,
             )
     finally:
         store.close()
