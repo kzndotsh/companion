@@ -970,3 +970,15 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   pairs through; the three below it are changes (a move, a new partner, a diet), not corrections of a
   wrong word, which sit at 0.73 to 0.88. Cost about $0.05. Rerun: `uv run pytest -m live
   tests/live/test_pair_conflicts.py -s`.
+- **2026-10-20. Searching older messages on a recall cue (R2): replayed, not built.** Every recall cue in
+  the log (23, from two days) was replayed as of its moment: a full-text search (SQLite FTS5, porter
+  stemming) over messages older than the 40 in view, scene messages left out outside a scene and serious
+  ones on light turns, the matching exchanges (a message and its reply) shown to the recall model beside
+  the memories, which picked up to three. A blind Claude judge read each pick against the conversation:
+  of 52 picked exchanges, 5 helped, 16 shared the subject but would not answer it, 31 could steer the reply
+  wrong (another topic sharing a word, banter or roleplay read as fact, sensitive talk not asked about).
+  Checked by eye: the judge is strict (a dress-up exchange it called misleading did show where a remembered
+  detail came from), but most picks were plainly off-topic. On 16 of 23 cues the answer was already in the
+  messages in view, so the misses there were in how the reply used what it could see, not in reach. Not
+  built; R2 waits for flags about things said beyond the window. Cost $0.015; the judge was free. Scratch
+  script and private data, not in the repo.

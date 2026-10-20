@@ -267,7 +267,10 @@ Unordered within each group. Pull a card into Todo when it is next.
       finds a real afterthought in about 1 of 20 replies, so the afterthought stays parked. See
       `evals/CHANGELOG.md`.
 - [ ] R2 Looking up older messages on recall cues, starting with a cue-triggered search into the
-      system block. (G21)
+      system block. (G21) **Replayed 2026-10-20, not built:** on the 23 real recall cues so far, the answer
+      was already in the 40 messages in view on 16, and a keyword search of older messages picked by the
+      recall model helped on 2 cases and added off-topic or pretend-as-real exchanges on 13. Worth another
+      look only when flags show recall misses on things outside the window; the replay is the test.
 - [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
       with the rest growing as recorded lore. Test that they surface without being asked and do not
       become talking points. From the Grok review.
