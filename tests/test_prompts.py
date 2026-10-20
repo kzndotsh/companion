@@ -14,6 +14,7 @@ PLACEHOLDERS = {
     "notes/length-serious": {"limit"},
     "notes/recall": {"items"},
     "notes/lore": {"items"},
+    "notes/listening-trivial": {"examples"},
     "notes/topic-spent": {"move"},
     "notes/guess": {"about", "items"},
     "notes/loop-follow-up": {"claim"},
@@ -26,6 +27,8 @@ PLACEHOLDERS = {
     "notes/address": {"address"},
     "notes/clock-gap": {"gap"},
 }
+# a prompt that gained its placeholders in a later version: earlier versions have none
+SINCE = {"notes/listening-trivial": 6}
 
 
 def _all_versions() -> dict[str, list[str]]:
@@ -67,8 +70,9 @@ def test_files_end_in_one_newline_and_have_no_trailing_spaces_or_carriage_return
 
 def test_placeholders_are_exactly_the_ones_the_code_fills_in() -> None:
     for name in prompts.manifest():
-        wanted = PLACEHOLDERS.get(name, set())
         for version in prompts.versions(name):
+            early = int(version.removeprefix("v")) < SINCE.get(name, 0)
+            wanted: set[str] = set() if early else PLACEHOLDERS.get(name, set())
             assert prompts.get(name, version).placeholders == wanted, f"{name} {version}"
 
 
@@ -123,7 +127,9 @@ def test_a_note_is_one_bracketed_line_except_the_clock_and_the_listening_parts()
         if not prompt.name.startswith("notes/"):
             continue
         bracketed = prompt.text.startswith("[") and prompt.text.endswith("]")
-        plain = prompt.name.startswith(("notes/clock", "notes/listening-", "notes/topic-move-"))
+        plain = prompt.name.startswith(
+            ("notes/clock", "notes/listening-", "notes/topic-move-", "notes/trivial-reactions")
+        )
         assert bracketed != plain, f"{prompt.ref} should {'not ' if plain else ''}be in [brackets]"
 
 

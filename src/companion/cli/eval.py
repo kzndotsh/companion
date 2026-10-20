@@ -156,7 +156,7 @@ def _listening_notes(fixtures: list[Fixture]) -> dict[str, str]:
                 [text for role, text in f.script.history if role == "assistant"] if f.script else []
             )
             judged = ListenJudgement(severity, stance, vague, medical, rude)
-            note = listening_note(judged, replies)
+            note = listening_note(judged, replies, seed=f.id)
             size = length_target("", severity=severity) if severity >= SERIOUS else None
             notes = [
                 n for n in (size.note if size else None, note, rude_note(judged)) if n is not None

@@ -32,7 +32,7 @@ def test_ordinary_replies_pass() -> None:
     assert (
         code_checks("hi girlfriend 💕 you're cute when you say it like that", "Hi girlfriend") == []
     )
-    assert code_checks("ugh—the worst", "laundry") == ["an em dash in a casual reply"]
+    assert code_checks("ugh—the worst", "laundry") == ["an em dash"]
 
 
 @pytest.mark.parametrize(
@@ -51,3 +51,11 @@ def test_the_clock_line_or_a_tag_copied_into_a_reply_fails(reply: str) -> None:
 def test_talking_about_the_time_is_fine() -> None:
     assert code_checks("right now it is late, go to bed lol") == []
     assert code_checks("it's thursday already?") == []
+
+
+def test_the_stock_especially_line_is_caught_and_plain_uses_are_not() -> None:
+    assert code_checks("that sounds exhausting, girl, especially when you're tired") == [
+        "the stock 'that sounds X, especially when' line"
+    ]
+    assert code_checks("ugh, that's the worst") == []
+    assert code_checks("i like jazz, especially piano") == []

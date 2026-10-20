@@ -84,6 +84,7 @@ from companion.core.react import decide as decide_reaction
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import recall_note
 from companion.core.recheck import QUIP, code_checks
+from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.recheck import eligible as recheck_eligible
 from companion.core.relevance import SHADOW as RELEVANCE_SHADOW
 from companion.core.relevance import Embedder
@@ -553,17 +554,18 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     talker: Talker,
 ) -> Reply:
     """The reply to send: the first, or one fresh draw when the first fails a check. On an ordinary
-    turn every check runs and the result is logged; in a scene only the code checks run, since play
-    is expected there, and only a resample is logged."""
+    turn every check runs and the result is logged; in a scene or on a serious turn only the code
+    checks run, and only a resample is logged."""
     severity = heard[0].severity if heard is not None else None
     scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
+    code_only = scene or severity == RECHECK_SERIOUS
     if not c.resample or not reply.text.strip():
         return reply
-    if not scene and not recheck_eligible(severity=severity, in_scene=False, reply=reply.text):
+    if not code_only and not recheck_eligible(severity=severity, in_scene=False, reply=reply.text):
         return reply
     failed = code_checks(reply.text, t.text)
-    if scene and not failed:
-        return reply  # in a scene only the code checks run, and a passing reply is not logged
+    if code_only and not failed:
+        return reply  # a scene or a serious turn gets only the code checks; a pass is not logged
     detail: dict[str, Json] = {}
     if not failed and c.judge is not None:
         judged = await judge_quip(c.judge, t.text, reply.text)
@@ -819,7 +821,7 @@ def _listening_note(c: Conversation, t: _Turn, heard: _Heard | None) -> str | No
         return None
     judged, model, prompt = heard
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
-    note = listening_note(judged, replies)
+    note = listening_note(judged, replies, seed=t.turn)
     c.store.append_decision(
         Decision(
             DecisionId(_id()),

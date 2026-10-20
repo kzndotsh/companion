@@ -6,8 +6,8 @@ written, cheap checks read it, and when one fails code asks the same model once 
 second reply whatever it is. Nothing is edited: code only chooses which whole reply goes out
 ("never rewrite what the model said"), and the discarded one is kept in the decision detail.
 
-Only ordinary turns are checked. A serious turn has its own care and a retry is not that; a scene
-has its own voice.
+Ordinary turns get every check. A serious turn and a scene get only the code checks: the joke judge
+is for ordinary chat, while an em dash or a stock line is as wrong in a hard moment as a light one.
 """
 
 from __future__ import annotations
@@ -45,12 +45,23 @@ _COPIED_CARD = re.compile(
 )
 
 
+# A stock sympathy line: "that sounds exhausting, especially when ..." (flagged 2026-10-20; 13 of
+# 1,056 replies so far, nearly all of them this shape).
+_ESPECIALLY = re.compile(
+    r"\b(?:that|it|this)(?:['\u2019]s| is| sounds| must be| feels| can feel| would be)\b"
+    r"[^.!?\n]{0,70}?,\s*especially\s+(?:when|while|if|since|with|after|because|on)\b",
+    re.IGNORECASE,
+)
+
+
 def code_checks(reply: str, said: str = "") -> list[str]:
     """The checks plain code can make, as the reasons they failed. Saying it is an AI is only a
     failure when their message did not touch on what it is: honesty when asked stays (persona)."""
-    failed = ["an em dash in a casual reply"] if EM_DASH in reply else []
+    failed = ["an em dash"] if EM_DASH in reply else []
     if _DISCLAIMER.search(reply) and not _ASKED_WHAT_IT_IS.search(said):
         failed.append("an AI disclaimer nobody asked for")
     if _COPIED_CARD.search(reply):
         failed.append("the clock line or a tag copied from the system block")
+    if _ESPECIALLY.search(reply):
+        failed.append("the stock 'that sounds X, especially when' line")
     return failed

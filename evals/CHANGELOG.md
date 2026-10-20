@@ -1061,3 +1061,20 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   they had done it or acted as if time had passed; they were "*waits*", "hurry back", "back in twenty",
   which the judge read too strictly. So by the fixture's intent, 60 of 60 (V4 on persona v25 was 21/30).
   The criterion now names what fails and what passes. Cost $0.013.
+- **2026-10-20. Four fixes from the owner's flags of the day.** Luna, persona v41, 30 samples per cell,
+  the note text swapped inside the recorded request of the real flagged turn (scratch script).
+  - **Serious note v7** (drops "show you take it seriously", which it said back: "I'm taking this
+    seriously"). On the two flagged serious turns, the phrase or an em dash in 16 of 60 replies under v6
+    against 1 of 60 under v7; the four public serious fixtures 40/48 against 42/48, within noise. Shipped.
+  - **Topic-spent note v2** ("keep the conversation going, do not send them off"), after a turn where
+    "soon lol" was answered with a send-off. Kept the chat going 6/30 (v1) and 8/30 (v2); dropping the
+    length note or the cozy mood line beside it, 8/30 and 13/30. All within noise: it sends them off
+    whatever the notes say, a plausible reply there. Dropped.
+  - **Code checks on serious turns**: the em dash, unasked AI disclaimer and copied clock checks now run
+    on serious turns too (the joke judge does not), with one redraw, plus a new check for the stock line
+    "that sounds X, especially when ..." (13 of 1,056 past replies, nearly all that sympathy shape).
+  - **Minor vents (T14), trivial note v6**: three size examples drawn per turn from a pool of 30 in place
+    of two fixed ones. A public minor-vent fixture: 22 different replies in 30 against 7 (the top line 3
+    times against 24), still 30/30. The real flagged laundry turn still retells their situation, 3/30
+    without a retelling both ways, re-measured on v41 (it was 6/30 on v36). Shipped for the variety.
+  Cost about $0.09 in all.

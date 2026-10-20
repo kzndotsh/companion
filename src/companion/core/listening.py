@@ -11,6 +11,7 @@ note here.
 
 from __future__ import annotations
 
+import random
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -107,6 +108,8 @@ def offered_recently(replies: Sequence[str]) -> bool:
 
 
 _TRIVIAL = get("notes/listening-trivial")
+_REACTIONS = [x.strip() for x in get("notes/trivial-reactions").text.splitlines() if x.strip()]
+EXAMPLES = 3  # size examples drawn per turn, so no single one becomes the reply (T14)
 _EVERYDAY = get("notes/listening-everyday")
 _SERIOUS = get("notes/listening-serious")
 _HEALTH = get("notes/listening-health")
@@ -133,12 +136,19 @@ def _note(body: Prompt, *extras: Prompt) -> str:
     return "[" + " ".join([body.text, *(e.text for e in extras)]) + "]"
 
 
-def listening_note(j: Judgement, prior_replies: Sequence[str] = ()) -> str | None:
-    """The line for the system block, or None when no special care applies."""
+def trivial_examples(seed: str) -> str:
+    """A few short reactions drawn from the pool, the same for the same turn so a replay matches."""
+    picked = random.Random(seed).sample(_REACTIONS, EXAMPLES)  # noqa: S311 (variety, not security)
+    return ", ".join(f'"{x}"' for x in picked)
+
+
+def listening_note(j: Judgement, prior_replies: Sequence[str] = (), seed: str = "") -> str | None:
+    """The line for the system block, or None when no special care applies. `seed` (the turn id)
+    picks the size examples for a minor vent."""
     if j.stance != "listening" or j.severity >= SEVERITIES[-1]:
         return None
     if j.severity == 0:
-        return _note(_TRIVIAL)
+        return "[" + _TRIVIAL.render(examples=trivial_examples(seed)) + "]"
     offer = not offered_recently(prior_replies)
     if j.severity == 1:
         return _note(_EVERYDAY, *([_OFFER] if j.vague and offer else []))

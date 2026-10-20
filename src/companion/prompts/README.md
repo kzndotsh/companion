@@ -72,13 +72,14 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/listening-health` | note | added to the severity 2 note for a health topic | v2 |
 | `notes/listening-offer` | note | added to the severity 1 note when they were vague | v1 |
 | `notes/listening-offer-serious` | note | added to the severity 2 note | v2 |
-| `notes/listening-serious` | note | listening note, severity 2 | v6 |
-| `notes/listening-trivial` | note | listening note, severity 0 | v5 |
+| `notes/listening-serious` | note | listening note, severity 2 | v7 |
+| `notes/listening-trivial` | note | listening note, severity 0 | v6 |
 | `notes/mood-buzzing` | note | dropped candidate mood line for buzzing (ADR 0016), kept for the `+mood-buzzing` eval flag | v1 |
 | `notes/mood-cozy` | note | the cozy mood line, shown when `COMPANION_MOOD=on` and cozy is among the strongest states (ADR 0016) | v2 |
 | `notes/mood-flat` | note | the flat mood line; measured, but the engine has no source for flat yet (waits for J6), so it is not shown | v2 |
 | `notes/mood-playful` | note | the playful mood line, shown when `COMPANION_MOOD=on` and playful is among the strongest states (ADR 0016) | v2 |
 | `notes/mood-tender` | note | the tender mood line, shown when `COMPANION_MOOD=on` and tender is among the strongest states (ADR 0016) | v2 |
+| `notes/trivial-reactions` | data | the pool of short reactions a minor-vent note draws three size examples from (T14) | v1 |
 | `notes/lore` | note | its own tastes nearest their message, as the words it said, on an ordinary turn (ADR 0020) | v1 |
 | `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v2 |
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |

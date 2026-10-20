@@ -101,7 +101,7 @@ async def test_an_em_dash_is_caught_by_code_without_asking_the_judge(store: Stor
     talker = Talker("ugh—too crispy", PLAIN)
     assert await _say(store, talker, judge) == PLAIN
     assert judge.quip_calls == 0
-    assert _reasons(store) == ["resampled: an em dash in a casual reply"]
+    assert _reasons(store) == ["resampled: an em dash"]
 
 
 async def test_a_passing_reply_is_sent_and_logged_as_kept(store: Store) -> None:
@@ -111,12 +111,22 @@ async def test_a_passing_reply_is_sent_and_logged_as_kept(store: Store) -> None:
     assert _reasons(store) == ["kept: the reply passed its checks"]
 
 
-@pytest.mark.parametrize(("severity", "on"), [(2, True), (0, False)])
-async def test_a_serious_turn_or_resample_off_is_never_checked(
-    store: Store, severity: int, *, on: bool
-) -> None:
-    judge = Judge(severity, joke=True)
+async def test_resample_off_is_never_checked(store: Store) -> None:
+    judge = Judge(0, joke=True)
     talker = Talker("ugh—" + JOKE, PLAIN)
-    assert await _say(store, talker, judge, on=on) == "ugh—" + JOKE
+    assert await _say(store, talker, judge, on=False) == "ugh—" + JOKE
     assert (talker.calls, judge.quip_calls) == (1, 0)
     assert _reasons(store) == []
+
+
+async def test_a_serious_turn_gets_the_code_checks_but_never_the_joke_judge(store: Store) -> None:
+    judge = Judge(2, joke=True)
+    talker = Talker("that sounds hard, especially when you're tired", PLAIN)
+    assert await _say(store, talker, judge) == PLAIN
+    assert judge.quip_calls == 0
+    assert _reasons(store) == ["resampled: the stock 'that sounds X, especially when' line"]
+    clean = Talker(JOKE)
+    assert (
+        await _say(store, clean, Judge(2, joke=True)) == JOKE
+    )  # no code check fails: kept, unlogged
+    assert clean.calls == 1
