@@ -194,9 +194,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   never shown to the talker yet.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
-  a scene) an em dash, an AI disclaimer nobody asked for, and the clock line or a tag copied from the system
-  block, by code, and a joke bolted onto an ordinary
-  message by the quip judge; in a scene only the code checks. On a fail the same model is asked once more
+  a scene) an em dash, an AI disclaimer nobody asked for, the clock line or a tag copied from the system
+  block, and the stock "that sounds X, especially when" line, by code, and a joke bolted onto an ordinary
+  message by the quip judge; in a scene or on a serious turn only the code checks. On a fail the same model is asked once more
   and the second reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
   edited. `COMPANION_RESAMPLE=off` turns it off.
 - Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the roleplay talker for a pretend

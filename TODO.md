@@ -242,9 +242,11 @@ Ordered. Pull from the top.
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
-      size examples) shipped 2026-10-19: 6/30 on that turn and short reactions elsewhere, plainer and more
+      size examples) shipped 2026-10-19: 6/30 without a retelling on that turn and short reactions elsewhere, plainer and more
       alike, which the owner accepted. Ideas for varied reactions in
-      `docs/inbox/2026-10-19-varied-short-reactions-to-minor-vents.md`.
+      `docs/inbox/2026-10-19-varied-short-reactions-to-minor-vents.md`. **2026-10-20:** the pool shipped
+      (note v6, three size examples drawn per turn): 22 different replies in 30 against 7. Left: the real
+      laundry turn still retells 27 of 30 on v41, whatever has been tried.
 - [ ] T15 Prompt experiments from the guides review (`docs/research/2026-10-18_prompting-guides-review.md`): a
       parrot audit of quoted sample phrases in the persona and notes, a trimmed persona against v26, positive
       rewrites of the notes, a stock-phrase note from the owner's marks, and a read of the Luna model page. Each
