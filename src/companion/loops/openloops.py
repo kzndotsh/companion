@@ -11,7 +11,7 @@ import logging
 import re
 import uuid
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, tzinfo
 
 from companion.core.beliefs.extract import build_user_prompt, index_window
@@ -49,6 +49,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.promises import read_promises
 from companion.prompts import get
 from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.store import Store
@@ -295,6 +296,7 @@ class Reading:
     batch: int
     context: int
     batches: int = 3
+    promises: bool = False  # also read its own messages for promises (J12, shadow)
 
 
 async def catch_up_loops(  # noqa: PLR0913, PLR0917
@@ -316,14 +318,22 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
             break
         upto = (batch[-1].at, batch[-1].id)
         targets = {u.id for u in batch if u.speaker is Speaker.USER}
-        if not targets:
+        own: set[UtteranceId] = (
+            {u.id for u in batch if u.speaker is Speaker.COMPANION} if reading.promises else set()
+        )
+        if not targets and not own:
             store.record_loop_run(rel, upto, ok=True, reason="none of their messages", at=now)
             continue
         window = index_window([*store.history_before(rel, batch[0].at, reading.context), *batch])
-        counts = await extract_open_loops(store, extractor, rel, window, targets, when, note)
-        if counts is not None:
+        counts = (
+            await extract_open_loops(store, extractor, rel, window, targets, when, note)
+            if targets
+            else LoopCounts()
+        )
+        spent = await read_promises(store, extractor, window, own, when, note) if own else 0.0
+        if counts is not None and spent is not None:
             store.record_loop_run(rel, upto, ok=True, reason="read", at=now)
-            total = _add(total, counts)
+            total = _add(total, replace(counts, cost_usd=counts.cost_usd + spent))
             continue
         tries = store.loop_failed_tries(rel, upto[1]) + 1
         if tries >= MAX_TRIES:

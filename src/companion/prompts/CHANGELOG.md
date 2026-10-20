@@ -735,6 +735,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/memory-pair
 - **system/memory-pair v1** (current). New (ADR 0019). Says how two memories relate: same, merge, distinct, replaces or contradicts. Read three times; a new memory read as the same as an existing one by all three becomes evidence on it, and nothing is merged automatically.
 
+## system/promise-read
+- **system/promise-read v1** (current). New (J12; a repair promise not to use a word again was broken a few hours later and flagged). Reads the companion's own messages in each memory batch for promises it made: standing (a rule for every later message) or once (one thing on a later day), and a word it said it would stop using. Only a change to how it acts, made because the user asked, corrected or complained; its general limits, keeping them company, banter, scenes, reassurance and apologies with no rule are not promises. Code then drops any promise whose quote is not in the message, is in a pretend scene, is hedged, or has no forward-looking word (won't, I'll, stop, next time, again). Shadow only: recorded and listed, never shown to the talker. Measured on every companion message so far in `evals/CHANGELOG.md`.
+
 ## system/guess-invite
 - **system/guess-invite v1** (current). New (J16; owner flag 2026-10-19, "you know what time it is?" answered with the clock when they meant coffee time). Asked only on a short question; says whether it invites a guess about them and about what. False for a real question wanting a fact, a complaint or correction, and anything serious. Kept apart from the listening judge, whose labels shifted when the topic label was added to it.
 

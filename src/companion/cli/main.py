@@ -17,6 +17,7 @@ from companion.cli import (
     knowing,
     memory,
     mood,
+    promises,
     replay,
     spend,
 )
@@ -58,6 +59,10 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     mp = add("map", help="what it knows about them by part of their life, and the gap it would ask")
     mp.add_argument("--label", action="store_true", help="label new memories first (a model call)")
     _db_args(mp)
+    pr = add("promises", help="the promises it made in its own replies (shadow), newest first")
+    pr.add_argument("--not", dest="wrong", metavar="ID", help="mark one as not a promise")
+    pr.add_argument("--retire", metavar="ID", help="retire one")
+    _db_args(pr)
     md = add("mood", help="the mood now, or --replay DAYS of what it would have been")
     md.add_argument("--replay", type=int, metavar="DAYS", help="rebuild it over the last DAYS days")
     _db_args(md)
@@ -238,6 +243,10 @@ def _initiative(a: argparse.Namespace) -> int:
     return _out(initiative.run(*_target(a)))
 
 
+def _promises(a: argparse.Namespace) -> int:
+    return _out(promises.run(*_target(a), wrong=a.wrong, retire=a.retire))
+
+
 def _favorites(a: argparse.Namespace) -> int:
     return _out(favorites.run(*_target(a)))
 
@@ -295,6 +304,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "favorites": _favorites,
     "initiative": _initiative,
     "mood": _mood,
+    "promises": _promises,
     "map": _map,
     "backup": _backup,
     "address": _address,

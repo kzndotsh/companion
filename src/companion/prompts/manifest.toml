@@ -61,6 +61,7 @@
 "system/memory-check" = "v1"
 "system/memory-pair" = "v1"
 "system/guess-invite" = "v1"
+"system/promise-read" = "v1"
 "system/self-extract" = "v4"
 "system/views-conflict" = "v1"
 "system/views-implicated" = "v1"

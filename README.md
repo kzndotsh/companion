@@ -79,6 +79,7 @@ once its log has been read.
 | What it would ask to get to know them | always shadow for now | `companion map` |
 | The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review`, the decision log |
 | The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` |
+| The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` |
 
 ## Quick start
 
@@ -140,6 +141,7 @@ All optional. Set them in `.env`.
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
 | `COMPANION_RELEVANCE` | `shadow` | the look-up of memories that bear on each message (ADR 0018); `off` stops it |
 | `COMPANION_CONSOLIDATE` | `shadow` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
+| `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 
 **Running**
 
@@ -179,6 +181,7 @@ Look after memory:
 ```bash
 uv run companion beliefs        # what it holds about the user, with quotes
 uv run companion memory review  # answer the memory check's questions, a few at a time
+uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
 uv run companion retire <id> --reason "..."      # close one memory
 uv run companion merge <id> <id> --claim "..."   # merge memories that say one thing, keeping every quote
 uv run companion address        # how they want to be referred to; --set TEXT changes it

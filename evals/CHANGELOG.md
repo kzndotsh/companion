@@ -990,3 +990,14 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   (J33); 2 misread the cue. 17 of the 23 came before the repair and recall-note changes of 2026-10-19
   (J30); of the 6 after, one narrowed what they meant and none missed something in view. Nothing to build
   from this; the live log after J30 decides. Free (Claude judge).
+- **2026-10-20. Reading its own replies for promises (J12): a label that needs code behind it.** Every
+  companion message so far (1,040) read in batches by Haiku 5.5 for promises it made to the user. A first
+  prompt (any concrete commitment) kept 101, and by eye about 12 were real: most were its general limits,
+  keeping them company, banter or reassurance. A tighter prompt (only a change to how it acts, made
+  because they asked, corrected or complained) kept 32, about 11 real; the model still kept apologies with
+  no rule going forward. A code check that the quote looks forward (won't, I'll, stop, next time, again)
+  left 15, 11 real by eye (the rest were date banter, a description of a past slip and a joke), and kept
+  every real one the tighter prompt found. One word to avoid was found right ("boy"), one too vaguely ("pet
+  name"); one real promise ("I'll keep that one straight from now on") was missed by the tighter prompt.
+  So it runs in shadow with the owner marking false ones; nothing reaches the talker. Cost $0.066 for
+  both prompts. Scratch script and private data, not in the repo.

@@ -204,6 +204,7 @@ def startup_line(
         f" | relevance {'shadow' if relevance_on() else 'off'}"
         f" | talker fallback {talker_fallback() or 'off'}"
         f" | memory check {consolidate_mode()}"
+        f" | promises {promises_mode()}"
     )
 
 
@@ -222,6 +223,13 @@ def consolidate_mode() -> str:
     would close, `on` closes it, `off` skips the check."""
     raw = os.environ.get("COMPANION_CONSOLIDATE", "").strip().lower()
     return raw if raw in ("on", "off") else "shadow"
+
+
+def promises_mode() -> str:
+    """COMPANION_PROMISES (J12): `shadow` (default) reads its own replies for promises and records
+    them, nothing reaches the talker; `off` skips the read."""
+    raw = os.environ.get("COMPANION_PROMISES", "").strip().lower()
+    return "off" if raw == "off" else "shadow"
 
 
 def talker_fallback() -> str | None:
@@ -427,7 +435,9 @@ async def run(data_dir: Path) -> None:
                 return
             try:
                 result = await retry_on_network_error(
-                    lambda: reflect_once(store, reflector, rel, same=same),
+                    lambda: reflect_once(
+                        store, reflector, rel, same=same, promises=promises_mode() != "off"
+                    ),
                     REFLECT_RETRY_DELAYS,
                     "reflect",
                 )

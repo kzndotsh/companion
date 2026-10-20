@@ -448,6 +448,11 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       memories are never compared with each other; the question still waits for the terminal (J3).
 - [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
       jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
+      **Partial 2026-10-20:** plan reviewed with Grok (its own promises first, then names, then shared
+      moments; no anniversaries, no pull at goodbye or silence). Step 1 in shadow: promises read from its own
+      replies and listed (`companion promises`). Next: a week of the list read by the owner, then standing
+      promises and "don't call me" words pinned with a word check and one redraw, measured on the real
+      flagged turn; one-off promises as open loops.
 - [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
       ones that match the current mood. No product has it. Behind J5.
 - [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),

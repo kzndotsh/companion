@@ -12,6 +12,7 @@ from companion.core.callbacks import Check
 from companion.core.knowing import Label
 from companion.core.mood import Effect, Said
 from companion.core.openloops import LoopState, OpenLoop
+from companion.core.promises import Promise
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
 from companion.core.relevance import Vector
@@ -48,12 +49,14 @@ from companion.store.sqlite import (
     memory_checks,
     mood,
     open_loops,
+    promises,
     reflect,
     settings,
     turns,
 )
 from companion.store.sqlite.db import connect, migrate
 from companion.store.sqlite.open_loops import ReachOut
+from companion.store.sqlite.promises import Recorded as RecordedPromise
 
 VIEWS_MODE_KEY = "views.mode"
 
@@ -264,6 +267,15 @@ class Store:
 
     def answer_check(self, check_id: int, said: str, at: datetime) -> None:
         memory_checks.answer(self._conn, check_id, said, at)
+
+    def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
+        promises.add(self._conn, p, model=model, prompt=prompt, at=at)
+
+    def mark_promise(self, promise_id: str, mark: str, reason: str, at: datetime) -> None:
+        promises.mark(self._conn, promise_id, mark, reason, at)
+
+    def promises(self, rel: RelationshipId) -> list[RecordedPromise]:
+        return promises.recorded(self._conn, rel)
 
     def add_belief_labels(
         self, rel: RelationshipId, found: Sequence[Label], model: str, prompt: str, at: datetime

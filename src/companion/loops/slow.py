@@ -77,6 +77,7 @@ class ReflectOptions:
     ignore: frozenset[BeliefId] = frozenset()
     tz: tzinfo | None = None
     same: SameCheck | None = None  # write-time check against existing memories (ADR 0019)
+    promises: bool = False  # read its own messages for promises it made (J12, shadow)
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,14 +144,16 @@ class _Pass:
         )
 
 
-async def reflect_once(
+async def reflect_once(  # noqa: PLR0913
     store: Store,
     extractor: Extractor,
     rel: RelationshipId,
     now: datetime | None = None,
     same: SameCheck | None = None,
+    *,
+    promises: bool = False,
 ) -> ReflectResult:
-    options = ReflectOptions(now, same=same)
+    options = ReflectOptions(now, same=same, promises=promises)
     return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), options)
 
 
@@ -383,7 +386,12 @@ async def reflect_from(
         rejected=users.rejected,
     )
     loops = await catch_up_loops(
-        store, extractor, rel, (now, local), run.log, Reading(BATCH, CONTEXT)
+        store,
+        extractor,
+        rel,
+        (now, local),
+        run.log,
+        Reading(BATCH, CONTEXT, promises=options.promises),
     )
     wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
     new_wants = users.accepted_ids & wanted

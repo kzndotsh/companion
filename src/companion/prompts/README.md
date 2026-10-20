@@ -114,6 +114,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |
 | `system/guess-invite` | system | whether their short question invites a guess about them, and about what (J16) | v1 |
+| `system/promise-read` | system | the promises the companion made in its own replies: standing or once, and a word it said it would stop using (J12) | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
 | `system/views-implicated` | system | which views a flag implicates, `core/beliefs/views_implicated.py` | v1 |
