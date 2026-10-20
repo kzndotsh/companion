@@ -4,8 +4,8 @@ Replay a recorded turn against a persona variant, score the reply, and print one
 
 ```bash
 uv run companion eval --list                         # the fixtures
-uv run companion eval --variants v36.md,v40.md --dry-run   # the plan, an upper estimate and the balance
-uv run companion eval --variants v36.md,v40.md --samples 12 --cap 0.20 --show
+uv run companion eval --variants v40.md,v41.md --dry-run   # the plan, an upper estimate and the balance
+uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
 ```
 
 ## How it works
@@ -19,13 +19,15 @@ uv run companion eval --variants v36.md,v40.md --samples 12 --cap 0.20 --show
     and a generic description, never the conversation, and need your database. They live in
     `evals/local/`, which is **gitignored**, and are for private regression checks on your own
     real conversations. Their ids end in `-local` so the two sets never mix up in a table.
-- A **variant** is a persona version (`v40.md`, from `src/companion/prompts/system/persona/`) with optional
+- A **variant** is a persona version (`v41.md`, from `src/companion/prompts/system/persona/`) with optional
   flags, in any order, and `@model` last: `+nocard` drops the memory block, `+h10` keeps the last 10
   messages of history, `+low`, `+medium` or `+high` turns reasoning on, `+len` adds the length note and
   `+listen` adds the listening note the fixture's labels would produce, `+echo` the note against
   copying their emoji, `+as-NAME` lays a character sheet over the persona, `+mood-STATE` (or two joined
   with a dot) adds a mood line, `+resample` draws once more when the quip check fires, and `+roleplay`
-  builds the roleplay talker's prompt (with `+as-NAME`, its sheet section too). The recorded history and the
+  builds the roleplay talker's prompt (with `+as-NAME`, its sheet section too). `+tags` puts the whole
+  system block in XML-style tags and `+tagsnotes` only the clock and the notes (as the bot does), and
+  `+lore` shows a script's `lore` tastes as the companion's own (ADR 0020). The recorded history and the
   user's message are reused exactly, so only the thing under test changes. To try another version of a
   non-persona prompt, set `COMPANION_PROMPT_OVERRIDES` for the run.
 - Free models for cross-model checks. `@kiro/claude-sonnet-4.6` (or another Kiro model) sends the talker
@@ -40,7 +42,7 @@ uv run companion eval --variants v36.md,v40.md --samples 12 --cap 0.20 --show
   `pass`, `fail` or `unclear` for one criterion; `epitome` scores a reply 0 to 2 on reaction,
   interpretation, exploration and support and passes with a reaction plus a strong interpretation, an
   exploration or support. A script (or a recorded turn) can carry `labels` (severity, stance, vague,
-  medical) so `+listen` can add the matching note. `unclear` is unscored and never
+  medical) so `+listen` can add the matching note, and `lore` (a list of its own tastes) for `+lore`. `unclear` is unscored and never
   counts as a failure. The judge prompt and schema are hashed into every result.
 - A sample passes only if every check passes. Cells read `passes/scored`, with `+k?` for unscored.
 - **A spend cap is mandatory.** The runner adds up the cost each response reports and stops at the

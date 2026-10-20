@@ -198,8 +198,8 @@ Run an eval:
 
 ```bash
 uv run companion eval --list
-uv run companion eval --variants v40.md,v40.md+listen --samples 12 --cap 0.2 --dry-run
-uv run companion eval --variants v40.md@openai/gpt-6-luna --samples 12 --cap 0.2
+uv run companion eval --variants v41.md,v41.md+listen --samples 12 --cap 0.2 --dry-run
+uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
 A run shows the OpenRouter balance first and refuses a cap above it. Each result carries its 95%

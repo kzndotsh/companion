@@ -31,8 +31,8 @@ decision is made; it may be wrong, but never stale.
 
 Live: persona **v41** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
-**Claude Haiku 5.5** with a fallback model for calls it refuses. 19 ADRs, 105 public eval fixtures plus the
-private recorded ones, and about 960 tests with strict lint and types.
+**Claude Haiku 5.5** with a fallback model for calls it refuses. 20 ADRs, 110 public eval fixtures plus the
+private recorded ones, and about 980 tests with strict lint and types.
 
 Built and working:
 
@@ -57,6 +57,9 @@ Built and working:
   0019), the map of what it knows about them (J48). Live: due plans brought up when they next write
   (J15), repair notes (J30), a topic-spent note, invited guesses (J16), a talker fallback (J21), daily
   backups (J36), the clock and notes in tags, and conflicting memories asked about in `memory review`.
+- **Since 2026-10-20.** Its own tastes shown back when the moment touches them (ADR 0020, live). In
+  shadow: promises it makes read from its replies (J12, `companion promises`), names matched against
+  memory (`companion names`), and its views labelled taste, stance, rule, self or lived (`companion lore`).
 - **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
   messages, and a new message that arrives before the last answer is out replaces it. A reply
   Telegram never delivered is recorded as undelivered and left out of what the model reads.
@@ -114,6 +117,10 @@ Each item ends with the thing that tells us it is done. The cards are below.
    of the shadow log is read by a Claude judge and the owner, and the next step it decides is taken.
 5. **A week of shadow mode** for open loops. *Done when:* the owner has read `companion initiative` and
    the caps are set. Going live also needs outcome recording and a slow re-probe.
+6. **Memory tidies itself** (ADR 0019), in shadow since 2026-10-19. *Done when:* the review of
+   2026-10-26 is read and the owner decides on `COMPANION_CONSOLIDATE=on`.
+7. **Its own promises and lore** (J12, ADR 0020): promises and labels in shadow, tastes shown live since
+   2026-10-20. *Done when:* the review of 2026-10-27 is read and the owner decides J12 step 2 and L5.
 
 ### Next
 
@@ -164,6 +171,9 @@ Each item ends with the thing that tells us it is done. The cards are below.
 5. **Body and appearance question** (inbox, parked since the start).
 6. **Provider routing (T8).**
 7. **Flagged turns in history (T9).**
+8. **The relevance look-up (ADR 0018):** which outcome, after the review of 2026-10-21.
+9. **The memory check on (ADR 0019):** `COMPANION_CONSOLIDATE=on`, after the review of 2026-10-26.
+10. **Promises (J12 step 2, L5):** pin standing promises, and which source, after the review of 2026-10-27.
 
 ---
 

@@ -34,7 +34,7 @@ line, and every decision in the log names the text it came from.
 - Small wording fixes cost a new file and a changelog line. That is the point: a change to what the
   model reads is worth recording.
 - A code change that alters what the model is sent also goes in `prompts/CHANGELOG.md`.
-- Since: the persona is v40 and the prompts folder has about fifty prompts. It is still readable, so
+- Since: the persona is v41 and the prompts folder has about seventy prompts. It is still readable, so
   the archive folder below is not needed yet.
 
 **Rejected.** (added 2026-10-19 from the context above, not recorded at the time) Prompt strings in code with a version constant; editing shipped versions with the history

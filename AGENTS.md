@@ -31,8 +31,9 @@ just logs         # follow data/logs/companion.log: every stage, judge, model an
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup
+uv run companion memory review | promises | names | lore   # questions for the owner, and the shadow lists
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
-uv run companion eval --variants v40.md@openai/gpt-6-luna --samples 12 --cap 0.2
+uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
 Strict ruff and basedpyright, a lefthook pre-commit, and import-linter run on every commit. Layer

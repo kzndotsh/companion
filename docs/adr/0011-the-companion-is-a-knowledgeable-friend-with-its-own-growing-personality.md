@@ -36,7 +36,7 @@ distinctions keep honesty simple: what it knows, what it has not done, what it c
   history of its own, not knowledge. A persona that is a particular person may still have gaps ("not
   my world"); that belongs to its core, not to a global rule.
 - Since: a character sheet may give an authored past, and the AI-honesty rule holds over it: it says
-  plainly what it is when sincerely asked (`system/character-frame`). The persona is now v40.
+  plainly what it is when sincerely asked (`system/character-frame`). The persona is now v41.
 
 **Rejected.** (added 2026-10-19 from the context above, not recorded at the time)
 - A character whose knowledge comes only from authored lore.

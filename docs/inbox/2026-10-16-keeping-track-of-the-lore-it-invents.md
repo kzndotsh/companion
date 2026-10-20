@@ -1,6 +1,7 @@
 # Keeping track of the backstory the companion invents
 
-Added 2026-10-16. Nothing is decided. This is an idea to look at later, not a task.
+Added 2026-10-16. Decided on 2026-10-20 in ADR 0020 (its lore lives in its views, labelled by kind, and
+is shown when the moment touches it); kept here as the background.
 
 ## What was noticed
 
