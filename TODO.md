@@ -29,7 +29,7 @@ decision is made; it may be wrong, but never stale.
 
 ## Where we are (2026-10-19)
 
-Live: persona **v40** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
+Live: persona **v41** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
 **Claude Haiku 5.5** with a fallback model for calls it refuses. 17 ADRs, 93 public eval fixtures plus the
 private recorded ones, and about 870 tests with strict lint and types.

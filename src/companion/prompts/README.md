@@ -52,7 +52,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 
 | Name | Kind | Used for | Current |
 |---|---|---|---|
-| `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v40 |
+| `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v41 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, `core/address.py` | v1 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
