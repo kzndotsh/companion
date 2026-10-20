@@ -120,7 +120,7 @@ Each item ends with the thing that tells us it is done. The cards are below.
 6. **Memory tidies itself** (ADR 0019), in shadow since 2026-10-19. *Done when:* the review of
    2026-10-26 is read and the owner decides on `COMPANION_CONSOLIDATE=on`.
 7. **Its own promises and lore** (J12, ADR 0020): promises and labels in shadow, tastes shown live since
-   2026-10-20. *Done when:* the review of 2026-10-27 is read and the owner decides J12 step 2 and L5.
+   2026-10-20. *Done when:* the review of 2026-10-27 is read and the owner decides J12 step 2 and LR5.
 
 ### Next
 
@@ -128,9 +128,10 @@ Each item ends with the thing that tells us it is done. The cards are below.
   nothing. Needs the owner's design.
 - **A language guard** that regenerates once when a reply uses a script the user has not.
 - **Pacing ADR** (T2), **provider routing for DeepSeek** (T8), the two DeepSeek-only gaps (T4, T5).
-- **Looking up older messages** when the user says "remember" (R2), **recording the lore it invents**
-  (R3), **reactions** beyond acknowledgements, **calibrating the view gates**, and **eval tooling**
-  (favourites to fixtures, a gate on synthetic-only data).
+- **Looking up older messages** when the user says "remember" (R2: replayed 2026-10-20, waits for a flag about
+  something said beyond the window), **reactions** beyond acknowledgements, **calibrating the view gates**,
+  **a cooldown before raising the same memory or taste again** (G16), and **eval tooling** (favourites to
+  fixtures, a gate on synthetic-only data).
 - **History hygiene:** a flag does not always say which reply it is about, so dropping flagged replies
   was tried and reverted (T9).
 - **Cache:** the 40-message window slides each turn, so the history is never cached.
@@ -173,7 +174,7 @@ Each item ends with the thing that tells us it is done. The cards are below.
 7. **Flagged turns in history (T9).**
 8. **The relevance look-up (ADR 0018):** which outcome, after the review of 2026-10-21.
 9. **The memory check on (ADR 0019):** `COMPANION_CONSOLIDATE=on`, after the review of 2026-10-26.
-10. **Promises (J12 step 2, L5):** pin standing promises, and which source, after the review of 2026-10-27.
+10. **Promises (J12 step 2, LR5):** pin standing promises, and which source, after the review of 2026-10-27.
 
 ---
 
@@ -182,8 +183,13 @@ Each item ends with the thing that tells us it is done. The cards are below.
 - [ ] D1 Watch the two-talker setup in real chat (Luna for everyday, DeepSeek V4.1 Flash for roleplay).
       Split `/flag` and `/fav` by the model that wrote each turn. Done when a week of marks shows
       whether the roleplay model helps and where the voice change at the boundary hurts.
-- [ ] L1 Its own lore labelled by kind (ADR 0020 phase 1): taste, stance, rule, self or lived, on every
-      view it holds; `companion lore` lists the tastes. Done when the labels read right to the owner.
+- [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
+      jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
+      **Partial 2026-10-20:** plan reviewed with Grok (its own promises first, then names, then shared
+      moments; no anniversaries, no pull at goodbye or silence). Step 1 in shadow: promises read from its own
+      replies and listed (`companion promises`). Next: a week of the list read by the owner, then standing
+      promises and "don't call me" words pinned with a word check and one redraw, measured on the real
+      flagged turn; one-off promises as open loops.
 
 ## Todo
 
@@ -283,9 +289,6 @@ Unordered within each group. Pull a card into Todo when it is next.
       was already in the 40 messages in view on 16, and a keyword search of older messages picked by the
       recall model helped on 2 cases and added off-topic or pretend-as-real exchanges on 13. Worth another
       look only when flags show recall misses on things outside the window; the replay is the test.
-- [ ] R14 (waits on ADR 0020 phase 2) Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
-      with the rest growing as recorded lore. Test that they surface without being asked and do not
-      become talking points. From the Grok review.
 - [ ] R17 Show gaps under a minute in seconds on the clock line. Not needed so far: the persona sentence
       alone fixed the short-gap fixture (9/12 with and without the gap stated).
 - [ ] R15 Extend the rejected list to beliefs: when a belief about the user is retired by hand, no
@@ -293,7 +296,6 @@ Unordered within each group. Pull a card into Todo when it is next.
       are protected. (A20 in the audit synthesis)
 - [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
       fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
-- [ ] R3 Record the lore it invents, through the same filter as the memory rules. (G23) Now ADR 0020, L1 to L4.
 - [ ] R4 No reaction alongside a reply while a scene is in progress, send the reaction as soon as the
       judge returns, and record the user's reactions to its messages.
 - [ ] R5 A command that turns favourites into "must still pass" fixtures.
@@ -334,7 +336,7 @@ Unordered within each group. Pull a card into Todo when it is next.
       pull counts as used. (new)
 - [ ] G18 Emotional-context match in ranking. Nobody has built it. (new)
 - [ ] G19 Tells, the highest-value kind. The kind exists, extraction is thin. (partial)
-- [ ] G20 Promises used for follow-ups, not only stored. (partial)
+- [ ] G20 Promises used for follow-ups, not only stored. (partial: its own promises are J12)
 
 ### C. The self
 
@@ -371,9 +373,6 @@ Unordered within each group. Pull a card into Todo when it is next.
 
 ### G. Evaluation
 
-- [ ] G42 Fabrication rate: facts in replies with no belief behind them, target zero. (built 2026-10-20 as
-      `companion invented`: a cheap judge finds candidates, a Claude judge confirms; first reading 5 of 367
-      replies, about 1.4%)
 - [ ] G43 Date-aware probes the day before and after a thread's date. (new)
 - [ ] G44 Style distance (must not converge on the user's), self-similarity over time, and a
       slop-phrase rate. (new)
@@ -406,6 +405,7 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] A9 Queue-time repeat filter for reach-outs and replies, as a hold or resample with a reason, never a
       rewrite. See `docs/inbox/2026-10-18-resample-a-reply-that-fails-a-code-check.md`.
 - [ ] A15 A correction supersedes its target with the reason recorded (`superseded_by` exists, unused).
+      Partly J11 (2026-10-20): a conflicting pair is a question for the owner; keeping one retires the other.
       See `docs/inbox/2026-10-18-a-second-look-and-consolidation-pass-for-beliefs.md`.
 - [ ] A23 Persona-change proposals state what would change once landed, one file per proposal, enforced in
       code. With R9.
@@ -436,14 +436,10 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
       M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
       to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). Left: a few days of flags, then the ADR accepted.
-- [ ] J6 (ADR 0020 phase 4, L4) Its own time away: after a gap it has something of its own to say about the interval, recorded as
-      lore so it stays consistent (greenfield "continuous" probe; ties to R3 and A22).
 - [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk
       about that") so marks sort by failure type (greenfield section 10).
 - [ ] J8 Model-swap protocol: probe the old model, diff the new one against it, tell the owner in
       character, reversible for a window (greenfield section 9: the top reason users quit). With F.
-- [ ] J9 (built as G42, `companion invented`) Made-up facts rate: count replies that state a fact about the user with no recorded belief behind
-      it, target zero, as an automatic eval metric (greenfield section 10).
 - [ ] J10 Refuse-to-overwrite rules for the second look: a one-off never replaces a habit, an occasion
       never replaces a standing fact, a vaguer statement never replaces a precise one, someone else's value
       is not theirs (mengram's four named rules, product-code audit). Matches the overstated beliefs the
@@ -460,13 +456,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       look-alike pairs (`tests/live/test_pair_conflicts.py`). Left: a correction whose memory sits below the
       0.55 embedding gate is never compared (3 of the 14, all changes rather than corrections); older
       memories are never compared with each other; the question still waits for the terminal (J3).
-- [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
-      jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
-      **Partial 2026-10-20:** plan reviewed with Grok (its own promises first, then names, then shared
-      moments; no anniversaries, no pull at goodbye or silence). Step 1 in shadow: promises read from its own
-      replies and listed (`companion promises`). Next: a week of the list read by the owner, then standing
-      promises and "don't call me" words pinned with a word check and one redraw, measured on the real
-      flagged turn; one-off promises as open loops.
 - [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
       ones that match the current mood. No product has it. Behind J5.
 - [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
@@ -545,17 +534,29 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 
 ### L. The companion's own lore (ADR 0020)
 
-- [ ] L3 A new taste read as a pair with its nearest taste; a contradiction is a question for the owner.
-- [ ] L4 One thread of its own as a low-priority open loop, at most daily on a casual turn, "I was
+Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
+
+- [ ] LR3 A new taste read as a pair with its nearest taste; a contradiction is a question for the owner.
+- [ ] LR4 (was J6) One thread of its own as a low-priority open loop, at most daily on a casual turn, "I was
       thinking about", never "I did", never at a goodbye or after silence (J6, small). Shadow first.
-- [ ] L5 One source for promises: the J12 promise read and the views' promise kind overlap (10 of 12).
+- [ ] LR5 One source for promises: the J12 promise read and the views' promise kind overlap (10 of 12).
+- [ ] R14 Seed a few authored tastes in the core persona (what it likes, finds funny, is quietly into),
+      with the rest growing as recorded lore. Test that they surface without being asked and do not
+      become talking points. From the Grok review. Phase 2 shipped 2026-10-20; only if its
+      shown tastes leave gaps.
 
 ## Done
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-20**
-- [x] L2 Its own tastes nearest their message, at most two at 0.3 or more, shown on ordinary turns as the
+- [x] LR1 Its own lore labelled by kind (ADR 0020 phase 1): taste, stance, rule, self or lived, on every
+      view it holds; `companion lore` lists the tastes. The owner read them and retired three wrong tastes; each view is now read three times
+      and a taste needs all three.
+- [x] G42 / J9 Made-up facts rate (`companion invented`): a cheap judge lists candidates, a Claude judge
+      confirms. First reading 5 of 367 replies (about 1.4%); the cheap judge is right about one flag in
+      twelve. Read weekly in the review.
+- [x] LR2 Its own tastes nearest their message, at most two at 0.3 or more, shown on ordinary turns as the
       words it said (ADR 0020 phase 2, `COMPANION_LORE`). Asked its music 4/20 to 20/20, its weather 0/20 to
       17/20, never brought up when they did not fit (40/40). Watch: three weather replies claimed to hear
       rain on a window.
