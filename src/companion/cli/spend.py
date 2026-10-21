@@ -7,7 +7,7 @@ from pathlib import Path
 
 from companion.core.clock import local_midnight, utc_now
 from companion.core.types import RelationshipId
-from companion.daemon import cap_text, daily_cap
+from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
 
@@ -20,7 +20,7 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
         week = store.spend_since(RelationshipId(relationship), midnight - timedelta(days=6))
     finally:
         store.close()
-    cap = f"daily cap: {cap_text(daily_cap())} (set COMPANION_DAILY_CAP_USD, or off)"
+    cap = f"daily cap: {Settings.from_env().cap_text} (set COMPANION_DAILY_CAP_USD, or off)"
     if not week:
         return f"no spend recorded yet\n{cap}\n"
     return "\n".join([cap, "", *_block("today", today), "", *_block("last 7 days", week)]) + "\n"

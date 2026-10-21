@@ -1,4 +1,5 @@
-"""Wires the pieces together and runs the Telegram surface. The only module that reads the env."""
+"""Wires the pieces together and runs the Telegram surface. Settings come from `settings.py`;
+keys and tokens are read here, where the clients are made."""
 
 from __future__ import annotations
 
@@ -20,7 +21,6 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.invented import report as invented_report
-from companion.core.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.core.prompt.prefix import build_prefix
 from companion.core.relevance import Embedder
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
@@ -47,15 +47,14 @@ from companion.loops.worth import expire_routine, label
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import RefusalFallback, TalkerFallback
 from companion.models.retry import retry_on_network_error
+from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
 FALLBACK_MODEL = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
-ROLEPLAY_MODEL = "deepseek/deepseek-v4.1-flash"
 UPDATE_KEY = "telegram.last_update_id"
-DEFAULT_DAILY_CAP_USD = 10.0
 REFLECT_IDLE_SECONDS = 90
 REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 REMINDER_TICK_SECONDS = 60
@@ -91,201 +90,57 @@ def extractor(client: httpx.AsyncClient) -> Extractor:
     return RefusalFallback(first, openrouter.OpenRouterExtractor(key, client, second))
 
 
-def _talker(client: httpx.AsyncClient) -> Talker:
-    model = os.environ.get("COMPANION_MODEL")
-    if key := os.environ.get("OPENROUTER_API_KEY"):
-        return openrouter.OpenRouterTalker(key, client, model or openrouter.DEFAULT_MODEL)
-    key = _need("ANTHROPIC_API_KEY")
-    return anthropic.AnthropicTalker(key, client, model or anthropic.DEFAULT_MODEL)
-
-
-def daily_cap() -> float | None:
-    """The daily spend cap in dollars from COMPANION_DAILY_CAP_USD, or None when it is switched off.
-
-    Unset means the default. "off", "none" or "0" turn the cap off."""
-    raw = os.environ.get("COMPANION_DAILY_CAP_USD", "").strip().lower()
-    if raw in ("off", "none", "0", "0.0"):
-        return None
-    try:
-        value = float(raw) if raw else DEFAULT_DAILY_CAP_USD
-    except ValueError:
-        return DEFAULT_DAILY_CAP_USD
-    return value if value > 0 else None
-
-
-def pace_name() -> str:
-    """The reply pace from COMPANION_PACE: off, quick, natural or slow. Unset means natural."""
-    raw = os.environ.get("COMPANION_PACE", "").strip().lower()
-    return raw if raw in PACES else DEFAULT_PACE
-
-
-def initiative_mode() -> str:
-    """COMPANION_INITIATIVE: `shadow` (the default) records what it would reach out about and sends
-    nothing, `off` turns it off. There is no live mode yet."""
-    raw = os.environ.get("COMPANION_INITIATIVE", "").strip().lower()
-    return "off" if raw in ("off", "0", "no", "false") else "shadow"
-
-
-def listen_on() -> bool:
-    """Whether each message is read for how serious it is before the reply: COMPANION_LISTEN, on
-    unless off."""
-    return os.environ.get("COMPANION_LISTEN", "").strip().lower() not in ("off", "0", "no", "false")
-
-
-def mood_mode() -> str:
-    """COMPANION_MOOD (ADR 0016): `shadow` (the default) works the mood out and logs it without
-    showing it to the model, `on` adds the mood line, `off` does neither."""
-    raw = os.environ.get("COMPANION_MOOD", "").strip().lower()
-    return raw if raw in ("off", "on") else "shadow"
-
-
-def resample_on() -> bool:
-    """Whether a reply that fails a check is drawn once more: COMPANION_RESAMPLE, on unless off."""
-    return os.environ.get("COMPANION_RESAMPLE", "").strip().lower() not in (
-        "off",
-        "0",
-        "no",
-        "false",
-    )
-
-
-def route_intimate_on() -> bool:
-    """COMPANION_ROUTE_INTIMATE (ADR 0017): `on` lets intimate talk go to the roleplay talker, above
-    the floor in code; anything else keeps it on the everyday talker."""
-    return os.environ.get("COMPANION_ROUTE_INTIMATE", "").strip().lower() in (
-        "on",
-        "1",
-        "yes",
-        "true",
-    )
-
-
-def relevance_on() -> bool:
-    """Whether the relevance look-up runs in shadow (`core/relevance.py`): COMPANION_RELEVANCE,
-    shadow unless off. It never reaches the talker yet."""
-    return os.environ.get("COMPANION_RELEVANCE", "").strip().lower() not in (
-        "off",
-        "0",
-        "no",
-        "false",
-    )
-
-
-def reminders_on() -> bool:
-    """Whether reminders they ask for are set and sent (J50): COMPANION_REMINDERS, on unless off."""
-    return os.environ.get("COMPANION_REMINDERS", "").strip().lower() not in (
-        "off",
-        "0",
-        "no",
-        "false",
-    )
-
-
-def split_on() -> bool:
-    """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
-    return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
-
-
-def pace_setting() -> float:
-    return pace_factor(pace_name())
-
-
-def cap_text(cap: float | None) -> str:
-    return "off" if cap is None else f"${cap:.2f}"
+def _talker(client: httpx.AsyncClient, s: Settings) -> Talker:
+    if s.openrouter:
+        return openrouter.OpenRouterTalker(_need("OPENROUTER_API_KEY"), client, s.everyday_model)
+    return anthropic.AnthropicTalker(_need("ANTHROPIC_API_KEY"), client, s.everyday_model)
 
 
 def startup_line(
     rel: RelationshipId,
     prefix_sha: str,
-    scene: Talker | None,
     character: Character | None = None,
+    settings: Settings | None = None,
 ) -> str:
-    """The line that says what is running: persona, prefix hash and which models talk."""
-    if model := os.environ.get("COMPANION_MODEL"):
-        everyday = model
-    elif os.environ.get("OPENROUTER_API_KEY"):
-        everyday = openrouter.DEFAULT_MODEL
-    else:
-        everyday = anthropic.DEFAULT_MODEL
-    roleplay = (
-        "the same model"
-        if scene is None
-        else os.environ.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
-    )
+    """The line that says what is running: persona, prefix hash, models and every setting, printed
+    from the same values the bot is configured with."""
+    s = settings or Settings.from_env()
     persona = prompts.get("system/persona").version
-    return (
-        f"up as {rel} | persona {persona} (prefix {prefix_sha[:12]})"
-        f" | character {character.ref if character else 'none'} | prompts {prompts.set_hash()}"
-        f" | everyday {everyday}"
-        f" | roleplay {roleplay} | daily cap {cap_text(daily_cap())} | pace {pace_name()}"
-        f" | split {'on' if split_on() else 'off'} | listen {'on' if listen_on() else 'off'}"
-        f" | initiative {initiative_mode()} | mood {mood_mode()}"
-        f" | resample {'on' if resample_on() else 'off'}"
-        f" | intimate {'may route' if route_intimate_on() else 'stays'}"
-        f" | relevance {'shadow' if relevance_on() else 'off'}"
-        f" | talker fallback {talker_fallback() or 'off'}"
-        f" | memory check {consolidate_mode()}"
-        f" | promises {promises_mode()}"
-        f" | lore {lore_mode()}"
-        f" | reminders {'on' if reminders_on() else 'off'}"
+    return " | ".join(
+        [
+            f"up as {rel}",
+            f"persona {persona} (prefix {prefix_sha[:12]})",
+            f"character {character.ref if character else 'none'}",
+            f"prompts {prompts.set_hash()}",
+            f"everyday {s.everyday_model}",
+            *s.fragments(),
+        ]
     )
 
 
 ROLEPLAY_MAX_TOKENS = 700  # scene replies run longer; 400 cut some off mid-sentence
 
 
-def _roleplay_talker(client: httpx.AsyncClient) -> Talker | None:
+def _roleplay_talker(client: httpx.AsyncClient, s: Settings) -> Talker | None:
     """The model for pretend scenes and, when allowed, intimate talk (ADR 0017). Set
     COMPANION_ROLEPLAY_MODEL to `none` to use the everyday model for those too. Needs OpenRouter."""
-    model = os.environ.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
-    key = os.environ.get("OPENROUTER_API_KEY")
-    if model.lower() == "none" or not key:
+    if s.roleplay_model is None:
         return None
-    return openrouter.OpenRouterTalker(key, client, model, max_tokens=ROLEPLAY_MAX_TOKENS)
-
-
-def consolidate_mode() -> str:
-    """COMPANION_CONSOLIDATE (ADR 0019): `shadow` (default) logs what the overnight memory check
-    would close, `on` closes it, `off` skips the check."""
-    raw = os.environ.get("COMPANION_CONSOLIDATE", "").strip().lower()
-    return raw if raw in ("on", "off") else "shadow"
-
-
-def lore_mode() -> str:
-    """COMPANION_LORE (ADR 0020): `on` (default) shows it its own tastes nearest their message on
-    ordinary turns, `shadow` only logs them, `off` skips the look-up."""
-    raw = os.environ.get("COMPANION_LORE", "").strip().lower()
-    return raw if raw in ("shadow", "off") else "on"
-
-
-def promises_mode() -> str:
-    """COMPANION_PROMISES (J12): `shadow` (default) reads its own replies for promises and records
-    them, nothing reaches the talker; `off` skips the read."""
-    raw = os.environ.get("COMPANION_PROMISES", "").strip().lower()
-    return "off" if raw == "off" else "shadow"
-
-
-def talker_fallback() -> str | None:
-    """The model that answers when the everyday talker fails or stalls (J21):
-    COMPANION_TALKER_FALLBACK, by default the roleplay model; `none` turns it off. The roleplay
-    talker falls back to the everyday model. Needs OpenRouter."""
-    if not os.environ.get("OPENROUTER_API_KEY"):
-        return None
-    model = os.environ.get("COMPANION_TALKER_FALLBACK", "").strip()
-    if model.lower() == "none":
-        return None
-    return model or os.environ.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
+    return openrouter.OpenRouterTalker(
+        _need("OPENROUTER_API_KEY"), client, s.roleplay_model, max_tokens=ROLEPLAY_MAX_TOKENS
+    )
 
 
 def _with_fallback(client: httpx.AsyncClient, talker: Talker, fallback: str | None) -> Talker:
-    key = os.environ.get("OPENROUTER_API_KEY")
-    if fallback is None or fallback.lower() == "none" or not key:
+    if fallback is None:
         return talker
-    return TalkerFallback(talker, openrouter.OpenRouterTalker(key, client, fallback))
+    return TalkerFallback(
+        talker, openrouter.OpenRouterTalker(_need("OPENROUTER_API_KEY"), client, fallback)
+    )
 
 
 def _metered_models(
-    client: httpx.AsyncClient, store: Store, rel: RelationshipId
+    client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Settings
 ) -> tuple[Talker, Talker | None, Extractor, Extractor]:
     """The talkers and extractors, each reporting what its calls cost to the spend ledger. Each
     talker has a fallback: the everyday one the fallback model, the roleplay one the everyday
@@ -294,12 +149,13 @@ def _metered_models(
     def sink(event: SpendEvent) -> None:
         store.record_spend(rel, event, datetime.now(UTC))
 
-    scene = _roleplay_talker(client)
+    scene = _roleplay_talker(client, s)
     shared = extractor(client)
-    fallback = talker_fallback()
-    everyday = os.environ.get("COMPANION_MODEL") or openrouter.DEFAULT_MODEL
-    talker = _with_fallback(client, _talker(client), fallback)
-    roleplay = _with_fallback(client, scene, everyday if fallback else None) if scene else None
+    fallback = s.talker_fallback
+    talker = _with_fallback(client, _talker(client, s), fallback)
+    roleplay = (
+        _with_fallback(client, scene, s.everyday_model if fallback else None) if scene else None
+    )
     return (
         MeteredTalker(talker, sink, "talker"),
         MeteredTalker(roleplay, sink, "roleplay talker") if roleplay is not None else None,
@@ -308,18 +164,19 @@ def _metered_models(
     )
 
 
-def _embedder(client: httpx.AsyncClient, store: Store, rel: RelationshipId) -> Embedder | None:
+def _embedder(
+    client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Settings
+) -> Embedder | None:
     """The embedding model for the relevance look-up and its tastes, metered, or None when both
     are off."""
-    key = os.environ.get("OPENROUTER_API_KEY")
-    if not key or (not relevance_on() and lore_mode() == "off"):
+    if not s.openrouter or (not s.on("relevance") and not s.on("lore")):
         return None
 
     def sink(event: SpendEvent) -> None:
         store.record_spend(rel, event, datetime.now(UTC))
 
-    model = os.environ.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL)
-    return MeteredEmbedder(embeddings.OpenRouterEmbedder(key, client, model), sink)
+    key = _need("OPENROUTER_API_KEY")
+    return MeteredEmbedder(embeddings.OpenRouterEmbedder(key, client, s.embed_model), sink)
 
 
 def _hooks(store: Store, rel: RelationshipId) -> Hooks:
@@ -374,9 +231,9 @@ INITIATIVE_TICK_SECONDS = 900
 NIGHTLY_HOUR = 4  # local time, when they are least likely to be chatting
 
 
-async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId) -> None:
+async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId, s: Settings) -> None:
     """The memory check once a night (ADR 0019). A failure is logged and tried the next night."""
-    if consolidate_mode() == "off":
+    if not s.on("memory check"):
         return
     while True:
         now = utc_now().astimezone(local_zone())
@@ -384,10 +241,10 @@ async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId) -
         if nxt <= now:
             nxt += timedelta(days=1)
         await asyncio.sleep((nxt - now).total_seconds())
-        if over_cap(store, rel, daily_cap(), datetime.now(UTC)) is not None:
+        if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
             continue
         try:
-            await nightly(store, judge, rel, utc_now(), local_zone(), mode=consolidate_mode())
+            await nightly(store, judge, rel, utc_now(), local_zone(), mode=s.mode("memory check"))
             await merging.recent(store, judge, rel, utc_now(), local_zone())
             expire_routine(store, rel, utc_now())
         except Exception:
@@ -402,10 +259,10 @@ async def _daily_backups(data_dir: Path, db: Path) -> None:
 
 
 def _start_initiative(
-    store: Store, rel: RelationshipId, judge: Extractor
+    store: Store, rel: RelationshipId, judge: Extractor, s: Settings
 ) -> asyncio.Task[None] | None:
     """The timer that looks at open loops. In shadow mode it records and sends nothing."""
-    if initiative_mode() == "off":
+    if not s.on("initiative"):
         return None
     ticker, draft = Ticker(), drafter(judge)
     log = logging.getLogger("companion.initiative")
@@ -413,7 +270,7 @@ def _start_initiative(
     async def loop() -> None:
         while True:
             await asyncio.sleep(INITIATIVE_TICK_SECONDS)
-            if over_cap(store, rel, daily_cap(), datetime.now(UTC)) is not None:
+            if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
                 continue
             try:
                 await tick(store, rel, utc_now(), local_zone(), draft, ticker)
@@ -424,9 +281,11 @@ def _start_initiative(
     return asyncio.create_task(loop())
 
 
-def _start_reminders(convo: Conversation, tg: Telegram, user: int) -> asyncio.Task[None] | None:
+def _start_reminders(
+    convo: Conversation, tg: Telegram, user: int, s: Settings
+) -> asyncio.Task[None] | None:
     """The timer that sends reminders when they fall due (J50)."""
-    if not reminders_on():
+    if not s.on("reminders"):
         return None
     started, log = utc_now(), logging.getLogger("companion.reminders")
 
@@ -446,6 +305,7 @@ def _start_reminders(convo: Conversation, tg: Telegram, user: int) -> asyncio.Ta
 
 async def run(data_dir: Path) -> None:
     load_dotenv(Path(".env"))
+    s = Settings.from_env()
     log_file = logsetup.configure(data_dir / "logs")
     token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
     rel = RelationshipId(f"telegram-{user}")
@@ -458,7 +318,7 @@ async def run(data_dir: Path) -> None:
         characters.system_prompt(prompts.get("system/persona").raw, character, roleplay=True)
     )
     async with httpx.AsyncClient() as client:
-        talker, scene, judge, reflector = _metered_models(client, store, rel)
+        talker, scene, judge, reflector = _metered_models(client, store, rel, s)
         convo = Conversation(
             store,
             talker,
@@ -466,22 +326,22 @@ async def run(data_dir: Path) -> None:
             rel,
             judge=judge,
             roleplay_talker=scene,
-            daily_cap_usd=daily_cap(),
-            listen=listen_on(),
-            mood=mood_mode(),
-            resample=resample_on(),
-            route_intimate=route_intimate_on(),
+            daily_cap_usd=s.daily_cap,
+            listen=s.on("listen"),
+            mood=s.mode("mood"),
+            resample=s.on("resample"),
+            route_intimate=s.on("intimate"),
             roleplay_prefix=roleplay_prefix,
             scene_reminder=character.scene_reminder if character is not None else "",
-            embedder=_embedder(client, store, rel),
-            embed_model=os.environ.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
-            lore=lore_mode(),
-            relevance=relevance_on(),
-            reminders=reminders_on(),
+            embedder=_embedder(client, store, rel, s),
+            embed_model=s.embed_model,
+            lore=s.mode("lore"),
+            relevance=s.on("relevance"),
+            reminders=s.on("reminders"),
         )
         same = (
-            SameCheck(reflector, convo.embedder, convo.embed_model, consolidate_mode())
-            if convo.embedder is not None and consolidate_mode() != "off"
+            SameCheck(reflector, convo.embedder, convo.embed_model, s.mode("memory check"))
+            if convo.embedder is not None and s.on("memory check")
             else None
         )
         pending: list[asyncio.Task[None]] = []
@@ -491,13 +351,13 @@ async def run(data_dir: Path) -> None:
             logging.getLogger("companion.slow").debug(
                 "idle for %ds; reading what has not been read", REFLECT_IDLE_SECONDS
             )
-            if over_cap(store, rel, daily_cap(), datetime.now(UTC)) is not None:
+            if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
                 logging.getLogger("companion.slow").warning("daily spend cap reached; no reflect")
                 return
             try:
                 result = await retry_on_network_error(
                     lambda: reflect_once(
-                        store, reflector, rel, same=same, promises=promises_mode() != "off"
+                        store, reflector, rel, same=same, promises=s.on("promises")
                     ),
                     REFLECT_RETRY_DELAYS,
                     "reflect",
@@ -533,7 +393,7 @@ async def run(data_dir: Path) -> None:
             pending[:] = [asyncio.create_task(reflect_after_idle())]
 
         tg = Telegram(
-            token, user, client, _hooks(store, rel), pace=pace_setting(), split=split_on()
+            token, user, client, _hooks(store, rel), pace=s.pace_factor, split=s.on("split")
         )
 
         async def handle(text: str) -> str | Reaction | ReactAndReply:
@@ -541,17 +401,15 @@ async def run(data_dir: Path) -> None:
             schedule_reflect()
             return reply
 
-        logging.getLogger("companion").info(
-            startup_line(rel, prefix.sha256, convo.roleplay_talker, character)
-        )
+        logging.getLogger("companion").info(startup_line(rel, prefix.sha256, character, s))
         logging.getLogger("companion").info("full log: %s", log_file)
         background = [
             task
             for task in (
-                _start_initiative(store, rel, judge),
-                _start_reminders(convo, tg, user),
+                _start_initiative(store, rel, judge, s),
+                _start_reminders(convo, tg, user, s),
                 asyncio.create_task(_daily_backups(data_dir, db)),
-                asyncio.create_task(_nightly_memory(store, reflector, rel)),
+                asyncio.create_task(_nightly_memory(store, reflector, rel, s)),
             )
             if task is not None
         ]

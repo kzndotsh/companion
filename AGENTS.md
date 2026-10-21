@@ -114,7 +114,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`,
   `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_BACKUP_DIR`, `COMPANION_TALKER_FALLBACK`, `COMPANION_CONSOLIDATE`, `COMPANION_PROMISES`, `COMPANION_LORE`, `COMPANION_REMINDERS`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
   it) and `COMPANION_CHARACTER` (a character sheet laid over the persona, `companion/characters.py`). The
-  table is in `README.md`.
+  table is in `README.md`. They are read once into `companion/settings.py` (`Settings`, one row per switch in
+  `SWITCHES`); the startup line is printed from it. A new switch is one row there.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`logsetup.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.

@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from companion import daemon
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.spend import SpendEvent
@@ -13,6 +12,7 @@ from companion.core.talker import Reply
 from companion.core.types import RelationshipId, SessionId, Speaker
 from companion.loops.fast import Conversation
 from companion.loops.spendcap import NOTICE, over_cap
+from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -123,4 +123,4 @@ def test_the_cap_setting(
         monkeypatch.delenv("COMPANION_DAILY_CAP_USD", raising=False)
     else:
         monkeypatch.setenv("COMPANION_DAILY_CAP_USD", raw)
-    assert daemon.daily_cap() == expected
+    assert Settings.from_env().daily_cap == expected
