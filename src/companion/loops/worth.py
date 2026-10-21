@@ -3,16 +3,15 @@ memories are acted on when the three reads agree; memories kept before become qu
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from companion.core.context import AFTER, BEFORE, build_prompt
 from companion.core.extractor import Extractor
-from companion.core.spend import purpose
 from companion.core.types import Belief, RelationshipId
-from companion.core.worth import PROMPT, READS, ROUTINE_DAYS, SCHEMA, Label, read, to_ask, verdict
+from companion.core.worth import PROMPT, ROUTINE_DAYS, SCHEMA, Label, read, to_ask, verdict
+from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.worth")
@@ -31,17 +30,8 @@ class Labelled:
 
 
 async def _reads(extractor: Extractor, prompt: str) -> tuple[tuple[str | None, ...], float]:
-    async def one() -> tuple[str | None, float]:
-        try:
-            with purpose("worth"):
-                got = await extractor.extract(PROMPT.text, prompt, SCHEMA)
-        except Exception as err:  # a failed read is never agreement
-            log.warning("memory worth failed: %r", err)
-            return None, 0.0
-        return read(got.data), got.cost_usd
-
-    results = await asyncio.gather(*(one() for _ in range(READS)))
-    return tuple(r for r, _ in results), sum(c for _, c in results)
+    got = await read_times(extractor, PROMPT.text, prompt, SCHEMA, read, spend="worth")
+    return got.values, got.cost_usd
 
 
 async def label(  # noqa: PLR0913

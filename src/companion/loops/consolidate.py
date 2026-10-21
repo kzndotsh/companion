@@ -4,7 +4,6 @@ it logs what it would have closed and closes nothing."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
@@ -15,7 +14,6 @@ from companion.core.consolidate import (
     CHECK_SCHEMA,
     PAIR,
     PAIR_SCHEMA,
-    READS,
     check_prompt,
     pair_prompt,
     plan_for,
@@ -30,6 +28,7 @@ from companion.core.relevance import Embedder, nearest
 from companion.core.spend import purpose
 from companion.core.types import Belief, RelationshipId
 from companion.loops.curate import log_would_close, retire
+from companion.loops.reads import read_times
 from companion.loops.relevance import embed_missing
 from companion.store.sqlite.store import Store
 
@@ -48,17 +47,10 @@ class Night:
 
 
 async def _reads(judge: Extractor, b: Belief, today: str) -> tuple[tuple[str | None, ...], float]:
-    async def one() -> tuple[str | None, float]:
-        try:
-            with purpose("consolidate"):
-                got = await judge.extract(CHECK.text, check_prompt(b, today), CHECK_SCHEMA)
-        except Exception as err:  # a failed read is never agreement, so nothing is acted on
-            log.warning("memory check failed: %r", err)
-            return None, 0.0
-        return read_label(got.data), got.cost_usd
-
-    results = await asyncio.gather(*(one() for _ in range(READS)))
-    return tuple(r for r, _ in results), sum(c for _, c in results)
+    got = await read_times(
+        judge, CHECK.text, check_prompt(b, today), CHECK_SCHEMA, read_label, spend="consolidate"
+    )
+    return got.values, got.cost_usd
 
 
 async def nightly(  # noqa: PLR0913
@@ -147,12 +139,17 @@ class SameCheck:
             return None
         older = near[0][0]
 
-        async def one() -> str | None:
-            with purpose("consolidate"):
-                got = await self.judge.extract(PAIR.text, pair_prompt(older, new), PAIR_SCHEMA)
-            return read_relation(got.data)
-
-        reads = tuple(await asyncio.gather(*(one() for _ in range(READS))))
+        got = await read_times(
+            self.judge,
+            PAIR.text,
+            pair_prompt(older, new),
+            PAIR_SCHEMA,
+            read_relation,
+            spend="consolidate",
+        )
+        if got.failed:  # the memory is stored as usual; nothing is recorded about the pair
+            return None
+        reads = got.values
         found = verdict(reads)
         store.add_memory_check(rel, older.id, new.id, reads, found, prompt=PAIR.ref, at=now)
         return older if same_as(found) else None

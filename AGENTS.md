@@ -87,6 +87,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
   `_assemble`.
+- Ask a small model the same question several times with `loops/reads.py` `read_times` (each failed or
+  unreadable read is None) and count agreement with `core/agreement.py` (`READS`, `unanimous`); a
+  feature states what a failed read means for it (no agreement, or try the batch again later).
 - Record a decision through `loops/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
   `_decide(c, t, ...)`), never by building `Decision(...)` by hand. Code that looks a past decision up
   matches its key (`decided_since`, `Decision.has_key`), never its reason text; decisions from before keys

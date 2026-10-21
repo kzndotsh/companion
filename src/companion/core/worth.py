@@ -15,11 +15,11 @@ from collections.abc import Sequence
 from datetime import timedelta
 from enum import StrEnum
 
+from companion.core.agreement import unanimous
 from companion.core.types import Json
 from companion.prompts import get
 
 PROMPT = get("system/memory-worth")
-READS = 3
 ROUTINE_DAYS = timedelta(days=7)
 
 
@@ -50,8 +50,9 @@ def read(data: Json) -> str | None:
 def verdict(reads: Sequence[str | None]) -> str:
     """keep, about_the_bot or routine when every read agrees; unsure when any read says other than
     keep without agreement; keep when the reads failed (nothing is acted on)."""
-    if len(reads) == READS and reads[0] is not None and all(r == reads[0] for r in reads):
-        return reads[0] if reads[0] != Label.UNSURE else Label.UNSURE.value
+    agreed = unanimous(reads)
+    if agreed is not None:
+        return agreed
     if any(r is not None and r != Label.KEEP for r in reads):
         return Label.UNSURE.value
     return Label.KEEP.value

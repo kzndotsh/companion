@@ -13,10 +13,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
+from companion.core.agreement import unanimous
 from companion.core.types import Belief, Json
 from companion.prompts import get
 
-READS = 3
 HELD = 2  # sensitive memories are only ever the owner's call
 CHECK = get("system/memory-check")
 PAIR = get("system/memory-pair")
@@ -63,12 +63,7 @@ def read_relation(data: Json) -> str | None:
 
 def verdict(reads: Sequence[str | None]) -> str:
     """The label when every read agrees, else MIXED. A failed read is never agreement."""
-    first = reads[0] if reads else None
-    return (
-        first
-        if first is not None and len(reads) == READS and all(r == first for r in reads)
-        else MIXED
-    )
+    return unanimous(reads) or MIXED
 
 
 def check_prompt(b: Belief, today: str) -> str:

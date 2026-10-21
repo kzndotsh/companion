@@ -13,7 +13,6 @@ from companion.core.lore import (
     BATCH,
     GATE,
     PROMPT,
-    READS,
     SCHEMA,
     SHOWN,
     agreed,
@@ -24,6 +23,7 @@ from companion.core.lore import (
 from companion.core.relevance import Embedder, nearest
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, RelationshipId
+from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.lore")
@@ -57,17 +57,20 @@ async def label_views(  # noqa: PLR0913
             break
         redo -= {b.id for b in todo}
         text, refs = prompt(todo)
-        try:
-            with purpose("lore"):
-                results = await asyncio.gather(
-                    *(extractor.extract(PROMPT.text, text, SCHEMA) for _ in range(READS))
-                )
-        except Exception as err:
-            log.warning("view kinds failed: %r", err)
+        got = await read_times(
+            extractor,
+            PROMPT.text,
+            text,
+            SCHEMA,
+            lambda data, shown=refs: parse(data, shown),
+            spend="lore",
+        )
+        cost += got.cost_usd
+        if got.failed:  # the batch is labelled again next time, never from fewer reads
+            log.warning("view kinds: a read failed; the batch waits for the next pass")
             break
-        cost += sum(r.cost_usd for r in results)
-        found = agreed([parse(r.data, refs) for r in results], refs.values())
-        store.add_view_kinds(rel, found, model=results[0].model, prompt=PROMPT.ref, at=now)
+        found = agreed(got.values, refs.values())
+        store.add_view_kinds(rel, found, model=got.model, prompt=PROMPT.ref, at=now)
         done += len(found)
     have = store.view_kinds(rel)
     left = sum(b.id not in have for b in store.self_beliefs(rel))

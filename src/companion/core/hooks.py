@@ -14,6 +14,7 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from enum import StrEnum
 
+from companion.core.agreement import unanimous
 from companion.core.types import Json
 from companion.prompts import get
 
@@ -21,7 +22,6 @@ PROMPT = get("system/basics-hook")
 WOULD_ASK = "hook (shadow): would ask about a basic their words touched"
 EVERY = timedelta(hours=24)
 MAX_OFFERS = 2
-READS = 3  # a basic counts only when every read names it: one read labels small talk too often
 
 
 class Basic(StrEnum):
@@ -54,9 +54,7 @@ def read_basic(data: Json) -> Basic | None:
 
 def agreed(reads: Iterable[Basic | None]) -> Basic | None:
     """The basic every read named, else None."""
-    found = list(reads)
-    first = found[0] if found else None
-    return first if first is not None and all(r is first for r in found) else None
+    return unanimous(reads)
 
 
 def may_ask(basic: Basic | None, asked: Iterable[tuple[str, datetime]], now: datetime) -> bool:

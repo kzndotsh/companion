@@ -3,7 +3,6 @@ the owner answers them in `companion memory review`."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from collections import defaultdict
 from collections.abc import Sequence
@@ -15,7 +14,6 @@ from companion.core.merging import (
     GROUP,
     GROUP_SCHEMA,
     PICK,
-    READS,
     WRITE,
     WRITE_SCHEMA,
     Group,
@@ -26,6 +24,7 @@ from companion.core.merging import (
 )
 from companion.core.spend import purpose
 from companion.core.types import Belief, RelationshipId
+from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.merging")
@@ -39,17 +38,15 @@ class Proposed:
 
 
 async def _group_reads(judge: Extractor, beliefs: Sequence[Belief]) -> tuple[list[Group], float]:
-    async def one() -> tuple[list[Group] | None, float]:
-        try:
-            with purpose("consolidate"):
-                got = await judge.extract(GROUP.text, listing(beliefs), GROUP_SCHEMA)
-        except Exception as err:  # a failed read is never agreement
-            log.warning("memory grouping failed: %r", err)
-            return None, 0.0
-        return read_groups(got.data, len(beliefs)), got.cost_usd
-
-    results = await asyncio.gather(*(one() for _ in range(READS)))
-    return agreed([r for r, _ in results]), sum(c for _, c in results)
+    got = await read_times(
+        judge,
+        GROUP.text,
+        listing(beliefs),
+        GROUP_SCHEMA,
+        lambda data: read_groups(data, len(beliefs)),
+        spend="consolidate",
+    )
+    return agreed(got.values), got.cost_usd
 
 
 async def _wording(judge: Extractor, members: Sequence[Belief]) -> tuple[str | None, float]:

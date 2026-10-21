@@ -49,7 +49,6 @@ from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.hooks import KNEW as HOOK_KNEW
 from companion.core.hooks import PROMPT as HOOK_PROMPT
-from companion.core.hooks import READS as HOOK_READS
 from companion.core.hooks import SCHEMA as HOOK_SCHEMA
 from companion.core.hooks import TOPIC as HOOK_TOPIC
 from companion.core.hooks import WOULD_ASK as HOOK_WOULD_ASK
@@ -107,6 +106,7 @@ from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.notes import Lookups, Moment, look, notes_for
 from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
+from companion.loops.reads import read_times
 from companion.loops.record import Recorder
 from companion.loops.relevance import shadow as relevance_shadow
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
@@ -737,16 +737,8 @@ def _hook_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None)
     async def run(judge: Extractor) -> None:
         last = [u.text for u in t.prior if u.speaker is Speaker.COMPANION][-1:]
         said = (f"COMPANION: {last[0]}\n" if last else "") + f"USER: {t.text}"
-        try:
-            with purpose("hook"):
-                reads = await asyncio.gather(
-                    *(judge.extract(HOOK_PROMPT.text, said, HOOK_SCHEMA) for _ in range(HOOK_READS))
-                )
-        except Exception as err:  # a failed read only means no shadow pick this turn
-            log.debug("hook read failed: %r", err)
-            return
-        got = reads[0]
-        basic = agreed(read_basic(r.data) for r in reads)
+        got = await read_times(judge, HOOK_PROMPT.text, said, HOOK_SCHEMA, read_basic, spend="hook")
+        basic = agreed(got.values)  # a failed read means no shadow pick this turn
         if basic is None or not may_ask(basic, asked, t.now):
             return
         found = await stated(judge, beliefs, HOOK_TOPIC[basic])

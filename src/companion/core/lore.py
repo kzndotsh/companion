@@ -21,7 +21,6 @@ _NOTE = get("notes/lore")
 SHOWN = 2  # at most this many of its tastes a turn
 GATE = 0.3  # a taste less like their message than this is not shown
 BATCH = 60
-READS = 3  # a view is a taste only when every read says so (as in ADR 0019)
 
 
 class Kind(StrEnum):

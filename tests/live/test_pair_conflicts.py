@@ -16,10 +16,10 @@ from pathlib import Path
 import httpx
 import pytest
 
+from companion.core.agreement import READS
 from companion.core.consolidate import (
     PAIR,
     PAIR_SCHEMA,
-    READS,
     Relation,
     pair_prompt,
     read_relation,
