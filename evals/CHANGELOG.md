@@ -1146,3 +1146,36 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   owner is happy with longer replies now and then, so the range stays soft. Cost about $0.30 for the runs;
   judging free. A fixed list of repeated phrases was dropped as too brittle; the habit check names
   repetition from her recent replies.
+- **2026-10-21. Two days of the shadow logs: relevance, repair and recall, names, lore.** Read from the
+  database (read-only, scratch script, private data not in the repo); the judge was a Claude subagent
+  (sonnet), about ten of its verdicts checked by eye (agreed on most; it was a little lenient on two).
+  - **Relevance look-up (ADR 0018), 159 turns since 2026-10-19 13:42.** The model picked something on 158
+    (three picks on 127). Cost $0.023 in all, $0.00015 a turn. Embedding median 408 ms (p90 755), pick
+    median 976 ms (p90 1,428). Already on the card: 12% of picks, 10% of the embedding's top three for
+    the message alone, 13% with the companion's last message. Judged on two samples of 30 (turns with
+    picks; small talk and bare reactions): an item bore on the message for 28% of picks (45 of 161),
+    19% of the embedding's top three with context (35 of 180) and 11% for the message alone (20 of 180).
+    On the turns with picks, at least one useful item: picks 20 of 30, embedding with context 18, message
+    alone 14. The right answer was "none" on 8 of 30 and 19 of 30 small-talk turns, and the model picked
+    anyway on all but one of those. Only 2 of 45 useful picks were already on the card. The embedding
+    score barely separates good from bad (median 0.36 against 0.33 with context); for the message alone,
+    0.4 or more kept 6 good and 4 bad. So: the picks are not mostly on the card (leaving it off is not
+    the answer), the model adds little over the embedding with context, and neither is precise enough to
+    put in the card as is, mostly because nothing ever says "none".
+  - **Repair and "you forgot" (J30), since 2026-10-19 14:42.** 3 turns labelled as a repair and 8 recall
+    look-ups (2 in pretend scenes), all of which found memories; none came back empty. No reply asked
+    them to repeat or said it did not know, and none made a long apology or explanation (two short
+    owning lines). Two replies misread what was meant (a guess corrected, a feature narrowed), and one
+    was flagged as confusing. No "you forgot" message went unlabelled (three keyword matches were about
+    other things). Flags fell on the turns around a recall rather than on it: the slip before it (twice)
+    and once the turn right after a repair, which kept the corrected guess. These are the same six real
+    recall turns the 2026-10-20 replay read, plus two in scenes; nothing contradicts it.
+  - **Names (fetch on mention), since the restart on 2026-10-20.** One turn named something memory knows
+    and the card lacked it; the relevance look-up had already picked that same memory as its first pick.
+    Nothing caught that relevance missed, on one case.
+  - **Lore (ADR 0020 phase 2).** Three turns showed a taste, at 0.303 to 0.322: two were one-word playful
+    sounds matched to tastes about its own voice, one a scene turn. None fitted the moment; no reply
+    brought the taste up and no ordinary reply claimed a body or senses. The scene turn was stored as a
+    scene after the fact; the gate reads the frame as it stood before the turn. No flags or favourites
+    on these turns. Three cases: too few to move the 0.3 cutoff, but every live hit sat just above it.
+  Free (Claude judge).
