@@ -1233,3 +1233,15 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   - **Duplicates are written although the extractor sees every memory** as already recorded on each
     pass; the write-time same-memory check has logged one repeat in shadow since it started.
   Free (Claude judges). Scratch files, not kept.
+- **2026-10-21. A support check on new memories: not good enough to switch on.** A small model read each
+  of the 219 memories against its quote three times and labelled it supported, says more, the
+  companion's idea, or not serious; scored against the audit's labels (38 overstated, the companion's
+  words or a joke; 95 clean). Haiku 5.5 with the companion's message before: caught 31 of 38 but turned
+  away 26 of 95 clean ones. With the six messages before and the whole message (long ones had been cut in
+  the first run): caught 28, turned away 21; "says more" narrowed to what changes the meaning or would
+  mislead changed nothing. One read by a stronger Claude model (sonnet subagent) on the 92 disputed ones:
+  turned away 8 clean ones but caught only 15 of 38. Seeing the conversation helps; neither model is near
+  usable. Why, by eye: a claim often draws on several messages (a short answer to an earlier question, a
+  detail from the message before) while it carries one quote, so "does this quote show the claim" has no
+  clean answer; and the audit's own line between a fair reading and an overstatement is a judge's call.
+  Not built. 20.8 cents.
