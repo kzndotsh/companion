@@ -1115,3 +1115,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   (4 of 72) with directness 3.6. The owner read samples and chose the paragraph version. Placement after
   the history was the lever, as community presets and the docs of a popular roleplay front end say. Cost
   about $0.10; judging free.
+- **2026-10-21. The scene reminder alone against the section plus the reminder.** The owner asked why the
+  style lines appear twice. Same six scene turns, 12 samples: the live sheet (section and reminder) 75
+  words, directness 3.9, narrating the user 13 of 69; a trimmed section that keeps only the standing rules
+  (own actions only, no echoing, follow their lead, play not literal) with the same reminder: 96 words,
+  directness 4.0, narrating the user 19 of 70. The repeat adds no explicitness, and the trim leaned the
+  wrong way on narrating, so the live sheet stays. Five of 144 replies came back empty from the roleplay
+  model (none so far live); an empty reply is now drawn once more instead of leaving the turn silent.
+  Cost $0.024.

@@ -206,7 +206,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   block, and the stock "that sounds X, especially when" line, by code, and a joke bolted onto an ordinary
   message by the quip judge; in a scene or on a serious turn only the code checks. On a fail the same model is asked once more
   and the second reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
-  edited. `COMPANION_RESAMPLE=off` turns it off.
+  edited, and an empty reply is drawn once more instead of a silent turn. `COMPANION_RESAMPLE=off` turns
+  it off.
 - Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the roleplay talker for a pretend
   scene, or for intimate talk when `COMPANION_ROUTE_INTIMATE=on`, unless the listening judge reads the turn
   as age-coded or could not read it (a fallback model's reading counts as unread). That floor is code, not a

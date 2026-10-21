@@ -130,3 +130,10 @@ async def test_a_serious_turn_gets_the_code_checks_but_never_the_joke_judge(stor
         await _say(store, clean, Judge(2, joke=True)) == JOKE
     )  # no code check fails: kept, unlogged
     assert clean.calls == 1
+
+
+async def test_an_empty_reply_is_drawn_once_more_instead_of_a_silent_turn(store: Store) -> None:
+    talker = Talker("", PLAIN)
+    assert await _say(store, talker, Judge()) == PLAIN
+    assert talker.calls == 2
+    assert "resampled: the model returned no text" in _reasons(store)

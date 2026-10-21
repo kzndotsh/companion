@@ -559,6 +559,26 @@ def _start_beside(
     return talk, framing, asyncio.ensure_future(judge_reaction(c.judge, t.prior, t.text))
 
 
+async def _redraw_empty(c: Conversation, t: _Turn, request: TalkerRequest, talker: Talker) -> Reply:
+    """An empty reply would be a silent turn (seen in 2 to 3% of long scene replies in tests): ask
+    the same model once more, and send whatever comes back."""
+    again = await talker.reply(request)
+    _mark_reply(t, again)
+    c.store.append_decision(
+        Decision(
+            DecisionId(_id()),
+            c.rel,
+            t.session,
+            t.turn,
+            TraceId(t.turn),
+            DecisionKind.POLICY,
+            "resampled: the model returned no text",
+            t.now,
+        )
+    )
+    return again
+
+
 async def _recheck(  # noqa: PLR0913, PLR0917
     c: Conversation,
     t: _Turn,
@@ -574,8 +594,10 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     severity = heard[0].severity if heard is not None else None
     scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
     code_only = scene or severity == RECHECK_SERIOUS
-    if not c.resample or not reply.text.strip():
+    if not c.resample:
         return reply
+    if not reply.text.strip():
+        return await _redraw_empty(c, t, request, talker)
     if not code_only and not recheck_eligible(severity=severity, in_scene=False, reply=reply.text):
         return reply
     failed = code_checks(reply.text, t.text)
