@@ -26,6 +26,10 @@ PLACEHOLDERS = {
     "notes/clock": {"stamp"},
     "notes/address": {"address"},
     "notes/clock-gap": {"gap"},
+    "notes/reminder-set": {"what", "when", "extra"},
+    "notes/reminder-ask": {"what", "reason"},
+    "notes/reminder-cancelled": {"what"},
+    "system/reminder-send": {"what"},
 }
 # a prompt that gained its placeholders in a later version: earlier versions have none
 SINCE = {"notes/listening-trivial": 6}

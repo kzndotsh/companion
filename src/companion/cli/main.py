@@ -20,6 +20,7 @@ from companion.cli import (
     mood,
     names,
     promises,
+    reminders,
     replay,
     spend,
 )
@@ -76,6 +77,9 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     pr.add_argument("--not", dest="wrong", metavar="ID", help="mark one as not a promise")
     pr.add_argument("--retire", metavar="ID", help="retire one")
     _db_args(pr)
+    rm = add("reminders", help="the reminders they asked for, with what became of each")
+    rm.add_argument("--cancel", metavar="ID", help="drop a pending one")
+    _db_args(rm)
     md = add("mood", help="the mood now, or --replay DAYS of what it would have been")
     md.add_argument("--replay", type=int, metavar="DAYS", help="rebuild it over the last DAYS days")
     _db_args(md)
@@ -283,6 +287,10 @@ def _names(a: argparse.Namespace) -> int:
     return _out(first + names.run(db, rel))
 
 
+def _reminders(a: argparse.Namespace) -> int:
+    return _out(reminders.run(*_target(a), cancel=a.cancel))
+
+
 def _promises(a: argparse.Namespace) -> int:
     return _out(promises.run(*_target(a), wrong=a.wrong, retire=a.retire))
 
@@ -345,6 +353,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "initiative": _initiative,
     "mood": _mood,
     "promises": _promises,
+    "reminders": _reminders,
     "names": _names,
     "lore": _lore,
     "map": _map,

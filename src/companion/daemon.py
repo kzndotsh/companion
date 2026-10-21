@@ -37,6 +37,7 @@ from companion.loops.lore import label_views
 from companion.loops.names import read_names
 from companion.loops.nudges import tick_nudge
 from companion.loops.openloops import Ticker, drafter, tick
+from companion.loops.reminders import deliver_due
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
@@ -54,6 +55,7 @@ UPDATE_KEY = "telegram.last_update_id"
 DEFAULT_DAILY_CAP_USD = 10.0
 REFLECT_IDLE_SECONDS = 90
 REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
+REMINDER_TICK_SECONDS = 60
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
 
 
@@ -166,6 +168,16 @@ def relevance_on() -> bool:
     )
 
 
+def reminders_on() -> bool:
+    """Whether reminders they ask for are set and sent (J50): COMPANION_REMINDERS, on unless off."""
+    return os.environ.get("COMPANION_REMINDERS", "").strip().lower() not in (
+        "off",
+        "0",
+        "no",
+        "false",
+    )
+
+
 def split_on() -> bool:
     """Whether long replies may be sent as several messages: COMPANION_SPLIT, on unless off."""
     return os.environ.get("COMPANION_SPLIT", "").strip().lower() not in ("off", "0", "no", "false")
@@ -212,6 +224,7 @@ def startup_line(
         f" | memory check {consolidate_mode()}"
         f" | promises {promises_mode()}"
         f" | lore {lore_mode()}"
+        f" | reminders {'on' if reminders_on() else 'off'}"
     )
 
 
@@ -406,6 +419,26 @@ def _start_initiative(
     return asyncio.create_task(loop())
 
 
+def _start_reminders(convo: Conversation, tg: Telegram, user: int) -> asyncio.Task[None] | None:
+    """The timer that sends reminders when they fall due (J50)."""
+    if not reminders_on():
+        return None
+    started, log = utc_now(), logging.getLogger("companion.reminders")
+
+    async def send(text: str) -> None:
+        await tg.send(user, text)
+
+    async def loop() -> None:
+        while True:
+            await asyncio.sleep(REMINDER_TICK_SECONDS)
+            try:
+                await deliver_due(convo, send, SESSION, utc_now(), started)
+            except Exception:
+                log.exception("reminder tick failed; will try again next time")
+
+    return asyncio.create_task(loop())
+
+
 async def run(data_dir: Path) -> None:
     load_dotenv(Path(".env"))
     log_file = logsetup.configure(data_dir / "logs")
@@ -439,6 +472,7 @@ async def run(data_dir: Path) -> None:
             embed_model=os.environ.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
             lore=lore_mode(),
             relevance=relevance_on(),
+            reminders=reminders_on(),
         )
         same = (
             SameCheck(reflector, convo.embedder, convo.embed_model, consolidate_mode())
@@ -506,16 +540,21 @@ async def run(data_dir: Path) -> None:
             startup_line(rel, prefix.sha256, convo.roleplay_talker, character)
         )
         logging.getLogger("companion").info("full log: %s", log_file)
-        initiative = _start_initiative(store, rel, judge)
-        daily = asyncio.create_task(_daily_backups(data_dir, db))
-        memory = asyncio.create_task(_nightly_memory(store, reflector, rel))
+        background = [
+            task
+            for task in (
+                _start_initiative(store, rel, judge),
+                _start_reminders(convo, tg, user),
+                asyncio.create_task(_daily_backups(data_dir, db)),
+                asyncio.create_task(_nightly_memory(store, reflector, rel)),
+            )
+            if task is not None
+        ]
         try:
             await tg.run(handle, _commands(store, rel, reflector))
         finally:
-            daily.cancel()
-            memory.cancel()
-            if initiative is not None:
-                initiative.cancel()
+            for task in background:
+                task.cancel()
 
 
 async def callbacks_now(db: Path, relationship: str, days: int, cap_usd: float) -> str:

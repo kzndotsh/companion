@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime, time, timedelta, tzinfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from companion.prompts import get
 
@@ -41,6 +43,20 @@ def utc_now() -> datetime:
     """The one place the wall clock is read. Callers take `now` as an argument and use this only as
     the default, so tests and replays can pin the time."""
     return datetime.now(UTC)
+
+
+def named_zone() -> tzinfo:
+    """The machine's zone with its rules (America/New_York, not a fixed -04:00), so a time set
+    today for after a clock change keeps its wall time. TZ first, then /etc/localtime; the fixed
+    offset when neither names one."""
+    name = os.environ.get("TZ", "").lstrip(":")
+    if not name:
+        path = os.path.realpath("/etc/localtime")
+        name = path.rpartition("zoneinfo/")[2] if "zoneinfo/" in path else ""
+    try:
+        return ZoneInfo(name) if name else local_zone()
+    except (ZoneInfoNotFoundError, ValueError):
+        return local_zone()
 
 
 def local_zone() -> tzinfo:

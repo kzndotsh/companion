@@ -1179,3 +1179,13 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
     scene after the fact; the gate reads the frame as it stood before the turn. No flags or favourites
     on these turns. Three cases: too few to move the 0.3 cutoff, but every live hit sat just above it.
   Free (Claude judge).
+- **2026-10-21. Reminder requests land at the time meant (J50).** `system/reminder-read` v1 on
+  `anthropic/claude-haiku-5.5` with the rules in `core/reminders.py`, on 41 made-up requests at a fixed
+  Monday 13:00 in New York (`uv run pytest -m live tests/live/test_reminder_read.py -s`): 41/41 twice. The
+  cases include bare hours ("at 8" after eight in the morning is that evening; "tomorrow at 8" is asked),
+  "next friday" (asked), a repeating one (asked), a date after the clocks change, past sixty days (asked),
+  cancels, an answer to "what time?", and five ordinary lines that must set nothing (none did). About 2
+  cents. Then the everyday talker (persona v41, `openai/gpt-6-luna`) wrote 12 due messages with
+  `system/reminder-send` as the tail: all short, all named the thing, 12/12 passed the code checks; a
+  check-in asks how it went. A scratch script, not kept; rerun by sending a `TalkerRequest` with
+  `tail=send_instruction(...)`.

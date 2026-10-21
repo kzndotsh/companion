@@ -82,7 +82,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
   live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
-- Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`). A test enforces it.
+- Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, `named_zone`). A test enforces it.
 
 **Evals**
 - Every eval run has a spend cap, stated before the run. Check OpenRouter credits first. Keep
@@ -100,7 +100,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `COMPANION_REFLECT_MODEL`, `COMPANION_FALLBACK_MODEL` (asked only when the judges' model refuses a
   call), `COMPANION_DAILY_CAP_USD` (default 10, `off` removes it), `COMPANION_DB`, `COMPANION_PACE`,
   `COMPANION_SPLIT`, `COMPANION_LISTEN`, `COMPANION_INITIATIVE`, `COMPANION_MOOD`, `COMPANION_RESAMPLE`,
-  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_BACKUP_DIR`, `COMPANION_TALKER_FALLBACK`, `COMPANION_CONSOLIDATE`, `COMPANION_PROMISES`, `COMPANION_LORE`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
+  `COMPANION_ROUTE_INTIMATE`, `COMPANION_RELEVANCE`, `COMPANION_EMBED_MODEL`, `COMPANION_BACKUP_DIR`, `COMPANION_TALKER_FALLBACK`, `COMPANION_CONSOLIDATE`, `COMPANION_PROMISES`, `COMPANION_LORE`, `COMPANION_REMINDERS`, `COMPANION_PROMPT_OVERRIDES` (try another prompt version without shipping
   it) and `COMPANION_CHARACTER` (a character sheet laid over the persona, `companion/characters.py`). The
   table is in `README.md`.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
@@ -200,6 +200,16 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   stop using; code keeps one only if its quote is in that message, said for real, not hedged and forward
   looking. Shadow only (`COMPANION_PROMISES`, `off` to skip): recorded and listed by `companion promises`,
   never shown to the talker yet.
+- Reminders they ask for are live (J50, `core/reminders.py`, `loops/reminders.py`), one-off only. A
+  message with reminder words, or the answer when it just asked when, is read by `system/reminder-read`
+  into their words for the thing and the parts of when; code works out the time in the machine's named
+  zone (`named_zone`, so a time after a clock change keeps its wall time) and asks instead of guessing (a
+  bare "at 8" with both still ahead, "next friday", a time gone, past sixty days, a repeating one). One
+  note says it was set, with the time code worked out, or what to ask, or that one was cancelled. Every
+  minute due ones are claimed once, written by the everyday talker with `system/reminder-send` as the tail,
+  drawn once more on a code-check fail, and sent; their words go out marked when the talker fails or the
+  cap is reached. A pretend scene holds them until it ends; one missed while the bot was down by over two
+  hours is let go. `companion reminders` lists them, `--cancel ID` drops one; `COMPANION_REMINDERS=off`.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash, an AI disclaimer nobody asked for, the clock line or a tag copied from the system

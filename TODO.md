@@ -60,6 +60,7 @@ Built and working:
 - **Since 2026-10-20.** Its own tastes shown back when the moment touches them (ADR 0020, live). In
   shadow: promises it makes read from its replies (J12, `companion promises`), names matched against
   memory (`companion names`), and its views labelled taste, stance, rule, self or lived (`companion lore`).
+- **Since 2026-10-21.** Reminders and check-ins they ask for, one-off, live (J50, `companion reminders`).
 - **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
   messages, and a new message that arrives before the last answer is out replaces it. A reply
   Telegram never delivered is recorded as undelivered and left out of what the model reads.
@@ -558,6 +559,13 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
 ## Done
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
+
+**2026-10-21**
+- [x] J50 Reminders they ask for, live, one-off only: "remind me at 8pm to take the dog out", "check up on
+      me in a few days about the interview". A model reads the words, code works out the time in the named
+      zone and asks when it is unclear; the reply confirms the time. Sent when due in its own voice, held
+      during a pretend scene until it ends. Measured: 82/82 requests read to the time meant (41 made-up
+      phrases, two runs), 12/12 sent messages passed the code checks. Next if wanted: rituals (repeating).
 
 **2026-10-20**
 - [x] Fuller, more direct scene replies: a character's scene reminder sent after the history on roleplay

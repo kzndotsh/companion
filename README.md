@@ -150,6 +150,7 @@ All optional. Set them in `.env`.
 | `COMPANION_RESAMPLE` | on | a reply that fails a check is drawn once more; `off` disables it |
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow` |
 | `COMPANION_SPLIT` | on | long plain replies are sometimes sent as two or three messages; `off` stops it |
+| `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 
 **Shadow features**
@@ -203,6 +204,7 @@ uv run companion memory review  # answer the memory check's questions, a few at 
 uv run companion lore           # its own tastes (lore); --label labels new views, --relabel all of them
 uv run companion names          # things named in memory; --read reads new memories for names first
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
+uv run companion reminders      # the reminders they asked for and what became of each; --cancel ID
 uv run companion retire <id> --reason "..."      # close one memory
 uv run companion merge <id> <id> --claim "..."   # merge memories that say one thing, keeping every quote
 uv run companion address        # how they want to be referred to; --set TEXT changes it

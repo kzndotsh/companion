@@ -57,6 +57,7 @@ from companion.store.sqlite import (
     open_loops,
     promises,
     reflect,
+    reminders,
     settings,
     turns,
     view_kinds,
@@ -64,6 +65,7 @@ from companion.store.sqlite import (
 from companion.store.sqlite.db import connect, migrate
 from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.promises import Recorded as RecordedPromise
+from companion.store.sqlite.reminders import Reminder
 
 VIEWS_MODE_KEY = "views.mode"
 
@@ -329,6 +331,18 @@ class Store:
         self, rel: RelationshipId, start: datetime
     ) -> list[tuple[str, list[Statement]]]:
         return invented.since(self._conn, rel, start)
+
+    def add_reminder(self, r: Reminder) -> None:
+        reminders.add(self._conn, r)
+
+    def reminder_event(self, reminder_id: str, state: str, reason: str, at: datetime) -> None:
+        reminders.event(self._conn, reminder_id, state, reason, at)
+
+    def claim_reminder(self, reminder_id: str, at: datetime) -> bool:
+        return reminders.claim(self._conn, reminder_id, at)
+
+    def reminders(self, rel: RelationshipId) -> list[Reminder]:
+        return reminders.all_(self._conn, rel)
 
     def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
         promises.add(self._conn, p, model=model, prompt=prompt, at=at)

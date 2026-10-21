@@ -30,7 +30,7 @@ from companion.core.basics import ASK_EVERY as ASK_NAME_EVERY
 from companion.core.basics import ASKED as ASKED_NAME
 from companion.core.basics import NAME_CAPTURE, ask_name, asked_for_name, knows_name, name_belief
 from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, Card, build_card, render
-from companion.core.clock import local_zone, now_line, utc_now
+from companion.core.clock import local_zone, named_zone, now_line, utc_now
 from companion.core.extractor import Extractor, from_fallback
 from companion.core.floor import HOLD_NOTE, INTIMATE_CHECK
 from companion.core.floor import Talker as RouteTalker
@@ -100,6 +100,8 @@ from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.recheck import eligible as recheck_eligible
 from companion.core.relevance import SHADOW as RELEVANCE_SHADOW
 from companion.core.relevance import Embedder
+from companion.core.reminders import PROMPT as REMINDER_PROMPT
+from companion.core.reminders import likely as reminder_likely
 from companion.core.replay import TurnRecord
 from companion.core.spend import purpose
 from companion.core.talker import Reply, Talker
@@ -140,6 +142,10 @@ from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
 from companion.loops.recall import Recalled, look_up
 from companion.loops.relevance import shadow as relevance_shadow
+from companion.loops.reminders import ASKED as REMINDER_ASKED
+from companion.loops.reminders import act as reminder_act
+from companion.loops.reminders import log_decision as reminder_log
+from companion.loops.reminders import read_slots as reminder_slots
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.loops.topics import judge_spent
 from companion.store.sqlite.store import Store
@@ -254,6 +260,7 @@ class Conversation:
     lore: str = "off"  # on, shadow or off: its tastes nearest their message (ADR 0020)
     scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
     relevance: bool = True  # the relevance look-up in shadow, when there is an embedder
+    reminders: bool = True  # reminders they ask for are read and set (J50)
 
     async def handle(
         self, session: SessionId, text: str, channel: str, now: datetime | None = None
@@ -1201,6 +1208,9 @@ class _Lookups:
     spent: bool = False
     guess: Invited | None = None
     tastes: tuple[str, ...] = ()  # its own tastes to show it this turn (ADR 0020)
+    reminder: str | None = (
+        None  # a reminder they asked for was set, cancelled or needs asking (J50)
+    )
 
 
 LORE_SHOWN = "lore: its own tastes nearest their message"
@@ -1244,7 +1254,28 @@ async def _before_reply(
     asked_to_recall = heard is not None and heard[0].recall
     guess = None if asked_to_recall else await _invited_guess(c, t, in_scene, heard)
     tastes = await _tastes(c, t, in_scene, heard)
-    return _Lookups(recalled, spent, guess, tastes)
+    return _Lookups(recalled, spent, guess, tastes, await _reminder(c, t))
+
+
+async def _reminder(c: Conversation, t: _Turn) -> str | None:
+    """When they ask to be reminded or checked on, or answer its asking when (J50): read the words,
+    let code set the time, and say in a note what happened."""
+    last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
+    asked = last is not None and any(
+        d.reason == REMINDER_ASKED for d in c.store.decisions_for_turn(c.rel, last.turn_id)
+    )
+    if c.judge is None or not c.reminders or not reminder_likely(t.text, asked_when=asked):
+        return None
+    _mark(t, "reminder judge")
+    zone = named_zone()
+    slots = await reminder_slots(c.judge, t.prior, t.text, t.now, zone)
+    done = reminder_act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
+    if done is None:
+        return None
+    reminder_log(
+        c, t.session, t.turn, done.reason, t.now, done.detail | {"prompt": REMINDER_PROMPT.ref}
+    )
+    return done.note
 
 
 async def _invited_guess(
@@ -1401,6 +1432,7 @@ def _assemble(  # noqa: PLR0913
     spent: bool = False,
     guess: Invited | None = None,
     tastes: tuple[str, ...] = (),
+    reminder: str | None = None,
 ) -> _Assembled:
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
@@ -1442,7 +1474,20 @@ def _assemble(  # noqa: PLR0913
     own = lore_note(f'you said: "{q}"' for q in tastes)
     notes += [
         n
-        for n in (listening, rude, repair, found, mood, hold, name, loop, moving, guessing, own)
+        for n in (
+            listening,
+            rude,
+            repair,
+            found,
+            mood,
+            hold,
+            name,
+            loop,
+            moving,
+            guessing,
+            own,
+            reminder,
+        )
         if n is not None
     ]
     card_text = tagged(
@@ -1500,6 +1545,7 @@ async def _handle_turn(
         spent=looked.spent,
         guess=looked.guess,
         tastes=looked.tastes,
+        reminder=looked.reminder,
     )
     request, card_text, card, views, view_state = (
         asm.request,

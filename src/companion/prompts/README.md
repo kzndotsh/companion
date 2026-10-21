@@ -94,6 +94,9 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
 | `notes/scene-play` | note | a pretend scene is in progress | v1 |
 | `notes/scene-story` | note | they are telling a story | v1 |
+| `notes/reminder-set` | note | a reminder they asked for is set: confirm it with the time code worked out (J50) | v1 |
+| `notes/reminder-ask` | note | a reminder they asked for has an unclear time: ask about that one thing (J50) | v1 |
+| `notes/reminder-cancelled` | note | a reminder they asked to drop is dropped: say so (J50) | v1 |
 | `system/ack` | system | the ack judge, `core/ack.py` | v2 |
 | `system/callback-judge` | system | the callback check, `core/callbacks.py`, `companion callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
@@ -119,6 +122,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/away` | system | whether their message leaves the chat now (brief, back, goodbye) and for about how long, for the nudge (shadow) | v1 |
 | `system/nudge-draft` | system | the one light nudge after they stayed away much longer than they said (shadow) | v1 |
 | `system/invented-judge` | system | statements in a reply about the user and what supports each, for the made-up facts rate (G42); flags are candidates | v1 |
+| `system/reminder-read` | system | whether a message asks to be reminded, checked on or to cancel one, and the words of when; code works out the time (J50) | v1 |
+| `system/reminder-send` | system | the instruction sent after the history when a reminder is due: one short message naming it (J50) | v1 |
 | `system/lore-label` | system | the kind of each of the companion's own views: taste (its lore), stance, rule, self or lived (ADR 0020) | v1 |
 | `system/memory-names` | system | the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |

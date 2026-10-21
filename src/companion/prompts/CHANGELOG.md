@@ -779,3 +779,18 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/views-implicated
 - **system/views-implicated v1** (current). From commit 13ba5a2 on 2026-10-15: fix(self): flags retire only implicated views, retirements stick, add the answer-not-repeated fixture and an inbox item on memory block size
+
+## system/reminder-read
+- **system/reminder-read v1** (current). New (J50, reminders). Read only when code sees reminder words in their message or the companion just asked when: whether they ask to be reminded or checked on later, or to cancel one, with the thing in their words and the parts of when as they said them (day words, hour, am or pm only if said, part of the day, minutes from now). The model never works out a date: `core/reminders.py` does, with fixed rules, and asks when the time is unclear.
+
+## system/reminder-send
+- **system/reminder-send v1** (current). New (J50). When a reminder is due, the talker is sent its usual request with this after the history (the `tail`), so the reminder comes in its own voice: one short message naming the thing, no guilt, no question to answer.
+
+## notes/reminder-set
+- **notes/reminder-set v1** (current). New (J50). The reminder is stored; the reply confirms it with the time as code worked it out ("tomorrow at 9:00 am"), so a misread shows at once. A time code filled in ("in a few days") adds that they can change it.
+
+## notes/reminder-ask
+- **notes/reminder-ask v1** (current). New (J50). The time was unclear (a bare "at 8" with both still ahead today, "next friday", a time already gone, more than sixty days out, a repeating one): nothing is stored, and the reply asks about that one thing.
+
+## notes/reminder-cancelled
+- **notes/reminder-cancelled v1** (current). New (J50). They asked to drop a reminder and the pending one was cancelled.
