@@ -54,6 +54,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.context import Written, write_missing
 from companion.loops.knowing import Labelled, label_new
 from companion.loops.lore import KindsRead, label_views
 from companion.loops.names import NamesRead, read_names
@@ -400,6 +401,7 @@ async def reflect_from(
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
     mapped = await label_new(store, extractor, rel, now) if users.accepted else Labelled()
     named = await read_names(store, extractor, rel, now) if users.accepted else NamesRead()
+    noted = await write_missing(store, extractor, rel, now) if users.accepted else Written()
     sorted_views = await label_views(store, extractor, rel, now) if own.accepted else KindsRead()
     return ReflectResult(
         True,
@@ -413,6 +415,7 @@ async def reflect_from(
         + loops.cost_usd
         + mapped.cost_usd
         + named.cost_usd
+        + noted.cost_usd
         + sorted_views.cost_usd,
         upto,
         views_accepted=own.accepted,

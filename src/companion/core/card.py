@@ -10,9 +10,10 @@ companion can check naturally. Stale sensitive ones are left out entirely.
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta, tzinfo
 
+from companion.core.context import wants_context
 from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.types import Belief, BeliefId, BeliefKind
 
@@ -58,6 +59,7 @@ class Card:
     views: tuple[Belief, ...] = ()
     crowded: tuple[Belief, ...] = ()  # current, but past the card's size
     kept_back: tuple[Belief, ...] = ()  # sensitive, left out on a casual turn
+    contexts: Mapping[BeliefId, str] = field(default_factory=dict[BeliefId, str])  # J51
 
     @property
     def empty(self) -> bool:
@@ -73,6 +75,7 @@ def build_card(  # noqa: PLR0913
     *,
     show_held: bool = True,
     everyday: Collection[BeliefId] = (),
+    contexts: Mapping[BeliefId, str] | None = None,
 ) -> Card:
     """`support` is each belief's freshest evidence time, falling back to valid_from.
 
@@ -109,6 +112,7 @@ def build_card(  # noqa: PLR0913
         views=tuple(views),
         crowded=tuple(crowded),
         kept_back=tuple(kept_back),
+        contexts={k: v for k, v in (contexts or {}).items() if k in aged},
     )
 
 
@@ -129,7 +133,9 @@ def _line(b: Belief, card: Card) -> str:
     a = card.aged[b.id]
     when = when_phrase(a.last_supported, card.now)
     note = "; may have changed" if a.status is Freshness.AGING else ""
-    return f"- {b.claim} (mentioned {when}{note})"
+    said = card.contexts.get(b.id) if wants_context(b) else None
+    about = f"; said {said}" if said else ""
+    return f"- {b.claim} (mentioned {when}{about}{note})"
 
 
 def render(card: Card, tz: tzinfo = UTC) -> str:

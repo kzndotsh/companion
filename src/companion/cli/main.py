@@ -88,7 +88,7 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
 def _memory_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     """The commands that close or merge beliefs by hand, each closure logged with its reason."""
     mm = add("memory", help="answer the questions about memory, or propose merges (ADR 0019)")
-    mm.add_argument("action", choices=["review", "group"])
+    mm.add_argument("action", choices=["review", "group", "context"])
     mm.add_argument(
         "--all", action="store_true", help="keep asking until none are left or you quit"
     )
@@ -338,6 +338,8 @@ def _memory(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     if a.action == "group":
         return _out(asyncio.run(daemon.group_now(db, rel)))
+    if a.action == "context":
+        return _out(asyncio.run(daemon.context_now(db, rel)))
     return _out(memory.review(db, rel))
 
 

@@ -44,6 +44,7 @@ from companion.core.views import ViewState, parse_mode
 from companion.store.sqlite import (
     beliefs,
     callbacks,
+    contexts,
     decisions,
     embeddings,
     favorites,
@@ -288,6 +289,14 @@ class Store:
         at: datetime,
     ) -> int:
         return merges.add(self._conn, rel, members, claim, prompt, at)
+
+    def add_belief_context(
+        self, rel: RelationshipId, belief_id: BeliefId, context: str, *, prompt: str, at: datetime
+    ) -> None:
+        contexts.add(self._conn, rel, belief_id, context, prompt, at)
+
+    def belief_contexts(self, rel: RelationshipId) -> dict[BeliefId, str]:
+        return contexts.latest(self._conn, rel)
 
     def merge_proposals(self, rel: RelationshipId) -> list[merges.Proposal]:
         return merges.all_(self._conn, rel)

@@ -1450,6 +1450,7 @@ def _assemble(  # noqa: PLR0913
         views=views,
         show_held=sharing,
         everyday=everyday,
+        contexts=store.belief_contexts(c.rel),
     )
     shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
