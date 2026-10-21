@@ -89,6 +89,9 @@ def _memory_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     """The commands that close or merge beliefs by hand, each closure logged with its reason."""
     mm = add("memory", help="answer the questions about memory, or propose merges (ADR 0019)")
     mm.add_argument("action", choices=["review", "group"])
+    mm.add_argument(
+        "--all", action="store_true", help="keep asking until none are left or you quit"
+    )
     _db_args(mm)
     mg = add("merge", help="merge beliefs that say one thing into one, keeping every quote")
     mg.add_argument("id_prefix", nargs="+")

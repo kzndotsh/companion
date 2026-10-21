@@ -155,3 +155,11 @@ def test_keeping_a_merge_apart_changes_nothing_and_is_not_asked_again(
     assert "kept apart  3 memories" in out
     assert len(Store(db).user_beliefs(REL)) == 3
     assert [p.answer for p in Store(db).merge_proposals(REL)] == ["apart"]
+
+
+def test_it_asks_every_question_unless_capped(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    db = _store(tmp_path, utterance, belief)
+    assert "1 question left" in review(db, REL, ask=lambda _: "k", per_sitting=1)
+    assert "0 questions left" in review(db, REL, ask=lambda _: "k")

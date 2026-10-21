@@ -1,5 +1,6 @@
-"""`companion memory review`: the owner's questions about memory (ADR 0019), a few at a time. Each
-answer is recorded; a retire goes through the logged retire path, and nothing is deleted."""
+"""`companion memory review`: the owner's questions about memory (ADR 0019), all of them until
+[q]uit. Each answer is recorded; a retire goes through the logged retire path, and nothing is
+deleted."""
 
 from __future__ import annotations
 
@@ -16,7 +17,6 @@ from companion.store.sqlite.memory_checks import MemoryCheck
 from companion.store.sqlite.merges import Proposal
 from companion.store.sqlite.store import Store
 
-PER_SITTING = 5
 ASKED = (Label.OUT_OF_DATE, Label.OVERSTATED, Label.PASSING)
 CONFLICT = (Relation.REPLACES, Relation.CONTRADICTS)
 WHY: dict[str, str] = {
@@ -133,7 +133,10 @@ def _answer(  # noqa: PLR0913
 
 
 def review(
-    db: Path, relationship: str, ask: Callable[[str], str] = input, per_sitting: int = PER_SITTING
+    db: Path,
+    relationship: str,
+    ask: Callable[[str], str] = input,
+    per_sitting: int | None = None,
 ) -> str:
     store = Store(db)
     rel = RelationshipId(relationship)
@@ -143,7 +146,7 @@ def review(
         if not pending:
             return "no questions about memory right now\n"
         answered = 0
-        for item in pending[:per_sitting]:
+        for item in pending[:per_sitting]:  # every question unless capped; [q]uit stops
             current = {b.id: b for b in store.user_beliefs(rel)}
             now = utc_now()
             is_merge = isinstance(item, Proposal)
