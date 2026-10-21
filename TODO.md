@@ -176,7 +176,9 @@ Each item ends with the thing that tells us it is done. The cards are below.
 5. **Body and appearance question** (inbox, parked since the start).
 6. **Provider routing (T8).**
 7. **Flagged turns in history (T9).**
-8. **The relevance look-up (ADR 0018):** which outcome, after the review of 2026-10-21.
+8. **The relevance look-up (ADR 0018):** reviewed 2026-10-21. A picker that says none (v2) was more
+   precise but lost real finds, and two judges disagreed on what counts, so it stays in shadow on v1. Next
+   step needs the owner's marks on about 30 turns: is each memory something the reply should have had?
 9. **The memory check on (ADR 0019):** `COMPANION_CONSOLIDATE=on`, after the review of 2026-10-26.
 10. **Promises (J12 step 2, LR5):** pin standing promises, and which source, after the review of 2026-10-27.
 

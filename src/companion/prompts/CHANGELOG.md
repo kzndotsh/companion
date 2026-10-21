@@ -703,6 +703,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/relevance
 - **system/relevance v1** (current). New, shadow only. On an ordinary turn, an embedding of their message finds the 15 nearest memories they may see that turn, and this prompt picks at most three a friend would have in mind, or none. Nothing reaches the talker: the embedding's top three and the picks are logged with whether each was already on the card (`core/relevance.py`). Reason: the card shows 15 memories out of about 135 ordinary ones, ranked by kind and recency, and the look-up ran only when they asked it to remember.
+- **system/relevance v2** (candidate, not shipped). Measured 2026-10-21 (`evals/CHANGELOG.md`): every shortlisted memory is judged yes or no, with all-no said to be common, to fix v1 never saying none. It was more precise but dropped real finds, so v1 stays. Written for a per-item answer (`items` of `label` and `use`) that `core/relevance.py` does not ask for: do not pick it through `COMPANION_PROMPT_OVERRIDES`.
 
 ## system/name-capture
 - **system/name-capture v1** (current). New. When the companion's last message asked what to call them, reads their answer and gives the name as written, or nothing; code keeps it only if it is short and appears in their words, and stores it as a belief quoting their answer (J48). Reason: a bare one-word answer to "what name do you like being called?" was not picked up by the memory pass.

@@ -1192,3 +1192,44 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
 - **2026-10-21. Vague check-ins at a picked time.** A check-in with no time now lands at a time picked
   once between 4 and 8 pm (five-minute marks) instead of 6 pm, and the reply names only the part of the
   day. The live reading test was rerun with the window as the expected outcome: 41/41, about 1 cent.
+- **2026-10-21. The relevance picker that says none, and why the judge question decides it (ADR 0018).**
+  The 60 turns of the morning's review (30 with picks, 30 small talk), shortlists rebuilt from today's
+  memory with their last reply, then v1 and a candidate v2 (`system/relevance/v2.md`: every item judged
+  yes or no, all-no common) on `anthropic/claude-haiku-5.5`, 4.9 cents in all. Both versions' picks were
+  judged blind together by two Claude subagents (sonnet), same question as the review.
+  - **A code skip for short messages is wrong.** In the review's own verdicts, 11 of the 30 small-talk
+    turns had a useful memory (a one-word yes or sigh after the companion asked about something): a short
+    reply is about the companion's last message. Only bare sounds were reliably empty.
+  - **v1:** picked on all 60 turns, 168 picks; 63% useful; a useful pick on 56 of 60. **v2:** picked on
+    46 turns, 73 picks; 79% useful; a useful pick on 38 of 60; said none on 3 of the 5 turns where none
+    was right.
+  - **The two judges disagree badly.** This one called 63% of v1's picks useful and none right on 5 of
+    60; the review's judge said 28% and none right on 27. By eye this one is lenient (a memory matched to a
+    playful sound), the review's strict. Of the 18 turns where only v1 had a useful pick,
+    about half are real losses for v2 (a memory that fit a joke they made, a habit that bore on what they
+    said they were about to do, a wish not to go into details on a low reply) and half stretches.
+  - **So:** v2 is not a clear win and is not shipped; v1 stays in shadow. Neither judge asks what
+    matters for the card: whether a memory adds something the chat in view does not already hold. The
+    measure needs the owner's own marks on about 30 turns before either version goes further.
+  Rerun: the scratch scripts read `sample.json` and `verdicts.json` from the review; not kept.
+- **2026-10-21. What is in memory: an audit of all 219 current memories about the user.** Started from
+  the owner's relevance marks (11 of 30 turns marked, no memory marked "needed"; their notes were about
+  the memories themselves: a duplicate triple, a joke kept as a fact, a remark about the chat, a fact just
+  said). Three Claude subagents (sonnet) labelled every memory with its quote, their whole message and
+  the companion's message before it; all four of the owner's examples were labelled as the owner did.
+  Kept 106, would drop 113. Labels (several per memory): ok 101, momentary 39, about the chat 37, trivial
+  33, overstated 24, duplicate 24, scene 18, from the companion 12, joke 9. By eye the judges were harsh in
+  two places: all six boundaries were dropped as "about the chat" though they are how to treat them, and
+  real feelings and a dated event were dropped as momentary where they should fade, not go.
+  What holds up by eye:
+  - **One moment becomes many memories.** One errand on a single day became six memories, one for each
+    detail of it; one evening became two.
+  - **The quote does not support the claim.** The quote is checked to be in the message, never to say
+    what the claim says: a two-word aside stands behind a trait, a greeting behind a wish.
+  - **The companion's framing kept as theirs.** 21 memories rest on a quote of three words or fewer,
+    12 would be dropped, 7 as the companion's words agreed to.
+  - **Their work on the companion floods memory.** The owner builds the bot, so changes they are making
+    to it are kept as facts about them: threads were 12 of 14 dropped.
+  - **Duplicates are written although the extractor sees every memory** as already recorded on each
+    pass; the write-time same-memory check has logged one repeat in shadow since it started.
+  Free (Claude judges). Scratch files, not kept.
