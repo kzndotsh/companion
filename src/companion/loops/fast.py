@@ -6,9 +6,8 @@ import asyncio
 import contextlib
 import dataclasses
 import logging
-import time
 import uuid
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -26,13 +25,11 @@ from companion.core.ack import (
 )
 from companion.core.address import KEY as ADDRESS_KEY
 from companion.core.address import address_note
-from companion.core.basics import ASK_EVERY as ASK_NAME_EVERY
-from companion.core.basics import ASKED as ASKED_NAME
-from companion.core.basics import NAME_CAPTURE, ask_name, asked_for_name, knows_name, name_belief
+from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name_belief
 from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, Card, build_card, render
-from companion.core.clock import local_zone, named_zone, now_line, utc_now
+from companion.core.clock import now_line, utc_now
 from companion.core.extractor import Extractor, from_fallback
-from companion.core.floor import HOLD_NOTE, INTIMATE_CHECK
+from companion.core.floor import INTIMATE_CHECK
 from companion.core.floor import Talker as RouteTalker
 from companion.core.floor import choose as choose_route
 from companion.core.frames import (
@@ -45,16 +42,10 @@ from companion.core.frames import (
     is_assertable,
     needs_judge,
     scene_frame,
-    scene_note,
 )
 from companion.core.frames import render_reason as frame_reason
 from companion.core.frames import resolve as frame_resolve
 from companion.core.freshness import HORIZON_DAYS, when_phrase
-from companion.core.guess import INVITED as GUESS_INVITED
-from companion.core.guess import NOTE as GUESS_NOTE
-from companion.core.guess import likely as guess_likely
-from companion.core.guess import note as guess_note
-from companion.core.habits import habit_note
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.hooks import KNEW as HOOK_KNEW
 from companion.core.hooks import PROMPT as HOOK_PROMPT
@@ -63,19 +54,8 @@ from companion.core.hooks import SCHEMA as HOOK_SCHEMA
 from companion.core.hooks import TOPIC as HOOK_TOPIC
 from companion.core.hooks import WOULD_ASK as HOOK_WOULD_ASK
 from companion.core.hooks import agreed, may_ask, read_basic
-from companion.core.knowing import MAP_EVERY, WOULD_ASK, Depth, Domain, pick_gap
-from companion.core.length import LengthTarget, length_target
-from companion.core.listening import PROMPT as LISTEN_PROMPT
-from companion.core.listening import SERIOUS, listening_note, repair_note, rude_note
-from companion.core.listening import Judgement as ListenJudgement
-from companion.core.listening import render_reason as render_listening
-from companion.core.lore import lore_note
-from companion.core.mood import PARAMS_VERSION as MOOD_PARAMS
-from companion.core.mood import WINDOW as MOOD_WINDOW
-from companion.core.mood import Effect as MoodEffect
-from companion.core.mood import Said, chat_minutes, effects_for, held_because, inputs_for, mood_at
-from companion.core.mood import line as mood_line
-from companion.core.mood import reason as mood_reason
+from companion.core.knowing import Depth, Domain
+from companion.core.listening import SERIOUS
 from companion.core.moves import PROMPT as HABITS_PROMPT
 from companion.core.moves import replies_to_read
 from companion.core.names import SHADOW as NAMES_SHADOW
@@ -85,7 +65,6 @@ from companion.core.nudges import AWAY as AWAY_REASON
 from companion.core.nudges import PROMPT as AWAY_PROMPT
 from companion.core.nudges import SCHEMA as AWAY_SCHEMA
 from companion.core.nudges import parse as parse_away
-from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_note
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
 from companion.core.prompt.sections import tagged
@@ -93,23 +72,14 @@ from companion.core.quip import PROMPT as QUIP_PROMPT
 from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
 from companion.core.react import decide as decide_reaction
-from companion.core.recall import PROMPT as RECALL_PROMPT
-from companion.core.recall import recall_note
 from companion.core.recheck import QUIP, code_checks
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.recheck import eligible as recheck_eligible
 from companion.core.relevance import SHADOW as RELEVANCE_SHADOW
 from companion.core.relevance import Embedder
-from companion.core.reminders import PROMPT as REMINDER_PROMPT
-from companion.core.reminders import likely as reminder_likely
 from companion.core.replay import TurnRecord
 from companion.core.spend import purpose
 from companion.core.talker import Reply, Talker
-from companion.core.topics import EVERY_TURNS as TOPIC_EVERY
-from companion.core.topics import NOTE as TOPIC_NOTE
-from companion.core.topics import SPENT as TOPIC_SPENT
-from companion.core.topics import likely as topic_likely
-from companion.core.topics import topic_note
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -131,22 +101,16 @@ from companion.loops.floor import judge_intimate
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
-from companion.loops.guess import Invited, invited_guess
 from companion.loops.hooks import stated
 from companion.loops.listen import judge_listening
-from companion.loops.lore import nearest_tastes
 from companion.loops.moves import HabitMemory, find_habits
+from companion.loops.notes import Lookups, Moment, look, notes_for
 from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
-from companion.loops.recall import Recalled, look_up
 from companion.loops.record import Recorder
 from companion.loops.relevance import shadow as relevance_shadow
-from companion.loops.reminders import ASKED as REMINDER_ASKED
-from companion.loops.reminders import act as reminder_act
-from companion.loops.reminders import log_decision as reminder_log
-from companion.loops.reminders import read_slots as reminder_slots
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
-from companion.loops.topics import judge_spent
+from companion.loops.turn import Heard, Turn, decide, is_casual, mark, recorder
 from companion.store.sqlite.decisions import REACTED
 from companion.store.sqlite.store import Store
 
@@ -155,24 +119,6 @@ log = logging.getLogger("companion.turn")
 
 def _id() -> str:
     return uuid.uuid4().hex
-
-
-def _recorder(c: Conversation, t: _Turn) -> Recorder:
-    return Recorder(c.store, c.rel, t.session, t.turn, TraceId(t.turn), t.now)
-
-
-def _decide(  # noqa: PLR0913
-    c: Conversation,
-    t: _Turn,
-    key: str,
-    detail: dict[str, Json] | None = None,
-    *,
-    reason: str | None = None,
-    kind: DecisionKind = DecisionKind.POLICY,
-    at: datetime | None = None,
-) -> None:
-    """Record one of this turn's decisions (`loops/record.py`)."""
-    _recorder(c, t).decide(key, detail, reason=reason, kind=kind, at=at)
 
 
 @dataclass(frozen=True, slots=True)
@@ -259,23 +205,8 @@ class Conversation:
         return await _handle_turn(self, session, text, channel, now)
 
 
-@dataclass(frozen=True, slots=True)
-class _Turn:
-    session: SessionId
-    turn: TurnId
-    now: datetime
-    prior: list[Utterance]
-    text: str
-    started: float = field(default_factory=time.perf_counter)
-
-
-def _mark(t: _Turn, what: str) -> None:
-    """One DEBUG line per stage of a turn, with the milliseconds since the turn began."""
-    log.debug("turn %s +%dms %s", t.turn[:8], (time.perf_counter() - t.started) * 1000, what)
-
-
-def _mark_start(t: _Turn, in_scene: Frame, card: Card, card_text: str) -> None:
-    _mark(
+def _mark_start(t: Turn, in_scene: Frame, card: Card, card_text: str) -> None:
+    mark(
         t,
         f"start: {len(t.prior)} history messages, scene={in_scene.value},"
         f" card {len(card_text)} chars ({len(card.usable)} usable, {len(card.held)} held,"
@@ -285,7 +216,7 @@ def _mark_start(t: _Turn, in_scene: Frame, card: Card, card_text: str) -> None:
 
 
 async def _await_beside(
-    t: _Turn,
+    t: Turn,
     talk: asyncio.Future[Reply],
     framing: asyncio.Future[Any] | None,
     feeling: asyncio.Future[Any] | None,
@@ -295,15 +226,15 @@ async def _await_beside(
     _mark_reply(t, reply)
     outcome = await framing if framing is not None else None
     if framing is not None:
-        _mark(t, "frame judge done")
+        mark(t, "frame judge done")
     felt = await feeling if feeling is not None else None
     if feeling is not None:
-        _mark(t, "reaction judge done")
+        mark(t, "reaction judge done")
     return reply, outcome, felt
 
 
-def _mark_reply(t: _Turn, reply: Reply) -> None:
-    _mark(
+def _mark_reply(t: Turn, reply: Reply) -> None:
+    mark(
         t,
         f"talker done: {reply.model} {reply.latency_ms}ms in={reply.input_tokens}"
         f" cache_read={reply.cache_read_tokens} cost=${reply.cost_usd:.5f},"
@@ -311,21 +242,21 @@ def _mark_reply(t: _Turn, reply: Reply) -> None:
     )
 
 
-async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
+async def _ack_reaction(c: Conversation, t: Turn) -> Reaction | None:
     """A reaction if this short message only acknowledges. Logs every judgement it makes."""
     if c.judge is None or not is_candidate(t.text, t.prior, after_serious=_after_serious(c, t)):
-        _mark(t, "ack judge skipped: not a candidate for a reaction")
+        mark(t, "ack judge skipped: not a candidate for a reaction")
         return None
     outcome = await judge(c.judge, t.prior, t.text)
     if outcome is None:
-        _mark(t, "ack judge gave no answer; replying")
+        mark(t, "ack judge gave no answer; replying")
         return None
     judged, model, prompt = outcome
     reaction = reaction_for(judged)
-    _mark(
+    mark(
         t, f"ack judged {judged.kind} {judged.confidence:.2f} -> {'react' if reaction else 'reply'}"
     )
-    _decide(
+    decide(
         c,
         t,
         REACTED if reaction is not None else "ack: replied",
@@ -342,7 +273,7 @@ async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
     return reaction
 
 
-def _after_serious(c: Conversation, t: _Turn) -> bool:
+def _after_serious(c: Conversation, t: Turn) -> bool:
     """Whether the listening judge found their previous message serious (severity 2 or more)."""
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     if not theirs:
@@ -356,14 +287,14 @@ def _after_serious(c: Conversation, t: _Turn) -> bool:
 
 
 def _react_alongside(
-    c: Conversation, t: _Turn, felt: tuple[ReactJudgement, str, str] | None
+    c: Conversation, t: Turn, felt: tuple[ReactJudgement, str, str] | None
 ) -> Reaction | None:
     """A reaction to send with the reply, if the message calls for one. Logs the judgement."""
     if felt is None:
         return None
     judged, model, prompt = felt
     decision = decide_reaction(judged, c.store.turns_since_reaction(c.rel))
-    _decide(
+    decide(
         c,
         t,
         REACTED if decision.reaction is not None else "react: none",
@@ -378,32 +309,7 @@ def _react_alongside(
     return decision.reaction
 
 
-def _notes(
-    c: Conversation, prior: list[Utterance], in_scene: Frame, size: LengthTarget | None
-) -> list[str]:
-    """What it should know about its own habits, a scene in progress and how long to answer.
-    These go in the system block with the memory card: in a user message the model read them as
-    something they said."""
-    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene), size.note if size else None]
-    return [n for n in notes if n is not None]
-
-
-def _length(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
-) -> LengthTarget | None:
-    """The one length target for this turn, logged with the reason code wrote for it."""
-    severity = heard[0].severity if heard is not None else None
-    size = length_target(
-        t.text, severity=severity, in_scene=in_scene is not Frame.REAL, seed=str(t.turn)
-    )
-    reason = f"length: under about {size.words} words, {size.why}" if size else "length: no cap"
-    _decide(
-        c, t, "length", {"words": size.words if size else None, "severity": severity}, reason=reason
-    )
-    return size
-
-
-def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
+def _check_habits(c: Conversation, t: Turn, sent: str) -> None:
     """After the reply is out, read the last few replies in the background for habits."""
     if c.judge is None:
         return
@@ -422,7 +328,7 @@ def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
             "inputs_hash": inputs_hash(prompt),
             "habits": list[Json](habits),
         }
-        _decide(
+        decide(
             c,
             t,
             "habit check",
@@ -444,7 +350,7 @@ def _stopped_by_cap(
     if spent is None:
         return None
     turn = TurnId(_id())
-    t = _Turn(session, turn, now, [], text)
+    t = Turn(session, turn, now, [], text)
     _store_user(c, t, channel, Frame.REAL)
     Recorder(c.store, c.rel, session, turn, TraceId(turn), now).decide(
         "daily spend cap reached",
@@ -454,8 +360,8 @@ def _stopped_by_cap(
 
 
 async def _route(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
-) -> tuple[Talker, bool, _Heard | None]:
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+) -> tuple[Talker, bool, Heard | None]:
     """The talker for this turn (ADR 0017): the roleplay talker for a pretend scene, or for intimate
     talk when COMPANION_ROUTE_INTIMATE allows it, unless the floor keeps it on the everyday talker.
     Logged when it is anything but the plain everyday choice.
@@ -470,7 +376,7 @@ async def _route(
     in_play = in_scene is Frame.PLAY
     read = heard
     if read is None and in_play and c.judge is not None:
-        _mark(t, "floor: reading the scene turn")
+        mark(t, "floor: reading the scene turn")
         read = await judge_listening(c.judge, t.prior, t.text)  # for routing only, no note
     route = choose_route(
         in_play=in_play,
@@ -481,13 +387,13 @@ async def _route(
         else None,
     )
     if route.reason is not None:
-        _decide(c, t, "route", reason=route.reason)
+        decide(c, t, "route", reason=route.reason)
     talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
     return talker, route.held, read
 
 
 def _start_beside(
-    c: Conversation, t: _Turn, request: TalkerRequest, talker: Talker
+    c: Conversation, t: Turn, request: TalkerRequest, talker: Talker
 ) -> tuple[
     asyncio.Future[Reply],
     asyncio.Future[tuple[Judgement, str, str] | None] | None,
@@ -506,21 +412,21 @@ def _start_beside(
     return talk, framing, asyncio.ensure_future(judge_reaction(c.judge, t.prior, t.text))
 
 
-async def _redraw_empty(c: Conversation, t: _Turn, request: TalkerRequest, talker: Talker) -> Reply:
+async def _redraw_empty(c: Conversation, t: Turn, request: TalkerRequest, talker: Talker) -> Reply:
     """An empty reply would be a silent turn (seen in 2 to 3% of long scene replies in tests): ask
     the same model once more, and send whatever comes back."""
     again = await talker.reply(request)
     _mark_reply(t, again)
-    _decide(c, t, "resampled", reason="resampled: the model returned no text")
+    decide(c, t, "resampled", reason="resampled: the model returned no text")
     return again
 
 
 async def _recheck(  # noqa: PLR0913, PLR0917
     c: Conversation,
-    t: _Turn,
+    t: Turn,
     request: TalkerRequest,
     reply: Reply,
-    heard: _Heard | None,
+    heard: Heard | None,
     in_scene: Frame,
     talker: Talker,
 ) -> Reply:
@@ -546,23 +452,23 @@ async def _recheck(  # noqa: PLR0913, PLR0917
             detail = {"scorer": judged[1], "prompt": QUIP_PROMPT.ref}
             if judged[0]:
                 failed.append(QUIP)
-    _mark(t, f"recheck: {', '.join(failed) or 'passed'}")
+    mark(t, f"recheck: {', '.join(failed) or 'passed'}")
     again = None
     if failed:
         again = await talker.reply(request)
         _mark_reply(t, again)
         detail |= {"discarded": reply.text, "checks": list[Json](failed)}
     reason = f"resampled: {', '.join(failed)}" if failed else "kept: the reply passed its checks"
-    _decide(c, t, "recheck", detail or None, reason=reason)
+    decide(c, t, "recheck", detail or None, reason=reason)
     return again if again is not None and again.text else reply
 
 
 async def _checked(  # noqa: PLR0913, PLR0917
     c: Conversation,
-    t: _Turn,
+    t: Turn,
     request: TalkerRequest,
     reply: Reply,
-    heard: _Heard | None,
+    heard: Heard | None,
     in_scene: Frame,
     talker: Talker,
     *,
@@ -575,7 +481,7 @@ async def _checked(  # noqa: PLR0913, PLR0917
 
 
 async def _hold_check(
-    c: Conversation, t: _Turn, request: TalkerRequest, reply: Reply, talker: Talker
+    c: Conversation, t: Turn, request: TalkerRequest, reply: Reply, talker: Talker
 ) -> Reply:
     """On a turn the floor held, the reply must not be intimate (ADR 0017). An intimate or unread
     reply is drawn again with the same request, then once more with only their last message in
@@ -597,7 +503,7 @@ async def _hold_check(
         reply = Reply(text="", model=reply.model, latency_ms=reply.latency_ms)
     if discarded:
         sent = ["a second reply", "a reply drawn with only their last message", "nothing"]
-        _decide(
+        decide(
             c,
             t,
             "floor: held reply",
@@ -608,7 +514,7 @@ async def _hold_check(
     return reply
 
 
-def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> Utterance:
+def _store_user(c: Conversation, t: Turn, channel: str, frame: Frame) -> Utterance:
     said = Utterance(
         UtteranceId(_id()),
         c.rel,
@@ -625,14 +531,14 @@ def _store_user(c: Conversation, t: _Turn, channel: str, frame: Frame) -> Uttera
 
 
 def _with_reaction(
-    c: Conversation, t: _Turn, felt: tuple[ReactJudgement, str, str] | None, sent: str
+    c: Conversation, t: Turn, felt: tuple[ReactJudgement, str, str] | None, sent: str
 ) -> str | ReactAndReply:
     reacted = _react_alongside(c, t, felt)
-    _mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to Telegram")
+    mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to Telegram")
     return ReactAndReply(reacted, sent) if reacted is not None else sent
 
 
-async def _capture_name(c: Conversation, t: _Turn, said: Utterance) -> None:
+async def _capture_name(c: Conversation, t: Turn, said: Utterance) -> None:
     """When its last message asked what to call them, read their answer and remember the name,
     quoting their own words. Logged either way."""
     asked = next((u.text for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), "")
@@ -645,7 +551,7 @@ async def _capture_name(c: Conversation, t: _Turn, said: Utterance) -> None:
     if name is not None:
         c.store.insert_belief(name_belief(said, name, _id(), t.now))
         reason = f"basics: remembered what to call them ({name})"
-    _decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
+    decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
 
 
 async def _stop(*tasks: asyncio.Future[Any] | None) -> None:
@@ -659,7 +565,7 @@ async def _stop(*tasks: asyncio.Future[Any] | None) -> None:
 
 
 def _log_frame(
-    c: Conversation, t: _Turn, outcome: tuple[Judgement, str, str] | None, stored: Frame
+    c: Conversation, t: Turn, outcome: tuple[Judgement, str, str] | None, stored: Frame
 ) -> None:
     """Record every frame judgement and what was stored, with the reason built by code."""
     judged = outcome[0] if outcome else None
@@ -673,15 +579,15 @@ def _log_frame(
             "scores": {"frame": outcome[0].frame.value, "confidence": outcome[0].confidence},
             "threshold": FRAME_MIN_CONFIDENCE,
         }
-    _decide(c, t, "frame", detail, reason=frame_reason(judged, stored))
+    decide(c, t, "frame", detail, reason=frame_reason(judged, stored))
 
 
-def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, channel: str) -> str:
+def _persist_reply(c: Conversation, t: Turn, reply: Reply, user_frame: Frame, channel: str) -> str:
     """Store the companion's reply and the decision that sent it. Returns what to send."""
     replied_at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1))
     ids = (c.rel, t.session, t.turn)
     if not reply.text:
-        _decide(c, t, "model returned no text", kind=DecisionKind.DO_NOTHING, at=replied_at)
+        decide(c, t, "model returned no text", kind=DecisionKind.DO_NOTHING, at=replied_at)
         return ""
     c.store.append_utterance(
         Utterance(
@@ -694,7 +600,7 @@ def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, c
             replied_at,
         )
     )
-    _decide(
+    decide(
         c,
         t,
         "replied",
@@ -711,9 +617,6 @@ def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, c
     return reply.text
 
 
-_Heard = tuple[ListenJudgement, str, str]
-
-
 @dataclass(frozen=True, slots=True)
 class _Assembled:
     """What one turn sends and what it needs to record afterwards."""
@@ -723,111 +626,21 @@ class _Assembled:
     card: Card
     views: Sequence[Belief]
     view_state: ViewState
-    mood: Sequence[
-        MoodEffect
-    ] = ()  # written once their message is stored, so a dropped turn adds none
+    after: Sequence[Callable[[], None]] = ()  # the notes' writes, made once the turn is stored
 
 
-async def _listening(c: Conversation, t: _Turn, in_scene: Frame) -> _Heard | None:
+async def _listening(c: Conversation, t: Turn, in_scene: Frame) -> Heard | None:
     """How serious the message is and what they are doing. Not asked in a scene."""
     if c.judge is None or not c.listen or in_scene is not Frame.REAL:
         return None
     return await judge_listening(c.judge, t.prior, t.text)
 
 
-def _listening_note(c: Conversation, t: _Turn, heard: _Heard | None) -> str | None:
-    """The line for the system block, with the decision logged from the labels."""
-    if heard is None:
-        return None
-    judged, model, prompt = heard
-    replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
-    note = listening_note(judged, replies, seed=t.turn)
-    _decide(
-        c,
-        t,
-        "listening",
-        {
-            "scorer": model,
-            "prompt": LISTEN_PROMPT.ref,
-            "inputs_hash": inputs_hash(prompt),
-            "labels": {
-                "severity": judged.severity,
-                "stance": judged.stance,
-                "vague": judged.vague,
-                "rude": judged.rude,
-            },
-        },
-        reason=render_listening(judged, note),
-    )
-    return note
-
-
-async def _recall(c: Conversation, t: _Turn, heard: _Heard | None) -> Recalled | None:
-    """When they asked it to remember something, look it up across all of memory and log it."""
-    if c.judge is None or heard is None or not heard[0].recall or not heard[0].topic:
-        return None
-    _mark(t, f"recall look-up: {heard[0].topic!r}")
-    recalled = await look_up(c.judge, c.store.user_beliefs(c.rel), heard[0].topic)
-    found = recalled.picked if recalled is not None else ()
-    reason = f"recall: they asked about {heard[0].topic!r}; " + (
-        f"{len(found)} found" if recalled is not None else "the look-up failed"
-    )
-    _decide(
-        c,
-        t,
-        "recall",
-        {
-            "topic": heard[0].topic,
-            "picked": [b.id for b in found],
-            "searched": recalled.searched if recalled is not None else 0,
-            "scorer": recalled.model if recalled is not None else "",
-            "prompt": RECALL_PROMPT.ref,
-        },
-        reason=reason,
-    )
-    return recalled
-
-
-def _mood(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
-) -> tuple[str | None, list[MoodEffect]]:
-    """The mood line for the system block when the mood is on, and what this message adds to it.
-    The decision is logged in shadow mode too, so the replay and the live log can be compared."""
-    if c.mood == "off":
-        return None, []
-    zone = local_zone()
-    severity = heard[0].severity if heard is not None else None
-    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
-    earlier = c.store.said_since(c.rel, theirs[-1].at)[:1] if theirs else []
-    minutes = chat_minutes([u.at for u in t.prior], t.now, zone)
-    said = Said(t.turn, t.now, t.text, severity, None)
-    added = effects_for(inputs_for(said, earlier[0].tone if earlier else None, minutes))
-    stored = c.store.mood_effects_since(c.rel, t.now - MOOD_WINDOW)
-    before, after = mood_at(stored, t.now, zone), mood_at([*stored, *added], t.now, zone)
-    held = held_because(severity=severity, text=t.text, in_scene=in_scene is not Frame.REAL)
-    shown, why = mood_line(after, held=held), mood_reason(after, held=held)
-    _decide(
-        c,
-        t,
-        "mood",
-        {
-            "mode": c.mood,
-            "params": MOOD_PARAMS,
-            "before": {s.value: round(v, 3) for s, v in before.strengths.items()},
-            "after": {s.value: round(v, 3) for s, v in after.strengths.items()},
-            "added": [[e.source.value, round(e.amount, 3)] for e in added],
-            "line": shown,
-        },
-        reason=f"{why} [{c.mood}]",
-    )
-    return (shown if c.mood == "on" else None), added
-
-
 _BESIDE: set[asyncio.Task[None]] = set()  # shadow look-ups still running, kept from collection
 
 
 def _relevance_beside(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, card: Card
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
 ) -> None:
     """Start the relevance look-up beside the turn on an ordinary message (shadow). It logs what it
     would have kept in mind and never holds up or changes the reply."""
@@ -857,14 +670,14 @@ def _relevance_beside(
         )
         if found is None:
             return
-        _decide(c, t, RELEVANCE_SHADOW, found.detail)
+        decide(c, t, RELEVANCE_SHADOW, found.detail)
 
     task = asyncio.get_running_loop().create_task(run(c.embedder, c.judge))
     _BESIDE.add(task)
     task.add_done_callback(_BESIDE.discard)
 
 
-def _shadows(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, card: Card) -> None:
+def _shadows(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
     """What runs in shadow on a turn and never changes the reply: the relevance look-up, the names
     it was told, and the basic it would ask about."""
     _relevance_beside(c, t, in_scene, heard, card)
@@ -873,7 +686,7 @@ def _shadows(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, c
     _away_beside(c, t, in_scene, heard)
 
 
-def _away_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> None:
+def _away_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> None:
     """Record when they say they are stepping away and for about how long, so the tick can nudge
     if they stay gone (shadow). Runs beside any real, not serious turn, not only casual ones:
     "gotta run" is exactly the message to read, and the judge tells a goodbye apart."""
@@ -891,7 +704,7 @@ def _away_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
         read = parse_away(got.data)
         if read is None:
             return
-        _decide(
+        decide(
             c,
             t,
             AWAY_REASON,
@@ -909,10 +722,10 @@ def _away_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
     task.add_done_callback(_BESIDE.discard)
 
 
-def _hook_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> None:
+def _hook_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> None:
     """On a casual turn, ask a small judge which basic their message touches and log whether code
     would ask about it (J48 hook, shadow). Runs beside the turn; nothing reaches the talker."""
-    if c.judge is None or not _casual(t, in_scene, heard):
+    if c.judge is None or not is_casual(t, in_scene, heard):
         return
     beliefs = c.store.user_beliefs(c.rel)
     asked = [
@@ -940,7 +753,7 @@ def _hook_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
         if found is None:
             return
         knew = bool(found)
-        _decide(
+        decide(
             c,
             t,
             HOOK_KNEW if knew else HOOK_WOULD_ASK,
@@ -959,7 +772,7 @@ def _hook_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
 
 
 def _names_shadow(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, card: Card
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
 ) -> None:
     """When their message names something memory knows, log the memories about it that the card
     left out (shadow, code only). Nothing reaches the talker."""
@@ -976,7 +789,7 @@ def _names_shadow(
         return
     on_card = {b.id for b in (*card.usable, *card.held, *card.older)}
     about = {bid for n in named for bid in n.beliefs}
-    _decide(
+    decide(
         c,
         t,
         NAMES_SHADOW,
@@ -988,226 +801,17 @@ def _names_shadow(
     )
 
 
-LOOP_OFFERED = "open loop: offered as a note when they wrote"
-LOOP_NOTE_EVERY = timedelta(hours=24)
-
-
-def _loop_note(c: Conversation, t: _Turn, *, casual: bool) -> str | None:
-    """Bring up one due open loop as a note when they write (J15): on a casual turn with no other
-    nudge, at most one a day, each loop at most twice. The loop is marked asked, so it is never
-    also a reach-out."""
-    if not casual or c.store.decided_since(c.rel, LOOP_OFFERED, t.now - LOOP_NOTE_EVERY):
-        return None
-    offers = c.store.loop_events_with_reason(c.rel, LOOP_OFFERED)
-    loop = pick_note(c.store.open_loops(c.rel), offers, t.now, local_zone())
-    if loop is None:
-        return None
-    c.store.open_loop_event(loop.id, LoopState.ASKED, LOOP_OFFERED, t.now)
-    _decide(
-        c,
-        t,
-        LOOP_OFFERED,
-        {
-            "loop_id": loop.id,
-            "claim": loop.claim,
-            "kind": loop.kind.value,
-            "offer": offers.get(loop.id, 0) + 1,
-            "note": loop_note_ref(loop),
-        },
-    )
-    return loop_note(loop)
-
-
-@dataclass(frozen=True, slots=True)
-class _Lookups:
-    """What a reply waits for besides the judges: a recall, whether a topic is spent, a guess."""
-
-    recalled: Recalled | None = None
-    spent: bool = False
-    guess: Invited | None = None
-    tastes: tuple[str, ...] = ()  # its own tastes to show it this turn (ADR 0020)
-    reminder: str | None = (
-        None  # a reminder they asked for was set, cancelled or needs asking (J50)
-    )
-
-
-LORE_SHOWN = "lore: its own tastes nearest their message"
-
-
-async def _tastes(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
-) -> tuple[str, ...]:
-    """Its tastes nearest their message on an ordinary turn (ADR 0020), as the words it said. In
-    shadow they are logged and not shown."""
-    if c.lore == "off" or c.embedder is None or not _casual(t, in_scene, heard):
-        return ()
-    found = await nearest_tastes(c.store, c.embedder, c.rel, c.embed_model, t.text, t.now)
-    if found is None or not found.tastes:
-        return ()
-    _decide(
-        c,
-        t,
-        LORE_SHOWN + ("" if c.lore == "on" else " (shadow)"),
-        {
-            "tastes": [str(b.id) for b, _ in found.tastes],
-            "scores": [round(s, 3) for _, s in found.tastes],
-            "claims": [b.claim for b, _ in found.tastes],
-        },
-    )
-    return tuple(b.evidence[0].quote for b, _ in found.tastes) if c.lore == "on" else ()
-
-
-async def _before_reply(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, read: _Heard | None
-) -> _Lookups:
-    recalled = await _recall(c, t, heard or read)
-    spent = await _topic_spent(c, t, in_scene, heard)
-    asked_to_recall = heard is not None and heard[0].recall
-    guess = None if asked_to_recall else await _invited_guess(c, t, in_scene, heard)
-    tastes = await _tastes(c, t, in_scene, heard)
-    return _Lookups(recalled, spent, guess, tastes, await _reminder(c, t))
-
-
-async def _reminder(c: Conversation, t: _Turn) -> str | None:
-    """When they ask to be reminded or checked on, or answer its asking when (J50): read the words,
-    let code set the time, and say in a note what happened."""
-    last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
-    asked = last is not None and any(
-        d.has_key(REMINDER_ASKED) for d in c.store.decisions_for_turn(c.rel, last.turn_id)
-    )
-    if c.judge is None or not c.reminders or not reminder_likely(t.text, asked_when=asked):
-        return None
-    _mark(t, "reminder judge")
-    zone = named_zone()
-    slots = await reminder_slots(c.judge, t.prior, t.text, t.now, zone)
-    done = reminder_act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
-    if done is None:
-        return None
-    reminder_log(
-        c, t.session, t.turn, done.reason, t.now, done.detail | {"prompt": REMINDER_PROMPT.ref}
-    )
-    return done.note
-
-
-async def _invited_guess(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None
-) -> Invited | None:
-    """When their short question invites a guess about them (J16), what memory holds that may fit.
-    Casual turns only; logged with what was offered, so guesses can later be scored by kind."""
-    if c.judge is None or not _casual(t, in_scene, heard) or not guess_likely(t.text):
-        return None
-    _mark(t, "guess judge")
-    found = await invited_guess(c.judge, t.prior, t.text, c.store.user_beliefs(c.rel))
-    if found is not None:
-        _decide(
-            c,
-            t,
-            GUESS_INVITED,
-            {
-                "about": found.about,
-                "offered": [b.claim for b in found.offered],
-                "note": GUESS_NOTE.ref,
-            },
-        )
-    return found
-
-
-async def _topic_spent(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None) -> bool:
-    """Whether a small topic has run its course: asked of its own judge only on a likely moment on
-    a casual turn, so the listening judge, which carries the age floor, stays as it was."""
-    if c.judge is None or not _casual(t, in_scene, heard) or not topic_likely(t.prior, t.text):
-        return False
-    _mark(t, "topic judge")
-    return await judge_spent(c.judge, t.prior, t.text)
-
-
-def _topic_note(
-    c: Conversation, t: _Turn, *, spent: bool, casual: bool, loop: str | None
-) -> str | None:
-    """When a small topic has run its course, one line to move on, at most once in EVERY_TURNS of
-    their messages. Logged with the move it named."""
-    if not spent or "?" in t.text:
-        return None  # a question of theirs is answered, never moved past
-    theirs = [u.turn_id for u in t.prior if u.speaker is Speaker.USER][-(TOPIC_EVERY - 1) :]
-    recent = any(
-        d.has_key(TOPIC_SPENT) for turn in theirs for d in c.store.decisions_for_turn(c.rel, turn)
-    )
-    found = topic_note(
-        spent=True,
-        casual=casual,
-        moved_recently=recent,
-        local_hour=t.now.astimezone(local_zone()).hour,
-        loop_offered=loop is not None,
-    )
-    if found is None:
-        return None
-    note, move = found
-    _decide(c, t, TOPIC_SPENT, {"move": move.ref, "note": TOPIC_NOTE.ref})
-    return note
-
-
-def _casual(t: _Turn, in_scene: Frame, heard: _Heard | None) -> bool:
-    """An ordinary moment: read as not serious, not in a scene, not a goodbye."""
-    return (
-        heard is not None
-        and heard[0].severity == 0
-        and in_scene is Frame.REAL
-        and held_because(severity=0, text=t.text, in_scene=False) is None
-    )
-
-
-def _map_shadow(c: Conversation, t: _Turn, *, casual: bool, asking_name: bool) -> None:
-    """Log the gap it would ask about on a casual turn, at most once a day (J48, shadow). Nothing
-    reaches the talker. The name comes first, so nothing is picked while that note is offered."""
-    if not casual or asking_name:
-        return
-    if c.store.decided_since(c.rel, WOULD_ASK, t.now - MAP_EVERY):
-        return
-    gap = pick_gap(c.store.user_beliefs(c.rel), c.store.belief_labels(c.rel))
-    if gap is None:
-        return
-    _decide(
-        c,
-        t,
-        WOULD_ASK,
-        {
-            "why": gap.reason,
-            "domain": gap.domain.value,
-            "depth": gap.depth.value,
-            "counts": {d.value: n for d, n in gap.counts.items()},
-        },
-    )
-
-
-def _ask_name(
-    c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | None, beliefs: Sequence[Belief]
-) -> str | None:
-    """Offer to ask what to call them on a casual turn, at most once a day, until memory knows."""
-    casual = _casual(t, in_scene, heard)
-    note = ask_name(
-        known=knows_name(beliefs),
-        casual=casual,
-        asked_recently=c.store.decided_since(c.rel, ASKED_NAME, t.now - ASK_NAME_EVERY),
-    )
-    if note is not None:
-        _decide(c, t, ASKED_NAME)
-    return note
-
-
 def _assemble(  # noqa: PLR0913
     c: Conversation,
-    t: _Turn,
+    t: Turn,
     in_scene: Frame,
-    heard: _Heard | None,
-    recalled: Recalled | None,
+    heard: Heard | None,
+    looked: Lookups,
     *,
     held: bool = False,
     roleplay: bool = False,
-    spent: bool = False,
-    guess: Invited | None = None,
-    tastes: tuple[str, ...] = (),
-    reminder: str | None = None,
 ) -> _Assembled:
+    """The request for this turn: the card, the clock and every note (`loops/notes.py`)."""
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
     views = card_views(store.self_beliefs(c.rel), view_state)
@@ -1230,43 +834,9 @@ def _assemble(  # noqa: PLR0913
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)
     pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
-    notes = _notes(c, t.prior, in_scene, _length(c, t, in_scene, heard))
-    listening = _listening_note(c, t, heard)
-    rude = rude_note(heard[0]) if heard is not None else None
-    repair = repair_note(heard[0]) if heard is not None else None
-    # In a scene an empty look-up adds nothing: what they mean is most likely in the story itself,
-    # in view, and "memory holds nothing" would make it deny something it can see.
-    empty_in_scene = in_scene is not Frame.REAL and recalled is not None and not recalled.picked
-    found = recall_note(recalled.picked) if recalled is not None and not empty_in_scene else None
-    mood, mood_effects = _mood(c, t, in_scene, heard)
-    hold = HOLD_NOTE.text if held else None
-    name = _ask_name(c, t, in_scene, heard, assertable)
-    casual = _casual(t, in_scene, heard)
-    _map_shadow(c, t, casual=casual, asking_name=name is not None)
-    loop = _loop_note(c, t, casual=casual and name is None and not held)
-    moving = _topic_note(c, t, spent=spent, casual=casual and name is None and not held, loop=loop)
-    guessing = guess_note(guess.about, guess.offered) if guess is not None else None
-    own = lore_note(f'you said: "{q}"' for q in tastes)
-    notes += [
-        n
-        for n in (
-            listening,
-            rude,
-            repair,
-            found,
-            mood,
-            hold,
-            name,
-            loop,
-            moving,
-            guessing,
-            own,
-            reminder,
-        )
-        if n is not None
-    ]
+    notes = notes_for(Moment(c, t, in_scene, heard, looked, held, assertable))
     card_text = tagged(
-        "\n".join([clock, *([pinned] if pinned else []), *shown, *notes]), memory=False
+        "\n".join([clock, *([pinned] if pinned else []), *shown, *notes.lines]), memory=False
     )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
@@ -1274,7 +844,7 @@ def _assemble(  # noqa: PLR0913
         request = dataclasses.replace(request, tail=c.scene_reminder)
     store.save_prefix(prefix)
     _mark_start(t, in_scene, card, card_text)
-    return _Assembled(request, card_text, card, views, view_state, mood_effects)
+    return _Assembled(request, card_text, card, views, view_state, notes.after)
 
 
 async def _handle_turn(
@@ -1284,10 +854,10 @@ async def _handle_turn(
     now = now or utc_now()
     turn = TurnId(_id())
     prior = store.history_before(rel, now, HISTORY_LIMIT)
-    t = _Turn(session, turn, now, prior, text)
+    t = Turn(session, turn, now, prior, text)
     in_scene = scene_frame(prior)
     listening = asyncio.ensure_future(_listening(c, t, in_scene))
-    heard: _Heard | None = None
+    heard: Heard | None = None
     try:
         reaction = await _ack_reaction(c, t)
         if reaction is None:
@@ -1300,7 +870,7 @@ async def _handle_turn(
         await _stop(listening)
         said = _store_user(c, t, channel, in_scene)
         await _capture_name(c, t, said)
-        _mark(t, "done: reaction only")
+        mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
     try:
@@ -1308,20 +878,8 @@ async def _handle_turn(
     except BaseException:
         _store_user(c, t, channel, Frame.REAL)
         raise
-    looked = await _before_reply(c, t, in_scene, heard, read)
-    asm = _assemble(
-        c,
-        t,
-        in_scene,
-        heard,
-        looked.recalled,
-        held=held,
-        roleplay=talker is c.roleplay_talker,
-        spent=looked.spent,
-        guess=looked.guess,
-        tastes=looked.tastes,
-        reminder=looked.reminder,
-    )
+    looked = await look(c, t, in_scene, heard, read)
+    asm = _assemble(c, t, in_scene, heard, looked, held=held, roleplay=talker is c.roleplay_talker)
     request, card_text, card, views, view_state = (
         asm.request,
         asm.card_text,
@@ -1340,8 +898,6 @@ async def _handle_turn(
         raise
     user_frame = frame_resolve(outcome[0] if outcome else None, fallback=in_scene)
     said = _store_user(c, t, channel, user_frame)
-    if asm.mood:
-        store.add_mood_effects(rel, asm.mood)
     if framing is not None:
         _log_frame(c, t, outcome, user_frame)
     store.record_turn(
@@ -1357,7 +913,7 @@ async def _handle_turn(
             card_text,
         )
     )
-    _CardLog(_recorder(c, t), {b.id: why(b, view_state) for b in views}).write(card)
+    _CardLog(recorder(c, t), {b.id: why(b, view_state) for b in views}).write(card)
     log.info(
         "turn %s | %s %dms in=%d cache_read=%d cache_write=%d%s\n  you: %s\n  it:  %s",
         turn[:8],
@@ -1371,5 +927,7 @@ async def _handle_turn(
         reply.text or "(no reply)",
     )
     sent = _persist_reply(c, t, reply, user_frame, channel)
+    for write in asm.after:  # what the notes used up, now that the turn is stored
+        write()
     await _capture_name(c, t, said)
     return _with_reaction(c, t, felt, sent)

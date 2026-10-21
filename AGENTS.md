@@ -83,6 +83,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
   live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
+- A line for the system block is a note source in `loops/notes.py` `SOURCES`, in the order it is sent:
+  it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
+  use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
+  `_assemble`.
 - Record a decision through `loops/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
   `_decide(c, t, ...)`), never by building `Decision(...)` by hand. Code that looks a past decision up
   matches its key (`decided_since`, `Decision.has_key`), never its reason text; decisions from before keys
