@@ -1189,3 +1189,6 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   `system/reminder-send` as the tail: all short, all named the thing, 12/12 passed the code checks; a
   check-in asks how it went. A scratch script, not kept; rerun by sending a `TalkerRequest` with
   `tail=send_instruction(...)`.
+- **2026-10-21. Vague check-ins at a picked time.** A check-in with no time now lands at a time picked
+  once between 4 and 8 pm (five-minute marks) instead of 6 pm, and the reply names only the part of the
+  day. The live reading test was rerun with the window as the expected outcome: 41/41, about 1 cent.

@@ -15,6 +15,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, tzinfo
 from enum import StrEnum
+from random import Random
 
 from companion.core.types import Json, Speaker, Utterance
 from companion.prompts import get
@@ -24,7 +25,11 @@ FURTHEST = timedelta(days=60)
 A_FEW_DAYS = 3
 WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 PARTS = {"morning": time(9), "afternoon": time(15), "evening": time(18), "night": time(20)}
-CHECK_IN_HOUR = time(18)  # a check-in with no time lands early evening
+# A check-in with no time lands at a time picked once between these, as a friend's would; the reply
+# names only the part of the day
+WINDOW = (time(16), time(20))
+SLOT = timedelta(minutes=5)
+SOON = timedelta(minutes=30)  # a check-in picked for today is at least this far off
 GRACE = timedelta(hours=2)  # a reminder this late still goes out, marked late; later it expires
 
 
@@ -95,6 +100,9 @@ class When:
     defaulted: bool = (
         False  # a vague time code filled in ("in a few days"): say it and offer a change
     )
+    loose: bool = (
+        False  # a time picked in the check-in window: say the part of the day, not the minute
+    )
 
 
 def _int(v: Json) -> int | None:
@@ -154,16 +162,17 @@ def _day(s: Slots, today: date) -> date | str:  # noqa: PLR0911
     return "which day they meant"
 
 
-def _clock(s: Slots, now: datetime, day: date) -> time | str:  # noqa: PLR0911
-    """The time of day, or why it is unclear. A bare hour is read as the next one still to come,
-    and asked about only when both the morning and the evening one are still ahead today."""
+def _clock(s: Slots, now: datetime, day: date) -> time | str | None:  # noqa: PLR0911
+    """The time of day, why it is unclear, or None for a check-in left to the window. A bare hour is
+    read as the next one still to come, and asked about only when both the morning and the evening
+    one are still ahead today."""
     if s.hour is None:
         if s.part in PARTS:
             return PARTS[s.part]
         if s.day == "tonight":
             return PARTS["night"]
         if s.kind is Kind.CHECK_IN:
-            return CHECK_IN_HOUR
+            return None
         return "what time"
     if not 0 <= s.hour <= 23 or not 0 <= s.minute <= 59:
         return "what time"
@@ -184,10 +193,23 @@ def _clock(s: Slots, now: datetime, day: date) -> time | str:  # noqa: PLR0911
     return time(hour, s.minute)
 
 
-def resolve(s: Slots, now: datetime, tz: tzinfo) -> When:
+def _in_window(s: Slots, day: date, local: datetime, rng: Random) -> datetime:
+    """A five-minute slot in the check-in window, at least SOON from now. A check-in with no day
+    whose window has gone today moves to tomorrow's."""
+    tz = local.tzinfo
+    start, end = (datetime.combine(day, t, tzinfo=tz) for t in WINDOW)
+    slots = [start + SLOT * i for i in range(int((end - start) / SLOT) + 1)]
+    ahead = [x for x in slots if x >= local + SOON]
+    if not ahead and s.day == "unsaid":
+        ahead = [x + timedelta(days=1) for x in slots]
+    return rng.choice(ahead or slots)
+
+
+def resolve(s: Slots, now: datetime, tz: tzinfo, rng: Random | None = None) -> When:
     """When a request falls, in their zone, or why to ask. Nothing in the past, nothing more than
     sixty days out."""
     local = now.astimezone(tz)
+    loose = False
     if s.in_minutes is not None and s.in_minutes > 0:
         at = local + timedelta(minutes=s.in_minutes)
     else:
@@ -197,21 +219,31 @@ def resolve(s: Slots, now: datetime, tz: tzinfo) -> When:
         clock = _clock(s, local, day)
         if isinstance(clock, str):
             return When(None, clock)
-        at = datetime.combine(day, clock, tzinfo=tz)
-        if s.day == "unsaid" and at <= local:
-            at += timedelta(days=1)  # "at 9am" said after nine means tomorrow
+        if clock is None:
+            at, loose = _in_window(s, day, local, rng or Random()), True  # noqa: S311  a time of day, not a secret
+        else:
+            at = datetime.combine(day, clock, tzinfo=tz)
+            if s.day == "unsaid" and at <= local:
+                at += timedelta(days=1)  # "at 9am" said after nine means tomorrow
     if at <= local:
         return When(None, "that time has already passed")
     if at - local > FURTHEST:
         return When(None, "that is further out than reminders go (sixty days)")
     vague = (s.day == "in_days" and s.days is None) or (s.hour is None and s.in_minutes is None)
-    return When(at, defaulted=vague)
+    return When(at, defaulted=vague, loose=loose)
 
 
-def spoken(at: datetime, now: datetime, tz: tzinfo) -> str:
+def spoken(at: datetime, now: datetime, tz: tzinfo, *, loose: bool = False) -> str:
     """The time as a person would say it back: "tonight at 8:00 pm", "tomorrow at 9:00 am",
-    "Friday 24 Oct at 6:00 pm"."""
+    "Friday 24 Oct at 6:00 pm"; a loose one by the part of the day: "Thursday evening"."""
     local, today = at.astimezone(tz), now.astimezone(tz).date()
+    if loose:
+        part = "afternoon" if local.hour < 17 else "evening"
+        if local.date() == today:
+            return f"this {part}"
+        if local.date() == today + timedelta(days=1):
+            return f"tomorrow {part}"
+        return f"{local.strftime('%A')} {part}"
     clock = local.strftime("%I:%M %p").lstrip("0").lower()
     if local.date() == today:
         return f"{'tonight' if local.hour >= 18 else 'today'} at {clock}"

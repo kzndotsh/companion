@@ -133,7 +133,7 @@ def act(  # noqa: PLR0913, PLR0917
         now,
     )
     c.store.add_reminder(r)
-    told = spoken(when.at, now, tz)
+    told = spoken(when.at, now, tz, loose=when.loose)
     return Read(
         set_note(s.thing, told, defaulted=when.defaulted),
         SET,

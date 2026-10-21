@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
+from random import Random
 from zoneinfo import ZoneInfo
 
 from companion.core.reminders import (
@@ -71,11 +72,36 @@ def test_weekdays_are_the_next_one_and_next_weekday_is_asked() -> None:
     assert "this friday or the one after" in nxt.unclear
 
 
-def test_a_vague_check_in_lands_early_evening_and_says_it_was_filled_in() -> None:
-    when = resolve(_set(kind="check_in", day="in_days"), NOW, TZ)
-    assert when.at == datetime(2026, 10, 22, 18, tzinfo=TZ)
+def test_a_vague_check_in_lands_at_a_picked_time_in_the_window_and_says_only_the_part() -> None:
+    times = {
+        resolve(_set(kind="check_in", day="in_days"), NOW, TZ, Random(n)).at for n in range(40)
+    }
+    assert all(t is not None and t.date() == date(2026, 10, 22) for t in times)
+    assert all(
+        t is not None and time(16) <= t.time() <= time(20) and t.minute % 5 == 0 for t in times
+    )
+    assert len(times) > 10  # picked, not fixed
+    when = resolve(_set(kind="check_in", day="in_days"), NOW, TZ, Random(1))
     assert when.defaulted
-    assert not resolve(_set(hour=8, ampm="pm"), NOW, TZ).defaulted
+    assert when.loose
+    assert when.at is not None
+    part = "afternoon" if when.at.hour < 17 else "evening"
+    assert spoken(when.at, NOW, TZ, loose=True) == f"Thursday {part}"
+    assert not resolve(_set(hour=8, ampm="pm"), NOW, TZ).loose
+    assert not resolve(_set(kind="check_in", day="tomorrow", part="morning"), NOW, TZ).loose
+
+
+def test_a_check_in_later_today_is_at_least_half_an_hour_off_or_moves_to_tomorrow() -> None:
+    late_afternoon = datetime(2026, 10, 19, 17, 0, tzinfo=TZ)
+    for n in range(20):
+        at = resolve(_set(kind="check_in"), late_afternoon, TZ, Random(n)).at
+        assert at is not None
+        assert late_afternoon + timedelta(minutes=30) <= at <= datetime(2026, 10, 19, 20, tzinfo=TZ)
+    night = datetime(2026, 10, 19, 21, 0, tzinfo=TZ)
+    at = resolve(_set(kind="check_in"), night, TZ, Random(0)).at
+    assert at is not None
+    assert at.date() == date(2026, 10, 20)
+    assert resolve(_set(kind="check_in", day="today"), night, TZ, Random(0)).at is None
 
 
 def test_a_reminder_with_no_time_at_all_is_asked_about() -> None:

@@ -787,7 +787,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/reminder-send v1** (current). New (J50). When a reminder is due, the talker is sent its usual request with this after the history (the `tail`), so the reminder comes in its own voice: one short message naming the thing, no guilt, no question to answer.
 
 ## notes/reminder-set
-- **notes/reminder-set v1** (current). New (J50). The reminder is stored; the reply confirms it with the time as code worked it out ("tomorrow at 9:00 am"), so a misread shows at once. A time code filled in ("in a few days") adds that they can change it.
+- **notes/reminder-set v1** (current). New (J50). The reminder is stored; the reply confirms it with the time as code worked it out ("tomorrow at 9:00 am"), so a misread shows at once. A time code filled in ("in a few days") adds that they can change it. From 2026-10-21, a check-in with no time ("in a few days") is set at a time code picks once between 4 and 8 pm, on five-minute marks, and the note names only the part of the day ("Thursday evening"), so it reads like a friend checking in, not a timer. A time they said stays exact.
 
 ## notes/reminder-ask
 - **notes/reminder-ask v1** (current). New (J50). The time was unclear (a bare "at 8" with both still ahead today, "next friday", a time already gone, more than sixty days out, a repeating one): nothing is stored, and the reply asks about that one thing.

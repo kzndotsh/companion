@@ -209,7 +209,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   minute due ones are claimed once, written by the everyday talker with `system/reminder-send` as the tail,
   drawn once more on a code-check fail, and sent; their words go out marked when the talker fails or the
   cap is reached. A pretend scene holds them until it ends; one missed while the bot was down by over two
-  hours is let go. `companion reminders` lists them, `--cancel ID` drops one; `COMPANION_REMINDERS=off`.
+  hours is let go. A check-in with no time is set at a time picked once between 4 and 8 pm and confirmed
+  only as the part of the day ("Thursday evening"). `companion reminders` lists them, `--cancel ID` drops one; `COMPANION_REMINDERS=off`.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash, an AI disclaimer nobody asked for, the clock line or a tag copied from the system

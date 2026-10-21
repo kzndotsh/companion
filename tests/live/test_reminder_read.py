@@ -45,8 +45,8 @@ CASES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("remind me at 8 to take my pills", ("10-19 20:00", "ask")),
     ("remind me tomorrow at 8 to take my pills", ("ask",)),
     ("remind me tomorrow morning at 8 to take my pills", ("10-20 08:00",)),
-    ("check up on me in a few days about the interview", ("10-22 18:00",)),
-    ("check in on me tomorrow about how the exam went", ("10-20 18:00",)),
+    ("check up on me in a few days about the interview", ("10-22 window",)),
+    ("check in on me tomorrow about how the exam went", ("10-20 window",)),
     ("ping me at 3:30 to leave for pickup", ("10-19 15:30",)),
     ("remind me every day at 9am to stretch", ("ask",)),
     ("remind me on november 2 at 9am to renew my passport", ("11-02 09:00",)),
@@ -70,7 +70,7 @@ CASES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("text me at 11pm to go to sleep", ("10-19 23:00",)),
     ("remind me later to do the dishes", ("ask",)),
     ("wanna remind me to stretch at 7 tonight?", ("10-19 19:00",)),
-    ("check back in with me next week about the apartment", ("ask", "10-26 18:00")),
+    ("check back in with me next week about the apartment", ("ask", "10-26 window")),
     ("remind me at 7 am tomorrow to leave early for the airport", ("10-20 07:00",)),
     ("remind me in an hour to take the bread out", ("10-19 14:00",)),
     ("set a reminder for 4:15 to join the call", ("10-19 16:15",)),
@@ -101,7 +101,10 @@ def _outcome(data: object) -> str:
     if s.repeats:
         return "ask"
     when = resolve(s, NOW, TZ)
-    return "ask" if when.at is None else when.at.astimezone(TZ).strftime("%m-%d %H:%M")
+    if when.at is None:
+        return "ask"
+    local = when.at.astimezone(TZ)
+    return f"{local:%m-%d} window" if when.loose else f"{local:%m-%d %H:%M}"
 
 
 async def test_requests_land_at_the_time_meant_and_ordinary_talk_sets_nothing() -> None:
