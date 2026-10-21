@@ -105,6 +105,7 @@ class Store:
                     "reply not delivered, so it is left out of what the model reads",
                     now,
                     detail={"utterance_id": marked.id, "cause": reason},
+                    key="reply not delivered",
                 ),
             )
         return marked

@@ -36,8 +36,6 @@ from companion.core.openloops import (
 )
 from companion.core.spend import purpose
 from companion.core.types import (
-    Decision,
-    DecisionId,
     DecisionKind,
     Frame,
     Json,
@@ -50,6 +48,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.promises import read_promises
+from companion.loops.record import Recorder
 from companion.prompts import get
 from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.store import Store
@@ -170,21 +169,12 @@ class Ticker:
     seen: set[tuple[str, str]] = field(default_factory=set[tuple[str, str]])
 
 
-def _decision(
-    rel: RelationshipId, kind: DecisionKind, reason: str, now: datetime, detail: dict[str, Json]
-) -> Decision:
+HELD = "held, would otherwise reach out"  # the key of a reach-out the gate held back
+
+
+def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
     trace = _id()
-    return Decision(
-        DecisionId(_id()),
-        rel,
-        SESSION,
-        TurnId(trace),
-        TraceId(trace),
-        kind,
-        reason,
-        now,
-        detail=detail,
-    )
+    return Recorder(store, rel, SESSION, TurnId(trace), TraceId(trace), now)
 
 
 def _situation(store: Store, rel: RelationshipId, now: datetime, tz: tzinfo) -> Situation:
@@ -221,10 +211,8 @@ async def tick(  # noqa: PLR0913, PLR0917
     verdict = evaluate(store.open_loops(rel), _situation(store, rel, now, tz), caps)
     for lp in verdict.expired:
         store.open_loop_event(lp.id, LoopState.EXPIRED, "past its follow-up horizon", now)
-        store.append_decision(
-            _decision(
-                rel, DecisionKind.POLICY, f"open loop expired: {lp.claim}", now, {"loop_id": lp.id}
-            )
+        _record(store, rel, now).decide(
+            "open loop expired", {"loop_id": lp.id}, reason=f"open loop expired: {lp.claim}"
         )
     if verdict.loop is None:
         log.debug("initiative: %s", verdict.reason)
@@ -235,15 +223,20 @@ async def tick(  # noqa: PLR0913, PLR0917
         if key not in ticker.seen:
             ticker.seen.add(key)
             reason = f"held, would otherwise reach out about {verdict.loop.claim}: {verdict.reason}"
-            store.append_decision(_decision(rel, DecisionKind.DO_NOTHING, reason, now, detail))
+            _record(store, rel, now).decide(
+                HELD, detail, reason=reason, kind=DecisionKind.DO_NOTHING
+            )
             log.info("initiative held: %s (%s)", verdict.loop.claim, verdict.reason)
         return verdict
     text = await draft(verdict.loop) if draft is not None else ""
     store.add_reach_out(ReachOut(_id(), rel, verdict.loop.id, "shadow", text, verdict.reason, now))
     store.open_loop_event(verdict.loop.id, LoopState.ASKED, "shadow reach-out, not sent", now)
     detail["draft"] = text
-    store.append_decision(
-        _decision(rel, DecisionKind.INITIATE, f"shadow, would send: {verdict.reason}", now, detail)
+    _record(store, rel, now).decide(
+        "shadow, would send",
+        detail,
+        reason=f"shadow, would send: {verdict.reason}",
+        kind=DecisionKind.INITIATE,
     )
     log.info("initiative shadow: would send %r about %s", text, verdict.loop.claim)
     return verdict

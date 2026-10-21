@@ -42,9 +42,6 @@ from companion.core.reflect import ReflectRun
 from companion.core.types import (
     Belief,
     BeliefId,
-    Decision,
-    DecisionId,
-    DecisionKind,
     Json,
     RelationshipId,
     SessionId,
@@ -60,6 +57,7 @@ from companion.loops.knowing import label_new
 from companion.loops.lore import KindsRead, label_views
 from companion.loops.names import NamesRead, read_names
 from companion.loops.openloops import Reading, catch_up_loops
+from companion.loops.record import Recorder
 from companion.loops.views import WANT_KINDS, check_views
 from companion.loops.worth import Labelled, label
 from companion.store.sqlite.store import Store
@@ -116,19 +114,9 @@ class _Pass:
     latency_ms: int = 0
 
     def log(self, reason: str, detail: dict[str, Json]) -> None:
-        self.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                self.rel,
-                self.session,
-                self.turn,
-                TraceId(self.run_id),
-                DecisionKind.POLICY,
-                reason,
-                self.now,
-                detail=detail,
-            )
-        )
+        Recorder(
+            self.store, self.rel, self.session, self.turn, TraceId(self.run_id), self.now
+        ).decide(reason, detail)
 
     def finish(self, last: Utterance, n_utterances: int, **counts: int) -> None:
         self.store.record_reflect(

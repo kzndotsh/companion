@@ -45,9 +45,6 @@ from companion.core.reminders import (
 )
 from companion.core.spend import purpose
 from companion.core.types import (
-    Decision,
-    DecisionId,
-    DecisionKind,
     Frame,
     Json,
     SessionId,
@@ -57,6 +54,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.record import Recorder
 from companion.loops.spendcap import over_cap
 from companion.store.sqlite.reminders import Reminder
 
@@ -149,19 +147,7 @@ def log_decision(  # noqa: PLR0913, PLR0917
     now: datetime,
     detail: dict[str, Json] | None = None,
 ) -> None:
-    c.store.append_decision(
-        Decision(
-            DecisionId(uuid.uuid4().hex),
-            c.rel,
-            session,
-            turn,
-            TraceId(turn),
-            DecisionKind.POLICY,
-            reason,
-            now,
-            detail=detail,
-        )
-    )
+    Recorder(c.store, c.rel, session, turn, TraceId(turn), now).decide(reason, detail)
 
 
 async def _write(

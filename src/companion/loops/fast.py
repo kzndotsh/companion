@@ -113,8 +113,6 @@ from companion.core.topics import topic_note
 from companion.core.types import (
     Belief,
     BeliefId,
-    Decision,
-    DecisionId,
     DecisionKind,
     Frame,
     Json,
@@ -141,6 +139,7 @@ from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
 from companion.loops.recall import Recalled, look_up
+from companion.loops.record import Recorder
 from companion.loops.relevance import shadow as relevance_shadow
 from companion.loops.reminders import ASKED as REMINDER_ASKED
 from companion.loops.reminders import act as reminder_act
@@ -148,6 +147,7 @@ from companion.loops.reminders import log_decision as reminder_log
 from companion.loops.reminders import read_slots as reminder_slots
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.loops.topics import judge_spent
+from companion.store.sqlite.decisions import REACTED
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
@@ -157,15 +157,29 @@ def _id() -> str:
     return uuid.uuid4().hex
 
 
+def _recorder(c: Conversation, t: _Turn) -> Recorder:
+    return Recorder(c.store, c.rel, t.session, t.turn, TraceId(t.turn), t.now)
+
+
+def _decide(  # noqa: PLR0913
+    c: Conversation,
+    t: _Turn,
+    key: str,
+    detail: dict[str, Json] | None = None,
+    *,
+    reason: str | None = None,
+    kind: DecisionKind = DecisionKind.POLICY,
+    at: datetime | None = None,
+) -> None:
+    """Record one of this turn's decisions (`loops/record.py`)."""
+    _recorder(c, t).decide(key, detail, reason=reason, kind=kind, at=at)
+
+
 @dataclass(frozen=True, slots=True)
 class _CardLog:
     """Records where each belief went this turn: into the card, or held back."""
 
-    store: Store
-    rel: RelationshipId
-    session: SessionId
-    turn: TurnId
-    at: datetime
+    record: Recorder
     view_reasons: dict[BeliefId, str]
 
     def write(self, card: Card) -> None:
@@ -178,33 +192,17 @@ class _CardLog:
         for b in card.older:
             self._one(DecisionKind.SURFACE, b, "in the card as older, possibly out of date")
         if card.kept_back:
-            self.store.append_decision(
-                Decision(
-                    DecisionId(_id()),
-                    self.rel,
-                    self.session,
-                    self.turn,
-                    TraceId(self.turn),
-                    DecisionKind.POLICY,
-                    f"card: {len(card.kept_back)} held beliefs left out, the turn is casual",
-                    self.at,
-                    detail={"kept_back": [b.id for b in card.kept_back]},
-                )
+            self.record.decide(
+                "card: held left out",
+                {"kept_back": [b.id for b in card.kept_back]},
+                reason=f"card: {len(card.kept_back)} held beliefs left out, the turn is casual",
             )
         if card.crowded:
-            self.store.append_decision(
-                Decision(
-                    DecisionId(_id()),
-                    self.rel,
-                    self.session,
-                    self.turn,
-                    TraceId(self.turn),
-                    DecisionKind.POLICY,
-                    f"card: {len(card.crowded)} current beliefs crowded out, it holds "
-                    f"{len(card.usable) + len(card.held)}",
-                    self.at,
-                    detail={"crowded": [b.id for b in card.crowded]},
-                )
+            self.record.decide(
+                "card: crowded out",
+                {"crowded": [b.id for b in card.crowded]},
+                reason=f"card: {len(card.crowded)} current beliefs crowded out, it holds "
+                f"{len(card.usable) + len(card.held)}",
             )
         for b in card.dropped:
             self._one(DecisionKind.WITHHOLD, b, self._why_dropped(b, card))
@@ -223,19 +221,8 @@ class _CardLog:
         return f"stale: last mentioned {last}, past its {horizon}-day horizon, so left out"
 
     def _one(self, kind: DecisionKind, belief: Belief, reason: str) -> None:
-        self.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                self.rel,
-                self.session,
-                self.turn,
-                TraceId(self.turn),
-                kind,
-                reason,
-                self.at,
-                belief.id,
-            )
-        )
+        key = "card: surfaced" if kind is DecisionKind.SURFACE else "card: withheld"
+        self.record.decide(key, reason=reason, kind=kind, belief=belief.id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -338,25 +325,19 @@ async def _ack_reaction(c: Conversation, t: _Turn) -> Reaction | None:
     _mark(
         t, f"ack judged {judged.kind} {judged.confidence:.2f} -> {'react' if reaction else 'reply'}"
     )
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            render_reason(judged, reaction is not None),
-            t.now,
-            detail={
-                "scorer": model,
-                "prompt": ACK_PROMPT.ref,
-                "schema_hash": schema_hash(),
-                "inputs_hash": inputs_hash(prompt),
-                "scores": {"kind": judged.kind, "confidence": judged.confidence},
-                "threshold": REACT_THRESHOLD,
-            },
-        )
+    _decide(
+        c,
+        t,
+        REACTED if reaction is not None else "ack: replied",
+        {
+            "scorer": model,
+            "prompt": ACK_PROMPT.ref,
+            "schema_hash": schema_hash(),
+            "inputs_hash": inputs_hash(prompt),
+            "scores": {"kind": judged.kind, "confidence": judged.confidence},
+            "threshold": REACT_THRESHOLD,
+        },
+        reason=render_reason(judged, reaction is not None),
     )
     return reaction
 
@@ -382,23 +363,17 @@ def _react_alongside(
         return None
     judged, model, prompt = felt
     decision = decide_reaction(judged, c.store.turns_since_reaction(c.rel))
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            decision.reason,
-            t.now,
-            detail={
-                "scorer": model,
-                "prompt": REACT_PROMPT.ref,
-                "inputs_hash": inputs_hash(prompt),
-                "scores": {"tone": judged.tone, "confidence": judged.confidence},
-            },
-        )
+    _decide(
+        c,
+        t,
+        REACTED if decision.reaction is not None else "react: none",
+        {
+            "scorer": model,
+            "prompt": REACT_PROMPT.ref,
+            "inputs_hash": inputs_hash(prompt),
+            "scores": {"tone": judged.tone, "confidence": judged.confidence},
+        },
+        reason=decision.reason,
     )
     return decision.reaction
 
@@ -422,18 +397,8 @@ def _length(
         t.text, severity=severity, in_scene=in_scene is not Frame.REAL, seed=str(t.turn)
     )
     reason = f"length: under about {size.words} words, {size.why}" if size else "length: no cap"
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            reason,
-            t.now,
-            detail={"words": size.words if size else None, "severity": severity},
-        )
+    _decide(
+        c, t, "length", {"words": size.words if size else None, "severity": severity}, reason=reason
     )
     return size
 
@@ -457,18 +422,12 @@ def _check_habits(c: Conversation, t: _Turn, sent: str) -> None:
             "inputs_hash": inputs_hash(prompt),
             "habits": list[Json](habits),
         }
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                c.rel,
-                t.session,
-                t.turn,
-                TraceId(t.turn),
-                DecisionKind.POLICY,
-                f"habit check: {len(habits)} habits found in the last {len(replies)} replies",
-                t.now,
-                detail=detail,
-            )
+        _decide(
+            c,
+            t,
+            "habit check",
+            detail,
+            reason=f"habit check: {len(habits)} habits found in the last {len(replies)} replies",
         )
         return habits
 
@@ -487,17 +446,9 @@ def _stopped_by_cap(
     turn = TurnId(_id())
     t = _Turn(session, turn, now, [], text)
     _store_user(c, t, channel, Frame.REAL)
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            session,
-            turn,
-            TraceId(turn),
-            DecisionKind.POLICY,
-            f"daily spend cap reached: ${spent:.2f} of ${c.daily_cap_usd or 0:.2f}, no reply",
-            now,
-        )
+    Recorder(c.store, c.rel, session, turn, TraceId(turn), now).decide(
+        "daily spend cap reached",
+        reason=f"daily spend cap reached: ${spent:.2f} of ${c.daily_cap_usd or 0:.2f}, no reply",
     )
     return NOTICE if first_notice_today(c.store, c.rel, now) else ""
 
@@ -530,18 +481,7 @@ async def _route(
         else None,
     )
     if route.reason is not None:
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                c.rel,
-                t.session,
-                t.turn,
-                TraceId(t.turn),
-                DecisionKind.POLICY,
-                route.reason,
-                t.now,
-            )
-        )
+        _decide(c, t, "route", reason=route.reason)
     talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
     return talker, route.held, read
 
@@ -571,18 +511,7 @@ async def _redraw_empty(c: Conversation, t: _Turn, request: TalkerRequest, talke
     the same model once more, and send whatever comes back."""
     again = await talker.reply(request)
     _mark_reply(t, again)
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            "resampled: the model returned no text",
-            t.now,
-        )
-    )
+    _decide(c, t, "resampled", reason="resampled: the model returned no text")
     return again
 
 
@@ -624,19 +553,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
         _mark_reply(t, again)
         detail |= {"discarded": reply.text, "checks": list[Json](failed)}
     reason = f"resampled: {', '.join(failed)}" if failed else "kept: the reply passed its checks"
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            reason,
-            t.now,
-            detail=detail or None,
-        )
-    )
+    _decide(c, t, "recheck", detail or None, reason=reason)
     return again if again is not None and again.text else reply
 
 
@@ -680,18 +597,13 @@ async def _hold_check(
         reply = Reply(text="", model=reply.model, latency_ms=reply.latency_ms)
     if discarded:
         sent = ["a second reply", "a reply drawn with only their last message", "nothing"]
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                c.rel,
-                t.session,
-                t.turn,
-                TraceId(t.turn),
-                DecisionKind.POLICY,
-                f"floor: a reply on a held turn read as intimate, sent {sent[len(discarded) - 1]}",
-                t.now,
-                detail={"discarded": discarded, "prompt": INTIMATE_CHECK.ref},
-            )
+        _decide(
+            c,
+            t,
+            "floor: held reply",
+            {"discarded": discarded, "prompt": INTIMATE_CHECK.ref},
+            reason="floor: a reply on a held turn read as intimate,"
+            f" sent {sent[len(discarded) - 1]}",
         )
     return reply
 
@@ -733,19 +645,7 @@ async def _capture_name(c: Conversation, t: _Turn, said: Utterance) -> None:
     if name is not None:
         c.store.insert_belief(name_belief(said, name, _id(), t.now))
         reason = f"basics: remembered what to call them ({name})"
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            reason,
-            t.now,
-            detail={"prompt": NAME_CAPTURE.ref},
-        )
-    )
+    _decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
 
 
 async def _stop(*tasks: asyncio.Future[Any] | None) -> None:
@@ -773,19 +673,7 @@ def _log_frame(
             "scores": {"frame": outcome[0].frame.value, "confidence": outcome[0].confidence},
             "threshold": FRAME_MIN_CONFIDENCE,
         }
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            frame_reason(judged, stored),
-            t.now,
-            detail=detail,
-        )
-    )
+    _decide(c, t, "frame", detail, reason=frame_reason(judged, stored))
 
 
 def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, channel: str) -> str:
@@ -793,16 +681,7 @@ def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, c
     replied_at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1))
     ids = (c.rel, t.session, t.turn)
     if not reply.text:
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                *ids,
-                TraceId(t.turn),
-                DecisionKind.DO_NOTHING,
-                "model returned no text",
-                replied_at,
-            )
-        )
+        _decide(c, t, "model returned no text", kind=DecisionKind.DO_NOTHING, at=replied_at)
         return ""
     c.store.append_utterance(
         Utterance(
@@ -815,21 +694,18 @@ def _persist_reply(c: Conversation, t: _Turn, reply: Reply, user_frame: Frame, c
             replied_at,
         )
     )
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            *ids,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            "replied: every user message gets a reply in v1",
-            replied_at,
-            detail={
-                "latency_ms": reply.latency_ms,
-                "input_tokens": reply.input_tokens,
-                "cache_read_tokens": reply.cache_read_tokens,
-                "cache_write_tokens": reply.cache_write_tokens,
-            },
-        )
+    _decide(
+        c,
+        t,
+        "replied",
+        {
+            "latency_ms": reply.latency_ms,
+            "input_tokens": reply.input_tokens,
+            "cache_read_tokens": reply.cache_read_tokens,
+            "cache_write_tokens": reply.cache_write_tokens,
+        },
+        reason="replied: every user message gets a reply in v1",
+        at=replied_at,
     )
     _check_habits(c, t, reply.text)
     return reply.text
@@ -866,28 +742,22 @@ def _listening_note(c: Conversation, t: _Turn, heard: _Heard | None) -> str | No
     judged, model, prompt = heard
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
     note = listening_note(judged, replies, seed=t.turn)
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            render_listening(judged, note),
-            t.now,
-            detail={
-                "scorer": model,
-                "prompt": LISTEN_PROMPT.ref,
-                "inputs_hash": inputs_hash(prompt),
-                "labels": {
-                    "severity": judged.severity,
-                    "stance": judged.stance,
-                    "vague": judged.vague,
-                    "rude": judged.rude,
-                },
+    _decide(
+        c,
+        t,
+        "listening",
+        {
+            "scorer": model,
+            "prompt": LISTEN_PROMPT.ref,
+            "inputs_hash": inputs_hash(prompt),
+            "labels": {
+                "severity": judged.severity,
+                "stance": judged.stance,
+                "vague": judged.vague,
+                "rude": judged.rude,
             },
-        )
+        },
+        reason=render_listening(judged, note),
     )
     return note
 
@@ -902,24 +772,18 @@ async def _recall(c: Conversation, t: _Turn, heard: _Heard | None) -> Recalled |
     reason = f"recall: they asked about {heard[0].topic!r}; " + (
         f"{len(found)} found" if recalled is not None else "the look-up failed"
     )
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            reason,
-            t.now,
-            detail={
-                "topic": heard[0].topic,
-                "picked": [b.id for b in found],
-                "searched": recalled.searched if recalled is not None else 0,
-                "scorer": recalled.model if recalled is not None else "",
-                "prompt": RECALL_PROMPT.ref,
-            },
-        )
+    _decide(
+        c,
+        t,
+        "recall",
+        {
+            "topic": heard[0].topic,
+            "picked": [b.id for b in found],
+            "searched": recalled.searched if recalled is not None else 0,
+            "scorer": recalled.model if recalled is not None else "",
+            "prompt": RECALL_PROMPT.ref,
+        },
+        reason=reason,
     )
     return recalled
 
@@ -942,25 +806,19 @@ def _mood(
     before, after = mood_at(stored, t.now, zone), mood_at([*stored, *added], t.now, zone)
     held = held_because(severity=severity, text=t.text, in_scene=in_scene is not Frame.REAL)
     shown, why = mood_line(after, held=held), mood_reason(after, held=held)
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            f"{why} [{c.mood}]",
-            t.now,
-            detail={
-                "mode": c.mood,
-                "params": MOOD_PARAMS,
-                "before": {s.value: round(v, 3) for s, v in before.strengths.items()},
-                "after": {s.value: round(v, 3) for s, v in after.strengths.items()},
-                "added": [[e.source.value, round(e.amount, 3)] for e in added],
-                "line": shown,
-            },
-        )
+    _decide(
+        c,
+        t,
+        "mood",
+        {
+            "mode": c.mood,
+            "params": MOOD_PARAMS,
+            "before": {s.value: round(v, 3) for s, v in before.strengths.items()},
+            "after": {s.value: round(v, 3) for s, v in after.strengths.items()},
+            "added": [[e.source.value, round(e.amount, 3)] for e in added],
+            "line": shown,
+        },
+        reason=f"{why} [{c.mood}]",
     )
     return (shown if c.mood == "on" else None), added
 
@@ -999,19 +857,7 @@ def _relevance_beside(
         )
         if found is None:
             return
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                c.rel,
-                t.session,
-                t.turn,
-                TraceId(t.turn),
-                DecisionKind.POLICY,
-                RELEVANCE_SHADOW,
-                t.now,
-                detail=found.detail,
-            )
-        )
+        _decide(c, t, RELEVANCE_SHADOW, found.detail)
 
     task = asyncio.get_running_loop().create_task(run(c.embedder, c.judge))
     _BESIDE.add(task)
@@ -1045,24 +891,17 @@ def _away_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
         read = parse_away(got.data)
         if read is None:
             return
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                c.rel,
-                t.session,
-                t.turn,
-                TraceId(t.turn),
-                DecisionKind.POLICY,
-                AWAY_REASON,
-                t.now,
-                detail={
-                    "kind": read[0].value,
-                    "minutes": read[1],
-                    "said": t.text,
-                    "model": got.model,
-                    "prompt": AWAY_PROMPT.ref,
-                },
-            )
+        _decide(
+            c,
+            t,
+            AWAY_REASON,
+            {
+                "kind": read[0].value,
+                "minutes": read[1],
+                "said": t.text,
+                "model": got.model,
+                "prompt": AWAY_PROMPT.ref,
+            },
         )
 
     task = asyncio.get_running_loop().create_task(run(c.judge))
@@ -1079,7 +918,7 @@ def _hook_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
     asked = [
         (str(d.detail.get("basic")), d.at)
         for d in c.store.decisions_of_kind(c.rel, DecisionKind.POLICY)
-        if d.reason in (HOOK_WOULD_ASK, HOOK_KNEW) and isinstance(d.detail, dict)
+        if (d.has_key(HOOK_WOULD_ASK) or d.has_key(HOOK_KNEW)) and isinstance(d.detail, dict)
     ]
 
     async def run(judge: Extractor) -> None:
@@ -1101,24 +940,17 @@ def _hook_beside(c: Conversation, t: _Turn, in_scene: Frame, heard: _Heard | Non
         if found is None:
             return
         knew = bool(found)
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                c.rel,
-                t.session,
-                t.turn,
-                TraceId(t.turn),
-                DecisionKind.POLICY,
-                HOOK_KNEW if knew else HOOK_WOULD_ASK,
-                t.now,
-                detail={
-                    "basic": basic.value,
-                    "said": t.text,
-                    "known": [b.claim for b in found],
-                    "model": got.model,
-                    "prompt": HOOK_PROMPT.ref,
-                },
-            )
+        _decide(
+            c,
+            t,
+            HOOK_KNEW if knew else HOOK_WOULD_ASK,
+            {
+                "basic": basic.value,
+                "said": t.text,
+                "known": [b.claim for b in found],
+                "model": got.model,
+                "prompt": HOOK_PROMPT.ref,
+            },
         )
 
     task = asyncio.get_running_loop().create_task(run(c.judge))
@@ -1144,22 +976,15 @@ def _names_shadow(
         return
     on_card = {b.id for b in (*card.usable, *card.held, *card.older)}
     about = {bid for n in named for bid in n.beliefs}
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            NAMES_SHADOW,
-            t.now,
-            detail={
-                "names": [str(n.name) for n in named],
-                "would_add": [str(b) for b in sorted(about - on_card)],
-                "on_card": [str(b) for b in sorted(about & on_card)],
-            },
-        )
+    _decide(
+        c,
+        t,
+        NAMES_SHADOW,
+        {
+            "names": [str(n.name) for n in named],
+            "would_add": [str(b) for b in sorted(about - on_card)],
+            "on_card": [str(b) for b in sorted(about & on_card)],
+        },
     )
 
 
@@ -1178,24 +1003,17 @@ def _loop_note(c: Conversation, t: _Turn, *, casual: bool) -> str | None:
     if loop is None:
         return None
     c.store.open_loop_event(loop.id, LoopState.ASKED, LOOP_OFFERED, t.now)
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            LOOP_OFFERED,
-            t.now,
-            detail={
-                "loop_id": loop.id,
-                "claim": loop.claim,
-                "kind": loop.kind.value,
-                "offer": offers.get(loop.id, 0) + 1,
-                "note": loop_note_ref(loop),
-            },
-        )
+    _decide(
+        c,
+        t,
+        LOOP_OFFERED,
+        {
+            "loop_id": loop.id,
+            "claim": loop.claim,
+            "kind": loop.kind.value,
+            "offer": offers.get(loop.id, 0) + 1,
+            "note": loop_note_ref(loop),
+        },
     )
     return loop_note(loop)
 
@@ -1226,22 +1044,15 @@ async def _tastes(
     found = await nearest_tastes(c.store, c.embedder, c.rel, c.embed_model, t.text, t.now)
     if found is None or not found.tastes:
         return ()
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            LORE_SHOWN + ("" if c.lore == "on" else " (shadow)"),
-            t.now,
-            detail={
-                "tastes": [str(b.id) for b, _ in found.tastes],
-                "scores": [round(s, 3) for _, s in found.tastes],
-                "claims": [b.claim for b, _ in found.tastes],
-            },
-        )
+    _decide(
+        c,
+        t,
+        LORE_SHOWN + ("" if c.lore == "on" else " (shadow)"),
+        {
+            "tastes": [str(b.id) for b, _ in found.tastes],
+            "scores": [round(s, 3) for _, s in found.tastes],
+            "claims": [b.claim for b, _ in found.tastes],
+        },
     )
     return tuple(b.evidence[0].quote for b, _ in found.tastes) if c.lore == "on" else ()
 
@@ -1262,7 +1073,7 @@ async def _reminder(c: Conversation, t: _Turn) -> str | None:
     let code set the time, and say in a note what happened."""
     last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
     asked = last is not None and any(
-        d.reason == REMINDER_ASKED for d in c.store.decisions_for_turn(c.rel, last.turn_id)
+        d.has_key(REMINDER_ASKED) for d in c.store.decisions_for_turn(c.rel, last.turn_id)
     )
     if c.judge is None or not c.reminders or not reminder_likely(t.text, asked_when=asked):
         return None
@@ -1288,22 +1099,15 @@ async def _invited_guess(
     _mark(t, "guess judge")
     found = await invited_guess(c.judge, t.prior, t.text, c.store.user_beliefs(c.rel))
     if found is not None:
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                c.rel,
-                t.session,
-                t.turn,
-                TraceId(t.turn),
-                DecisionKind.POLICY,
-                GUESS_INVITED,
-                t.now,
-                detail={
-                    "about": found.about,
-                    "offered": [b.claim for b in found.offered],
-                    "note": GUESS_NOTE.ref,
-                },
-            )
+        _decide(
+            c,
+            t,
+            GUESS_INVITED,
+            {
+                "about": found.about,
+                "offered": [b.claim for b in found.offered],
+                "note": GUESS_NOTE.ref,
+            },
         )
     return found
 
@@ -1326,7 +1130,7 @@ def _topic_note(
         return None  # a question of theirs is answered, never moved past
     theirs = [u.turn_id for u in t.prior if u.speaker is Speaker.USER][-(TOPIC_EVERY - 1) :]
     recent = any(
-        d.reason == TOPIC_SPENT for turn in theirs for d in c.store.decisions_for_turn(c.rel, turn)
+        d.has_key(TOPIC_SPENT) for turn in theirs for d in c.store.decisions_for_turn(c.rel, turn)
     )
     found = topic_note(
         spent=True,
@@ -1338,19 +1142,7 @@ def _topic_note(
     if found is None:
         return None
     note, move = found
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            TOPIC_SPENT,
-            t.now,
-            detail={"move": move.ref, "note": TOPIC_NOTE.ref},
-        )
-    )
+    _decide(c, t, TOPIC_SPENT, {"move": move.ref, "note": TOPIC_NOTE.ref})
     return note
 
 
@@ -1374,23 +1166,16 @@ def _map_shadow(c: Conversation, t: _Turn, *, casual: bool, asking_name: bool) -
     gap = pick_gap(c.store.user_beliefs(c.rel), c.store.belief_labels(c.rel))
     if gap is None:
         return
-    c.store.append_decision(
-        Decision(
-            DecisionId(_id()),
-            c.rel,
-            t.session,
-            t.turn,
-            TraceId(t.turn),
-            DecisionKind.POLICY,
-            WOULD_ASK,
-            t.now,
-            detail={
-                "why": gap.reason,
-                "domain": gap.domain.value,
-                "depth": gap.depth.value,
-                "counts": {d.value: n for d, n in gap.counts.items()},
-            },
-        )
+    _decide(
+        c,
+        t,
+        WOULD_ASK,
+        {
+            "why": gap.reason,
+            "domain": gap.domain.value,
+            "depth": gap.depth.value,
+            "counts": {d.value: n for d, n in gap.counts.items()},
+        },
     )
 
 
@@ -1405,18 +1190,7 @@ def _ask_name(
         asked_recently=c.store.decided_since(c.rel, ASKED_NAME, t.now - ASK_NAME_EVERY),
     )
     if note is not None:
-        c.store.append_decision(
-            Decision(
-                DecisionId(_id()),
-                c.rel,
-                t.session,
-                t.turn,
-                TraceId(t.turn),
-                DecisionKind.POLICY,
-                ASKED_NAME,
-                t.now,
-            )
-        )
+        _decide(c, t, ASKED_NAME)
     return note
 
 
@@ -1583,7 +1357,7 @@ async def _handle_turn(
             card_text,
         )
     )
-    _CardLog(store, rel, session, turn, now, {b.id: why(b, view_state) for b in views}).write(card)
+    _CardLog(_recorder(c, t), {b.id: why(b, view_state) for b in views}).write(card)
     log.info(
         "turn %s | %s %dms in=%d cache_read=%d cache_write=%d%s\n  you: %s\n  it:  %s",
         turn[:8],

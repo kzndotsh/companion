@@ -21,7 +21,7 @@ def run(db: Path, relationship: str) -> str:
         beliefs = store.user_beliefs(rel)
         labels = store.belief_labels(rel)
         picks = [
-            d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.reason == WOULD_ASK
+            d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.has_key(WOULD_ASK)
         ]
     finally:
         store.close()

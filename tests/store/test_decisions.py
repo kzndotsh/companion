@@ -100,3 +100,31 @@ def test_decisions_are_append_only(conn: sqlite3.Connection) -> None:
         conn.execute("UPDATE decisions SET reason = 'edited'")
     with pytest.raises(sqlite3.DatabaseError, match="append-only"):
         conn.execute("DELETE FROM decisions")
+
+
+def test_a_look_up_matches_the_key_whatever_the_reason_says(conn: sqlite3.Connection) -> None:
+    d = make(DecisionKind.POLICY, reason="topic: moved on to their evening", key="topic: moved on")
+    decisions.append_decision(conn, d)
+    assert decisions.decided_since(conn, REL, "topic: moved on", T0 - timedelta(minutes=1))
+    assert not decisions.decided_since(conn, REL, "topic: moved on", T0 + timedelta(minutes=1))
+    [back] = decisions.decisions_for_turn(conn, REL, d.turn_id)
+    assert back.key == "topic: moved on"
+    assert back.has_key("topic: moved on")
+
+
+def test_a_decision_logged_before_keys_is_matched_by_how_its_reason_begins(
+    conn: sqlite3.Connection,
+) -> None:
+    decisions.append_decision(conn, make(DecisionKind.POLICY, reason="basics: asked their name"))
+    assert decisions.decided_since(conn, REL, "basics: asked", T0 - timedelta(minutes=1))
+    [old] = decisions.decisions_for_turn(conn, REL, TurnId("t1"))
+    assert old.key is None
+    assert old.has_key("basics: asked")
+    assert not old.has_key("mood")
+
+
+def test_a_keyed_decision_is_not_matched_by_its_reason(conn: sqlite3.Connection) -> None:
+    decisions.append_decision(
+        conn, make(DecisionKind.POLICY, reason="recall: they asked", key="recall")
+    )
+    assert not decisions.decided_since(conn, REL, "recall: they", T0 - timedelta(minutes=1))

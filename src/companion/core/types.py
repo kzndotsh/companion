@@ -184,6 +184,12 @@ class Decision:
     at: datetime
     belief_id: BeliefId | None = None
     detail: dict[str, Json] | None = None
+    key: str | None = None  # what code looks it up by; the reason is what a person reads
+
+    def has_key(self, key: str) -> bool:
+        """Whether this is a decision of that key. One logged before keys existed is matched by its
+        reason, which then began with the key."""
+        return self.key == key if self.key is not None else self.reason.startswith(key)
 
     def __post_init__(self) -> None:
         if not self.reason.strip():

@@ -19,6 +19,15 @@ from companion.core.types import (
 )
 from companion.store.sqlite.db import iso, parse_iso, write_tx
 
+REACTED = "reacted "  # the key of a reaction sent instead of a reply
+CLOSED = "closed belief:"  # the key of a memory closed
+
+
+def _keyed(key: str) -> tuple[str, str, str]:
+    """The arguments for the key match written in each query: a decision of this key, or one logged
+    before keys whose reason began with it."""
+    return key, key, key
+
 
 def _decision(row: sqlite3.Row) -> Decision:
     detail = row["detail"]
@@ -41,6 +50,7 @@ def _decision(row: sqlite3.Row) -> Decision:
         at=parse_iso(str(row["at"])),
         belief_id=BeliefId(str(belief)) if belief is not None else None,
         detail=parsed,
+        key=str(row["key"]) if row["key"] is not None else None,
     )
 
 
@@ -49,7 +59,7 @@ def append_decision(conn: sqlite3.Connection, d: Decision) -> None:
     with write_tx(conn):
         conn.execute(
             "INSERT INTO decisions (id, relationship_id, session_id, turn_id, trace_id, kind,"
-            " belief_id, reason, detail, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " belief_id, reason, detail, at, key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 d.id,
                 d.relationship_id,
@@ -61,6 +71,7 @@ def append_decision(conn: sqlite3.Connection, d: Decision) -> None:
                 d.reason,
                 detail,
                 iso(d.at),
+                d.key,
             ),
         )
 
@@ -88,9 +99,10 @@ def decisions_of_kind(
 def turns_since_reaction(conn: sqlite3.Connection, relationship_id: RelationshipId) -> int | None:
     """How many of the user's messages have come since the last reaction, or None if never."""
     row = conn.execute(
-        "SELECT at FROM decisions WHERE relationship_id = ? AND reason LIKE 'reacted %'"
+        "SELECT at FROM decisions WHERE relationship_id = ?"
+        " AND (key = ? OR (key IS NULL AND substr(reason, 1, length(?)) = ?))"
         " ORDER BY at DESC, id DESC LIMIT 1",
-        (relationship_id,),
+        (relationship_id, *_keyed(REACTED)),
     ).fetchone()
     if row is None:
         return None
@@ -114,9 +126,10 @@ def closure_reasons(
 ) -> dict[BeliefId, str]:
     rows = conn.execute(
         "SELECT json_extract(detail, '$.belief_id') AS bid, reason FROM decisions"
-        " WHERE relationship_id = ? AND reason LIKE 'closed belief:%' AND bid IS NOT NULL"
+        " WHERE relationship_id = ? AND bid IS NOT NULL"
+        " AND (key = ? OR (key IS NULL AND substr(reason, 1, length(?)) = ?))"
         " ORDER BY at, id",
-        (relationship_id,),
+        (relationship_id, *_keyed(CLOSED)),
     ).fetchall()
     return {BeliefId(str(r["bid"])): str(r["reason"]) for r in rows}
 
@@ -124,9 +137,10 @@ def closure_reasons(
 def decided_since(
     conn: sqlite3.Connection, rel: RelationshipId, reason: str, since: datetime
 ) -> bool:
-    """Whether a decision with this exact reason was logged at or after a time."""
+    """Whether a decision of this key was logged at or after a time."""
     row = conn.execute(
-        "SELECT 1 FROM decisions WHERE relationship_id = ? AND reason = ? AND at >= ? LIMIT 1",
-        (rel, reason, iso(since)),
+        "SELECT 1 FROM decisions WHERE relationship_id = ? AND at >= ?"
+        " AND (key = ? OR (key IS NULL AND substr(reason, 1, length(?)) = ?)) LIMIT 1",
+        (rel, iso(since), *_keyed(reason)),
     ).fetchone()
     return row is not None

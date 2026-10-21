@@ -7,6 +7,7 @@ from pathlib import Path
 
 from companion.core.nudges import AWAY, WOULD_NUDGE
 from companion.core.types import DecisionKind, RelationshipId
+from companion.loops.openloops import HELD
 from companion.store.sqlite.store import Store
 
 
@@ -17,12 +18,10 @@ def run(db: Path, relationship: str) -> str:
         loops = store.open_loops(rel)
         reach = store.reach_outs(rel)
         held = store.decisions_of_kind(rel, DecisionKind.DO_NOTHING)
-        held = [d for d in held if d.reason.startswith("held, would otherwise")]
-        away = [d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.reason == AWAY]
+        held = [d for d in held if d.has_key(HELD)]
+        away = [d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.has_key(AWAY)]
         nudges = [
-            d
-            for d in store.decisions_of_kind(rel, DecisionKind.INITIATE)
-            if d.reason.startswith(WOULD_NUDGE)
+            d for d in store.decisions_of_kind(rel, DecisionKind.INITIATE) if d.has_key(WOULD_NUDGE)
         ]
     finally:
         store.close()

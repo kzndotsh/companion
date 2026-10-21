@@ -15,9 +15,7 @@ def run(db: Path, relationship: str) -> str:
     rel = RelationshipId(relationship)
     try:
         named = index(store.name_rows(rel), {b.id for b in store.user_beliefs(rel)})
-        logged = [
-            d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.reason == SHADOW
-        ]
+        logged = [d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.has_key(SHADOW)]
         left = len(store.user_beliefs(rel)) - len(store.names_read(rel))
     finally:
         store.close()

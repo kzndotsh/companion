@@ -24,10 +24,7 @@ from companion.core.nudges import (
 )
 from companion.core.spend import purpose
 from companion.core.types import (
-    Decision,
-    DecisionId,
     DecisionKind,
-    Json,
     RelationshipId,
     SessionId,
     Speaker,
@@ -35,31 +32,22 @@ from companion.core.types import (
     TurnId,
 )
 from companion.loops.openloops import short_draft
+from companion.loops.record import Recorder
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.nudges")
 SESSION = SessionId("initiative")
 
 
-def _decision(rel: RelationshipId, reason: str, now: datetime, detail: dict[str, Json]) -> Decision:
+def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
     trace = uuid.uuid4().hex
-    return Decision(
-        DecisionId(uuid.uuid4().hex),
-        rel,
-        SESSION,
-        TurnId(trace),
-        TraceId(trace),
-        DecisionKind.INITIATE,
-        reason,
-        now,
-        detail=detail,
-    )
+    return Recorder(store, rel, SESSION, TurnId(trace), TraceId(trace), now)
 
 
 def aways(store: Store, rel: RelationshipId) -> list[Away]:
     out: list[Away] = []
     for d in store.decisions_of_kind(rel, DecisionKind.POLICY):
-        if d.reason != AWAY or not isinstance(d.detail, dict):
+        if not d.has_key(AWAY) or not isinstance(d.detail, dict):
             continue
         kind, minutes, said = d.detail.get("kind"), d.detail.get("minutes"), d.detail.get("said")
         if kind in set(Kind) and isinstance(minutes, int) and isinstance(said, str):
@@ -70,9 +58,7 @@ def aways(store: Store, rel: RelationshipId) -> list[Away]:
 def _look(store: Store, rel: RelationshipId, now: datetime) -> Look:
     theirs = [u.at for u in store.history_before(rel, now, 40) if u.speaker is Speaker.USER]
     sent = [
-        d
-        for d in store.decisions_of_kind(rel, DecisionKind.INITIATE)
-        if d.reason.startswith(WOULD_NUDGE)
+        d for d in store.decisions_of_kind(rel, DecisionKind.INITIATE) if d.has_key(WOULD_NUDGE)
     ]
     nudged = frozenset(
         str(d.detail.get("turn"))
@@ -107,19 +93,17 @@ async def tick_nudge(  # noqa: PLR0913
             text = short_draft(message) if isinstance(message, str) else ""
         except Exception:
             log.warning("could not draft the nudge", exc_info=True)
-    store.append_decision(
-        _decision(
-            rel,
-            f"{WOULD_NUDGE}: {reason}",
-            now,
-            {
-                "turn": away.turn,
-                "said": away.said,
-                "kind": away.kind,
-                "draft": text,
-                "prompt": DRAFT.ref,
-            },
-        )
+    _record(store, rel, now).decide(
+        WOULD_NUDGE,
+        {
+            "turn": away.turn,
+            "said": away.said,
+            "kind": away.kind,
+            "draft": text,
+            "prompt": DRAFT.ref,
+        },
+        reason=f"{WOULD_NUDGE}: {reason}",
+        kind=DecisionKind.INITIATE,
     )
     log.info("nudge shadow: would send %r (%s)", text, reason)
     return text

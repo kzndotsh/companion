@@ -13,44 +13,33 @@ from companion.core.types import (
     Belief,
     BeliefId,
     BeliefKind,
-    Decision,
-    DecisionId,
-    DecisionKind,
     RelationshipId,
     TraceId,
 )
+from companion.loops.record import Recorder
 from companion.loops.slow import ReflectOptions, reflect_from
+from companion.store.sqlite.decisions import CLOSED
 from companion.store.sqlite.store import Store
 
 
 def _close(store: Store, b: Belief, reason: str, now: datetime) -> None:
-    _log(store, b, f"closed belief: {reason}", now)
+    _log(store, b, CLOSED, now, f"closed belief: {reason}")
     store.close_belief(b.id, now)
 
 
 def log_would_close(store: Store, b: Belief, reason: str, now: datetime) -> None:
     """In shadow: what would have been closed, and why. Nothing changes."""
-    _log(store, b, f"would close belief (shadow): {reason}", now)
+    _log(store, b, "would close belief (shadow)", now, f"would close belief (shadow): {reason}")
 
 
-def _log(store: Store, b: Belief, reason: str, now: datetime) -> None:
+def _log(store: Store, b: Belief, key: str, now: datetime, reason: str) -> None:
     source = store.get_utterance(b.evidence[0].utterance_id)
     if source is None:
         msg = f"belief {b.id} cites an utterance missing from the ledger"
         raise ValueError(msg)
-    store.append_decision(
-        Decision(
-            DecisionId(uuid.uuid4().hex),
-            b.relationship_id,
-            source.session_id,
-            source.turn_id,
-            TraceId(uuid.uuid4().hex),
-            DecisionKind.POLICY,
-            reason,
-            now,
-            detail={"belief_id": b.id, "claim": b.claim},
-        )
-    )
+    Recorder(
+        store, b.relationship_id, source.session_id, source.turn_id, TraceId(uuid.uuid4().hex), now
+    ).decide(key, {"belief_id": b.id, "claim": b.claim}, reason=reason)
 
 
 def close_duplicates(store: Store, rel: RelationshipId, now: datetime | None = None) -> list[str]:
@@ -161,18 +150,9 @@ def approve(store: Store, rel: RelationshipId, id_prefix: str, now: datetime | N
         msg = f"view {view.id} cites an utterance missing from the ledger"
         raise ValueError(msg)
     store.approve_view(view.id, now)
-    store.append_decision(
-        Decision(
-            DecisionId(uuid.uuid4().hex),
-            rel,
-            source.session_id,
-            source.turn_id,
-            TraceId(uuid.uuid4().hex),
-            DecisionKind.POLICY,
-            "approved by the user: this view now reaches the card",
-            now,
-            detail={"belief_id": view.id, "claim": view.claim},
-        )
+    Recorder(store, rel, source.session_id, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
+        "approved by the user: this view now reaches the card",
+        {"belief_id": view.id, "claim": view.claim},
     )
     return f"approved  {view.claim}"
 

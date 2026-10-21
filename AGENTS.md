@@ -83,6 +83,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
   live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
+- Record a decision through `loops/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
+  `_decide(c, t, ...)`), never by building `Decision(...)` by hand. Code that looks a past decision up
+  matches its key (`decided_since`, `Decision.has_key`), never its reason text; decisions from before keys
+  match by how their reason begins.
 - Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, `named_zone`). A test enforces it.
 
 **Evals**
