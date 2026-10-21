@@ -1103,3 +1103,15 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   studies, texting advice): a single light message that refers to what they said is the welcome kind;
   messages at goodbyes, "I miss you", "you up?" and a second try after no reply are the disliked kinds. No
   survey measures how long friends wait. Cost about $0.18 for both readings.
+- **2026-10-20/21. Fuller, more direct scene replies: a reminder after the history (owner's choice C).**
+  Six real turns from one adult scene (private fixtures), DeepSeek V4.1 Flash with the private character's
+  scene section, 12 samples each, counts by code and a blind Claude judge (the cheap judge is blocked by
+  the provider's moderation on this text). Today's section: 27 words median, plain wording in few
+  replies, directness 2.1 of 5. A rewritten section alone (fuller replies, plain and unshy wording, no
+  echoing, move the scene on): about the same (30 words, 2.2). The same lines sent as a short system
+  reminder after the history: 80 words, directness 3.9, vividness 4.1, purple 1.2, but about 1 reply in 6
+  took over the scene or narrated the user, and naturalness fell from 4.1 to 3.0. A version that added
+  "describe only yourself" did not lower that within noise; a 40-to-70-word version halved the narrating
+  (4 of 72) with directness 3.6. The owner read samples and chose the paragraph version. Placement after
+  the history was the lever, as community presets and the docs of a popular roleplay front end say. Cost
+  about $0.10; judging free.

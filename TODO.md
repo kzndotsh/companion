@@ -560,6 +560,9 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-20**
+- [x] Fuller, more direct scene replies: a character's scene reminder sent after the history on roleplay
+      turns, the sheet's scene section rewritten, roleplay replies up to 700 tokens. Measured on six real scene
+      turns; the owner chose the paragraph version knowing about 1 reply in 6 runs ahead of them. Watch flags.
 - [x] T5 `signoff-then-time-skip` on DeepSeek: gone on V4.1 Flash with persona v41. Not one of 60 replies
       (plain and roleplay prompt) asked whether they had done it or acted as if time had passed; Luna 30/30.
       The judge had failed harmless sign-offs ("*waits*", "hurry back"), so the criterion was made explicit.

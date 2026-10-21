@@ -215,6 +215,9 @@ def startup_line(
     )
 
 
+ROLEPLAY_MAX_TOKENS = 700  # scene replies run longer; 400 cut some off mid-sentence
+
+
 def _roleplay_talker(client: httpx.AsyncClient) -> Talker | None:
     """The model for pretend scenes and, when allowed, intimate talk (ADR 0017). Set
     COMPANION_ROLEPLAY_MODEL to `none` to use the everyday model for those too. Needs OpenRouter."""
@@ -222,7 +225,7 @@ def _roleplay_talker(client: httpx.AsyncClient) -> Talker | None:
     key = os.environ.get("OPENROUTER_API_KEY")
     if model.lower() == "none" or not key:
         return None
-    return openrouter.OpenRouterTalker(key, client, model)
+    return openrouter.OpenRouterTalker(key, client, model, max_tokens=ROLEPLAY_MAX_TOKENS)
 
 
 def consolidate_mode() -> str:
@@ -431,6 +434,7 @@ async def run(data_dir: Path) -> None:
             resample=resample_on(),
             route_intimate=route_intimate_on(),
             roleplay_prefix=roleplay_prefix,
+            scene_reminder=character.scene_reminder if character is not None else "",
             embedder=_embedder(client, store, rel),
             embed_model=os.environ.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
             lore=lore_mode(),

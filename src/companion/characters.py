@@ -12,7 +12,9 @@ written.
 Public sheets are versioned prompts at `prompts/characters/<id>/vN.md` (ADR 0013). Private sheets
 live at `data/characters/<id>.md`, are never committed, and win over a public sheet of the same id.
 `COMPANION_CHARACTER=<id>` picks one; unset means no character. A sheet may end with an
-`## In roleplay and intimate moments` section, which only the roleplay talker sees.
+`## In roleplay and intimate moments` section, which only the roleplay talker sees, and that section
+may end with a `## Scene reminder`: a few lines sent after the history on roleplay turns, where
+models weight them most (2026-10-20: much more vivid scene replies than the same words at the top).
 """
 
 from __future__ import annotations
@@ -35,6 +37,11 @@ _ROLEPLAY_LINE = re.compile(
 )
 
 
+_REMINDER_LINE = re.compile(
+    r"^[ \t]*(?:#+[ \t]*)?scene reminder:?[ \t]*$", re.IGNORECASE | re.MULTILINE
+)
+
+
 class CharacterError(ValueError):
     """A character that cannot be loaded, with the reason in plain words."""
 
@@ -46,6 +53,9 @@ class Character:
     sheet: str
     roleplay_sheet: str = (
         ""  # after an "## In roleplay and intimate moments" heading: for the roleplay talker only
+    )
+    scene_reminder: str = (
+        ""  # after a "## Scene reminder" heading: sent after the history in scenes
     )
 
     @property
@@ -61,7 +71,9 @@ def parse(text: str, char_id: str, version: str) -> Character:
     if not sheet.strip():
         msg = f"character {char_id!r} has an empty sheet"
         raise CharacterError(msg)
-    return Character(char_id, version, sheet.strip(), scene.strip())
+    tail = _REMINDER_LINE.search(scene)
+    scene, reminder = (scene[: tail.start()], scene[tail.end() :]) if tail else (scene, "")
+    return Character(char_id, version, sheet.strip(), scene.strip(), reminder.strip())
 
 
 def load(char_id: str, private_dir: Path = PRIVATE_DIR) -> Character:

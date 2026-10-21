@@ -744,6 +744,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/memory-pair
 - **system/memory-pair v1** (current). New (ADR 0019). Says how two memories relate: same, merge, distinct, replaces or contradicts. Read three times; a new memory read as the same as an existing one by all three becomes evidence on it, and nothing is merged automatically.
 
+## Request assembly: a character's scene reminder after the history
+- **2026-10-20.** A character sheet may end its scene section with `## Scene reminder`; on roleplay turns those lines are sent as a system message after the history (`TalkerRequest.tail`), the everyday talker never sees them, and the request hash includes them. The roleplay talker's reply limit rose from 400 to 700 tokens, since longer scene replies were cut off mid-sentence. Reason: the owner found scenes too tame and short; on six real scene turns the same style lines at the top of the system block barely changed the replies, while sent after the history they made replies about three times longer and much more direct (measured in `evals/CHANGELOG.md`). The text of the reminder lives in the private sheet.
+
 ## system/basics-hook
 - **system/basics-hook v1** (current). New (J48 hook; owner flag 2026-10-20: "im getting old" was the moment to ask their age). On a casual turn, read three times beside the reply: which basic fact (age, work, home, place) their own words touch without giving it. A basic counts only when all three reads name it; one read labelled small talk too often ("mmmmmmm" as work, laundry as home). Shadow: nothing reaches the talker.
 

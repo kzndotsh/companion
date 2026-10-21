@@ -66,7 +66,7 @@ def test_volatile_context_rides_the_user_message_and_never_touches_the_prefix() 
 
 def test_the_request_has_no_thinking_knob() -> None:
     fields = set(build_request(build_prefix(PERSONA), [], "hi").__dataclass_fields__)
-    assert fields == {"prefix", "messages", "card"}
+    assert fields == {"prefix", "messages", "card", "tail"}
 
 
 def test_canonical_text_ends_with_exactly_one_newline() -> None:

@@ -48,6 +48,7 @@ class Variant:
     tags: bool = False  # the system block in XML-style sections instead of bracketed lines
     tags_notes: bool = False  # only the clock and the notes in tags; memory stays as it is
     lore: bool = False  # show the fixture's own tastes as the lore note (ADR 0020)
+    tail: str = ""  # a character's scene reminder after the history, as the bot sends it in scenes
 
 
 @dataclass(frozen=True, slots=True)
@@ -116,7 +117,9 @@ def request_for(
         card = f"{card}\n{line}" if card else line
     if variant.tags or variant.tags_notes:
         card = tagged(card, memory=variant.tags)
-    return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card)
+    return TalkerRequest(
+        prefix=variant.prefix, messages=tuple(messages), card=card, tail=variant.tail
+    )
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import dataclasses
+
+import httpx
+
 from companion.core.prompt.prefix import build_prefix
-from companion.core.prompt.request import Message, build_request
+from companion.core.prompt.request import Message, build_request, request_sha256
+from companion.models.openrouter import OpenRouterTalker
 from companion.models.wire import messages_with_breakpoint
 
 PREFIX = build_prefix("persona " * 800)
@@ -44,3 +49,12 @@ def test_no_card_means_one_system_block() -> None:
     from companion.models.wire import system_blocks  # noqa: PLC0415
 
     assert len(system_blocks(build_request(PREFIX, [], "hi"))) == 1
+
+
+def test_a_scene_reminder_is_the_last_message_and_part_of_the_request_identity() -> None:
+    plain = build_request(PREFIX, [], "hi", "", "card")
+    tailed = dataclasses.replace(plain, tail="be specific")
+    talker = OpenRouterTalker("k", httpx.AsyncClient(), "deepseek/x")
+    assert talker.body(tailed)["messages"][-1] == {"role": "system", "content": "be specific"}  # type: ignore[index]
+    assert talker.body(plain)["messages"][-1]["role"] == "user"  # type: ignore[index]
+    assert request_sha256(plain) != request_sha256(tailed)

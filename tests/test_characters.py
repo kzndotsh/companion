@@ -79,3 +79,16 @@ def test_the_roleplay_section_is_cut_out_however_the_heading_is_written(heading:
     c = parse(f"You are Mika.\n\n{heading}\nStay in the role.\n", "mika", "local")
     assert c.sheet == "You are Mika."
     assert c.roleplay_sheet == "Stay in the role."
+
+
+def test_a_scene_reminder_is_kept_apart_from_both_the_sheet_and_the_scene_section() -> None:
+    c = parse(
+        "You are Mika.\n\n## In roleplay and intimate moments\nWrite only your own actions.\n\n"
+        "## Scene reminder\nBe specific.",
+        "mika",
+        "local",
+    )
+    assert c.roleplay_sheet == "Write only your own actions."
+    assert c.scene_reminder == "Be specific."
+    assert "Be specific." not in system_prompt("Persona.", c, roleplay=True)
+    assert parse("You are Mika.", "mika", "local").scene_reminder == ""

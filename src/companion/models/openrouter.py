@@ -60,10 +60,11 @@ class OpenRouterTalker:
 
     def body(self, request: TalkerRequest) -> dict[str, object]:
         system = {"role": "system", "content": system_blocks(request)}
+        tail = [{"role": "system", "content": request.tail}] if request.tail else []
         body: dict[str, object] = {
             "model": self._model,
             "max_tokens": self._max_tokens,
-            "messages": [system, *messages_with_breakpoint(request)],
+            "messages": [system, *messages_with_breakpoint(request), *tail],
             "reasoning": {"enabled": False}
             if self._effort is None
             else {"effort": self._effort, "exclude": True},

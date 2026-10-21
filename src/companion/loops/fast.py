@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import dataclasses
 import logging
 import time
 import uuid
@@ -251,6 +252,7 @@ class Conversation:
     embedder: Embedder | None = None  # the relevance look-up runs in shadow when set
     embed_model: str = ""
     lore: str = "off"  # on, shadow or off: its tastes nearest their message (ADR 0020)
+    scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
     relevance: bool = True  # the relevance look-up in shadow, when there is an embedder
 
     async def handle(
@@ -1426,6 +1428,8 @@ def _assemble(  # noqa: PLR0913
     )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
+    if roleplay and c.scene_reminder:  # after the history, where it weighs most (scene turns only)
+        request = dataclasses.replace(request, tail=c.scene_reminder)
     store.save_prefix(prefix)
     _mark_start(t, in_scene, card, card_text)
     return _Assembled(request, card_text, card, views, view_state, mood_effects)

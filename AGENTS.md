@@ -213,7 +213,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   setting. A held turn gets a note, its reply is read by an intimate check and redrawn (the last draw sees
   only their message), and if all read intimate nothing is sent; no reply is written by code. The roleplay
   talker also sees the character sheet's `## In roleplay and intimate moments` section; the everyday one
-  never does. "Scene" means only a pretend scene in progress (the frame judge's label).
+  never does. A `## Scene reminder` at the end of that section is sent after the history on roleplay
+  turns (`TalkerRequest.tail`), where it weighs most; its words live in the private sheet. "Scene" means only a pretend scene in progress (the frame judge's label).
 
 **Working with the owner**
 - Plain English, short, and say what changed and what it was measured on. Lead with what matters.

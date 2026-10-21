@@ -31,6 +31,7 @@ class TalkerRequest:
     prefix: Prefix
     messages: tuple[Message, ...]
     card: str = ""
+    tail: str = ""  # a system message after the history: a character's scene reminder, scenes only
 
 
 def build_request(
@@ -59,6 +60,8 @@ def request_sha256(request: TalkerRequest) -> str:
     }
     if request.card:
         body["card"] = request.card  # absent when empty, so turns recorded before it still match
+    if request.tail:
+        body["tail"] = request.tail  # likewise
     payload = json.dumps(
         body,
         sort_keys=True,
