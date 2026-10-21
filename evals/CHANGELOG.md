@@ -1123,3 +1123,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   wrong way on narrating, so the live sheet stays. Five of 144 replies came back empty from the roleplay
   model (none so far live); an empty reply is now drawn once more instead of leaving the turn silent.
   Cost $0.024.
+- **2026-10-21. Winding down after the peak of a scene (owner flag: it kept the intensity up like a real
+  climax never happened).** Four real turns right after the peak of an adult scene (private fixtures),
+  DeepSeek V4.1 Flash, 12 samples each, blind Claude judge. The private character's scene section and
+  reminder gained a line: after the peak, or when they slow down, stay close and warm but slower and
+  shorter, a tease about later is fine, and do not start things up again unless they do. Restarting by
+  itself 7 of 48 (6 on the flagged turn) to 0 of 48; winding down 4.0 to 4.8 of 5; natural 3.6 to 4.1;
+  plans for later kept (15 to 12); replies about a fifth shorter. The owner's favourite reply of the night
+  was exactly this kind: half asleep, holding them, a plan for the morning. Also a code check for the
+  stage direction "a beat" (three uses, flagged), one redraw. Cost $0.04.

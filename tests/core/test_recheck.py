@@ -59,3 +59,8 @@ def test_the_stock_especially_line_is_caught_and_plain_uses_are_not() -> None:
     ]
     assert code_checks("ugh, that's the worst") == []
     assert code_checks("i like jazz, especially piano") == []
+
+
+def test_a_beat_as_a_stage_direction_is_caught_but_not_a_beat_in_music() -> None:
+    assert code_checks("*a beat, and I grin*") == ["the stage direction 'a beat'"]
+    assert code_checks("the song has a beat drop that hits") == []

@@ -54,6 +54,10 @@ _ESPECIALLY = re.compile(
 )
 
 
+# A screenwriter's stage direction ("*a beat, and I grin*"), not how a person writes (2026-10-21).
+_A_BEAT = re.compile(r"\ba beat\b(?!\s+(?:drop|to|of|from|in)\b)", re.IGNORECASE)
+
+
 def code_checks(reply: str, said: str = "") -> list[str]:
     """The checks plain code can make, as the reasons they failed. Saying it is an AI is only a
     failure when their message did not touch on what it is: honesty when asked stays (persona)."""
@@ -64,4 +68,6 @@ def code_checks(reply: str, said: str = "") -> list[str]:
         failed.append("the clock line or a tag copied from the system block")
     if _ESPECIALLY.search(reply):
         failed.append("the stock 'that sounds X, especially when' line")
+    if _A_BEAT.search(reply):
+        failed.append("the stage direction 'a beat'")
     return failed
