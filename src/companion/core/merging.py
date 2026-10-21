@@ -19,6 +19,8 @@ GROUP = get("system/memory-group")
 WRITE = get("system/memory-merge")
 READS = 3
 PROPOSED = "memory: proposed merging memories about one thing"
+NOTE = "note: "  # an owner's note on a merge question; it stays open
+PICK = "pick "  # the members the owner said belong together, by number, proposed again alone
 
 GROUP_SCHEMA: dict[str, Json] = {
     "type": "object",

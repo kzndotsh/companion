@@ -477,6 +477,11 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
       updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
       plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
+- [ ] J51 Memories that keep what it was about (owner, 2026-10-21, reviewing merges): some memories are
+      too general to use, they "don't add context to what the convo was in regards to". The memory pass
+      writes each claim to stand alone a year later and strips the moment it came from (why it came up,
+      what they were answering). Try: a short "said when" context in the claim or beside it, measured by
+      the owner marking a sample before and after; the audit of 2026-10-21 has the examples (private).
 - [ ] J49 Today so far (owner flag 2026-10-19, "it isn't remembering what happened today"): at bedtime they
       said "it was an intense day" and the reply knew nothing of it; the day's events had left the 40-message
       window and memory held only "had an intense day". A few plain facts about their day, from that day's

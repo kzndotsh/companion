@@ -62,3 +62,16 @@ async def test_keep_apart_from_the_writer_proposes_nothing(
     store, made = _store(tmp_path, utterance, belief)
     assert (await propose(store, Grouper(apart=True), REL, made, T0)).groups == 0
     assert store.merge_proposals(REL) == []
+
+
+async def test_a_pick_is_proposed_again_alone_with_new_wording(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.loops.merging import repick  # noqa: PLC0415
+
+    store, made = _store(tmp_path, utterance, belief)
+    first = store.add_merge_proposal(REL, [b.id for b in made], "all three", prompt="g", at=T0)
+    store.answer_merge(first, "pick 1 2", T0)
+    assert (await repick(store, Grouper(), REL, T0)).groups == 1
+    assert store.merge_proposals(REL)[-1].members == (made[0].id, made[1].id)
+    assert (await repick(store, Grouper(), REL, T0)).groups == 0

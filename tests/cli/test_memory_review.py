@@ -163,3 +163,44 @@ def test_it_asks_every_question_unless_capped(
     db = _store(tmp_path, utterance, belief)
     assert "1 question left" in review(db, REL, ask=lambda _: "k", per_sitting=1)
     assert "0 questions left" in review(db, REL, ask=lambda _: "k")
+
+
+def test_a_note_is_kept_and_the_merge_is_asked_again_with_it(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    db = _merge_proposal(tmp_path, utterance, belief)
+    answers = iter(["n", "too vague", "s"])
+    asked: list[str] = []
+    review(db, REL, ask=lambda q: asked.append(q) or next(answers))
+    assert [p.answer for p in Store(db).merge_proposals(REL)] == ["note: too vague"]
+    review(db, REL, ask=lambda q: asked.append(q) or "s")
+    assert "your note: too vague" in asked[-1]
+
+
+def test_their_own_wording_merges_with_it(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    db = _merge_proposal(tmp_path, utterance, belief)
+    answers = iter(["w", "Had a virtual checkup."])
+    review(db, REL, ask=lambda _: next(answers))
+    [merged] = Store(db).user_beliefs(REL)
+    assert merged.claim == "Had a virtual checkup."
+    assert len(merged.evidence) == 3
+
+
+def test_a_pick_is_recorded_and_changes_nothing_yet(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    db = _merge_proposal(tmp_path, utterance, belief)
+    answers = iter(["p", "1 2"])
+    review(db, REL, ask=lambda _: next(answers))
+    assert [p.answer for p in Store(db).merge_proposals(REL)] == ["pick 1 2"]
+    assert len(Store(db).user_beliefs(REL)) == 3
+
+
+def test_a_pick_needs_two_or_more_valid_numbers() -> None:
+    from companion.cli.memory import picked  # noqa: PLC0415
+
+    assert picked("1, 3", 3) == [0, 2]
+    assert picked("2", 3) is None
+    assert picked("1 4", 3) is None

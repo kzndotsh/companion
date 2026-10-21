@@ -128,7 +128,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/memory-names` | system | the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |
 | `system/memory-group` | system | which memories are about one thing and would read better as one, read three times (ADR 0019) | v1 |
-| `system/memory-merge` | system | one memory that says everything a group says, adding nothing; a proposal for the owner | v1 |
+| `system/memory-merge` | system | one memory a friend would keep for a group: one sentence, each thing once, adding nothing; a proposal for the owner | v2 |
 | `system/guess-invite` | system | whether their short question invites a guess about them, and about what (J16) | v1 |
 | `system/promise-read` | system | the promises the companion made in its own replies: standing or once, and a word it said it would stop using (J12) | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |

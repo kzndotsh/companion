@@ -14,6 +14,7 @@ from companion.core.extractor import Extractor
 from companion.core.merging import (
     GROUP,
     GROUP_SCHEMA,
+    PICK,
     READS,
     WRITE,
     WRITE_SCHEMA,
@@ -51,6 +52,38 @@ async def _group_reads(judge: Extractor, beliefs: Sequence[Belief]) -> tuple[lis
     return agreed([r for r, _ in results]), sum(c for _, c in results)
 
 
+async def _wording(judge: Extractor, members: Sequence[Belief]) -> tuple[str | None, float]:
+    try:
+        with purpose("consolidate"):
+            got = await judge.extract(WRITE.text, listing(members), WRITE_SCHEMA)
+    except Exception as err:
+        log.warning("merged wording failed: %r", err)
+        return None, 0.0
+    return read_claim(got.data), got.cost_usd
+
+
+async def repick(store: Store, judge: Extractor, rel: RelationshipId, now: datetime) -> Proposed:
+    """Propose again, alone, the members the owner said belong together."""
+    current = {b.id: b for b in store.user_beliefs(rel)}
+    proposals = store.merge_proposals(rel)
+    asked = {frozenset(p.members) for p in proposals}
+    made, cost = 0, 0.0
+    for p in proposals:
+        if p.answer is None or not p.answer.startswith(PICK):
+            continue
+        ids = [p.members[int(n) - 1] for n in p.answer.removeprefix(PICK).split()]
+        if frozenset(ids) in asked or not all(i in current for i in ids):
+            continue
+        members = [current[i] for i in ids]
+        claim, spent = await _wording(judge, members)
+        cost += spent
+        if claim is not None:
+            store.add_merge_proposal(rel, ids, claim, prompt=WRITE.ref, at=now)
+            asked.add(frozenset(ids))
+            made += 1
+    return Proposed(made, cost)
+
+
 async def propose(
     store: Store, judge: Extractor, rel: RelationshipId, beliefs: Sequence[Belief], now: datetime
 ) -> Proposed:
@@ -65,14 +98,8 @@ async def propose(
         ids = frozenset(b.id for b in members)
         if ids in asked:
             continue
-        try:
-            with purpose("consolidate"):
-                got = await judge.extract(WRITE.text, listing(members), WRITE_SCHEMA)
-        except Exception as err:
-            log.warning("merged wording failed: %r", err)
-            continue
-        cost += got.cost_usd
-        claim = read_claim(got.data)
+        claim, spent = await _wording(judge, members)
+        cost += spent
         if claim is None:
             continue
         store.add_merge_proposal(rel, [b.id for b in members], claim, prompt=GROUP.ref, at=now)
@@ -94,7 +121,7 @@ async def recent(
     """Group the memories of each of the last RECENT_DAYS days, for the nightly run."""
     since = now - timedelta(days=RECENT_DAYS)
     fresh = [b for b in store.user_beliefs(rel) if b.recorded_at >= since]
-    total = Proposed()
+    total = await repick(store, judge, rel, now)
     for day in _by_day(fresh, tz).values():
         got = await propose(store, judge, rel, day, now)
         total = Proposed(total.groups + got.groups, total.cost_usd + got.cost_usd)
@@ -106,7 +133,7 @@ async def everything(
 ) -> Proposed:
     """Every day's memories, then the whole store at once for repeats across days."""
     current = store.user_beliefs(rel)
-    total = Proposed()
+    total = await repick(store, judge, rel, now)
     for day in [*_by_day(current, tz).values(), current]:
         got = await propose(store, judge, rel, day, now)
         total = Proposed(total.groups + got.groups, total.cost_usd + got.cost_usd)

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from companion.core.clock import utc_now
 from companion.core.consolidate import HELD, Label, Relation
-from companion.core.merging import merged_kind
+from companion.core.merging import NOTE, PICK, merged_kind
 from companion.core.types import Belief, BeliefId, RelationshipId
 from companion.loops.curate import merge, retire
 from companion.store.sqlite.memory_checks import MemoryCheck
@@ -32,12 +32,17 @@ def _held(current: Mapping[BeliefId, Belief], bid: BeliefId) -> bool:
     return bid in current and current[bid].sensitivity >= HELD
 
 
+def _open(p: Proposal) -> bool:
+    """Unanswered, or answered only with a note: a note keeps it for another time."""
+    return p.answer is None or p.answer.startswith(NOTE)
+
+
 def _pending(
     store: Store, rel: RelationshipId, current: Mapping[BeliefId, Belief]
 ) -> list[MemoryCheck | Proposal]:
     """Merges first, then the checks. A conflict between two memories that a pending merge would
     join is held back: pieces of one moment read as a contradiction when apart."""
-    merges = [p for p in store.merge_proposals(rel) if p.answer is None]
+    merges = [p for p in store.merge_proposals(rel) if _open(p)]
     joined = [set(p.members) for p in merges]
     singles = [c for c in store.unanswered_checks(rel, list(ASKED)) if c.other_id is None]
     # a passing moment is asked about only when sensitive; the rest close on their own
@@ -53,29 +58,69 @@ def _pending(
 def _merge_question(p: Proposal, current: Mapping[BeliefId, Belief]) -> str | None:
     if not all(m in current for m in p.members):
         return None
-    lines = "\n".join(f"  - {current[m].claim}" for m in p.members)
+    lines = "\n".join(f"  {i}. {current[m].claim}" for i, m in enumerate(p.members, start=1))
+    noted = f"\n  your note: {p.answer.removeprefix(NOTE)}" if p.answer else ""
     return (
-        f"\nThese may be one memory:\n{lines}\n  as one: {p.claim}\n"
-        "  [m]erge, keep [a]part, [s]kip, [q]uit: "
+        f"\nThese may be one memory:\n{lines}\n  as one: {p.claim}{noted}\n"
+        "  [m]erge, [p]ick which belong, [w]ord it yourself, keep [a]part, [n]ote why, [s]kip,"
+        " [q]uit: "
     )
 
 
-def _merge_answer(  # noqa: PLR0913
+def picked(said: str, size: int) -> list[int] | None:
+    """The members they named ("1 2 4"), as positions, when two or more are valid."""
+    nums = sorted({int(x) - 1 for x in said.replace(",", " ").split() if x.isdigit()})
+    valid = [n for n in nums if 0 <= n < size]
+    return valid if len(valid) >= 2 and len(valid) == len(nums) else None
+
+
+def _merge_answer(  # noqa: PLR0911, PLR0913
     store: Store,
     rel: RelationshipId,
     p: Proposal,
     current: Mapping[BeliefId, Belief],
     *,
     choice: str,
+    ask: Callable[[str], str],
     now: datetime,
 ) -> str | None:
+    """Act on one answer to a merge question; None when it was skipped or not understood."""
+    members = [current[m] for m in p.members]
     if choice == "a":
         store.answer_merge(p.id, "apart", now)
-        return f"kept apart  {len(p.members)} memories"
+        return f"kept apart  {len(members)} memories"
+    if choice == "n":
+        why = " ".join(ask("  why? ").split())
+        if not why:
+            return None
+        store.answer_merge(p.id, NOTE + why, now)
+        return f"noted      {why}"
+    if choice == "p":
+        which = picked(ask("  which belong together (for example 1 2 4)? "), len(members))
+        if which is None:
+            return None
+        store.answer_merge(p.id, PICK + " ".join(str(n + 1) for n in which), now)
+        return "picked     a new wording for those is proposed at the next grouping"
+    if choice == "w":
+        claim = " ".join(ask("  your wording: ").split())
+        if not claim:
+            return None
+        done = merge(
+            store,
+            rel,
+            list(p.members),
+            claim,
+            now,
+            kind=merged_kind(members),
+            why="worded by the owner",
+        )
+        store.answer_merge(p.id, "worded", now)
+        return done
     if choice != "m":
         return None
-    kind = merged_kind([current[m] for m in p.members])
-    done = merge(store, rel, list(p.members), p.claim, now, kind=kind, why="the owner agreed")
+    done = merge(
+        store, rel, list(p.members), p.claim, now, kind=merged_kind(members), why="the owner agreed"
+    )
     store.answer_merge(p.id, "merged", now)
     return done
 
@@ -162,7 +207,7 @@ def review(
             if choice == "q":
                 break
             line = (
-                _merge_answer(store, rel, item, current, choice=choice, now=now)
+                _merge_answer(store, rel, item, current, choice=choice, ask=ask, now=now)
                 if isinstance(item, Proposal)
                 else _answer(store, rel, item, current, choice=choice, now=now)
             )
