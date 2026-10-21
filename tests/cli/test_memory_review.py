@@ -204,3 +204,26 @@ def test_a_pick_needs_two_or_more_valid_numbers() -> None:
     assert picked("1, 3", 3) == [0, 2]
     assert picked("2", 3) is None
     assert picked("1 4", 3) is None
+
+
+def test_a_memory_labelled_about_the_bot_is_asked_and_retired_on_yes(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    path = tmp_path / "rel.sqlite"
+    store = Store(path)
+    store.append_utterance(utterance(text="added a feature", uid="u1"))
+    store.insert_belief(belief(bid="bot", utterance_id="u1", quote="added a feature", claim="x"))
+    store.add_memory_check(
+        REL,
+        belief(bid="bot").id,
+        None,
+        ["about_the_bot"] * 3,
+        "ask_about_the_bot",
+        prompt="w",
+        at=T0,
+    )
+    store.close()
+    asked: list[str] = []
+    review(path, REL, ask=lambda q: asked.append(q) or "r")
+    assert "remark about the bot" in asked[0]
+    assert Store(path).user_beliefs(REL) == []

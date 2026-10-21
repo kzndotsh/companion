@@ -11,7 +11,7 @@ import logging
 import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
-from datetime import datetime, tzinfo
+from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
 from companion.core.beliefs.dedupe import is_duplicate_candidate
@@ -55,11 +55,13 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.context import Written, write_missing
-from companion.loops.knowing import Labelled, label_new
+from companion.loops.knowing import Labelled as Mapped
+from companion.loops.knowing import label_new
 from companion.loops.lore import KindsRead, label_views
 from companion.loops.names import NamesRead, read_names
 from companion.loops.openloops import Reading, catch_up_loops
 from companion.loops.views import WANT_KINDS, check_views
+from companion.loops.worth import Labelled, label
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:  # a type only: consolidate imports curate, which imports this module
@@ -399,9 +401,14 @@ async def reflect_from(
     wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
     new_wants = users.accepted_ids & wanted
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
-    mapped = await label_new(store, extractor, rel, now) if users.accepted else Labelled()
+    mapped = await label_new(store, extractor, rel, now) if users.accepted else Mapped()
     named = await read_names(store, extractor, rel, now) if users.accepted else NamesRead()
     noted = await write_missing(store, extractor, rel, now) if users.accepted else Written()
+    sorted_out = (
+        await label(store, extractor, rel, now, act_since=now - timedelta(days=1))
+        if users.accepted
+        else Labelled()
+    )
     sorted_views = await label_views(store, extractor, rel, now) if own.accepted else KindsRead()
     return ReflectResult(
         True,
@@ -416,6 +423,7 @@ async def reflect_from(
         + mapped.cost_usd
         + named.cost_usd
         + noted.cost_usd
+        + sorted_out.cost_usd
         + sorted_views.cost_usd,
         upto,
         views_accepted=own.accepted,

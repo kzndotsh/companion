@@ -130,6 +130,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/memory-group` | system | which memories are about one thing and would read better as one, read three times (ADR 0019) | v1 |
 | `system/memory-merge` | system | one memory a friend would keep for a group: one sentence, each thing once, adding nothing; a proposal for the owner | v2 |
 | `system/memory-context` | system | what they were talking about when a feeling or sensitive memory was said, under 15 words, shown beside it on the card (J51) | v1 |
+| `system/memory-worth` | system | whether a memory is about their life, a remark about the bot, or one day's routine, keep cases first; read three times | v1 |
 | `system/guess-invite` | system | whether their short question invites a guess about them, and about what (J16) | v1 |
 | `system/promise-read` | system | the promises the companion made in its own replies: standing or once, and a word it said it would stop using (J12) | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |

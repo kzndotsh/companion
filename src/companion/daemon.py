@@ -43,6 +43,7 @@ from companion.loops.reminders import deliver_due
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
+from companion.loops.worth import expire_routine, label
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import RefusalFallback, TalkerFallback
 from companion.models.retry import retry_on_network_error
@@ -388,6 +389,7 @@ async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId) -
         try:
             await nightly(store, judge, rel, utc_now(), local_zone(), mode=consolidate_mode())
             await merging.recent(store, judge, rel, utc_now(), local_zone())
+            expire_routine(store, rel, utc_now())
         except Exception:
             logging.getLogger("companion.consolidate").exception("memory check failed")
 
@@ -639,6 +641,28 @@ async def context_now(db: Path, relationship: str) -> str:
     finally:
         store.close()
     return f"wrote {done.written} notes on what was being talked about, ${done.cost_usd:.4f}\n"
+
+
+async def worth_now(db: Path, relationship: str) -> str:
+    """Label every memory kept before the rule; each change becomes a question, `memory label`."""
+    load_dotenv(Path(".env"))
+    store = Store(db)
+    try:
+        async with httpx.AsyncClient() as client:
+            done = await label(
+                store,
+                extractor(client),
+                RelationshipId(relationship),
+                utc_now(),
+                act_since=None,
+                limit=1000,
+            )
+    finally:
+        store.close()
+    return (
+        f"labelled {done.labelled}, {done.questions} questions for memory review,"
+        f" ${done.cost_usd:.4f}\n"
+    )
 
 
 async def lore_now(db: Path, relationship: str, *, again: bool = False) -> str:

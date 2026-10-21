@@ -268,8 +268,10 @@ class Store:
             self._conn, rel, belief_id, other_id, reads=reads, verdict=verdict, prompt=prompt, at=at
         )
 
-    def checked_memories(self, rel: RelationshipId) -> set[BeliefId]:
-        return memory_checks.checked(self._conn, rel)
+    def checked_memories(
+        self, rel: RelationshipId, prompt: str = "system/memory-check"
+    ) -> set[BeliefId]:
+        return memory_checks.checked(self._conn, rel, prompt)
 
     def unanswered_checks(
         self, rel: RelationshipId, verdicts: Sequence[str]

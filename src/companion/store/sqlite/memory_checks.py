@@ -44,11 +44,14 @@ def add(  # noqa: PLR0913
     return int(cur.lastrowid or 0)
 
 
-def checked(conn: sqlite3.Connection, rel: RelationshipId) -> set[BeliefId]:
+def checked(
+    conn: sqlite3.Connection, rel: RelationshipId, prompt: str = "system/memory-check"
+) -> set[BeliefId]:
+    """The memories read by this prompt (any version)."""
     rows = conn.execute(
         "SELECT DISTINCT belief_id FROM memory_checks"
-        " WHERE relationship_id = ? AND other_id IS NULL",
-        (rel,),
+        " WHERE relationship_id = ? AND other_id IS NULL AND prompt LIKE ?",
+        (rel, f"{prompt}@%"),
     ).fetchall()
     return {BeliefId(str(r["belief_id"])) for r in rows}
 

@@ -808,3 +808,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## Request assembly: what they were talking about, beside a feeling or sensitive memory
 - From 2026-10-21 a memory line on the card for a state or a sensitive memory reads "(mentioned <when>; said <what they were talking about>)" when its note exists (`core/card.py`). Other memories are unchanged, so the card grows only where the owner's picks showed it helps.
+
+## system/memory-worth
+- **system/memory-worth v1** (current). New. The owner's rule (2026-10-21): remarks about the bot are dropped, a routine moment of one day lasts a week, and anything unclear is asked. A first draft listed the categories and then the exceptions, and the model applied the category and skipped the exceptions: a third of what it would drop was how they want to be talked to or a feeling about the companion. This version checks the keep cases first (how they want to be treated, its style, rules or limits; feelings about it or AI; building it as part of their life; the habit behind a routine; a feeling, a first or something ongoing; anything they asked to remember), and only then labels about_the_bot, routine or keep. Read three times; code acts on a new memory only when all three agree and asks the owner otherwise; a memory kept before the rule becomes a question either way (`core/worth.py`).

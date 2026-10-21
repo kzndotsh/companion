@@ -12,6 +12,9 @@ from companion.core.clock import utc_now
 from companion.core.consolidate import HELD, Label, Relation
 from companion.core.merging import NOTE, PICK, merged_kind
 from companion.core.types import Belief, BeliefId, RelationshipId
+from companion.core.worth import ASK_ABOUT_THE_BOT, ASK_ROUTINE
+from companion.core.worth import ASKED as WORTH_ASKED
+from companion.core.worth import Label as Worth
 from companion.loops.curate import merge, retire
 from companion.store.sqlite.memory_checks import MemoryCheck
 from companion.store.sqlite.merges import Proposal
@@ -25,6 +28,9 @@ WHY: dict[str, str] = {
     Label.PASSING: "looks like a passing moment (sensitive, so it is your call)",
     Relation.REPLACES: "the later one may replace the earlier",
     Relation.CONTRADICTS: "these two may not both be true",
+    ASK_ABOUT_THE_BOT: "reads as a remark about the bot, not about you (would be dropped)",
+    ASK_ROUTINE: "reads as a routine moment of one day (would be let go)",
+    Worth.UNSURE: "unclear whether this is about you, about the bot, or a routine moment",
 }
 
 
@@ -44,7 +50,9 @@ def _pending(
     join is held back: pieces of one moment read as a contradiction when apart."""
     merges = [p for p in store.merge_proposals(rel) if _open(p)]
     joined = [set(p.members) for p in merges]
-    singles = [c for c in store.unanswered_checks(rel, list(ASKED)) if c.other_id is None]
+    singles = [
+        c for c in store.unanswered_checks(rel, [*ASKED, *WORTH_ASKED]) if c.other_id is None
+    ]
     # a passing moment is asked about only when sensitive; the rest close on their own
     singles = [c for c in singles if c.verdict != Label.PASSING or _held(current, c.belief_id)]
     pairs = [
