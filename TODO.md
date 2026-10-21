@@ -27,12 +27,12 @@ decision is made; it may be wrong, but never stale.
 
 ---
 
-## Where we are (2026-10-20)
+## Where we are (2026-10-21)
 
 Live: persona **v41** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
 **Claude Haiku 5.5** with a fallback model for calls it refuses. 20 ADRs, 110 public eval fixtures plus the
-private recorded ones, and about 980 tests with strict lint and types.
+private recorded ones, and about 1,020 tests with strict lint and types.
 
 Built and working:
 
@@ -122,6 +122,9 @@ Each item ends with the thing that tells us it is done. The cards are below.
    2026-10-26 is read and the owner decides on `COMPANION_CONSOLIDATE=on`.
 7. **Its own promises and lore** (J12, ADR 0020): promises and labels in shadow, tastes shown live since
    2026-10-20. *Done when:* the review of 2026-10-27 is read and the owner decides J12 step 2 and LR5.
+8. **Reminders in real use** (J50), live since 2026-10-21. *Done when:* the first real reminders and
+   check-ins have arrived when meant, read in `companion reminders`, and the owner says whether repeating
+   ones are wanted.
 
 ### Next
 

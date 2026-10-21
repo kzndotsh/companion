@@ -7,7 +7,7 @@ Read this first. `CLAUDE.md` is a symlink to this file, so every agent sees the 
 A Telegram companion bot that tries to be the most human-like AI companion, plus the memory engine
 under it. One person talks to it, marks a reply `/flag` when it feels off and `/fav` when it
 delights, and those marks set priorities. It runs from `src/companion`. It is a single-user,
-local-only project: the git repo has no remote and the bot runs on the owner's machine.
+project: the bot runs on the owner's machine, and the repo is pushed to a GitHub remote (`origin`).
 
 ## Where things live
 
@@ -32,6 +32,7 @@ just restart      # stop the running bot, wait for it to exit, start the new one
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup
 uv run companion memory review | promises | names | lore   # questions for the owner, and the shadow lists
+uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
 uv run companion invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
 uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
@@ -107,7 +108,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   per stage and the full text of what was said. Secrets are scrubbed by value (`logsetup.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.
 - Never log or print the Telegram token. Telegram errors carry no URL (`TelegramError`).
-- Restart with `just restart`, which stops the old process first. Two bots on one token fight over updates. After a
+- Restart with `just restart` in a terminal the owner can see, never as a hidden background job or under a
+  timeout (it runs the bot in the foreground). It stops the old process first. Two bots on one token fight over updates. After a
   restart, confirm the "up as" line shows the new prefix and persona.
 - A reply the user never received is marked undelivered and left out of what the model reads.
 - Replies are held to feel typed: `COMPANION_PACE` is off, quick, natural (default) or slow.
@@ -210,11 +212,12 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   drawn once more on a code-check fail, and sent; their words go out marked when the talker fails or the
   cap is reached. A pretend scene holds them until it ends; one missed while the bot was down by over two
   hours is let go. A check-in with no time is set at a time picked once between 4 and 8 pm and confirmed
-  only as the part of the day ("Thursday evening"). `companion reminders` lists them, `--cancel ID` drops one; `COMPANION_REMINDERS=off`.
+  only as the part of the day ("Thursday evening"). `companion reminders` lists them, `--cancel ID`
+  drops one; `COMPANION_REMINDERS=off`.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash, an AI disclaimer nobody asked for, the clock line or a tag copied from the system
-  block, and the stock "that sounds X, especially when" line, by code, and a joke bolted onto an ordinary
+  block, the stock "that sounds X, especially when" line and the stage direction "a beat", by code, and a joke bolted onto an ordinary
   message by the quip judge; in a scene or on a serious turn only the code checks. On a fail the same model is asked once more
   and the second reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
   edited, and an empty reply is drawn once more instead of a silent turn. `COMPANION_RESAMPLE=off` turns

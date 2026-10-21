@@ -42,6 +42,9 @@ Today it is reached through Telegram, its only integration for now.
   never asks them to repeat something memory already holds.
 - **Follows up.** Things they say about their near future become open loops. When one falls due, it is
   brought up lightly the next time they write. Reaching out first runs in shadow only.
+- **Reminds them.** "Remind me at 8pm to take the dog out" or "check up on me in a few days about the
+  interview": a small model reads the words, code works out the time and asks when it is unclear, and
+  the reminder comes when due in its own voice. One-off only; a pretend scene holds it until it ends.
 - **Moves on.** When a small topic has run its course, it reacts and moves the chat on instead of
   asking about smaller and smaller details.
 - **Has tastes of its own.** It picks for itself and keeps its view under pushback without a reason
@@ -63,8 +66,9 @@ Today it is reached through Telegram, its only integration for now.
   go to a less restrictive model, above an age floor in code that no setting changes
   ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
 - **Checks its own replies.** A reply with a known habit (an em dash, an AI disclaimer nobody asked for,
-  the clock line copied from its own notes, the stock "that sounds X, especially when" line, and on
-  ordinary turns a joke bolted onto an ordinary message) is drawn once more. Nothing is ever edited.
+  the clock line copied from its own notes, the stock "that sounds X, especially when" line, the stage
+  direction "a beat", and on ordinary turns a joke bolted onto an ordinary message) is drawn once more,
+  and so is an empty reply. Nothing is ever edited.
 - **Never goes silent.** If the talker errors, or has not answered in ten seconds, a fallback model
   answers too and the first reply wins.
 
