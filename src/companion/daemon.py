@@ -27,6 +27,7 @@ from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalke
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.io.telegram import Commands, Hooks, Telegram
+from companion.loops import merging
 from companion.loops.callbacks import check_new
 from companion.loops.consolidate import SameCheck, nightly
 from companion.loops.curate import rebuild, retire_implicated_views
@@ -385,6 +386,7 @@ async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId) -
             continue
         try:
             await nightly(store, judge, rel, utc_now(), local_zone(), mode=consolidate_mode())
+            await merging.recent(store, judge, rel, utc_now(), local_zone())
         except Exception:
             logging.getLogger("companion.consolidate").exception("memory check failed")
 
@@ -608,6 +610,20 @@ async def label_now(db: Path, relationship: str) -> str:
     finally:
         store.close()
     return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"
+
+
+async def group_now(db: Path, relationship: str) -> str:
+    """Propose merges across every day and the whole store, for `companion memory group`."""
+    load_dotenv(Path(".env"))
+    store = Store(db)
+    try:
+        async with httpx.AsyncClient() as client:
+            done = await merging.everything(
+                store, extractor(client), RelationshipId(relationship), utc_now(), local_zone()
+            )
+    finally:
+        store.close()
+    return f"proposed {done.groups} merges, ${done.cost_usd:.4f}; answer them in memory review\n"
 
 
 async def lore_now(db: Path, relationship: str, *, again: bool = False) -> str:

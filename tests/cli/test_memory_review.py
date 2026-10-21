@@ -102,3 +102,56 @@ def test_skip_and_quit_leave_the_question_for_later(
     answers = iter(["s", "q"])
     review(db, REL, ask=lambda _: next(answers))
     assert len(Store(db).unanswered_checks(REL, ["out_of_date", "overstated"])) == 2
+
+
+def _merge_proposal(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> Path:
+    from companion.core.types import BeliefKind  # noqa: PLC0415
+
+    path = tmp_path / "rel.sqlite"
+    store = Store(path)
+    store.append_utterance(utterance(text="had my checkup, it was virtual. all done", uid="u1"))
+    for bid, quote, kind in (
+        ("visit", "had my checkup", BeliefKind.EVENT),
+        ("virtual", "it was virtual", BeliefKind.EVENT),
+        ("done", "all done", BeliefKind.STATE),
+    ):
+        store.insert_belief(
+            belief(bid=bid, utterance_id="u1", quote=quote, claim=f"checkup {bid}", kind=kind)
+        )
+    ids = [belief(bid=b).id for b in ("visit", "virtual", "done")]
+    store.add_memory_check(
+        REL, ids[0], ids[1], ["contradicts"] * 3, "contradicts", prompt="p", at=T0
+    )
+    store.add_merge_proposal(REL, ids, "Had a virtual checkup and it is done.", prompt="g", at=T0)
+    store.close()
+    return path
+
+
+def test_a_merge_joins_the_memories_keeping_every_quote_and_closes_the_originals(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.core.types import BeliefKind  # noqa: PLC0415
+
+    db = _merge_proposal(tmp_path, utterance, belief)
+    asked: list[str] = []
+    out = review(db, REL, ask=lambda q: asked.append(q) or "m")
+    assert "as one: Had a virtual checkup and it is done." in asked[0]
+    assert len(asked) == 1  # the conflict between two of its pieces is never asked
+    [merged] = Store(db).user_beliefs(REL)
+    assert merged.claim == "Had a virtual checkup and it is done."
+    assert {e.quote for e in merged.evidence} == {"had my checkup", "it was virtual", "all done"}
+    assert merged.kind is BeliefKind.STATE  # it holds a passing state, so it fades like one
+    assert "merged 3 into" in out
+
+
+def test_keeping_a_merge_apart_changes_nothing_and_is_not_asked_again(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    db = _merge_proposal(tmp_path, utterance, belief)
+    answers = iter(["a", "b"])
+    out = review(db, REL, ask=lambda _: next(answers))
+    assert "kept apart  3 memories" in out
+    assert len(Store(db).user_beliefs(REL)) == 3
+    assert [p.answer for p in Store(db).merge_proposals(REL)] == ["apart"]

@@ -9,9 +9,11 @@ from pathlib import Path
 
 from companion.core.clock import utc_now
 from companion.core.consolidate import HELD, Label, Relation
+from companion.core.merging import merged_kind
 from companion.core.types import Belief, BeliefId, RelationshipId
-from companion.loops.curate import retire
+from companion.loops.curate import merge, retire
 from companion.store.sqlite.memory_checks import MemoryCheck
+from companion.store.sqlite.merges import Proposal
 from companion.store.sqlite.store import Store
 
 PER_SITTING = 5
@@ -32,12 +34,50 @@ def _held(current: Mapping[BeliefId, Belief], bid: BeliefId) -> bool:
 
 def _pending(
     store: Store, rel: RelationshipId, current: Mapping[BeliefId, Belief]
-) -> list[MemoryCheck]:
+) -> list[MemoryCheck | Proposal]:
+    """Merges first, then the checks. A conflict between two memories that a pending merge would
+    join is held back: pieces of one moment read as a contradiction when apart."""
+    merges = [p for p in store.merge_proposals(rel) if p.answer is None]
+    joined = [set(p.members) for p in merges]
     singles = [c for c in store.unanswered_checks(rel, list(ASKED)) if c.other_id is None]
     # a passing moment is asked about only when sensitive; the rest close on their own
     singles = [c for c in singles if c.verdict != Label.PASSING or _held(current, c.belief_id)]
-    pairs = [c for c in store.unanswered_checks(rel, list(CONFLICT)) if c.other_id is not None]
-    return sorted(singles + pairs, key=lambda c: c.id)
+    pairs = [
+        c
+        for c in store.unanswered_checks(rel, list(CONFLICT))
+        if c.other_id is not None and not any({c.belief_id, c.other_id} <= j for j in joined)
+    ]
+    return [*merges, *sorted(singles + pairs, key=lambda c: c.id)]
+
+
+def _merge_question(p: Proposal, current: Mapping[BeliefId, Belief]) -> str | None:
+    if not all(m in current for m in p.members):
+        return None
+    lines = "\n".join(f"  - {current[m].claim}" for m in p.members)
+    return (
+        f"\nThese may be one memory:\n{lines}\n  as one: {p.claim}\n"
+        "  [m]erge, keep [a]part, [s]kip, [q]uit: "
+    )
+
+
+def _merge_answer(  # noqa: PLR0913
+    store: Store,
+    rel: RelationshipId,
+    p: Proposal,
+    current: Mapping[BeliefId, Belief],
+    *,
+    choice: str,
+    now: datetime,
+) -> str | None:
+    if choice == "a":
+        store.answer_merge(p.id, "apart", now)
+        return f"kept apart  {len(p.members)} memories"
+    if choice != "m":
+        return None
+    kind = merged_kind([current[m] for m in p.members])
+    done = merge(store, rel, list(p.members), p.claim, now, kind=kind, why="the owner agreed")
+    store.answer_merge(p.id, "merged", now)
+    return done
 
 
 def _question(check: MemoryCheck, current: Mapping[BeliefId, Belief]) -> str | None:
@@ -103,18 +143,26 @@ def review(
         if not pending:
             return "no questions about memory right now\n"
         answered = 0
-        for check in pending[:per_sitting]:
+        for item in pending[:per_sitting]:
             current = {b.id: b for b in store.user_beliefs(rel)}
             now = utc_now()
-            question = _question(check, current)
+            is_merge = isinstance(item, Proposal)
+            question = _merge_question(item, current) if is_merge else _question(item, current)
             if question is None:
-                store.answer_check(check.id, "gone", now)
+                if isinstance(item, Proposal):
+                    store.answer_merge(item.id, "gone", now)
+                else:
+                    store.answer_check(item.id, "gone", now)
                 answered += 1
                 continue
             choice = ask(question).strip().lower()[:1]
             if choice == "q":
                 break
-            line = _answer(store, rel, check, current, choice=choice, now=now)
+            line = (
+                _merge_answer(store, rel, item, current, choice=choice, now=now)
+                if isinstance(item, Proposal)
+                else _answer(store, rel, item, current, choice=choice, now=now)
+            )
             if line is not None:
                 lines.append(line)
                 answered += 1

@@ -795,3 +795,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## notes/reminder-cancelled
 - **notes/reminder-cancelled v1** (current). New (J50). They asked to drop a reminder and the pending one was cancelled.
+
+## system/memory-group
+- **system/memory-group v1** (current). New (ADR 0019). An audit of every memory found one moment split into several memories and one interest restated in new words; the write-time pair check labels such pairs merge but nothing acted on it, and it reads pieces of one moment as conflicts. The memories of each day (and once, the whole store) are listed with their dates and quotes and grouped three times; a group counts where all three reads put each pair together (`core/merging.py`). Each group becomes a question in `companion memory review`; nothing merges without the owner.
+
+## system/memory-merge
+- **system/memory-merge v1** (current). New. For an agreed group, one memory that says everything its members say, keeping every date and detail and adding nothing, or keep apart when it cannot. The owner sees the members and this wording before anything is merged; the merged memory carries every quote and the originals are closed as merged into it, never removed.

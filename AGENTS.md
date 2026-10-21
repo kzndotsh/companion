@@ -31,7 +31,7 @@ just logs         # follow data/logs/companion.log: every stage, judge, model an
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup
-uv run companion memory review | promises | names | lore   # questions for the owner, and the shadow lists
+uv run companion memory review | group | promises | names | lore   # questions for the owner, merge proposals, shadow lists
 uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
 uv run companion invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
@@ -181,7 +181,11 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   When the memory pass writes a new memory, the nearest existing one (by embedding, at 0.55 or more) is
   read as a pair three times; read as the same, the new quote becomes evidence on the old memory instead;
   read as a conflict (replaces or contradicts) all three times, it is a question for the owner, who keeps
-  one or both (J11). `COMPANION_CONSOLIDATE` is shadow (log only) unless `on` or `off`. Nothing is merged
+  one or both (J11). Memories about one thing (one moment split into pieces, one interest restated) are grouped
+  three times each night for the last two days (`system/memory-group`, `core/merging.py`; `companion memory
+  group` for the whole store); each agreed group, with one wording that keeps every detail
+  (`system/memory-merge`), is a merge question in `memory review`, and a conflict between two pieces of a
+  pending merge is held back. `COMPANION_CONSOLIDATE` is shadow (log only) unless `on` or `off`. Nothing is merged
   automatically. `companion memory review` asks the owner the questions the check raised; `companion merge`
   merges by hand.
 - When a short question of theirs invites a guess about them ("you know what time it is?"), its own judge

@@ -12,6 +12,7 @@ from companion.core.extractor import Extractor
 from companion.core.types import (
     Belief,
     BeliefId,
+    BeliefKind,
     Decision,
     DecisionId,
     DecisionKind,
@@ -73,12 +74,15 @@ def retire(
     return f"closed  {matches[0].claim}"
 
 
-def merge(
+def merge(  # noqa: PLR0913
     store: Store,
     rel: RelationshipId,
     id_prefixes: list[str],
     claim: str,
     now: datetime | None = None,
+    *,
+    kind: BeliefKind | None = None,
+    why: str = "at the owner's request",
 ) -> str:
     """Several beliefs that say one thing become one, worded by the owner, carrying every quote the
     originals had (ADR 0001); the originals are closed as merged into it, never removed (ADR 0002).
@@ -101,6 +105,7 @@ def merge(
         first,
         id=BeliefId(uuid.uuid4().hex),
         claim=claim.strip(),
+        kind=kind or first.kind,
         evidence=evidence,
         confidence=max(b.confidence for b in found),
         sensitivity=max(b.sensitivity for b in found),
@@ -109,7 +114,7 @@ def merge(
     )
     store.insert_belief(merged)
     for b in found:
-        _close(store, b, f"merged into {merged.id[:8]} at the owner's request", now)
+        _close(store, b, f"merged into {merged.id[:8]} {why}", now)
     return f"merged {len(found)} into {merged.id[:8]}  {merged.claim}"
 
 

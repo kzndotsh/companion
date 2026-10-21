@@ -52,6 +52,7 @@ from companion.store.sqlite import (
     labels,
     ledger,
     memory_checks,
+    merges,
     mood,
     names,
     open_loops,
@@ -276,6 +277,23 @@ class Store:
 
     def answer_check(self, check_id: int, said: str, at: datetime) -> None:
         memory_checks.answer(self._conn, check_id, said, at)
+
+    def add_merge_proposal(
+        self,
+        rel: RelationshipId,
+        members: Sequence[BeliefId],
+        claim: str,
+        *,
+        prompt: str,
+        at: datetime,
+    ) -> int:
+        return merges.add(self._conn, rel, members, claim, prompt, at)
+
+    def merge_proposals(self, rel: RelationshipId) -> list[merges.Proposal]:
+        return merges.all_(self._conn, rel)
+
+    def answer_merge(self, proposal_id: int, said: str, at: datetime) -> None:
+        merges.answer(self._conn, proposal_id, said, at)
 
     def add_names(  # noqa: PLR0913
         self,

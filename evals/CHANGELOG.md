@@ -1245,3 +1245,12 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   detail from the message before) while it carries one quote, so "does this quote show the claim" has no
   clean answer; and the audit's own line between a fair reading and an overstatement is a judge's call.
   Not built. 20.8 cents.
+- **2026-10-21. Memories about one thing, proposed as one (ADR 0019).** The write-time pair check had
+  labelled 7 pairs merge (all three reads) with nothing acting on it, read pieces of one moment as
+  conflicts 6 times, and compares only with the single nearest memory. A grouping judge
+  (`system/memory-group`, Haiku 5.5) read each day's memories and then the whole store three times; a
+  group counts where every read put each pair together. By eye the groups were right: one moment's
+  pieces, an interest stated three ways, one project; a few were looser (two related likes) and are the
+  owner's to keep apart. `companion memory group` on the live store proposed 52 merges (sizes 2 to 6) for
+  2.1 cents; one day's list was refused by the first model and read by the fallback. Nothing merges
+  without the owner.

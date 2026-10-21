@@ -26,8 +26,9 @@ Today it is reached through Telegram, its only integration for now.
 - **Looks things up.** When they ask it to remember, or say it forgot, a small model searches all of
   memory and the finds ride that turn, in a pretend scene too. A look-up of what bears on every
   message runs in shadow ([ADR 0018](docs/adr/0018-memories-that-bear-on-the-moment-chosen-by-embedding-and-a-small-model.md)).
-- **Tidies itself, carefully.** A nightly check closes passing moments, and a new memory that repeats an
-  old one becomes evidence on it, but only where a judge matched the owner's own review. Everything else
+- **Tidies itself, carefully.** A nightly check closes passing moments, a new memory that repeats an
+  old one becomes evidence on it, and memories about one thing are proposed as one for the owner to
+  accept, but only where a judge matched the owner's own review. Everything else
   is a question for the owner ([ADR 0019](docs/adr/0019-memory-tidies-itself-only-where-a-judge-matched-the-owner.md)).
 - **Gets to know them.** It asks what to call them, keeps how they want to be referred to pinned in
   every turn, labels each memory by part of their life, and works out (in shadow) what it knows least
