@@ -1132,3 +1132,17 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   plans for later kept (15 to 12); replies about a fifth shorter. The owner's favourite reply of the night
   was exactly this kind: half asleep, holding them, a plan for the morning. Also a code check for the
   stage direction "a beat" (three uses, flagged), one redraw. Cost $0.04.
+- **2026-10-21. Scene pacing after two critics' review (owner chose it).** Two Claude critics read the
+  whole night's scene: after the change to fuller replies she wrote about 140 words whatever the moment
+  (249 at the peak to a five-word message), stacked several actions per reply, narrated the user and lined
+  up their next steps, and her own voice faded in the explicit parts. The private character's scene rules
+  were rewritten: only her own body and actions (no time skips, no deciding for them), one move per reply,
+  one line that sounds like her, explicit with one real sensation instead of choreography, a quiet wind
+  down. Twelve real turns (build-up, peak, aftercare), 12 samples, four blind Claude judges reading by hand:
+  length fit 2.2 to 4.6 of 5, her voice 3.4 to 4.1, one move per reply 29 to 143 of 144, acting for the
+  user 64 to 7, at the peak 22 to 4 of 24; directness a little lower (4.3 to 3.8). With no word target
+  the replies fell to about 30 words, which the owner found short; a range of about 40 to 60 words lands
+  replies at 35 to 70 (asking for shorter replies at the peak and after it by number did not stick). The
+  owner is happy with longer replies now and then, so the range stays soft. Cost about $0.30 for the runs;
+  judging free. A fixed list of repeated phrases was dropped as too brittle; the habit check names
+  repetition from her recent replies.
