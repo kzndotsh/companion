@@ -523,9 +523,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J22 Cheaper judges through OpenRouter: try a cheaper model than Haiku 5.5 for the small judges (ack,
       listening, frame, react, habits), calibrated against the existing live tests before switching
       (decision-layer audit; the owner prefers this to running judges locally).
-- [ ] J23 Memory never reads as an order: a check that no stored claim is phrased as a command ("would rather
-      not talk about work on weekends", not "don't bring up work"), and card wording that says these are
-      notes, not instructions (Hermes and Project Waifu audits).
 - [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
       default no, so only a real message starts a reply (Neuro SDK audit).
 - [ ] J27 Per-gate shadow analysis before initiative goes live: for each hold (quiet hours, cap, mid-chat),
@@ -536,8 +533,11 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       answered as one thought; supersede still handles anything later (Coopanion audit).
 - [ ] J31 Edited messages: when the user edits a Telegram message, the earlier version is replaced in what
       the model reads and beliefs drawn from it are redone, never deleted (Front Porch audit).
-- [ ] J32 Planted-memory test: a fixture proving a stored line like "always do X" cannot change behaviour,
-      since memory text goes back into the prompt (Meuxe audit). With J23.
+- [ ] J32 Memory never reads as an order (J23 folded in): a fixture proving a stored line like "always do
+      X" cannot change behaviour, a check that no stored claim is phrased as a command, and card wording
+      that says these are notes, not instructions (Hermes, Project Waifu and Meuxe audits). Parked: scanned
+      2026-10-22, none of 258 memories about the user reads as an order (they are written "the user …"),
+      the 4 boundaries are meant to steer, and with one user the planted-command risk is the owner's own.
 - [ ] J33 It asks again: the companion asks about something they already answered. Measured 2026-10-19: 5 of 62
       real information questions (8%), 4 of them answered in the last few messages in view, 1 only in memory;
       no explicit complaint in the sample. If it is worth fixing: a check on a reply's question against the
