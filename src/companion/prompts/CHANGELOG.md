@@ -817,3 +817,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## Request assembly: memories that bear on the moment, before the reply
 - From 2026-10-21 the relevance look-up runs before the reply on ordinary and serious turns outside a scene (3 s limit; a slow look-up only means no note), and its picks reach the system block through `notes/relevant` after any recall note (`loops/notes.py`). `shadow` keeps the old behaviour: run beside the turn and only logged.
+
+## Request assembly: a second redraw for an em dash
+- From 2026-10-21 a reply drawn again for an em dash that comes back with one is drawn a third time, and the third goes out whatever it is (`loops/fast.py` `_recheck`). Of 10 em dash redraws in the log, 4 still had one; the owner flagged one. Nothing is edited; every discarded draw is kept in the decision detail.

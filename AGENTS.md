@@ -236,7 +236,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   a scene) an em dash, an AI disclaimer nobody asked for, the clock line or a tag copied from the system
   block, the stock "that sounds X, especially when" line and the stage direction "a beat", by code, and a joke bolted onto an ordinary
   message by the quip judge; in a scene or on a serious turn only the code checks. On a fail the same model is asked once more
-  and the second reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
+  (twice if the redraw still has an em dash) and the last reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
   edited, and an empty reply is drawn once more instead of a silent turn. `COMPANION_RESAMPLE=off` turns
   it off.
 - Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the roleplay talker for a pretend

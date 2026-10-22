@@ -71,6 +71,7 @@ from companion.core.quip import PROMPT as QUIP_PROMPT
 from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
 from companion.core.react import decide as decide_reaction
+from companion.core.recheck import DASHED as EM_DASH_CHECK
 from companion.core.recheck import QUIP, code_checks
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.recheck import eligible as recheck_eligible
@@ -430,7 +431,8 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     in_scene: Frame,
     talker: Talker,
 ) -> Reply:
-    """The reply to send: the first, or one fresh draw when the first fails a check. On an ordinary
+    """The reply to send: the first, or one fresh draw when the first fails a check (two when the
+    redraw still has an em dash: one redraw left 4 of 10 dashes in). On an ordinary
     turn every check runs and the result is logged; in a scene or on a serious turn only the code
     checks run, and only a resample is logged."""
     severity = heard[0].severity if heard is not None else None
@@ -458,6 +460,12 @@ async def _recheck(  # noqa: PLR0913, PLR0917
         again = await talker.reply(request)
         _mark_reply(t, again)
         detail |= {"discarded": reply.text, "checks": list[Json](failed)}
+        still = [x for x in code_checks(again.text, t.text) if x == EM_DASH_CHECK]
+        if still and again.text:  # the model that dashes once often dashes again: one more draw
+            detail |= {"discarded_again": again.text}
+            third = await talker.reply(request)
+            _mark_reply(t, third)
+            again = third if third.text else again
     reason = f"resampled: {', '.join(failed)}" if failed else "kept: the reply passed its checks"
     decide(c, t, "recheck", detail or None, reason=reason)
     return again if again is not None and again.text else reply

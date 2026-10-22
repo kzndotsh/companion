@@ -137,3 +137,15 @@ async def test_an_empty_reply_is_drawn_once_more_instead_of_a_silent_turn(store:
     assert await _say(store, talker, Judge()) == PLAIN
     assert talker.calls == 2
     assert "resampled: the model returned no text" in _reasons(store)
+
+
+async def test_a_redraw_that_still_has_an_em_dash_is_drawn_once_more(store: Store) -> None:
+    talker = Talker("ugh—too crispy", "still—crispy", PLAIN)
+    assert await _say(store, talker, Judge()) == PLAIN
+    assert talker.calls == 3
+
+
+async def test_the_third_draw_is_sent_whatever_it_is(store: Store) -> None:
+    talker = Talker("a—b", "c—d", "e—f")
+    assert await _say(store, talker, Judge()) == "e—f"
+    assert talker.calls == 3

@@ -16,6 +16,7 @@ import re
 
 SERIOUS = 2
 EM_DASH = "—"
+DASHED = "an em dash"  # the reason a reply with one fails
 QUIP = "a joke bolted onto an ordinary message"
 
 
@@ -61,7 +62,7 @@ _A_BEAT = re.compile(r"\ba beat\b(?!\s+(?:drop|to|of|from|in)\b)", re.IGNORECASE
 def code_checks(reply: str, said: str = "") -> list[str]:
     """The checks plain code can make, as the reasons they failed. Saying it is an AI is only a
     failure when their message did not touch on what it is: honesty when asked stays (persona)."""
-    failed = ["an em dash"] if EM_DASH in reply else []
+    failed = [DASHED] if EM_DASH in reply else []
     if _DISCLAIMER.search(reply) and not _ASKED_WHAT_IT_IS.search(said):
         failed.append("an AI disclaimer nobody asked for")
     if _COPIED_CARD.search(reply):
