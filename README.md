@@ -155,6 +155,7 @@ All optional. Set them in `.env`.
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow` |
 | `COMPANION_SPLIT` | on | long plain replies are sometimes sent as two or three messages; `off` stops it |
 | `COMPANION_RELEVANCE` | `on` | memories that bear on their message, picked when one is near and shown to it (ADR 0018); `shadow` only logs, `off` stops it |
+| `COMPANION_EPISODES` | `on` | what the two of them did recently, shown when they point at a time or come back after a gap (J12); `shadow` only logs, `off` stops it |
 | `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 

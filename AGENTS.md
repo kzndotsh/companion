@@ -233,14 +233,14 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   hours is let go. A check-in with no time is set at a time picked once between 4 and 8 pm and confirmed
   only as the part of the day ("Thursday evening"). `companion reminders` lists them, `--cancel ID`
   drops one; `COMPANION_REMINDERS=off`.
-- The times they spent together are recorded in shadow (J12, `core/episodes.py`): the chat is cut into
+- The times they spent together are recorded (J12, `core/episodes.py`): the chat is cut into
   stretches at a 2-hour gap or a turn into or out of a pretend scene lasting 20 messages; code works out
   the length, the kind (everyday, scene, heavy), the most serious moment and firsts, and `system/episode-gist`
   writes one sentence on the shape of it and how it ended, never its details. Written nightly and by
   `companion episodes --write`; a newer prompt's line supersedes an older one. When their message points at a
   time ("last night", "today") or they come back after 3 hours, the lines for that time (or the last one) are
-  chosen by code and logged; with `COMPANION_EPISODES=on` they ride the system block (`notes/recent-times`).
-  Shadow until the owner has read the lines.
+  chosen by code, logged, and ride the system block (`notes/recent-times`; `COMPANION_EPISODES` on by
+  default, `shadow` only logs, `off` stops it). The owner read the lines and turned it on, 2026-10-22.
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash, an AI disclaimer nobody asked for, the clock line or a tag copied from the system
