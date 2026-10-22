@@ -20,6 +20,9 @@ from companion.prompts import get
 
 PROMPT = get("system/relevance")
 SHADOW = "relevance: what it would have kept in mind (shadow)"
+LIVE = "relevance: what it was shown"
+GATE = 0.42  # live: the small model picks only when the closest memory is this near (1 turn in 5)
+SHOWN = 2  # live: at most this many picks reach the talker, none already on the card
 SHORTLIST = 15
 MAX_PICKS = 3
 MAX_SENSITIVITY = 2  # never a crisis-level memory on its own

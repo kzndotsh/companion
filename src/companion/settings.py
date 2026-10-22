@@ -46,7 +46,7 @@ SWITCHES: tuple[Switch, ...] = (
     Switch(
         "COMPANION_ROUTE_INTIMATE", "intimate", ("off", "on"), {"on": "may route", "off": "stays"}
     ),
-    Switch("COMPANION_RELEVANCE", "relevance", ("on", "off"), {"on": "shadow"}),
+    Switch("COMPANION_RELEVANCE", "relevance", ("on", "shadow", "off")),
     Switch("COMPANION_CONSOLIDATE", "memory check", ("shadow", "on", "off")),
     Switch("COMPANION_PROMISES", "promises", ("shadow", "off")),
     Switch("COMPANION_LORE", "lore", ("on", "shadow", "off")),

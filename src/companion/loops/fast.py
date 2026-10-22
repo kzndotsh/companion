@@ -192,7 +192,7 @@ class Conversation:
     embed_model: str = ""
     lore: str = "off"  # on, shadow or off: its tastes nearest their message (ADR 0020)
     scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
-    relevance: bool = True  # the relevance look-up in shadow, when there is an embedder
+    relevance: str = "shadow"  # on (picks shown when a memory is near), shadow or off (ADR 0018)
     reminders: bool = True  # reminders they ask for are read and set (J50)
 
     async def handle(
@@ -645,7 +645,7 @@ def _relevance_beside(
     """Start the relevance look-up beside the turn on an ordinary message (shadow). It logs what it
     would have kept in mind and never holds up or changes the reply."""
     if (
-        not c.relevance
+        c.relevance != "shadow"
         or c.embedder is None
         or c.judge is None
         or heard is None
@@ -826,7 +826,8 @@ def _assemble(  # noqa: PLR0913
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)
     pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
-    notes = notes_for(Moment(c, t, in_scene, heard, looked, held, assertable))
+    on_card = frozenset(b.id for b in (*card.usable, *card.held, *card.older))
+    notes = notes_for(Moment(c, t, in_scene, heard, looked, held, assertable, on_card))
     card_text = tagged(
         "\n".join([clock, *([pinned] if pinned else []), *shown, *notes.lines]), memory=False
     )

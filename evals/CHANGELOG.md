@@ -1254,3 +1254,11 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   owner's to keep apart. `companion memory group` on the live store proposed 52 merges (sizes 2 to 6) for
   2.1 cents; one day's list was refused by the first model and read by the fallback. Nothing merges
   without the owner.
+- **2026-10-21. The relevance look-up goes live behind a gate (ADR 0018).** An owner flag: the companion
+  asked how they take an everyday drink and had to be told it knew. The shadow log for those turns had picked both
+  memories about it, neither on the card. Over 215 logged turns the closest memory's score had a
+  median of 0.36 (90th percentile 0.45); those turns scored 0.43 to 0.54, so the small model is now
+  asked only at 0.42 or more. On the recorded turn, drawn 10 times each with the everyday talker and the
+  owner's character: it used what it knew 3/10 with `notes/relevant`, 0/10 without; asking what
+  kind was 0/10 both ways (the live turn had asked). Within noise at 10 per side; judged next by flags.
+  About 1.2 cents.

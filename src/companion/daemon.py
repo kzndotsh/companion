@@ -339,7 +339,7 @@ async def run(data_dir: Path) -> None:
             embedder=_embedder(client, store, rel, s),
             embed_model=s.embed_model,
             lore=s.mode("lore"),
-            relevance=s.on("relevance"),
+            relevance=s.mode("relevance"),
             reminders=s.on("reminders"),
         )
         same = (

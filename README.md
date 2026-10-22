@@ -95,7 +95,6 @@ once its log has been read.
 |---|---|---|
 | Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` |
 | One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` |
-| The look-up of memories that bear on each message | `COMPANION_RELEVANCE` | the decision log |
 | What it would ask to get to know them | always shadow for now | `companion map` |
 | A light question when their words touch a basic it does not know (age, work, home, place) | always shadow for now | the decision log |
 | The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review`, the decision log |
@@ -155,6 +154,7 @@ All optional. Set them in `.env`.
 | `COMPANION_RESAMPLE` | on | a reply that fails a check is drawn once more; `off` disables it |
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow` |
 | `COMPANION_SPLIT` | on | long plain replies are sometimes sent as two or three messages; `off` stops it |
+| `COMPANION_RELEVANCE` | `on` | memories that bear on their message, picked when one is near and shown to it (ADR 0018); `shadow` only logs, `off` stops it |
 | `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 
@@ -163,7 +163,6 @@ All optional. Set them in `.env`.
 | Variable | Default | What it does |
 |---|---|---|
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
-| `COMPANION_RELEVANCE` | `shadow` | the look-up of memories that bear on each message (ADR 0018); `off` stops it |
 | `COMPANION_CONSOLIDATE` | `shadow` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 

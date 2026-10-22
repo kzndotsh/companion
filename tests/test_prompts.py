@@ -13,6 +13,7 @@ PLACEHOLDERS = {
     "notes/length": {"words", "unit", "limit"},
     "notes/length-serious": {"limit"},
     "notes/recall": {"items"},
+    "notes/relevant": {"items"},
     "notes/lore": {"items"},
     "notes/listening-trivial": {"examples"},
     "notes/topic-spent": {"move"},

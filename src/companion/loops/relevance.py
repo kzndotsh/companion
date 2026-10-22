@@ -58,7 +58,7 @@ async def embed_missing(
 
 
 def _row(b: Belief, on_card: set[BeliefId], score: float | None = None) -> dict[str, Json]:
-    row: dict[str, Json] = {"claim": b.claim, "on_card": b.id in on_card}
+    row: dict[str, Json] = {"id": b.id, "claim": b.claim, "on_card": b.id in on_card}
     if score is not None:
         row["score"] = round(score, 3)
     return row
@@ -76,7 +76,9 @@ async def look_up(  # noqa: PLR0913
     sharing: bool,
     on_card: set[BeliefId],
     now: datetime,
+    gate: float | None = None,
 ) -> Lookup:
+    """With `gate`, the small model is asked only when the closest memory scores at least that."""
     started = time.perf_counter()
     cost = await embed_missing(store, embedder, rel, model, now)
     texts = [said, f"{last_reply}\n{said}"] if last_reply else [said]
@@ -91,11 +93,16 @@ async def look_up(  # noqa: PLR0913
         query.vectors[-1], pool, vectors
     )  # with their last reply, when there is one
     started = time.perf_counter()
-    with purpose("relevance"):
-        result = await judge.extract(
-            PROMPT.text, build_prompt(last_reply, said, [b for b, _ in shortlist]), SCHEMA
-        )
-    picked = parse(result.data, [b for b, _ in shortlist])
+    gated = gate is not None and (not shortlist or shortlist[0][1] < gate)
+    picked: list[Belief] = []
+    pick_cost, pick_model = 0.0, ""
+    if not gated:
+        with purpose("relevance"):
+            result = await judge.extract(
+                PROMPT.text, build_prompt(last_reply, said, [b for b, _ in shortlist]), SCHEMA
+            )
+        picked = parse(result.data, [b for b, _ in shortlist])
+        pick_cost, pick_model = result.cost_usd, result.model
     detail: dict[str, Json] = {
         "nearest": [_row(b, on_card, s) for b, s in alone[:SHOWN]],
         "nearest_in_context": [_row(b, on_card, s) for b, s in shortlist[:SHOWN]],
@@ -103,10 +110,11 @@ async def look_up(  # noqa: PLR0913
         "searched": len(pool),
         "embed_ms": embed_ms,
         "pick_ms": int((time.perf_counter() - started) * 1000),
-        "cost_usd": round(cost + result.cost_usd, 6),
+        "cost_usd": round(cost + pick_cost, 6),
         "prompt": PROMPT.ref,
         "embed_model": model,
-        "pick_model": result.model,
+        "pick_model": pick_model,
+        "gated": gated,
     }
     log.debug(
         "relevance: %d picked of %d nearest (%d searched), on card %d, %dms + %dms, $%.5f",
@@ -116,7 +124,7 @@ async def look_up(  # noqa: PLR0913
         sum(b.id in on_card for b in picked),
         detail["embed_ms"],
         detail["pick_ms"],
-        cost + result.cost_usd,
+        cost + pick_cost,
     )
     return Lookup(detail)
 
@@ -133,6 +141,8 @@ async def shadow(  # noqa: PLR0913
     sharing: bool,
     on_card: Sequence[BeliefId],
     now: datetime,
+    gate: float | None = None,
+    timeout: float = TIMEOUT_SECONDS,
 ) -> Lookup | None:
     """The look-up with a time limit; None when it failed or ran out of time."""
     try:
@@ -148,8 +158,9 @@ async def shadow(  # noqa: PLR0913
                 sharing=sharing,
                 on_card=set(on_card),
                 now=now,
+                gate=gate,
             ),
-            TIMEOUT_SECONDS,
+            timeout,
         )
     except Exception as err:
         log.warning("relevance look-up failed or timed out: %r", err)

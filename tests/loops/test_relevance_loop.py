@@ -114,8 +114,13 @@ async def test_it_logs_the_nearest_and_the_pick_and_sends_nothing(store: Store) 
     [found] = _shadow(store)
     nearest = found["nearest"]
     assert isinstance(nearest, list)
-    assert nearest[0] == {"claim": "The user has two dogs.", "on_card": True, "score": 1.0}
-    assert found["picked"] == [{"claim": "The user has two dogs.", "on_card": True}]
+    assert nearest[0] == {
+        "id": "dogs",
+        "claim": "The user has two dogs.",
+        "on_card": True,
+        "score": 1.0,
+    }
+    assert found["picked"] == [{"id": "dogs", "claim": "The user has two dogs.", "on_card": True}]
     assert "kept in mind" not in talker.seen[0].card
     assert embedder.calls[0] == ["The user has two dogs.", "The user likes fries."]
     assert len(store.belief_embeddings(REL, "fake-embed")) == 2
@@ -126,3 +131,42 @@ async def test_memories_are_embedded_once(store: Store) -> None:
     await _say(store, embedder, "hi")
     await _say(store, embedder, "hello again")
     assert sum(len(c) == 2 and "The user has two dogs." in c for c in embedder.calls) == 1
+
+
+async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Store) -> None:
+    from companion.core.relevance import LIVE  # noqa: PLC0415
+
+    talker = Talker()
+    convo = Conversation(
+        store,
+        talker,
+        PREFIX,
+        REL,
+        judge=Picker(),
+        embedder=Embedder(),
+        embed_model="fake-embed",
+        relevance="on",
+    )
+    await convo.handle(SESSION, "my dog just stole a sock", "test", NOW)
+    turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 50)}
+    [live] = [d.detail for t in turns for d in store.decisions_for_turn(REL, t) if d.has_key(LIVE)]
+    assert live is not None
+    assert live["gated"] is False
+    assert not _shadow(store)  # live, not also in shadow
+    assert "may bear on what they just said" not in talker.seen[0].card  # already on the card
+
+
+def test_a_pick_not_on_the_card_reaches_the_notes(store: Store) -> None:
+    from companion.core.types import Frame as F  # noqa: PLC0415
+    from companion.loops.notes import Lookups, Moment, notes_for  # noqa: PLC0415
+    from companion.loops.turn import Turn  # noqa: PLC0415
+
+    convo = Conversation(store, Talker(), PREFIX, REL)
+    t = Turn(SESSION, TurnId("t1"), NOW, [], "fries sound good")
+    pick = ((BeliefId("food"), "The user likes fries."),)
+    shown = notes_for(Moment(convo, t, F.REAL, None, Lookups(relevant=pick), False, []))
+    assert any("The user likes fries." in line for line in shown.lines)
+    hidden = Moment(
+        convo, t, F.REAL, None, Lookups(relevant=pick), False, [], frozenset({BeliefId("food")})
+    )
+    assert not any("fries" in line for line in notes_for(hidden).lines)

@@ -82,6 +82,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/trivial-reactions` | data | the pool of short reactions a minor-vent note draws three size examples from (T14) | v1 |
 | `notes/lore` | note | its own tastes nearest their message, as the words it said, on an ordinary turn (ADR 0020) | v1 |
 | `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v2 |
+| `notes/relevant` | note | memories a small model picked as bearing on their message, when the closest is near; never ask what this answers (ADR 0018) | v1 |
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |
 | `notes/repair` | note | they say it got them wrong: own it in one line, go on from what they said (J30) | v1 |
 | `notes/guess` | note | they invite a guess: what memory holds that may fit, guess once as a question (J16) | v1 |

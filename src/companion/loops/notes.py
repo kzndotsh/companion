@@ -39,6 +39,9 @@ from companion.core.mood import reason as mood_reason
 from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_note
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import recall_note
+from companion.core.relevance import GATE as RELEVANCE_GATE
+from companion.core.relevance import LIVE as RELEVANCE_LIVE
+from companion.core.relevance import SHOWN as RELEVANCE_SHOWN
 from companion.core.reminders import PROMPT as REMINDER_PROMPT
 from companion.core.reminders import likely as reminder_likely
 from companion.core.topics import EVERY_TURNS as TOPIC_EVERY
@@ -48,6 +51,7 @@ from companion.core.topics import likely as topic_likely
 from companion.core.topics import topic_note
 from companion.core.types import (
     Belief,
+    BeliefId,
     Frame,
     Json,
     Speaker,
@@ -56,17 +60,21 @@ from companion.core.types import (
 from companion.loops.guess import Invited, invited_guess
 from companion.loops.lore import nearest_tastes
 from companion.loops.recall import Recalled, look_up
+from companion.loops.relevance import shadow as relevance_look_up
 from companion.loops.reminders import ASKED as REMINDER_ASKED
 from companion.loops.reminders import act as reminder_act
 from companion.loops.reminders import log_decision as reminder_log
 from companion.loops.reminders import read_slots as reminder_slots
 from companion.loops.topics import judge_spent
+from companion.prompts import get
 
 if TYPE_CHECKING:
     from companion.loops.fast import Conversation
 from companion.loops.turn import Heard, Turn, decide, is_casual, mark
 
 log = logging.getLogger("companion.turn")
+RELEVANT_NOTE = get("notes/relevant")
+LIVE_SECONDS = 3.0  # a slow look-up only means no memories are offered this turn
 LOOP_OFFERED = "open loop: offered as a note when they wrote"
 LOOP_NOTE_EVERY = timedelta(hours=24)
 
@@ -82,6 +90,7 @@ class Lookups:
     reminder: str | None = (
         None  # a reminder they asked for was set, cancelled or needs asking (J50)
     )
+    relevant: tuple[tuple[BeliefId, str], ...] = ()  # memories near their message (ADR 0018)
 
 
 LORE_SHOWN = "lore: its own tastes nearest their message"
@@ -118,7 +127,44 @@ async def look(
     asked_to_recall = heard is not None and heard[0].recall
     guess = None if asked_to_recall else await _invited_guess(c, t, in_scene, heard)
     tastes = await _tastes(c, t, in_scene, heard)
-    return Lookups(recalled, spent, guess, tastes, await _reminder(c, t))
+    reminder = await _reminder(c, t)
+    return Lookups(recalled, spent, guess, tastes, reminder, await _relevant(c, t, in_scene, heard))
+
+
+async def _relevant(
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+) -> tuple[tuple[BeliefId, str], ...]:
+    """With the look-up on (ADR 0018): the memories a small model picks as bearing on their message,
+    asked only when the closest memory is near (GATE), outside a scene. Logged either way."""
+    if c.relevance != "on" or c.embedder is None or c.judge is None or heard is None:
+        return ()
+    if in_scene is not Frame.REAL:
+        return ()
+    mark(t, "relevance look-up")
+    replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
+    found = await relevance_look_up(
+        c.store,
+        c.embedder,
+        c.judge,
+        c.rel,
+        model=c.embed_model,
+        said=t.text,
+        last_reply=replies[-1] if replies else None,
+        sharing=heard[0].severity >= 1,
+        on_card=(),
+        now=t.now,
+        gate=RELEVANCE_GATE,
+        timeout=LIVE_SECONDS,
+    )
+    if found is None:
+        return ()
+    decide(c, t, RELEVANCE_LIVE, found.detail)
+    rows = found.detail.get("picked")
+    return tuple(
+        (BeliefId(str(row["id"])), str(row["claim"]))
+        for row in (rows if isinstance(rows, list) else [])
+        if isinstance(row, dict) and isinstance(row.get("claim"), str) and "id" in row
+    )
 
 
 async def _reminder(c: Conversation, t: Turn) -> str | None:
@@ -377,6 +423,7 @@ class Moment:
     looked: Lookups
     held: bool  # the floor held this turn (ADR 0017)
     beliefs: Sequence[Belief]  # the memories that may be stated as true
+    on_card: frozenset[BeliefId] = frozenset()  # what the card already shows this turn
 
     @property
     def casual(self) -> bool:
@@ -465,6 +512,13 @@ def _topic(m: Moment, so_far: Offered) -> Offer:
     return _topic_note(m, quiet=_quiet(m, so_far), loop_offered=bool(so_far["loop"].lines))
 
 
+def _relevant_note(m: Moment, _: Offered) -> Offer:
+    picks = [claim for bid, claim in m.looked.relevant if bid not in m.on_card][:RELEVANCE_SHOWN]
+    if not picks:
+        return Offer()
+    return Offer((RELEVANT_NOTE.render(items="\n".join(f"- {p}" for p in picks)),))
+
+
 def _guess(m: Moment, _: Offered) -> Offer:
     g = m.looked.guess
     note = guess_note(g.about, g.offered) if g is not None else None
@@ -488,6 +542,7 @@ SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
     ("rude", _rude),
     ("repair", _repair),
     ("recall", _recalled),
+    ("relevant", _relevant_note),
     ("mood", _mood_line),
     ("hold", _hold),
     ("name", _name),

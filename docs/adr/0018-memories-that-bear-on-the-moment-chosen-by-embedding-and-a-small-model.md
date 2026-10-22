@@ -48,3 +48,13 @@ is and this stays off.
 
 **Reverses if.** The picks are no better than the card's own ranking, or they surface memories at the
 wrong moments once live.
+
+## Update, 2026-10-21: live behind a gate
+
+The review of the shadow log found the small model rarely said none and judges disagreed on what counts.
+The owner's own marks found no memory "needed" on ordinary turns, but then flagged a turn where the
+companion asked how they take an everyday drink; the look-up had picked both memories about it and neither was on the
+card. So it runs before the reply, the small model is asked only when the closest memory scores 0.42 or
+more (about one turn in five, including those turns), and at most two picks not already on the card
+are shown as "may bear on this; never ask what it answers". Measured on that turn: the reply used the
+memory 3/10 with the note, 0/10 without. Judged next by the owner's flags.
