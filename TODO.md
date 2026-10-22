@@ -232,7 +232,7 @@ Ordered. Pull from the top.
       joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150 (within noise)
       plain. Left: watch live flags; banter they started is let through by design.
 - [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, though a second
-      draw can carry one too. Missed inferences (the Hackers poster; the "Weird Fishes" meaning): low
+      draw can carry one too. Missed inferences (an object they mentioned; what a song meant to them): low
       reasoning made them worse and slower (9/30 to 4/30, 11/30 to 4/30), so reasoning stays off; likely a
       model limit, testable against another talker. "you seem sleepy" answered "haha, a little" (a body claim),
       not yet looked at.

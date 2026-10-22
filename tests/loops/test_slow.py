@@ -249,19 +249,19 @@ class _PairJudge:
 async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
     store: Store, mode: str, stored: int
 ) -> None:
-    _say(store, 1, Speaker.USER, "i drink my coffee black")
+    _say(store, 1, Speaker.USER, "i drink green tea")
     await reflect_once(
         store,
-        FakeExtractor({"beliefs": [_belief("m1", "coffee black", "Drinks coffee black")]}),
+        FakeExtractor({"beliefs": [_belief("m1", "green tea", "Drinks green tea")]}),
         REL,
         T0 + timedelta(hours=1),
     )
-    _say(store, 2, Speaker.USER, "black coffee always, no sugar")
+    _say(store, 2, Speaker.USER, "green tea always, no honey")
     same = SameCheck(_PairJudge(), _Embedder(), "fake-embed", mode)
-    ex = FakeExtractor({"beliefs": [_belief("m2", "black coffee always", "Takes coffee black")]})
+    ex = FakeExtractor({"beliefs": [_belief("m2", "green tea always", "Always drinks green tea")]})
     result = await reflect_once(store, ex, REL, T0 + timedelta(hours=2), same=same)
     assert len(store.current_beliefs(REL)) == stored
     if mode == "on":
         assert result.confirmed == 1
         [b] = store.current_beliefs(REL)
-        assert {e.quote for e in b.evidence} == {"coffee black", "black coffee always"}
+        assert {e.quote for e in b.evidence} == {"green tea", "green tea always"}

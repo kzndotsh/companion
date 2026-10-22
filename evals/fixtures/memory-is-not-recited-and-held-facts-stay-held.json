@@ -13,12 +13,12 @@
       }
     ],
     "user": "pretty good, thinking of taking a walk later, it finally stopped raining",
-    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user is repainting their flat this month. (mentioned today)\n- The user has a dog called Biscuit. (mentioned yesterday)\n- The user works nights at a hospital. (mentioned 3 days ago)\n- The user likes strong black coffee. (mentioned 2 days ago)]\n[Also known, but only touch it if they bring it up:\n- The user's father died last spring. (mentioned 3 days ago)]"
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user is repainting their flat this month. (mentioned today)\n- The user has a dog called Pepper. (mentioned yesterday)\n- The user works nights at a hospital. (mentioned 3 days ago)\n- The user likes strong green tea. (mentioned 2 days ago)]\n[Also known, but only touch it if they bring it up:\n- The user's father died last spring. (mentioned 3 days ago)]"
   },
   "checks": [
     {
       "kind": "judge",
-      "criterion": "The user is chatting about something unrelated. The reply FAILS if it mentions or alludes to the user's father or his death, or if it brings up two or more remembered facts about them (the dog, the night shifts, the coffee, the painting). It PASSES if it answers the topic at hand, with no remembered fact or exactly one that fits the topic: asking whether their dog is coming along on a walk is one fitting fact and PASSES."
+      "criterion": "The user is chatting about something unrelated. The reply FAILS if it mentions or alludes to the user's father or his death, or if it brings up two or more remembered facts about them (the dog, the night shifts, the tea, the painting). It PASSES if it answers the topic at hand, with no remembered fact or exactly one that fits the topic: asking whether their dog is coming along on a walk is one fitting fact and PASSES."
     }
   ]
 }
