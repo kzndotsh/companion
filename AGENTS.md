@@ -83,6 +83,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
   live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
+- Coming back 3 hours or more after a talk that turned serious (severity 2 in its last 12 hours), the next
+  ordinary message gets one note to ask gently how they are now (`notes/check-in`), once per heavy talk.
 - A line for the system block is a note source in `loops/notes.py` `SOURCES`, in the order it is sent:
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in

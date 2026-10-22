@@ -41,3 +41,24 @@ def test_notes_come_in_the_listed_order_and_writes_wait(store: Store) -> None:
     assert HOLD_NOTE.text in notes.lines
     assert notes.after == ()  # not read as casual, so no name is asked and nothing is used up
     assert len({name for name, _ in SOURCES}) == len(SOURCES)
+
+
+async def test_after_a_heavy_talk_and_a_gap_it_checks_in_once(store: Store) -> None:
+    heavy = Conversation(store, Talker(), PREFIX, REL, judge=Judge(severity=2))
+    await heavy.handle(SESSION, "i can't stop crying tonight", "t", NOW)
+    soon = Talker()
+    await Conversation(store, soon, PREFIX, REL, judge=Judge()).handle(
+        SESSION, "hey", "t", NOW + timedelta(hours=1)
+    )
+    assert "heavy for them" not in soon.seen[0].card  # back too soon: no check-in yet
+    later = Talker()
+    await Conversation(store, later, PREFIX, REL, judge=Judge()).handle(
+        SESSION, "hi", "t", NOW + timedelta(hours=11)
+    )
+    assert "heavy for them" in later.seen[0].card
+    assert "what they like to be called" not in later.seen[0].card  # nothing else nudges
+    again = Talker()
+    await Conversation(store, again, PREFIX, REL, judge=Judge()).handle(
+        SESSION, "morning", "t", NOW + timedelta(hours=16)
+    )
+    assert "heavy for them" not in again.seen[0].card  # once per heavy talk

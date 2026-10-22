@@ -74,6 +74,11 @@ from companion.loops.turn import Heard, Turn, decide, is_casual, mark
 
 log = logging.getLogger("companion.turn")
 RELEVANT_NOTE = get("notes/relevant")
+CHECK_IN_NOTE = get("notes/check-in")
+CHECKED_IN = "check-in: asked how they are after a heavy last talk"
+CHECK_IN_GAP = timedelta(hours=3)  # away at least this long since their last message
+HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
+SERIOUS = 2
 LIVE_SECONDS = 3.0  # a slow look-up only means no memories are offered this turn
 LOOP_OFFERED = "open loop: offered as a note when they wrote"
 LOOP_NOTE_EVERY = timedelta(hours=24)
@@ -488,17 +493,48 @@ def _mood_line(m: Moment, _: Offered) -> Offer:
     return Offer((shown,) if shown else (), after)
 
 
+def _severity(detail: dict[str, Json] | None) -> int:
+    """The severity a listening decision logged, or -1."""
+    labels = (detail or {}).get("labels")
+    value = labels.get("severity") if isinstance(labels, dict) else None
+    return value if isinstance(value, int) else -1
+
+
+def _check_in(m: Moment, _: Offered) -> Offer:
+    """When they come back after a gap and the talk before it was heavy (a serious message in its
+    last hours), one note to ask gently how they are, once per heavy talk."""
+    c, t = m.c, m.t
+    if m.heard is None or m.heard[0].severity >= SERIOUS or m.in_scene is not Frame.REAL:
+        return Offer()
+    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
+    if not theirs or t.now - theirs[-1].at < CHECK_IN_GAP:
+        return Offer()
+    last = theirs[-1].at
+    if c.store.decided_since(c.rel, CHECKED_IN, last):
+        return Offer()
+    recent = [u.turn_id for u in theirs if last - u.at <= HEAVY_WINDOW]
+    heavy = any(
+        _severity(d.detail) >= SERIOUS
+        for turn in recent
+        for d in c.store.decisions_for_turn(c.rel, turn)
+        if d.has_key("listening")
+    )
+    if not heavy:
+        return Offer()
+    return Offer((CHECK_IN_NOTE.text,), (lambda: decide(c, t, CHECKED_IN),))
+
+
 def _hold(m: Moment, _: Offered) -> Offer:
     return Offer((HOLD_NOTE.text,) if m.held else ())
 
 
-def _name(m: Moment, _: Offered) -> Offer:
-    return _ask_name(m)
+def _name(m: Moment, so_far: Offered) -> Offer:
+    return Offer() if so_far["check-in"].lines else _ask_name(m)
 
 
 def _quiet(m: Moment, so_far: Offered) -> bool:
     """A casual turn with no name asked and nothing held: room for a plan or a move on."""
-    return m.casual and not so_far["name"].lines and not m.held
+    return m.casual and not so_far["name"].lines and not so_far["check-in"].lines and not m.held
 
 
 def _map(m: Moment, so_far: Offered) -> Offer:
@@ -544,6 +580,7 @@ SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
     ("repair", _repair),
     ("recall", _recalled),
     ("relevant", _relevant_note),
+    ("check-in", _check_in),
     ("mood", _mood_line),
     ("hold", _hold),
     ("name", _name),

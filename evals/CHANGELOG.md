@@ -1277,3 +1277,7 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   there as intimate talk since 2026-10-19, 11 began a run. `system/explicit-lead` on those 11, three reads
   each: the two explicit messages explicit 3/3, the nine flirty ones not 3/3. So a first intimate message
   stays on the everyday talker unless it is explicit, and the next goes on. About 1 cent.
+- **2026-10-22. A gentle check-in after a heavy talk.** On the real morning-after turn (the owner's flag),
+  the everyday talker with the owner's character, 10 draws each, read by eye: acknowledging the night
+  before 7/10 with `notes/check-in`, 3/10 without (the live reply was an ordinary greeting). Small sample;
+  watch flags. About 1 cent.

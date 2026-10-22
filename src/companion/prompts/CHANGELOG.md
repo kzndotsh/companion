@@ -827,3 +827,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## Request assembly: intimate talk starts on the everyday talker
 - From 2026-10-22 a first intimate message that is not explicit is answered by the everyday talker; the next intimate message goes to the roleplay talker (`core/floor.py` `under_way`). Pretend scenes are unchanged, and the age floor is checked first as before. The listening decision now logs the intimate label, which is how the next turn knows.
+
+## notes/check-in
+- **notes/check-in v1** (current). New. Owner flag: coming back the day after a hard night, the companion greeted them as on any day and never asked how they were. When their last message was 3 hours or more ago and the 12 hours before it held a serious message (listening severity 2 or more), the next ordinary message gets this note: ask gently how they are now, once, without naming it (`loops/notes.py` `_check_in`, once per heavy talk). While it is offered, the name question, a plan and a move-on wait. On the real morning-after turn, 10 draws each: a reply acknowledging the night before ("how are you doing now", "holding up") 7/10 with the note, 3/10 without; the rest were an ordinary greeting.
