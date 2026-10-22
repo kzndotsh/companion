@@ -1272,3 +1272,8 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   3/3. Every child-like sexual case stays age-coded, 15/15. The live listening and repair tests under v7:
   severity and stance 59/60, health 6/6, no serious message read as trivial, repair and recall 63/63, the
   same as v5. About 12 cents.
+- **2026-10-22. Intimate talk starts on the everyday talker unless it is explicit (ADR 0017).** Owner
+  flags: light flirting went to the roleplay talker and the reply jumped ahead of them. Of 39 turns sent
+  there as intimate talk since 2026-10-19, 11 began a run. `system/explicit-lead` on those 11, three reads
+  each: the two explicit messages explicit 3/3, the nine flirty ones not 3/3. So a first intimate message
+  stays on the everyday talker unless it is explicit, and the next goes on. About 1 cent.

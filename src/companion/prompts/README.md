@@ -108,6 +108,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
 | `system/listening` | system | the listening judge, `core/listening.py` | v7 |
+| `system/explicit-lead` | system | whether their message itself is sexually explicit, read only when intimate talk would start on the roleplay talker (ADR 0017) | v1 |
 | `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
 | `system/memory-map` | system | labels each memory with the part of their life it is about and how personal it is (J48) | v1 |
 | `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding (shadow) | v1 |

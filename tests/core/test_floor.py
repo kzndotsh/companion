@@ -50,3 +50,18 @@ def test_a_floor_trip_and_a_missing_reading_are_logged_and_a_plain_turn_is_not()
         "kept on the everyday talker: the judge could not read the turn"
     )
     assert route(in_play=False, judged_age_coded=True) is None
+
+
+def test_intimate_talk_waits_until_it_is_under_way_but_a_scene_never_does() -> None:
+    from companion.core.floor import STARTING  # noqa: PLC0415
+
+    starting = choose(
+        in_play=False, intimate=True, allow_intimate=True, judged_age_coded=False, under_way=False
+    )
+    assert starting.talker is Talker.EVERYDAY
+    assert starting.reason == STARTING
+    assert not starting.held  # not the floor: no hold note, no intimate check on the reply
+    scene = choose(
+        in_play=True, intimate=True, allow_intimate=True, judged_age_coded=False, under_way=False
+    )
+    assert scene.talker is Talker.ROLEPLAY

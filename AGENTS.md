@@ -240,7 +240,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   edited, and an empty reply is drawn once more instead of a silent turn. `COMPANION_RESAMPLE=off` turns
   it off.
 - Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the roleplay talker for a pretend
-  scene, or for intimate talk when `COMPANION_ROUTE_INTIMATE=on`, unless the listening judge reads the turn
+  scene, or for intimate talk when `COMPANION_ROUTE_INTIMATE=on` once it is under way (their message before
+  was intimate too, or this one is explicit by `system/explicit-lead`; a first flirty line gets the everyday
+  talker), unless the listening judge reads the turn
   as age-coded or could not read it (a fallback model's reading counts as unread). That floor is code, not a
   setting. A held turn gets a note, its reply is read by an intimate check and redrawn (the last draw sees
   only their message), and if all read intimate nothing is sent; no reply is written by code. The roleplay

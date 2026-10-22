@@ -317,6 +317,7 @@ def _listening_note(c: Conversation, t: Turn, heard: Heard | None) -> str | None
             "prompt": LISTEN_PROMPT.ref,
             "inputs_hash": inputs_hash(prompt),
             "labels": {
+                "intimate": judged.intimate,
                 "severity": judged.severity,
                 "stance": judged.stance,
                 "vague": judged.vague,

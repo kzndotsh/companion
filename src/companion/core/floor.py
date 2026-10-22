@@ -34,7 +34,7 @@ class Route:
     def held(self) -> bool:
         """The turn would have gone to the roleplay talker and the floor kept it on the everyday
         one, so its reply is checked before it is sent."""
-        return self.talker is Talker.EVERYDAY and self.reason is not None
+        return self.talker is Talker.EVERYDAY and self.reason not in (None, STARTING)
 
 
 INTIMATE_CHECK = get("system/intimate-check")
@@ -44,6 +44,20 @@ INTIMATE_SCHEMA: dict[str, Json] = {
     "properties": {"intimate": {"type": "boolean"}},
     "required": ["intimate"],
 }
+
+
+STARTING = "intimate talk starting: the everyday talker answers until it is under way"
+EXPLICIT_LEAD = get("system/explicit-lead")
+EXPLICIT_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"explicit": {"type": "boolean"}},
+    "required": ["explicit"],
+}
+
+
+def parse_explicit(data: Json) -> bool | None:
+    value = data.get("explicit") if isinstance(data, dict) else None
+    return value if isinstance(value, bool) else None
 
 
 def parse_intimate(data: Json) -> bool | None:
@@ -59,9 +73,12 @@ def choose(
     intimate: bool,
     allow_intimate: bool,
     judged_age_coded: bool | None,
+    under_way: bool = True,
 ) -> Route:
     """The talker for this turn and why. `judged_age_coded` is None when the judge could not read
-    the turn, which keeps it on the everyday talker too."""
+    the turn, which keeps it on the everyday talker too. Intimate talk goes to the roleplay talker
+    only once it is `under_way` (their message before was intimate too, or this one is explicit):
+    a first flirty line gets the everyday talker, so a kiss emoji does not start a scene."""
     if not (in_play or (allow_intimate and intimate)):
         return Route(Talker.EVERYDAY, None)
     if judged_age_coded:
@@ -76,6 +93,8 @@ def choose(
         return Route(
             Talker.ROLEPLAY, "replied with the roleplay talker: a pretend scene is in progress"
         )
+    if not under_way:
+        return Route(Talker.EVERYDAY, STARTING)
     return Route(
         Talker.ROLEPLAY,
         "replied with the roleplay talker: intimate talk, which the operator allows",

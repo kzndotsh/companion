@@ -29,7 +29,7 @@ from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name
 from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, Card, build_card, render
 from companion.core.clock import now_line, utc_now
 from companion.core.extractor import Extractor, from_fallback
-from companion.core.floor import INTIMATE_CHECK
+from companion.core.floor import EXPLICIT_LEAD, EXPLICIT_SCHEMA, INTIMATE_CHECK, parse_explicit
 from companion.core.floor import Talker as RouteTalker
 from companion.core.floor import choose as choose_route
 from companion.core.frames import (
@@ -379,9 +379,14 @@ async def _route(
     if read is None and in_play and c.judge is not None:
         mark(t, "floor: reading the scene turn")
         read = await judge_listening(c.judge, t.prior, t.text)  # for routing only, no note
+    intimate = read is not None and read[0].intimate
+    under_way = True
+    if intimate and c.route_intimate and not in_play:
+        under_way = _intimate_before(c, t) or await _explicit(c, t)
     route = choose_route(
         in_play=in_play,
-        intimate=read is not None and read[0].intimate,
+        intimate=intimate,
+        under_way=under_way,
         allow_intimate=c.route_intimate,
         judged_age_coded=read[0].age_coded
         if read is not None and not from_fallback(read[1])
@@ -391,6 +396,40 @@ async def _route(
         decide(c, t, "route", reason=route.reason)
     talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
     return talker, route.held, read
+
+
+def _intimate_before(c: Conversation, t: Turn) -> bool:
+    """Whether their message before this one was read as intimate, or answered by the roleplay
+    talker: intimate talk already under way."""
+    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
+    if not theirs:
+        return False
+    for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
+        if d.has_key("route") and d.reason.startswith("replied with the roleplay talker"):
+            return True
+        labels = d.detail.get("labels") if d.has_key("listening") and d.detail else None
+        if isinstance(labels, dict) and labels.get("intimate") is True:
+            return True
+    return False
+
+
+async def _explicit(c: Conversation, t: Turn) -> bool:
+    """Whether their message itself is sexually explicit (`system/explicit-lead`): then intimacy
+    starts on the roleplay talker at once. A failed read is no."""
+    if c.judge is None:
+        return False
+    mark(t, "explicit-lead judge")
+    lines = [f"{u.speaker.value.upper()}: {u.text}" for u in t.prior[-4:]]
+    said = "\n".join(["Conversation:", *lines, "", f"Newest USER message: {t.text}"])
+    try:
+        with purpose("floor"):
+            got = await c.judge.extract(EXPLICIT_LEAD.text, said, EXPLICIT_SCHEMA)
+    except Exception as err:
+        log.warning("explicit-lead judge failed: %r", err)
+        return False
+    found = parse_explicit(got.data) is True
+    decide(c, t, "explicit lead", {"explicit": found, "prompt": EXPLICIT_LEAD.ref})
+    return found
 
 
 def _start_beside(

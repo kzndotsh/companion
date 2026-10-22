@@ -44,9 +44,15 @@ class Judge:
     age-coded unless told otherwise, and gives the other judges an inert answer."""
 
     def __init__(
-        self, *, age_coded: bool | None = False, intimate: bool = False, sexual_reply: bool = False
+        self,
+        *,
+        age_coded: bool | None = False,
+        intimate: bool = False,
+        sexual_reply: bool = False,
+        explicit: bool = True,
     ) -> None:
         self.age_coded, self.intimate, self.sexual_reply = age_coded, intimate, sexual_reply
+        self.explicit = explicit
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         del user
@@ -55,6 +61,8 @@ class Judge:
         props = schema["properties"]
         if isinstance(props, dict) and set(props) == {"intimate"}:
             return Extraction({"intimate": self.sexual_reply}, "j", 0.0, 1)
+        if isinstance(props, dict) and set(props) == {"explicit"}:
+            return Extraction({"explicit": self.explicit}, "j", 0.0, 1)
         if isinstance(props, dict) and "age_coded" in props and self.age_coded is not None:
             labels: Json = {
                 "severity": 0,
@@ -281,3 +289,23 @@ async def test_you_forgot_in_a_scene_looks_it_up_and_an_empty_look_up_adds_nothi
     card = scene.seen[-1].card
     assert ("They asked you to remember this" in card) is finds
     assert "holds nothing on it" not in card
+
+
+async def test_a_first_flirty_line_gets_the_everyday_talker_and_the_next_one_routes(
+    store: Store,
+) -> None:
+    everyday, scene = Talker("everyday"), Talker("scene")
+    convo = Conversation(
+        store,
+        everyday,
+        PREFIX,
+        REL,
+        judge=Judge(intimate=True, explicit=False),
+        roleplay_talker=scene,
+        route_intimate=True,
+    )
+    await convo.handle(SESSION, "you look cute today", "test", NOW)
+    assert (len(everyday.seen), len(scene.seen)) == (1, 0)
+    assert "keep this reply free" not in everyday.seen[0].card  # not held: no floor note
+    await convo.handle(SESSION, "come closer then", "test", NOW + timedelta(minutes=1))
+    assert (len(everyday.seen), len(scene.seen)) == (1, 1)

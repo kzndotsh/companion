@@ -821,3 +821,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## Request assembly: a second redraw for an em dash
 - From 2026-10-21 a reply drawn again for an em dash that comes back with one is drawn a third time, and the third goes out whatever it is (`loops/fast.py` `_recheck`). Of 10 em dash redraws in the log, 4 still had one; the owner flagged one. Nothing is edited; every discarded draw is kept in the decision detail.
+
+## system/explicit-lead
+- **system/explicit-lead v1** (current). New (ADR 0017). Owner flags: a kiss emoji and a playful compliment went to the roleplay talker as intimate talk and the reply jumped ahead of them. Intimate talk now goes to the roleplay talker only once it is under way (their message before was intimate too) or when their message itself is sexually explicit, which this judge reads, once, only on such a first message; a failed read keeps it on the everyday talker. Read three times on the 11 real messages that started an intimate run: the two explicit ones explicit 3/3, the nine flirty ones (an emoji, a compliment, an invitation) not, 3/3.
+
+## Request assembly: intimate talk starts on the everyday talker
+- From 2026-10-22 a first intimate message that is not explicit is answered by the everyday talker; the next intimate message goes to the roleplay talker (`core/floor.py` `under_way`). Pretend scenes are unchanged, and the age floor is checked first as before. The listening decision now logs the intimate label, which is how the next turn knows.

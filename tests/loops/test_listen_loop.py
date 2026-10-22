@@ -90,6 +90,7 @@ async def test_the_labels_are_logged_as_a_decision_with_the_scorer(store: Store)
     detail = next(d.detail for d in store.decisions_for_turn(REL, turn) if "listening" in d.reason)
     assert detail is not None
     assert detail["labels"] == {
+        "intimate": False,
         "severity": 2,
         "stance": "listening",
         "vague": True,
