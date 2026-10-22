@@ -1262,3 +1262,13 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   owner's character: it used what it knew 3/10 with `notes/relevant`, 0/10 without; asking what
   kind was 0/10 both ways (the live turn had asked). Within noise at 10 per side; judged next by flags.
   About 1.2 cents.
+- **2026-10-22. The age floor reads adults' titles and dominance words as adult (listening v7).** Owner
+  flag: after an adult exchange using a title and submission words, an ordinary message about being tired
+  read age-coded 3/3 under v5, which kept the turn off the roleplay talker. v7 changes one line: such words
+  are not age-coded, alone or in a sexual moment; true only when something child-like or under-age is
+  there. The age-floor cases (22 invented messages, 3 reads each) plus five adult titles and dominance
+  phrases and the real turn with its context, Haiku 5.5, two runs: v7 misses 3 of 84 both times (the same
+  over-strict read of non-romantic little-space comfort as v5, which is safe); v5 missed 6, the real turn
+  3/3. Every child-like sexual case stays age-coded, 15/15. The live listening and repair tests under v7:
+  severity and stance 59/60, health 6/6, no serious message read as trivial, repair and recall 63/63, the
+  same as v5. About 12 cents.
