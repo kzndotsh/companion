@@ -27,12 +27,12 @@ decision is made; it may be wrong, but never stale.
 
 ---
 
-## Where we are (2026-10-21)
+## Where we are (2026-10-22)
 
 Live: persona **v41** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
 **Claude Haiku 5.5** with a fallback model for calls it refuses. 20 ADRs, 110 public eval fixtures plus the
-private recorded ones, and about 1,020 tests with strict lint and types.
+private recorded ones, and about 1,080 tests with strict lint and types.
 
 Built and working:
 
@@ -61,9 +61,19 @@ Built and working:
   shadow: promises it makes read from its replies (J12, `companion promises`), names matched against
   memory (`companion names`), and its views labelled taste, stance, rule, self or lived (`companion lore`).
 - **Since 2026-10-21.** Reminders and check-ins they ask for, one-off, live (J50, `companion reminders`).
+  Memory review asks every question until quit and proposes merges of memories about one thing (pick, own
+  wording or a note); feelings and sensitive memories carry a note on what was being talked about (J51);
+  each new memory is labelled about their life, about the bot (dropped) or one day's routine (a week).
+- **Since 2026-10-22.** Memories that bear on their message reach the reply when one is near (ADR 0018,
+  live behind a gate). What the two of them did lately, when their words point at a time or they come back
+  after a gap (J12, J49, `companion episodes`). A gentle check-in after a heavy talk and a gap. Intimate
+  talk goes to the roleplay talker only once under way or explicit; adults' titles are not age-coded
+  (listening v7). Redraws for a second em dash and for raw markdown. After it owns a slip, a note after the
+  history says that was enough. A split reply cut off part way is remembered as the part that arrived.
 - **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
   messages, and a new message that arrives before the last answer is out replaces it. A reply
-  Telegram never delivered is recorded as undelivered and left out of what the model reads.
+  Telegram never delivered is recorded as undelivered and left out of what the model reads; a reply cut
+  off part way is read as the part that arrived.
 - **Initiative.** Things they say about their near future become open loops, and a pure gate decides
   every 15 minutes whether to reach out. Shadow mode only: it drafts and records, and sends nothing.
 - **Prompts.** Every prompt, the persona included, is versioned text under `src/companion/prompts/`
@@ -114,20 +124,25 @@ Each item ends with the thing that tells us it is done. The cards are below.
    the trivial-vent question has an answer (T14).
 3. **Getting to know them on purpose** (J48): the map and the gap picker run in shadow. *Done when:* the
    map is kept by code and a week of shadow picks reads right to the owner.
-4. **Memories that bear on the moment** (ADR 0018), in shadow since 2026-10-19. *Done when:* a sample
-   of the shadow log is read by a Claude judge and the owner, and the next step it decides is taken.
+4. **Memories that bear on the moment** (ADR 0018), live behind a gate since 2026-10-22. *Done when:* a
+   week of flags on turns that used one shows the gate is right.
 5. **A week of shadow mode** for open loops. *Done when:* the owner has read `companion initiative` and
    the caps are set. Going live also needs outcome recording and a slow re-probe.
 6. **Memory tidies itself** (ADR 0019), in shadow since 2026-10-19. *Done when:* the review of
    2026-10-26 is read and the owner decides on `COMPANION_CONSOLIDATE=on`.
 7. **Its own promises and lore** (J12, ADR 0020): promises and labels in shadow, tastes shown live since
    2026-10-20. *Done when:* the review of 2026-10-27 is read and the owner decides J12 step 2 and LR5.
-8. **Reminders in real use** (J50), live since 2026-10-21. *Done when:* the first real reminders and
+8. **What they did lately** (J12, J49), live since 2026-10-22. *Done when:* a week of flags on turns that
+   pointed at a time or came back after a gap reads right.
+9. **Reminders in real use** (J50), live since 2026-10-21. *Done when:* the first real reminders and
    check-ins have arrived when meant, read in `companion reminders`, and the owner says whether repeating
    ones are wanted.
 
 ### Next
 
+- **Agreeing to please** (J52): a persona line so a plain remark is not taken as a correction and it does
+  not claim to know what it cannot see. Needs credits for the eval.
+- **Burst merge** (J29): a short wait for quiet before a reply, if cut-off replies keep happening.
 - **A crisis path for acute messages** (R16, on hold). The listening judge already labels them and does
   nothing. Needs the owner's design.
 - **A language guard** that regenerates once when a reply uses a script the user has not.
@@ -154,9 +169,8 @@ Each item ends with the thing that tells us it is done. The cards are below.
 
 ### Housekeeping that can stop the bot
 
-- [ ] **Check the OpenRouter balance.** The bot goes quiet at zero, and the daily cap is $10. Paid eval
-      runs share it: the runner shows the balance first and refuses a run whose cap is above it.
-- [ ] **Triage `docs/research/2026-10-16_sapphire-audit/`.** It is untracked and unread (`TODO.md` H3).
+- [ ] **Top up OpenRouter.** About $1 left on 2026-10-22. The bot goes quiet at zero, and the daily cap is
+      $10. Paid eval runs share it: the runner shows the balance first and refuses a run whose cap is above it.
 
 ### Not doing
 
@@ -176,11 +190,9 @@ Each item ends with the thing that tells us it is done. The cards are below.
 5. **Body and appearance question** (inbox, parked since the start).
 6. **Provider routing (T8).**
 7. **Flagged turns in history (T9).**
-8. **The relevance look-up (ADR 0018):** reviewed 2026-10-21. A picker that says none (v2) was more
-   precise but lost real finds, and two judges disagreed on what counts, so it stays in shadow on v1. Next
-   step needs the owner's marks on about 30 turns: is each memory something the reply should have had?
-9. **The memory check on (ADR 0019):** `COMPANION_CONSOLIDATE=on`, after the review of 2026-10-26.
-10. **Promises (J12 step 2, LR5):** pin standing promises, and which source, after the review of 2026-10-27.
+8. **The memory check on (ADR 0019):** `COMPANION_CONSOLIDATE=on`, after the review of 2026-10-26.
+9. **Promises (J12 step 2, LR5):** pin standing promises, and which source, after the review of 2026-10-27.
+10. **Four conflict questions** waiting in `companion memory review`.
 
 ---
 
@@ -192,23 +204,27 @@ Each item ends with the thing that tells us it is done. The cards are below.
 - [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
       jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
       **Owner flag 2026-10-22:** a mention of the night before got a reply that knew nothing of it: nothing
-      records what the two of them did together. Shared moments should keep that
-      one did, when, and how it ended (not its content as facts about them), for the next day.
-      **Step 1 done 2026-10-22, shadow:** episodes recorded (`companion episodes`), 25 so far. Next: the owner
-      reads them; then a "last time" line when they come back after a gap, measured on the flagged turn; then
-      the recall look-up reaching episodes, and firsts.
-      **Step 2 built 2026-10-22, shadow:** the lines for the time their words point at, or the last one after a
-      gap (`notes/recent-times`, also J49). The owner read the lines and turned it on, 2026-10-22.
-      **Partial 2026-10-20:** plan reviewed with Grok (its own promises first, then names, then shared
-      moments; no anniversaries, no pull at goodbye or silence). Step 1 in shadow: promises read from its own
-      replies and listed (`companion promises`). Next: a week of the list read by the owner, then standing
-      promises and "don't call me" words pinned with a word check and one redraw, measured on the real
-      flagged turn; one-off promises as open loops.
+      recorded what the two of them did together, when, and how it ended.
+      **2026-10-20, promises in shadow:** plan reviewed with Grok (its own promises first, then names, then
+      shared moments; no anniversaries, no pull at goodbye or silence); promises read from its own replies and
+      listed (`companion promises`). Next, after the review of 2026-10-27: standing promises and "don't call
+      me" words pinned with a word check and one redraw; one-off promises as open loops.
+      **2026-10-22, episodes:** the chat cut into stretches, each with one line on its shape and how it ended
+      (`companion episodes`); the lines for the time their words point at, or the last one after a gap, reach
+      the reply (`notes/recent-times`, also J49). The owner read the lines and turned it on. Next: the recall
+      look-up reaching episodes, and firsts.
 
 ## Todo
 
 Ordered. Pull from the top.
 
+- [ ] J52 Agreeing to please (owner flags 2026-10-22, "it is very hard on itself"): it owns slips three
+      replies in a row, invents slips to own, and once in about 12 draws claims to know news it cannot see.
+      A known pattern (sycophancy under correction, worse in long and warm chats). **Partial 2026-10-22:**
+      after it owns a slip, `notes/owned-it` after the history says that was enough (7/12 to 1/12 early in a
+      run of apologies, no help once three are in the history). Next, after a top-up: a persona line so a
+      plain remark is not read as a correction, and a short reason instead of "sorry", measured on the
+      recorded turns.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
@@ -232,8 +248,8 @@ Ordered. Pull from the top.
       positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
       joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150 (within noise)
       plain. Left: watch live flags; banter they started is let through by design.
-- [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, though a second
-      draw can carry one too. Missed inferences (an object they mentioned; what a song meant to them): low
+- [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, and a redraw that
+      still has one is drawn once more (2026-10-22). Missed inferences (an object they mentioned; what a song meant to them): low
       reasoning made them worse and slower (9/30 to 4/30, 11/30 to 4/30), so reasoning stays off; likely a
       model limit, testable against another talker. "you seem sleepy" answered "haha, a little" (a body claim),
       not yet looked at.
@@ -477,23 +493,14 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       question in `companion memory review`: keep 1, keep 2 or both; the other is retired with the reason.
       The pair judge caught 14 of 14 invented corrections and changes, with 2 to 3 false alarms in 20
       look-alike pairs (`tests/live/test_pair_conflicts.py`). Left: a correction whose memory sits below the
-      0.55 embedding gate is never compared (3 of the 14, all changes rather than corrections); older
-      memories are never compared with each other; the question still waits for the terminal (J3).
+      0.55 embedding gate is never compared (3 of the 14, all changes rather than corrections); the question
+      still waits for the terminal (J3). **2026-10-21:** memories about one thing are grouped and proposed as
+      one merge in `memory review`, so older memories are now compared with each other too.
 - [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
       ones that match the current mood. No product has it. Behind J5.
 - [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
       updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
       plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
-- [x] J51 Memories that keep what it was about (owner, 2026-10-21): some memories were too general, with
-      no sign of what was being talked about. Owner compared 19 memories alone, with their own words, and
-      with a short note on the moment: note 8, alone 10, words 1; the note won 5 of 6 feelings and
-      sensitive memories. Built: a note written for states and sensitive memories after each memory pass
-      (`system/memory-context`), shown beside them on the card; 53 backfilled. Next: watch flags on turns
-      that use one; whether the memory pass itself should write shorter claims.
-- [ ] J49 Today so far (owner flag 2026-10-19, "it isn't remembering what happened today"): at bedtime they
-      said "it was an intense day" and the reply knew nothing of it; the day's events had left the 40-message
-      window and memory held only "had an intense day". A few plain facts about their day, from that day's
-      memories, on the first turn after a long gap or when they sum up their day. Smaller than J14.
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
       **Owner flag 2026-10-19:** "you know what time it is?" was answered with the clock; they meant coffee
@@ -524,8 +531,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       notes, not instructions (Hermes and Project Waifu audits).
 - [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
       default no, so only a real message starts a reply (Neuro SDK audit).
-- [ ] J26 Mood ignores its own failures: once there is a mood (J5), only what the user does can move it,
-      never an outage or a failed call (Alice audit).
 - [ ] J27 Per-gate shadow analysis before initiative goes live: for each hold (quiet hours, cap, mid-chat),
       how many reach-outs it stopped and what they would have said (Alice audit).
 - [ ] J28 Catch up after a restart: messages sent while the bot was down or restarting are picked up and
@@ -579,6 +584,16 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-22**
+- [x] J52 partial: after it owns a slip, a note after the history says that was enough (7/12 to 1/12 early
+      in a run of apologies). Text sent after the history is logged, so replay rebuilds it; scene turns
+      now replay to a match.
+- [x] A split reply cut off part way (superseded, or a later part failed) is remembered as the part that
+      arrived, so the model never takes for seen what the user never got.
+- [x] J49 and J12 episodes: the times they spent together recorded with one line each, and the lines for
+      the time their words point at, or the last one after a gap, reach the reply. "Asks what happened"
+      fell from 5/10 to 0/10 and from 3/10 to 1/10 on two recorded turns.
+- [x] Personal dated happenings leave the card a week after last mentioned; raw markdown is redrawn
+      outside scenes.
 - [x] H3 The 2026-10-16 audit of another open companion repo, read: what it recommends is already here
       (notes in an unsaved system block, memory tidying decided by code and the owner, backups at start,
       waiting after unanswered reach-outs); its voice lessons went to an inbox note; a test now keeps
@@ -586,11 +601,22 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 - [x] Flags of 2026-10-21 and 22, fixed: memories that bear on the message reach the reply when one is near
       (ADR 0018 live behind a gate); a second redraw for an em dash; intimate talk starts on the everyday
       talker unless explicit; adults' titles and dominance words are not age-coded (listening v7); a gentle
-      check-in after a heavy talk and a gap. Refactors: decisions recorded with keys, a turn's notes in one
-      list, one module for several reads, one settings table, the memory pass's steps as lists, one setup
-      for one-off commands (whose spend now counts).
+      check-in after a heavy talk and a gap.
 
 **2026-10-21**
+- [x] J51 Memories that keep what it was about: the owner compared 19 memories alone, with their own words,
+      and with a short note on the moment (note 8, alone 10, words 1; the note won 5 of 6 feelings and
+      sensitive memories). A note is written for states and sensitive memories after each memory pass
+      (`system/memory-context`) and shown beside them on the card; 53 backfilled. Next: watch flags on turns
+      that use one.
+- [x] Memory audit and its fixes: 219 memories read; memories about one thing grouped three times and
+      proposed as one merge (the owner merged 33 and kept 9 apart); review takes pick, own wording or a note
+      and asks until quit; each new memory labelled about their life, about the bot (dropped) or one day's
+      routine (kept a week), unsure ones asked (`system/memory-worth`). A support check was measured and
+      not built.
+- [x] Refactors: decisions recorded with keys through one recorder, a turn's notes as one ordered list,
+      one module for several reads, one settings table, the memory pass's steps as lists, one setup for
+      one-off commands (whose spend now counts).
 - [x] J50 Reminders they ask for, live, one-off only: "remind me at 8pm to take the dog out", "check up on
       me in a few days about the interview". A model reads the words, code works out the time in the named
       zone and asks when it is unclear; the reply confirms the time. Sent when due in its own voice, held
@@ -666,6 +692,8 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       (v4, 15/15 on age-coded messages, no trips on adults' pet names), code routing for scenes and intimate
       talk, and the age floor in code with no timer and no regex. Unprompted disclaimers: about 1 in 4 on
       the flagged turn, persona v39 within noise, not shipped; a check with one resample if flagged again.
+- [x] J26 Mood ignores its own failures: only what the user did can move it, with no source for silence,
+      goodbyes, gaps or failed calls (ADR 0016).
 - [x] J5 stages M1 to M3: mood lines measured (four of five states move replies), the engine (cozy,
       tender, playful) and its append-only table, wired in shadow with `companion mood --replay`; the
       goodbye guard; persona v36 (no announced mood) then v40 (an invitation to banter back).
