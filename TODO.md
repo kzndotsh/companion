@@ -516,9 +516,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change
       drops a behaviour below its usual level, with floors set from two baseline runs (Phoenix's gate).
-- [ ] J20 Live-typed drafts: Telegram's sendMessageDraft shows the reply appearing as it is written, which
-      could replace the held typing indicator with real typing. Test against pace, split and supersede first
-      (speed-stack audit).
 - [ ] J44 Kiro judge calibration: re-grade about 200 replies already graded by the paid judge with a Kiro
       model (Sonnet 4.6) on the same criteria; compare agreement and read the disagreements by eye. At
       about 90% agreement with no one-sided bias, judging moves to Kiro and evals become nearly free. Free,
@@ -855,3 +852,7 @@ Decided against, with the reason.
 - [x] X13 A delete tool for the model, including "forget" as a model action. Retirement is a recorded act.
 - [x] X14 Preset attachment-seeking, possessive or personality-disorder behaviour packs. The Ani sheet
       left out its codependent, jealous and possessive lines on 2026-10-18 for the same reason.
+- [x] X15 (was J20) Live-typed drafts with Telegram's `sendMessageDraft`. People see "typing…" and then a
+      message, not text writing itself, so it reads as an AI assistant; and it would show a reply before
+      the code checks and the age floor's intimate check have passed, clash with splitting, and show text
+      that vanishes when a newer message replaces the reply. The typing indicator stays. Researched 2026-10-22.
