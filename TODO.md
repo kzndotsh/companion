@@ -207,7 +207,6 @@ Each item ends with the thing that tells us it is done. The cards are below.
 
 Ordered. Pull from the top.
 
-- [ ] H3 Triage the untracked `docs/research/2026-10-16_sapphire-audit/` folder. Unread, not ours.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
@@ -578,6 +577,10 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-22**
+- [x] H3 The 2026-10-16 audit of another open companion repo, read: what it recommends is already here
+      (notes in an unsaved system block, memory tidying decided by code and the owner, backups at start,
+      waiting after unanswered reach-outs); its voice lessons went to an inbox note; a test now keeps
+      every relative link in the docs pointing at a file that exists.
 - [x] Flags of 2026-10-21 and 22, fixed: memories that bear on the message reach the reply when one is near
       (ADR 0018 live behind a gate); a second redraw for an em dash; intimate talk starts on the everyday
       talker unless explicit; adults' titles and dominance words are not age-coded (listening v7); a gentle
