@@ -848,3 +848,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## Request assembly: notes after the history
 - From 2026-10-22 a note can be sent after the history, as a system message, where it weighs most (`loops/notes.py` `Offer.tail`); the scene reminder already went there. The first is `notes/owned-it`. The text sent there is logged with the turn (`tail: sent after the history`), so replay rebuilds it; scene turns, which did not replay to a match before, now do from this date.
 
+## Request assembly: a reply cut off is read as the part that arrived
+- From 2026-10-22 a reply sent as two or three messages that is cut off after the first went out (a newer message superseded it, or a later part failed to send) is marked undelivered, and what arrived is added beside it at the same time and turn (`Store.mark_partly_delivered`, decision `reply partly delivered`). Before, the whole reply stayed in what the model read, so it could take for seen a part the user never got. Nothing is removed: the whole reply stays in the ledger with its mark.
+

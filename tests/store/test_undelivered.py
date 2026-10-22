@@ -75,3 +75,25 @@ def test_the_store_logs_the_decision_with_a_reason_written_by_code(
     reasons = [d.reason for d in store.decisions_for_turn(REL, marked.turn_id)]
     assert "reply not delivered, so it is left out of what the model reads" in reasons
     store.close()
+
+
+def test_a_reply_cut_off_is_read_as_the_part_that_arrived(
+    tmp_path: object, utterance: Callable[..., Utterance]
+) -> None:
+    from pathlib import Path  # noqa: PLC0415
+
+    store = Store(Path(str(tmp_path)) / "rel.sqlite")
+    store.append_utterance(utterance(text="hi", uid="a"))
+    store.append_utterance(
+        utterance(text="First bit. Second bit.", speaker=Speaker.COMPANION, uid="b")
+    )
+    seen = store.mark_partly_delivered(
+        REL, "First bit. Second bit.", "First bit.", "superseded", T0 + timedelta(seconds=5)
+    )
+    assert seen is not None
+    history = store.history_before(REL, T0 + timedelta(days=1), 10)
+    assert [u.text for u in history] == ["hi", "First bit."]
+    assert history[-1].turn_id == seen.turn_id and history[-1].speaker is Speaker.COMPANION
+    keys = [d.key for d in store.decisions_for_turn(REL, seen.turn_id)]
+    assert "reply partly delivered" in keys  # the whole reply stays in the ledger, marked
+    store.close()

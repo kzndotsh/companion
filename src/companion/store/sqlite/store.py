@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import uuid
 from collections.abc import Iterable, Mapping, Sequence
@@ -110,6 +111,34 @@ class Store:
                 ),
             )
         return marked
+
+    def mark_partly_delivered(
+        self, rel: RelationshipId, text: str, delivered: str, reason: str, now: datetime
+    ) -> Utterance | None:
+        """A reply cut off after some of its messages went out: the whole reply leaves what the
+        model reads, and what arrived is added beside it, at the same time and turn. Nothing is
+        removed; the whole reply stays in the ledger with its mark."""
+        marked = ledger.mark_undelivered(self._conn, rel, text, reason, now)
+        if marked is None:
+            return None
+        seen = dataclasses.replace(marked, id=UtteranceId(uuid.uuid4().hex), text=delivered)
+        ledger.append_utterance(self._conn, seen)
+        decisions.append_decision(
+            self._conn,
+            Decision(
+                DecisionId(uuid.uuid4().hex),
+                rel,
+                marked.session_id,
+                marked.turn_id,
+                TraceId(marked.turn_id),
+                DecisionKind.POLICY,
+                "reply partly delivered, so the model reads only the part that arrived",
+                now,
+                detail={"utterance_id": marked.id, "kept_as": seen.id, "cause": reason},
+                key="reply partly delivered",
+            ),
+        )
+        return seen
 
     def history_before(self, rel: RelationshipId, before: datetime, limit: int) -> list[Utterance]:
         return ledger.history_before(self._conn, rel, before, limit)

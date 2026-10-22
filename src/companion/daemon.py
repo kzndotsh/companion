@@ -186,8 +186,14 @@ def _embedder(
 def _hooks(store: Store, rel: RelationshipId) -> Hooks:
     """What the Telegram layer reports back: undelivered replies, and which updates were handled."""
 
-    async def undelivered(text: str, reason: str) -> None:
-        if store.mark_undelivered(rel, text, reason, datetime.now(UTC)) is not None:
+    async def undelivered(text: str, reason: str, delivered: str) -> None:
+        now = datetime.now(UTC)
+        if delivered:
+            if store.mark_partly_delivered(rel, text, delivered, reason, now) is not None:
+                logging.getLogger("companion").warning(
+                    "a reply was cut off; only what arrived is kept"
+                )
+        elif store.mark_undelivered(rel, text, reason, now) is not None:
             logging.getLogger("companion").warning("a reply never arrived and is not remembered")
 
     def last_handled() -> int | None:

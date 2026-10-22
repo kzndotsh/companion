@@ -223,7 +223,8 @@ async def test_an_undelivered_reply_is_reported_with_its_text(
     monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
     told: list[tuple[str, str]] = []
 
-    async def on_undelivered(text: str, reason: str) -> None:
+    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
+        assert delivered == ""
         told.append((text, reason))
 
     def handler(req: httpx.Request) -> httpx.Response:
@@ -244,11 +245,52 @@ async def test_an_undelivered_reply_is_reported_with_its_text(
     assert "SECRET" not in told[0][1]
 
 
+async def test_a_reply_cut_off_after_its_first_part_reports_the_part_that_arrived(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import companion.io.telegram as module  # noqa: PLC0415
+
+    async def no_sleep(seconds: float) -> None:
+        del seconds
+
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+
+    def two_parts(text: str, *_: float) -> list[str]:
+        del text
+        return ["First bit.", "Second bit."]
+
+    monkeypatch.setattr(module, "split_reply", two_parts)
+    told: list[tuple[str, str]] = []
+    sends = 0
+
+    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
+        del reason
+        told.append((text, delivered))
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal sends
+        if str(req.url).endswith("sendMessage"):
+            sends += 1
+            if sends >= 2:  # the second part fails, retry included
+                return httpx.Response(500, json={"ok": False})
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        del text
+        return "First bit. Second bit."
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    await Telegram(
+        "T", ALLOWED, client, Hooks(on_undelivered=on_undelivered), pace=0.0, split=True
+    ).handle_update(_update("hi"), talk, {})
+    assert told == [("First bit. Second bit.", "First bit.")]
+
+
 async def test_a_delivered_reply_is_not_reported() -> None:
     told: list[str] = []
 
-    async def on_undelivered(text: str, reason: str) -> None:
-        told.append(text + reason)
+    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
+        told.append(text + reason + delivered)
 
     def handler(req: httpx.Request) -> httpx.Response:
         del req
@@ -541,8 +583,8 @@ async def _burst(
             return first_reply
         return "reply to both"
 
-    async def on_undelivered(text: str, reason: str) -> None:
-        del reason
+    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
+        del reason, delivered
         undelivered.append(text)
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))

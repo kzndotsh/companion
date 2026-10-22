@@ -133,7 +133,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   sentence boundaries only, and a reply with quoted speech (roleplay) is never split (`core/split.py`).
 - A plain message that arrives while the previous one is still being answered (written or held)
   replaces that answer, and the dropped reply is marked undelivered, so the new reply sees both
-  messages. Commands never supersede. The poll offset moves past a message when it is queued, so a
+  messages. A split reply cut off after some of its messages went out (superseded, or a send that failed)
+  is marked too, and the part that arrived is added beside it, so the model reads only what was seen. Commands never supersede. The poll offset moves past a message when it is queued, so a
   restart can lose one that was queued but not answered.
 - Things they said about their near future are recorded as open loops (`core/openloops.py`), and a
   pure gate (`core/initiative.py`) decides every 15 minutes whether to reach out. It only runs in

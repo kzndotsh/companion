@@ -7,8 +7,8 @@ import contextlib
 import logging
 import random
 import time
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable, Sequence
+from dataclasses import dataclass, field
 
 import httpx
 
@@ -24,7 +24,8 @@ TYPING_REFRESH_SECONDS = 4.0  # Telegram drops the typing indicator after about 
 Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 CommandHandler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
-Undelivered = Callable[[str, str], Awaitable[None]]  # the reply text and why it did not arrive
+# The reply text, why it did not all arrive, and the parts that did ("" when none did).
+Undelivered = Callable[[str, str, str], Awaitable[None]]
 LastHandled = Callable[[], int | None]  # the newest update id already handled, if any
 MarkHandled = Callable[[int], None]
 
@@ -40,10 +41,10 @@ class Hooks:
 
 @dataclass(slots=True)
 class _Delivery:
-    """How many messages of one reply have actually gone out, so a cancelled reply is only called
-    undelivered when the user saw none of it."""
+    """The messages of one reply that have actually gone out, so a cut-off reply is remembered as
+    what the user saw."""
 
-    sent: int = 0
+    sent: list[str] = field(default_factory=list[str])
 
 
 class TelegramError(RuntimeError):
@@ -268,9 +269,10 @@ class Telegram:
         try:
             await self._answer(chat_id, message_id, reply, wait, delivery)
         except asyncio.CancelledError:
-            log.info("message %d superseded; %d part(s) had gone out", message_id, delivery.sent)
-            if delivery.sent == 0:
-                await self._report_undelivered(reply, "superseded by a newer message")
+            log.info(
+                "message %d superseded; %d part(s) had gone out", message_id, len(delivery.sent)
+            )
+            await self._report_undelivered(reply, "superseded by a newer message", delivery.sent)
             raise
         except TelegramError as err:
             log.warning("could not deliver the reply: %s", err)
@@ -314,7 +316,7 @@ class Telegram:
     ) -> None:
         """Send a reply, cut into a few messages when it is long enough, each after its own
         typing time. A part that fails after an earlier one arrived stops the rest and is logged;
-        the user has already seen the start, so the reply is not reported as undelivered."""
+        the user has already seen the start, so only the parts that arrived are remembered."""
         parts = split_reply(text, random.random(), random.random()) if self._split else [text]  # noqa: S311
         if len(parts) > 1:
             log.info(
@@ -327,13 +329,14 @@ class Telegram:
                 await hold(part, first=n == 0)
             try:
                 await self.send(chat_id, part)
-                delivery.sent += 1
-            except TelegramError:
+                delivery.sent.append(part)
+            except TelegramError as err:
                 if n == 0:
                     raise
                 log.warning(
                     "part %d of %d failed to send; the rest were not sent", n + 1, len(parts)
                 )
+                await self._report_undelivered(text, str(err), delivery.sent)
                 return
 
     async def _answer(
@@ -373,13 +376,19 @@ class Telegram:
         elif reply:
             await self._send_parts(chat_id, reply, hold if wait is not None else None, delivery)
 
-    async def _report_undelivered(self, reply: str | Reaction | ReactAndReply, reason: str) -> None:
-        """Tell the conversation a reply never arrived, so the model does not think it was seen."""
+    async def _report_undelivered(
+        self, reply: str | Reaction | ReactAndReply, reason: str, sent: Sequence[str] = ()
+    ) -> None:
+        """Tell the conversation a reply, or the rest of it, never arrived, so the model does not
+        think it was seen. `sent` is the parts that did; a reply sent whole is not reported."""
         text = reply.text if isinstance(reply, ReactAndReply) else reply
         if not isinstance(text, str) or not text or self._hooks.on_undelivered is None:
             return
+        delivered = " ".join(p.strip() for p in sent)
+        if sent and delivered == " ".join(text.split()):
+            return  # all of it arrived
         try:
-            await self._hooks.on_undelivered(text, reason)
+            await self._hooks.on_undelivered(text, reason, delivered)
         except Exception:
             log.exception("could not record an undelivered reply")
 
