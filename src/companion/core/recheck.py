@@ -59,9 +59,16 @@ _ESPECIALLY = re.compile(
 _A_BEAT = re.compile(r"\ba beat\b(?!\s+(?:drop|to|of|from|in)\b)", re.IGNORECASE)
 
 
-def code_checks(reply: str, said: str = "") -> list[str]:
+# Markdown that shows raw in Telegram: **bold**, or a *Title* in italics (owner flag 2026-10-21). An
+# action in asterisks ("*leans in*") starts lower-case and is how a scene or a flirt is written.
+_MARKDOWN = re.compile(r"\*\*[^*\n]+\*\*|(?<![\w*])\*(?!I\b)[A-Z][^*\n]{0,60}\*(?![\w*])")
+MARKDOWN = "markdown that shows raw in a chat"
+
+
+def code_checks(reply: str, said: str = "", *, scene: bool = False) -> list[str]:
     """The checks plain code can make, as the reasons they failed. Saying it is an AI is only a
-    failure when their message did not touch on what it is: honesty when asked stays (persona)."""
+    failure when their message did not touch on what it is: honesty when asked stays (persona).
+    Markdown is only checked outside a scene."""
     failed = [DASHED] if EM_DASH in reply else []
     if _DISCLAIMER.search(reply) and not _ASKED_WHAT_IT_IS.search(said):
         failed.append("an AI disclaimer nobody asked for")
@@ -71,4 +78,6 @@ def code_checks(reply: str, said: str = "") -> list[str]:
         failed.append("the stock 'that sounds X, especially when' line")
     if _A_BEAT.search(reply):
         failed.append("the stage direction 'a beat'")
+    if not scene and _MARKDOWN.search(reply):
+        failed.append(MARKDOWN)
     return failed

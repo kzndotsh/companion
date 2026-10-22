@@ -483,7 +483,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
         return await _redraw_empty(c, t, request, talker)
     if not code_only and not recheck_eligible(severity=severity, in_scene=False, reply=reply.text):
         return reply
-    failed = code_checks(reply.text, t.text)
+    failed = code_checks(reply.text, t.text, scene=scene)
     if code_only and not failed:
         return reply  # a scene or a serious turn gets only the code checks; a pass is not logged
     detail: dict[str, Json] = {}
@@ -499,7 +499,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
         again = await talker.reply(request)
         _mark_reply(t, again)
         detail |= {"discarded": reply.text, "checks": list[Json](failed)}
-        still = [x for x in code_checks(again.text, t.text) if x == EM_DASH_CHECK]
+        still = [x for x in code_checks(again.text, t.text, scene=scene) if x == EM_DASH_CHECK]
         if still and again.text:  # the model that dashes once often dashes again: one more draw
             detail |= {"discarded_again": again.text}
             third = await talker.reply(request)

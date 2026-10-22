@@ -64,3 +64,14 @@ def test_the_stock_especially_line_is_caught_and_plain_uses_are_not() -> None:
 def test_a_beat_as_a_stage_direction_is_caught_but_not_a_beat_in_music() -> None:
     assert code_checks("*a beat, and I grin*") == ["the stage direction 'a beat'"]
     assert code_checks("the song has a beat drop that hits") == []
+
+
+def test_markdown_titles_and_bold_are_caught_but_not_actions_or_scenes() -> None:
+    from companion.core.recheck import MARKDOWN, code_checks  # noqa: PLC0415
+
+    assert MARKDOWN in code_checks("mostly *Thor* and *The Avengers*")
+    assert MARKDOWN in code_checks("that's **so** good")
+    assert code_checks("*leans in and kisses you*") == []
+    assert code_checks("*I rock back once, waiting*") == []
+    assert code_checks("3*4 = 12 and 5*6") == []
+    assert code_checks("watch *Thor* first", scene=True) == []

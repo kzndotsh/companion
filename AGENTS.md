@@ -158,8 +158,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   cool reply) and a request to remember something; then a small model looks the topic up across every
   belief and the finds ride that turn's system block (`core/recall.py`). Sensitive (held) memories are
   in the card only on turns rated severity 1 or more; the beliefs the card has no room for are logged once
-  per turn. A one-day moment of daily life (an event labelled daily and surface by the memory map) leaves
-  the card a week after it was last mentioned; it stays in memory.
+  per turn. A one-day moment of daily life (an event labelled daily and surface by the memory map), and a
+  personal event on a given day, leave the card a week after last mentioned; they stay in memory.
 - How they want to be referred to is a setting (`companion address --set`) pinned after the clock on
   every turn. Until memory knows their name, a note on a casual turn (at most daily) asks for it, and their
   answer is stored as a belief quoting their words (`core/basics.py`, J48). Each memory is labelled
@@ -241,7 +241,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - Evals run on the plain persona by default; the owner's character only as a labelled second check.
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious, not
   a scene) an em dash, an AI disclaimer nobody asked for, the clock line or a tag copied from the system
-  block, the stock "that sounds X, especially when" line and the stage direction "a beat", by code, and a joke bolted onto an ordinary
+  block, the stock "that sounds X, especially when" line, the stage direction "a beat" and markdown
+  that shows raw (outside scenes), by code, and a joke bolted onto an ordinary
   message by the quip judge; in a scene or on a serious turn only the code checks. On a fail the same model is asked once more
   (twice if the redraw still has an em dash) and the last reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
   edited, and an empty reply is drawn once more instead of a silent turn. `COMPANION_RESAMPLE=off` turns

@@ -9,6 +9,7 @@ companion can check naturally. Stale sensitive ones are left out entirely.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta, tzinfo
@@ -88,7 +89,12 @@ def build_card(  # noqa: PLR0913
         )
         for b in beliefs
     }
-    faded = [b for b in beliefs if b.id in everyday and _faded(b, aged[b.id].last_supported, now)]
+    faded = [
+        b
+        for b in beliefs
+        if (b.id in everyday and _faded(b, aged[b.id].last_supported, now))
+        or _dated_past(b, aged[b.id].last_supported, now)
+    ]
     current = [b for b in beliefs if aged[b.id].status is not Freshness.STALE and b not in faded]
     kept_back = [] if show_held else [b for b in current if b.sensitivity >= HOLD_AT]
     current = [b for b in current if b not in kept_back]
@@ -113,6 +119,21 @@ def build_card(  # noqa: PLR0913
         crowded=tuple(crowded),
         kept_back=tuple(kept_back),
         contexts={k: v for k, v in (contexts or {}).items() if k in aged},
+    )
+
+
+_ON_A_DATE = re.compile(r"\b20\d\d-\d\d-\d\d\b")
+
+
+def _dated_past(b: Belief, last: datetime, now: datetime) -> bool:
+    """A personal happening on a given day ("On 2026-10-21 they had an appointment"), past its week
+    on the card. It stays in memory, and the look-ups still find it. Events told without a date are
+    their history, and an ordinary dated one (a project started) is a milestone; both stay."""
+    return (
+        b.kind is BeliefKind.EVENT
+        and b.sensitivity >= 1
+        and _ON_A_DATE.search(b.claim) is not None
+        and now - last > timedelta(days=EVENT_SHOWN_DAYS)
     )
 
 

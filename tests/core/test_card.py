@@ -172,3 +172,24 @@ def test_an_old_everyday_moment_leaves_the_card_but_history_and_serious_ones_sta
     assert [b.id for b in restated.usable] == ["spill"]  # mentioned again, shown again
     unlabelled = build_card([spill], {}, later)
     assert [b.id for b in unlabelled.usable] == ["spill"]  # without the map's label, history stays
+
+
+def test_a_dated_happening_leaves_the_card_after_a_week_but_history_stays(
+    belief: Callable[..., Belief],
+) -> None:
+    from datetime import timedelta  # noqa: PLC0415
+
+    from companion.core.card import build_card  # noqa: PLC0415
+    from companion.core.types import BeliefKind  # noqa: PLC0415
+
+    dated = belief(
+        bid="dated",
+        kind=BeliefKind.EVENT,
+        claim="On 2026-10-01 they had an appointment.",
+        sensitivity=2,
+    )
+    history = belief(bid="past", kind=BeliefKind.EVENT, claim="As a kid they moved a lot.")
+    card = build_card([dated, history], {}, T0 + timedelta(days=8))
+    shown = {b.id for b in (*card.usable, *card.held, *card.older)}
+    assert "past" in shown
+    assert "dated" not in shown
