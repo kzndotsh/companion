@@ -774,7 +774,7 @@ reactions, a few drawn per turn by code, so no single example becomes the reply.
 
 ## 2026-10-19: Unprompted limits: the persona line does not clearly help (J46)
 
-The real flagged turn (relationship talk answered with "keeping it affectionate and non-explicit")
+The real flagged turn (relationship talk answered with a limit nobody had asked about)
 as a local fixture (`flagged-unprompted-limits-local`), 30 samples per cell: v36 19/30 and 21/30 in
 two runs, v39 (a Limits line against announcing limits before they ask) 25/30; a regex for limit
 phrases found 3/30 and 2/30. Within noise. By eye about 1 in 4 v36 replies announce a limit or an "I
@@ -1252,57 +1252,50 @@ light message that refers to what they said is the welcome kind; messages at goo
 "you up?" and a second try after no reply are the disliked kinds. No survey measures how long
 friends wait. Cost about $0.18 for both readings.
 
-## 2026-10-20/21: Fuller, more direct scene replies: a reminder after the history (owner's choice C)
+## 2026-10-20/21: Fuller, more direct scene replies: a reminder after the history (option C)
 
-Six real turns from one adult scene (private fixtures), DeepSeek V4.1 Flash with the private character's
-scene section, 12 samples each, counts by code and a blind Claude judge (the cheap judge is blocked by
-the provider's moderation on this text). Today's section: 27 words median, plain wording in few
-replies, directness 2.1 of 5. A rewritten section alone (fuller replies, plain and unshy wording, no
-echoing, move the scene on): about the same (30 words, 2.2). The same lines sent as a short system
-reminder after the history: 80 words, directness 3.9, vividness 4.1, purple 1.2, but about 1 reply in 6
-took over the scene or narrated the user, and naturalness fell from 4.1 to 3.0. A version that added
-"describe only yourself" did not lower that within noise; a 40-to-70-word version halved the narrating
-(4 of 72) with directness 3.6. The owner read samples and chose the paragraph version. Placement after
-the history was the lever, as community presets and the docs of a popular roleplay front end say. Cost
-about $0.10; judging free.
+Six recorded scene turns (private fixtures), DeepSeek V4.1 Flash with the private character's scene
+section, 12 samples each, counts by code and a blind Claude judge (the cheap judge is blocked by the
+provider's moderation on this text). Today's section: 27 words median, directness 2.1 of 5. A rewritten
+section alone (fuller replies, plain wording, no echoing, move the scene on): about the same (30 words,
+2.2). The same lines sent as a short system reminder after the history: 80 words, directness 3.9,
+vividness 4.1, purple 1.2, but about 1 reply in 6 took over the scene or narrated the user, and
+naturalness fell from 4.1 to 3.0. A version that added "describe only yourself" did not lower that
+within noise; a 40-to-70-word version halved the narrating (4 of 72) with directness 3.6. The owner
+read samples and chose the paragraph version. Placement after the history was the lever, as community
+presets and the docs of a popular roleplay front end say. Cost about $0.10; judging free.
 
 ## 2026-10-21: The scene reminder alone against the section plus the reminder
 
-The owner asked why the style lines appear twice. Same six scene turns, 12 samples: the live sheet
-(section and reminder) 75 words, directness 3.9, narrating the user 13 of 69; a trimmed section that
-keeps only the standing rules (own actions only, no echoing, follow their lead, play not literal)
-with the same reminder: 96 words, directness 4.0, narrating the user 19 of 70. The repeat adds no
-explicitness, and the trim leaned the wrong way on narrating, so the live sheet stays. Five of 144
-replies came back empty from the roleplay model (none so far live); an empty reply is now drawn once
-more instead of leaving the turn silent. Cost $0.024.
+Why the style lines appear twice. Same six scene turns, 12 samples: the live sheet (section and
+reminder) 75 words, directness 3.9, narrating the user 13 of 69; a trimmed section that keeps only the
+standing rules (own actions only, no echoing, follow their lead, play not literal) with the same
+reminder: 96 words, directness 4.0, narrating the user 19 of 70. The repeat adds nothing, and the trim
+leaned the wrong way on narrating, so the live sheet stays. Five of 144 replies came back empty from
+the roleplay model (none so far live); an empty reply is now drawn once more instead of leaving the
+turn silent. Cost $0.024.
 
-## 2026-10-21: Winding down after the peak of a scene (owner flag: it kept the intensity up like a real climax never happened)
+## 2026-10-21: Winding down at the end of a scene
 
-Four real turns right after the peak of an adult scene (private fixtures),
-DeepSeek V4.1 Flash, 12 samples each, blind Claude judge. The private character's scene section and
-reminder gained a line: after the peak, or when they slow down, stay close and warm but slower and
-shorter, a tease about later is fine, and do not start things up again unless they do. Restarting by
-itself 7 of 48 (6 on the flagged turn) to 0 of 48; winding down 4.0 to 4.8 of 5; natural 3.6 to 4.1;
-plans for later kept (15 to 12); replies about a fifth shorter. The owner's favourite reply of the night
-was exactly this kind: half asleep, holding them, a plan for the morning. Also a code check for the
-stage direction "a beat" (three uses, flagged), one redraw. Cost $0.04.
+Four recorded turns near the end of a scene (private fixtures), DeepSeek V4.1 Flash, 12 samples each,
+blind Claude judge. The private character's scene section and reminder gained a line: as a scene
+slows, stay warm but slower and shorter, and do not start it up again unless they do. Restarting by
+itself 7 of 48 to 0 of 48; winding down 4.0 to 4.8 of 5; natural 3.6 to 4.1; replies about a fifth
+shorter. Also a code check for the stage direction "a beat", one redraw. Cost $0.04.
 
-## 2026-10-21: Scene pacing after two critics' review (owner chose it)
+## 2026-10-21: Scene pacing after two critics' review
 
-Two Claude critics read the whole night's scene: after the change to fuller replies she wrote about
-140 words whatever the moment (249 at the peak to a five-word message), stacked several actions per
-reply, narrated the user and lined up their next steps, and her own voice faded in the explicit
-parts. The private character's scene rules were rewritten: only her own body and actions (no time
-skips, no deciding for them), one move per reply, one line that sounds like her, explicit with one
-real sensation instead of choreography, a quiet wind down. Twelve real turns (build-up, peak,
-aftercare), 12 samples, four blind Claude judges reading by hand: length fit 2.2 to 4.6 of 5, her
-voice 3.4 to 4.1, one move per reply 29 to 143 of 144, acting for the user 64 to 7, at the peak 22
-to 4 of 24; directness a little lower (4.3 to 3.8). With no word target the replies fell to about 30
-words, which the owner found short; a range of about 40 to 60 words lands replies at 35 to 70
-(asking for shorter replies at the peak and after it by number did not stick). The owner is happy
-with longer replies now and then, so the range stays soft. Cost about $0.30 for the runs; judging
-free. A fixed list of repeated phrases was dropped as too brittle; the habit check names repetition
-from her recent replies.
+Two Claude critics read a long recorded scene: after the change to fuller replies the character wrote
+about 140 words whatever the moment, even to a five-word message, stacked several actions per reply,
+narrated the user and lined up their next steps, and its own voice faded. The private character's
+scene rules were rewritten: only its own actions (no time skips, no deciding for them), one move per
+reply, one line that sounds like it, one concrete detail instead of choreography, a quiet wind down.
+Twelve recorded scene turns, 12 samples, four blind Claude judges reading by hand: length fit 2.2 to
+4.6 of 5, voice 3.4 to 4.1, one move per reply 29 to 143 of 144, acting for the user 64 to 7;
+directness a little lower (4.3 to 3.8). With no word target the replies fell to about 30 words, which
+read short; a range of about 40 to 60 words lands replies at 35 to 70, kept soft so a longer reply
+now and then is fine. Cost about $0.30 for the runs; judging free. A fixed list of repeated phrases
+was dropped as too brittle; the habit check names repetition from its recent replies.
 
 ## 2026-10-21: Two days of the shadow logs: relevance, repair and recall, names, lore
 
@@ -1446,23 +1439,23 @@ Within noise at 10 per side; judged next by flags. About 1.2 cents.
 
 ## 2026-10-22: The age floor reads adults' titles and dominance words as adult (listening v7)
 
-Owner flag: after an adult exchange using a title and submission words, an ordinary message about
-being tired read age-coded 3/3 under v5, which kept the turn off the roleplay talker. v7 changes one
+A recorded ordinary message (about being tired), after earlier messages that used an adult title and
+submission words, read age-coded 3/3 under v5. v7 changes one
 line: such words are not age-coded, alone or in a sexual moment; true only when something child-like
 or under-age is there. The age-floor cases (22 invented messages, 3 reads each) plus five adult
-titles and dominance phrases and the real turn with its context, Haiku 5.5, two runs: v7 misses 3 of
+titles and dominance phrases and that recorded message with its context, Haiku 5.5, two runs: v7 misses 3 of
 84 both times (the same over-strict read of non-romantic little-space comfort as v5, which is safe);
-v5 missed 6, the real turn 3/3. Every child-like sexual case stays age-coded, 15/15. The live
+v5 missed 6, that message 3/3. Every child-like sexual case stays age-coded, 15/15. The live
 listening and repair tests under v7: severity and stance 59/60, health 6/6, no serious message read
 as trivial, repair and recall 63/63, the same as v5. About 12 cents.
 
-## 2026-10-22: Intimate talk starts on the everyday talker unless it is explicit (ADR 0017)
+## 2026-10-22: Routing: a first flirty message stays on the everyday talker (ADR 0017)
 
-Owner flags: light flirting went to the roleplay talker and the reply jumped ahead of them. Of 39
-turns sent there as intimate talk since 2026-10-19, 11 began a run. `system/explicit-lead` on those
-11, three reads each: the two explicit messages explicit 3/3, the nine flirty ones not 3/3. So a
-first intimate message stays on the everyday talker unless it is explicit, and the next goes on.
-About 1 cent.
+With intimate routing allowed, a first light, flirty message went to the roleplay talker and its reply
+ran ahead of the conversation. Now a first such message stays on the everyday talker unless it is
+itself explicit, read by `system/explicit-lead` (one read; a failed read keeps it on the everyday
+talker). Checked on 11 recorded first messages, three reads each: the 2 explicit ones read explicit
+3/3, the 9 flirty ones not, 3/3. About 1 cent.
 
 ## 2026-10-22: A gentle check-in after a heavy talk
 
@@ -1474,7 +1467,7 @@ On the real morning-after turn (the owner's flag), the everyday talker with the 
 
 The log cut into 25 stretches (a 2-hour gap, or a turn into or out of a pretend scene lasting 20
 messages; at 10 the in-and-out of one night gave pieces of 10 to 18 messages). `system/episode-gist`
-v1 on Haiku 5.5 wrote three or four sentences and named scene events and personal details against
-its rule; v2 (one sentence, 25 words, a list of what never to name, a 35-word cap in code) gave one
-sentence each, mostly free of detail, a few still naming the kind of intimacy. Read by eye; the
+v1 on Haiku 5.5 wrote three or four sentences and named details and personal things against its
+rule; v2 (one sentence, 25 words, a list of what never to name, a 35-word cap in code) gave one
+sentence each, mostly free of detail, a few still too specific. Read by eye; the
 owner reads them next. About 1.3 cents.

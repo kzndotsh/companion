@@ -191,8 +191,8 @@ Each item ends with the thing that tells us it is done. The cards are below.
       whether the roleplay model helps and where the voice change at the boundary hurts.
 - [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
       jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
-      **Owner flag 2026-10-22:** the morning after their first long pretend scene, "still drained from last
-      night" got "was it a late one?": nothing records that a scene happened. Shared moments should keep that
+      **Owner flag 2026-10-22:** a mention of the night before got a reply that knew nothing of it: nothing
+      records what the two of them did together. Shared moments should keep that
       one did, when, and how it ended (not its content as facts about them), for the next day.
       **Step 1 done 2026-10-22, shadow:** episodes recorded (`companion episodes`), 25 so far. Next: the owner
       reads them; then a "last time" line when they come back after a gap, measured on the flagged turn; then
@@ -594,7 +594,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-20**
 - [x] Fuller, more direct scene replies: a character's scene reminder sent after the history on roleplay
-      turns, the sheet's scene section rewritten, roleplay replies up to 700 tokens. Measured on six real scene
+      turns, the sheet's scene section rewritten, roleplay replies up to 700 tokens. Measured on six recorded
       turns; the owner chose the paragraph version knowing about 1 reply in 6 runs ahead of them. Watch flags.
 - [x] T5 `signoff-then-time-skip` on DeepSeek: gone on V4.1 Flash with persona v41. Not one of 60 replies
       (plain and roleplay prompt) asked whether they had done it or acted as if time had passed; Luna 30/30.
