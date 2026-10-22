@@ -191,6 +191,9 @@ Each item ends with the thing that tells us it is done. The cards are below.
       whether the roleplay model helps and where the voice change at the boundary hurts.
 - [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
       jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
+      **Owner flag 2026-10-22:** the morning after their first long pretend scene, "still drained from last
+      night" got "was it a late one?": nothing records that a scene happened. Shared moments should keep that
+      one did, when, and how it ended (not its content as facts about them), for the next day.
       **Partial 2026-10-20:** plan reviewed with Grok (its own promises first, then names, then shared
       moments; no anniversaries, no pull at goodbye or silence). Step 1 in shadow: promises read from its own
       replies and listed (`companion promises`). Next: a week of the list read by the owner, then standing
@@ -570,6 +573,14 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
 ## Done
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
+
+**2026-10-22**
+- [x] Flags of 2026-10-21 and 22, fixed: memories that bear on the message reach the reply when one is near
+      (ADR 0018 live behind a gate); a second redraw for an em dash; intimate talk starts on the everyday
+      talker unless explicit; adults' titles and dominance words are not age-coded (listening v7); a gentle
+      check-in after a heavy talk and a gap. Refactors: decisions recorded with keys, a turn's notes in one
+      list, one module for several reads, one settings table, the memory pass's steps as lists, one setup
+      for one-off commands (whose spend now counts).
 
 **2026-10-21**
 - [x] J50 Reminders they ask for, live, one-off only: "remind me at 8pm to take the dog out", "check up on
