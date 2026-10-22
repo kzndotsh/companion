@@ -197,6 +197,8 @@ Each item ends with the thing that tells us it is done. The cards are below.
       **Step 1 done 2026-10-22, shadow:** episodes recorded (`companion episodes`), 25 so far. Next: the owner
       reads them; then a "last time" line when they come back after a gap, measured on the flagged turn; then
       the recall look-up reaching episodes, and firsts.
+      **Step 2 built 2026-10-22, shadow:** the lines for the time their words point at, or the last one after a
+      gap (`notes/recent-times`, also J49). Waits for the owner's read, then `COMPANION_EPISODES=on`.
       **Partial 2026-10-20:** plan reviewed with Grok (its own promises first, then names, then shared
       moments; no anniversaries, no pull at goodbye or silence). Step 1 in shadow: promises read from its own
       replies and listed (`companion promises`). Next: a week of the list read by the owner, then standing

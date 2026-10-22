@@ -343,6 +343,7 @@ async def run(data_dir: Path) -> None:
             lore=s.mode("lore"),
             relevance=s.mode("relevance"),
             reminders=s.on("reminders"),
+            episodes=s.mode("episodes"),
         )
         same = (
             SameCheck(reflector, convo.embedder, convo.embed_model, s.mode("memory check"))

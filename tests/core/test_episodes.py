@@ -59,3 +59,48 @@ def test_a_line_longer_than_a_summary_is_not_kept() -> None:
     assert parse({"gist": " A cozy  evening. "}) == "A cozy evening."
     assert parse({"gist": "word " * (MAX_WORDS + 1)}) is None
     assert parse({"gist": ""}) is None
+
+
+def test_words_point_at_a_time_from_a_seven_oclock_day() -> None:
+    from datetime import datetime  # noqa: PLC0415
+    from zoneinfo import ZoneInfo  # noqa: PLC0415
+
+    from companion.core.episodes import period, when_said  # noqa: PLC0415
+
+    z = ZoneInfo("America/New_York")
+    evening = datetime(2026, 10, 21, 20, 43, tzinfo=z)
+    night = period("still drained from last night", evening, z)
+    assert night == (datetime(2026, 10, 20, 18, tzinfo=z), datetime(2026, 10, 21, 7, tzinfo=z))
+    small_hours = datetime(2026, 10, 19, 3, 6, tzinfo=z)
+    day = period("it was an intense day", small_hours, z)
+    assert day == (datetime(2026, 10, 18, 7, tzinfo=z), small_hours)  # at 3 a.m. "today" is ending
+    assert period("hey", evening, z) is None
+    assert when_said(datetime(2026, 10, 21, 2, 42, tzinfo=z), evening, z) == "last night"
+    assert when_said(datetime(2026, 10, 18, 10, tzinfo=z), small_hours, z) == "earlier today"
+    assert when_said(datetime(2026, 10, 19, 0, 41, tzinfo=z), small_hours, z) == "earlier tonight"
+
+
+def test_recent_shows_the_time_pointed_at_else_the_last_one_after_a_gap() -> None:
+    from datetime import datetime  # noqa: PLC0415
+    from zoneinfo import ZoneInfo  # noqa: PLC0415
+
+    from companion.core.episodes import recent  # noqa: PLC0415
+
+    z = ZoneInfo("America/New_York")
+    ends = [
+        (
+            datetime(2026, 10, 20, 22, tzinfo=z),
+            datetime(2026, 10, 21, 0, 30, tzinfo=z),
+            "a late one",
+        ),
+        (
+            datetime(2026, 10, 21, 13, tzinfo=z),
+            datetime(2026, 10, 21, 17, tzinfo=z),
+            "an easy afternoon",
+        ),
+    ]
+    now = datetime(2026, 10, 21, 20, 43, tzinfo=z)
+    assert [t.gist for t in recent(ends, "drained from last night", now, now, z)] == ["a late one"]
+    back = recent(ends, "hey", datetime(2026, 10, 21, 17, tzinfo=z), now, z)
+    assert [(t.when, t.gist) for t in back] == [("earlier today", "an easy afternoon")]
+    assert recent(ends, "hey", now - timedelta(minutes=5), now, z) == []

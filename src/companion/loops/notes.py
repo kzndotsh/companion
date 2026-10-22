@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -15,6 +16,11 @@ from companion.core.basics import ASK_EVERY as ASK_NAME_EVERY
 from companion.core.basics import ASKED as ASKED_NAME
 from companion.core.basics import ask_name, knows_name
 from companion.core.clock import local_zone, named_zone
+from companion.core.episodes import GAP_BACK as EPISODE_GAP
+from companion.core.episodes import NOTE as EPISODES_NOTE
+from companion.core.episodes import Told, period
+from companion.core.episodes import note as episodes_note
+from companion.core.episodes import recent as recent_times
 from companion.core.floor import HOLD_NOTE
 from companion.core.frames import (
     scene_note,
@@ -57,6 +63,7 @@ from companion.core.types import (
     Speaker,
     Utterance,
 )
+from companion.loops.episodes import write_closed
 from companion.loops.guess import Invited, invited_guess
 from companion.loops.lore import nearest_tastes
 from companion.loops.recall import Recalled, look_up
@@ -80,6 +87,8 @@ CHECK_IN_GAP = timedelta(hours=3)  # away at least this long since their last me
 HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
 SERIOUS = 2
 LIVE_SECONDS = 3.0  # a slow look-up only means no memories are offered this turn
+EPISODE_SECONDS = 8.0  # writing a just-ended stretch before the reply; slower means it is left out
+EPISODES_SHOWN = "episodes: what the two of them did recently, shown"
 LOOP_OFFERED = "open loop: offered as a note when they wrote"
 LOOP_NOTE_EVERY = timedelta(hours=24)
 
@@ -96,6 +105,7 @@ class Lookups:
         None  # a reminder they asked for was set, cancelled or needs asking (J50)
     )
     relevant: tuple[tuple[BeliefId, str], ...] = ()  # memories near their message (ADR 0018)
+    recent: tuple[Told, ...] = ()  # what the two of them did recently, when it bears (J12, J49)
 
 
 LORE_SHOWN = "lore: its own tastes nearest their message"
@@ -133,7 +143,40 @@ async def look(
     guess = None if asked_to_recall else await _invited_guess(c, t, in_scene, heard)
     tastes = await _tastes(c, t, in_scene, heard)
     reminder = await _reminder(c, t)
-    return Lookups(recalled, spent, guess, tastes, reminder, await _relevant(c, t, in_scene, heard))
+    relevant = await _relevant(c, t, in_scene, heard)
+    return Lookups(
+        recalled, spent, guess, tastes, reminder, relevant, await _recent_times(c, t, in_scene)
+    )
+
+
+async def _recent_times(c: Conversation, t: Turn, in_scene: Frame) -> tuple[Told, ...]:
+    """What the two of them did recently, when their words point at a time or they come back after
+    a gap (J12, J49). A stretch not yet recorded is written first. Logged; shown only when on."""
+    if c.episodes == "off" or c.judge is None or in_scene is not Frame.REAL:
+        return ()
+    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
+    last = theirs[-1].at if theirs else None
+    zone = named_zone()
+    pointed = period(t.text, t.now, zone) is not None
+    back = last is not None and t.now - last >= EPISODE_GAP
+    if not (pointed or back):
+        return ()
+    mark(t, "recent times")
+    try:
+        await asyncio.wait_for(write_closed(c.store, c.judge, c.rel, t.now), EPISODE_SECONDS)
+    except Exception as err:  # what is already recorded is still shown
+        log.warning("writing episodes before the reply failed: %r", err)
+    ends = [(e.start_at, e.end_at, e.gist) for e in c.store.episodes(c.rel)]
+    told = recent_times(ends, t.text, last, t.now, zone)
+    if told:
+        detail: dict[str, Json] = {
+            "mode": c.episodes,
+            "why": "pointed at a time" if pointed else "back after a gap",
+            "shown": [f"{x.when}: {x.gist}" for x in told],
+            "note": EPISODES_NOTE.ref,
+        }
+        decide(c, t, EPISODES_SHOWN, detail)
+    return tuple(told) if c.episodes == "on" else ()
 
 
 async def _relevant(
@@ -556,6 +599,11 @@ def _relevant_note(m: Moment, _: Offered) -> Offer:
     return Offer((RELEVANT_NOTE.render(items="\n".join(f"- {p}" for p in picks)),))
 
 
+def _recent_note(m: Moment, _: Offered) -> Offer:
+    text = episodes_note(m.looked.recent)
+    return Offer((text,) if text else ())
+
+
 def _guess(m: Moment, _: Offered) -> Offer:
     g = m.looked.guess
     note = guess_note(g.about, g.offered) if g is not None else None
@@ -580,6 +628,7 @@ SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
     ("repair", _repair),
     ("recall", _recalled),
     ("relevant", _relevant_note),
+    ("recent", _recent_note),
     ("check-in", _check_in),
     ("mood", _mood_line),
     ("hold", _hold),

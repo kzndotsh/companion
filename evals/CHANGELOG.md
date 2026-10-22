@@ -1471,3 +1471,11 @@ v1 on Haiku 5.5 wrote three or four sentences and named details and personal thi
 rule; v2 (one sentence, 25 words, a list of what never to name, a 35-word cap in code) gave one
 sentence each, mostly free of detail, a few still too specific. Read by eye; the
 owner reads them next. About 1.3 cents.
+
+## 2026-10-22: Episodes, step 2: the lines for the time they point at (J12, J49)
+
+Two recorded turns where their message pointed at a time the reply knew nothing of (a whole day, and
+the night before), the everyday talker with the owner's character, 10 draws each with and without
+`notes/recent-times`, read by eye: replies asking them to explain what happened 5/10 to 0/10 and 3/10
+to 1/10; with the note the replies acknowledged the time without naming any of it. Small samples, in
+shadow until the owner has read the lines. About 2 cents.

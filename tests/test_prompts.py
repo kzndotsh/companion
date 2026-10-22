@@ -14,6 +14,7 @@ PLACEHOLDERS = {
     "notes/length-serious": {"limit"},
     "notes/recall": {"items"},
     "notes/relevant": {"items"},
+    "notes/recent-times": {"items"},
     "notes/lore": {"items"},
     "notes/listening-trivial": {"examples"},
     "notes/topic-spent": {"move"},
