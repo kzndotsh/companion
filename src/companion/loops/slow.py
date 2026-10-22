@@ -9,10 +9,10 @@ from __future__ import annotations
 
 import logging
 import uuid
-from collections.abc import Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 from companion.core.beliefs.dedupe import is_duplicate_candidate
 from companion.core.beliefs.extract import (
@@ -51,15 +51,14 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.context import Written, write_missing
-from companion.loops.knowing import Labelled as Mapped
+from companion.loops.context import write_missing
 from companion.loops.knowing import label_new
-from companion.loops.lore import KindsRead, label_views
-from companion.loops.names import NamesRead, read_names
+from companion.loops.lore import label_views
+from companion.loops.names import read_names
 from companion.loops.openloops import Reading, catch_up_loops
 from companion.loops.record import Recorder
 from companion.loops.views import WANT_KINDS, check_views
-from companion.loops.worth import Labelled, label
+from companion.loops.worth import label
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:  # a type only: consolidate imports curate, which imports this module
@@ -135,6 +134,27 @@ class _Pass:
                 at=self.now,
             )
         )
+
+
+class _Spent(Protocol):
+    @property
+    def cost_usd(self) -> float: ...
+
+
+_Step = Callable[[Store, Extractor, RelationshipId, datetime], Awaitable[_Spent]]
+
+
+async def _sort_new(
+    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
+) -> _Spent:
+    """About their life, about the bot, or routine; acted on for memories from the last day."""
+    return await label(store, extractor, rel, now, act_since=now - timedelta(days=1))
+
+
+# What runs once a pass has stored new memories of theirs, in order: the map of their life, names,
+# what they were talking about, what kind of memory it is. Then, for new views of its own, lore.
+AFTER_THEIRS: tuple[_Step, ...] = (label_new, read_names, write_missing, _sort_new)
+AFTER_OWN: tuple[_Step, ...] = (label_views,)
 
 
 async def reflect_once(  # noqa: PLR0913
@@ -389,30 +409,15 @@ async def reflect_from(
     wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
     new_wants = users.accepted_ids & wanted
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
-    mapped = await label_new(store, extractor, rel, now) if users.accepted else Mapped()
-    named = await read_names(store, extractor, rel, now) if users.accepted else NamesRead()
-    noted = await write_missing(store, extractor, rel, now) if users.accepted else Written()
-    sorted_out = (
-        await label(store, extractor, rel, now, act_since=now - timedelta(days=1))
-        if users.accepted
-        else Labelled()
-    )
-    sorted_views = await label_views(store, extractor, rel, now) if own.accepted else KindsRead()
+    after = [*(AFTER_THEIRS if users.accepted else ()), *(AFTER_OWN if own.accepted else ())]
+    labelled = sum([(await step(store, extractor, rel, now)).cost_usd for step in after])
     return ReflectResult(
         True,
         users.accepted,
         users.rejected,
         users.duplicates,
         users.confirmed,
-        users.cost
-        + own.cost
-        + check.cost_usd
-        + loops.cost_usd
-        + mapped.cost_usd
-        + named.cost_usd
-        + noted.cost_usd
-        + sorted_out.cost_usd
-        + sorted_views.cost_usd,
+        users.cost + own.cost + check.cost_usd + loops.cost_usd + labelled,
         upto,
         views_accepted=own.accepted,
         views_confirmed=own.confirmed,
