@@ -11,6 +11,7 @@ from companion.cli import (
     address,
     backup,
     beliefs,
+    episodes,
     favorites,
     flags,
     initiative,
@@ -77,6 +78,11 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     pr.add_argument("--not", dest="wrong", metavar="ID", help="mark one as not a promise")
     pr.add_argument("--retire", metavar="ID", help="retire one")
     _db_args(pr)
+    ep = add("episodes", help="the times they spent together, with a line about each (shadow)")
+    ep.add_argument(
+        "--write", action="store_true", help="write the ones not written yet (a model call)"
+    )
+    _db_args(ep)
     rm = add("reminders", help="the reminders they asked for, with what became of each")
     rm.add_argument("--cancel", metavar="ID", help="drop a pending one")
     _db_args(rm)
@@ -290,6 +296,12 @@ def _names(a: argparse.Namespace) -> int:
     return _out(first + names.run(db, rel))
 
 
+def _episodes(a: argparse.Namespace) -> int:
+    db, rel = _target(a)
+    first = asyncio.run(daemon.episodes_now(db, rel)) if a.write else ""
+    return _out(first + episodes.run(db, rel))
+
+
 def _reminders(a: argparse.Namespace) -> int:
     return _out(reminders.run(*_target(a), cancel=a.cancel))
 
@@ -363,6 +375,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "mood": _mood,
     "promises": _promises,
     "reminders": _reminders,
+    "episodes": _episodes,
     "names": _names,
     "lore": _lore,
     "map": _map,

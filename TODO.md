@@ -194,6 +194,9 @@ Each item ends with the thing that tells us it is done. The cards are below.
       **Owner flag 2026-10-22:** the morning after their first long pretend scene, "still drained from last
       night" got "was it a late one?": nothing records that a scene happened. Shared moments should keep that
       one did, when, and how it ended (not its content as facts about them), for the next day.
+      **Step 1 done 2026-10-22, shadow:** episodes recorded (`companion episodes`), 25 so far. Next: the owner
+      reads them; then a "last time" line when they come back after a gap, measured on the flagged turn; then
+      the recall look-up reaching episodes, and firsts.
       **Partial 2026-10-20:** plan reviewed with Grok (its own promises first, then names, then shared
       moments; no anniversaries, no pull at goodbye or silence). Step 1 in shadow: promises read from its own
       replies and listed (`companion promises`). Next: a week of the list read by the owner, then standing

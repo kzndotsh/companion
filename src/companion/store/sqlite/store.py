@@ -47,6 +47,7 @@ from companion.store.sqlite import (
     contexts,
     decisions,
     embeddings,
+    episodes,
     favorites,
     flags,
     invented,
@@ -300,6 +301,12 @@ class Store:
 
     def belief_contexts(self, rel: RelationshipId) -> dict[BeliefId, str]:
         return contexts.latest(self._conn, rel)
+
+    def add_episode(self, rel: RelationshipId, e: episodes.Episode) -> None:
+        episodes.add(self._conn, rel, e)
+
+    def episodes(self, rel: RelationshipId) -> list[episodes.Episode]:
+        return episodes.all_(self._conn, rel)
 
     def merge_proposals(self, rel: RelationshipId) -> list[merges.Proposal]:
         return merges.all_(self._conn, rel)

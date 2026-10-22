@@ -1281,3 +1281,9 @@ so good" and "okayyy, that must've hit the spot" unprompted. Spent about $0.15.
   the everyday talker with the owner's character, 10 draws each, read by eye: acknowledging the night
   before 7/10 with `notes/check-in`, 3/10 without (the live reply was an ordinary greeting). Small sample;
   watch flags. About 1 cent.
+- **2026-10-22. Episodes, step 1 (J12, shadow).** The log cut into 25 stretches (a 2-hour gap, or a turn
+  into or out of a pretend scene lasting 20 messages; at 10 the in-and-out of one night gave pieces of 10
+  to 18 messages). `system/episode-gist` v1 on Haiku 5.5 wrote three or four sentences and named scene
+  events and personal details against its rule; v2 (one sentence, 25 words, a list of what never to name,
+  a 35-word cap in code) gave one sentence each, mostly free of detail, a few still naming the kind of
+  intimacy. Read by eye; the owner reads them next. About 1.3 cents.

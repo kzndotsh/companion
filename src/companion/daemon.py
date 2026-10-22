@@ -35,6 +35,7 @@ from companion.loops.callbacks import check_new
 from companion.loops.consolidate import SameCheck, nightly
 from companion.loops.context import write_missing
 from companion.loops.curate import rebuild, retire_implicated_views
+from companion.loops.episodes import write_closed
 from companion.loops.fast import Conversation
 from companion.loops.invented import check_new as check_invented
 from companion.loops.knowing import label_new
@@ -250,6 +251,7 @@ async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId, s
             await nightly(store, judge, rel, utc_now(), local_zone(), mode=s.mode("memory check"))
             await merging.recent(store, judge, rel, utc_now(), local_zone())
             expire_routine(store, rel, utc_now())
+            await write_closed(store, judge, rel, utc_now())
         except Exception:
             logging.getLogger("companion.consolidate").exception("memory check failed")
 
@@ -504,6 +506,13 @@ async def worth_now(db: Path, relationship: str) -> str:
         f"labelled {done.labelled}, {done.questions} questions for memory review,"
         f" ${done.cost_usd:.4f}\n"
     )
+
+
+async def episodes_now(db: Path, relationship: str) -> str:
+    """Write a record of every finished stretch of chat that has none, for `companion episodes`."""
+    async with _services(db, relationship) as x:
+        done = await write_closed(x.store, x.judge, x.rel, utc_now())
+    return f"wrote {done.written} episodes, ${done.cost_usd:.4f}\n"
 
 
 async def lore_now(db: Path, relationship: str, *, again: bool = False) -> str:
