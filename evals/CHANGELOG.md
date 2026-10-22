@@ -1492,3 +1492,12 @@ must fire from the first own-up, which the code does (the last two replies are r
 cents. Rerun: a scratch script that rebuilds each recorded turn from `turn_requests` and draws the
 talker with and without `TalkerRequest.tail`.
 
+## 2026-10-22: Claiming to know news it cannot see is a rare draw, not the episodes note
+
+A flagged reply said "I know, the tech news has been a lot lately" and then that it could not see the
+headlines. The episodes note was suspected, but on that turn it ran in shadow and was never sent (its log
+line said "shown"; it now says "shadow, not sent"). The turn redrawn 12 times exactly as it was sent,
+GPT-6 Luna, persona v41, the owner's character sheet (as recorded): 1/12 claimed to know ("I know, I wish
+I could see what you mean too"), 11/12 said it could not see the news and asked what happened. Read by
+eye. Under a cent. Rerun: a scratch script that rebuilds the turn from `turn_requests` and draws the talker.
+

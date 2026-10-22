@@ -12,8 +12,9 @@ from companion.core.ownup import NOTE as OWNED_NOTE
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.loops.fast import Conversation
-from companion.loops.notes import SOURCES, Lookups, Moment, notes_for
+from companion.loops.notes import EPISODES_SHOWN, SOURCES, Lookups, Moment, notes_for
 from companion.loops.turn import Turn
+from companion.store.sqlite.episodes import Episode
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
 
@@ -90,3 +91,26 @@ async def test_after_it_owns_a_slip_the_next_turn_says_enough_after_the_history(
     assert OWNED_NOTE.text not in sent.card  # in the system block it moved nothing
     turn = store.history_before(REL, later + timedelta(minutes=1), 4)[-2].turn_id
     assert replay_file(tmp_path / "rel.sqlite", turn).matched  # replay rebuilds what came after
+
+
+@pytest.mark.parametrize("mode", ["on", "shadow"])
+async def test_recent_times_reach_the_talker_only_when_on_and_the_log_says_which(
+    store: Store, mode: str
+) -> None:
+    await Conversation(store, Talker(), PREFIX, REL, judge=Judge()).handle(SESSION, "hey", "t", NOW)
+    [first, last] = store.history_before(REL, NOW + timedelta(hours=1), 4)
+    gist = "A quiet chat that ended warm."
+    store.add_episode(
+        REL,
+        Episode(
+            "e1", first.id, last.id, first.at, last.at, 2, "everyday", 0.0, 0, (), gist, "p", NOW
+        ),
+    )
+    later = NOW + timedelta(hours=5)
+    talker = Talker()
+    convo = Conversation(store, talker, PREFIX, REL, judge=Judge(), episodes=mode)
+    await convo.handle(SESSION, "hi again", "t", later)
+    assert (gist in talker.seen[0].card) == (mode == "on")
+    turn = store.history_before(REL, later + timedelta(minutes=1), 4)[-2].turn_id
+    [logged] = [d for d in store.decisions_for_turn(REL, turn) if d.has_key(EPISODES_SHOWN)]
+    assert ("not sent" in logged.reason) == (mode == "shadow")

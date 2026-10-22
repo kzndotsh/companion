@@ -176,7 +176,8 @@ async def _recent_times(c: Conversation, t: Turn, in_scene: Frame) -> tuple[Told
             "shown": [f"{x.when}: {x.gist}" for x in told],
             "note": EPISODES_NOTE.ref,
         }
-        decide(c, t, EPISODES_SHOWN, detail)
+        shadow = "" if c.episodes == "on" else " (shadow, not sent)"
+        decide(c, t, EPISODES_SHOWN, detail, reason=EPISODES_SHOWN + shadow)
     return tuple(told) if c.episodes == "on" else ()
 
 
