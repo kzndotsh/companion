@@ -250,6 +250,11 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   (twice if the redraw still has an em dash) and the last reply goes out whatever it is; the first is kept in the decision detail. Nothing is ever
   edited, and an empty reply is drawn once more instead of a silent turn. `COMPANION_RESAMPLE=off` turns
   it off.
+- When one of its last two replies owned a slip ("my bad", "I got that wrong"; `core/ownup.py`, sympathy
+  is not one), the next turn outside a scene gets `notes/owned-it` after the history, as a system message:
+  that was enough, no more apologies or self-blame. In the system block it moved nothing; after the
+  history it did, but only early in a run of apologies (measured). Text sent after the history is logged
+  with the turn (`tail: sent after the history`) so replay rebuilds it.
 - Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the roleplay talker for a pretend
   scene, or for intimate talk when `COMPANION_ROUTE_INTIMATE=on` once it is under way (their message before
   was intimate too, or this one is explicit by `system/explicit-lead`; a first flirty line gets the everyday

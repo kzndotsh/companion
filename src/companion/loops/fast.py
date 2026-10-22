@@ -77,7 +77,7 @@ from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.recheck import eligible as recheck_eligible
 from companion.core.relevance import SHADOW as RELEVANCE_SHADOW
 from companion.core.relevance import Embedder
-from companion.core.replay import TurnRecord
+from companion.core.replay import TAIL, TurnRecord
 from companion.core.spend import purpose
 from companion.core.talker import Reply, Talker
 from companion.core.types import (
@@ -881,8 +881,11 @@ def _assemble(  # noqa: PLR0913
     )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
-    if roleplay and c.scene_reminder:  # after the history, where it weighs most (scene turns only)
-        request = dataclasses.replace(request, tail=c.scene_reminder)
+    scene = [c.scene_reminder] if roleplay and c.scene_reminder else []
+    tail = "\n".join([*scene, *notes.tail])  # after the history, where it weighs most
+    if tail:
+        request = dataclasses.replace(request, tail=tail)
+        decide(c, t, TAIL, {"text": tail})  # what replay needs to rebuild it
     store.save_prefix(prefix)
     _mark_start(t, in_scene, card, card_text)
     return _Assembled(request, card_text, card, views, view_state, notes.after)

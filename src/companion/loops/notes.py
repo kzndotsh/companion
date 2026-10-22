@@ -43,6 +43,7 @@ from companion.core.mood import Said, chat_minutes, effects_for, held_because, i
 from companion.core.mood import line as mood_line
 from companion.core.mood import reason as mood_reason
 from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_note
+from companion.core.ownup import owned_note
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import recall_note
 from companion.core.relevance import GATE as RELEVANCE_GATE
@@ -486,12 +487,14 @@ class Offer:
 
     lines: tuple[str, ...] = ()
     after: tuple[Callable[[], None], ...] = ()
+    tail: tuple[str, ...] = ()  # lines sent after the history, where they weigh most
 
 
 @dataclass(frozen=True, slots=True)
 class Notes:
     lines: tuple[str, ...]
     after: tuple[Callable[[], None], ...]
+    tail: tuple[str, ...] = ()
 
 
 Offered = Mapping[str, Offer]
@@ -515,6 +518,17 @@ def _rude(m: Moment, _: Offered) -> Offer:
 def _repair(m: Moment, _: Offered) -> Offer:
     note = repair_note(m.heard[0]) if m.heard is not None else None
     return Offer((note,) if note else ())
+
+
+def _owned(m: Moment, so_far: Offered) -> Offer:
+    """When one of its last replies owned a slip, a note not to own more: outside a scene, and not
+    when they say it got them wrong this turn (the repair note's). Sent after the history: in the
+    system block it moved nothing (measured 2026-10-22)."""
+    if m.in_scene is not Frame.REAL:
+        return Offer()
+    replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]
+    note = owned_note(replies, repairing=bool(so_far["repair"].lines))
+    return Offer(tail=(note,) if note else ())
 
 
 def _recalled(m: Moment, _: Offered) -> Offer:
@@ -626,6 +640,7 @@ SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
     ("listening", _listening),
     ("rude", _rude),
     ("repair", _repair),
+    ("owned", _owned),
     ("recall", _recalled),
     ("relevant", _relevant_note),
     ("recent", _recent_note),
@@ -650,4 +665,5 @@ def notes_for(m: Moment) -> Notes:
     return Notes(
         tuple(line for o in offered.values() for line in o.lines),
         tuple(f for o in offered.values() for f in o.after),
+        tuple(line for o in offered.values() for line in o.tail),
     )

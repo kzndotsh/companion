@@ -8,9 +8,13 @@ from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.basics import ASKED as ASKED_NAME
 from companion.core.floor import HOLD_NOTE
+from companion.core.ownup import NOTE as OWNED_NOTE
+from companion.core.prompt.request import TalkerRequest
+from companion.core.talker import Reply
 from companion.loops.fast import Conversation
 from companion.loops.notes import SOURCES, Lookups, Moment, notes_for
 from companion.loops.turn import Turn
+from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
 
 
@@ -62,3 +66,27 @@ async def test_after_a_heavy_talk_and_a_gap_it_checks_in_once(store: Store) -> N
         SESSION, "morning", "t", NOW + timedelta(hours=16)
     )
     assert "heavy for them" not in again.seen[0].card  # once per heavy talk
+
+
+class _Owning(Talker):
+    async def reply(self, request: TalkerRequest) -> Reply:
+        await super().reply(request)
+        return Reply(text="oh, my bad, I mixed it up", model="fake", latency_ms=1)
+
+
+async def test_after_it_owns_a_slip_the_next_turn_says_enough_after_the_history(
+    store: Store, tmp_path: Path
+) -> None:
+    await Conversation(store, _Owning(), PREFIX, REL, judge=Judge()).handle(
+        SESSION, "he's the main character", "t", NOW
+    )
+    later = NOW + timedelta(minutes=1)
+    talker = Talker()
+    await Conversation(store, talker, PREFIX, REL, judge=Judge()).handle(
+        SESSION, "this is a show about that", "t", later
+    )
+    sent = talker.seen[0]
+    assert sent.tail == OWNED_NOTE.text
+    assert OWNED_NOTE.text not in sent.card  # in the system block it moved nothing
+    turn = store.history_before(REL, later + timedelta(minutes=1), 4)[-2].turn_id
+    assert replay_file(tmp_path / "rel.sqlite", turn).matched  # replay rebuilds what came after

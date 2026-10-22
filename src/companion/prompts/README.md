@@ -87,6 +87,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/check-in` | note | they came back after a gap from a heavy talk: ask gently how they are, once, without naming it | v1 |
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |
 | `notes/repair` | note | they say it got them wrong: own it in one line, go on from what they said (J30) | v1 |
+| `notes/owned-it` | note | after the history: one of its last two replies owned a slip, so no more apologies or self-blame, carry on lightly | v1 |
 | `notes/guess` | note | they invite a guess: what memory holds that may fit, guess once as a question (J16) | v1 |
 | `notes/topic-spent` | note | a small topic has run its course: react briefly, then move on with `$move` | v1 |
 | `notes/topic-move-loop` | part | the move: bring up a plan of theirs offered this turn | v1 |

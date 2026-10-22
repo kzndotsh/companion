@@ -1479,3 +1479,16 @@ the night before), the everyday talker with the owner's character, 10 draws each
 `notes/recent-times`, read by eye: replies asking them to explain what happened 5/10 to 0/10 and 3/10
 to 1/10; with the note the replies acknowledged the time without naming any of it. Small samples, in
 shadow until the owner has read the lines. About 2 cents.
+
+## 2026-10-22: A note against piling on apologies works only after the history, and only early
+
+On the two real turns of a casual talk where the companion owned a slip in reply after reply,
+12 draws per cell on GPT-6 Luna, persona v41, the owner's character sheet (as recorded). Scored by a
+regex for talking itself down ("I was being dense", "my bad", "sorry", "I should've"), checked by
+eye. `notes/owned-it` in the system block: no change (5/12 vs 4/12, and 4/12 vs 3/12, on a narrower
+regex). The same line sent after the history as a system message: on the turn after the second
+own-up, 7/12 without and 1/12 with; on the turn after the third, 8/12 without and 9/12 with. So it
+must fire from the first own-up, which the code does (the last two replies are read). About 2
+cents. Rerun: a scratch script that rebuilds each recorded turn from `turn_requests` and draws the
+talker with and without `TalkerRequest.tail`.
+

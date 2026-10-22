@@ -8,7 +8,7 @@ from pathlib import Path
 
 from companion.core.history import HISTORY_LIMIT
 from companion.core.prompt.request import TalkerRequest
-from companion.core.replay import ReplayError, TurnRecord, matches_record, rebuild_request
+from companion.core.replay import TAIL, ReplayError, TurnRecord, matches_record, rebuild_request
 from companion.core.types import Decision, TurnId
 from companion.store.sqlite import decisions, ledger, turns
 from companion.store.sqlite.db import connect, migrate
@@ -36,12 +36,15 @@ def replay(conn: sqlite3.Connection, turn_id: TurnId) -> ReplayReport:
         msg = f"turn {turn_id} has no user utterance in the ledger"
         raise ReplayError(msg)
     history = ledger.history_before(conn, record.relationship_id, user.at, HISTORY_LIMIT)
-    request = rebuild_request(record, prefix, user, history)
+    made = decisions.decisions_for_turn(conn, record.relationship_id, turn_id)
+    logged = next((d.detail for d in made if d.has_key(TAIL) and d.detail), None)
+    tail = logged.get("text") if logged else None
+    request = rebuild_request(record, prefix, user, history, tail if isinstance(tail, str) else "")
     return ReplayReport(
         record=record,
         request=request,
         matched=matches_record(record, request),
-        decisions=decisions.decisions_for_turn(conn, record.relationship_id, turn_id),
+        decisions=made,
     )
 
 

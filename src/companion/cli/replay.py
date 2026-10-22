@@ -21,6 +21,8 @@ def _prompt_in_order(report: ReplayReport) -> list[str]:
         lines += ["system block 2, the card (clock, memory, notes):", request.card, ""]
     lines += [f"messages ({len(request.messages)}):"]
     lines += [f"  [{m.role}] {m.content}" for m in request.messages]
+    if request.tail:
+        lines += ["", "after the history (system):", request.tail]
     return lines
 
 
@@ -39,6 +41,8 @@ def render(report: ReplayReport, *, show_prompt: bool = False) -> str:
         lines += [f"  [{m.role}] {m.content}" for m in report.request.messages]
         if report.request.card:
             lines += ["", "memory card (system block):", report.request.card]
+        if report.request.tail:
+            lines += ["", "after the history (system):", report.request.tail]
     lines += ["", f"decisions ({len(report.decisions)}):"]
     lines += [f"  {d.kind}  {d.reason}" for d in report.decisions]
     return "\n".join(lines) + "\n"

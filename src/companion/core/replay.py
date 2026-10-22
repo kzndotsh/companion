@@ -7,6 +7,7 @@ everything else is derived, and the rebuilt request must hash to the recorded on
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -34,17 +35,26 @@ class ReplayError(ValueError):
     """The turn cannot be rebuilt from the ledger."""
 
 
+TAIL = "tail: sent after the history"
+
+
 def rebuild_request(
-    record: TurnRecord, prefix: Prefix, user: Utterance, history: Sequence[Utterance]
+    record: TurnRecord,
+    prefix: Prefix,
+    user: Utterance,
+    history: Sequence[Utterance],
+    tail: str = "",
 ) -> TalkerRequest:
-    """`history` is the windowed past before `user`, exactly as the live loop fetched it."""
+    """`history` is the windowed past before `user`, exactly as the live loop fetched it; `tail` is
+    what the turn logged under TAIL, sent after it."""
     if user.turn_id != record.turn_id:
         msg = f"utterance {user.id} belongs to turn {user.turn_id}, not {record.turn_id}"
         raise ReplayError(msg)
     if prefix.sha256 != record.prefix_sha256:
         msg = "prefix does not match the one recorded for this turn"
         raise ReplayError(msg)
-    return build_request(prefix, to_messages(history), user.text, record.volatile, record.card)
+    request = build_request(prefix, to_messages(history), user.text, record.volatile, record.card)
+    return dataclasses.replace(request, tail=tail) if tail else request
 
 
 def matches_record(record: TurnRecord, rebuilt: TalkerRequest) -> bool:
