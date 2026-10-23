@@ -12,8 +12,6 @@ from pathlib import Path
 from companion.core.callbacks import Check
 from companion.core.invented import Statement
 from companion.core.knowing import Label
-from companion.core.lore import Kind as ViewKind
-from companion.core.lore import Labelled as ViewLabel
 from companion.core.mood import Effect, Said
 from companion.core.names import Row as NameRow
 from companion.core.openloops import LoopState, OpenLoop
@@ -42,6 +40,8 @@ from companion.core.types import (
 )
 from companion.core.vectors import Vector
 from companion.core.views import ViewState, parse_mode
+from companion.features.lore.logic import Kind as ViewKind
+from companion.features.lore.logic import Labelled as ViewLabel
 from companion.features.reminders import store as reminders
 from companion.features.reminders.store import Reminder
 from companion.store.sqlite import (

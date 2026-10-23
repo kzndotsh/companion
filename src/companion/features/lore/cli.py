@@ -7,8 +7,8 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-from companion.core.lore import lore
 from companion.core.types import RelationshipId
+from companion.features.lore.logic import lore
 from companion.store.sqlite.store import Store
 
 

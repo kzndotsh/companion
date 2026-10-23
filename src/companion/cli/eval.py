@@ -14,7 +14,6 @@ from companion.core.clock import utc_now
 from companion.core.length import length_target
 from companion.core.listening import SERIOUS, listening_note, rude_note
 from companion.core.listening import Judgement as ListenJudgement
-from companion.core.lore import lore_note
 from companion.core.prompt.prefix import Prefix, build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.replay import ReplayError
@@ -33,6 +32,7 @@ from companion.evals.rebuild import rebuilt
 from companion.evals.report import render_replies, render_table, save
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import parse_spec
+from companion.features.lore.logic import lore_note
 from companion.models.credits import charged_since, credits
 from companion.models.kiro import PREFIX as KIRO
 from companion.models.kiro import KiroTalker, kiro_key

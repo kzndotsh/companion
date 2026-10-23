@@ -64,6 +64,7 @@ venv = ".venv"
 [tool.importlinter]
 root_package = "companion"
 include_external_packages = true
+exclude_type_checking_imports = true  # a type-only import is not a runtime dependency
 
 [[tool.importlinter.contracts]]
 id = "core-is-pure"
@@ -103,6 +104,12 @@ id = "features-are-independent"
 name = "no feature imports another; shared things go through core or the turn"
 type = "independence"
 modules = ["companion.features.*"]
+# The two hubs that know every feature by design: the store facade (and its tables) and the registry.
+# A feature reaching a hub does not make it depend on the features the hub lists.
+ignore_imports = [
+    "companion.store.sqlite.** -> companion.features.**",
+    "companion.loops.registry -> companion.features.**",
+]
 
 [[tool.importlinter.contracts]]
 id = "only-store-owns-sqlite"

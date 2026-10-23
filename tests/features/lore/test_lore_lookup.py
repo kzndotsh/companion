@@ -4,13 +4,12 @@ import asyncio
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-from tests.conftest import REL, T0
-
-from companion.core.lore import Kind, Labelled
 from companion.core.types import Belief, Subject, Utterance
 from companion.core.vectors import Embedded, unit
-from companion.loops.lore import nearest_tastes
+from companion.features.lore.logic import Kind, Labelled
+from companion.features.lore.run import nearest_tastes
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 AXIS = {"music": [1.0, 0.0, 0.0], "rain": [0.0, 1.0, 0.0], "advice": [0.0, 0.0, 1.0]}
 

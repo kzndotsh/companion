@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from companion.core.lore import Kind, Labelled, agreed, lore, parse, prompt
 from companion.core.types import Belief, BeliefId, Json, Subject
+from companion.features.lore.logic import Kind, Labelled, agreed, lore, parse, prompt
 
 
 def test_each_view_is_shown_with_its_words_and_labels_come_back_by_ref(

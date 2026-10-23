@@ -6,8 +6,8 @@ import sqlite3
 from collections.abc import Sequence
 from datetime import datetime
 
-from companion.core.lore import Kind, Labelled
 from companion.core.types import BeliefId, RelationshipId
+from companion.features.lore.logic import Kind, Labelled
 from companion.store.sqlite.db import iso, write_tx
 
 
