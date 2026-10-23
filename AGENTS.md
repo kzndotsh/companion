@@ -193,7 +193,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   has the fallback asked too, the first answer sent (`models/fallback.py` `TalkerFallback`, J21). The
   reply carries the model that wrote it, and every check runs on it as usual. Talker calls time out at 25 s.
 - Memory tidies itself only where a judge matched the owner's own review (ADR 0019,
-  `core/consolidate.py`): at 04:00 each memory a week old is read three times; a faded passing moment
+  `core/consolidate.py`): the night's steps run each on its own (`loops/nightly.py`; one failing does not
+  skip the rest) and a night missed while the bot was down is made up five minutes after it starts. At 04:00 each memory a week old is read three times; a faded passing moment
   read so three times is closed, and out of date or overstated findings become questions for the owner.
   When the memory pass writes a new memory, the nearest existing one (by embedding, at 0.55 or more) is
   read as a pair three times; read as the same, the new quote becomes evidence on the old memory instead;

@@ -29,8 +29,11 @@ def add(
 
 
 def latest(conn: sqlite3.Connection, rel: RelationshipId, model: str) -> dict[BeliefId, Vector]:
+    """The newest vector of each current belief. A closed belief's vector stays stored and is
+    not loaded: every caller compares against current beliefs only."""
     rows = conn.execute(
         "SELECT belief_id, vector FROM belief_embeddings WHERE relationship_id = ? AND model = ?"
+        " AND belief_id IN (SELECT id FROM beliefs WHERE valid_until IS NULL)"
         " ORDER BY id",
         (rel, model),
     ).fetchall()

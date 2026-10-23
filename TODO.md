@@ -379,6 +379,9 @@ Unordered within each group. Pull a card into Todo when it is next.
 
 ### B. Memory
 
+- [ ] G58 The memory pass's "Already recorded" list grows with memory (about 260 current, 2026-10-23). Capping it
+      could let duplicates back in; the same-memory check folds repeats. Revisit when the pass's input passes
+      about 600 memories or its daily cost a few cents (architecture audit, 2026-10-23). (new)
 - [ ] G11 Supersession with reasons and refusal rules (correction, time change, scope; a vaguer claim
       never replaces a specific one). (partial)
 - [ ] G12 Deterministic confidence from evidence, capped so nothing becomes "core" automatically. (new)

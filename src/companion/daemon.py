@@ -32,7 +32,7 @@ from companion.core.types import Favorite, FavoriteId, Flag, FlagId, Relationshi
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops import merging
 from companion.loops.callbacks import check_new
-from companion.loops.consolidate import SameCheck, nightly
+from companion.loops.consolidate import SameCheck
 from companion.loops.context import write_missing
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.episodes import write_closed
@@ -41,13 +41,14 @@ from companion.loops.invented import check_new as check_invented
 from companion.loops.knowing import label_new
 from companion.loops.lore import label_views
 from companion.loops.names import read_names
+from companion.loops.nightly import missed, night
 from companion.loops.nudges import tick_nudge
 from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.reminders import deliver_due
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
-from companion.loops.worth import expire_routine, label
+from companion.loops.worth import label
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import RefusalFallback, TalkerFallback
 from companion.models.retry import retry_on_network_error
@@ -239,27 +240,32 @@ INITIATIVE_TICK_SECONDS = 900
 
 
 NIGHTLY_HOUR = 4  # local time, when they are least likely to be chatting
+CATCH_UP = timedelta(minutes=5)  # after a start, a missed night runs this much later
 
 
 async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId, s: Settings) -> None:
-    """The memory check once a night (ADR 0019). A failure is logged and tried the next night."""
+    """The night's memory work once a night (ADR 0019, `loops/nightly.py`), each step on its own. A
+    night missed while the bot was down is made up CATCH_UP after it starts."""
     if not s.on("memory check"):
         return
+
+    async def run() -> None:
+        if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
+            return
+        failed = await night(store, judge, rel, local_zone(), mode=s.mode("memory check"))
+        if failed:
+            logging.getLogger("companion.nightly").warning("nightly: %s failed", ", ".join(failed))
+
+    if missed(store, rel, utc_now()):
+        await asyncio.sleep(CATCH_UP.total_seconds())
+        await run()
     while True:
         now = utc_now().astimezone(local_zone())
         nxt = now.replace(hour=NIGHTLY_HOUR, minute=0, second=0, microsecond=0)
         if nxt <= now:
             nxt += timedelta(days=1)
         await asyncio.sleep((nxt - now).total_seconds())
-        if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
-            continue
-        try:
-            await nightly(store, judge, rel, utc_now(), local_zone(), mode=s.mode("memory check"))
-            await merging.recent(store, judge, rel, utc_now(), local_zone())
-            expire_routine(store, rel, utc_now())
-            await write_closed(store, judge, rel, utc_now())
-        except Exception:
-            logging.getLogger("companion.consolidate").exception("memory check failed")
+        await run()
 
 
 async def _daily_backups(data_dir: Path, db: Path) -> None:
