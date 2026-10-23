@@ -101,7 +101,8 @@ values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed
   `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(convo, ...)`; the
   `Conversation` it runs is plain data in `loops/conversation.py`): change a stage in its module.
 - A feature declares its parts as a `Feature` in its own module (`loops/features.py`): a look-up before the
-  reply, a note, steps after a memory pass, and a look-up in shadow beside the turn. It is one line in `FEATURES` (`companion/registry.py`); a note
+  reply, a note, steps after a memory pass, a look-up in shadow beside the turn, and a step once the
+  turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
   also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
   reaches its note as `Lookups.found[name]`. Registered: the memory map, names, context, worth, relevance,

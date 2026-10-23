@@ -9,7 +9,6 @@ from companion.core.extractor import FALLBACK, Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.turn.basics import name_belief
 from companion.core.types import (
     Frame,
     Json,
@@ -20,6 +19,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.basics.logic import name_belief
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

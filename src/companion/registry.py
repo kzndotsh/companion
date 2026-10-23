@@ -3,6 +3,7 @@ their notes go in this order, and so do their steps after a memory pass."""
 
 from __future__ import annotations
 
+from companion.features.basics.run import BASICS
 from companion.features.context.run import CONTEXT
 from companion.features.episodes.run import EPISODES
 from companion.features.guess.run import GUESS
@@ -20,6 +21,7 @@ from companion.loops.features import Feature
 
 FEATURES: tuple[Feature, ...] = (
     KNOWING,
+    BASICS,
     NAMES,
     CONTEXT,
     WORTH,

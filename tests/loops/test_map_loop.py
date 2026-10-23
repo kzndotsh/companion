@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
-from companion.core.turn.basics import name_belief
 from companion.core.types import (
     Depth,
     Domain,
@@ -17,6 +16,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.basics.logic import name_belief
 from companion.features.knowing.logic import WOULD_ASK
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store

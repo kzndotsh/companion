@@ -18,9 +18,6 @@ from companion.core.recall import recall_note
 from companion.core.turn.ack import (
     inputs_hash,
 )
-from companion.core.turn.basics import ASK_EVERY as ASK_NAME_EVERY
-from companion.core.turn.basics import ASKED as ASKED_NAME
-from companion.core.turn.basics import ask_name, knows_name
 from companion.core.turn.floor import BRUSH_NOTE, HOLD_NOTE
 from companion.core.turn.habits import habit_note
 from companion.core.turn.length import LengthTarget, length_target
@@ -92,17 +89,6 @@ async def look(
         recalled=cast("Recalled | None", got.get("recall")),
         found={f.name: got[f.name] for f in FEATURES if f.name in got},
     )
-
-
-def _ask_name(m: Moment) -> Offer:
-    """Offer to ask what to call them on a casual turn, at most once a day, until memory knows."""
-    c, t = m.c, m.t
-    note = ask_name(
-        known=knows_name(m.beliefs),
-        casual=m.casual,
-        asked_recently=c.store.decided_since(c.rel, ASKED_NAME, t.now - ASK_NAME_EVERY),
-    )
-    return Offer() if note is None else Offer((note,), (lambda: decide(c, t, ASKED_NAME),))
 
 
 def _listening_note(c: Conversation, t: Turn, heard: Heard | None) -> str | None:
@@ -313,10 +299,6 @@ def _brush(m: Moment, _: Offered) -> Offer:
     return Offer((BRUSH_NOTE.text,) if m.brushed else ())
 
 
-def _name(m: Moment, so_far: Offered) -> Offer:
-    return Offer() if so_far["check-in"].lines else _ask_name(m)
-
-
 def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
     note = f.note
     assert note is not None
@@ -339,7 +321,6 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "mood": _mood_line,
     "hold": _hold,
     "brush-off": _brush,
-    "name": _name,
 }
 
 # Every note, in the order it reaches the system block. A source sees what the ones before it

@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.turn.basics import name_belief
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -21,6 +20,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.basics.logic import name_belief
 from companion.features.guess.logic import INVITED
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store

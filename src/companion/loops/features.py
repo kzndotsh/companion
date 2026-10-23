@@ -12,7 +12,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
-from companion.core.types import Belief, BeliefId, Frame
+from companion.core.types import Belief, BeliefId, Frame, Utterance
 from companion.loops.recall import Recalled
 from companion.loops.turn import Heard, Turn, is_casual
 
@@ -37,6 +37,9 @@ class Offer:
 
 
 type Look = Callable[[Conversation, Turn, Frame, Heard | None], Awaitable[object]]
+# Once the turn is stored: their message as kept, and the reply sent (None when it only reacted).
+# A step that should not hold up the reply starts its own task and returns.
+type AfterTurn = Callable[[Conversation, Turn, Utterance, str | None], Awaitable[None]]
 # A look-up in shadow: run beside the turn once the reply is out, with the card it was sent; it logs
 # what it would have done and never changes the reply. A failure is logged by `turn/beside.py`.
 type Shadow = Callable[
@@ -71,6 +74,7 @@ class Feature:
     after_theirs: Step | None = None  # after a memory pass stored new memories of theirs
     after_own: Step | None = None  # after a memory pass stored new views of its own
     shadow: Shadow | None = None
+    after_turn: AfterTurn | None = None
 
 
 @dataclass(frozen=True, slots=True)

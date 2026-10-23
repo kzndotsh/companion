@@ -4,8 +4,14 @@ from collections.abc import Callable
 
 import pytest
 
-from companion.core.turn.basics import ASK_NAME, ask_name, asked_for_name, knows_name, parse_name
 from companion.core.types import Belief, Subject
+from companion.features.basics.logic import (
+    ASK_NAME,
+    ask_name,
+    asked_for_name,
+    knows_name,
+    parse_name,
+)
 
 
 @pytest.mark.parametrize(

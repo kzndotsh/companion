@@ -27,7 +27,6 @@ from companion.core.turn.ack import (
     Reaction,
     inputs_hash,
 )
-from companion.core.turn.basics import NAME_CAPTURE, asked_for_name, knows_name, name_belief
 from companion.core.turn.moves import PROMPT as HABITS_PROMPT
 from companion.core.turn.moves import replies_to_read
 from companion.core.turn.react import PROMPT as REACT_PROMPT
@@ -44,9 +43,9 @@ from companion.core.types import (
 from companion.core.views import why
 from companion.loops.moves import find_habits
 from companion.loops.turn import Answered, Turn, decide, mark, recorder
+from companion.registry import FEATURES
 from companion.store.sqlite.decisions import REACTED
 from companion.turn.assemble import Assembled, CardLog
-from companion.turn.basics import judge_name
 from companion.turn.frames import inputs_hash as frames_inputs_hash
 from companion.turn.frames import schema_hash as frames_schema_hash
 
@@ -160,20 +159,11 @@ def with_reaction(
     return ReactAndReply(reacted, sent) if reacted is not None else sent
 
 
-async def capture_name(c: Conversation, t: Turn, said: Utterance) -> None:
-    """When its last message asked what to call them, read their answer and remember the name,
-    quoting their own words. Logged either way."""
-    asked = next((u.text for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), "")
-    if c.judge is None or not asked_for_name(asked):
-        return
-    if knows_name(c.store.user_beliefs(c.rel)):
-        return
-    name = await judge_name(c.judge, asked, t.text)
-    reason = "basics: no name in their answer"
-    if name is not None:
-        c.store.insert_belief(name_belief(said, name, uuid.uuid4().hex, t.now))
-        reason = f"basics: remembered what to call them ({name})"
-    decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
+async def after_turn(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
+    """Each feature's step once the turn is stored, in the registry's order."""
+    for feature in FEATURES:
+        if feature.after_turn is not None:
+            await feature.after_turn(c, t, said, sent)
 
 
 def log_frame(
@@ -234,7 +224,7 @@ async def reaction_only(
 ) -> Reaction:
     """A turn answered by a reaction alone: their message is kept, and nothing else is stored."""
     said = keep.store(in_scene)
-    await capture_name(c, t, said)
+    await after_turn(c, t, said, None)
     mark(t, "done: reaction only")
     log.info("turn %s | ack -> %s\n  you: %s", t.turn[:8], reaction.emoji, t.text)
     return reaction
@@ -281,5 +271,5 @@ async def finish(
     sent = persist_reply(c, t, reply, user_frame, keep.channel)
     for write in asm.after:  # what the notes used up, now that the turn is stored
         write()
-    await capture_name(c, t, said)
+    await after_turn(c, t, said, sent)
     return with_reaction(c, t, answered.felt, sent)

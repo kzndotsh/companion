@@ -7,9 +7,9 @@ import pytest
 
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.turn.basics import ASKED as ASKED_NAME
 from companion.core.turn.floor import HOLD_NOTE
 from companion.core.turn.ownup import NOTE as OWNED_NOTE
+from companion.features.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
 from companion.loops.conversation import Conversation

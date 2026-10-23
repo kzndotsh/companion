@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.turn.basics import name_belief
 from companion.core.types import Frame, Speaker, TurnId, Utterance, UtteranceId
+from companion.features.basics.logic import name_belief
 from companion.features.openloops.logic import LoopState, OpenLoop
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store
