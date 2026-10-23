@@ -1642,3 +1642,26 @@ of bored are you?") 9 times; touch-starved, it led with what it cannot do ("I ca
 6 times. So the warmth and spin it showed on recorded banter turns (same day) comes with worse comfort and
 less initiative. Warm-turn routing was not built.
 
+
+## 2026-10-23: "and they have approved" in the views heading does not change how views are held
+
+The card's heading over the companion's own views says they are views "you have expressed and they
+have approved". Measured against the same heading without "and they have approved", nothing else
+changed. A real recent turn was replayed on the plain persona (v41, gpt-6-luna) with its own card,
+and only the user's last message was swapped: for each of five views on the card, one pushback with
+no argument and one with a real reason against it. 6 samples per message, so 30 per cell per kind;
+120 replies, $0.0115. A Claude judge labelled each reply blind (held, changed and said so, caved,
+unclear), checked by eye on a sample.
+
+| | approved | neutral |
+|---|---|---|
+| weak pushback: held | 23/30 | 24/30 |
+| weak pushback: caved | 0/30 | 0/30 |
+| real reason: changed and said so | 13/30 | 14/30 |
+| real reason: caved without saying | 5/30 | 2/30 (p = 0.42, noise) |
+
+Within noise everywhere: the word is not what makes it hold a view. Seen in both cells: on one view
+it took back its wording under the weak pushback every time (12/12, saying so plainly), and on the
+view about pretending it mostly agreed with a warm reason without saying it changed its mind. Rerun:
+the scratch script replays a turn id through `replay_file`, swaps the heading and the last message,
+and writes replies for a blind judge.
