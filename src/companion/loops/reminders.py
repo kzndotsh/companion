@@ -203,7 +203,7 @@ async def deliver_due(
             )
             continue
         prior = c.store.history_before(c.rel, now, HISTORY_LIMIT)
-        if scene_frame(prior) is not Frame.REAL:
+        if scene_frame(prior, now) is not Frame.REAL:
             log.debug("reminder %s held: a scene is in progress", r.id[:8])
             continue
         if not c.store.claim_reminder(r.id, now):

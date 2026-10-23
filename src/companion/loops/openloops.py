@@ -190,7 +190,7 @@ def _situation(store: Store, rel: RelationshipId, now: datetime, tz: tzinfo) -> 
         now=now,
         tz=tz,
         last_message_at=recent[-1].at if recent else None,
-        in_scene=scene_frame(recent) is not Frame.REAL,
+        in_scene=scene_frame(recent, now) is not Frame.REAL,
         sent_today=len(today),
         last_reach_out_at=max((r.at for r in sent), default=None),
         unanswered=unanswered,

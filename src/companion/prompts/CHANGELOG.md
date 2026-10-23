@@ -856,3 +856,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## Request assembly: a reply cut off is read as the part that arrived
 - From 2026-10-22 a reply sent as two or three messages that is cut off after the first went out (a newer message superseded it, or a later part failed to send) is marked undelivered, and what arrived is added beside it at the same time and turn (`Store.mark_partly_delivered`, decision `reply partly delivered`). Before, the whole reply stayed in what the model read, so it could take for seen a part the user never got. Nothing is removed: the whole reply stays in the ledger with its mark.
 
+## Request assembly: a scene ends after a two-hour gap
+- From 2026-10-23 a pretend scene is no longer "in progress" when their last message was two hours ago or more (`core/frames.py` `scene_frame`, `SCENE_GAP`, the same gap that cuts episodes). Before, a scene started by one action in asterisks held over a two-hour gap, so a casual message hours later went to the roleplay talker with the scene note and reminder (two flags). The next message after a gap is read fresh by the frame judge; it can still open a new scene. Reminders and the reach-out gate use the same rule.
+

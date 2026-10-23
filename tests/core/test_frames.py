@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import timedelta
 
 import pytest
 
 from companion.core.frames import (
     MIN_CONFIDENCE,
+    SCENE_GAP,
     Judgement,
     build_prompt,
     companion_frame,
@@ -49,9 +51,18 @@ def test_a_scene_in_progress_asks_the_judge_even_without_a_cue(
     utterance: Callable[..., Utterance],
 ) -> None:
     play = [utterance(text="*waves*", speaker=Speaker.USER, frame=Frame.PLAY)]
-    assert scene_frame(play) is Frame.PLAY
-    assert needs_judge("and then what happens", play)
-    assert not needs_judge("and then what happens", [utterance(text="hi")])
+    soon = play[-1].at + timedelta(minutes=1)
+    assert scene_frame(play, soon) is Frame.PLAY
+    assert needs_judge("and then what happens", play, soon)
+    assert not needs_judge("and then what happens", [utterance(text="hi")], soon)
+
+
+def test_coming_back_after_a_long_gap_ends_the_scene(utterance: Callable[..., Utterance]) -> None:
+    play = [utterance(text="*waves*", speaker=Speaker.USER, frame=Frame.PLAY)]
+    last = play[-1].at
+    assert scene_frame(play, last + SCENE_GAP - timedelta(minutes=1)) is Frame.PLAY
+    assert scene_frame(play, last + SCENE_GAP) is Frame.REAL
+    assert not needs_judge("hey, i'm back", play, last + SCENE_GAP)
 
 
 def test_stepping_out_ends_the_scene(utterance: Callable[..., Utterance]) -> None:
@@ -59,11 +70,11 @@ def test_stepping_out_ends_the_scene(utterance: Callable[..., Utterance]) -> Non
         utterance(text="*waves*", speaker=Speaker.USER, frame=Frame.PLAY),
         utterance(text="wait, seriously though", speaker=Speaker.USER, frame=Frame.OOC),
     ]
-    assert scene_frame(out) is Frame.REAL
+    assert scene_frame(out, out[-1].at) is Frame.REAL
 
 
-def test_an_empty_history_is_real() -> None:
-    assert scene_frame([]) is Frame.REAL
+def test_an_empty_history_is_real(utterance: Callable[..., Utterance]) -> None:
+    assert scene_frame([], utterance(text="hi").at) is Frame.REAL
 
 
 @pytest.mark.parametrize(

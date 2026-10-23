@@ -447,7 +447,7 @@ def _start_beside(
         return talk, None, None
     framing = (
         asyncio.ensure_future(judge_frame(c.judge, t.prior, t.text))
-        if needs_judge(t.text, t.prior)
+        if needs_judge(t.text, t.prior, t.now)
         else None
     )
     return talk, framing, asyncio.ensure_future(judge_reaction(c.judge, t.prior, t.text))
@@ -899,7 +899,7 @@ async def _handle_turn(
     turn = TurnId(_id())
     prior = store.history_before(rel, now, HISTORY_LIMIT)
     t = Turn(session, turn, now, prior, text)
-    in_scene = scene_frame(prior)
+    in_scene = scene_frame(prior, now)
     listening = asyncio.ensure_future(_listening(c, t, in_scene))
     heard: Heard | None = None
     try:

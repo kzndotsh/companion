@@ -15,11 +15,13 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 
 from companion.core.types import Belief, Frame, Json, Provenance, Speaker, Utterance
 from companion.prompts import get
 
 NON_REAL = frozenset({Frame.PLAY, Frame.STORY, Frame.HYPOTHETICAL})
+SCENE_GAP = timedelta(hours=2)  # back after this long, a scene has ended (as episodes cut the chat)
 MIN_CONFIDENCE = 0.7
 CONTEXT_MESSAGES = 4
 
@@ -52,16 +54,20 @@ def has_cue(text: str) -> bool:
     return _CUES.search(text) is not None
 
 
-def scene_frame(history: Sequence[Utterance]) -> Frame:
-    """The frame the conversation was in at the user's last message. Out of character ends it."""
+def scene_frame(history: Sequence[Utterance], now: datetime) -> Frame:
+    """The frame the conversation was in at the user's last message. Out of character ends it, and
+    so does a gap of SCENE_GAP or more: coming back hours later is not still the scene (a flag of
+    2026-10-23: a scene held over a two-hour gap)."""
     for u in reversed(history):
         if u.speaker is Speaker.USER:
+            if now - u.at >= SCENE_GAP:
+                return Frame.REAL
             return u.frame if u.frame in NON_REAL else Frame.REAL
     return Frame.REAL
 
 
-def needs_judge(text: str, history: Sequence[Utterance]) -> bool:
-    return has_cue(text) or scene_frame(history) is not Frame.REAL
+def needs_judge(text: str, history: Sequence[Utterance], now: datetime) -> bool:
+    return has_cue(text) or scene_frame(history, now) is not Frame.REAL
 
 
 def companion_frame(user_frame: Frame) -> Frame:
