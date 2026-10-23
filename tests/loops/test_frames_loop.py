@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -134,7 +135,7 @@ async def test_a_failing_or_slow_judge_stores_real_and_the_reply_still_goes(
         SESSION, "let's pretend", "t", NOW
     )
     assert out == "ok"
-    monkeypatch.setattr(frames_loop, "TIMEOUT_SECONDS", 0.05)
+    monkeypatch.setattr(frames_loop, "FRAME", replace(frames_loop.FRAME, timeout=0.05))
     out = await Conversation(
         store, Talker("fine"), PREFIX, REL, judge=Judge(("play", 0.9), delay=1.0)
     ).handle(SESSION, "imagine that", "t", NOW + timedelta(minutes=5))

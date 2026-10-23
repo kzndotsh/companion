@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -142,7 +143,7 @@ async def test_a_failing_judge_means_a_normal_reply(store: Store) -> None:
 
 
 async def test_a_slow_judge_is_abandoned(store: Store, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(ack_loop, "TIMEOUT_SECONDS", 0.05)
+    monkeypatch.setattr(ack_loop, "ACK", replace(ack_loop.ACK, timeout=0.05))
     talker, out = await _two_turns(store, Judge(_verdict("ack", 0.99), delay=1.0))
     assert out == "a normal reply"
     assert talker.calls == 2

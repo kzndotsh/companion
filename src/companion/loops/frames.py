@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
-import logging
 from collections.abc import Sequence
 
 from companion.core.extractor import Extractor
-from companion.core.frames import SCHEMA, SYSTEM, Judgement, build_prompt, parse
-from companion.core.spend import purpose
+from companion.core.frames import PROMPT, SCHEMA, Judgement, build_prompt, parse
 from companion.core.types import Utterance
+from companion.loops.ask import Judge, ask
 
 TIMEOUT_SECONDS = 2.5
-log = logging.getLogger("companion.frames")
+FRAME = Judge("frame", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="storing as real")
 
 
 def schema_hash() -> str:
@@ -30,14 +28,5 @@ async def judge_frame(
 ) -> tuple[Judgement, str, str] | None:
     """The judgement, the model id and the prompt, or None if it could not be made in time."""
     prompt = build_prompt(history, text)
-    try:
-        with purpose("frame"):
-            result = await asyncio.wait_for(
-                extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
-            )
-    except Exception as err:
-        log.warning("frame judgement failed or timed out; storing as real: %r", err)
-        return None
-    judged = parse(result.data)
-    log.debug("frame judged %s in %dms, $%.5f", judged, result.latency_ms, result.cost_usd)
-    return None if judged is None else (judged, result.model, prompt)
+    got = await ask(extractor, FRAME, prompt)
+    return None if got is None else (got.value, got.model, prompt)

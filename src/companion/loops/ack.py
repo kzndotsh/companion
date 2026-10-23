@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-import asyncio
-import logging
 from collections.abc import Sequence
 
-from companion.core.ack import SCHEMA, SYSTEM, Judgement, build_prompt, parse
+from companion.core.ack import PROMPT, SCHEMA, Judgement, build_prompt, parse
 from companion.core.extractor import Extractor
-from companion.core.spend import purpose
 from companion.core.types import Utterance
+from companion.loops.ask import Judge, ask
 
 TIMEOUT_SECONDS = 2.0
-log = logging.getLogger("companion.ack")
+ACK = Judge("ack", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="replying normally")
 
 
 async def judge(
@@ -20,14 +18,5 @@ async def judge(
 ) -> tuple[Judgement, str, str] | None:
     """The judgement, the model id and the prompt, or None if it could not be made in time."""
     prompt = build_prompt(history, text)
-    try:
-        with purpose("ack"):
-            result = await asyncio.wait_for(
-                extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
-            )
-    except Exception as err:
-        log.warning("ack judgement failed or timed out; replying normally: %r", err)
-        return None
-    judged = parse(result.data)
-    log.debug("ack judged %s in %dms, $%.5f", judged, result.latency_ms, result.cost_usd)
-    return None if judged is None else (judged, result.model, prompt)
+    got = await ask(extractor, ACK, prompt)
+    return None if got is None else (got.value, got.model, prompt)
