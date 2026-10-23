@@ -204,9 +204,15 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   pending merge is held back. `COMPANION_CONSOLIDATE` is shadow (log only) unless `on` or `off`. Nothing is merged
   automatically. `companion memory review` asks the owner the questions the check raised; `companion merge`
   merges by hand.
+- After each memory pass, feelings and sensitive memories get a short note on what was being talked about
+  (`system/memory-context`, `core/context.py`, J51), shown beside them on the card; and each new memory is
+  labelled about their life, about the bot or one day's routine, keep cases first (`system/memory-worth`,
+  `core/worth.py`): a remark about the bot is dropped, a routine is closed a week on (at 04:00), and an
+  unsure one is a question in `memory review`. `companion memory context|label` backfill by hand.
 - When a short question of theirs invites a guess about them ("you know what time it is?"), its own judge
   says so, the recall look-up picks what may fit (never sensitive), and one note asks for a single
-  playful guess as a question (`core/guess.py`, J16). It never guesses unasked.
+  playful guess as a question (`core/guess.py`, J16). A hint at what it is time for is looked up as a habit
+  or routine of theirs (`system/guess-invite` v2), never as the clock. It never guesses unasked.
 - The companion's own lore lives in its views (ADR 0020): after each memory pass a small model labels each
   new view of its own as taste, stance, rule, self or lived (`system/lore-label`, `core/lore.py`); only a
   taste is lore, a lived claim never is; `companion lore` lists the tastes. On an ordinary turn (not

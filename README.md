@@ -21,14 +21,20 @@ Today it is reached through Telegram, its only integration for now.
   ([ADR 0001](docs/adr/0001-a-belief-is-a-quoted-claim-with-a-frame.md),
   [0002](docs/adr/0002-the-ledger-never-deletes.md)).
 - **Shows the right memories.** Each turn's card holds fifteen memories. Sensitive ones only come into
-  view when they are sharing something, and a one-day moment of daily life leaves the card a week
-  after it was last mentioned.
+  view when they are sharing something. A one-day moment of daily life, or a personal event on a given
+  day, leaves the card a week after it was last mentioned. Feelings and sensitive memories carry a short
+  note on what was being talked about.
 - **Looks things up.** When they ask it to remember, or say it forgot, a small model searches all of
-  memory and the finds ride that turn, in a pretend scene too. A look-up of what bears on every
-  message runs in shadow ([ADR 0018](docs/adr/0018-memories-that-bear-on-the-moment-chosen-by-embedding-and-a-small-model.md)).
+  memory and the finds ride that turn, in a pretend scene too. On every ordinary message, when a memory
+  is close to what they said, a small model picks up to two that bear on it and they ride the turn
+  ([ADR 0018](docs/adr/0018-memories-that-bear-on-the-moment-chosen-by-embedding-and-a-small-model.md)).
+- **Remembers what you did together.** The chat is cut into stretches, each kept as one line on its
+  shape and how it ended. When they point at a time ("last night") or come back after a gap, the lines
+  for that time ride the turn (J12).
 - **Tidies itself, carefully.** A nightly check closes passing moments, a new memory that repeats an
   old one becomes evidence on it, and memories about one thing are proposed as one for the owner to
-  accept, but only where a judge matched the owner's own review. Everything else
+  accept, but only where a judge matched the owner's own review. Each new memory is labelled about
+  their life, about the bot (dropped) or one day's routine (kept a week). Everything else
   is a question for the owner ([ADR 0019](docs/adr/0019-memory-tidies-itself-only-where-a-judge-matched-the-owner.md)).
 - **Gets to know them.** It asks what to call them, keeps how they want to be referred to pinned in
   every turn, labels each memory by part of their life, and works out (in shadow) what it knows least
@@ -40,7 +46,10 @@ Today it is reached through Telegram, its only integration for now.
 
 - **Listens.** Each message is read for how serious it is before the reply, and code adds a matching note.
 - **Repairs.** When they say it got them wrong, it owns it in a line instead of improvising, and it
-  never asks them to repeat something memory already holds.
+  never asks them to repeat something memory already holds. Once it has owned a slip, a note after the
+  history tells it that was enough, so it does not pile on apologies.
+- **Checks in.** Coming back hours after a talk that turned serious, it gently asks how they are now,
+  once.
 - **Follows up.** Things they say about their near future become open loops. When one falls due, it is
   brought up lightly the next time they write. Reaching out first runs in shadow only.
 - **Reminds them.** "Remind me at 8pm to take the dog out" or "check up on me in a few days about the
@@ -53,23 +62,27 @@ Today it is reached through Telegram, its only integration for now.
   to it when a message touches them, so what it likes stays the same from day to day
   ([ADR 0020](docs/adr/0020-the-companions-own-lore-lives-in-its-views-labelled-by-kind-and-shown-when-the-moment-touches-it.md)).
 - **Plays along with a guess.** When a short question invites one ("you know what time it is?"), it
-  makes one playful guess from what memory holds, as a question.
+  makes one playful guess from what memory holds, as a question; a hint at what it is time for is
+  looked up as one of their habits or routines.
 - **Reacts like a person to small vents.** A short reaction, with varied size examples drawn per turn so
   it does not say the same line every time.
 - **Has a mood that carries.** Cozy, tender or playful, kept by code from what happened, shown only in
   how it replies ([ADR 0016](docs/adr/0016-a-mood-that-carries-owned-by-code-shown-in-behaviour.md)).
 - **Feels typed.** Replies are paced like a person typing, and long plain replies are sometimes sent
-  as two or three messages.
+  as two or three messages. A new message that arrives first replaces the reply in progress; a reply
+  cut off part way is remembered as only the part they received.
 
 **Safety and models**
 
-- **Routes roleplay to a second model.** Pretend scenes, and intimate talk if the operator allows it,
-  go to a less restrictive model, above an age floor in code that no setting changes
+- **Routes roleplay to a second model.** Pretend scenes, and intimate talk if the operator allows it
+  (once it is under way or explicit; a first flirty line stays with the everyday model), go to a less
+  restrictive model, above an age floor in code that no setting changes
   ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
 - **Checks its own replies.** A reply with a known habit (an em dash, an AI disclaimer nobody asked for,
   the clock line copied from its own notes, the stock "that sounds X, especially when" line, the stage
-  direction "a beat", and on ordinary turns a joke bolted onto an ordinary message) is drawn once more,
-  and so is an empty reply. Nothing is ever edited.
+  direction "a beat", markdown that shows raw in a chat, and on ordinary turns a joke bolted onto an
+  ordinary message) is drawn once more, twice if an em dash survives, and so is an empty reply.
+  Nothing is ever edited.
 - **Never goes silent.** If the talker errors, or has not answered in ten seconds, a fallback model
   answers too and the first reply wins.
 
@@ -196,6 +209,7 @@ uv run companion spend          # model spend by purpose
 uv run companion initiative     # open loops, and what reaching out would have sent
 uv run companion mood           # the mood now; --replay DAYS rebuilds it over past messages
 uv run companion map            # what it knows by part of their life; --label labels new memories
+uv run companion episodes       # the times they spent together, one line each; --write writes new ones
 uv run companion callbacks      # judge recent replies for callbacks to memories
 uv run companion invented --days 7 --cap 0.2 --dump out.json   # made-up facts about them: candidates, to confirm by a stronger reader
 uv run companion prompts        # every prompt and its current version
@@ -205,7 +219,8 @@ Look after memory:
 
 ```bash
 uv run companion beliefs        # what it holds about the user, with quotes
-uv run companion memory review  # answer the memory check's questions, a few at a time
+uv run companion memory review  # answer the memory check's questions and merge proposals until you quit
+uv run companion memory group   # group memories about one thing across the whole store into merge proposals
 uv run companion lore           # its own tastes (lore); --label labels new views, --relabel all of them
 uv run companion names          # things named in memory; --read reads new memories for names first
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
@@ -257,18 +272,20 @@ what it gets to see.
 1. **Read the message.** Small models label it before the reply starts: how serious it is, whether
    it is real talk, a story, a game or a what-if, whether it only needs a reaction, whether they ask
    it to remember or say it got them wrong, whether a small topic has run its course, and whether a
-   short question invites a guess.
+   short question invites a guess. A first intimate message is read once for whether it is explicit.
 2. **Build the card.** Code turns those labels into short notes and adds the clock, how they want to
-   be referred to, the memories in view, anything looked up, a due plan of theirs, its own tastes that
-   the message touches, and the mood. The
+   be referred to, the memories in view, anything looked up, memories that bear on the message, what
+   the two of them did at the time they point at, a check-in after a heavy talk, a due plan of theirs,
+   its own tastes that the message touches, and the mood. A line that must weigh most (the scene
+   reminder, "you already owned that slip") goes after the history instead. The
    persona is the first system block and the card is the second, with the clock and the notes in
    `<clock>` and `<notes>` tags. Nothing from the card ever goes in the user's message.
 3. **Write the reply.** The talker sees the persona, the card, the last 40 messages and the new
    message exactly as typed. Pretend scenes, and intimate talk when allowed, go to the roleplay model,
    unless the floor keeps them on the everyday one. A stall or an error goes to the fallback model.
 4. **Check and deliver it.** A reply that fails a check is drawn once more. Then it is paced,
-   sometimes split (never roleplay), and sent. Beside it, in shadow, the relevance look-up, the names
-   it was told and the basics hook log what they would have done.
+   sometimes split (never roleplay), and sent. Beside it, in shadow, the names it was told and the
+   basics hook log what they would have done.
 
 The judges never see the persona, and each logs `name@version` with its decision. The full list of
 prompts and how a request is assembled is in [src/companion/prompts/](src/companion/prompts/README.md).
@@ -279,9 +296,12 @@ prompts and how a request is assembled is in [src/companion/prompts/](src/compan
   with quotes, and the companion's own views. A new memory that repeats, replaces or contradicts an old
   one is checked against it. New memories are labelled by part of their life and read for names; its
   new views are sorted (taste, stance, rule, self, lived). A separate pass, with its own bookmark,
-  records the plans they mention and the promises it made in its replies.
+  records the plans they mention and the promises it made in its replies. Feelings and sensitive
+  memories get their note on what was being talked about, and each new memory its keep label.
 - **Every 15 minutes,** the reach-out gate looks at due plans (shadow).
-- **At 04:00,** the memory check reads each settled memory (shadow).
+- **At 04:00,** the memory check reads each settled memory (shadow), memories about one thing from the
+  last two days are grouped into merge proposals, one day's routines a week old are closed, and the
+  stretches of chat that ended are written as episodes.
 - **At every start and once a day,** the database and character sheets are backed up.
 
 ### Principles

@@ -28,7 +28,7 @@ decision is made; it may be wrong, but never stale.
 
 ---
 
-## Where we are (2026-10-22)
+## Where we are (2026-10-23)
 
 Live: persona **v41** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
@@ -71,6 +71,8 @@ Built and working:
   talk goes to the roleplay talker only once under way or explicit; adults' titles are not age-coded
   (listening v7). Redraws for a second em dash and for raw markdown. After it owns a slip, a note after the
   history says that was enough. A split reply cut off part way is remembered as the part that arrived.
+- **Since 2026-10-23.** A hint at what it is time for is looked up as one of their habits, so an invited
+  guess finds their ritual (J16).
 - **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
   messages, and a new message that arrives before the last answer is out replaces it. A reply
   Telegram never delivered is recorded as undelivered and left out of what the model reads; a reply cut
