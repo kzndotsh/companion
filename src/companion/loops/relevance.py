@@ -24,6 +24,7 @@ from companion.core.relevance import (
 )
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Json, RelationshipId
+from companion.loops.ask import Judge, ask
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.relevance")
@@ -97,12 +98,19 @@ async def look_up(  # noqa: PLR0913
     picked: list[Belief] = []
     pick_cost, pick_model = 0.0, ""
     if not gated:
-        with purpose("relevance"):
-            result = await judge.extract(
-                PROMPT.text, build_prompt(last_reply, said, [b for b, _ in shortlist]), SCHEMA
-            )
-        picked = parse(result.data, [b for b, _ in shortlist])
-        pick_cost, pick_model = result.cost_usd, result.model
+        offered = [b for b, _ in shortlist]
+        picker = Judge(
+            "relevance",
+            PROMPT,
+            SCHEMA,
+            lambda data: parse(data, offered),
+            timeout=TIMEOUT_SECONDS,
+            unread="no memories picked this turn; the nearest are still logged",
+        )
+        got = await ask(judge, picker, build_prompt(last_reply, said, offered))
+        if got is not None:
+            picked = got.value
+            pick_cost, pick_model = got.cost_usd, got.model
     detail: dict[str, Json] = {
         "nearest": [_row(b, on_card, s) for b, s in alone[:SHOWN]],
         "nearest_in_context": [_row(b, on_card, s) for b, s in shortlist[:SHOWN]],

@@ -8,7 +8,6 @@ pretend scene is in progress it waits until the scene ends.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
@@ -17,7 +16,7 @@ from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
 from companion.core.clock import now_line
-from companion.core.extractor import Extractor, from_fallback
+from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.request import TalkerRequest
@@ -43,7 +42,6 @@ from companion.core.reminders import (
     set_note,
     spoken,
 )
-from companion.core.spend import purpose
 from companion.core.types import (
     Frame,
     Json,
@@ -54,6 +52,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.ask import Judge, ask
 from companion.loops.record import Recorder
 from companion.loops.spendcap import over_cap
 from companion.store.sqlite.reminders import Reminder
@@ -63,6 +62,15 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.reminders")
 TIMEOUT_SECONDS = 8.0
+READER = Judge(
+    "reminders",
+    PROMPT,
+    SCHEMA,
+    parse,
+    timeout=TIMEOUT_SECONDS,
+    unread="no reminder this turn",
+    trust_fallback=False,
+)
 LATE = timedelta(minutes=5)  # sent later than this after its time, it is marked late
 SET, ASKED, CANCELLED = "reminders: set", ASKED_WHEN, "reminders: cancelled"
 
@@ -80,16 +88,8 @@ class Read:
 async def read_slots(
     judge: Extractor, prior: Sequence[Utterance], said: str, now: datetime, tz: tzinfo
 ) -> Slots | None:
-    try:
-        with purpose("reminders"):
-            result = await asyncio.wait_for(
-                judge.extract(PROMPT.text, read_prompt(prior, said, now, tz), SCHEMA),
-                TIMEOUT_SECONDS,
-            )
-    except Exception as err:
-        log.warning("reminder read failed or timed out; no reminder this turn: %r", err)
-        return None
-    return None if from_fallback(result.model) else parse(result.data)
+    got = await ask(judge, READER, read_prompt(prior, said, now, tz))
+    return None if got is None else got.value
 
 
 def act(  # noqa: PLR0913, PLR0917
