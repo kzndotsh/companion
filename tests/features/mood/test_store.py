@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.turn.mood import Source, effect
 from companion.core.types import TurnId
+from companion.features.mood.logic import Source, effect
 from companion.lib.sqlite.db import connect, iso
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0

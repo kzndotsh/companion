@@ -6,8 +6,8 @@ import sqlite3
 from collections.abc import Sequence
 from datetime import datetime
 
-from companion.core.turn.mood import PARAMS_VERSION, Effect, Said, Source, State
 from companion.core.types import RelationshipId, TurnId
+from companion.features.mood.logic import PARAMS_VERSION, Effect, Said, Source, State
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 

@@ -15,7 +15,6 @@ from companion.cli import (
     flags,
     initiative,
     memory,
-    mood,
     replay,
     spend,
 )
@@ -28,6 +27,7 @@ from companion.evals.fixtures import load_fixtures
 from companion.features.episodes import cli as episodes
 from companion.features.knowing import cli as knowing
 from companion.features.lore import cli as lore
+from companion.features.mood import cli as mood
 from companion.features.names import cli as names
 from companion.features.promises import cli as promises
 from companion.features.reminders import cli as reminders

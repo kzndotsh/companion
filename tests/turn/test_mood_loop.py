@@ -10,7 +10,6 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.turn.mood import Source, State, effect
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -27,6 +26,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.mood.logic import Source, State, effect
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

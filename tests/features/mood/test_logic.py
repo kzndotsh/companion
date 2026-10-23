@@ -8,7 +8,8 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from companion import prompts
-from companion.core.turn.mood import (
+from companion.core.types import TurnId
+from companion.features.mood.logic import (
     LINE_AT,
     Inputs,
     Source,
@@ -20,7 +21,6 @@ from companion.core.turn.mood import (
     mood_at,
     reason,
 )
-from companion.core.types import TurnId
 
 DAY = datetime(2026, 10, 19, 14, 0, tzinfo=UTC)
 NIGHT = datetime(2026, 10, 19, 23, 30, tzinfo=UTC)

@@ -13,7 +13,6 @@ from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
 from companion.core.replay import TurnRecord
 from companion.core.spend import SpendEvent
-from companion.core.turn.mood import Effect, Said
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -45,6 +44,8 @@ from companion.features.invented.logic import Statement
 from companion.features.lore.logic import Kind as ViewKind
 from companion.features.lore.logic import Labelled as ViewLabel
 from companion.features.merging import store as merges
+from companion.features.mood import store as mood
+from companion.features.mood.logic import Effect, Said
 from companion.features.names import store as names
 from companion.features.names.logic import Row as NameRow
 from companion.features.openloops import store as open_loops
@@ -63,7 +64,6 @@ from companion.store.sqlite import (
     flags,
     labels,
     ledger,
-    mood,
     reflect,
     settings,
     turns,

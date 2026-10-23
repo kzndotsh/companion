@@ -1,5 +1,5 @@
 -- What moved the mood (ADR 0016). One row per effect; the mood at any moment is worked out from these
--- by `core/turn/mood.py`, never stored. Each row keeps its own state and half-life, so a replay reads it the
+-- by `features/mood/logic.py`, never stored. Each row keeps its own state and half-life, so a replay reads it the
 -- way it was meant even after the parameters change. Append-only.
 
 CREATE TABLE mood_effects (

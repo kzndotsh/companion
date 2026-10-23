@@ -11,7 +11,6 @@ call or an undelivered reply, so none of them can lower or raise a state.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
@@ -19,6 +18,7 @@ from enum import StrEnum
 from itertools import pairwise
 
 from companion.core.turn.energy import texting_energy
+from companion.core.turn.goodbye import leaving
 from companion.core.types import TurnId
 from companion.prompts import get
 
@@ -203,14 +203,6 @@ def baseline(now: datetime, zone: tzinfo) -> dict[State, float]:
     return {State.COZY: NIGHT_COZY} if now.astimezone(zone).hour in NIGHT_HOURS else {}
 
 
-_LEAVING = re.compile(
-    r"\b(?:bye+|goodbye|cya|see ya|ttyl|talk (?:to you )?later|gtg|g2g|gotta (?:go|run|head)"
-    r"|got to go|have to go|heading (?:to bed|out|off)|(?:going|off) to (?:bed|sleep)|sleep well)\b"
-    r"|(?:^|[,.!]\s*|\b(?:ok|okay|alright|well)\s+)(?:good ?night|night night|nite|night|gn)\b",
-    re.IGNORECASE,
-)
-
-
 def held_because(*, severity: int | None, text: str, in_scene: bool) -> str | None:
     """Why no mood line is shown this turn, or None. A serious turn has the listening note, a
     goodbye must never get a mood that could read as a pull to stay, and a scene has its voice."""
@@ -218,7 +210,7 @@ def held_because(*, severity: int | None, text: str, in_scene: bool) -> str | No
         return "the turn is serious"
     if in_scene:
         return "a scene is in progress"
-    if _LEAVING.search(text):
+    if leaving(text):
         return "they are leaving"
     return None
 

@@ -16,7 +16,7 @@ the driver, `handle(convo, ...)`).
 - Coming back 3 hours or more after a talk that turned serious (severity 2 in its last 12 hours),
   the next ordinary message gets one note to ask gently how they are now (`notes/check-in`), once per
   heavy talk.
-- A mood that carries (ADR 0016, `core/turn/mood.py`): each message adds effects to cozy, tender or
+- A mood that carries (ADR 0016, `features/mood/logic.py`): each message adds effects to cozy, tender or
   playful in an append-only table, the mood is worked out from them when read, and only what the user
   did can move it (no source for silence, goodbyes, gaps or failed calls). `COMPANION_MOOD` is shadow,
   on or off; `uv run companion mood --replay 7` rebuilds it over past messages from the same rules.
