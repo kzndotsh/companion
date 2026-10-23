@@ -268,9 +268,10 @@ Ordered. Pull from the top.
       picks what may fit, never anything sensitive, one note to guess once as a question), each logged with
       what was offered. **2026-10-23:** 2 guesses so far. "you know what time?" got "shower time?" when they
       meant coffee: the look-up offered shower and dinner memories and none about their most repeated habit,
-      the case the card was opened for. Next: offer their most repeated habits beside the look-up's picks,
-      measured on that turn. Later, with enough guesses: score them by kind from the next message, and only
-      then guesses it forms on its own.
+      the case the card was opened for. **Fixed 2026-10-23:** the judge names a habit or routine for such
+      hints (`system/guess-invite` v2), and the look-up then offers the ritual: 0/12 to 11/12 on that turn.
+      Next, with enough guesses: score them by kind from the next message, and only then guesses it forms
+      on its own.
 - [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
       does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] T4 Fix `no-claimed-perception` on DeepSeek, fixture first. Measured on v25 (30 samples): DeepSeek

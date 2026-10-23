@@ -1513,3 +1513,17 @@ the reaction (0/96). It brought back the previous joke on one turn only, 4/12 wi
 reactions would earn their place as quiet feedback, not as a note. $0.013. Rerun: a scratch script that
 rebuilds each turn from `turn_requests` and adds the line inside `<notes>`.
 
+## 2026-10-23: An invited guess finds their ritual once the look-up is asked for a routine
+
+On the recorded "you know what time it is?" turn the guess named a shower; they meant their most
+repeated daily ritual. The recall look-up, given the judge's "what time it is for them", picked one-off
+dated happenings 6/6 times; asked for "a daily ritual or routine they might be hinting at" it picked the
+standing ritual memories first, 3/3. Leaving dated happenings out instead made it worse (scattered picks,
+no ritual). `system/guess-invite` v2 names a habit or routine for such hints: the ritual offered 6/6
+against 1/6 (6 judge reads each); the talker, 12 draws each on that turn with the note built from each
+version's picks (GPT-6 Luna, persona v41, the owner's character sheet as recorded), guessed it 11/12
+against 0/12. The other recorded guess (a scent) drew the same memories under both versions; the live
+judge test 27/27. Two v2 guesses recited the memory a little ("black, just how you like it?"). About
+2 cents. Rerun: scratch scripts that call the judge and `loops/recall.look_up` on the live store, and
+rebuild the turn from `turn_requests` with the guess note replaced.
+
