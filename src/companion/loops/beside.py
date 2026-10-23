@@ -72,7 +72,7 @@ def _relevance_beside(
         c.relevance != "shadow"
         or c.embedder is None
         or c.judge is None
-        or heard is None
+        or (heard is None and not c.listen)
         or in_scene is not Frame.REAL
     ):
         return
@@ -88,7 +88,7 @@ def _relevance_beside(
             model=c.embed_model,
             said=t.text,
             last_reply=replies[-1] if replies else None,
-            sharing=heard[0].severity >= 1,
+            sharing=heard is not None and heard[0].severity >= 1,
             on_card=on_card,
             now=t.now,
         )

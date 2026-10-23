@@ -103,6 +103,7 @@ async def look_up(  # noqa: PLR0913
     started = time.perf_counter()
     gated = gate is not None and (not shortlist or shortlist[0][1] < gate)
     picked: list[Belief] = []
+    pick_failed = False
     pick_cost, pick_model = 0.0, ""
     if not gated:
         offered = [b for b, _ in shortlist]
@@ -115,6 +116,7 @@ async def look_up(  # noqa: PLR0913
             unread="no memories picked this turn; the nearest are still logged",
         )
         got = await ask(judge, picker, build_prompt(last_reply, said, offered))
+        pick_failed = got is None
         if got is not None:
             picked = got.value
             pick_cost, pick_model = got.cost_usd, got.model
@@ -130,6 +132,7 @@ async def look_up(  # noqa: PLR0913
         "embed_model": model,
         "pick_model": pick_model,
         "gated": gated,
+        "pick_failed": pick_failed,  # the picker was asked and gave nothing usable
     }
     log.debug(
         "relevance: %d picked of %d nearest (%d searched), on card %d, %dms + %dms, $%.5f",
@@ -191,9 +194,11 @@ async def relevant_for_turn(
 ) -> tuple[tuple[BeliefId, str], ...]:
     """With the look-up on (ADR 0018): the memories a small model picks as bearing on their message,
     asked only when the closest memory is near (GATE), outside a scene. Logged either way. With no
-    listening read (the judge failed) it still runs, as a turn that is not sharing, so nothing held
-    is offered."""
+    listening read because the judge failed it still runs, as a turn that is not sharing, so nothing
+    held is offered; with listening switched off it does not run, as before."""
     if c.relevance != "on" or c.embedder is None or c.judge is None:
+        return ()
+    if heard is None and not c.listen:
         return ()
     if in_scene is not Frame.REAL:
         return ()

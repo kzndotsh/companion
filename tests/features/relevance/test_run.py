@@ -157,6 +157,25 @@ async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Stor
     assert "may bear on what they just said" not in talker.seen[0].card  # already on the card
 
 
+async def test_with_listening_switched_off_the_live_look_up_does_not_run(store: Store) -> None:
+    from companion.features.relevance.logic import LIVE  # noqa: PLC0415
+
+    convo = Conversation(
+        store,
+        Talker(),
+        PREFIX,
+        REL,
+        judge=Picker(),
+        embedder=Embedder(),
+        embed_model="fake-embed",
+        relevance="on",
+        listen=False,
+    )
+    await convo.handle(SESSION, "my dog just stole a sock", "test", NOW)
+    turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 50)}
+    assert not [d for t in turns for d in store.decisions_for_turn(REL, t) if d.has_key(LIVE)]
+
+
 def test_a_pick_not_on_the_card_reaches_the_notes(store: Store) -> None:
     from companion.core.types import Frame as F  # noqa: PLC0415
     from companion.loops.notes import Lookups, Moment, notes_for  # noqa: PLC0415
