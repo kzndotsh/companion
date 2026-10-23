@@ -62,7 +62,7 @@ from companion.core.types import (
     Utterance,
 )
 from companion.loops.episodes import write_closed
-from companion.loops.features import Feature, Offer
+from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.guess import Invited, invited_guess
 from companion.loops.recall import Recalled, look_up
 from companion.loops.registry import FEATURES
@@ -463,9 +463,6 @@ class Notes:
     tail: tuple[str, ...] = ()
 
 
-Offered = Mapping[str, Offer]
-
-
 def _base(m: Moment, _: Offered) -> Offer:
     size = _length(m.c, m.t, m.in_scene, m.heard)
     return Offer(tuple(_notes(m.c, m.t.prior, m.in_scene, size)))
@@ -560,8 +557,7 @@ def _name(m: Moment, so_far: Offered) -> Offer:
 
 
 def _quiet(m: Moment, so_far: Offered) -> bool:
-    """A casual turn with no name asked and nothing held: room for a plan or a move on."""
-    return m.casual and not so_far["name"].lines and not so_far["check-in"].lines and not m.held
+    return quiet(m, so_far)
 
 
 def _map(m: Moment, so_far: Offered) -> Offer:
@@ -598,8 +594,8 @@ def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
     note = f.note
     assert note is not None
 
-    def source(m: Moment, _: Offered) -> Offer:
-        return note(m, m.looked.found.get(f.name))
+    def source(m: Moment, so_far: Offered) -> Offer:
+        return note(m, m.looked.found.get(f.name), so_far)
 
     return source
 

@@ -25,7 +25,7 @@ from companion.core.lore import (
 from companion.core.relevance import Embedder, nearest
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Frame, RelationshipId
-from companion.loops.features import Feature, Offer
+from companion.loops.features import Feature, Offer, Offered
 from companion.loops.reads import read_times
 from companion.loops.turn import Heard, Turn, decide, is_casual
 from companion.store.sqlite.store import Store
@@ -152,9 +152,9 @@ async def tastes_for_turn(
     return tuple(b.evidence[0].quote for b, _ in found.tastes) if c.lore == "on" else ()
 
 
-def lore_offer(m: Moment, found: object) -> Offer:
+def lore_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """Its tastes as the words it said, in one note (`notes/lore`)."""
-    del m
+    del m, so_far
     quotes = cast("tuple[str, ...]", found or ())
     note = lore_note(f'you said: "{q}"' for q in quotes)
     return Offer((note,) if note else ())

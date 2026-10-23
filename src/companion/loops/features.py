@@ -8,7 +8,7 @@ field on `Lookups`, no branch in `look`, no entry written by hand in `SOURCES`.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
@@ -34,8 +34,16 @@ class Offer:
 
 
 type Look = Callable[[Conversation, Turn, Frame, Heard | None], Awaitable[object]]
-# A note gets what the look-up found, or None when it found nothing.
-type Note = Callable[[Moment, object], Offer]
+Offered = Mapping[str, Offer]  # what the notes before this one offered, by name
+
+# A note gets what its look-up found (None when it found nothing) and what earlier notes offered.
+type Note = Callable[[Moment, object, Offered], Offer]
+
+
+def quiet(m: Moment, so_far: Offered) -> bool:
+    """A casual turn with no name asked, no check-in and nothing held: room for a plan or a
+    move on."""
+    return m.casual and not so_far["name"].lines and not so_far["check-in"].lines and not m.held
 
 
 class Spent(Protocol):

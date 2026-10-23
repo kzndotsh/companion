@@ -54,7 +54,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.ask import Judge, ask
-from companion.loops.features import Feature, Offer
+from companion.loops.features import Feature, Offer, Offered
 from companion.loops.record import Recorder
 from companion.loops.spendcap import over_cap
 from companion.loops.turn import Heard, Turn, mark
@@ -269,9 +269,9 @@ async def reminder_for_turn(
     return done.note
 
 
-def reminder_offer(m: Moment, found: object) -> Offer:
+def reminder_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """The note saying a reminder was set, cancelled, or what to ask."""
-    del m
+    del m, so_far
     return Offer((found,) if isinstance(found, str) and found else ())
 
 
