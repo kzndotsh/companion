@@ -17,7 +17,6 @@ import httpx
 import pytest
 
 from companion.core.mood import held_because
-from companion.core.topics import JUDGE, SCHEMA, judge_prompt, likely, parse
 from companion.core.types import (
     Frame,
     RelationshipId,
@@ -28,6 +27,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.daemon import load_dotenv
+from companion.features.topics.logic import JUDGE, SCHEMA, judge_prompt, likely, parse
 from companion.models.openrouter import OpenRouterExtractor
 
 pytestmark = pytest.mark.live

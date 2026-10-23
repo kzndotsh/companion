@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from companion.core.clock import local_zone
-from companion.core.topics import EVERY_TURNS as TOPIC_EVERY
-from companion.core.topics import NOTE as TOPIC_NOTE
-from companion.core.topics import SPENT as TOPIC_SPENT
-from companion.core.topics import likely as topic_likely
-from companion.core.topics import topic_note
 from companion.core.types import Frame, Speaker
+from companion.features.topics.logic import EVERY_TURNS as TOPIC_EVERY
+from companion.features.topics.logic import NOTE as TOPIC_NOTE
+from companion.features.topics.logic import SPENT as TOPIC_SPENT
+from companion.features.topics.logic import likely as topic_likely
+from companion.features.topics.logic import topic_note
 from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.turn import Heard, Turn, decide, is_casual, mark
 
@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 from collections.abc import Sequence
 
 from companion.core.extractor import Extractor
-from companion.core.topics import JUDGE, SCHEMA, judge_prompt, parse
 from companion.core.types import Utterance
+from companion.features.topics.logic import JUDGE, SCHEMA, judge_prompt, parse
 from companion.loops.ask import Judge, ask
 
 TIMEOUT_SECONDS = 3.0

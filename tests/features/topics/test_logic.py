@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.core.topics import MOVES, move_for, topic_note
+from companion.features.topics.logic import MOVES, move_for, topic_note
 
 
 def test_the_move_follows_the_clock_and_a_plan_offered_this_turn_comes_first() -> None:
