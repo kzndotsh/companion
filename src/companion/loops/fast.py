@@ -10,16 +10,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from companion.core.ack import PROMPT as ACK_PROMPT
 from companion.core.ack import (
-    REACT_THRESHOLD,
     ReactAndReply,
     Reaction,
-    inputs_hash,
-    is_candidate,
-    reaction_for,
-    render_reason,
-    schema_hash,
 )
 from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
@@ -28,7 +21,6 @@ from companion.core.frames import (
     scene_frame,
 )
 from companion.core.history import HISTORY_LIMIT
-from companion.core.listening import SERIOUS
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import request_sha256
 from companion.core.relevance import Embedder
@@ -38,15 +30,13 @@ from companion.core.types import (
     Frame,
     RelationshipId,
     SessionId,
-    Speaker,
     TraceId,
     TurnId,
 )
 from companion.core.views import why
-from companion.loops.ack import judge
 from companion.loops.assemble import CardLog, assemble
 from companion.loops.beside import shadows
-from companion.loops.listen import judge_listening
+from companion.loops.hear import ack_reaction, hear_them
 from companion.loops.moves import HabitMemory
 from companion.loops.notes import look
 from companion.loops.persist import (
@@ -62,8 +52,7 @@ from companion.loops.record import Recorder
 from companion.loops.route import route_turn
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.loops.talk import await_beside, checked, start_beside
-from companion.loops.turn import Heard, Turn, decide, mark, recorder
-from companion.store.sqlite.decisions import REACTED
+from companion.loops.turn import Heard, Turn, mark, recorder
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
@@ -108,50 +97,6 @@ class Conversation:
         return await _handle_turn(self, session, text, channel, now)
 
 
-async def _ack_reaction(c: Conversation, t: Turn) -> Reaction | None:
-    """A reaction if this short message only acknowledges. Logs every judgement it makes."""
-    if c.judge is None or not is_candidate(t.text, t.prior, after_serious=_after_serious(c, t)):
-        mark(t, "ack judge skipped: not a candidate for a reaction")
-        return None
-    outcome = await judge(c.judge, t.prior, t.text)
-    if outcome is None:
-        mark(t, "ack judge gave no answer; replying")
-        return None
-    judged, model, prompt = outcome
-    reaction = reaction_for(judged)
-    mark(
-        t, f"ack judged {judged.kind} {judged.confidence:.2f} -> {'react' if reaction else 'reply'}"
-    )
-    decide(
-        c,
-        t,
-        REACTED if reaction is not None else "ack: replied",
-        {
-            "scorer": model,
-            "prompt": ACK_PROMPT.ref,
-            "schema_hash": schema_hash(),
-            "inputs_hash": inputs_hash(prompt),
-            "scores": {"kind": judged.kind, "confidence": judged.confidence},
-            "threshold": REACT_THRESHOLD,
-        },
-        reason=render_reason(judged, reaction is not None),
-    )
-    return reaction
-
-
-def _after_serious(c: Conversation, t: Turn) -> bool:
-    """Whether the listening judge found their previous message serious (severity 2 or more)."""
-    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
-    if not theirs:
-        return False
-    for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
-        labels = d.detail.get("labels") if d.detail else None
-        severity = labels.get("severity") if isinstance(labels, dict) else None
-        if isinstance(severity, int) and not isinstance(severity, bool) and severity >= SERIOUS:
-            return True
-    return False
-
-
 def _stopped_by_cap(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime
 ) -> str | None:
@@ -181,13 +126,6 @@ async def _stop(*tasks: asyncio.Future[Any] | None) -> None:
             await task
 
 
-async def _listening(c: Conversation, t: Turn, in_scene: Frame) -> Heard | None:
-    """How serious the message is and what they are doing. Not asked in a scene."""
-    if c.judge is None or not c.listen or in_scene is not Frame.REAL:
-        return None
-    return await judge_listening(c.judge, t.prior, t.text)
-
-
 async def _handle_turn(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
 ) -> str | Reaction | ReactAndReply:
@@ -206,10 +144,10 @@ async def _turn(
 ) -> str | Reaction | ReactAndReply:
     """The stages of one turn, inside the guard that keeps their message."""
     store, rel, turn, now, text = c.store, c.rel, t.turn, t.now, t.text
-    listening = asyncio.ensure_future(_listening(c, t, in_scene))
+    listening = asyncio.ensure_future(hear_them(c, t, in_scene))
     heard: Heard | None = None
     try:
-        reaction = await _ack_reaction(c, t)
+        reaction = await ack_reaction(c, t)
         if reaction is None:
             heard = await listening
     except BaseException:
