@@ -64,10 +64,9 @@ from companion.core.types import (
 from companion.loops.episodes import write_closed
 from companion.loops.features import Feature, Offer
 from companion.loops.guess import Invited, invited_guess
-from companion.loops.lore import LORE
 from companion.loops.recall import Recalled, look_up
+from companion.loops.registry import FEATURES
 from companion.loops.relevance import shadow as relevance_look_up
-from companion.loops.reminders import REMINDERS
 from companion.loops.topics import judge_spent
 from companion.prompts import get
 
@@ -593,10 +592,6 @@ def _guess(m: Moment, _: Offered) -> Offer:
     g = m.looked.guess
     note = guess_note(g.about, g.offered) if g is not None else None
     return Offer((note,) if note else ())
-
-
-# The features the turn runs by declaration (`loops/features.py`), in the order their notes go.
-FEATURES: tuple[Feature, ...] = (LORE, REMINDERS)
 
 
 def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:

@@ -53,10 +53,10 @@ from companion.core.types import (
 )
 from companion.loops.context import write_missing
 from companion.loops.knowing import label_new
-from companion.loops.lore import label_views
 from companion.loops.names import read_names
 from companion.loops.openloops import Reading, catch_up_loops
 from companion.loops.record import Recorder
+from companion.loops.registry import FEATURES
 from companion.loops.views import WANT_KINDS, check_views
 from companion.loops.worth import label
 from companion.store.sqlite.store import Store
@@ -152,9 +152,16 @@ async def _sort_new(
 
 
 # What runs once a pass has stored new memories of theirs, in order: the map of their life, names,
-# what they were talking about, what kind of memory it is. Then, for new views of its own, lore.
-AFTER_THEIRS: tuple[_Step, ...] = (label_new, read_names, write_missing, _sort_new)
-AFTER_OWN: tuple[_Step, ...] = (label_views,)
+# what they were talking about, what kind of memory it is, then each feature's own step. For new
+# views of its own, each feature's step (lore labels them).
+AFTER_THEIRS: tuple[_Step, ...] = (
+    label_new,
+    read_names,
+    write_missing,
+    _sort_new,
+    *(f.after_theirs for f in FEATURES if f.after_theirs is not None),
+)
+AFTER_OWN: tuple[_Step, ...] = tuple(f.after_own for f in FEATURES if f.after_own is not None)
 
 
 async def reflect_once(  # noqa: PLR0913

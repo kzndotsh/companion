@@ -10,13 +10,17 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from companion.core.types import Frame
+    from datetime import datetime
+
+    from companion.core.extractor import Extractor
+    from companion.core.types import Frame, RelationshipId
     from companion.loops.fast import Conversation
     from companion.loops.notes import Moment
     from companion.loops.turn import Heard, Turn
+    from companion.store.sqlite.store import Store
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,8 +38,19 @@ type Look = Callable[[Conversation, Turn, Frame, Heard | None], Awaitable[object
 type Note = Callable[[Moment, object], Offer]
 
 
+class Spent(Protocol):
+    @property
+    def cost_usd(self) -> float: ...
+
+
+# A step after a memory pass: it reads the store, may ask a model, and says what it cost.
+type Step = Callable[[Store, Extractor, RelationshipId, datetime], Awaitable[Spent]]
+
+
 @dataclass(frozen=True, slots=True)
 class Feature:
     name: str  # its name in the notes' order and in the look-ups' log lines
     look: Look | None = None
     note: Note | None = None
+    after_theirs: Step | None = None  # after a memory pass stored new memories of theirs
+    after_own: Step | None = None  # after a memory pass stored new views of its own

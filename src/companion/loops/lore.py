@@ -160,4 +160,4 @@ def lore_offer(m: Moment, found: object) -> Offer:
     return Offer((note,) if note else ())
 
 
-LORE = Feature("lore", look=tastes_for_turn, note=lore_offer)
+LORE = Feature("lore", look=tastes_for_turn, note=lore_offer, after_own=label_views)
