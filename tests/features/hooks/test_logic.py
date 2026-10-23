@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from companion.core.hooks import Basic, agreed, may_ask, read_basic
+from companion.features.hooks.logic import Basic, agreed, may_ask, read_basic
 from tests.conftest import T0
 
 
