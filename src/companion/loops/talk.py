@@ -31,7 +31,7 @@ from companion.loops.react import judge_reaction
 from companion.loops.turn import Answered, Heard, Routed, Turn, decide, mark, stop
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
+    from companion.loops.conversation import Conversation
 
 log = logging.getLogger("companion.turn")
 

@@ -20,7 +20,8 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -95,7 +96,7 @@ async def _chat(
         store, everyday, PREFIX, REL, judge=judge or Judge(), roleplay_talker=scene
     )
     for i, text in enumerate(texts):
-        await convo.handle(SESSION, text, "t", NOW + timedelta(minutes=i))
+        await handle(convo, SESSION, text, "t", NOW + timedelta(minutes=i))
     return everyday
 
 
@@ -168,7 +169,7 @@ async def test_intimate_talk_goes_to_the_roleplay_talker_only_when_allowed_and_a
         roleplay_talker=scene,
         route_intimate=allowed,
     )
-    await convo.handle(SESSION, "i want you so bad", "t", NOW)
+    await handle(convo, SESSION, "i want you so bad", "t", NOW)
     assert (len(scene.seen), len(everyday.seen)) == ((1, 0) if routed else (0, 1))
 
 
@@ -186,7 +187,7 @@ async def test_a_held_turn_gets_the_note_and_an_intimate_reply_three_times_sends
         roleplay_talker=scene,
         route_intimate=True,
     )
-    out = await convo.handle(SESSION, "i want you so bad", "t", NOW)
+    out = await handle(convo, SESSION, "i want you so bad", "t", NOW)
     assert scene.seen == []
     assert "keep this reply free of anything sexual" in everyday.seen[0].card
     if sent is None:
@@ -211,8 +212,8 @@ async def test_a_scene_reply_with_an_em_dash_is_drawn_once_more(store: Store) ->
     convo = Conversation(
         store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene, resample=True
     )
-    await convo.handle(SESSION, "let's pretend you're a knight", "t", NOW)
-    out = await convo.handle(SESSION, "*bows*", "t", NOW + timedelta(minutes=1))
+    await handle(convo, SESSION, "let's pretend you're a knight", "t", NOW)
+    out = await handle(convo, SESSION, "*bows*", "t", NOW + timedelta(minutes=1))
     assert out == "I lean in, closer"
     assert len(scene.seen) == 2
 
@@ -307,10 +308,10 @@ async def test_a_first_flirty_line_gets_the_everyday_talker_and_the_next_one_rou
         roleplay_talker=scene,
         route_intimate=True,
     )
-    await convo.handle(SESSION, "you look cute today", "test", NOW)
+    await handle(convo, SESSION, "you look cute today", "test", NOW)
     assert (len(everyday.seen), len(scene.seen)) == (1, 0)
     assert "keep this reply free" not in everyday.seen[0].card  # not held: no floor note
-    await convo.handle(SESSION, "come closer then", "test", NOW + timedelta(minutes=1))
+    await handle(convo, SESSION, "come closer then", "test", NOW + timedelta(minutes=1))
     assert (len(everyday.seen), len(scene.seen)) == (1, 1)
 
 
@@ -321,13 +322,13 @@ async def test_a_push_back_in_a_scene_is_answered_by_the_everyday_talker_with_a_
 
     everyday, scene = Talker("everyday"), Talker("scene")
     playing = Conversation(store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene)
-    await playing.handle(SESSION, "*waves at you*", "test", NOW)
-    await playing.handle(SESSION, "*sits down next to you*", "test", NOW + timedelta(minutes=1))
+    await handle(playing, SESSION, "*waves at you*", "test", NOW)
+    await handle(playing, SESSION, "*sits down next to you*", "test", NOW + timedelta(minutes=1))
     assert len(scene.seen) == 1  # the scene is under way
     pushed = Conversation(
         store, everyday, PREFIX, REL, judge=Judge(declines=True), roleplay_talker=scene
     )
-    await pushed.handle(SESSION, "*bonk* behave, i'm starving", "test", NOW + timedelta(minutes=2))
+    await handle(pushed, SESSION, "*bonk* behave, i'm starving", "test", NOW + timedelta(minutes=2))
     assert len(scene.seen) == 1
     assert BRUSH_NOTE.text.strip("[]") in everyday.seen[-1].card
     assert "keep this reply free" not in everyday.seen[-1].card  # no floor hold

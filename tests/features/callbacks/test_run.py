@@ -24,7 +24,8 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.callbacks.run import check_new
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -88,7 +89,7 @@ async def test_each_reply_is_judged_once_and_the_verdict_is_kept(tmp_path: Path)
         )
     )
     convo = Conversation(store, Talker(), PREFIX, REL)
-    await convo.handle(SessionId("s"), "ugh long day", "test", NOW)
+    await handle(convo, SessionId("s"), "ugh long day", "test", NOW)
     judge = Judge()
     assert await check_new(store, judge, REL, NOW - timedelta(days=1), 1.0) == (1, 0.001)
     assert await check_new(store, judge, REL, NOW - timedelta(days=1), 1.0) == (0, 0.0)

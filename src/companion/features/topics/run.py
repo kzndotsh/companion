@@ -18,8 +18,8 @@ from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.turn import Heard, Turn, decide, is_casual, mark
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
-    from companion.loops.notes import Moment
+    from companion.loops.conversation import Conversation
+    from companion.loops.features import Moment
 
 TIMEOUT_SECONDS = 3.0
 SPENT = Judge(

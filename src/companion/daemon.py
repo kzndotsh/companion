@@ -30,7 +30,8 @@ from companion.features.reminders.run import deliver_due
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.lib import logs, retry
 from companion.loops import curate
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.loops.nightly import missed, night
 from companion.loops.slow import reflect_once
 from companion.loops.spendcap import over_cap
@@ -399,8 +400,8 @@ async def run(data_dir: Path) -> None:
             token, user, client, _hooks(store, rel), pace=s.pace_factor, split=s.on("split")
         )
 
-        async def handle(text: str) -> str | Reaction | ReactAndReply:
-            reply = await convo.handle(SESSION, text, "telegram")
+        async def answer(text: str) -> str | Reaction | ReactAndReply:
+            reply = await handle(convo, SESSION, text, "telegram")
             schedule_reflect()
             return reply
 
@@ -417,7 +418,7 @@ async def run(data_dir: Path) -> None:
             if task is not None
         ]
         try:
-            await tg.run(handle, _commands(store, rel, reflector))
+            await tg.run(answer, _commands(store, rel, reflector))
         finally:
             for task in background:
                 task.cancel()

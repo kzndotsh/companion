@@ -17,8 +17,8 @@ from companion.loops.features import Feature, Offer, Offered
 from companion.loops.turn import Heard, Turn, decide, mark
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
-    from companion.loops.notes import Moment
+    from companion.loops.conversation import Conversation
+    from companion.loops.features import Moment
 
 import logging
 import uuid

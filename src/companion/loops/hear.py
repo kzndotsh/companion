@@ -27,7 +27,7 @@ from companion.loops.turn import Heard, Listened, Turn, decide, mark, stop
 from companion.store.sqlite.decisions import REACTED
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
+    from companion.loops.conversation import Conversation
 
 log = logging.getLogger("companion.turn")
 

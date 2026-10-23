@@ -24,7 +24,8 @@ from companion.core.types import (
 )
 from companion.core.vectors import Embedded, unit
 from companion.features.relevance.logic import SHADOW
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
@@ -93,7 +94,7 @@ async def _say(store: Store, embedder: Embedder, text: str) -> Talker:
     convo = Conversation(
         store, talker, PREFIX, REL, judge=Picker(), embedder=embedder, embed_model="fake-embed"
     )
-    await convo.handle(SESSION, text, "test", NOW)
+    await handle(convo, SESSION, text, "test", NOW)
     for _ in range(50):
         await asyncio.sleep(0)
     return talker
@@ -148,7 +149,7 @@ async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Stor
         embed_model="fake-embed",
         relevance="on",
     )
-    await convo.handle(SESSION, "my dog just stole a sock", "test", NOW)
+    await handle(convo, SESSION, "my dog just stole a sock", "test", NOW)
     turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 50)}
     [live] = [d.detail for t in turns for d in store.decisions_for_turn(REL, t) if d.has_key(LIVE)]
     assert live is not None
@@ -171,14 +172,15 @@ async def test_with_listening_switched_off_the_live_look_up_does_not_run(store: 
         relevance="on",
         listen=False,
     )
-    await convo.handle(SESSION, "my dog just stole a sock", "test", NOW)
+    await handle(convo, SESSION, "my dog just stole a sock", "test", NOW)
     turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 50)}
     assert not [d for t in turns for d in store.decisions_for_turn(REL, t) if d.has_key(LIVE)]
 
 
 def test_a_pick_not_on_the_card_reaches_the_notes(store: Store) -> None:
     from companion.core.types import Frame as F  # noqa: PLC0415
-    from companion.loops.notes import Lookups, Moment, notes_for  # noqa: PLC0415
+    from companion.loops.features import Lookups, Moment  # noqa: PLC0415
+    from companion.loops.notes import notes_for  # noqa: PLC0415
     from companion.loops.turn import Turn  # noqa: PLC0415
 
     convo = Conversation(store, Talker(), PREFIX, REL)

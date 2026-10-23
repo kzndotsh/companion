@@ -61,8 +61,8 @@ from companion.loops.spendcap import over_cap
 from companion.loops.turn import Heard, Turn, mark
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
-    from companion.loops.notes import Moment
+    from companion.loops.conversation import Conversation
+    from companion.loops.features import Moment
 
 log = logging.getLogger("companion.reminders")
 TIMEOUT_SECONDS = 8.0

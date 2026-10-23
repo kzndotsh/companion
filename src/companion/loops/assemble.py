@@ -31,12 +31,13 @@ from companion.core.types import (
     Speaker,
 )
 from companion.core.views import ViewState, card_views
-from companion.loops.notes import Lookups, Moment, notes_for
+from companion.loops.features import Lookups, Moment
+from companion.loops.notes import notes_for
 from companion.loops.record import Recorder
 from companion.loops.turn import Heard, Turn, decide, mark
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
+    from companion.loops.conversation import Conversation
 
 log = logging.getLogger("companion.turn")
 

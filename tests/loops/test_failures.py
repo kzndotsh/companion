@@ -13,7 +13,8 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import RelationshipId, SessionId, Speaker
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -49,7 +50,7 @@ async def test_a_failed_model_call_keeps_the_users_message_and_stores_nothing_fr
 ) -> None:
     convo = Conversation(store, Flaky(RuntimeError("provider down: 503")), PREFIX, REL)
     with pytest.raises(RuntimeError):
-        await convo.handle(SESSION, "are you there", "t", NOW)
+        await handle(convo, SESSION, "are you there", "t", NOW)
     assert _said(store) == [(Speaker.USER, "are you there")]
     assert store.latest_turn(REL) is None  # no request record for a turn that never answered
 
@@ -58,8 +59,8 @@ async def test_the_next_turn_sees_the_unanswered_message_exactly_once(store: Sto
     talker = Flaky(RuntimeError("down"), "hi, sorry about that")
     convo = Conversation(store, talker, PREFIX, REL)
     with pytest.raises(RuntimeError):
-        await convo.handle(SESSION, "are you there", "t", NOW)
-    await convo.handle(SESSION, "hello?", "t", NOW + timedelta(minutes=2))
+        await handle(convo, SESSION, "are you there", "t", NOW)
+    await handle(convo, SESSION, "hello?", "t", NOW + timedelta(minutes=2))
     history = [m.content for m in talker.seen[1].messages]
     assert history.count("are you there") == 1
     assert history[-1] == "hello?"
@@ -68,11 +69,11 @@ async def test_the_next_turn_sees_the_unanswered_message_exactly_once(store: Sto
 
 async def test_an_empty_reply_stores_no_companion_message(store: Store) -> None:
     convo = Conversation(store, Flaky(""), PREFIX, REL)
-    await convo.handle(SESSION, "hey", "t", NOW)
+    await handle(convo, SESSION, "hey", "t", NOW)
     assert _said(store) == [(Speaker.USER, "hey")]
 
 
 async def test_one_message_makes_one_turn_and_one_reply(store: Store) -> None:
     convo = Conversation(store, Flaky("hi"), PREFIX, REL)
-    await convo.handle(SESSION, "hey", "t", NOW)
+    await handle(convo, SESSION, "hey", "t", NOW)
     assert _said(store) == [(Speaker.USER, "hey"), (Speaker.COMPANION, "hi")]

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Awaitable, Callable, Mapping, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
@@ -35,21 +35,19 @@ from companion.core.ownup import owned_note
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import recall_note
 from companion.core.types import (
-    Belief,
-    BeliefId,
     Frame,
     Json,
     Speaker,
     Utterance,
 )
-from companion.loops.features import Feature, Offer, Offered
+from companion.loops.features import Feature, Lookups, Moment, Offer, Offered
 from companion.loops.recall import Recalled, look_up
 from companion.loops.registry import FEATURES
 from companion.prompts import get
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
-from companion.loops.turn import Heard, Turn, decide, is_casual, mark
+    from companion.loops.conversation import Conversation
+from companion.loops.turn import Heard, Turn, decide, mark
 
 log = logging.getLogger("companion.turn")
 CHECK_IN_NOTE = get("notes/check-in")
@@ -58,14 +56,6 @@ CHECK_IN_GAP = timedelta(hours=3)  # away at least this long since their last me
 HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
 SERIOUS = 2
 LOOK_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
-
-
-@dataclass(frozen=True, slots=True)
-class Lookups:
-    """What a reply waits for besides the judges: a recall, whether a topic is spent, a guess."""
-
-    recalled: Recalled | None = None
-    found: Mapping[str, object] = field(default_factory=dict[str, object])  # by feature name
 
 
 async def look(
@@ -218,25 +208,6 @@ def _length(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> L
         c, t, "length", {"words": size.words if size else None, "severity": severity}, reason=reason
     )
     return size
-
-
-@dataclass(frozen=True, slots=True)
-class Moment:
-    """What every note reads about the turn being answered."""
-
-    c: Conversation
-    t: Turn
-    in_scene: Frame
-    heard: Heard | None
-    looked: Lookups
-    held: bool  # the floor held this turn (ADR 0017)
-    beliefs: Sequence[Belief]  # the memories that may be stated as true
-    on_card: frozenset[BeliefId] = frozenset()  # what the card already shows this turn
-    brushed: bool = False  # they pushed the flirting or the scene back (`system/brush-off`)
-
-    @property
-    def casual(self) -> bool:
-        return is_casual(self.t, self.in_scene, self.heard)
 
 
 @dataclass(frozen=True, slots=True)

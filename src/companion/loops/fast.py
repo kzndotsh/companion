@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import uuid
-from dataclasses import dataclass, field
 from datetime import datetime
 
 from companion.core.ack import (
@@ -12,25 +11,20 @@ from companion.core.ack import (
     Reaction,
 )
 from companion.core.clock import utc_now
-from companion.core.extractor import Extractor
 from companion.core.frames import (
     scene_frame,
 )
 from companion.core.history import HISTORY_LIMIT
-from companion.core.prompt.prefix import Prefix
-from companion.core.talker import Talker
 from companion.core.types import (
     Frame,
-    RelationshipId,
     SessionId,
     TraceId,
     TurnId,
 )
-from companion.core.vectors import Embedder
 from companion.loops.assemble import assemble
 from companion.loops.beside import shadows
+from companion.loops.conversation import Conversation
 from companion.loops.hear import listen
-from companion.loops.moves import HabitMemory
 from companion.loops.notes import look
 from companion.loops.persist import (
     TheirMessage,
@@ -44,7 +38,6 @@ from companion.loops.route import route_turn
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.loops.talk import talk
 from companion.loops.turn import Turn
-from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
 
@@ -53,39 +46,15 @@ def _id() -> str:
     return uuid.uuid4().hex
 
 
-@dataclass(frozen=True, slots=True)
-class Conversation:
-    store: Store
-    talker: Talker
-    prefix: Prefix
-    rel: RelationshipId
-    judge: Extractor | None = None
-    habits: HabitMemory = field(default_factory=HabitMemory)
-    roleplay_talker: Talker | None = None  # replies while a pretend scene is in progress
-    daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
-    listen: bool = True  # ask how serious a message is before the reply
-    mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
-    resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
-    route_intimate: bool = False  # intimate talk may go to the roleplay talker (ADR 0017)
-    roleplay_prefix: Prefix | None = (
-        None  # the roleplay talker's system prompt, with the sheet's scene section
-    )
-    embedder: Embedder | None = None  # the relevance look-up runs in shadow when set
-    embed_model: str = ""
-    lore: str = "off"  # on, shadow or off: its tastes nearest their message (ADR 0020)
-    scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
-    relevance: str = "shadow"  # on (picks shown when a memory is near), shadow or off (ADR 0018)
-    reminders: bool = True  # reminders they ask for are read and set (J50)
-    episodes: str = "off"  # what they did together lately, when it bears: on, shadow or off (J12)
-
-    async def handle(
-        self, session: SessionId, text: str, channel: str, now: datetime | None = None
-    ) -> str | Reaction | ReactAndReply:
-        now = now or utc_now()
-        capped = _stopped_by_cap(self, session, text, channel, now)
-        if capped is not None:
-            return capped
-        return await _handle_turn(self, session, text, channel, now)
+async def handle(
+    c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None = None
+) -> str | Reaction | ReactAndReply:
+    """One message in, one reply out (or a reaction, or nothing at the cap)."""
+    now = now or utc_now()
+    capped = _stopped_by_cap(c, session, text, channel, now)
+    if capped is not None:
+        return capped
+    return await _handle_turn(c, session, text, channel, now)
 
 
 def _stopped_by_cap(

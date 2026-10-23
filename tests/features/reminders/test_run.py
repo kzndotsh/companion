@@ -12,7 +12,8 @@ from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, Uttera
 from companion.features.reminders.logic import Kind
 from companion.features.reminders.run import ASKED, CANCELLED, SET, deliver_due
 from companion.features.reminders.store import Reminder
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
@@ -54,7 +55,7 @@ def store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Store:
 
 async def _say(store: Store, judge: Judge, text: str, at: datetime = NOW) -> str:
     talker = Talker()
-    await Conversation(store, talker, PREFIX, REL, judge=judge).handle(SESSION, text, "t", at)
+    await handle(Conversation(store, talker, PREFIX, REL, judge=judge), SESSION, text, "t", at)
     return talker.seen[0].card
 
 

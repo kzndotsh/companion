@@ -14,7 +14,7 @@ from companion.loops.registry import FEATURES
 from companion.loops.turn import Heard, Turn
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
+    from companion.loops.conversation import Conversation
 
 log = logging.getLogger("companion.turn")
 

@@ -11,7 +11,8 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.topics.logic import SPENT
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
@@ -61,7 +62,7 @@ async def _say(
 ) -> str:
     talker = Asker()
     convo = Conversation(store, talker, PREFIX, REL, judge=judge or Spent())
-    await convo.handle(SESSION, text, "t", at)
+    await handle(convo, SESSION, text, "t", at)
     return talker.seen[0].card
 
 

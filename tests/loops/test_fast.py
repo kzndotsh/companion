@@ -26,7 +26,8 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.models.anthropic import AnthropicTalker
 from companion.models.openrouter import OpenRouterTalker
 from companion.store.sqlite import replay as store_replay
@@ -57,7 +58,7 @@ async def test_turns_are_logged_and_replay_matches(store: Store, tmp_path: Path)
     talker = FakeTalker("hey", "couldn't sleep either?", "ha, fair")
     convo = Conversation(store, talker, PREFIX, REL)
     for i, text in enumerate(["morning", "up early", "yeah"]):
-        await convo.handle(SESSION, text, "test", NOW + timedelta(minutes=i))
+        await handle(convo, SESSION, text, "test", NOW + timedelta(minutes=i))
     assert len(talker.seen[2].messages) == 5  # two earlier exchanges plus the new message
     store.close()
     for turn_id in _turn_ids(tmp_path / "rel.sqlite"):
@@ -69,7 +70,7 @@ async def test_turns_are_logged_and_replay_matches(store: Store, tmp_path: Path)
 
 async def test_empty_model_reply_is_logged_not_sent(store: Store, tmp_path: Path) -> None:
     convo = Conversation(store, FakeTalker(""), PREFIX, REL)
-    assert await convo.handle(SESSION, "hello", "test", NOW) == ""
+    assert await handle(convo, SESSION, "hello", "test", NOW) == ""
     store.close()
     report = store_replay.replay_file(
         tmp_path / "rel.sqlite", _turn_ids(tmp_path / "rel.sqlite")[0]
@@ -141,7 +142,7 @@ async def test_history_window_is_shared_by_live_and_replay(store: Store, tmp_pat
     talker = FakeTalker(*(f"r{i}" for i in range(turns)))
     convo = Conversation(store, talker, PREFIX, REL)
     for i in range(turns):
-        await convo.handle(SESSION, f"m{i}", "test", NOW + timedelta(minutes=i))
+        await handle(convo, SESSION, f"m{i}", "test", NOW + timedelta(minutes=i))
     assert len(talker.seen[-1].messages) == HISTORY_LIMIT + 1
     store.close()
     db = tmp_path / "rel.sqlite"
@@ -151,8 +152,8 @@ async def test_history_window_is_shared_by_live_and_replay(store: Store, tmp_pat
 async def test_history_continues_across_sessions(store: Store) -> None:
     talker = FakeTalker("a", "b")
     convo = Conversation(store, talker, PREFIX, REL)
-    await convo.handle(SessionId("monday"), "first", "test", NOW)
-    await convo.handle(SessionId("tuesday"), "second", "test", NOW + timedelta(days=1))
+    await handle(convo, SessionId("monday"), "first", "test", NOW)
+    await handle(convo, SessionId("tuesday"), "second", "test", NOW + timedelta(days=1))
     assert [m.content.split("\n\n")[-1] for m in talker.seen[1].messages] == [
         "first",
         "a",
@@ -163,8 +164,8 @@ async def test_history_continues_across_sessions(store: Store) -> None:
 async def test_clock_line_names_the_gap(store: Store) -> None:
     talker = FakeTalker("a", "b")
     convo = Conversation(store, talker, PREFIX, REL)
-    await convo.handle(SESSION, "first", "test", NOW)
-    await convo.handle(SESSION, "second", "test", NOW + timedelta(hours=5, minutes=1))
+    await handle(convo, SESSION, "first", "test", NOW)
+    await handle(convo, SESSION, "second", "test", NOW + timedelta(hours=5, minutes=1))
     assert "Their last message came 5 hours ago." in talker.seen[1].card
     assert "Right now it is" not in talker.seen[1].messages[-1].content
 
@@ -172,7 +173,7 @@ async def test_clock_line_names_the_gap(store: Store) -> None:
 async def test_the_gap_counts_from_their_last_message_not_the_companions(store: Store) -> None:
     talker = FakeTalker("a", "b")
     convo = Conversation(store, talker, PREFIX, REL)
-    await convo.handle(SESSION, "first", "test", NOW)
+    await handle(convo, SESSION, "first", "test", NOW)
     later = Utterance(
         UtteranceId("late"),
         REL,
@@ -185,7 +186,7 @@ async def test_the_gap_counts_from_their_last_message_not_the_companions(store: 
         NOW + timedelta(hours=4),
     )
     store.append_utterance(later)
-    await convo.handle(SESSION, "second", "test", NOW + timedelta(hours=5, minutes=1))
+    await handle(convo, SESSION, "second", "test", NOW + timedelta(hours=5, minutes=1))
     assert "Their last message came 5 hours ago." in talker.seen[1].card
 
 
@@ -226,7 +227,7 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     store.insert_belief(believe("b2", "Has asthma", "i have asthma", 2))
     talker = FakeTalker("nice")
     convo = Conversation(store, talker, PREFIX, REL)
-    await convo.handle(SESSION, "hey", "test", NOW)
+    await handle(convo, SESSION, "hey", "test", NOW)
     sent = talker.seen[0].card
     assert "Likes climbing" not in talker.seen[0].messages[-1].content
     assert "Likes climbing" in sent
@@ -280,7 +281,7 @@ async def test_stale_beliefs_reach_the_model_as_older_and_every_placement_is_log
     store.insert_belief(believe("mood", "Feels low", "feeling pretty low", BeliefKind.STATE, 0))
     store.insert_belief(believe("hush", "Feels very low", "pretty low", BeliefKind.STATE, 2))
     talker = FakeTalker("hey")
-    await Conversation(store, talker, PREFIX, REL).handle(SESSION, "hi", "test", NOW)
+    await handle(Conversation(store, talker, PREFIX, REL), SESSION, "hi", "test", NOW)
     sent = talker.seen[0].card
     main = sent.split("[Older")[0]
     assert "Likes climbing (mentioned 2 months ago)" in main
@@ -306,7 +307,7 @@ async def test_a_streak_of_the_same_opener_reaches_the_next_request_as_a_note(
     talker = FakeTalker("Ha, one", "Ha, two", "Ha, three", "fine")
     convo = Conversation(store, talker, PREFIX, REL)
     for i, text in enumerate(["a", "b", "c", "d"]):
-        await convo.handle(SESSION, text, "test", NOW + timedelta(minutes=i))
+        await handle(convo, SESSION, text, "test", NOW + timedelta(minutes=i))
     assert "began with" not in talker.seen[2].card
     assert 'began with "ha"' in talker.seen[3].card
     assert "began with" not in talker.seen[3].messages[-1].content
@@ -329,9 +330,9 @@ async def test_openrouter_does_not_pin_a_provider_for_other_makers() -> None:
 async def test_a_short_statement_gets_a_length_note_in_the_system_block(store: Store) -> None:
     talker = FakeTalker("a", "b", "c")
     convo = Conversation(store, talker, PREFIX, REL)
-    await convo.handle(SESSION, "just got home", "test", NOW)
-    await convo.handle(SESSION, "what should i eat?", "test", NOW + timedelta(minutes=1))
-    await convo.handle(SESSION, "ok", "test", NOW + timedelta(minutes=2))
+    await handle(convo, SESSION, "just got home", "test", NOW)
+    await handle(convo, SESSION, "what should i eat?", "test", NOW + timedelta(minutes=1))
+    await handle(convo, SESSION, "ok", "test", NOW + timedelta(minutes=2))
     assert "Their message was short (3 words)" in talker.seen[0].card
     assert "Their message was short" not in talker.seen[0].messages[-1].content
     assert "Their message was short" not in talker.seen[1].card  # a question

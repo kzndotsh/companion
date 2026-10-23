@@ -11,7 +11,8 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId, SessionId
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -53,7 +54,7 @@ def store(tmp_path: Path) -> Store:
 async def _say(store: Store, judge: Judge | None, texts: list[str]) -> list[object]:
     convo = Conversation(store, Talker(), PREFIX, REL, judge=judge)
     return [
-        await convo.handle(SESSION, text, "test", NOW + timedelta(minutes=i))
+        await handle(convo, SESSION, text, "test", NOW + timedelta(minutes=i))
         for i, text in enumerate(texts)
     ]
 

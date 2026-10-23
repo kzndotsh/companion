@@ -59,7 +59,7 @@ from companion.prompts import get
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.notes import Moment
+    from companion.loops.features import Moment
 
 log = logging.getLogger("companion.initiative")
 SESSION = SessionId("initiative")

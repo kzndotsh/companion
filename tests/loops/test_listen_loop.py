@@ -11,7 +11,8 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId, SessionId
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -68,7 +69,7 @@ def store(tmp_path: Path) -> Store:
 async def _ask(store: Store, judge: Judge, text: str = "my boss ignored me again today") -> Talker:
     talker = Talker()
     convo = Conversation(store, talker, PREFIX, REL, judge=judge)
-    await convo.handle(SESSION, text, "test", NOW)
+    await handle(convo, SESSION, text, "test", NOW)
     return talker
 
 
@@ -115,7 +116,7 @@ async def test_a_failing_judge_means_no_note_and_the_reply_still_goes_out(store:
 
 async def test_no_judge_at_all_changes_nothing(store: Store) -> None:
     talker = Talker()
-    await Conversation(store, talker, PREFIX, REL).handle(SESSION, "rough week", "test", NOW)
+    await handle(Conversation(store, talker, PREFIX, REL), SESSION, "rough week", "test", NOW)
     assert "[They are" not in talker.seen[0].card
 
 
@@ -128,7 +129,7 @@ async def test_acute_is_logged_as_having_no_crisis_path(store: Store) -> None:
 async def test_listen_off_never_asks_the_judge_and_adds_no_note(store: Store) -> None:
     talker = Talker()
     convo = Conversation(store, talker, PREFIX, REL, judge=Judge(_labels(2)), listen=False)
-    await convo.handle(SESSION, "rough week", "test", NOW)
+    await handle(convo, SESSION, "rough week", "test", NOW)
     assert "[They are" not in talker.seen[0].card
 
 
@@ -169,8 +170,8 @@ async def test_after_a_serious_message_a_bare_thanks_gets_words_not_an_emoji(
     store: Store, severity: int, *, reacted: bool
 ) -> None:
     convo = Conversation(store, Talker(), PREFIX, REL, judge=AckAndListen(severity, 0))
-    await convo.handle(SESSION, "my mom is in the hospital", "test", NOW)
-    answer = await convo.handle(SESSION, "thanks", "test", NOW + timedelta(minutes=1))
+    await handle(convo, SESSION, "my mom is in the hospital", "test", NOW)
+    answer = await handle(convo, SESSION, "thanks", "test", NOW + timedelta(minutes=1))
     assert isinstance(answer, Reaction) is reacted
 
 

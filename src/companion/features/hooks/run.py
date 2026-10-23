@@ -28,7 +28,7 @@ from companion.loops.turn import Heard, Turn, decide, is_casual
 from companion.prompts import get
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
+    from companion.loops.conversation import Conversation
 
 log = logging.getLogger("companion.hooks")
 KNOWN = get("system/basics-known")

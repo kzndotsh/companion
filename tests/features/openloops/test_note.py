@@ -8,7 +8,8 @@ import pytest
 from companion.core.basics import name_belief
 from companion.core.types import Frame, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.openloops.logic import LoopState, OpenLoop
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
@@ -46,7 +47,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, judge: Judge, at: datetime, text: str = "hey hey") -> str:
     talker = Talker()
-    await Conversation(store, talker, PREFIX, REL, judge=judge).handle(SESSION, text, "test", at)
+    await handle(Conversation(store, talker, PREFIX, REL, judge=judge), SESSION, text, "test", at)
     return talker.seen[0].card
 
 

@@ -29,7 +29,7 @@ from companion.core.types import (
 from companion.loops.record import Recorder
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
+    from companion.loops.conversation import Conversation
 
 log = logging.getLogger("companion.turn")
 

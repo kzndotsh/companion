@@ -2,25 +2,27 @@
 
 A feature lists only the parts it has. Its look-up runs with the others before the reply, side by
 side under the turn's deadline; its note reads what the look-up found and joins the notes, in the
-order of `FEATURES` in `loops/notes.py`. Adding a feature is its module plus one line there: no
+order of `ORDER` in `loops/notes.py`. Adding a feature is its module plus one line there: no
 field on `Lookups`, no branch in `look`, no entry written by hand in `SOURCES`.
 """
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
+
+from companion.core.types import Belief, BeliefId, Frame
+from companion.loops.recall import Recalled
+from companion.loops.turn import Heard, Turn, is_casual
 
 if TYPE_CHECKING:
     from datetime import datetime
 
     from companion.core.card import Card
     from companion.core.extractor import Extractor
-    from companion.core.types import Frame, RelationshipId
-    from companion.loops.fast import Conversation
-    from companion.loops.notes import Moment
-    from companion.loops.turn import Heard, Turn
+    from companion.core.types import RelationshipId
+    from companion.loops.conversation import Conversation
     from companion.store.sqlite.store import Store
 
 
@@ -69,3 +71,30 @@ class Feature:
     after_theirs: Step | None = None  # after a memory pass stored new memories of theirs
     after_own: Step | None = None  # after a memory pass stored new views of its own
     shadow: Shadow | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Lookups:
+    """What a reply waits for besides the judges: a recall, whether a topic is spent, a guess."""
+
+    recalled: Recalled | None = None
+    found: Mapping[str, object] = field(default_factory=dict[str, object])  # by feature name
+
+
+@dataclass(frozen=True, slots=True)
+class Moment:
+    """What every note reads about the turn being answered."""
+
+    c: Conversation
+    t: Turn
+    in_scene: Frame
+    heard: Heard | None
+    looked: Lookups
+    held: bool  # the floor held this turn (ADR 0017)
+    beliefs: Sequence[Belief]  # the memories that may be stated as true
+    on_card: frozenset[BeliefId] = frozenset()  # what the card already shows this turn
+    brushed: bool = False  # they pushed the flirting or the scene back (`system/brush-off`)
+
+    @property
+    def casual(self) -> bool:
+        return is_casual(self.t, self.in_scene, self.heard)

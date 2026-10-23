@@ -21,7 +21,7 @@ from companion.loops.listen import judge_listening
 from companion.loops.turn import Heard, Routed, Turn, decide, mark
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
+    from companion.loops.conversation import Conversation
 
 log = logging.getLogger("companion.turn")
 

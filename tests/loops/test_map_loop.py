@@ -18,7 +18,8 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.knowing.logic import WOULD_ASK
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 
 
@@ -45,8 +46,8 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, judge: Judge, text: str = "lol ok", at: datetime = NOW) -> Talker:
     talker = Talker()
-    await Conversation(store, talker, PREFIX, REL, judge=judge, mood="off").handle(
-        SESSION, text, "test", at
+    await handle(
+        Conversation(store, talker, PREFIX, REL, judge=judge, mood="off"), SESSION, text, "test", at
     )
     return talker
 

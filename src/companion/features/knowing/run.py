@@ -25,7 +25,7 @@ from companion.loops.turn import decide
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.notes import Moment
+    from companion.loops.features import Moment
 
 log = logging.getLogger("companion.knowing")
 

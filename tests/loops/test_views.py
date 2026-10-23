@@ -27,8 +27,9 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import card_views, is_settled
+from companion.loops.conversation import Conversation
 from companion.loops.curate import retire_implicated_views
-from companion.loops.fast import Conversation
+from companion.loops.fast import handle
 from companion.loops.rebuild import rebuild
 from companion.loops.slow import reflect_once
 from companion.loops.views import check_views, views_implicated
@@ -259,8 +260,12 @@ async def test_only_approved_views_reach_the_model_and_the_placement_is_logged(
     store.approve_view(closed.id, T0)
     store.close_belief(closed.id, T0 + timedelta(days=1))
     talker = _Talker()
-    await Conversation(store, talker, PREFIX, REL).handle(
-        SessionId("s"), "hi", "test", T0 + timedelta(days=3)
+    await handle(
+        Conversation(store, talker, PREFIX, REL),
+        SessionId("s"),
+        "hi",
+        "test",
+        T0 + timedelta(days=3),
     )
     sent = talker.seen[0].card
     assert "[Views of your own that you have expressed and they have approved" in sent
@@ -399,8 +404,12 @@ async def _carried_turn(store: Store) -> TurnId:
     _two_day_view(store)
     await check_views(store, Routed(checks=[_verdict(False)]), REL)
     talker = _Talker()
-    await Conversation(store, talker, PREFIX, REL).handle(
-        SessionId("s"), "hi", "test", T0 + timedelta(days=3)
+    await handle(
+        Conversation(store, talker, PREFIX, REL),
+        SessionId("s"),
+        "hi",
+        "test",
+        T0 + timedelta(days=3),
     )
     assert "short replies read as more human" in talker.seen[0].card
     turn = store.latest_turn(REL)
@@ -462,7 +471,7 @@ async def test_a_label_the_model_invents_is_ignored(store: Store) -> None:
 
 async def test_a_turn_that_carried_no_views_never_asks_the_model(store: Store) -> None:
     talker = _Talker()
-    await Conversation(store, talker, PREFIX, REL).handle(SessionId("s"), "hi", "test", T0)
+    await handle(Conversation(store, talker, PREFIX, REL), SessionId("s"), "hi", "test", T0)
     turn = store.latest_turn(REL)
     assert turn is not None
     ex = Routed()

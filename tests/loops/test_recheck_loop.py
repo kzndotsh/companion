@@ -10,7 +10,8 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId, SessionId
-from companion.loops.fast import Conversation
+from companion.loops.conversation import Conversation
+from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -67,7 +68,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, talker: Talker, judge: Judge, *, on: bool = True) -> str:
     convo = Conversation(store, talker, PREFIX, REL, judge=judge, resample=on)
-    sent = await convo.handle(SessionId("s"), "kinda too crispy/hard", "test", NOW)
+    sent = await handle(convo, SessionId("s"), "kinda too crispy/hard", "test", NOW)
     assert isinstance(sent, str)
     return sent
 

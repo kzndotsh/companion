@@ -31,8 +31,8 @@ from companion.prompts import get
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
-    from companion.loops.notes import Moment
+    from companion.loops.conversation import Conversation
+    from companion.loops.features import Moment
 
 log = logging.getLogger("companion.relevance")
 TIMEOUT_SECONDS = 10.0
