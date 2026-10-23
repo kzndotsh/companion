@@ -7,7 +7,7 @@ import contextlib
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 from companion.core.ack import PROMPT as ACK_PROMPT
@@ -21,55 +21,43 @@ from companion.core.ack import (
     render_reason,
     schema_hash,
 )
-from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name_belief
 from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
+from companion.core.frames import resolve as frame_resolve
 from companion.core.frames import (
-    MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
-)
-from companion.core.frames import PROMPT as FRAMES_PROMPT
-from companion.core.frames import (
-    Judgement,
-    companion_frame,
     scene_frame,
 )
-from companion.core.frames import render_reason as frame_reason
-from companion.core.frames import resolve as frame_resolve
 from companion.core.history import HISTORY_LIMIT
 from companion.core.listening import SERIOUS
-from companion.core.moves import PROMPT as HABITS_PROMPT
-from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import request_sha256
-from companion.core.react import PROMPT as REACT_PROMPT
-from companion.core.react import Judgement as ReactJudgement
-from companion.core.react import decide as decide_reaction
 from companion.core.relevance import Embedder
 from companion.core.replay import TurnRecord
-from companion.core.talker import Reply, Talker
+from companion.core.talker import Talker
 from companion.core.types import (
-    DecisionKind,
     Frame,
-    Json,
     RelationshipId,
     SessionId,
     Speaker,
     TraceId,
     TurnId,
-    Utterance,
-    UtteranceId,
 )
 from companion.core.views import why
 from companion.loops.ack import judge
 from companion.loops.assemble import CardLog, assemble
-from companion.loops.basics import judge_name
 from companion.loops.beside import shadows
-from companion.loops.frames import inputs_hash as frames_inputs_hash
-from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.listen import judge_listening
-from companion.loops.moves import HabitMemory, find_habits
+from companion.loops.moves import HabitMemory
 from companion.loops.notes import look
-from companion.loops.persist import TheirMessage, store_user, their_message
+from companion.loops.persist import (
+    TheirMessage,
+    capture_name,
+    log_frame,
+    persist_reply,
+    store_user,
+    their_message,
+    with_reaction,
+)
 from companion.loops.record import Recorder
 from companion.loops.route import route_turn
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
@@ -164,60 +152,6 @@ def _after_serious(c: Conversation, t: Turn) -> bool:
     return False
 
 
-def _react_alongside(
-    c: Conversation, t: Turn, felt: tuple[ReactJudgement, str, str] | None
-) -> Reaction | None:
-    """A reaction to send with the reply, if the message calls for one. Logs the judgement."""
-    if felt is None:
-        return None
-    judged, model, prompt = felt
-    decision = decide_reaction(judged, c.store.turns_since_reaction(c.rel))
-    decide(
-        c,
-        t,
-        REACTED if decision.reaction is not None else "react: none",
-        {
-            "scorer": model,
-            "prompt": REACT_PROMPT.ref,
-            "inputs_hash": inputs_hash(prompt),
-            "scores": {"tone": judged.tone, "confidence": judged.confidence},
-        },
-        reason=decision.reason,
-    )
-    return decision.reaction
-
-
-def _check_habits(c: Conversation, t: Turn, sent: str) -> None:
-    """After the reply is out, read the last few replies in the background for habits."""
-    if c.judge is None:
-        return
-    replies = replies_to_read(t.prior, sent)
-    if not replies:
-        return
-
-    async def look() -> list[str] | None:
-        found = await find_habits(c.judge, replies)  # type: ignore[arg-type]
-        if found is None:
-            return None
-        habits, model, prompt = found
-        detail: dict[str, Json] = {
-            "scorer": model,
-            "prompt": HABITS_PROMPT.ref,
-            "inputs_hash": inputs_hash(prompt),
-            "habits": list[Json](habits),
-        }
-        decide(
-            c,
-            t,
-            "habit check",
-            detail,
-            reason=f"habit check: {len(habits)} habits found in the last {len(replies)} replies",
-        )
-        return habits
-
-    c.habits.start(look())
-
-
 def _stopped_by_cap(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime
 ) -> str | None:
@@ -237,30 +171,6 @@ def _stopped_by_cap(
     return NOTICE if first_notice_today(c.store, c.rel, now) else ""
 
 
-def _with_reaction(
-    c: Conversation, t: Turn, felt: tuple[ReactJudgement, str, str] | None, sent: str
-) -> str | ReactAndReply:
-    reacted = _react_alongside(c, t, felt)
-    mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to Telegram")
-    return ReactAndReply(reacted, sent) if reacted is not None else sent
-
-
-async def _capture_name(c: Conversation, t: Turn, said: Utterance) -> None:
-    """When its last message asked what to call them, read their answer and remember the name,
-    quoting their own words. Logged either way."""
-    asked = next((u.text for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), "")
-    if c.judge is None or not asked_for_name(asked):
-        return
-    if knows_name(c.store.user_beliefs(c.rel)):
-        return
-    name = await judge_name(c.judge, asked, t.text)
-    reason = "basics: no name in their answer"
-    if name is not None:
-        c.store.insert_belief(name_belief(said, name, _id(), t.now))
-        reason = f"basics: remembered what to call them ({name})"
-    decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
-
-
 async def _stop(*tasks: asyncio.Future[Any] | None) -> None:
     """Cancel whatever is still running beside the reply."""
     for task in tasks:
@@ -269,59 +179,6 @@ async def _stop(*tasks: asyncio.Future[Any] | None) -> None:
         task.cancel()
         with contextlib.suppress(asyncio.CancelledError, Exception):
             await task
-
-
-def _log_frame(
-    c: Conversation, t: Turn, outcome: tuple[Judgement, str, str] | None, stored: Frame
-) -> None:
-    """Record every frame judgement and what was stored, with the reason built by code."""
-    judged = outcome[0] if outcome else None
-    detail: dict[str, Json] = {"stored": stored.value}
-    if outcome is not None:
-        detail |= {
-            "scorer": outcome[1],
-            "prompt": FRAMES_PROMPT.ref,
-            "schema_hash": frames_schema_hash(),
-            "inputs_hash": frames_inputs_hash(outcome[2]),
-            "scores": {"frame": outcome[0].frame.value, "confidence": outcome[0].confidence},
-            "threshold": FRAME_MIN_CONFIDENCE,
-        }
-    decide(c, t, "frame", detail, reason=frame_reason(judged, stored))
-
-
-def _persist_reply(c: Conversation, t: Turn, reply: Reply, user_frame: Frame, channel: str) -> str:
-    """Store the companion's reply and the decision that sent it. Returns what to send."""
-    replied_at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1))
-    ids = (c.rel, t.session, t.turn)
-    if not reply.text:
-        decide(c, t, "model returned no text", kind=DecisionKind.DO_NOTHING, at=replied_at)
-        return ""
-    c.store.append_utterance(
-        Utterance(
-            UtteranceId(_id()),
-            *ids,
-            Speaker.COMPANION,
-            reply.text,
-            companion_frame(user_frame),
-            channel,
-            replied_at,
-        )
-    )
-    decide(
-        c,
-        t,
-        "replied",
-        {
-            "latency_ms": reply.latency_ms,
-            "input_tokens": reply.input_tokens,
-            "cache_read_tokens": reply.cache_read_tokens,
-            "cache_write_tokens": reply.cache_write_tokens,
-        },
-        reason="replied: every user message gets a reply in v1",
-        at=replied_at,
-    )
-    _check_habits(c, t, reply.text)
-    return reply.text
 
 
 async def _listening(c: Conversation, t: Turn, in_scene: Frame) -> Heard | None:
@@ -361,7 +218,7 @@ async def _turn(
     if reaction is not None:
         await _stop(listening)
         said = keep.store(in_scene)
-        await _capture_name(c, t, said)
+        await capture_name(c, t, said)
         mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
@@ -395,7 +252,7 @@ async def _turn(
     user_frame = frame_resolve(outcome[0] if outcome else None, fallback=in_scene)
     said = keep.store(user_frame)
     if framing is not None:
-        _log_frame(c, t, outcome, user_frame)
+        log_frame(c, t, outcome, user_frame)
     store.record_turn(
         TurnRecord(
             turn,
@@ -422,8 +279,8 @@ async def _turn(
         text,
         reply.text or "(no reply)",
     )
-    sent = _persist_reply(c, t, reply, user_frame, channel)
+    sent = persist_reply(c, t, reply, user_frame, channel)
     for write in asm.after:  # what the notes used up, now that the turn is stored
         write()
-    await _capture_name(c, t, said)
-    return _with_reaction(c, t, felt, sent)
+    await capture_name(c, t, said)
+    return with_reaction(c, t, felt, sent)
