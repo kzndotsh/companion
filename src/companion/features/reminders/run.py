@@ -22,7 +22,17 @@ from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.request import TalkerRequest
 from companion.core.prompt.sections import tagged
 from companion.core.recheck import code_checks
-from companion.core.reminders import (
+from companion.core.types import (
+    Frame,
+    Json,
+    SessionId,
+    Speaker,
+    TraceId,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
+from companion.features.reminders.logic import (
     ASKED_WHEN,
     GRACE,
     ONE_OFF,
@@ -43,22 +53,12 @@ from companion.core.reminders import (
     set_note,
     spoken,
 )
-from companion.core.types import (
-    Frame,
-    Json,
-    SessionId,
-    Speaker,
-    TraceId,
-    TurnId,
-    Utterance,
-    UtteranceId,
-)
+from companion.features.reminders.store import Reminder
 from companion.loops.ask import Judge, ask
 from companion.loops.features import Feature, Offer, Offered
 from companion.loops.record import Recorder
 from companion.loops.spendcap import over_cap
 from companion.loops.turn import Heard, Turn, mark
-from companion.store.sqlite.reminders import Reminder
 
 if TYPE_CHECKING:
     from companion.loops.fast import Conversation

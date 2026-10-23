@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from random import Random
 from zoneinfo import ZoneInfo
 
-from companion.core.reminders import (
+from companion.features.reminders.logic import (
     Ask,
     Kind,
     Slots,

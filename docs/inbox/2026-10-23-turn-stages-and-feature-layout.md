@@ -174,4 +174,8 @@ Steps 4 and 5 are churn: hundreds of import edits and conflicts for any session 
   from 708 to 479 lines. Not in the shape yet: the reminder delivery tick (one user) and commands (with
   the layout pilot). Left in `notes.py` as notes of the turn itself: listening, rude, repair, owned,
   recall, check-in, mood, hold, brush-off, the name question, the map pick and due plans.
+- 2026-10-23, step 4 piloted with reminders: `src/companion/features/reminders/` holds `logic.py`, `run.py`,
+  `store.py`, `cli.py` and its `README.md`; tests in `tests/features/reminders/`; moved by a script with
+  `git mv` and import rewrites. Three new import-linter contracts (feature logic pure, features
+  independent, only a feature's store touches sqlite) all kept. Prompts and the migration stayed central.
 

@@ -100,6 +100,11 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
   reaches its note as `Lookups.found[name]`. Registered: the memory map, names, context, worth, relevance,
   recent times, topic-spent, guess, lore and reminders.
+- Features are moving into one folder each under `src/companion/features/` (reminders so far): `logic.py`
+  (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it
+  works). import-linter keeps a feature's logic pure, keeps features from importing each other, and lets only
+  a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests mirror the folder
+  (`tests/features/<name>/`). Move one with a script, never by hand, one feature per commit.
 - Ask a judge through `loops/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.

@@ -29,6 +29,7 @@ from companion.core.relevance import Embedder
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
+from companion.features.reminders.run import deliver_due
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops import merging
 from companion.loops.callbacks import check_new
@@ -44,7 +45,6 @@ from companion.loops.names import read_names
 from companion.loops.nightly import missed, night
 from companion.loops.nudges import tick_nudge
 from companion.loops.openloops import Ticker, drafter, tick
-from companion.loops.reminders import deliver_due
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated

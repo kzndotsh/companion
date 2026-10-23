@@ -21,7 +21,6 @@ from companion.cli import (
     mood,
     names,
     promises,
-    reminders,
     replay,
     spend,
 )
@@ -31,6 +30,7 @@ from companion.cli import shadows as shadows_cli
 from companion.cli.target import find_db, resolve_db, resolve_relationship
 from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
+from companion.features.reminders import cli as reminders
 
 
 def _db_args(p: argparse.ArgumentParser, *, relationship: bool = True) -> None:

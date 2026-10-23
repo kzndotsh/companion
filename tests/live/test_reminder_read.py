@@ -16,7 +16,6 @@ from zoneinfo import ZoneInfo
 import httpx
 import pytest
 
-from companion.core.reminders import PROMPT, SCHEMA, Ask, parse, read_prompt, resolve
 from companion.core.types import (
     Frame,
     RelationshipId,
@@ -27,6 +26,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.daemon import load_dotenv
+from companion.features.reminders.logic import PROMPT, SCHEMA, Ask, parse, read_prompt, resolve
 from companion.models.openrouter import OpenRouterExtractor
 
 pytestmark = pytest.mark.live

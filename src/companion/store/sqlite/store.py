@@ -42,6 +42,8 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import ViewState, parse_mode
+from companion.features.reminders import store as reminders
+from companion.features.reminders.store import Reminder
 from companion.store.sqlite import (
     beliefs,
     callbacks,
@@ -61,7 +63,6 @@ from companion.store.sqlite import (
     open_loops,
     promises,
     reflect,
-    reminders,
     settings,
     turns,
     view_kinds,
@@ -69,7 +70,6 @@ from companion.store.sqlite import (
 from companion.store.sqlite.db import connect, migrate
 from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.promises import Recorded as RecordedPromise
-from companion.store.sqlite.reminders import Reminder
 
 VIEWS_MODE_KEY = "views.mode"
 

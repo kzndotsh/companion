@@ -7,8 +7,8 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.reminders import Kind
 from companion.core.types import RelationshipId, TurnId
+from companion.features.reminders.logic import Kind
 from companion.store.sqlite.db import iso, parse_iso, write_tx
 
 

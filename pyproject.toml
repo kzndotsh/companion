@@ -81,6 +81,30 @@ forbidden_modules = [
 ]
 
 [[tool.importlinter.contracts]]
+id = "feature-logic-is-pure"
+name = "a feature's logic imports nothing from the shell or any feature's effects"
+type = "forbidden"
+source_modules = ["companion.features.*.logic"]
+forbidden_modules = [
+    "companion.store",
+    "companion.cli",
+    "companion.models",
+    "companion.loops",
+    "companion.io",
+    "companion.daemon",
+    "companion.evals",
+    "companion.features.*.run",
+    "companion.features.*.store",
+    "companion.features.*.cli",
+]
+
+[[tool.importlinter.contracts]]
+id = "features-are-independent"
+name = "no feature imports another; shared things go through core or the turn"
+type = "independence"
+modules = ["companion.features.*"]
+
+[[tool.importlinter.contracts]]
 id = "only-store-owns-sqlite"
 name = "only store imports sqlite3"
 type = "forbidden"
@@ -92,6 +116,9 @@ source_modules = [
     "companion.io",
     "companion.daemon",
     "companion.evals",
+    "companion.features.*.logic",
+    "companion.features.*.run",
+    "companion.features.*.cli",
 ]
 forbidden_modules = ["sqlite3"]
 allow_indirect_imports = true

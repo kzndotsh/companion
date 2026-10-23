@@ -4,17 +4,17 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.extractor import Extraction
 from companion.core.prompt.request import TalkerRequest
-from companion.core.reminders import Kind
 from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
+from companion.features.reminders.logic import Kind
+from companion.features.reminders.run import ASKED, CANCELLED, SET, deliver_due
+from companion.features.reminders.store import Reminder
 from companion.loops.fast import Conversation
-from companion.loops.reminders import ASKED, CANCELLED, SET, deliver_due
-from companion.store.sqlite.reminders import Reminder
 from companion.store.sqlite.store import Store
+from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 # NOW is Monday 19 Oct 2026, 17:00 UTC: 13:00 in New York
 
