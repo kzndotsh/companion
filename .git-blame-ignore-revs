@@ -1,3 +1,12 @@
 # Commits that only move files or rewrite imports; `git blame` skips them.
 # Use: git config blame.ignoreRevsFile .git-blame-ignore-revs
 315205d3d6c87b1a4cf488a593cc6b31f4b86935  # reminders into src/companion/features/reminders
+f44e30038fe51318b7ffdfacd453dd82f319ff7c  # lore into src/companion/features/lore
+ed6ca162a7291d7425f209de12b366781ca74fcd  # episodes into src/companion/features/episodes
+419334630852c6ed32626676aa74c6a754a391e6  # guess into src/companion/features/guess
+aec25b9e3cc4afe18ff2f9001fd3ae6920443b34  # topics into src/companion/features/topics
+10df2b1522f5b4f39368f2588f8b4fc65b59a486  # names into src/companion/features/names
+92f1bc39fc729961d46194770e9c1f9f24df4db0  # relevance into src/companion/features/relevance
+f06084e41bf1aff2413da255881472163afb170c  # worth into src/companion/features/worth
+8a319c57cb6135b2a9cd27b57f20ed1cfb33c712  # context into src/companion/features/context
+bcc957efab1a18599e69b4e11b99caf8bd7b1dbe  # knowing into src/companion/features/knowing
