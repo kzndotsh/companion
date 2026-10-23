@@ -7,7 +7,7 @@ from pathlib import Path
 
 from companion.core.types import DecisionKind, RelationshipId
 from companion.features.nudges.logic import AWAY, WOULD_NUDGE
-from companion.loops.openloops import HELD
+from companion.features.openloops.run import HELD
 from companion.store.sqlite.store import Store
 
 

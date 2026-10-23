@@ -7,10 +7,11 @@ from datetime import timedelta
 
 import pytest
 
-from companion.core.openloops import LoopState, OpenLoop
 from companion.core.types import Utterance, UtteranceId
-from companion.store.sqlite import ledger, open_loops
-from companion.store.sqlite.open_loops import ReachOut
+from companion.features.openloops import store as open_loops
+from companion.features.openloops.logic import LoopState, OpenLoop
+from companion.features.openloops.store import ReachOut
+from companion.store.sqlite import ledger
 from tests.conftest import REL, T0
 
 

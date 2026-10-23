@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.openloops import LoopState, OpenLoop
 from companion.core.reachout import Caps
 from companion.core.types import (
     DecisionKind,
@@ -19,7 +18,8 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.openloops import (
+from companion.features.openloops.logic import LoopState, OpenLoop
+from companion.features.openloops.run import (
     Reading,
     Ticker,
     catch_up_loops,
@@ -27,7 +27,7 @@ from companion.loops.openloops import (
     short_draft,
     tick,
 )
-from companion.store.sqlite.open_loops import ReachOut
+from companion.features.openloops.store import ReachOut
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")

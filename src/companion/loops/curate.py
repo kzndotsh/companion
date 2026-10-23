@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import replace
-from datetime import datetime, tzinfo
+from datetime import datetime
 
 from companion.core.beliefs.dedupe import duplicate_groups
 from companion.core.clock import utc_now
-from companion.core.extractor import Extractor
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -17,12 +16,11 @@ from companion.core.types import (
     TraceId,
 )
 from companion.loops.record import Recorder
-from companion.loops.slow import ReflectOptions, reflect_from
 from companion.store.sqlite.decisions import CLOSED
 from companion.store.sqlite.store import Store
 
 
-def _close(store: Store, b: Belief, reason: str, now: datetime) -> None:
+def close(store: Store, b: Belief, reason: str, now: datetime) -> None:
     _log(store, b, CLOSED, now, f"closed belief: {reason}")
     store.close_belief(b.id, now)
 
@@ -47,7 +45,7 @@ def close_duplicates(store: Store, rel: RelationshipId, now: datetime | None = N
     report: list[str] = []
     for keep, drop in duplicate_groups(store.current_beliefs(rel)):
         for b in drop:
-            _close(store, b, f"duplicate of {keep.id[:8]} (same words)", now)
+            close(store, b, f"duplicate of {keep.id[:8]} (same words)", now)
             report.append(f"closed  {b.claim}\n  kept  {keep.claim}")
     return report
 
@@ -59,7 +57,7 @@ def retire(
     if len(matches) != 1:
         msg = f"{len(matches)} current beliefs start with {id_prefix!r}; need exactly one"
         raise ValueError(msg)
-    _close(store, matches[0], reason, now or utc_now())
+    close(store, matches[0], reason, now or utc_now())
     return f"closed  {matches[0].claim}"
 
 
@@ -103,32 +101,8 @@ def merge(  # noqa: PLR0913
     )
     store.insert_belief(merged)
     for b in found:
-        _close(store, b, f"merged into {merged.id[:8]} {why}", now)
+        close(store, b, f"merged into {merged.id[:8]} {why}", now)
     return f"merged {len(found)} into {merged.id[:8]}  {merged.claim}"
-
-
-async def rebuild(
-    store: Store, extractor: Extractor, rel: RelationshipId, tz: tzinfo | None = None
-) -> str:
-    """Restate every belief from the whole ledger under the current extraction rules.
-
-    The old beliefs are closed only after every batch has succeeded, so a failure part-way leaves
-    them in force. They stay on disk, closed, with the reason logged.
-    """
-    old = store.user_beliefs(rel)
-    options = ReflectOptions(ignore=frozenset(b.id for b in old), tz=tz)
-    start = None
-    added = 0
-    while True:
-        result = await reflect_from(store, extractor, rel, start, options)
-        if not result.ran:
-            break
-        added += result.accepted
-        start = result.upto
-    now = utc_now()
-    for b in old:
-        _close(store, b, "replaced by a rebuild under improved extraction rules", now)
-    return f"rebuilt: {added} beliefs added, {len(old)} replaced"
 
 
 def approve(store: Store, rel: RelationshipId, id_prefix: str, now: datetime | None = None) -> str:
@@ -163,5 +137,5 @@ def retire_implicated_views(
     """Close the views a flag implicates. The caller decides which; most flags implicate none."""
     now = now or utc_now()
     for b in views:
-        _close(store, b, "the user flagged a turn, and the flag implicates this view", now)
+        close(store, b, "the user flagged a turn, and the flag implicates this view", now)
     return [b.claim for b in views]

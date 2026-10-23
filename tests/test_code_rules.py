@@ -26,7 +26,7 @@ CAPS = {
     "daemon.py": 572,
     "store/sqlite/store.py": 536,
 }
-NOQA_CAP = 66  # lint exceptions in src; each new one replaces an old one
+NOQA_CAP = 64  # lint exceptions in src; each new one replaces an old one
 
 
 def _sources() -> dict[str, str]:

@@ -3,10 +3,10 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
-from companion.core.initiative import Situation, evaluate
-from companion.core.openloops import LoopKind, LoopState, OpenLoop
 from companion.core.reachout import Caps, in_quiet_hours
 from companion.core.types import RelationshipId, UtteranceId
+from companion.features.openloops.gate import Situation, evaluate
+from companion.features.openloops.logic import LoopKind, LoopState, OpenLoop
 
 REL = RelationshipId("rel")
 NOON = datetime(2026, 10, 14, 12, 0, tzinfo=UTC)

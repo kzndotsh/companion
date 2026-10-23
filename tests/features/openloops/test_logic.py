@@ -4,7 +4,17 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from companion.core.openloops import (
+from companion.core.types import (
+    Frame,
+    Json,
+    RelationshipId,
+    SessionId,
+    Speaker,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
+from companion.features.openloops.logic import (
     NOTE_DELAY,
     LoopKind,
     LoopState,
@@ -21,16 +31,6 @@ from companion.core.openloops import (
     render_open_loops,
     to_loop,
     to_resolution,
-)
-from companion.core.types import (
-    Frame,
-    Json,
-    RelationshipId,
-    SessionId,
-    Speaker,
-    TurnId,
-    Utterance,
-    UtteranceId,
 )
 
 REL = RelationshipId("rel")

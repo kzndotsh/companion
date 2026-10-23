@@ -6,8 +6,8 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.openloops import LoopKind, LoopState, OpenLoop
 from companion.core.types import RelationshipId, UtteranceId
+from companion.features.openloops.logic import LoopKind, LoopState, OpenLoop
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 

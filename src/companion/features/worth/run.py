@@ -19,6 +19,7 @@ from companion.features.worth.logic import (
     to_ask,
     verdict,
 )
+from companion.loops.curate import retire
 from companion.loops.features import Feature
 from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store
@@ -54,8 +55,6 @@ async def label(  # noqa: PLR0913
 ) -> Labelled:
     """Label the memories not yet labelled. One recorded since `act_since` (a new memory) is acted
     on: an agreed remark about the bot is retired at once. One kept before becomes a question."""
-    from companion.loops.curate import retire  # noqa: PLC0415  curate imports the memory pass
-
     done = store.checked_memories(rel, prompt="system/memory-worth")
     todo: list[Belief] = [b for b in store.user_beliefs(rel) if b.id not in done][:limit]
     if not todo:
@@ -83,8 +82,6 @@ async def label(  # noqa: PLR0913
 
 def expire_routine(store: Store, rel: RelationshipId, now: datetime) -> int:
     """Retire routine moments a week after they were last mentioned."""
-    from companion.loops.curate import retire  # noqa: PLC0415  curate imports the memory pass
-
     routine = {
         c.belief_id
         for c in store.unanswered_checks(rel, [Label.ROUTINE.value])

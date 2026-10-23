@@ -85,7 +85,7 @@ forbidden_modules = [
 id = "feature-logic-is-pure"
 name = "a feature's logic imports nothing from the shell or any feature's effects"
 type = "forbidden"
-source_modules = ["companion.features.*.logic"]
+source_modules = ["companion.features.*.logic", "companion.features.*.gate"]
 forbidden_modules = [
     "companion.store",
     "companion.cli",
@@ -147,6 +147,7 @@ source_modules = [
     "companion.daemon",
     "companion.evals",
     "companion.features.*.logic",
+    "companion.features.*.gate",
     "companion.features.*.run",
     "companion.features.*.cli",
     "companion.lib.vote",

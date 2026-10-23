@@ -22,7 +22,8 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.curate import close_duplicates, merge, rebuild, retire
+from companion.loops.curate import close_duplicates, merge, retire
+from companion.loops.rebuild import rebuild
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")

@@ -11,7 +11,7 @@ from companion.cli.promises import run
 from companion.core.extractor import Extraction
 from companion.core.promises import Proposed, to_promise
 from companion.core.types import Frame, Json, Speaker, Utterance
-from companion.loops.openloops import Reading, catch_up_loops
+from companion.features.openloops.run import Reading, catch_up_loops
 from companion.store.sqlite.store import Store
 
 SORRY = "sorry! i won't call you buddy again, promise"

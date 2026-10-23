@@ -3,8 +3,8 @@
 What it notices about their near future and what it would do with it. Reaching out is shadow only
 (`companion shadows`).
 
-- Things they said about their near future are recorded as open loops (`core/openloops.py`), and a
-  pure gate (`core/initiative.py`) decides every 15 minutes whether to reach out. It only runs in
+- Things they said about their near future are recorded as open loops (`features/openloops/logic.py`), and a
+  pure gate (`features/openloops/gate.py`) decides every 15 minutes whether to reach out. It only runs in
   shadow mode: it drafts and records `would send` and sends nothing (`COMPANION_INITIATIVE`, `off` to
   disable). Read it with `uv run companion initiative`. Only firm plans about their own life become
   loops (labels, not prompt rules); its kind sets the time (follow_up the morning after, celebrate on

@@ -11,8 +11,8 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, tzinfo
 
-from companion.core.openloops import SENSITIVE, LoopKind, LoopState, OpenLoop
 from companion.core.reachout import Caps, in_quiet_hours
+from companion.features.openloops.logic import SENSITIVE, LoopKind, LoopState, OpenLoop
 
 
 @dataclass(frozen=True, slots=True)

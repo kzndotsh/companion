@@ -51,7 +51,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.openloops import Reading, catch_up_loops
+from companion.features.openloops.run import Reading, catch_up_loops
 from companion.loops.record import Recorder
 from companion.loops.registry import FEATURES
 from companion.loops.views import WANT_KINDS, check_views

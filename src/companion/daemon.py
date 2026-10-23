@@ -35,18 +35,18 @@ from companion.features.knowing.run import label_new
 from companion.features.lore.run import label_views
 from companion.features.names.run import read_names
 from companion.features.nudges.run import tick_nudge
+from companion.features.openloops.run import Ticker, drafter, tick
 from companion.features.reminders.run import deliver_due
 from companion.features.worth.run import label
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.lib import logs, retry
-from companion.loops import merging
+from companion.loops import curate, merging
 from companion.loops.callbacks import check_new
 from companion.loops.consolidate import SameCheck
-from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.invented import check_new as check_invented
 from companion.loops.nightly import missed, night
-from companion.loops.openloops import Ticker, drafter, tick
+from companion.loops.rebuild import rebuild
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
@@ -219,7 +219,7 @@ def _commands(store: Store, rel: RelationshipId, reflector: Extractor) -> Comman
         logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, note)
         implicated = await views_implicated(store, reflector, rel, turn, note)
         logging.getLogger("companion").debug("flag implicates %d view(s)", len(implicated))
-        for claim in retire_implicated_views(store, implicated):
+        for claim in curate.retire_implicated_views(store, implicated):
             logging.getLogger("companion").info("flag retired a view: %s", claim)
         return Reaction(FLAG_REACTION)
 

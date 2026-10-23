@@ -4,13 +4,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.basics import name_belief
-from companion.core.openloops import LoopState, OpenLoop
 from companion.core.types import Frame, Speaker, TurnId, Utterance, UtteranceId
+from companion.features.openloops.logic import LoopState, OpenLoop
 from companion.loops.fast import Conversation
 from companion.store.sqlite.store import Store
+from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 
 @pytest.fixture

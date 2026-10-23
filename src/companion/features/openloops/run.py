@@ -1,7 +1,7 @@
 """Reading what they said for loops worth asking about, and the one tick that decides to ask.
 
 Extraction runs inside the slow loop's batch, after the beliefs, and costs one small call. The tick
-runs on a timer, reads the store, asks the pure gate in `core/initiative.py`, and in shadow mode
+runs on a timer, reads the store, asks the pure gate in `gate.py`, and in shadow mode
 only records what it would have sent. Nothing here sends a message.
 """
 
@@ -18,8 +18,22 @@ from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_midnight, local_zone
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
-from companion.core.initiative import Situation, Verdict, evaluate
-from companion.core.openloops import (
+from companion.core.reachout import Caps, short_draft
+from companion.core.spend import purpose
+from companion.core.types import (
+    DecisionKind,
+    Frame,
+    Json,
+    RelationshipId,
+    SessionId,
+    Speaker,
+    TraceId,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
+from companion.features.openloops.gate import Situation, Verdict, evaluate
+from companion.features.openloops.logic import (
     PROMPT,
     SCHEMA,
     SYSTEM,
@@ -37,26 +51,12 @@ from companion.core.openloops import (
     to_loop,
     to_resolution,
 )
-from companion.core.reachout import Caps, short_draft
-from companion.core.spend import purpose
-from companion.core.types import (
-    DecisionKind,
-    Frame,
-    Json,
-    RelationshipId,
-    SessionId,
-    Speaker,
-    TraceId,
-    TurnId,
-    Utterance,
-    UtteranceId,
-)
+from companion.features.openloops.store import ReachOut
 from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.promises import read_promises
 from companion.loops.record import Recorder
 from companion.loops.turn import decide
 from companion.prompts import get
-from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:

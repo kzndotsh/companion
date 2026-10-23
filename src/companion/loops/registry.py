@@ -11,12 +11,12 @@ from companion.features.knowing.run import KNOWING
 from companion.features.lore.run import LORE
 from companion.features.names.run import NAMES
 from companion.features.nudges.run import NUDGES
+from companion.features.openloops.run import OPENLOOPS
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
 from companion.features.topics.run import TOPICS
 from companion.features.worth.run import WORTH
 from companion.loops.features import Feature
-from companion.loops.openloops import OPENLOOPS
 
 FEATURES: tuple[Feature, ...] = (
     KNOWING,
