@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import asyncio
-import logging
-
 from companion.core.extractor import Extractor
-from companion.core.quip import SCHEMA, SYSTEM, build_prompt, parse
-from companion.core.spend import purpose
+from companion.core.quip import PROMPT, SCHEMA, build_prompt, parse
+from companion.loops.ask import Judge, ask
 
 TIMEOUT_SECONDS = 2.5
-log = logging.getLogger("companion.quip")
+
+
+QUIP = Judge("quip", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="the reply is kept")
 
 
 async def judge_quip(
@@ -19,14 +18,5 @@ async def judge_quip(
     """Whether it added a joke, the model id, the prompt and the cost, or None if it could not be
     read in time."""
     prompt = build_prompt(their_text, reply)
-    try:
-        with purpose("quip"):
-            result = await asyncio.wait_for(
-                extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
-            )
-    except Exception as err:
-        log.warning("quip check failed or timed out; the reply is kept: %r", err)
-        return None
-    added = parse(result.data)
-    log.debug("quip check: added_joke=%s in %dms, $%.5f", added, result.latency_ms, result.cost_usd)
-    return None if added is None else (added, result.model, prompt, result.cost_usd)
+    got = await ask(extractor, QUIP, prompt)
+    return None if got is None else (got.value, got.model, prompt, got.cost_usd)
