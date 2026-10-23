@@ -265,3 +265,31 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
         assert result.confirmed == 1
         [b] = store.current_beliefs(REL)
         assert {e.quote for e in b.evidence} == {"green tea", "green tea always"}
+
+
+async def test_new_memories_are_embedded_after_the_pass_with_the_memory_check_off(
+    store: Store,
+) -> None:
+    _say(store, 1, Speaker.USER, "i have asthma and a bad knee")
+    ex = FakeExtractor(
+        {"beliefs": [_belief("m1", "asthma and a bad knee", "Has asthma and a bad knee")]}
+    )
+    await reflect_once(store, ex, REL, T0 + timedelta(hours=1), embed=(_Embedder(), "fake-embed"))
+    [b] = store.current_beliefs(REL)
+    assert b.id in store.belief_embeddings(REL, "fake-embed")
+
+
+class _DownEmbedder:
+    async def embed(self, texts: Sequence[str]) -> Embedded:
+        raise TimeoutError
+
+
+async def test_a_failed_embedding_after_the_pass_keeps_the_memories(store: Store) -> None:
+    _say(store, 1, Speaker.USER, "i have asthma and a bad knee")
+    ex = FakeExtractor(
+        {"beliefs": [_belief("m1", "asthma and a bad knee", "Has asthma and a bad knee")]}
+    )
+    when = T0 + timedelta(hours=1)
+    result = await reflect_once(store, ex, REL, when, embed=(_DownEmbedder(), "fake-embed"))
+    assert result.accepted == 1
+    assert not store.belief_embeddings(REL, "fake-embed")

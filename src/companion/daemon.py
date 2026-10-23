@@ -348,6 +348,7 @@ async def run(data_dir: Path) -> None:
             if convo.embedder is not None and s.on("memory check")
             else None
         )
+        embed = (convo.embedder, convo.embed_model) if convo.embedder is not None else None
         pending: list[asyncio.Task[None]] = []
 
         async def reflect_after_idle() -> None:
@@ -361,7 +362,7 @@ async def run(data_dir: Path) -> None:
             try:
                 result = await retry.retry_on_network_error(
                     lambda: reflect_once(
-                        store, reflector, rel, same=same, promises=s.on("promises")
+                        store, reflector, rel, same=same, promises=s.on("promises"), embed=embed
                     ),
                     REFLECT_RETRY_DELAYS,
                     "reflect",

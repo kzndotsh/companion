@@ -51,9 +51,11 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck
 from companion.features.openloops.run import Reading, catch_up_loops
 from companion.features.promises.run import read_promises
+from companion.loops.embed import embed_missing
 from companion.loops.record import Recorder
 from companion.memory.views import WANT_KINDS, check_views
 from companion.registry import FEATURES
@@ -75,6 +77,7 @@ class ReflectOptions:
     tz: tzinfo | None = None
     same: SameCheck | None = None  # write-time check against existing memories (ADR 0019)
     promises: bool = False  # read its own messages for promises it made (J12, shadow)
+    embed: tuple[Embedder, str] | None = None  # embed new memories after the pass (model name)
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,8 +159,9 @@ async def reflect_once(  # noqa: PLR0913
     same: SameCheck | None = None,
     *,
     promises: bool = False,
+    embed: tuple[Embedder, str] | None = None,
 ) -> ReflectResult:
-    options = ReflectOptions(now, same=same, promises=promises)
+    options = ReflectOptions(now, same=same, promises=promises, embed=embed)
     return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), options)
 
 
@@ -402,6 +406,8 @@ async def reflect_from(
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
     after = [*(AFTER_THEIRS if users.accepted else ()), *(AFTER_OWN if own.accepted else ())]
     labelled = sum([(await step(store, extractor, rel, now)).cost_usd for step in after])
+    if users.accepted and options.embed is not None:
+        labelled += await _embed_new(store, rel, now, options.embed)
     return ReflectResult(
         True,
         users.accepted,
@@ -416,3 +422,16 @@ async def reflect_from(
         views_checked=check.checked,
         views_conflicts=check.conflicts,
     )
+
+
+async def _embed_new(
+    store: Store, rel: RelationshipId, now: datetime, embed: tuple[Embedder, str]
+) -> float:
+    """Embed the memories this pass stored, so no turn's look-up has to. A failure is logged and
+    left for the next pass, or the next look-up, to do."""
+    embedder, model = embed
+    try:
+        return await embed_missing(store, embedder, rel, model, now)
+    except Exception as err:
+        log.warning("embedding new memories after the pass failed: %r", err)
+        return 0.0
