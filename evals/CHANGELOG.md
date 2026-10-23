@@ -1547,3 +1547,24 @@ the turn after three own-ups ("this is a show about that") stays at 8 to 11 of 1
 kept as a candidate, not shipped. $0.025. Rerun: a scratch script rebuilding each turn from
 `turn_requests` with each persona version and the tail as live code computes it.
 
+## 2026-10-23: Our replies almost never show the small human touches another companion used
+
+The owner found another companion service more human: it paces in short beats, corrects itself mid-thought,
+names mixed feelings, wonders aloud about itself and reflects lightly on its own nature. Counted blind by a
+Haiku reader on 17 of its spoken turns (two of the owner's recordings, transcribed locally) and a random
+150 of our replies since 2026-10-17 (100 everyday, 50 in scenes); our hits read by eye.
+
+| | Other service (17 turns) | Ours, everyday (100) | Ours, scenes (50) |
+|---|---|---|---|
+| Any of the five | 11 | 7 | 1 |
+| Corrects itself mid-thought | 3 | 3 | 0 |
+| A mixed feeling | 1 | 0 | 0 |
+| Wonders aloud about itself | 3 | 0 | 0 |
+| Reflects on its own nature | 8 | 5 | 1 |
+| Short beats for rhythm | 7 | 0 | 0 |
+
+Read by eye, most of our "reflects" hits are AI disclaimers or owning a slip, not the light, curious kind;
+about three of our 150 are the real thing. Caveats: the other side is voice, longer per turn, and only 17
+turns; the reader is a small model. Free (saved replies). Rerun: label a blinded mix of `utterances` and
+transcript turns with the five definitions above.
+
