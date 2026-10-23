@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import re
 
-from companion.core.habits import EMOJI, EMOTICON
+from companion.core.turn.habits import EMOJI, EMOTICON
 
 _STRETCHED = re.compile(r"\b\w*([a-z])\1{2,}\w*\b", re.IGNORECASE)
 _EXCLAIM = re.compile(r"!+")

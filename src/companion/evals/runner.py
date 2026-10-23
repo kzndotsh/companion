@@ -14,12 +14,12 @@ from dataclasses import dataclass, field
 
 from companion import prompts
 from companion.core.extractor import Extractor
-from companion.core.habits import echo_note
-from companion.core.length import length_target
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.prompt.sections import tagged
 from companion.core.talker import Reply, Talker
+from companion.core.turn.habits import echo_note
+from companion.core.turn.length import length_target
 from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
 from companion.evals.judge import grade, grade_empathy

@@ -15,7 +15,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.ack import SCHEMA, SYSTEM, build_prompt, parse, reaction_for
+from companion.core.turn.ack import SCHEMA, SYSTEM, build_prompt, parse, reaction_for
 from companion.core.types import (
     Frame,
     RelationshipId,

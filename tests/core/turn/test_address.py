@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.core.address import address_note
+from companion.core.turn.address import address_note
 
 
 def test_the_pinned_line_says_how_to_refer_to_them_and_nothing_when_unset() -> None:

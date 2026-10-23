@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from companion.core.ack import build_prompt
 from companion.core.extractor import Extractor
-from companion.core.react import PROMPT, SCHEMA, Judgement, parse
+from companion.core.turn.ack import build_prompt
+from companion.core.turn.react import PROMPT, SCHEMA, Judgement, parse
 from companion.core.types import Utterance
 from companion.loops.ask import Judge, ask
 

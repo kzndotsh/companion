@@ -6,8 +6,8 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
-from companion.core.ack import PROMPT as ACK_PROMPT
-from companion.core.ack import (
+from companion.core.turn.ack import PROMPT as ACK_PROMPT
+from companion.core.turn.ack import (
     REACT_THRESHOLD,
     Reaction,
     inputs_hash,
@@ -16,7 +16,7 @@ from companion.core.ack import (
     render_reason,
     schema_hash,
 )
-from companion.core.listening import SERIOUS
+from companion.core.turn.listening import SERIOUS
 from companion.core.types import (
     Frame,
     Speaker,

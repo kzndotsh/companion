@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.energy import texting_energy
+from companion.core.turn.energy import texting_energy
 
 
 @pytest.mark.parametrize(

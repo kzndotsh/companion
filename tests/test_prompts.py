@@ -140,7 +140,7 @@ def test_a_note_is_one_bracketed_line_except_the_clock_and_the_listening_parts()
 
 
 def test_a_listening_note_reaches_the_model_bracketed() -> None:
-    from companion.core.listening import Judgement, listening_note  # noqa: PLC0415
+    from companion.core.turn.listening import Judgement, listening_note  # noqa: PLC0415
 
     for severity in (0, 1, 2):
         for vague in (False, True):

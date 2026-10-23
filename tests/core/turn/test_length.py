@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.length import (
+from companion.core.turn.length import (
     FLOOR_WORDS,
     MAX_USER_WORDS,
     MIN_VARIED_WORDS,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.core.ownup import NOTE, WINDOW, owned, owned_note
+from companion.core.turn.ownup import NOTE, WINDOW, owned, owned_note
 
 
 def test_an_own_up_is_read_and_sympathy_is_not() -> None:

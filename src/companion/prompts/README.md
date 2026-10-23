@@ -54,7 +54,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 |---|---|---|---|
 | `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v41 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
-| `notes/address` | note | how they want to be referred to, pinned first in every card, `core/address.py` | v1 |
+| `notes/address` | note | how they want to be referred to, pinned first in every card, `core/turn/address.py` | v1 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
 | `notes/loop-follow-up` | note | a due open loop, offered when they next write: ask how it went (J15) | v1 |
 | `notes/loop-celebrate` | note | a celebration on its day, offered when they write (J15) | v1 |
@@ -63,12 +63,12 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/clock-gap` | note | the gap since their last message | v1 |
 | `notes/floor-hold` | note | a turn the floor kept on the everyday talker: stay warm, nothing sexual, no explaining (ADR 0017) | v1 |
 | `notes/brush-off` | note | they pushed the flirting or the scene back: drop it, answer what they said, warm and normal | v1 |
-| `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy, `core/habits.py` | v1 |
+| `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy, `core/turn/habits.py` | v1 |
 | `notes/habit-moves` | note | the habit finder found a habit | v1 |
 | `notes/habit-opener` | note | an opening word is overused | v1 |
 | `notes/habit-phrases` | note | phrases are repeated | v1 |
-| `notes/length` | note | a short statement, `core/length.py` | v1 |
-| `notes/length-serious` | note | a message judged serious, `core/length.py` | v1 |
+| `notes/length` | note | a short statement, `core/turn/length.py` | v1 |
+| `notes/length-serious` | note | a message judged serious, `core/turn/length.py` | v1 |
 | `notes/listening-everyday` | note | listening note, severity 1 | v3 |
 | `notes/listening-health` | note | added to the severity 2 note for a health topic | v2 |
 | `notes/listening-offer` | note | added to the severity 1 note when they were vague | v1 |
@@ -95,23 +95,23 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/topic-move-day` | part | the move: ask what's next for their day | v1 |
 | `notes/topic-move-evening` | part | the move: ask about the rest of their evening | v1 |
 | `notes/topic-move-night` | part | the move, late at night: a small thought or opinion of its own | v2 |
-| `notes/rude` | note | their message was rude to the companion, `core/listening.py` | v1 |
+| `notes/rude` | note | their message was rude to the companion, `core/turn/listening.py` | v1 |
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
 | `notes/scene-play` | note | a pretend scene is in progress | v1 |
 | `notes/scene-story` | note | they are telling a story | v1 |
 | `notes/reminder-set` | note | a reminder they asked for is set: confirm it with the time code worked out (J50) | v1 |
 | `notes/reminder-ask` | note | a reminder they asked for has an unclear time: ask about that one thing (J50) | v1 |
 | `notes/reminder-cancelled` | note | a reminder they asked to drop is dropped: say so (J50) | v1 |
-| `system/ack` | system | the ack judge, `core/ack.py` | v2 |
+| `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
 | `system/callback-judge` | system | the callback check, `features/callbacks/logic.py`, `companion callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v8 |
 | `system/frames` | system | the frame judge, `core/frames.py` | v2 |
-| `system/habits` | system | the habit finder, `core/moves.py` | v2 |
+| `system/habits` | system | the habit finder, `core/turn/moves.py` | v2 |
 | `system/intimate-check` | system | reads whether a reply on a held turn is intimate (sexual, not affection) (ADR 0017) | v1 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
-| `system/listening` | system | the listening judge, `core/listening.py` | v7 |
+| `system/listening` | system | the listening judge, `core/turn/listening.py` | v7 |
 | `system/explicit-lead` | system | whether their message itself is sexually explicit, read only when intimate talk would start on the roleplay talker (ADR 0017) | v1 |
 | `system/brush-off` | system | whether their message pushes the flirting or the scene back, even jokingly; asked only of a turn the roleplay talker would answer | v1 |
 | `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
@@ -119,8 +119,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding (shadow) | v1 |
 | `system/openloops` | system | open-loop extraction, `features/openloops/logic.py` | v3 |
 | `system/openloops-draft` | system | the follow-up draft, `features/openloops/run.py` | v2 |
-| `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, `core/quip.py` | v2 |
-| `system/react` | system | the reaction judge, `core/react.py` | v1 |
+| `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, `core/turn/quip.py` | v2 |
+| `system/react` | system | the reaction judge, `core/turn/react.py` | v1 |
 | `system/recall` | system | the recall look-up, `core/recall.py` | v1 |
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |

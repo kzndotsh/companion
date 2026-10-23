@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from companion.core.ack import Reaction
+from companion.core.turn.ack import Reaction
 from companion.core.types import Json
 from companion.prompts import get
 

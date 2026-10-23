@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from companion import prompts
-from companion.core.mood import (
+from companion.core.turn.mood import (
     LINE_AT,
     Inputs,
     Source,

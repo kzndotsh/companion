@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.basics import name_belief
 from companion.core.extractor import Extraction
+from companion.core.turn.basics import name_belief
 from companion.core.types import (
     Belief,
     BeliefId,

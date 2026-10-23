@@ -8,7 +8,7 @@ from collections.abc import Coroutine, Sequence
 from dataclasses import dataclass, field
 
 from companion.core.extractor import Extractor
-from companion.core.moves import FRESH_FOR, PROMPT, SCHEMA, build_prompt, note_for, parse
+from companion.core.turn.moves import FRESH_FOR, PROMPT, SCHEMA, build_prompt, note_for, parse
 from companion.loops.ask import Judge, ask
 
 TIMEOUT_SECONDS = 6.0

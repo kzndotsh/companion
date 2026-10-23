@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.basics import name_belief
 from companion.core.extractor import FALLBACK, Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
+from companion.core.turn.basics import name_belief
 from companion.core.types import (
     Frame,
     Json,
@@ -318,7 +318,7 @@ async def test_a_first_flirty_line_gets_the_everyday_talker_and_the_next_one_rou
 async def test_a_push_back_in_a_scene_is_answered_by_the_everyday_talker_with_a_note(
     store: Store,
 ) -> None:
-    from companion.core.floor import BRUSH_NOTE  # noqa: PLC0415
+    from companion.core.turn.floor import BRUSH_NOTE  # noqa: PLC0415
 
     everyday, scene = Talker("everyday"), Talker("scene")
     playing = Conversation(store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene)

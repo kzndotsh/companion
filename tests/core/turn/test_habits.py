@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from companion.core.habits import echo_note, has_marks, opener_note
+from companion.core.turn.habits import echo_note, has_marks, opener_note
 from companion.core.types import Speaker, Utterance
 
 
@@ -47,7 +47,7 @@ def test_nothing_said_yet_gives_no_note() -> None:
 
 
 def test_a_phrase_reused_across_replies_is_named(utterance: Callable[..., Utterance]) -> None:
-    from companion.core.habits import repeated_phrases  # noqa: PLC0415
+    from companion.core.turn.habits import repeated_phrases  # noqa: PLC0415
 
     prior = _chat(
         utterance,
@@ -62,7 +62,7 @@ def test_a_phrase_reused_across_replies_is_named(utterance: Callable[..., Uttera
 
 
 def test_function_words_alone_are_not_a_habit(utterance: Callable[..., Utterance]) -> None:
-    from companion.core.habits import repeated_phrases  # noqa: PLC0415
+    from companion.core.turn.habits import repeated_phrases  # noqa: PLC0415
 
     prior = _chat(utterance, ["and then i am here", "so and then i am there", "and then i am ok"])
     assert repeated_phrases(prior) == []
@@ -71,7 +71,7 @@ def test_function_words_alone_are_not_a_habit(utterance: Callable[..., Utterance
 def test_the_phrase_must_come_from_enough_different_replies(
     utterance: Callable[..., Utterance],
 ) -> None:
-    from companion.core.habits import repeated_phrases  # noqa: PLC0415
+    from companion.core.turn.habits import repeated_phrases  # noqa: PLC0415
 
     prior = _chat(utterance, ["snug blanket around you, snug blanket around you", "different"])
     assert repeated_phrases(prior) == []
@@ -80,7 +80,7 @@ def test_the_phrase_must_come_from_enough_different_replies(
 def test_the_habit_note_joins_opener_and_phrase_notes(
     utterance: Callable[..., Utterance],
 ) -> None:
-    from companion.core.habits import habit_note  # noqa: PLC0415
+    from companion.core.turn.habits import habit_note  # noqa: PLC0415
 
     prior = _chat(
         utterance,

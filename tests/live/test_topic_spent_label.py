@@ -16,7 +16,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.mood import held_because
+from companion.core.turn.mood import held_because
 from companion.core.types import (
     Frame,
     RelationshipId,

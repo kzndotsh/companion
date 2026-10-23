@@ -9,8 +9,6 @@ from dataclasses import dataclass
 from datetime import UTC
 from typing import TYPE_CHECKING
 
-from companion.core.address import KEY as ADDRESS_KEY
-from companion.core.address import address_note
 from companion.core.card import EVENT_SHOWN_DAYS, Card, build_card, render
 from companion.core.clock import now_line
 from companion.core.frames import (
@@ -21,6 +19,8 @@ from companion.core.history import to_messages
 from companion.core.prompt.request import TalkerRequest, build_request
 from companion.core.prompt.sections import tagged
 from companion.core.replay import TAIL
+from companion.core.turn.address import KEY as ADDRESS_KEY
+from companion.core.turn.address import address_note
 from companion.core.types import (
     Belief,
     BeliefId,

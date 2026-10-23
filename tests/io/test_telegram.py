@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import httpx
 import pytest
 
-from companion.core.ack import ReactAndReply, Reaction
+from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.io.telegram import Hooks, Telegram, TelegramError
 
 ALLOWED = 42

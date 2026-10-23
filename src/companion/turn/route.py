@@ -6,9 +6,9 @@ import logging
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import from_fallback
-from companion.core.floor import BRUSHED, Route
-from companion.core.floor import Talker as RouteTalker
-from companion.core.floor import choose as choose_route
+from companion.core.turn.floor import BRUSHED, Route
+from companion.core.turn.floor import Talker as RouteTalker
+from companion.core.turn.floor import choose as choose_route
 from companion.core.types import (
     Decision,
     Frame,

@@ -12,9 +12,9 @@ from dataclasses import dataclass, field
 
 import httpx
 
-from companion.core.ack import ReactAndReply, Reaction
-from companion.core.pace import hold_seconds
-from companion.core.split import split_reply
+from companion.core.turn.ack import ReactAndReply, Reaction
+from companion.io.pace import hold_seconds
+from companion.io.split import split_reply
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")

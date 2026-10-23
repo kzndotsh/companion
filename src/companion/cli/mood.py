@@ -9,7 +9,7 @@ from itertools import pairwise
 from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
-from companion.core.mood import WINDOW, Mood, Replayed, mood_at, reason, replay
+from companion.core.turn.mood import WINDOW, Mood, Replayed, mood_at, reason, replay
 from companion.core.types import RelationshipId
 from companion.store.sqlite.store import Store
 

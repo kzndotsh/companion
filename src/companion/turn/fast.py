@@ -6,15 +6,15 @@ import logging
 import uuid
 from datetime import datetime
 
-from companion.core.ack import (
-    ReactAndReply,
-    Reaction,
-)
 from companion.core.clock import utc_now
 from companion.core.frames import (
     scene_frame,
 )
 from companion.core.history import HISTORY_LIMIT
+from companion.core.turn.ack import (
+    ReactAndReply,
+    Reaction,
+)
 from companion.core.types import (
     Frame,
     SessionId,

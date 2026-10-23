@@ -5,7 +5,7 @@ live in `turn/` (`hear`, `route`, `notes`, `assemble`, `talk`, `beside`, `persis
 the driver, `handle(convo, ...)`).
 
 - Each message outside a scene is read for how serious it is before the reply, and code adds a
-  listening note (`core/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity
+  listening note (`core/turn/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity
   3) get no note and there is no crisis path yet. The same judge labels a message rude to the
   companion (a one-turn note for a cool reply) and a request to remember something; then a small model
   looks the topic up across every belief and the finds ride that turn's system block
@@ -16,11 +16,11 @@ the driver, `handle(convo, ...)`).
 - Coming back 3 hours or more after a talk that turned serious (severity 2 in its last 12 hours),
   the next ordinary message gets one note to ask gently how they are now (`notes/check-in`), once per
   heavy talk.
-- A mood that carries (ADR 0016, `core/mood.py`): each message adds effects to cozy, tender or
+- A mood that carries (ADR 0016, `core/turn/mood.py`): each message adds effects to cozy, tender or
   playful in an append-only table, the mood is worked out from them when read, and only what the user
   did can move it (no source for silence, goodbyes, gaps or failed calls). `COMPANION_MOOD` is shadow,
   on or off; `uv run companion mood --replay 7` rebuilds it over past messages from the same rules.
-- Which talker answers is chosen in code (`core/floor.py`, ADR 0017): the roleplay talker for a
+- Which talker answers is chosen in code (`core/turn/floor.py`, ADR 0017): the roleplay talker for a
   pretend scene, or for intimate talk when `COMPANION_ROUTE_INTIMATE=on` once it is under way (their
   message before was intimate too, or this one is explicit by `system/explicit-lead`; a first flirty
   line gets the everyday talker), unless the listening judge reads the turn as age-coded or could not
@@ -43,7 +43,7 @@ the driver, `handle(convo, ...)`).
   once more (twice if the redraw still has an em dash) and the last reply goes out whatever it is; the
   first is kept in the decision detail. Nothing is ever edited, and an empty reply is drawn once more
   instead of a silent turn. `COMPANION_RESAMPLE=off` turns it off.
-- When one of its last two replies owned a slip ("my bad", "I got that wrong"; `core/ownup.py`,
+- When one of its last two replies owned a slip ("my bad", "I got that wrong"; `core/turn/ownup.py`,
   sympathy is not one), the next turn outside a scene gets `notes/owned-it` after the history, as a
   system message: that was enough, no more apologies or self-blame. In the system block it moved
   nothing; after the history it did, but only early in a run of apologies (measured). Text sent after

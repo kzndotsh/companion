@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 from itertools import pairwise
 
-from companion.core.energy import texting_energy
+from companion.core.turn.energy import texting_energy
 from companion.core.types import TurnId
 from companion.prompts import get
 

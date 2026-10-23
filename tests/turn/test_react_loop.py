@@ -5,11 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.ack import ReactAndReply, Reaction
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
+from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.core.types import Json, RelationshipId, SessionId
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store

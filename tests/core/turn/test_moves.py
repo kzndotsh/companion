@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from companion.core.moves import (
+from companion.core.turn.moves import (
     MAX_HABIT_CHARS,
     MAX_HABITS,
     MIN_SEEN_IN,

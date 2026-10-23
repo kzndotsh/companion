@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from companion.core.basics import NAME_CAPTURE, NAME_SCHEMA, parse_name
 from companion.core.extractor import Extractor
+from companion.core.turn.basics import NAME_CAPTURE, NAME_SCHEMA, parse_name
 from companion.loops.ask import Judge, ask
 
 TIMEOUT_SECONDS = 3.0

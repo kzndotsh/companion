@@ -11,13 +11,13 @@ import httpx
 
 from companion import characters, prompts
 from companion.core.clock import utc_now
-from companion.core.length import length_target
-from companion.core.listening import SERIOUS, listening_note, rude_note
-from companion.core.listening import Judgement as ListenJudgement
 from companion.core.prompt.prefix import Prefix, build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.replay import ReplayError
 from companion.core.talker import Talker
+from companion.core.turn.length import length_target
+from companion.core.turn.listening import SERIOUS, listening_note, rude_note
+from companion.core.turn.listening import Judgement as ListenJudgement
 from companion.daemon import load_dotenv
 from companion.evals import judge as judge_module
 from companion.evals.fixtures import (

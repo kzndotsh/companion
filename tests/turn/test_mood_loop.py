@@ -7,10 +7,10 @@ import pytest
 
 from companion import prompts
 from companion.core.extractor import Extraction
-from companion.core.mood import Source, State, effect
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
+from companion.core.turn.mood import Source, State, effect
 from companion.core.types import (
     Belief,
     BeliefId,

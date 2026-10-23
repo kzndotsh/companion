@@ -9,7 +9,7 @@ How a message comes in and a reply goes out over Telegram (`io/telegram.py`).
 - A long, plain reply is sometimes sent as two or three messages (`COMPANION_SPLIT`, on unless
   `off`). The ledger and the history keep it as one reply, so the model never sees the splitting. Cuts
   fall at sentence boundaries only, and a reply with quoted speech (roleplay) is never split
-  (`core/split.py`).
+  (`io/split.py`).
 - A plain message that arrives while the previous one is still being answered (written or held)
   replaces that answer, and the dropped reply is marked undelivered, so the new reply sees both
   messages. A split reply cut off after some of its messages went out (superseded, or a send that

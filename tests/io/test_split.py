@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.split import MIN_PART_WORDS, SPLIT_CHANCE, eligible, sentences, split_reply
+from companion.io.split import MIN_PART_WORDS, SPLIT_CHANCE, eligible, sentences, split_reply
 
 TWO = (
     "A lot of it is learned association: the smell is tied to waking up, comfort, and that first "

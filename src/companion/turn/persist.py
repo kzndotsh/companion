@@ -9,12 +9,6 @@ from collections.abc import AsyncGenerator
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from companion.core.ack import (
-    ReactAndReply,
-    Reaction,
-    inputs_hash,
-)
-from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name_belief
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
 )
@@ -25,14 +19,20 @@ from companion.core.frames import (
 )
 from companion.core.frames import render_reason as frame_reason
 from companion.core.frames import resolve as frame_resolve
-from companion.core.moves import PROMPT as HABITS_PROMPT
-from companion.core.moves import replies_to_read
 from companion.core.prompt.request import request_sha256
-from companion.core.react import PROMPT as REACT_PROMPT
-from companion.core.react import Judgement as ReactJudgement
-from companion.core.react import decide as decide_reaction
 from companion.core.replay import TurnRecord
 from companion.core.talker import Reply
+from companion.core.turn.ack import (
+    ReactAndReply,
+    Reaction,
+    inputs_hash,
+)
+from companion.core.turn.basics import NAME_CAPTURE, asked_for_name, knows_name, name_belief
+from companion.core.turn.moves import PROMPT as HABITS_PROMPT
+from companion.core.turn.moves import replies_to_read
+from companion.core.turn.react import PROMPT as REACT_PROMPT
+from companion.core.turn.react import Judgement as ReactJudgement
+from companion.core.turn.react import decide as decide_reaction
 from companion.core.types import (
     DecisionKind,
     Frame,

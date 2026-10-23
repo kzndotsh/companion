@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.floor import Talker, choose
+from companion.core.turn.floor import Talker, choose
 
 
 def _route(**over: object) -> Talker:
@@ -53,7 +53,7 @@ def test_a_floor_trip_and_a_missing_reading_are_logged_and_a_plain_turn_is_not()
 
 
 def test_intimate_talk_waits_until_it_is_under_way_but_a_scene_never_does() -> None:
-    from companion.core.floor import STARTING  # noqa: PLC0415
+    from companion.core.turn.floor import STARTING  # noqa: PLC0415
 
     starting = choose(
         in_play=False, intimate=True, allow_intimate=True, judged_age_coded=False, under_way=False
@@ -68,7 +68,7 @@ def test_intimate_talk_waits_until_it_is_under_way_but_a_scene_never_does() -> N
 
 
 def test_a_push_back_goes_to_the_everyday_talker_without_a_hold_but_the_floor_comes_first() -> None:
-    from companion.core.floor import BRUSHED  # noqa: PLC0415
+    from companion.core.turn.floor import BRUSHED  # noqa: PLC0415
 
     def route(**over: object):
         base: dict[str, object] = {

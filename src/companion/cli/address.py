@@ -8,8 +8,8 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from companion.core.address import KEY, address_note
 from companion.core.clock import utc_now
+from companion.core.turn.address import KEY, address_note
 from companion.core.types import RelationshipId
 from companion.store.sqlite.store import Store
 

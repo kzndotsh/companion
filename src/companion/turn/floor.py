@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from companion.core.extractor import Extractor
-from companion.core.floor import (
+from companion.core.turn.floor import (
     BRUSH_OFF,
     BRUSH_SCHEMA,
     EXPLICIT_LEAD,

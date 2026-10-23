@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.mood import Source, effect
+from companion.core.turn.mood import Source, effect
 from companion.core.types import TurnId
 from companion.lib.sqlite.db import connect, iso
 from companion.store.sqlite.store import Store

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.listening import (
+from companion.core.turn.listening import (
     Judgement,
     listening_note,
     offered_recently,
@@ -150,7 +150,7 @@ def test_the_logged_reason_names_the_labels_and_the_missing_crisis_path() -> Non
 
 
 def test_a_rude_message_gets_the_rude_note_and_nothing_else_does() -> None:
-    from companion.core.listening import Judgement, rude_note  # noqa: PLC0415
+    from companion.core.turn.listening import Judgement, rude_note  # noqa: PLC0415
 
     assert rude_note(Judgement(0, "other", vague=False, rude=True)) is not None
     assert rude_note(Judgement(0, "other", vague=False)) is None

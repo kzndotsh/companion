@@ -13,7 +13,7 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-from companion.core.pace import DEFAULT_PACE, PACES, pace_factor
+from companion.io.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.models import anthropic, embeddings, openrouter
 
 ROLEPLAY_MODEL = "deepseek/deepseek-v4.1-flash"

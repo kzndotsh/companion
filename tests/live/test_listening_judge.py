@@ -16,7 +16,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.listening import SCHEMA, SYSTEM, Judgement, parse
+from companion.core.turn.listening import SCHEMA, SYSTEM, Judgement, parse
 from companion.daemon import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 

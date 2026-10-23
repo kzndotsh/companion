@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from companion.core.ack import (
+from companion.core.turn.ack import (
     REACT_THRESHOLD,
     Judgement,
     Reaction,

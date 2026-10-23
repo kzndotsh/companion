@@ -7,19 +7,19 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
-from companion.core.floor import INTIMATE_CHECK
 from companion.core.frames import (
     Judgement,
     needs_judge,
 )
 from companion.core.prompt.request import TalkerRequest
-from companion.core.quip import PROMPT as QUIP_PROMPT
-from companion.core.react import Judgement as ReactJudgement
 from companion.core.recheck import DASHED as EM_DASH_CHECK
 from companion.core.recheck import QUIP, code_checks
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.recheck import eligible as recheck_eligible
 from companion.core.talker import Reply, Talker
+from companion.core.turn.floor import INTIMATE_CHECK
+from companion.core.turn.quip import PROMPT as QUIP_PROMPT
+from companion.core.turn.react import Judgement as ReactJudgement
 from companion.core.types import (
     Frame,
     Json,

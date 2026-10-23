@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.react import MIN_CONFIDENCE, MIN_GAP, Judgement, decide, parse
+from companion.core.turn.react import MIN_CONFIDENCE, MIN_GAP, Judgement, decide, parse
 
 
 def _j(tone: str = "funny", confidence: float = 0.9, emoji: str = "😁") -> Judgement:

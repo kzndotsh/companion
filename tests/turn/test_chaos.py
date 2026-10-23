@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.ack import ReactAndReply, Reaction
 from companion.core.extractor import FALLBACK, Extraction
+from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.core.types import Json, Speaker, TurnId
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store

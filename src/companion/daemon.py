@@ -14,13 +14,13 @@ import httpx
 
 from companion import backups, characters, prompts
 from companion.characters import Character
-from companion.core.ack import ReactAndReply, Reaction
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
+from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck

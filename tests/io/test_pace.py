@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.pace import (
+from companion.io.pace import (
     DEFAULT_PACE,
     MAX_SECONDS,
     PACES,

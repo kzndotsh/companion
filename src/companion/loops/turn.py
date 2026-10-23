@@ -11,12 +11,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from companion.core.ack import Reaction
 from companion.core.frames import Judgement as FrameJudgement
-from companion.core.listening import Judgement as ListenJudgement
-from companion.core.mood import held_because
-from companion.core.react import Judgement as ReactJudgement
 from companion.core.talker import Reply, Talker
+from companion.core.turn.ack import Reaction
+from companion.core.turn.listening import Judgement as ListenJudgement
+from companion.core.turn.mood import held_because
+from companion.core.turn.react import Judgement as ReactJudgement
 from companion.core.types import (
     DecisionKind,
     Frame,
