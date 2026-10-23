@@ -1,7 +1,14 @@
 from __future__ import annotations
 
-from companion.core.invented import Statement, Support, build_prompt, invented, parse, report
 from companion.core.types import Json
+from companion.features.invented.logic import (
+    Statement,
+    Support,
+    build_prompt,
+    invented,
+    parse,
+    report,
+)
 
 REPLY = "since you're always up late, grab a snack. i love rainy nights"
 

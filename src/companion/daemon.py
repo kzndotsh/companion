@@ -22,7 +22,6 @@ from companion.core.ack import ReactAndReply, Reaction
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
-from companion.core.invented import report as invented_report
 from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
@@ -32,6 +31,8 @@ from companion.features.callbacks.logic import report
 from companion.features.callbacks.run import check_new
 from companion.features.context.run import write_missing
 from companion.features.episodes.run import write_closed
+from companion.features.invented.logic import report as invented_report
+from companion.features.invented.run import check_new as check_invented
 from companion.features.knowing.run import label_new
 from companion.features.lore.run import label_views
 from companion.features.names.run import read_names
@@ -44,7 +45,6 @@ from companion.lib import logs, retry
 from companion.loops import curate, merging
 from companion.loops.consolidate import SameCheck
 from companion.loops.fast import Conversation
-from companion.loops.invented import check_new as check_invented
 from companion.loops.nightly import missed, night
 from companion.loops.rebuild import rebuild
 from companion.loops.slow import reflect_from, reflect_once

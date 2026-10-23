@@ -7,8 +7,8 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.invented import Statement, Support
 from companion.core.types import RelationshipId, TurnId
+from companion.features.invented.logic import Statement, Support
 from companion.lib.sqlite.db import iso, write_tx
 
 RECENT = 40  # messages the judge sees before the reply, their message included: what the talker saw

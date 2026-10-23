@@ -8,9 +8,9 @@ from datetime import datetime
 from companion.core.card import memories_from_card
 from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
-from companion.core.invented import PROMPT, SCHEMA, SYSTEM, build_prompt, parse
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId, TurnId
+from companion.features.invented.logic import PROMPT, SCHEMA, SYSTEM, build_prompt, parse
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.invented")

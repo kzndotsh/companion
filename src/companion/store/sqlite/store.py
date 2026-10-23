@@ -9,7 +9,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 
-from companion.core.invented import Statement
 from companion.core.mood import Effect, Said
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
@@ -40,6 +39,8 @@ from companion.features.callbacks import store as callbacks
 from companion.features.callbacks.logic import Check
 from companion.features.context import store as contexts
 from companion.features.episodes import store as episodes
+from companion.features.invented import store as invented
+from companion.features.invented.logic import Statement
 from companion.features.lore.logic import Kind as ViewKind
 from companion.features.lore.logic import Labelled as ViewLabel
 from companion.features.names import store as names
@@ -58,7 +59,6 @@ from companion.store.sqlite import (
     embeddings,
     favorites,
     flags,
-    invented,
     labels,
     ledger,
     memory_checks,
