@@ -10,7 +10,15 @@ from datetime import UTC, datetime, timedelta
 from companion.core.extractor import Extractor
 from companion.core.quoted import AFTER, BEFORE, build_prompt
 from companion.core.types import Belief, RelationshipId
-from companion.core.worth import PROMPT, ROUTINE_DAYS, SCHEMA, Label, read, to_ask, verdict
+from companion.features.worth.logic import (
+    PROMPT,
+    ROUTINE_DAYS,
+    SCHEMA,
+    Label,
+    read,
+    to_ask,
+    verdict,
+)
 from companion.loops.features import Feature
 from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store

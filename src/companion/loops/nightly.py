@@ -11,9 +11,9 @@ from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
 from companion.core.types import RelationshipId
 from companion.features.episodes.run import write_closed
+from companion.features.worth.run import expire_routine
 from companion.loops import merging
 from companion.loops.consolidate import nightly
-from companion.loops.worth import expire_routine
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.nightly")

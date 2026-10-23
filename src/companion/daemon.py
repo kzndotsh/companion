@@ -33,6 +33,7 @@ from companion.features.episodes.run import write_closed
 from companion.features.lore.run import label_views
 from companion.features.names.run import read_names
 from companion.features.reminders.run import deliver_due
+from companion.features.worth.run import label
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops import merging
 from companion.loops.callbacks import check_new
@@ -48,7 +49,6 @@ from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
-from companion.loops.worth import label
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import RefusalFallback, TalkerFallback
 from companion.models.retry import retry_on_network_error

@@ -4,12 +4,11 @@ from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
 
-from tests.conftest import REL, T0
-
 from companion.core.extractor import Extraction
 from companion.core.types import Belief, Json, Utterance
-from companion.loops.worth import expire_routine, label
+from companion.features.worth.run import expire_routine, label
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 
 class Labeller:

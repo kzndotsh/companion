@@ -10,10 +10,10 @@ from companion.features.names.run import NAMES
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
 from companion.features.topics.run import TOPICS
+from companion.features.worth.run import WORTH
 from companion.loops.context import CONTEXT
 from companion.loops.features import Feature
 from companion.loops.knowing import KNOWING
-from companion.loops.worth import WORTH
 
 FEATURES: tuple[Feature, ...] = (
     KNOWING,

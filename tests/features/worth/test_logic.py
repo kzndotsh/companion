@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.core.worth import ASK_ABOUT_THE_BOT, ASK_ROUTINE, to_ask, verdict
+from companion.features.worth.logic import ASK_ABOUT_THE_BOT, ASK_ROUTINE, to_ask, verdict
 
 
 def test_code_acts_only_when_every_read_agrees() -> None:
