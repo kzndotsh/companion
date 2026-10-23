@@ -31,6 +31,7 @@ class Judge[T]:
     timeout: float  # seconds
     unread: str  # what a failed or unusable read means, for the log ("no note")
     trust_fallback: bool = True  # False: a fallback model's answer counts as unread (ADR 0017)
+    attempts: int = 1  # tries when a call fails or runs out of time; an unreadable answer is final
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,13 +45,18 @@ class Read[T]:
 async def ask[T](extractor: Extractor, judge: Judge[T], user: str) -> Read[T] | None:
     """Ask the judge once. None when the call failed, ran past its time, came from the fallback
     model where that is not trusted, or could not be parsed, each logged with what it means."""
-    try:
-        with purpose(judge.name):
-            got = await asyncio.wait_for(
-                extractor.extract(judge.prompt.text, user, judge.schema), judge.timeout
-            )
-    except Exception as err:
-        log.warning("%s judge failed or timed out; %s: %r", judge.name, judge.unread, err)
+    got = None
+    for attempt in range(1, judge.attempts + 1):
+        try:
+            with purpose(judge.name):
+                got = await asyncio.wait_for(
+                    extractor.extract(judge.prompt.text, user, judge.schema), judge.timeout
+                )
+            break
+        except Exception as err:
+            log.warning("%s judge failed or timed out (try %d): %r", judge.name, attempt, err)
+    if got is None:
+        log.warning("%s judge could not be read; %s", judge.name, judge.unread)
         return None
     if not judge.trust_fallback and from_fallback(got.model):
         log.info(

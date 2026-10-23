@@ -75,3 +75,17 @@ async def test_a_fallback_answer_counts_only_where_it_is_trusted() -> None:
     trusted = await ask(fake, _judge(), "x")
     assert trusted is not None
     assert trusted.value is True
+
+
+async def test_a_failed_call_is_tried_again_up_to_its_attempts() -> None:
+    class Flaky(Fake):
+        async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+            self.fail = len(self.seen) == 0  # the first try fails, the second answers
+            return await super().extract(system, user, schema)
+
+    once = Judge("t", PROMPT, SCHEMA, _parse, timeout=1.0, unread="x")
+    twice = Judge("t", PROMPT, SCHEMA, _parse, timeout=1.0, unread="x", attempts=2)
+    assert await ask(Flaky({"declines": True}), once, "x") is None
+    got = await ask(Flaky({"declines": True}), twice, "x")
+    assert got is not None
+    assert got.value is True
