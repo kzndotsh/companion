@@ -6,13 +6,29 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
+from companion.core.card import HOLD_AT, Card
 from companion.core.extractor import Extractor
+from companion.core.frames import is_assertable
 from companion.core.spend import purpose
-from companion.core.types import RelationshipId
-from companion.features.names.logic import BATCH, PROMPT, SCHEMA, parse, prompt
+from companion.core.types import Frame, RelationshipId
+from companion.features.names.logic import (
+    BATCH,
+    PROMPT,
+    SCHEMA,
+    SHADOW,
+    index,
+    mentioned,
+    parse,
+    prompt,
+)
 from companion.loops.features import Feature
+from companion.loops.turn import Heard, Turn, decide
 from companion.store.sqlite.store import Store
+
+if TYPE_CHECKING:
+    from companion.loops.fast import Conversation
 
 log = logging.getLogger("companion.names")
 
@@ -56,4 +72,35 @@ async def read_names(
     return NamesRead(done, found, left, cost)
 
 
-NAMES = Feature("names", after_theirs=read_names)  # the names in new memories, for fetch on mention
+async def named_in_turn(
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
+) -> None:
+    """When their message names something memory knows, log the memories about it that the card
+    left out (shadow, code only). Nothing reaches the talker."""
+    if heard is None or in_scene is not Frame.REAL:
+        return
+    sharing = heard[0].severity >= 1
+    visible = {
+        b.id
+        for b in c.store.user_beliefs(c.rel)
+        if is_assertable(b) and (sharing or b.sensitivity < HOLD_AT)
+    }
+    named = mentioned(t.text, index(c.store.name_rows(c.rel), visible))
+    if not named:
+        return
+    on_card = {b.id for b in (*card.usable, *card.held, *card.older)}
+    about = {bid for n in named for bid in n.beliefs}
+    decide(
+        c,
+        t,
+        SHADOW,
+        {
+            "names": [str(n.name) for n in named],
+            "would_add": [str(b) for b in sorted(about - on_card)],
+            "on_card": [str(b) for b in sorted(about & on_card)],
+        },
+    )
+
+
+# The names in new memories, read after a memory pass; matched against their message in shadow.
+NAMES = Feature("names", after_theirs=read_names, shadow=named_in_turn)

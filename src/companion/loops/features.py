@@ -8,13 +8,14 @@ field on `Lookups`, no branch in `look`, no entry written by hand in `SOURCES`.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
     from datetime import datetime
 
+    from companion.core.card import Card
     from companion.core.extractor import Extractor
     from companion.core.types import Frame, RelationshipId
     from companion.loops.fast import Conversation
@@ -34,6 +35,11 @@ class Offer:
 
 
 type Look = Callable[[Conversation, Turn, Frame, Heard | None], Awaitable[object]]
+# A look-up in shadow: run beside the turn once the reply is out, with the card it was sent; it logs
+# what it would have done and never changes the reply. A failure is logged by `loops/beside.py`.
+type Shadow = Callable[
+    [Conversation, Turn, Frame, Heard | None, Card], Coroutine[object, object, None]
+]
 Offered = Mapping[str, Offer]  # what the notes before this one offered, by name
 
 # A note gets what its look-up found (None when it found nothing) and what earlier notes offered.
@@ -62,3 +68,4 @@ class Feature:
     note: Note | None = None
     after_theirs: Step | None = None  # after a memory pass stored new memories of theirs
     after_own: Step | None = None  # after a memory pass stored new views of its own
+    shadow: Shadow | None = None

@@ -5,34 +5,33 @@ Runs beside the turn and never holds the reply up. A failure logs what failed an
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
-
-from companion.core.types import Frame, Speaker
-from companion.features.relevance.logic import GATE as RELEVANCE_GATE
-from companion.features.relevance.logic import LIVE as RELEVANCE_LIVE
-from companion.features.relevance.logic import SHOWN as RELEVANCE_SHOWN
-from companion.loops.features import Feature, Offer, Offered
-from companion.loops.turn import Heard, Turn, decide, mark
-from companion.prompts import get
-
-if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
-    from companion.loops.notes import Moment
-
 import asyncio
 import logging
 import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING, cast
 
+from companion.core.card import Card
 from companion.core.extractor import Extractor
 from companion.core.spend import purpose
-from companion.core.types import Belief, BeliefId, Json, RelationshipId
+from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Speaker
 from companion.core.vectors import Embedder, nearest
+from companion.features.relevance.logic import GATE as RELEVANCE_GATE
+from companion.features.relevance.logic import LIVE as RELEVANCE_LIVE
 from companion.features.relevance.logic import PROMPT, SCHEMA, build_prompt, eligible, parse
+from companion.features.relevance.logic import SHADOW as RELEVANCE_SHADOW
+from companion.features.relevance.logic import SHOWN as RELEVANCE_SHOWN
 from companion.loops.ask import Judge, ask
+from companion.loops.features import Feature, Offer, Offered
+from companion.loops.turn import Heard, Turn, decide, mark
+from companion.prompts import get
 from companion.store.sqlite.store import Store
+
+if TYPE_CHECKING:
+    from companion.loops.fast import Conversation
+    from companion.loops.notes import Moment
 
 log = logging.getLogger("companion.relevance")
 TIMEOUT_SECONDS = 10.0
@@ -238,4 +237,34 @@ def relevant_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer((RELEVANT_NOTE.render(items="\n".join(f"- {p}" for p in picks)),))
 
 
-RELEVANCE = Feature("relevant", look=relevant_for_turn, note=relevant_offer)
+async def shadow_for_turn(
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
+) -> None:
+    """With the look-up in shadow: what it would have kept in mind on an ordinary message, logged
+    beside the turn; it never holds up or changes the reply."""
+    if (
+        c.relevance != "shadow"
+        or c.embedder is None
+        or c.judge is None
+        or (heard is None and not c.listen)
+        or in_scene is not Frame.REAL
+    ):
+        return
+    replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
+    found = await shadow(
+        c.store,
+        c.embedder,
+        c.judge,
+        c.rel,
+        model=c.embed_model,
+        said=t.text,
+        last_reply=replies[-1] if replies else None,
+        sharing=heard is not None and heard[0].severity >= 1,
+        on_card=[b.id for b in (*card.usable, *card.held, *card.older)],
+        now=t.now,
+    )
+    if found is not None:
+        decide(c, t, RELEVANCE_SHADOW, found.detail)
+
+
+RELEVANCE = Feature("relevant", look=relevant_for_turn, note=relevant_offer, shadow=shadow_for_turn)

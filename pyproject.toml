@@ -106,13 +106,11 @@ type = "independence"
 modules = ["companion.features.*"]
 # The hubs that know features by design. The store facade and its tables may use a feature's
 # queries and its pure types (the rows it stores), never its effects or command; the registry lists
-# every feature; the shadow stage runs the features' shadow look-ups. A feature reaching a hub does
-# not make it depend on the others.
+# every feature. A feature reaching a hub does not make it depend on the others.
 ignore_imports = [
     "companion.store.sqlite.** -> companion.features.*.store",
     "companion.store.sqlite.** -> companion.features.*.logic",
     "companion.loops.registry -> companion.features.**",
-    "companion.loops.beside -> companion.features.**",
 ]
 
 [[tool.importlinter.contracts]]

@@ -8,11 +8,8 @@ import logging
 from collections.abc import Coroutine
 from typing import TYPE_CHECKING
 
-from companion.core.card import HOLD_AT, Card
+from companion.core.card import Card
 from companion.core.extractor import Extractor
-from companion.core.frames import (
-    is_assertable,
-)
 from companion.core.hooks import KNEW as HOOK_KNEW
 from companion.core.hooks import PROMPT as HOOK_PROMPT
 from companion.core.hooks import SCHEMA as HOOK_SCHEMA
@@ -29,16 +26,11 @@ from companion.core.types import (
     Frame,
     Speaker,
 )
-from companion.core.vectors import Embedder
-from companion.features.names.logic import SHADOW as NAMES_SHADOW
-from companion.features.names.logic import index as name_index
-from companion.features.names.logic import mentioned
-from companion.features.relevance.logic import SHADOW as RELEVANCE_SHADOW
-from companion.features.relevance.run import shadow as relevance_shadow
 from companion.loops.ask import Judge, ask
 from companion.loops.hooks import TIMEOUT_SECONDS as HOOK_TIMEOUT
 from companion.loops.hooks import stated
 from companion.loops.reads import read_times
+from companion.loops.registry import FEATURES
 from companion.loops.turn import Heard, Turn, decide, is_casual
 
 if TYPE_CHECKING:
@@ -67,47 +59,12 @@ def beside(job: Coroutine[object, object, None]) -> None:
     task.add_done_callback(done)
 
 
-def _relevance_beside(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
-) -> None:
-    """Start the relevance look-up beside the turn on an ordinary message (shadow). It logs what it
-    would have kept in mind and never holds up or changes the reply."""
-    if (
-        c.relevance != "shadow"
-        or c.embedder is None
-        or c.judge is None
-        or (heard is None and not c.listen)
-        or in_scene is not Frame.REAL
-    ):
-        return
-    replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
-    on_card = [b.id for b in (*card.usable, *card.held, *card.older)]
-
-    async def run(embedder: Embedder, judge: Extractor) -> None:
-        found = await relevance_shadow(
-            c.store,
-            embedder,
-            judge,
-            c.rel,
-            model=c.embed_model,
-            said=t.text,
-            last_reply=replies[-1] if replies else None,
-            sharing=heard is not None and heard[0].severity >= 1,
-            on_card=on_card,
-            now=t.now,
-        )
-        if found is None:
-            return
-        decide(c, t, RELEVANCE_SHADOW, found.detail)
-
-    beside(run(c.embedder, c.judge))
-
-
 def shadows(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
-    """What runs in shadow on a turn and never changes the reply: the relevance look-up, the names
-    it was told, and the basic it would ask about."""
-    _relevance_beside(c, t, in_scene, heard, card)
-    _names_shadow(c, t, in_scene, heard, card)
+    """What runs in shadow on a turn and never changes the reply: each feature's shadow look-up,
+    whether they are stepping away, and the basic it would ask about."""
+    for feature in FEATURES:
+        if feature.shadow is not None:
+            beside(feature.shadow(c, t, in_scene, heard, card))
     _hook_beside(c, t, in_scene, heard)
     _away_beside(c, t, in_scene, heard)
 
@@ -186,33 +143,3 @@ def _hook_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None)
         )
 
     beside(run(c.judge))
-
-
-def _names_shadow(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
-) -> None:
-    """When their message names something memory knows, log the memories about it that the card
-    left out (shadow, code only). Nothing reaches the talker."""
-    if heard is None or in_scene is not Frame.REAL:
-        return
-    sharing = heard[0].severity >= 1
-    visible = {
-        b.id
-        for b in c.store.user_beliefs(c.rel)
-        if is_assertable(b) and (sharing or b.sensitivity < HOLD_AT)
-    }
-    named = mentioned(t.text, name_index(c.store.name_rows(c.rel), visible))
-    if not named:
-        return
-    on_card = {b.id for b in (*card.usable, *card.held, *card.older)}
-    about = {bid for n in named for bid in n.beliefs}
-    decide(
-        c,
-        t,
-        NAMES_SHADOW,
-        {
-            "names": [str(n.name) for n in named],
-            "would_add": [str(b) for b in sorted(about - on_card)],
-            "on_card": [str(b) for b in sorted(about & on_card)],
-        },
-    )

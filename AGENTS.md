@@ -89,14 +89,14 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
   `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
-  failed one adds nothing that turn. A shadow look-up runs through `beside` in `loops/beside.py`, which logs a failure.
+  failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `loops/beside.py` runs each beside the turn and logs a failure.
 - A turn runs in stages, one module each: `loops/hear.py` (a reaction instead of a reply, the listening
   read), `loops/route.py` (which talker), `loops/notes.py` `look` (the look-ups), `loops/assemble.py` (the
   request), `loops/talk.py` (the talker and the reply checks), `loops/beside.py` (shadow tasks) and
   `loops/persist.py` (their message kept once, the reply stored). `loops/fast.py` is only the driver: change a
   stage in its module.
 - A feature declares its parts as a `Feature` in its own module (`loops/features.py`): a look-up before the
-  reply, a note, and steps after a memory pass. It is one line in `FEATURES` (`loops/registry.py`); a note
+  reply, a note, steps after a memory pass, and a look-up in shadow beside the turn. It is one line in `FEATURES` (`loops/registry.py`); a note
   also goes by name in `ORDER` in `loops/notes.py`, which is checked when the module loads. No field on
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
   reaches its note as `Lookups.found[name]`. Registered: the memory map, names, context, worth, relevance,
