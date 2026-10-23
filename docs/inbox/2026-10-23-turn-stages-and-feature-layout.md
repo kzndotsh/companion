@@ -167,4 +167,11 @@ Steps 4 and 5 are churn: hundreds of import edits and conflicts for any session 
 - 2026-10-23, step 3 begun: `Feature` (look and note so far) in `loops/features.py`; lore and reminders
   declare theirs in their own modules and are registered in `FEATURES`. Next: the after-memory, nightly
   and command parts, then more features, then the layout pilot.
+- 2026-10-23, step 3 continued: `Feature` also carries steps after a memory pass, and the registry moved
+  to `loops/registry.py`. Ten features declare their parts (memory map, names, context, worth,
+  relevance, recent times, topic-spent, guess, lore, reminders); the memory pass runs all its after-steps
+  from the registry; the notes order is one named list (`ORDER`) checked at load. `loops/notes.py` went
+  from 708 to 479 lines. Not in the shape yet: the reminder delivery tick (one user) and commands (with
+  the layout pilot). Left in `notes.py` as notes of the turn itself: listening, rude, repair, owned,
+  recall, check-in, mood, hold, brush-off, the name question, the map pick and due plans.
 
