@@ -3,12 +3,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from tests.conftest import REL, T0
-
-from companion.cli.names import run
-from companion.core.names import Row
 from companion.core.types import Belief, Utterance
+from companion.features.names.cli import run
+from companion.features.names.logic import Row
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 
 def test_the_list_shows_each_name_with_its_words_and_what_is_left_to_read(

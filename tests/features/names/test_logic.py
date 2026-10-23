@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from companion.core.names import Row, index, mentioned, parse, prompt, usable
 from companion.core.types import BeliefId, Json
+from companion.features.names.logic import Row, index, mentioned, parse, prompt, usable
 
 A, B = BeliefId("a"), BeliefId("b")
 

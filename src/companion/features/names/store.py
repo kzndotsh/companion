@@ -7,8 +7,8 @@ import sqlite3
 from collections.abc import Iterable, Sequence
 from datetime import datetime
 
-from companion.core.names import Row
 from companion.core.types import BeliefId, RelationshipId
+from companion.features.names.logic import Row
 from companion.store.sqlite.db import iso, write_tx
 
 

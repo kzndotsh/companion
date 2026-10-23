@@ -8,9 +8,9 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.extractor import Extractor
-from companion.core.names import BATCH, PROMPT, SCHEMA, parse, prompt
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId
+from companion.features.names.logic import BATCH, PROMPT, SCHEMA, parse, prompt
 from companion.loops.features import Feature
 from companion.store.sqlite.store import Store
 

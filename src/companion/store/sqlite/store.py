@@ -13,7 +13,6 @@ from companion.core.callbacks import Check
 from companion.core.invented import Statement
 from companion.core.knowing import Label
 from companion.core.mood import Effect, Said
-from companion.core.names import Row as NameRow
 from companion.core.openloops import LoopState, OpenLoop
 from companion.core.promises import Promise
 from companion.core.prompt.prefix import Prefix
@@ -43,6 +42,8 @@ from companion.core.views import ViewState, parse_mode
 from companion.features.episodes import store as episodes
 from companion.features.lore.logic import Kind as ViewKind
 from companion.features.lore.logic import Labelled as ViewLabel
+from companion.features.names import store as names
+from companion.features.names.logic import Row as NameRow
 from companion.features.reminders import store as reminders
 from companion.features.reminders.store import Reminder
 from companion.store.sqlite import (
@@ -59,7 +60,6 @@ from companion.store.sqlite import (
     memory_checks,
     merges,
     mood,
-    names,
     open_loops,
     promises,
     reflect,

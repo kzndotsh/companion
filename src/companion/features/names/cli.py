@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from companion.core.names import SHADOW, index
 from companion.core.types import DecisionKind, RelationshipId
+from companion.features.names.logic import SHADOW, index
 from companion.store.sqlite.store import Store
 
 

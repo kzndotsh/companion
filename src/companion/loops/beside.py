@@ -19,9 +19,6 @@ from companion.core.hooks import SCHEMA as HOOK_SCHEMA
 from companion.core.hooks import TOPIC as HOOK_TOPIC
 from companion.core.hooks import WOULD_ASK as HOOK_WOULD_ASK
 from companion.core.hooks import agreed, may_ask, read_basic
-from companion.core.names import SHADOW as NAMES_SHADOW
-from companion.core.names import index as name_index
-from companion.core.names import mentioned
 from companion.core.nudges import AWAY as AWAY_REASON
 from companion.core.nudges import PROMPT as AWAY_PROMPT
 from companion.core.nudges import SCHEMA as AWAY_SCHEMA
@@ -35,6 +32,9 @@ from companion.core.types import (
     Speaker,
 )
 from companion.core.vectors import Embedder
+from companion.features.names.logic import SHADOW as NAMES_SHADOW
+from companion.features.names.logic import index as name_index
+from companion.features.names.logic import mentioned
 from companion.loops.hooks import stated
 from companion.loops.reads import read_times
 from companion.loops.relevance import shadow as relevance_shadow
