@@ -8,10 +8,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from companion.core.extractor import Extractor
-from companion.core.quoted import AFTER, BEFORE, build_prompt
+from companion.core.quoted import AFTER, BEFORE, build_prompt, wants_context
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId
-from companion.features.context.logic import PROMPT, SCHEMA, parse, wants_context
+from companion.features.context.logic import PROMPT, SCHEMA, parse
 from companion.loops.features import Feature
 from companion.store.sqlite.store import Store
 

@@ -11,8 +11,13 @@ SRC = Path(__file__).resolve().parents[1] / "src" / "companion"
 # Matching a logged reason's text is how look-ups broke before decisions had keys. These are the
 # only places allowed: the key fallback itself, a route decision from before its detail was kept,
 # and belief closure reasons, which have no keys.
-REASON_MATCH = re.compile(r"reason\.(startswith|endswith)\(")
-REASON_ALLOWED = {"core/types.py": 1, "loops/route.py": 1, "loops/calibrate.py": 1}
+REASON_MATCH = re.compile(
+    r"reason\.(startswith|endswith|find|index)\(|\breason\s*(==|!=)"
+    r"|\bin\s+[\w.]*\breason\b|re\.(match|search|fullmatch)\([^)\n]*\breason\b"
+)
+# loops/route.py has two: the old-decision fallback, and `route.reason == BRUSHED`, which compares
+# the floor's own answer as it is returned, not a logged decision.
+REASON_ALLOWED = {"core/types.py": 1, "loops/route.py": 2, "loops/calibrate.py": 1}
 
 # No new god files: a file over DEFAULT_CAP lines is split. The big ones may only shrink.
 DEFAULT_CAP = 450

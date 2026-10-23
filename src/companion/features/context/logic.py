@@ -9,23 +9,17 @@ So a note is written for those memories only and shown beside them on the card.
 
 from __future__ import annotations
 
-from companion.core.types import Belief, BeliefKind, Json
+from companion.core.types import Json
 from companion.prompts import get
 
 PROMPT = get("system/memory-context")
 MAX_WORDS = 25
-SENSITIVE = 2
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
     "properties": {"context": {"type": "string"}},
     "required": ["context"],
 }
-
-
-def wants_context(b: Belief) -> bool:
-    """A feeling or state, or a sensitive memory: where the moment carries the meaning."""
-    return b.kind is BeliefKind.STATE or b.sensitivity >= SENSITIVE
 
 
 def parse(data: Json) -> str | None:

@@ -4,8 +4,9 @@ from collections.abc import Callable
 from datetime import timedelta
 
 from companion.core.card import build_card, render
+from companion.core.quoted import wants_context
 from companion.core.types import Belief, BeliefKind
-from companion.features.context.logic import parse, wants_context
+from companion.features.context.logic import parse
 from tests.conftest import T0
 
 
