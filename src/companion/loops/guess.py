@@ -2,6 +2,20 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from companion.core.guess import INVITED as GUESS_INVITED
+from companion.core.guess import NOTE as GUESS_NOTE
+from companion.core.guess import likely as guess_likely
+from companion.core.guess import note as guess_note
+from companion.core.types import Frame
+from companion.loops.features import Feature, Offer, Offered
+from companion.loops.turn import Heard, Turn, decide, is_casual, mark
+
+if TYPE_CHECKING:
+    from companion.loops.fast import Conversation
+    from companion.loops.notes import Moment
+
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -33,3 +47,40 @@ async def invited_guess(
     found = await look_up(extractor, offerable(beliefs), about)
     picked = found.picked[:MAX_OFFERED] if found is not None else ()
     return Invited(about, tuple(picked))
+
+
+async def guess_for_turn(
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+) -> Invited | None:
+    """When their short question invites a guess about them (J16), what memory holds that may fit.
+    Casual turns only, and never when they asked it to remember something (recall answers that);
+    logged with what was offered, so guesses can later be scored by kind."""
+    if heard is not None and heard[0].recall:
+        return None
+    if c.judge is None or not is_casual(t, in_scene, heard) or not guess_likely(t.text):
+        return None
+    mark(t, "guess judge")
+    found = await invited_guess(c.judge, t.prior, t.text, c.store.user_beliefs(c.rel))
+    if found is not None:
+        decide(
+            c,
+            t,
+            GUESS_INVITED,
+            {
+                "about": found.about,
+                "offered": [b.claim for b in found.offered],
+                "note": GUESS_NOTE.ref,
+            },
+        )
+    return found
+
+
+def guess_offer(m: Moment, found: object, so_far: Offered) -> Offer:
+    """One note to make a single playful guess, as a question, from what memory may hold."""
+    del m, so_far
+    g = found if isinstance(found, Invited) else None
+    note = guess_note(g.about, g.offered) if g is not None else None
+    return Offer((note,) if note else ())
+
+
+GUESS = Feature("guess", look=guess_for_turn, note=guess_offer)

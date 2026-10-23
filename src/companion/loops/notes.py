@@ -25,10 +25,6 @@ from companion.core.floor import BRUSH_NOTE, HOLD_NOTE
 from companion.core.frames import (
     scene_note,
 )
-from companion.core.guess import INVITED as GUESS_INVITED
-from companion.core.guess import NOTE as GUESS_NOTE
-from companion.core.guess import likely as guess_likely
-from companion.core.guess import note as guess_note
 from companion.core.habits import habit_note
 from companion.core.knowing import MAP_EVERY, WOULD_ASK, pick_gap
 from companion.core.length import LengthTarget, length_target
@@ -63,7 +59,6 @@ from companion.core.types import (
 )
 from companion.loops.episodes import write_closed
 from companion.loops.features import Feature, Offer, Offered, quiet
-from companion.loops.guess import Invited, invited_guess
 from companion.loops.recall import Recalled, look_up
 from companion.loops.registry import FEATURES
 from companion.loops.relevance import shadow as relevance_look_up
@@ -95,7 +90,6 @@ class Lookups:
 
     recalled: Recalled | None = None
     spent: bool = False
-    guess: Invited | None = None
     relevant: tuple[tuple[BeliefId, str], ...] = ()  # memories near their message (ADR 0018)
     recent: tuple[Told, ...] = ()  # what the two of them did recently, when it bears (J12, J49)
     found: Mapping[str, object] = field(default_factory=dict[str, object])  # by feature name
@@ -108,15 +102,9 @@ async def look(
     has its own limit too; one still running at the deadline, or one that raised, gives nothing
     this turn and the reply goes ahead. Before, they ran one after another and their limits stacked
     past 15 s (architecture audit, 2026-10-23)."""
-    asked_to_recall = heard is not None and heard[0].recall
-
-    async def no_guess() -> Invited | None:
-        return None
-
     jobs: dict[str, Awaitable[object]] = {
         "recall": _recall(c, t, heard or read),
         "spent": _topic_spent(c, t, in_scene, heard),
-        "guess": no_guess() if asked_to_recall else _invited_guess(c, t, in_scene, heard),
         "relevant": _relevant(c, t, in_scene, heard),
         "recent": _recent_times(c, t, in_scene),
         **{f.name: f.look(c, t, in_scene, heard) for f in FEATURES if f.look is not None},
@@ -136,7 +124,6 @@ async def look(
     return Lookups(
         recalled=cast("Recalled | None", got.get("recall")),
         spent=got.get("spent") is True,
-        guess=cast("Invited | None", got.get("guess")),
         relevant=cast("tuple[tuple[BeliefId, str], ...]", got.get("relevant", ())),
         recent=cast("tuple[Told, ...]", got.get("recent", ())),
         found={f.name: got[f.name] for f in FEATURES if f.name in got},
@@ -210,29 +197,6 @@ async def _relevant(
         for row in (rows if isinstance(rows, list) else [])
         if isinstance(row, dict) and isinstance(row.get("claim"), str) and "id" in row
     )
-
-
-async def _invited_guess(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
-) -> Invited | None:
-    """When their short question invites a guess about them (J16), what memory holds that may fit.
-    Casual turns only; logged with what was offered, so guesses can later be scored by kind."""
-    if c.judge is None or not is_casual(t, in_scene, heard) or not guess_likely(t.text):
-        return None
-    mark(t, "guess judge")
-    found = await invited_guess(c.judge, t.prior, t.text, c.store.user_beliefs(c.rel))
-    if found is not None:
-        decide(
-            c,
-            t,
-            GUESS_INVITED,
-            {
-                "about": found.about,
-                "offered": [b.claim for b in found.offered],
-                "note": GUESS_NOTE.ref,
-            },
-        )
-    return found
 
 
 async def _topic_spent(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> bool:
@@ -584,12 +548,6 @@ def _recent_note(m: Moment, _: Offered) -> Offer:
     return Offer((text,) if text else ())
 
 
-def _guess(m: Moment, _: Offered) -> Offer:
-    g = m.looked.guess
-    note = guess_note(g.about, g.offered) if g is not None else None
-    return Offer((note,) if note else ())
-
-
 def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
     note = f.note
     assert note is not None
@@ -619,7 +577,6 @@ SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
     ("map", _map),
     ("loop", _loop),
     ("topic", _topic),
-    ("guess", _guess),
     *((f.name, _feature_note(f)) for f in FEATURES if f.note is not None),
 )
 
