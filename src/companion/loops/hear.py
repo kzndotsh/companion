@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -22,7 +23,7 @@ from companion.core.types import (
 )
 from companion.loops.ack import judge
 from companion.loops.listen import judge_listening
-from companion.loops.turn import Heard, Turn, decide, mark
+from companion.loops.turn import Heard, Listened, Turn, decide, mark, stop
 from companion.store.sqlite.decisions import REACTED
 
 if TYPE_CHECKING:
@@ -80,3 +81,18 @@ async def hear_them(c: Conversation, t: Turn, in_scene: Frame) -> Heard | None:
     if c.judge is None or not c.listen or in_scene is not Frame.REAL:
         return None
     return await judge_listening(c.judge, t.prior, t.text)
+
+
+async def listen(c: Conversation, t: Turn, in_scene: Frame) -> Listened:
+    """The listen stage: whether a reaction answers instead of a reply, and if not, what the
+    listening judge heard. The two run side by side; a failure stops both and goes on up."""
+    listening = asyncio.ensure_future(hear_them(c, t, in_scene))
+    try:
+        reaction = await ack_reaction(c, t)
+        if reaction is not None:
+            await stop(listening)
+            return Listened(reaction, None)
+        return Listened(None, await listening)
+    except BaseException:
+        await stop(listening)
+        raise

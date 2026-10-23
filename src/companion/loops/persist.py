@@ -24,11 +24,14 @@ from companion.core.frames import (
     companion_frame,
 )
 from companion.core.frames import render_reason as frame_reason
+from companion.core.frames import resolve as frame_resolve
 from companion.core.moves import PROMPT as HABITS_PROMPT
 from companion.core.moves import replies_to_read
+from companion.core.prompt.request import request_sha256
 from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
 from companion.core.react import decide as decide_reaction
+from companion.core.replay import TurnRecord
 from companion.core.talker import Reply
 from companion.core.types import (
     DecisionKind,
@@ -38,11 +41,13 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.core.views import why
+from companion.loops.assemble import Assembled, CardLog
 from companion.loops.basics import judge_name
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.moves import find_habits
-from companion.loops.turn import Turn, decide, mark
+from companion.loops.turn import Answered, Turn, decide, mark, recorder
 from companion.store.sqlite.decisions import REACTED
 
 if TYPE_CHECKING:
@@ -222,3 +227,59 @@ def persist_reply(c: Conversation, t: Turn, reply: Reply, user_frame: Frame, cha
     )
     _check_habits(c, t, reply.text)
     return reply.text
+
+
+async def reaction_only(
+    c: Conversation, t: Turn, keep: TheirMessage, in_scene: Frame, reaction: Reaction
+) -> Reaction:
+    """A turn answered by a reaction alone: their message is kept, and nothing else is stored."""
+    said = keep.store(in_scene)
+    await capture_name(c, t, said)
+    mark(t, "done: reaction only")
+    log.info("turn %s | ack -> %s\n  you: %s", t.turn[:8], reaction.emoji, t.text)
+    return reaction
+
+
+async def finish(
+    c: Conversation, t: Turn, keep: TheirMessage, asm: Assembled, answered: Answered
+) -> str | ReactAndReply:
+    """The persist stage: their message kept with the frame the judge resolved, the request
+    recorded for replay, the card logged, the reply stored, the notes' writes made, and what to
+    send handed back."""
+    reply, request = answered.reply, asm.request
+    framed = answered.framed
+    user_frame = frame_resolve(framed[0] if framed else None, fallback=answered.in_scene)
+    said = keep.store(user_frame)
+    if framed is not None:
+        log_frame(c, t, framed, user_frame)
+    c.store.record_turn(
+        TurnRecord(
+            t.turn,
+            c.rel,
+            t.session,
+            request.prefix.sha256,
+            "",
+            request_sha256(request),
+            reply.model,
+            t.now,
+            asm.card_text,
+        )
+    )
+    CardLog(recorder(c, t), {b.id: why(b, asm.view_state) for b in asm.views}).write(asm.card)
+    log.info(
+        "turn %s | %s %dms in=%d cache_read=%d cache_write=%d%s\n  you: %s\n  it:  %s",
+        t.turn[:8],
+        reply.model,
+        reply.latency_ms,
+        reply.input_tokens,
+        reply.cache_read_tokens,
+        reply.cache_write_tokens,
+        f" | frame={user_frame.value}" if user_frame is not Frame.REAL else "",
+        t.text,
+        reply.text or "(no reply)",
+    )
+    sent = persist_reply(c, t, reply, user_frame, keep.channel)
+    for write in asm.after:  # what the notes used up, now that the turn is stored
+        write()
+    await capture_name(c, t, said)
+    return with_reaction(c, t, answered.felt, sent)

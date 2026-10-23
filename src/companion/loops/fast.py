@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
-import contextlib
 import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
 
 from companion.core.ack import (
     ReactAndReply,
@@ -16,15 +13,12 @@ from companion.core.ack import (
 )
 from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
-from companion.core.frames import resolve as frame_resolve
 from companion.core.frames import (
     scene_frame,
 )
 from companion.core.history import HISTORY_LIMIT
 from companion.core.prompt.prefix import Prefix
-from companion.core.prompt.request import request_sha256
 from companion.core.relevance import Embedder
-from companion.core.replay import TurnRecord
 from companion.core.talker import Talker
 from companion.core.types import (
     Frame,
@@ -33,26 +27,23 @@ from companion.core.types import (
     TraceId,
     TurnId,
 )
-from companion.core.views import why
-from companion.loops.assemble import CardLog, assemble
+from companion.loops.assemble import assemble
 from companion.loops.beside import shadows
-from companion.loops.hear import ack_reaction, hear_them
+from companion.loops.hear import listen
 from companion.loops.moves import HabitMemory
 from companion.loops.notes import look
 from companion.loops.persist import (
     TheirMessage,
-    capture_name,
-    log_frame,
-    persist_reply,
+    finish,
+    reaction_only,
     store_user,
     their_message,
-    with_reaction,
 )
 from companion.loops.record import Recorder
 from companion.loops.route import route_turn
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
-from companion.loops.talk import await_beside, checked, start_beside
-from companion.loops.turn import Heard, Turn, mark, recorder
+from companion.loops.talk import talk
+from companion.loops.turn import Turn
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
@@ -116,16 +107,6 @@ def _stopped_by_cap(
     return NOTICE if first_notice_today(c.store, c.rel, now) else ""
 
 
-async def _stop(*tasks: asyncio.Future[Any] | None) -> None:
-    """Cancel whatever is still running beside the reply."""
-    for task in tasks:
-        if task is None:
-            continue
-        task.cancel()
-        with contextlib.suppress(asyncio.CancelledError, Exception):
-            await task
-
-
 async def _handle_turn(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
 ) -> str | Reaction | ReactAndReply:
@@ -136,89 +117,29 @@ async def _handle_turn(
     t = Turn(session, turn, now, prior, text)
     in_scene = scene_frame(prior, now)
     async with their_message(c, t, channel) as keep:
-        return await _turn(c, t, keep, in_scene, channel)
+        return await _turn(c, t, keep, in_scene)
 
 
 async def _turn(
-    c: Conversation, t: Turn, keep: TheirMessage, in_scene: Frame, channel: str
+    c: Conversation, t: Turn, keep: TheirMessage, in_scene: Frame
 ) -> str | Reaction | ReactAndReply:
     """The stages of one turn, inside the guard that keeps their message."""
-    store, rel, turn, now, text = c.store, c.rel, t.turn, t.now, t.text
-    listening = asyncio.ensure_future(hear_them(c, t, in_scene))
-    heard: Heard | None = None
-    try:
-        reaction = await ack_reaction(c, t)
-        if reaction is None:
-            heard = await listening
-    except BaseException:
-        await _stop(listening)
-        raise
-    if reaction is not None:
-        await _stop(listening)
-        said = keep.store(in_scene)
-        await capture_name(c, t, said)
-        mark(t, "done: reaction only")
-        log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
-        return reaction
-    talker, held, read, brushed = await route_turn(c, t, in_scene, heard)
-    looked = await look(c, t, in_scene, heard, read)
+    listened = await listen(c, t, in_scene)
+    if listened.reaction is not None:
+        return await reaction_only(c, t, keep, in_scene, listened.reaction)
+    heard = listened.heard
+    routed = await route_turn(c, t, in_scene, heard)
+    looked = await look(c, t, in_scene, heard, routed.read)
     asm = assemble(
         c,
         t,
         in_scene,
         heard,
         looked,
-        held=held,
-        brushed=brushed,
-        roleplay=talker is c.roleplay_talker,
+        held=routed.held,
+        brushed=routed.brushed,
+        roleplay=routed.talker is c.roleplay_talker,
     )
-    request, card_text, card, views, view_state = (
-        asm.request,
-        asm.card_text,
-        asm.card,
-        asm.views,
-        asm.view_state,
-    )
-    shadows(c, t, in_scene, heard, card)
-    talk, framing, feeling = start_beside(c, t, request, talker)
-    try:
-        reply, outcome, felt = await await_beside(t, talk, framing, feeling)
-        reply = await checked(c, t, request, reply, heard, in_scene, talker, held=held)
-    except BaseException:
-        await _stop(talk, framing, feeling)
-        raise
-    user_frame = frame_resolve(outcome[0] if outcome else None, fallback=in_scene)
-    said = keep.store(user_frame)
-    if framing is not None:
-        log_frame(c, t, outcome, user_frame)
-    store.record_turn(
-        TurnRecord(
-            turn,
-            rel,
-            t.session,
-            request.prefix.sha256,
-            "",
-            request_sha256(request),
-            reply.model,
-            now,
-            card_text,
-        )
-    )
-    CardLog(recorder(c, t), {b.id: why(b, view_state) for b in views}).write(card)
-    log.info(
-        "turn %s | %s %dms in=%d cache_read=%d cache_write=%d%s\n  you: %s\n  it:  %s",
-        turn[:8],
-        reply.model,
-        reply.latency_ms,
-        reply.input_tokens,
-        reply.cache_read_tokens,
-        reply.cache_write_tokens,
-        f" | frame={user_frame.value}" if user_frame is not Frame.REAL else "",
-        text,
-        reply.text or "(no reply)",
-    )
-    sent = persist_reply(c, t, reply, user_frame, channel)
-    for write in asm.after:  # what the notes used up, now that the turn is stored
-        write()
-    await capture_name(c, t, said)
-    return with_reaction(c, t, felt, sent)
+    shadows(c, t, in_scene, heard, asm.card)
+    answered = await talk(c, t, asm.request, routed)
+    return await finish(c, t, keep, asm, answered)

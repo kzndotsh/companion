@@ -28,7 +28,7 @@ from companion.loops.floor import judge_intimate
 from companion.loops.frames import judge_frame
 from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
-from companion.loops.turn import Heard, Turn, decide, mark
+from companion.loops.turn import Answered, Heard, Routed, Turn, decide, mark, stop
 
 if TYPE_CHECKING:
     from companion.loops.fast import Conversation
@@ -190,3 +190,25 @@ def _mark_reply(t: Turn, reply: Reply) -> None:
         f" cache_read={reply.cache_read_tokens} cost=${reply.cost_usd:.5f},"
         f" {len(reply.text.split())} words",
     )
+
+
+async def talk(c: Conversation, t: Turn, request: TalkerRequest, routed: Routed) -> Answered:
+    """The talk and check stages: the talker, with the frame and reaction judges beside it, then
+    the checks the reply passes before it is sent. A failure stops all three and goes on up."""
+    running, framing, feeling = start_beside(c, t, request, routed.talker)
+    try:
+        reply, framed, felt = await await_beside(t, running, framing, feeling)
+        reply = await checked(
+            c,
+            t,
+            request,
+            reply,
+            routed.heard,
+            routed.in_scene,
+            routed.talker,
+            held=routed.held,
+        )
+    except BaseException:
+        await stop(running, framing, feeling)
+        raise
+    return Answered(reply, framed, felt, routed.in_scene)

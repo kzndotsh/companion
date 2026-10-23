@@ -9,7 +9,6 @@ from companion.core.extractor import from_fallback
 from companion.core.floor import BRUSHED, Route
 from companion.core.floor import Talker as RouteTalker
 from companion.core.floor import choose as choose_route
-from companion.core.talker import Talker
 from companion.core.types import (
     Decision,
     Frame,
@@ -19,7 +18,7 @@ from companion.core.types import (
 from companion.loops.floor import DECLINES, EXPLICIT, explicit_lead
 from companion.loops.floor import declines as judge_declines
 from companion.loops.listen import judge_listening
-from companion.loops.turn import Heard, Turn, decide, mark
+from companion.loops.turn import Heard, Routed, Turn, decide, mark
 
 if TYPE_CHECKING:
     from companion.loops.fast import Conversation
@@ -27,9 +26,7 @@ if TYPE_CHECKING:
 log = logging.getLogger("companion.turn")
 
 
-async def route_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
-) -> tuple[Talker, bool, Heard | None, bool]:
+async def route_turn(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> Routed:
     """The talker for this turn (ADR 0017): the roleplay talker for a pretend scene, or for intimate
     talk when COMPANION_ROUTE_INTIMATE allows it, unless the floor keeps it on the everyday talker.
     Logged when it is anything but the plain everyday choice.
@@ -40,7 +37,9 @@ async def route_turn(
     scene turn can still look something up when they say it forgot.
     """
     if c.roleplay_talker is None:
-        return c.talker, False, heard, False
+        return Routed(
+            c.talker, held=False, read=heard, brushed=False, heard=heard, in_scene=in_scene
+        )
     in_play = in_scene is Frame.PLAY
     read = heard
     if read is None and in_play and c.judge is not None:
@@ -69,7 +68,14 @@ async def route_turn(
     if route.reason is not None:
         decide(c, t, "route", {"talker": route.talker.value}, reason=route.reason)
     talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
-    return talker, route.held, read, route.reason == BRUSHED
+    return Routed(
+        talker,
+        held=route.held,
+        read=read,
+        brushed=route.reason == BRUSHED,
+        heard=heard,
+        in_scene=in_scene,
+    )
 
 
 def routed_to_roleplay(d: Decision) -> bool:
