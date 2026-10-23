@@ -37,6 +37,7 @@ from companion.core.vectors import Vector
 from companion.core.views import ViewState, parse_mode
 from companion.features.callbacks import store as callbacks
 from companion.features.callbacks.logic import Check
+from companion.features.consolidate import store as memory_checks
 from companion.features.context import store as contexts
 from companion.features.episodes import store as episodes
 from companion.features.invented import store as invented
@@ -61,7 +62,6 @@ from companion.store.sqlite import (
     flags,
     labels,
     ledger,
-    memory_checks,
     merges,
     mood,
     reflect,

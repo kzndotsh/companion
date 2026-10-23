@@ -9,7 +9,11 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 
 from companion.core.card import faded
-from companion.core.consolidate import (
+from companion.core.extractor import Extractor
+from companion.core.spend import purpose
+from companion.core.types import Belief, Depth, Domain, RelationshipId
+from companion.core.vectors import Embedder, nearest
+from companion.features.consolidate.logic import (
     CHECK,
     CHECK_SCHEMA,
     PAIR,
@@ -22,10 +26,6 @@ from companion.core.consolidate import (
     same_as,
     verdict,
 )
-from companion.core.extractor import Extractor
-from companion.core.spend import purpose
-from companion.core.types import Belief, Depth, Domain, RelationshipId
-from companion.core.vectors import Embedder, nearest
 from companion.loops.curate import log_would_close, retire
 from companion.loops.embed import embed_missing
 from companion.loops.reads import read_times

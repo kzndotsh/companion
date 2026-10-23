@@ -12,7 +12,7 @@ import uuid
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, replace
 from datetime import datetime, tzinfo
-from typing import TYPE_CHECKING, Protocol
+from typing import Protocol
 
 from companion.core.beliefs.dedupe import is_duplicate_candidate
 from companion.core.beliefs.extract import (
@@ -51,15 +51,13 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.consolidate.run import SameCheck
 from companion.features.openloops.run import Reading, catch_up_loops
 from companion.features.promises.run import read_promises
 from companion.loops.record import Recorder
 from companion.loops.registry import FEATURES
 from companion.loops.views import WANT_KINDS, check_views
 from companion.store.sqlite.store import Store
-
-if TYPE_CHECKING:  # a type only: consolidate imports curate, which imports this module
-    from companion.loops.consolidate import SameCheck
 
 log = logging.getLogger("companion.slow")
 BATCH = 40

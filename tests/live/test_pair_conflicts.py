@@ -16,15 +16,15 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.consolidate import (
+from companion.core.types import Belief
+from companion.daemon import load_dotenv
+from companion.features.consolidate.logic import (
     PAIR,
     PAIR_SCHEMA,
     Relation,
     pair_prompt,
     read_relation,
 )
-from companion.core.types import Belief
-from companion.daemon import load_dotenv
 from companion.lib.vote import READS
 from companion.models.openrouter import OpenRouterExtractor
 

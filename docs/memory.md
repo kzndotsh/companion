@@ -4,7 +4,7 @@ How memory tidies itself, and how the database is kept safe. What each memory is
 the feature READMEs under `src/companion/features/` (context, worth, the memory map, names).
 
 - Memory tidies itself only where a judge matched the owner's own review (ADR 0019,
-  `core/consolidate.py`): the night's steps run each on its own (`loops/nightly.py`; one failing does
+  `src/companion/features/consolidate/`): the night's steps run each on its own (`loops/nightly.py`; one failing does
   not skip the rest) and a night missed while the bot was down is made up five minutes after it
   starts. At 04:00 each memory a week old is read three times; a faded passing moment read so three
   times is closed, and out of date or overstated findings become questions for the owner. When the

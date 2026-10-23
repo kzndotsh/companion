@@ -29,6 +29,7 @@ from companion.core.types import Favorite, FavoriteId, Flag, FlagId, Relationshi
 from companion.core.vectors import Embedder
 from companion.features.callbacks.logic import report
 from companion.features.callbacks.run import check_new
+from companion.features.consolidate.run import SameCheck
 from companion.features.context.run import write_missing
 from companion.features.episodes.run import write_closed
 from companion.features.invented.logic import report as invented_report
@@ -43,7 +44,6 @@ from companion.features.worth.run import label
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.lib import logs, retry
 from companion.loops import curate, merging
-from companion.loops.consolidate import SameCheck
 from companion.loops.fast import Conversation
 from companion.loops.nightly import missed, night
 from companion.loops.rebuild import rebuild

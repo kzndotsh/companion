@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from companion.core.consolidate import MIXED, Label, plan_for, verdict
 from companion.core.types import Belief
+from companion.features.consolidate.logic import MIXED, Label, plan_for, verdict
 
 
 def test_only_three_matching_reads_are_a_verdict() -> None:

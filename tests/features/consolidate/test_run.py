@@ -5,12 +5,12 @@ from datetime import UTC, timedelta
 from pathlib import Path
 
 import pytest
-from tests.conftest import REL, T0
 
 from companion.core.extractor import Extraction
 from companion.core.types import Belief, BeliefKind, Depth, Domain, Json, Label, Utterance
-from companion.loops.consolidate import nightly
+from companion.features.consolidate.run import nightly
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 LATER = T0 + timedelta(days=10)
 
