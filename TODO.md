@@ -12,7 +12,8 @@ decision is made; it may be wrong, but never stale.
 - **Todo is ordered.** Pull from the top.
 - Every card that changes how it talks needs a fixture or a measurement, and a line in
   `src/companion/prompts/CHANGELOG.md` (a prompt version, or a code change to what the model is sent).
-- Tags in the backlog say where we stand: **built**, **partial**, **new**.
+- Tags in the backlog say where we stand: **built**, **partial**, **new**. A card waiting on a review or a
+  decision goes in **Waiting**; one parked by the owner or until a named trigger goes in **Parked**.
 - IDs: `H` housekeeping, `T` ready work, `G` from the greenfield design
   (`docs/research/2026-10-15_greenfield-design.md`, numbered as in the review of 2026-10-16),
   `R` from the roadmap and inbox notes. Done cards keep their IDs.
@@ -214,6 +215,42 @@ Each item ends with the thing that tells us it is done. The cards are below.
       the reply (`notes/recent-times`, also J49). The owner read the lines and turned it on. Next: the recall
       look-up reaching episodes, and firsts.
 
+## Waiting
+
+Built in shadow or blocked, each waiting on a dated review or the owner's decision (see Decisions needed).
+When the answer comes, the card moves to Todo or Done.
+
+- [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
+      changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
+      pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
+- [ ] T8 Decide provider routing for DeepSeek: sort by latency (removes the 5 to 9 second outliers, the
+      provider changes per request) or pin a provider list. **Needs decision**.
+- [ ] T9 Decide whether replies from flagged turns stay in the window the model reads. A leaked reply
+      still echoes in 1 of 16 samples. **Tried and reverted 2026-10-17**: dropping the flagged reply broke the
+      next turn, because a flag is not always about the reply it lands on (it lands on the last reply even
+      when the note is about a missing one). A flag would need to say what it refers to first.
+- [ ] R1 Heartbeat for initiating contact (shadow mode built, see R1a; going live needs a week of shadow
+      review and outcome recording): a gate before any spend that holds when nothing is new, a
+      pure evaluator with named reasons, an outcome recorded per reach-out, a hold never counted as an
+      ignore, a slow re-probe, a test on a simulated clock, shadow first. (G30, G33) Prototype 2026-10-17:
+      about 8 plausible open loops in 3 days of chat, mostly low stakes, 3 sensitive to block; a model
+      finds a real afterthought in about 1 of 20 replies, so the afterthought stays parked. See
+      `evals/CHANGELOG.md`. **Waits on:** the review of 2026-10-24, then A6, J27 and J35 before going live.
+- [ ] R1b Nudges after stepping away (owner's choice: the looser rule B, also without "brb"). Built in
+      shadow 2026-10-20: when they say they are leaving now and stay quiet twice as long and an hour, one
+      light drafted nudge, logged. Replayed over six days: 18 times away, none nudged, since they always
+      wrote again sooner. If it reads needy, tighten to rule A (only after they said they would be back).
+      **Waits on:** the review of 2026-10-24.
+- [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
+      fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
+- [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
+      days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
+      section 5: the model picks a label, code owns the size).
+      **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
+      M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
+      to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). **Waits on:** the owner accepting ADR 0016
+      (decision 1) after a few days of flags.
+
 ## Todo
 
 Ordered. Pull from the top.
@@ -234,9 +271,8 @@ Ordered. Pull from the top.
       the case the card was opened for. Next: offer their most repeated habits beside the look-up's picks,
       measured on that turn. Later, with enough guesses: score them by kind from the next message, and only
       then guesses it forms on its own.
-- [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
-      changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
-      pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
+- [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
+      does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] T4 Fix `no-claimed-perception` on DeepSeek, fixture first. Measured on v25 (30 samples): DeepSeek
       11/30, Luna 30/30. Fails with invented sensation similes when asked how it feels.
 - [ ] T12 (see also A33: strip the leading sentence and stage directions from assistant turns in the
@@ -245,12 +281,6 @@ Ordered. Pull from the top.
       before any change; the memory card carries what older turns held. Measured 2026-10-17: a detail
       beyond the window is lost (12/12 in view, 0/12 out) unless the card holds it, and the card only
       updates after 90 seconds of quiet. See `evals/CHANGELOG.md`.
-- [ ] T8 Decide provider routing for DeepSeek: sort by latency (removes the 5 to 9 second outliers, the
-      provider changes per request) or pin a provider list. **Needs decision**.
-- [ ] T9 Decide whether replies from flagged turns stay in the window the model reads. A leaked reply
-      still echoes in 1 of 16 samples. **Tried and reverted 2026-10-17**: dropping the flagged reply broke the
-      next turn, because a flag is not always about the reply it lands on (it lands on the last reply even
-      when the note is about a missing one). A flag would need to say what it refers to first.
 - [ ] J45 Cheesy add-on jokes. A fine reply gets a witty line bolted on ("the sandwich had to carry the meal
       on its own"); at least five flags 2026-10-16 to 10-19. **Partial 2026-10-19:** five real turns as local
       fixtures; about 45% of replies add a joke on v36; wording does not fix it (v37, the ban replaced by a
@@ -317,33 +347,9 @@ Unordered within each group. Pull a card into Todo when it is next.
 
 ### From the roadmap and inbox notes
 
-- [ ] T10 Reflective restatement. **Parked by the user on 2026-10-17.** Measured at 7% of real replies,
-      clustered in one chat; the habit check cannot catch it. Research and options in
-      `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.
-
-- [ ] R1 Heartbeat for initiating contact (shadow mode built, see R1a; going live needs a week of shadow
-      review and outcome recording): a gate before any spend that holds when nothing is new, a
-      pure evaluator with named reasons, an outcome recorded per reach-out, a hold never counted as an
-      ignore, a slow re-probe, a test on a simulated clock, shadow first. (G30, G33) Prototype 2026-10-17:
-      about 8 plausible open loops in 3 days of chat, mostly low stakes, 3 sensitive to block; a model
-      finds a real afterthought in about 1 of 20 replies, so the afterthought stays parked. See
-      `evals/CHANGELOG.md`.
-- [ ] R1b Nudges after stepping away (owner's choice: the looser rule B, also without "brb"). Built in
-      shadow 2026-10-20: when they say they are leaving now and stay quiet twice as long and an hour, one
-      light drafted nudge, logged. Replayed over six days: 18 times away, none nudged, since they always
-      wrote again sooner. If it reads needy, tighten to rule A (only after they said they would be back).
-- [ ] R2 Looking up older messages on recall cues, starting with a cue-triggered search into the
-      system block. (G21) **Replayed 2026-10-20, not built:** on the 23 real recall cues so far, the answer
-      was already in the 40 messages in view on 16, and a keyword search of older messages picked by the
-      recall model helped on 2 cases and added off-topic or pretend-as-real exchanges on 13. Worth another
-      look only when flags show recall misses on things outside the window; the replay is the test.
-- [ ] R17 Show gaps under a minute in seconds on the clock line. Not needed so far: the persona sentence
-      alone fixed the short-gap fixture (9/12 with and without the gap stated).
 - [ ] R15 Extend the rejected list to beliefs: when a belief about the user is retired by hand, no
       later automatic write may recreate it and its evidence leaves recall. Today only retired views
       are protected. (A20 in the audit synthesis)
-- [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
-      fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
 - [ ] R4 No reaction alongside a reply while a scene is in progress, send the reaction as soon as the
       judge returns, and record the user's reactions to its messages.
 - [ ] R5 A command that turns favourites into "must still pass" fixtures.
@@ -356,8 +362,6 @@ Unordered within each group. Pull a card into Todo when it is next.
       rollback.
 - [ ] R10 Game state: whose turn it is and what was just asked.
 - [ ] R11 Split messages and follow-ups sent on a timer, once the heartbeat exists.
-- [ ] R12 Body and appearance questions (inbox, parked).
-- [ ] R13 Does the "letting them go" rule earn its place (inbox, parked).
 
 ### A. The process and its stores
 
@@ -410,7 +414,6 @@ Unordered within each group. Pull a card into Todo when it is next.
 
 - [ ] G37 Out-of-character turns consumed and not replayed, and the companion proposing frame shifts.
       (partial)
-- [ ] G38 Cascaded voice on the same brain. (later)
 
 ### F. Surviving a model swap
 
@@ -441,7 +444,6 @@ Unordered within each group. Pull a card into Todo when it is next.
       has a working consent layer. (new)
 - [ ] G55 Extract the memory engine as its own product. Long term. (new)
 - [ ] G56 A side-by-side harness comparing our memory with others behind one interface. (new)
-- [ ] G57 Apply the audit corrections to the old companmem docs. You said not to touch it yet. (new)
 
 ### I. From the audit synthesis (2026-10-17), still open
 
@@ -465,25 +467,9 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       without a marker, and "proven red before the fix" as the card convention.
 - [ ] A35 Incident log by bug class (silent drops, duplicate sends, prompt echo, stale replies), with
       fixtures named for the incident. A short file.
-- [ ] A36 Voice contract (parked until the first voice work): arm after first audio, cancel generation,
-      drop the queue by epoch, store the heard prefix with a truncated flag.
-- [ ] A37 Tool surface rules (parked until the first tool): allowlist by actor, no delete tool,
-      idempotency keys, recipient by id.
-- [ ] A38 Multi-user checklist (parked until a second user): default-closed auth, per-user scoping, a
-      non-owner's text never reaching the owner's prompt. With G51.
 
 ### J. From the research walk-through with the owner (2026-10-18)
 
-- [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
-      wrong one (Kindroid's edge in the user research). **Parked by the owner on 2026-10-18** after the
-      research (local notes: `docs/research/2026-10-18_user-visible-memory.md`); options were browse, search,
-      retire, correct, and how sensitive items show.
-- [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
-      days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
-      section 5: the model picks a label, code owns the size).
-      **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
-      M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
-      to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). Left: a few days of flags, then the ADR accepted.
 - [ ] J7 Flag with a reason: quick tags beside /flag ("you forgot", "too much", "off", "didn't want to talk
       about that") so marks sort by failure type (greenfield section 10).
 - [ ] J8 Model-swap protocol: probe the old model, diff the new one against it, tell the owner in
@@ -492,26 +478,9 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       never replaces a standing fact, a vaguer statement never replaces a precise one, someone else's value
       is not theirs (mengram's four named rules, product-code audit). Matches the overstated beliefs the
       belief audit found. With A15.
-- [ ] J11 Ask the owner when unsure: when the second look cannot decide, or a new statement contradicts a
-      belief, the question is queued for the owner instead of guessed (taosmd's pending-decisions queue).
-      With J3. **Owner flag 2026-10-19** ("when it confused something and I correct it, does it go back and
-      adjust the memory?"): no. Only the user's words become memories, so a misread in a reply is not
-      stored, but a wrong memory that a later message corrects stays beside the correction; nothing retires it
-      or asks. A scan of all current memories for contradictions, stale and duplicate ones is the first step.
-      **2026-10-20:** a new memory read as replacing or contradicting its nearest one (three reads) is now a
-      question in `companion memory review`: keep 1, keep 2 or both; the other is retired with the reason.
-      The pair judge caught 14 of 14 invented corrections and changes, with 2 to 3 false alarms in 20
-      look-alike pairs (`tests/live/test_pair_conflicts.py`). Left: a correction whose memory sits below the
-      0.55 embedding gate is never compared (3 of the 14, all changes rather than corrections); the question
-      still waits for the terminal (J3). **2026-10-21:** memories about one thing are grouped and proposed as
-      one merge in `memory review`, so older memories are now compared with each other too.
-- [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
-      ones that match the current mood. No product has it. Behind J5.
 - [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
       updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
       plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
-- [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
-      does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change
       drops a behaviour below its usual level, with floors set from two baseline runs (Phoenix's gate).
 - [ ] J44 Kiro judge calibration: re-grade about 200 replies already graded by the paid judge with a Kiro
@@ -521,12 +490,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J22 Cheaper judges through OpenRouter: try a cheaper model than Haiku 5.5 for the small judges (ack,
       listening, frame, react, habits), calibrated against the existing live tests before switching
       (decision-layer audit; the owner prefers this to running judges locally).
-- [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
-      default no, so only a real message starts a reply (Neuro SDK audit). **Shelved by the owner
-      2026-10-23:** today only text is heard, so nothing can wake it by accident; a plain note that they
-      reacted changed nothing (0/96 mentions), so reactions would only be quiet offline feedback, never a
-      score to raise. Research, the measurement and stickers and photos (which get silence today) in
-      `docs/inbox/2026-10-23-reactions-and-other-inputs.md`.
 - [ ] J27 Per-gate shadow analysis before initiative goes live: for each hold (quiet hours, cap, mid-chat),
       how many reach-outs it stopped and what they would have said (Alice audit).
 - [ ] J28 Catch up after a restart: messages sent while the bot was down or restarting are picked up and
@@ -535,15 +498,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       answered as one thought; supersede still handles anything later (Coopanion audit).
 - [ ] J31 Edited messages: when the user edits a Telegram message, the earlier version is replaced in what
       the model reads and beliefs drawn from it are redone, never deleted (Front Porch audit).
-- [ ] J32 Memory never reads as an order (J23 folded in): a fixture proving a stored line like "always do
-      X" cannot change behaviour, a check that no stored claim is phrased as a command, and card wording
-      that says these are notes, not instructions (Hermes, Project Waifu and Meuxe audits). Parked: scanned
-      2026-10-22, none of 258 memories about the user reads as an order (they are written "the user …"),
-      the 4 boundaries are meant to steer, and with one user the planted-command risk is the owner's own.
-- [ ] J33 It asks again: the companion asks about something they already answered. Measured 2026-10-19: 5 of 62
-      real information questions (8%), 4 of them answered in the last few messages in view, 1 only in memory;
-      no explicit complaint in the sample. If it is worth fixing: a check on a reply's question against the
-      last few messages, redrawn once like the quip check. Parked until a flag says so.
 - [ ] J34 Declared identity: the user's name, nicknames and aliases, each with where and when it was said,
       so a nickname is never a new person and it knows what to call them (Miru audit).
 - [ ] J35 Live-send safety, before initiative goes live: recheck quiet hours and mid-chat at the moment of
@@ -577,6 +531,55 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
       with the rest growing as recorded lore. Test that they surface without being asked and do not
       become talking points. From the Grok review. Phase 2 shipped 2026-10-20; only if its
       shown tastes leave gaps.
+
+### Parked
+
+Parked by the owner, or until something named happens (a flag, a voice mode, a tool, a second user).
+Each card says what would bring it back.
+
+- [ ] T10 Reflective restatement. **Parked by the user on 2026-10-17.** Measured at 7% of real replies,
+      clustered in one chat; the habit check cannot catch it. Research and options in
+      `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.
+- [ ] R2 Looking up older messages on recall cues, starting with a cue-triggered search into the
+      system block. (G21) **Replayed 2026-10-20, not built:** on the 23 real recall cues so far, the answer
+      was already in the 40 messages in view on 16, and a keyword search of older messages picked by the
+      recall model helped on 2 cases and added off-topic or pretend-as-real exchanges on 13. Worth another
+      look only when flags show recall misses on things outside the window; the replay is the test.
+- [ ] R17 Show gaps under a minute in seconds on the clock line. Not needed so far: the persona sentence
+      alone fixed the short-gap fixture (9/12 with and without the gap stated).
+- [ ] R12 Body and appearance questions (inbox, parked).
+- [ ] R13 Does the "letting them go" rule earn its place (inbox, parked).
+- [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
+      wrong one (Kindroid's edge in the user research). **Parked by the owner on 2026-10-18** after the
+      research (local notes: `docs/research/2026-10-18_user-visible-memory.md`); options were browse, search,
+      retire, correct, and how sensitive items show.
+- [ ] J13 Mood-matched recall, later: memories keep the feeling they were said with, and recall prefers
+      ones that match the current mood. No product has it. Behind J5.
+      Parked 2026-10-23 until a flag asks for it; the mood it would match is the companion's own, so a
+      version keyed to their feeling (the listening judge reads it) would come first. With G14, G18.
+- [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
+      default no, so only a real message starts a reply (Neuro SDK audit). **Shelved by the owner
+      2026-10-23:** today only text is heard, so nothing can wake it by accident; a plain note that they
+      reacted changed nothing (0/96 mentions), so reactions would only be quiet offline feedback, never a
+      score to raise. Research, the measurement and stickers and photos (which get silence today) in
+      `docs/inbox/2026-10-23-reactions-and-other-inputs.md`.
+- [ ] J32 Memory never reads as an order (J23 folded in): a fixture proving a stored line like "always do
+      X" cannot change behaviour, a check that no stored claim is phrased as a command, and card wording
+      that says these are notes, not instructions (Hermes, Project Waifu and Meuxe audits). Parked: scanned
+      2026-10-22, none of 258 memories about the user reads as an order (they are written "the user …"),
+      the 4 boundaries are meant to steer, and with one user the planted-command risk is the owner's own.
+- [ ] J33 It asks again: the companion asks about something they already answered. Measured 2026-10-19: 5 of 62
+      real information questions (8%), 4 of them answered in the last few messages in view, 1 only in memory;
+      no explicit complaint in the sample. If it is worth fixing: a check on a reply's question against the
+      last few messages, redrawn once like the quip check. Parked until a flag says so.
+- [ ] A36 Voice contract (parked until the first voice work): arm after first audio, cancel generation,
+      drop the queue by epoch, store the heard prefix with a truncated flag.
+- [ ] A37 Tool surface rules (parked until the first tool): allowlist by actor, no delete tool,
+      idempotency keys, recipient by id.
+- [ ] A38 Multi-user checklist (parked until a second user): default-closed auth, per-user scoping, a
+      non-owner's text never reaching the owner's prompt. With G51.
+- [ ] G38 Cascaded voice on the same brain. (later)
+- [ ] G57 Apply the audit corrections to the old companmem docs. You said not to touch it yet. (new)
 
 ## Done
 
@@ -646,9 +649,11 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       (1 to 20 of 20) and keeps its view under pushback with no reason (8 to 16 of 20), everyday fixtures
       within noise. Earlier (2026-10-18): a cool reply to real rudeness by a listening label and a one-turn
       note (2 to 20 of 20). Moods that change what it does are J5; ignoring on purpose stays out (X10).
-- [x] J11 partial: a new memory read as replacing or contradicting its nearest one (three reads) is a
-      question in `companion memory review` (keep 1, keep 2 or both). 14 of 14 invented corrections caught,
-      2 to 3 false alarms in 20 look-alikes. The card stays in the backlog for what is left.
+- [x] J11 Ask the owner when unsure: a new memory read as replacing or contradicting its nearest one (three
+      reads) is a question in `companion memory review` (keep 1, keep 2 or both). 14 of 14 invented
+      corrections caught, 2 to 3 false alarms in 20 look-alikes. Older memories are compared with each other
+      by the grouping of 2026-10-21. Closed 2026-10-23; what is left (a correction below the 0.55 embedding
+      gate is never compared, 3 of the 14) belongs to G11, and asking in Telegram to J3.
 - [x] J16 partial: an invited guess ("you know what time it is?") gets one playful guess from what
       memory holds, as a question; 12/12 against 0/12. The card stays in the backlog for scoring guesses.
 

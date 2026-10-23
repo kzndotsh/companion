@@ -13,7 +13,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 
 | Where | What |
 |---|---|
-| `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Todo, Backlog, Done, Canceled). Pull work from here |
+| `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
