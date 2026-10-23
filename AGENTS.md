@@ -87,8 +87,13 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - A line for the system block is a note source in `loops/notes.py` `SOURCES`, in the order it is sent:
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
-  `_assemble`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
+  `assemble`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
   failed one adds nothing that turn. A shadow look-up runs through `beside` in `loops/beside.py`, which logs a failure.
+- A turn runs in stages, one module each: `loops/hear.py` (a reaction instead of a reply, the listening
+  read), `loops/route.py` (which talker), `loops/notes.py` `look` (the look-ups), `loops/assemble.py` (the
+  request), `loops/talk.py` (the talker and the reply checks), `loops/beside.py` (shadow tasks) and
+  `loops/persist.py` (their message kept once, the reply stored). `loops/fast.py` is only the driver: change a
+  stage in its module.
 - Ask a judge through `loops/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.

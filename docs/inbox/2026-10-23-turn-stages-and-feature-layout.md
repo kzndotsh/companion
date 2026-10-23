@@ -154,3 +154,12 @@ Steps 4 and 5 are churn: hundreds of import edits and conflicts for any session 
 4. Found by the chaos test: a turn the floor holds, whose replies cannot be read (the judge model down),
    sends nothing (ADR 0017: doubt never sends). Keep, or send a plain non-intimate line written by the
    everyday talker with only their message?
+
+## Progress
+
+- 2026-10-23, step 1 in part: the stages are modules (`loops/hear.py`, `route.py`, `assemble.py`,
+  `talk.py`, `beside.py`, `persist.py`), and their message is stored in one place by a guard around the
+  whole turn, which also fixed a turn whose look-ups or card failed losing it. `loops/fast.py` went from
+  1,044 to 224 lines. Left of step 1: the typed stage values (`Arrived`, `Heard`, `Routed`, ...); today the
+  stages still pass loose arguments.
+
