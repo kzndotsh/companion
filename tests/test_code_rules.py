@@ -23,7 +23,6 @@ REASON_ALLOWED = {"core/types.py": 1, "loops/route.py": 2, "loops/calibrate.py":
 DEFAULT_CAP = 450
 CAPS = {
     "loops/fast.py": 145,
-    "loops/notes.py": 479,
     "daemon.py": 572,
     "store/sqlite/store.py": 536,
 }

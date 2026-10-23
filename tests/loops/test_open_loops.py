@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.initiative import Caps
 from companion.core.openloops import LoopState, OpenLoop
+from companion.core.reachout import Caps
 from companion.core.types import (
     DecisionKind,
     Frame,

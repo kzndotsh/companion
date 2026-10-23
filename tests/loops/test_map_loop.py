@@ -7,8 +7,17 @@ import pytest
 from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.basics import name_belief
-from companion.core.types import Frame, Speaker, TurnId, Utterance, UtteranceId
-from companion.features.knowing.logic import WOULD_ASK, Depth, Domain, Label
+from companion.core.types import (
+    Depth,
+    Domain,
+    Frame,
+    Label,
+    Speaker,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
+from companion.features.knowing.logic import WOULD_ASK
 from companion.loops.fast import Conversation
 from companion.store.sqlite.store import Store
 

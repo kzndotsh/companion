@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from companion.core.card import Card
 from companion.core.clock import local_midnight
 from companion.core.extractor import Extractor
-from companion.core.initiative import Caps
+from companion.core.reachout import Caps, short_draft
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.spend import purpose
 from companion.core.types import (
@@ -40,7 +40,6 @@ from companion.features.nudges.logic import (
 )
 from companion.loops.ask import Judge, ask
 from companion.loops.features import Feature
-from companion.loops.openloops import short_draft
 from companion.loops.record import Recorder
 from companion.loops.turn import Heard, Turn, decide
 from companion.store.sqlite.store import Store

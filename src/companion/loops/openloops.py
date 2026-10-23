@@ -8,17 +8,17 @@ only records what it would have sent. Nothing here sends a message.
 from __future__ import annotations
 
 import logging
-import re
 import uuid
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field, replace
-from datetime import datetime, tzinfo
+from datetime import datetime, timedelta, tzinfo
+from typing import TYPE_CHECKING
 
 from companion.core.beliefs.extract import build_user_prompt, index_window
-from companion.core.clock import local_midnight
+from companion.core.clock import local_midnight, local_zone
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
-from companion.core.initiative import Caps, Situation, Verdict, evaluate
+from companion.core.initiative import Situation, Verdict, evaluate
 from companion.core.openloops import (
     PROMPT,
     SCHEMA,
@@ -27,13 +27,17 @@ from companion.core.openloops import (
     Making,
     OpenLoop,
     loop_labels,
+    loop_note,
+    loop_note_ref,
     normalise,
     parse,
     parse_resolved,
+    pick_note,
     render_open_loops,
     to_loop,
     to_resolution,
 )
+from companion.core.reachout import Caps, short_draft
 from companion.core.spend import purpose
 from companion.core.types import (
     DecisionKind,
@@ -47,14 +51,18 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.promises import read_promises
 from companion.loops.record import Recorder
+from companion.loops.turn import decide
 from companion.prompts import get
 from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.store import Store
 
+if TYPE_CHECKING:
+    from companion.loops.notes import Moment
+
 log = logging.getLogger("companion.initiative")
-MAX_DRAFT_WORDS = 18
 SESSION = SessionId("initiative")
 Draft = Callable[[OpenLoop], Awaitable[str]]
 Log = Callable[[str, dict[str, Json]], None]
@@ -268,16 +276,6 @@ def drafter(extractor: Extractor) -> Draft:
     return draft
 
 
-def short_draft(message: str) -> str:
-    """The draft if it is short, its first sentence if that is a short question, else none."""
-    text = " ".join(message.split())
-    if len(text.split()) <= MAX_DRAFT_WORDS:
-        return text
-    first = re.split(r"(?<=[.!?])\s+", text)[0]
-    short = len(first.split()) <= MAX_DRAFT_WORDS and first.endswith("?")
-    return first if short else ""
-
-
 MAX_TRIES = 3  # a batch that keeps failing is let go, so plans can never block on one
 
 
@@ -347,3 +345,39 @@ def _add(a: LoopCounts, b: LoopCounts) -> LoopCounts:
         a.cost_usd + b.cost_usd,
         a.resolved + b.resolved,
     )
+
+
+LOOP_OFFERED = "open loop: offered as a note when they wrote"
+LOOP_NOTE_EVERY = timedelta(hours=24)
+
+
+def loop_offer(m: Moment, found: object, so_far: Offered) -> Offer:
+    """Bring up one due open loop as a note when they write (J15): on a casual turn with no other
+    nudge, at most one a day, each loop at most twice. Once the reply is stored the loop is marked
+    asked, so it is never also a reach-out."""
+    del found
+    c, t = m.c, m.t
+    if not quiet(m, so_far) or c.store.decided_since(c.rel, LOOP_OFFERED, t.now - LOOP_NOTE_EVERY):
+        return Offer()
+    offers = c.store.loop_events_with_reason(c.rel, LOOP_OFFERED)
+    loop = pick_note(c.store.open_loops(c.rel), offers, t.now, local_zone())
+    if loop is None:
+        return Offer()
+    detail: dict[str, Json] = {
+        "loop_id": loop.id,
+        "claim": loop.claim,
+        "kind": loop.kind.value,
+        "offer": offers.get(loop.id, 0) + 1,
+        "note": loop_note_ref(loop),
+    }
+
+    def asked() -> None:
+        c.store.open_loop_event(loop.id, LoopState.ASKED, LOOP_OFFERED, t.now)
+        decide(c, t, LOOP_OFFERED, detail)
+
+    note = loop_note(loop)
+    return Offer((note,) if note else (), (asked,))
+
+
+# Plans of theirs read in the open-loop batch; a due one is brought up as a note when they write.
+OPENLOOPS = Feature("loop", note=loop_offer)

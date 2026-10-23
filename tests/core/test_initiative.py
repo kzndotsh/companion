@@ -3,8 +3,9 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
-from companion.core.initiative import Caps, Situation, evaluate, in_quiet_hours
+from companion.core.initiative import Situation, evaluate
 from companion.core.openloops import LoopKind, LoopState, OpenLoop
+from companion.core.reachout import Caps, in_quiet_hours
 from companion.core.types import RelationshipId, UtteranceId
 
 REL = RelationshipId("rel")

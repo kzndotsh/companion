@@ -16,6 +16,7 @@ from companion.features.reminders.run import REMINDERS
 from companion.features.topics.run import TOPICS
 from companion.features.worth.run import WORTH
 from companion.loops.features import Feature
+from companion.loops.openloops import OPENLOOPS
 
 FEATURES: tuple[Feature, ...] = (
     KNOWING,
@@ -26,6 +27,7 @@ FEATURES: tuple[Feature, ...] = (
     EPISODES,
     TOPICS,
     GUESS,
+    OPENLOOPS,
     LORE,
     REMINDERS,
     NUDGES,

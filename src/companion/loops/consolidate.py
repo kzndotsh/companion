@@ -24,11 +24,10 @@ from companion.core.consolidate import (
 )
 from companion.core.extractor import Extractor
 from companion.core.spend import purpose
-from companion.core.types import Belief, RelationshipId
+from companion.core.types import Belief, Depth, Domain, RelationshipId
 from companion.core.vectors import Embedder, nearest
-from companion.features.knowing.logic import Depth, Domain
-from companion.features.relevance.run import embed_missing
 from companion.loops.curate import log_would_close, retire
+from companion.loops.embed import embed_missing
 from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store
 

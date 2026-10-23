@@ -12,18 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, tzinfo
 
 from companion.core.openloops import SENSITIVE, LoopKind, LoopState, OpenLoop
-
-
-@dataclass(frozen=True, slots=True)
-class Caps:
-    quiet_start: time = time(23, 0)
-    quiet_end: time = time(8, 0)
-    max_per_day: int = 1
-    min_gap_hours: float = 20.0
-    user_quiet_minutes: int = 90
-    expire_days: float = 2.0
-    backoff_hours: float = 72.0  # after one reach-out went unanswered
-    max_unanswered: int = 2  # after this many in a row, wait for them to write first
+from companion.core.reachout import Caps, in_quiet_hours
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,13 +32,6 @@ class Verdict:
     reason: str
     loop: OpenLoop | None = None
     expired: tuple[OpenLoop, ...] = field(default_factory=tuple)
-
-
-def in_quiet_hours(now: datetime, tz: tzinfo, caps: Caps) -> bool:
-    t = now.astimezone(tz).time()
-    if caps.quiet_start <= caps.quiet_end:
-        return caps.quiet_start <= t < caps.quiet_end
-    return t >= caps.quiet_start or t < caps.quiet_end
 
 
 def _hours(delta: timedelta) -> float:

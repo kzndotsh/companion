@@ -19,7 +19,7 @@ typecheck:
     uv run basedpyright
 
 layers:
-    uv run lint-imports
+    uv run lint-imports --no-cache
 
 check: lint typecheck layers test
 

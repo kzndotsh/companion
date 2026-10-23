@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
-from companion.core.initiative import Caps, in_quiet_hours
+from companion.core.reachout import Caps, in_quiet_hours
 from companion.core.types import Json
 from companion.prompts import get
 

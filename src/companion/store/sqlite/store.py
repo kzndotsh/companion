@@ -29,6 +29,7 @@ from companion.core.types import (
     Flag,
     FlagId,
     Json,
+    Label,
     RelationshipId,
     Subject,
     TraceId,
@@ -40,7 +41,6 @@ from companion.core.vectors import Vector
 from companion.core.views import ViewState, parse_mode
 from companion.features.context import store as contexts
 from companion.features.episodes import store as episodes
-from companion.features.knowing.logic import Label
 from companion.features.lore.logic import Kind as ViewKind
 from companion.features.lore.logic import Labelled as ViewLabel
 from companion.features.names import store as names

@@ -7,8 +7,8 @@ from collections import Counter
 from pathlib import Path
 
 from companion.core.clock import local_zone
-from companion.core.types import DecisionKind, RelationshipId
-from companion.features.knowing.logic import WOULD_ASK, Depth, Domain, pick_gap
+from companion.core.types import DecisionKind, Depth, Domain, RelationshipId
+from companion.features.knowing.logic import WOULD_ASK, pick_gap
 from companion.store.sqlite.store import Store
 
 SHOWN_PICKS = 7

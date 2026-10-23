@@ -5,19 +5,27 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from companion.core.extractor import Extractor
 from companion.core.spend import purpose
-from companion.core.types import RelationshipId
+from companion.core.types import Json, RelationshipId
 from companion.features.knowing.logic import (
     LABEL_BATCH,
     LABEL_PROMPT,
     LABEL_SCHEMA,
+    MAP_EVERY,
+    WOULD_ASK,
     label_prompt,
     parse_labels,
+    pick_gap,
 )
-from companion.loops.features import Feature
+from companion.loops.features import Feature, Offer, Offered
+from companion.loops.turn import decide
 from companion.store.sqlite.store import Store
+
+if TYPE_CHECKING:
+    from companion.loops.notes import Moment
 
 log = logging.getLogger("companion.knowing")
 
@@ -59,4 +67,25 @@ async def label_new(
     return Labelled(done, left, cost)
 
 
-KNOWING = Feature("memory map", after_theirs=label_new)  # each new memory placed in their life
+def map_offer(m: Moment, found: object, so_far: Offered) -> Offer:
+    """The gap it would ask about on a casual turn, at most once a day (J48, shadow). Nothing
+    reaches the talker. The name comes first, so nothing is picked while that note is offered."""
+    del found
+    c, t = m.c, m.t
+    asking_name = bool(so_far["name"].lines)
+    if not m.casual or asking_name or c.store.decided_since(c.rel, WOULD_ASK, t.now - MAP_EVERY):
+        return Offer()
+    gap = pick_gap(c.store.user_beliefs(c.rel), c.store.belief_labels(c.rel))
+    if gap is None:
+        return Offer()
+    detail: dict[str, Json] = {
+        "why": gap.reason,
+        "domain": gap.domain.value,
+        "depth": gap.depth.value,
+        "counts": {d.value: n for d, n in gap.counts.items()},
+    }
+    return Offer(after=(lambda: decide(c, t, WOULD_ASK, detail),))
+
+
+# Each new memory placed in their life, and the gap it would ask about (shadow, logged only).
+KNOWING = Feature("memory map", note=map_offer, after_theirs=label_new)

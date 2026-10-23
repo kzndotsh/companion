@@ -8,8 +8,7 @@ import pytest
 from tests.conftest import REL, T0
 
 from companion.core.extractor import Extraction
-from companion.core.types import Belief, BeliefKind, Json, Utterance
-from companion.features.knowing.logic import Depth, Domain, Label
+from companion.core.types import Belief, BeliefKind, Depth, Domain, Json, Label, Utterance
 from companion.loops.consolidate import nightly
 from companion.store.sqlite.store import Store
 

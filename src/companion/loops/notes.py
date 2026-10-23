@@ -31,7 +31,6 @@ from companion.core.mood import Effect as MoodEffect
 from companion.core.mood import Said, chat_minutes, effects_for, held_because, inputs_for, mood_at
 from companion.core.mood import line as mood_line
 from companion.core.mood import reason as mood_reason
-from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_note
 from companion.core.ownup import owned_note
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import recall_note
@@ -43,8 +42,7 @@ from companion.core.types import (
     Speaker,
     Utterance,
 )
-from companion.features.knowing.logic import MAP_EVERY, WOULD_ASK, pick_gap
-from companion.loops.features import Feature, Offer, Offered, quiet
+from companion.loops.features import Feature, Offer, Offered
 from companion.loops.recall import Recalled, look_up
 from companion.loops.registry import FEATURES
 from companion.prompts import get
@@ -60,8 +58,6 @@ CHECK_IN_GAP = timedelta(hours=3)  # away at least this long since their last me
 HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
 SERIOUS = 2
 LOOK_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
-LOOP_OFFERED = "open loop: offered as a note when they wrote"
-LOOP_NOTE_EVERY = timedelta(hours=24)
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,24 +97,6 @@ async def look(
     )
 
 
-def _map_shadow(m: Moment, *, asking_name: bool) -> Offer:
-    """The gap it would ask about on a casual turn, at most once a day (J48, shadow). Nothing
-    reaches the talker. The name comes first, so nothing is picked while that note is offered."""
-    c, t = m.c, m.t
-    if not m.casual or asking_name or c.store.decided_since(c.rel, WOULD_ASK, t.now - MAP_EVERY):
-        return Offer()
-    gap = pick_gap(c.store.user_beliefs(c.rel), c.store.belief_labels(c.rel))
-    if gap is None:
-        return Offer()
-    detail: dict[str, Json] = {
-        "why": gap.reason,
-        "domain": gap.domain.value,
-        "depth": gap.depth.value,
-        "counts": {d.value: n for d, n in gap.counts.items()},
-    }
-    return Offer(after=(lambda: decide(c, t, WOULD_ASK, detail),))
-
-
 def _ask_name(m: Moment) -> Offer:
     """Offer to ask what to call them on a casual turn, at most once a day, until memory knows."""
     c, t = m.c, m.t
@@ -128,33 +106,6 @@ def _ask_name(m: Moment) -> Offer:
         asked_recently=c.store.decided_since(c.rel, ASKED_NAME, t.now - ASK_NAME_EVERY),
     )
     return Offer() if note is None else Offer((note,), (lambda: decide(c, t, ASKED_NAME),))
-
-
-def _loop_note(m: Moment, *, quiet: bool) -> Offer:
-    """Bring up one due open loop as a note when they write (J15): on a casual turn with no other
-    nudge, at most one a day, each loop at most twice. Once the reply is stored the loop is marked
-    asked, so it is never also a reach-out."""
-    c, t = m.c, m.t
-    if not quiet or c.store.decided_since(c.rel, LOOP_OFFERED, t.now - LOOP_NOTE_EVERY):
-        return Offer()
-    offers = c.store.loop_events_with_reason(c.rel, LOOP_OFFERED)
-    loop = pick_note(c.store.open_loops(c.rel), offers, t.now, local_zone())
-    if loop is None:
-        return Offer()
-    detail: dict[str, Json] = {
-        "loop_id": loop.id,
-        "claim": loop.claim,
-        "kind": loop.kind.value,
-        "offer": offers.get(loop.id, 0) + 1,
-        "note": loop_note_ref(loop),
-    }
-
-    def asked() -> None:
-        c.store.open_loop_event(loop.id, LoopState.ASKED, LOOP_OFFERED, t.now)
-        decide(c, t, LOOP_OFFERED, detail)
-
-    note = loop_note(loop)
-    return Offer((note,) if note else (), (asked,))
 
 
 def _listening_note(c: Conversation, t: Turn, heard: Heard | None) -> str | None:
@@ -388,18 +339,6 @@ def _name(m: Moment, so_far: Offered) -> Offer:
     return Offer() if so_far["check-in"].lines else _ask_name(m)
 
 
-def _quiet(m: Moment, so_far: Offered) -> bool:
-    return quiet(m, so_far)
-
-
-def _map(m: Moment, so_far: Offered) -> Offer:
-    return _map_shadow(m, asking_name=bool(so_far["name"].lines))
-
-
-def _loop(m: Moment, so_far: Offered) -> Offer:
-    return _loop_note(m, quiet=_quiet(m, so_far))
-
-
 def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
     note = f.note
     assert note is not None
@@ -423,8 +362,6 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "hold": _hold,
     "brush-off": _brush,
     "name": _name,
-    "map": _map,
-    "loop": _loop,
 }
 
 # Every note, in the order it reaches the system block. A source sees what the ones before it
@@ -443,7 +380,7 @@ ORDER: tuple[str, ...] = (
     "hold",
     "brush-off",
     "name",
-    "map",
+    "memory map",
     "loop",
     "topic",
     "guess",

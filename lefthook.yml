@@ -11,4 +11,4 @@ pre-commit:
       glob: "*.py"
       run: uv run basedpyright
     layers:
-      run: uv run lint-imports
+      run: uv run lint-imports --no-cache

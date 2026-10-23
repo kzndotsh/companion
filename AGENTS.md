@@ -101,7 +101,7 @@ rules: `core` imports nothing from the shell, only `store` and `lib/sqlite` impo
   also goes by name in `ORDER` in `loops/notes.py`, which is checked when the module loads. No field on
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
   reaches its note as `Lookups.found[name]`. Registered: the memory map, names, context, worth, relevance,
-  recent times, topic-spent, guess, lore, reminders, nudges and the basics hook.
+  recent times, topic-spent, guess, open loops, lore, reminders, nudges and the basics hook.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it
   works). import-linter keeps a feature's logic pure, keeps features from importing each other, and lets only

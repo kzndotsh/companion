@@ -24,6 +24,7 @@ from companion.features.relevance.logic import PROMPT, SCHEMA, build_prompt, eli
 from companion.features.relevance.logic import SHADOW as RELEVANCE_SHADOW
 from companion.features.relevance.logic import SHOWN as RELEVANCE_SHOWN
 from companion.loops.ask import Judge, ask
+from companion.loops.embed import embed_missing
 from companion.loops.features import Feature, Offer, Offered
 from companion.loops.turn import Heard, Turn, decide, mark
 from companion.prompts import get
@@ -35,7 +36,6 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.relevance")
 TIMEOUT_SECONDS = 10.0
-EMBED_BATCH = 100
 SHOWN = 3
 
 
@@ -44,24 +44,6 @@ class Lookup:
     """What one shadow look-up found, for the decision detail."""
 
     detail: dict[str, Json]
-
-
-async def embed_missing(
-    store: Store, embedder: Embedder, rel: RelationshipId, model: str, now: datetime
-) -> float:
-    """Embed every current memory that has no vector for this model yet. Returns the cost."""
-    have = store.belief_embeddings(rel, model)
-    todo = [b for b in store.user_beliefs(rel) if b.id not in have]
-    cost = 0.0
-    for i in range(0, len(todo), EMBED_BATCH):
-        chunk = todo[i : i + EMBED_BATCH]
-        with purpose("relevance"):
-            got = await embedder.embed([b.claim for b in chunk])
-        store.add_belief_embeddings(
-            rel, {b.id: v for b, v in zip(chunk, got.vectors, strict=True)}, model, now
-        )
-        cost += got.cost_usd
-    return cost
 
 
 def _row(b: Belief, on_card: set[BeliefId], score: float | None = None) -> dict[str, Json]:

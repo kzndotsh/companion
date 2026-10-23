@@ -237,3 +237,27 @@ class Flag:
 
     def __post_init__(self) -> None:
         _require_aware("at", self.at)
+
+
+class Domain(StrEnum):
+    IDENTITY = "identity"  # who they are and what to call them
+    PEOPLE = "people"  # family, friends, partners, pets
+    DAILY = "daily"  # daily life, work, home, routines
+    INTERESTS = "interests"  # tastes, hobbies, media, food
+    HISTORY = "history"  # their past and the stories that formed them
+    HOPES = "hopes"  # plans, goals, what they want
+    VALUES = "values"  # what they believe and care about
+    INNER = "inner"  # feelings, health, struggles, desires
+
+
+class Depth(StrEnum):
+    SURFACE = "surface"
+    PERSONAL = "personal"
+    CORE = "core"
+
+
+@dataclass(frozen=True, slots=True)
+class Label:
+    belief_id: BeliefId
+    domain: Domain
+    depth: Depth

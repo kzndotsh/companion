@@ -25,11 +25,12 @@ from companion.core.types import (
     Belief,
     BeliefId,
     DecisionKind,
+    Depth,
+    Domain,
     Frame,
     Speaker,
 )
 from companion.core.views import ViewState, card_views
-from companion.features.knowing.logic import Depth, Domain
 from companion.loops.notes import Lookups, Moment, notes_for
 from companion.loops.record import Recorder
 from companion.loops.turn import Heard, Turn, decide, mark
