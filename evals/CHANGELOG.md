@@ -1501,3 +1501,15 @@ GPT-6 Luna, persona v41, the owner's character sheet (as recorded): 1/12 claimed
 I could see what you mean too"), 11/12 said it could not see the news and asked what happened. Read by
 eye. Under a cent. Rerun: a scratch script that rebuilds the turn from `turn_requests` and draws the talker.
 
+## 2026-10-23: A plain note that they reacted to its last message changes nothing
+
+Before deciding how the user's Telegram reactions would be used (J24), a note stating only the fact,
+"They reacted 😂 to your last message." (or ❤️), was added to the notes on 4 recorded everyday turns
+whose previous reply ended on a joke. 12 draws per cell, GPT-6 Luna, persona v41, the owner's character
+sheet (as recorded); 144 replies scored blind by a Haiku reader and checked by regex. No reply mentioned
+the reaction (0/96). It brought back the previous joke on one turn only, 4/12 with no note, 2/12 with 😂,
+3/12 with ❤️ (noise); affectionate and playful replies about 22 to 24 of 48 in every arm; median length
+23.5 words without the note and 20 with, likely noise. A bare fact in the notes is read and left alone, so
+reactions would earn their place as quiet feedback, not as a note. $0.013. Rerun: a scratch script that
+rebuilds each turn from `turn_requests` and adds the line inside `<notes>`.
+
