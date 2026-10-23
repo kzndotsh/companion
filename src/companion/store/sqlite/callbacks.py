@@ -9,7 +9,7 @@ from datetime import datetime
 
 from companion.core.callbacks import Check
 from companion.core.types import RelationshipId, TurnId
-from companion.store.sqlite.db import iso, write_tx
+from companion.lib.sqlite.db import iso, write_tx
 
 
 @dataclass(frozen=True, slots=True)

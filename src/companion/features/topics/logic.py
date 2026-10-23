@@ -12,7 +12,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from companion.core.types import Json, Speaker, Utterance
-from companion.prompts import Prompt, get
+from companion.lib.prompts import Prompt
+from companion.prompts import get
 
 JUDGE = get("system/topic-spent")
 SCHEMA: dict[str, Json] = {

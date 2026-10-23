@@ -8,8 +8,9 @@ import pytest
 
 from companion.core.replay import TurnRecord
 from companion.core.types import Belief, Flag, FlagId, FlagKind, SessionId, TurnId, Utterance
+from companion.lib.sqlite.db import connect
 from companion.store.sqlite import flags, ledger, turns
-from companion.store.sqlite.db import connect, migrate
+from companion.store.sqlite.db import migrate
 from tests.conftest import REL, T0
 
 

@@ -6,7 +6,7 @@ import sqlite3
 from datetime import datetime
 
 from companion.core.types import Flag, FlagId, FlagKind, RelationshipId, TurnId
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
 def add_flag(conn: sqlite3.Connection, f: Flag) -> None:

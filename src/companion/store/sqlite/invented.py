@@ -9,7 +9,7 @@ from datetime import datetime
 
 from companion.core.invented import Statement, Support
 from companion.core.types import RelationshipId, TurnId
-from companion.store.sqlite.db import iso, write_tx
+from companion.lib.sqlite.db import iso, write_tx
 
 RECENT = 40  # messages the judge sees before the reply, their message included: what the talker saw
 

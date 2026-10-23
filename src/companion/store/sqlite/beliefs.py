@@ -17,7 +17,7 @@ from companion.core.types import (
     Subject,
     UtteranceId,
 )
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
 def _insert(conn: sqlite3.Connection, b: Belief) -> None:

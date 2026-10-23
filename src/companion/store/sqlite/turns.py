@@ -7,7 +7,7 @@ import sqlite3
 from companion.core.prompt.prefix import Prefix
 from companion.core.replay import TurnRecord
 from companion.core.types import RelationshipId, SessionId, TurnId
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
 def save_prefix(conn: sqlite3.Connection, p: Prefix) -> None:

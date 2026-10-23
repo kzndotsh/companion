@@ -17,8 +17,9 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.lib.sqlite.db import connect, iso
 from companion.store.sqlite import beliefs, ledger
-from companion.store.sqlite.db import connect, iso, migrate
+from companion.store.sqlite.db import migrate
 from tests.conftest import REL, T0
 
 

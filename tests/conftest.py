@@ -22,7 +22,8 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.store.sqlite.db import connect, migrate
+from companion.lib.sqlite.db import connect
+from companion.store.sqlite.db import migrate
 
 REL = RelationshipId("rel-1")
 T0 = datetime(2026, 10, 1, 9, 0, tzinfo=UTC)

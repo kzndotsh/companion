@@ -8,7 +8,7 @@ from datetime import datetime
 
 from companion.core.types import BeliefId, RelationshipId
 from companion.features.lore.logic import Kind, Labelled
-from companion.store.sqlite.db import iso, write_tx
+from companion.lib.sqlite.db import iso, write_tx
 
 
 def add(  # noqa: PLR0913

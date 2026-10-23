@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.types import RelationshipId, UtteranceId
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
 @dataclass(frozen=True, slots=True)

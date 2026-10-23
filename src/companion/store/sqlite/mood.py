@@ -8,7 +8,7 @@ from datetime import datetime
 
 from companion.core.mood import PARAMS_VERSION, Effect, Said, Source, State
 from companion.core.types import RelationshipId, TurnId
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
 def add(conn: sqlite3.Connection, rel: RelationshipId, effects: Sequence[Effect]) -> None:

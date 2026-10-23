@@ -17,7 +17,7 @@ from companion.core.types import (
     TraceId,
     TurnId,
 )
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 REACTED = "reacted "  # the key of a reaction sent instead of a reply
 CLOSED = "closed belief:"  # the key of a memory closed

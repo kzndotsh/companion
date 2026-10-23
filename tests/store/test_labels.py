@@ -7,7 +7,7 @@ import pytest
 
 from companion.core.types import BeliefId
 from companion.features.knowing.logic import Depth, Domain, Label
-from companion.store.sqlite.db import connect
+from companion.lib.sqlite.db import connect
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 

@@ -10,8 +10,9 @@ from companion.core.history import HISTORY_LIMIT
 from companion.core.prompt.request import TalkerRequest
 from companion.core.replay import TAIL, ReplayError, TurnRecord, matches_record, rebuild_request
 from companion.core.types import Decision, TurnId
+from companion.lib.sqlite.db import connect
 from companion.store.sqlite import decisions, ledger, turns
-from companion.store.sqlite.db import connect, migrate
+from companion.store.sqlite.db import migrate
 
 
 @dataclass(frozen=True, slots=True)

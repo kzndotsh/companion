@@ -8,7 +8,7 @@ from datetime import datetime
 
 from companion.core.spend import SpendEvent
 from companion.core.types import BeliefId, Json, RelationshipId
-from companion.store.sqlite.db import iso, write_tx
+from companion.lib.sqlite.db import iso, write_tx
 
 
 def set_value(

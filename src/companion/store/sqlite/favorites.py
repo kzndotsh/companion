@@ -5,7 +5,7 @@ from __future__ import annotations
 import sqlite3
 
 from companion.core.types import Favorite, FavoriteId, RelationshipId, TurnId
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
 def add_favorite(conn: sqlite3.Connection, f: Favorite) -> None:

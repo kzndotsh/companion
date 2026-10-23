@@ -9,7 +9,7 @@ from datetime import datetime
 
 from companion.core.types import BeliefId, RelationshipId
 from companion.core.vectors import Vector
-from companion.store.sqlite.db import iso, write_tx
+from companion.lib.sqlite.db import iso, write_tx
 
 
 def add(

@@ -67,7 +67,7 @@ from companion.store.sqlite import (
     turns,
     view_kinds,
 )
-from companion.store.sqlite.db import connect, migrate
+from companion.store.sqlite.db import open_db
 from companion.store.sqlite.open_loops import ReachOut
 from companion.store.sqlite.promises import Recorded as RecordedPromise
 
@@ -80,8 +80,7 @@ log = logging.getLogger("companion.store")
 class Store:
     def __init__(self, path: Path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = connect(path)
-        migrate(self._conn)
+        self._conn = open_db(path)
 
     def close(self) -> None:
         self._conn.close()

@@ -8,7 +8,7 @@ import pytest
 
 from companion.core.types import Belief, BeliefId, Utterance
 from companion.core.vectors import unit
-from companion.store.sqlite.db import connect
+from companion.lib.sqlite.db import connect
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 

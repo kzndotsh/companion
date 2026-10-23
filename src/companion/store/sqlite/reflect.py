@@ -7,7 +7,7 @@ from datetime import datetime
 
 from companion.core.reflect import ReflectRun
 from companion.core.types import RelationshipId, UtteranceId
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
 def record_run(conn: sqlite3.Connection, r: ReflectRun) -> None:

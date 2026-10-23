@@ -14,7 +14,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.store.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
 def _utterance(row: sqlite3.Row) -> Utterance:

@@ -23,9 +23,10 @@ from companion.core.types import (
     TurnId,
     Utterance,
 )
+from companion.lib.sqlite.db import connect
 from companion.store.sqlite import decisions, ledger, turns
 from companion.store.sqlite import replay as store_replay
-from companion.store.sqlite.db import connect, migrate
+from companion.store.sqlite.db import migrate
 
 PERSONA = "You are a companion with a settled voice. " * 200
 

@@ -16,7 +16,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from companion.core.types import Json
-from companion.prompts import Prompt, get
+from companion.lib.prompts import Prompt
+from companion.prompts import get
 
 SEVERITIES = (0, 1, 2, 3)
 SERIOUS = 2  # serious personal; 3 is acute

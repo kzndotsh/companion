@@ -25,7 +25,7 @@ CAPS = {
     "loops/fast.py": 145,
     "loops/notes.py": 479,
     "daemon.py": 572,
-    "store/sqlite/store.py": 537,
+    "store/sqlite/store.py": 536,
 }
 NOQA_CAP = 66  # lint exceptions in src; each new one replaces an old one
 

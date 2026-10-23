@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from companion.core.extractor import Extractor, from_fallback
 from companion.core.spend import purpose
 from companion.core.types import Json
-from companion.prompts import Prompt
+from companion.lib.prompts import Prompt
 
 log = logging.getLogger("companion.judges")
 
