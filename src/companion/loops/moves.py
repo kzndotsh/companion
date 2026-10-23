@@ -8,10 +8,11 @@ from collections.abc import Coroutine, Sequence
 from dataclasses import dataclass, field
 
 from companion.core.extractor import Extractor
-from companion.core.moves import FRESH_FOR, SCHEMA, SYSTEM, build_prompt, note_for, parse
-from companion.core.spend import purpose
+from companion.core.moves import FRESH_FOR, PROMPT, SCHEMA, build_prompt, note_for, parse
+from companion.loops.ask import Judge, ask
 
 TIMEOUT_SECONDS = 6.0
+HABITS = Judge("habits", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="no note")
 log = logging.getLogger("companion.moves")
 
 
@@ -20,17 +21,8 @@ async def find_habits(
 ) -> tuple[list[str], str, str] | None:
     """The habits, the model id and the prompt, or None if they could not be found in time."""
     prompt = build_prompt(replies)
-    try:
-        with purpose("habits"):
-            result = await asyncio.wait_for(
-                extractor.extract(SYSTEM, prompt, SCHEMA), TIMEOUT_SECONDS
-            )
-    except Exception as err:
-        log.warning("habit check failed or timed out; no note: %r", err)
-        return None
-    habits = parse(result.data)
-    log.debug("habit judged %s in %dms, $%.5f", habits, result.latency_ms, result.cost_usd)
-    return None if habits is None else (habits, result.model, prompt)
+    got = await ask(extractor, HABITS, prompt)
+    return None if got is None else (got.value, got.model, prompt)
 
 
 @dataclass(slots=True)

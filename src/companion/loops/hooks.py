@@ -3,14 +3,13 @@ model only means no shadow pick this turn."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from collections.abc import Sequence
 
 from companion.core.extractor import Extractor
 from companion.core.recall import SCHEMA, build_prompt, candidates, parse
-from companion.core.spend import purpose
 from companion.core.types import Belief
+from companion.loops.ask import Judge, ask
 from companion.prompts import get
 
 log = logging.getLogger("companion.hooks")
@@ -25,13 +24,13 @@ async def stated(
     labelled = candidates(beliefs)
     if not labelled:
         return []
-    try:
-        with purpose("hook"):
-            got = await asyncio.wait_for(
-                extractor.extract(KNOWN.text, build_prompt(topic, labelled), SCHEMA),
-                TIMEOUT_SECONDS,
-            )
-    except Exception as err:
-        log.debug("basics check failed or was slow: %r", err)
-        return None
-    return parse(got.data, labelled)
+    judge = Judge(
+        "hook",
+        KNOWN,
+        SCHEMA,
+        lambda data: parse(data, labelled),
+        timeout=TIMEOUT_SECONDS,
+        unread="no shadow pick this turn",
+    )
+    got = await ask(extractor, judge, build_prompt(topic, labelled))
+    return None if got is None else got.value
