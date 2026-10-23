@@ -5,7 +5,7 @@ import pytest
 from companion.evals.fixtures import Fixture, MaxWords
 from companion.evals.report import render_table
 from companion.evals.runner import Cell, Results, Sample, Variant
-from companion.evals.stats import Comparison, cmh, fisher, holm, samples_needed, wilson
+from companion.lib.stats import Comparison, cmh, fisher, holm, samples_needed, wilson
 from tests.evals.test_evals import PREFIX
 
 

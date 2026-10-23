@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import asyncio
 
-from companion.core.agreement import unanimous
 from companion.core.extractor import Extraction
 from companion.core.types import Json
+from companion.lib.vote import unanimous
 from companion.loops.reads import read_times
 
 

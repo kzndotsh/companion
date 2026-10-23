@@ -16,7 +16,6 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.agreement import READS
 from companion.core.consolidate import (
     PAIR,
     PAIR_SCHEMA,
@@ -26,6 +25,7 @@ from companion.core.consolidate import (
 )
 from companion.core.types import Belief
 from companion.daemon import load_dotenv
+from companion.lib.vote import READS
 from companion.models.openrouter import OpenRouterExtractor
 
 pytestmark = pytest.mark.live

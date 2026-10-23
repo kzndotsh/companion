@@ -16,7 +16,7 @@ from pathlib import Path
 
 import httpx
 
-from companion import backups, characters, logsetup, prompts
+from companion import backups, characters, prompts
 from companion.characters import Character
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.callbacks import report
@@ -38,6 +38,7 @@ from companion.features.nudges.run import tick_nudge
 from companion.features.reminders.run import deliver_due
 from companion.features.worth.run import label
 from companion.io.telegram import Commands, Hooks, Telegram
+from companion.lib import logs, retry
 from companion.loops import merging
 from companion.loops.callbacks import check_new
 from companion.loops.consolidate import SameCheck
@@ -51,7 +52,6 @@ from companion.loops.spendcap import over_cap
 from companion.loops.views import views_implicated
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import RefusalFallback, TalkerFallback
-from companion.models.retry import retry_on_network_error
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
@@ -323,7 +323,7 @@ def _start_reminders(
 async def run(data_dir: Path) -> None:
     load_dotenv(Path(".env"))
     s = Settings.from_env()
-    log_file = logsetup.configure(data_dir / "logs")
+    log_file = logs.configure(data_dir / "logs")
     token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
     rel = RelationshipId(f"telegram-{user}")
     db = data_dir / f"{rel}.sqlite"
@@ -373,7 +373,7 @@ async def run(data_dir: Path) -> None:
                 logging.getLogger("companion.slow").warning("daily spend cap reached; no reflect")
                 return
             try:
-                result = await retry_on_network_error(
+                result = await retry.retry_on_network_error(
                     lambda: reflect_once(
                         store, reflector, rel, same=same, promises=s.on("promises")
                     ),

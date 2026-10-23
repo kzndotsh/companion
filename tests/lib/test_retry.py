@@ -3,8 +3,8 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from companion.models import retry
-from companion.models.retry import retry_on_network_error
+from companion.lib import retry
+from companion.lib.retry import retry_on_network_error
 
 
 @pytest.fixture(autouse=True)

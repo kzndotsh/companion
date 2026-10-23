@@ -12,7 +12,7 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json
-from companion.models.retry import retry_on_network_error
+from companion.lib.retry import retry_on_network_error
 from companion.models.wire import (
     integer,
     messages_with_breakpoint,

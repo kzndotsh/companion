@@ -8,7 +8,7 @@ from pathlib import Path
 
 from companion import backups
 from companion.core.clock import utc_now
-from companion.store.sqlite.backup import BackupError, check, restore, snapshots
+from companion.lib.sqlite.backup import BackupError, check, restore, snapshots
 
 BOT = r"(^uv run companion run$|\.venv/bin/companion run$)"  # as scripts/restart.sh finds it
 

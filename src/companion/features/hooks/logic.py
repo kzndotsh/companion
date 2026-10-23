@@ -14,8 +14,8 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from enum import StrEnum
 
-from companion.core.agreement import unanimous
 from companion.core.types import Json
+from companion.lib.vote import unanimous
 from companion.prompts import get
 
 PROMPT = get("system/basics-hook")

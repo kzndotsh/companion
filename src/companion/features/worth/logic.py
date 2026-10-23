@@ -15,8 +15,8 @@ from collections.abc import Sequence
 from datetime import timedelta
 from enum import StrEnum
 
-from companion.core.agreement import unanimous
 from companion.core.types import Json
+from companion.lib.vote import unanimous
 from companion.prompts import get
 
 PROMPT = get("system/memory-worth")

@@ -41,7 +41,8 @@ uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
 Strict ruff and basedpyright, a lefthook pre-commit, and import-linter run on every commit. Layer
-rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`. `core` may import
+rules: `core` imports nothing from the shell, only `store` and `lib/sqlite` import `sqlite3`, and
+`lib` imports nothing from the companion (only the standard library and itself). `core` may import
 `companion.prompts`, which only reads packaged text.
 
 ## Principles
@@ -110,7 +111,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   failed read means, whether a fallback model's answer counts, tries) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.
 - Ask a small model the same question several times with `loops/reads.py` `read_times` (each failed or
-  unreadable read is None) and count agreement with `core/agreement.py` (`READS`, `unanimous`); a
+  unreadable read is None) and count agreement with `lib/vote.py` (`READS`, `unanimous`); a
   feature states what a failed read means for it (no agreement, or try the batch again later).
 - Record a decision through `loops/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
   `_decide(c, t, ...)`), never by building `Decision(...)` by hand. Code that looks a past decision up
@@ -145,7 +146,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   once into `companion/settings.py` (`Settings`, one row per switch in `SWITCHES`); the startup line is
   printed from it. A new switch is one row there.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
-  per stage and the full text of what was said. Secrets are scrubbed by value (`logsetup.py`), and
+  per stage and the full text of what was said. Secrets are scrubbed by value (`lib/logs.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.
 - Never log or print the Telegram token. Telegram errors carry no URL (`TelegramError`).
 - Restart with `just restart` in a terminal the owner can see, never as a hidden background job or under a

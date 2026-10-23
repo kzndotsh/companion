@@ -9,7 +9,7 @@ from pathlib import Path
 
 from companion.evals.fixtures import Fixture
 from companion.evals.runner import Results, Variant
-from companion.evals.stats import Comparison, cmh, fisher, holm, wilson
+from companion.lib.stats import Comparison, cmh, fisher, holm, wilson
 
 
 def _counts(results: Results, fixture: str, variant: str) -> tuple[int, int]:

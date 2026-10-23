@@ -114,8 +114,29 @@ ignore_imports = [
 ]
 
 [[tool.importlinter.contracts]]
+id = "lib-knows-nothing"
+name = "lib imports nothing from the companion"
+type = "forbidden"
+source_modules = ["companion.lib"]
+forbidden_modules = [
+    "companion.core",
+    "companion.loops",
+    "companion.features",
+    "companion.store",
+    "companion.models",
+    "companion.cli",
+    "companion.io",
+    "companion.prompts",
+    "companion.evals",
+    "companion.daemon",
+    "companion.settings",
+    "companion.backups",
+    "companion.characters",
+]
+
+[[tool.importlinter.contracts]]
 id = "only-store-owns-sqlite"
-name = "only store imports sqlite3"
+name = "only store and lib.sqlite import sqlite3"
 type = "forbidden"
 source_modules = [
     "companion.core",
@@ -128,6 +149,10 @@ source_modules = [
     "companion.features.*.logic",
     "companion.features.*.run",
     "companion.features.*.cli",
+    "companion.lib.vote",
+    "companion.lib.retry",
+    "companion.lib.stats",
+    "companion.lib.logs",
 ]
 forbidden_modules = ["sqlite3"]
 allow_indirect_imports = true

@@ -12,8 +12,8 @@ from __future__ import annotations
 import itertools
 from collections.abc import Sequence
 
-from companion.core.agreement import READS
 from companion.core.types import Belief, BeliefKind, Json
+from companion.lib.vote import READS
 from companion.prompts import get
 
 GROUP = get("system/memory-group")

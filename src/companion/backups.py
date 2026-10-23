@@ -11,7 +11,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from companion.store.sqlite.backup import BackupError, prune, snapshot
+from companion.lib.sqlite.backup import BackupError, prune, snapshot
 
 log = logging.getLogger("companion.backup")
 KEEP_DAILY = 7  # a week of history, however often it restarts

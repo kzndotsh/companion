@@ -8,7 +8,7 @@ import pytest
 
 from companion import backups
 from companion.core.types import Utterance
-from companion.store.sqlite.backup import BackupError, check, prune, restore, snapshot, snapshots
+from companion.lib.sqlite.backup import BackupError, check, prune, restore, snapshot, snapshots
 from companion.store.sqlite.store import Store
 from tests.conftest import T0
 

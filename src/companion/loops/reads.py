@@ -1,4 +1,4 @@
-"""Asking a small model the same question several times (`core/agreement.py`).
+"""Asking a small model the same question several times (`lib/vote.py`).
 
 The fan-out every judged feature needs: the reads run at once, each failed call or unreadable
 answer is a None read, and the cost of the reads that answered is summed. What a None read means
@@ -12,10 +12,10 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from companion.core.agreement import READS
 from companion.core.extractor import Extractor
 from companion.core.spend import purpose
 from companion.core.types import Json
+from companion.lib.vote import READS
 
 log = logging.getLogger("companion.reads")
 
