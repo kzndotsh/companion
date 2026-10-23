@@ -88,7 +88,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
   `_assemble`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
-  failed one adds nothing that turn. A shadow look-up runs through `_beside` in `loops/fast.py`, which logs a failure.
+  failed one adds nothing that turn. A shadow look-up runs through `beside` in `loops/beside.py`, which logs a failure.
 - Ask a judge through `loops/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.
