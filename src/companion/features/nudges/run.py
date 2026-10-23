@@ -39,9 +39,9 @@ from companion.features.nudges.logic import (
     parse,
 )
 from companion.loops.ask import Judge, ask
+from companion.loops.current import Heard, Turn, decide
 from companion.loops.features import Feature
 from companion.loops.record import Recorder
-from companion.loops.turn import Heard, Turn, decide
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:

@@ -24,9 +24,9 @@ from companion.features.relevance.logic import PROMPT, SCHEMA, build_prompt, eli
 from companion.features.relevance.logic import SHADOW as RELEVANCE_SHADOW
 from companion.features.relevance.logic import SHOWN as RELEVANCE_SHOWN
 from companion.loops.ask import Judge, ask
+from companion.loops.current import Heard, Turn, decide, mark
 from companion.loops.embed import embed_missing
 from companion.loops.features import Feature, Offer, Offered
-from companion.loops.turn import Heard, Turn, decide, mark
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 

@@ -22,9 +22,9 @@ from companion.core.types import (
     TurnId,
 )
 from companion.loops.conversation import Conversation
+from companion.loops.current import Turn
 from companion.loops.record import Recorder
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
-from companion.loops.turn import Turn
 from companion.turn.assemble import assemble
 from companion.turn.beside import shadows
 from companion.turn.hear import listen

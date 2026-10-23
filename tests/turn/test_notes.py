@@ -13,7 +13,7 @@ from companion.features.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
 from companion.loops.conversation import Conversation
-from companion.loops.turn import Turn
+from companion.loops.current import Turn
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

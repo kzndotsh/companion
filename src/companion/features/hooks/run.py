@@ -22,9 +22,9 @@ from companion.features.hooks.logic import (
 )
 from companion.features.hooks.logic import SCHEMA as HOOK_SCHEMA
 from companion.loops.ask import Judge, ask
+from companion.loops.current import Heard, Turn, decide, is_casual
 from companion.loops.features import Feature
 from companion.loops.reads import read_times
-from companion.loops.turn import Heard, Turn, decide, is_casual
 from companion.prompts import get
 
 if TYPE_CHECKING:

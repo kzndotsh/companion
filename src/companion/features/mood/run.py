@@ -20,8 +20,8 @@ from companion.features.mood.logic import (
 )
 from companion.features.mood.logic import line as mood_line
 from companion.features.mood.logic import reason as mood_reason
+from companion.loops.current import Heard, Turn, decide
 from companion.loops.features import Feature, Moment, Offer, Offered
-from companion.loops.turn import Heard, Turn, decide
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

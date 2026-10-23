@@ -14,8 +14,8 @@ from companion.features.topics.logic import NOTE as TOPIC_NOTE
 from companion.features.topics.logic import SPENT as TOPIC_SPENT
 from companion.features.topics.logic import likely as topic_likely
 from companion.loops.ask import Judge, ask
+from companion.loops.current import Heard, Turn, decide, is_casual, mark
 from companion.loops.features import Feature, Offer, Offered, quiet
-from companion.loops.turn import Heard, Turn, decide, is_casual, mark
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

@@ -35,7 +35,7 @@ from companion.registry import FEATURES
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation
-from companion.loops.turn import Heard, Turn, decide, mark
+from companion.loops.current import Heard, Turn, decide, mark
 
 log = logging.getLogger("companion.turn")
 CHECK_IN_NOTE = get("notes/check-in")

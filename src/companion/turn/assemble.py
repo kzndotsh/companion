@@ -31,9 +31,9 @@ from companion.core.types import (
     Speaker,
 )
 from companion.core.views import ViewState, card_views
+from companion.loops.current import Heard, Turn, decide, mark
 from companion.loops.features import Lookups, Moment
 from companion.loops.record import Recorder
-from companion.loops.turn import Heard, Turn, decide, mark
 from companion.turn.notes import notes_for
 
 if TYPE_CHECKING:

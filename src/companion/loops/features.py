@@ -13,8 +13,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
 from companion.core.types import Belief, BeliefId, Frame, Utterance
+from companion.loops.current import Heard, Turn, is_casual
 from companion.loops.recall import Recalled
-from companion.loops.turn import Heard, Turn, is_casual
 
 if TYPE_CHECKING:
     from datetime import datetime

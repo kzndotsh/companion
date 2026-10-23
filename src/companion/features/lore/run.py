@@ -25,9 +25,9 @@ from companion.features.lore.logic import (
     parse,
     prompt,
 )
+from companion.loops.current import Heard, Turn, decide, is_casual
 from companion.loops.features import Feature, Offer, Offered
 from companion.loops.reads import read_times
-from companion.loops.turn import Heard, Turn, decide, is_casual
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:

@@ -55,10 +55,10 @@ from companion.features.reminders.logic import (
 )
 from companion.features.reminders.store import Reminder
 from companion.loops.ask import Judge, ask
+from companion.loops.current import Heard, Turn, mark
 from companion.loops.features import Feature, Offer, Offered
 from companion.loops.record import Recorder
 from companion.loops.spendcap import over_cap
-from companion.loops.turn import Heard, Turn, mark
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

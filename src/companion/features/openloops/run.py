@@ -52,9 +52,9 @@ from companion.features.openloops.logic import (
     to_resolution,
 )
 from companion.features.openloops.store import ReachOut
+from companion.loops.current import decide
 from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.record import Recorder
-from companion.loops.turn import decide
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 

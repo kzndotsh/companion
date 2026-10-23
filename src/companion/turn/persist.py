@@ -39,12 +39,13 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import why
-from companion.loops.turn import Answered, Turn, decide, mark, recorder
+from companion.loops.current import Turn, decide, mark, recorder
 from companion.registry import FEATURES
 from companion.store.sqlite.decisions import REACTED
 from companion.turn.assemble import Assembled, CardLog
 from companion.turn.frames import inputs_hash as frames_inputs_hash
 from companion.turn.frames import schema_hash as frames_schema_hash
+from companion.turn.values import Answered
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

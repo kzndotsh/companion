@@ -23,8 +23,8 @@ from companion.features.names.logic import (
     parse,
     prompt,
 )
+from companion.loops.current import Heard, Turn, decide
 from companion.loops.features import Feature
-from companion.loops.turn import Heard, Turn, decide
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:

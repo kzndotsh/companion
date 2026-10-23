@@ -179,8 +179,8 @@ async def test_with_listening_switched_off_the_live_look_up_does_not_run(store: 
 
 def test_a_pick_not_on_the_card_reaches_the_notes(store: Store) -> None:
     from companion.core.types import Frame as F  # noqa: PLC0415
+    from companion.loops.current import Turn  # noqa: PLC0415
     from companion.loops.features import Lookups, Moment  # noqa: PLC0415
-    from companion.loops.turn import Turn  # noqa: PLC0415
     from companion.turn.notes import notes_for  # noqa: PLC0415
 
     convo = Conversation(store, Talker(), PREFIX, REL)

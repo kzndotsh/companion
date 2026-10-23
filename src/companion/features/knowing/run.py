@@ -20,8 +20,8 @@ from companion.features.knowing.logic import (
     parse_labels,
     pick_gap,
 )
+from companion.loops.current import decide
 from companion.loops.features import Feature, Offer, Offered
-from companion.loops.turn import decide
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:

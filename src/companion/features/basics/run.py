@@ -18,8 +18,8 @@ from companion.features.basics.logic import (
     name_belief,
     parse_name,
 )
+from companion.loops.current import Turn, decide
 from companion.loops.features import Feature, Moment, Offer, Offered
-from companion.loops.turn import Turn, decide
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

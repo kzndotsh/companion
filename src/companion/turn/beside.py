@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.card import Card
 from companion.core.types import Frame
-from companion.loops.turn import Heard, Turn
+from companion.loops.current import Heard, Turn
 from companion.registry import FEATURES
 
 if TYPE_CHECKING:
