@@ -1527,3 +1527,23 @@ judge test 27/27. Two v2 guesses recited the memory a little ("black, just how y
 2 cents. Rerun: scratch scripts that call the judge and `loops/recall.look_up` on the live store, and
 rebuild the turn from `turn_requests` with the guess note replaced.
 
+## 2026-10-23: A persona paragraph against apologising and claiming to know does not move it
+
+Persona v42 is v41 plus one paragraph (J52): take a fact they add as information, not a correction; no
+apology for what was not wrong; own a real mistake once, with the reason; never agree it knows something
+outside the chat. 5 recorded turns: two where the user only added a fact after it had owned a slip, one
+about the day's news, two real corrections. 12 draws per cell on GPT-6 Luna, on the plain persona and with
+the owner's character sheet, with `notes/owned-it` after the history where live code would send it; 240
+replies scored blind by a Haiku reader, its labels checked by eye on a sample.
+
+| | v41 | v42 |
+|---|---|---|
+| Self-blame where they only added a fact or mentioned news (6 cells) | 22/72 | 24/72 |
+| Owning it on a real correction (4 cells; right to do) | 40/48 | 34/48 |
+| Claiming to know news it cannot see (all) | 5/120 | 4/120 |
+
+Within noise. The note after the history already holds the first turn of a run (0/12 and 3/12 on v41);
+the turn after three own-ups ("this is a show about that") stays at 8 to 11 of 12 under every version. v42
+kept as a candidate, not shipped. $0.025. Rerun: a scratch script rebuilding each turn from
+`turn_requests` with each persona version and the tail as live code computes it.
+

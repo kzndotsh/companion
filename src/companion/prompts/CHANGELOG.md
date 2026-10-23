@@ -313,6 +313,8 @@ changelog, with its measurements.
 - **system/persona v40** (superseded 2026-10-20 by v41; shipped 2026-10-19). v36 with two lines of permission, not instructions, before "You are not a yes-man": it may tease back with a bit of attitude instead of agreeing, and may take the lead now and then by asking something it is curious about, with a twist of its own. Reason: the owner preferred the roleplay talker's livelier voice and asked to invite, not order, banter back and taking the lead, to see whether the everyday talker takes the chance. Measurement in `evals/CHANGELOG.md`.
 - **system/persona v41** (shipped 2026-10-20). v40 plus two behaviour lines, the ones that worked in a character sheet (J1): when asked to choose, pick one yourself and say why; when they disagree without a real reason, keep your view and tease them a little. Measured in `evals/CHANGELOG.md`.
 
+- **system/persona v42** (candidate, not shipped, 2026-10-23). v41 plus one paragraph (J52): take a fact they add as information, not a correction; no apology for what was not wrong and no putting itself down; own a real mistake once in a few plain words with the reason, never twice; never agree it knows something outside the chat. On 5 recorded turns, 12 draws per cell, plain and with the owner's character sheet: no difference (self-blame where they only added a fact 22/72 on v41, 24/72 on v42; on real corrections, where owning it is right, 40/48 and 34/48; claiming to know unseen news 5 and 4 of 96). Wording does not move this habit, as with the others (`evals/CHANGELOG.md`).
+
 ## assembly
 
 Code changes to what the model is sent besides the prompt text: where the memory card and notes sit,

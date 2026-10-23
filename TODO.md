@@ -261,9 +261,9 @@ Ordered. Pull from the top.
       replies in a row, invents slips to own, and once in about 12 draws claims to know news it cannot see.
       A known pattern (sycophancy under correction, worse in long and warm chats). **Partial 2026-10-22:**
       after it owns a slip, `notes/owned-it` after the history says that was enough (7/12 to 1/12 early in a
-      run of apologies, no help once three are in the history). Next, after a top-up: a persona line so a
-      plain remark is not read as a correction, and a short reason instead of "sorry", measured on the
-      recorded turns.
+      run of apologies, no help once three are in the history). **2026-10-23:** a persona paragraph (v42)
+      measured within noise on 5 recorded turns and not shipped. Left: the turn after a run of own-ups,
+      8 to 11 of 12 under every version; the history full of its own apologies is the likely pull.
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
       **Partial 2026-10-20:** invited guesses are live (a small judge on short questions, the recall look-up
