@@ -19,7 +19,6 @@ from companion.core.turn.ack import (
     inputs_hash,
 )
 from companion.core.turn.floor import BRUSH_NOTE, HOLD_NOTE
-from companion.core.turn.habits import habit_note
 from companion.core.turn.length import LengthTarget, length_target
 from companion.core.turn.listening import PROMPT as LISTEN_PROMPT
 from companion.core.turn.listening import listening_note, repair_note, rude_note
@@ -42,7 +41,6 @@ from companion.core.types import (
     Frame,
     Json,
     Speaker,
-    Utterance,
 )
 from companion.loops.features import Feature, Lookups, Moment, Offer, Offered
 from companion.loops.recall import Recalled, look_up
@@ -180,13 +178,11 @@ def _mood(
     return (shown if c.mood == "on" else None), added
 
 
-def _notes(
-    c: Conversation, prior: list[Utterance], in_scene: Frame, size: LengthTarget | None
-) -> list[str]:
-    """What it should know about its own habits, a scene in progress and how long to answer.
+def _notes(in_scene: Frame, size: LengthTarget | None) -> list[str]:
+    """What it should know about a scene in progress and how long to answer.
     These go in the system block with the memory card: in a user message the model read them as
     something they said."""
-    notes = [habit_note(prior), c.habits.note(), scene_note(in_scene), size.note if size else None]
+    notes = [scene_note(in_scene), size.note if size else None]
     return [n for n in notes if n is not None]
 
 
@@ -212,7 +208,7 @@ class Notes:
 
 def _base(m: Moment, _: Offered) -> Offer:
     size = _length(m.c, m.t, m.in_scene, m.heard)
-    return Offer(tuple(_notes(m.c, m.t.prior, m.in_scene, size)))
+    return Offer(tuple(_notes(m.in_scene, size)))
 
 
 def _listening(m: Moment, _: Offered) -> Offer:
@@ -326,6 +322,7 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
 # Every note, in the order it reaches the system block. A source sees what the ones before it
 # offered: a plan or a move on waits while their name is asked, a move on knows a plan was offered.
 ORDER: tuple[str, ...] = (
+    "moves",
     "base",
     "listening",
     "rude",

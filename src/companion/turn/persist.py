@@ -27,8 +27,6 @@ from companion.core.turn.ack import (
     Reaction,
     inputs_hash,
 )
-from companion.core.turn.moves import PROMPT as HABITS_PROMPT
-from companion.core.turn.moves import replies_to_read
 from companion.core.turn.react import PROMPT as REACT_PROMPT
 from companion.core.turn.react import Judgement as ReactJudgement
 from companion.core.turn.react import decide as decide_reaction
@@ -41,7 +39,6 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import why
-from companion.loops.moves import find_habits
 from companion.loops.turn import Answered, Turn, decide, mark, recorder
 from companion.registry import FEATURES
 from companion.store.sqlite.decisions import REACTED
@@ -120,37 +117,6 @@ def _react_alongside(
     return decision.reaction
 
 
-def _check_habits(c: Conversation, t: Turn, sent: str) -> None:
-    """After the reply is out, read the last few replies in the background for habits."""
-    if c.judge is None:
-        return
-    replies = replies_to_read(t.prior, sent)
-    if not replies:
-        return
-
-    async def look() -> list[str] | None:
-        found = await find_habits(c.judge, replies)  # type: ignore[arg-type]
-        if found is None:
-            return None
-        habits, model, prompt = found
-        detail: dict[str, Json] = {
-            "scorer": model,
-            "prompt": HABITS_PROMPT.ref,
-            "inputs_hash": inputs_hash(prompt),
-            "habits": list[Json](habits),
-        }
-        decide(
-            c,
-            t,
-            "habit check",
-            detail,
-            reason=f"habit check: {len(habits)} habits found in the last {len(replies)} replies",
-        )
-        return habits
-
-    c.habits.start(look())
-
-
 def with_reaction(
     c: Conversation, t: Turn, felt: tuple[ReactJudgement, str, str] | None, sent: str
 ) -> str | ReactAndReply:
@@ -215,7 +181,6 @@ def persist_reply(c: Conversation, t: Turn, reply: Reply, user_frame: Frame, cha
         reason="replied: every user message gets a reply in v1",
         at=replied_at,
     )
-    _check_habits(c, t, reply.text)
     return reply.text
 
 

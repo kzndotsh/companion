@@ -4,7 +4,8 @@ from collections.abc import Callable
 
 import pytest
 
-from companion.core.turn.moves import (
+from companion.core.types import Json, Speaker, Utterance
+from companion.features.moves.logic import (
     MAX_HABIT_CHARS,
     MAX_HABITS,
     MIN_SEEN_IN,
@@ -12,7 +13,6 @@ from companion.core.turn.moves import (
     parse,
     replies_to_read,
 )
-from companion.core.types import Json, Speaker, Utterance
 
 
 def _chat(utterance: Callable[..., Utterance], n: int) -> list[Utterance]:

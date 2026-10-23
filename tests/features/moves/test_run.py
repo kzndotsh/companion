@@ -12,7 +12,7 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId, SessionId
 from companion.loops.conversation import Conversation
-from companion.loops.moves import HabitMemory
+from companion.loops.habits import HabitMemory
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -95,9 +95,9 @@ async def test_no_judge_means_no_note(store: Store) -> None:
 
 async def test_a_habit_is_dropped_after_a_couple_of_turns() -> None:
     memory = HabitMemory(["a"], 0)
-    assert memory.note() is not None
-    assert memory.note() is not None
-    assert memory.note() is None
+    assert memory.fresh(2) == ["a"]
+    assert memory.fresh(2) == ["a"]
+    assert memory.fresh(2) == []
 
 
 async def test_only_one_check_runs_at_a_time() -> None:
