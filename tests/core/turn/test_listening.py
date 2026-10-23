@@ -48,7 +48,7 @@ def test_serious_things_get_the_weight_named_no_advice_and_an_offer() -> None:
     assert "Do not advise on what to do or on treatment" in note
     assert "qualified" not in note  # a referral only when it is about health, from the health note
     assert "everyday words" in note
-    assert "under about" not in note  # the length target is core/length.py's
+    assert "under about" not in note  # the length target is core/turn/length.py's
     assert "talk about it" in note
     assert "talk about it" not in str(listening_note(_j(2), ["do you want to talk about it?"]))
 

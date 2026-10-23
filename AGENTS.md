@@ -43,7 +43,11 @@ uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 Strict ruff and basedpyright, a lefthook pre-commit, and import-linter run on every commit. Layer
 rules: `core` imports nothing from the shell, only `store` and `lib/sqlite` import `sqlite3`, and
 `lib` imports nothing from the companion (only the standard library and itself). `core` may import
-`companion.prompts`, which only reads packaged text.
+`companion.prompts`, which only reads packaged text. Imports point down (`direction` contract):
+`turn/` (the reply path's stages) and `memory/` (slow loop, nightly, rebuild, views) run features, so
+they sit above `registry.py` and `features/`; what a feature uses sits below in `loops/` (the turn's
+values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed`), then `core/`
+(shared vocabulary; `core/turn/` holds the reply path's own pure rules), then `lib/`.
 
 ## Principles
 

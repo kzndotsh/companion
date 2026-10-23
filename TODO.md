@@ -250,7 +250,7 @@ When the answer comes, the card moves to Todo or Done.
       M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
       to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). **Waits on:** the owner accepting ADR 0016
       (decision 1) after a few days of flags.
-- [ ] T16 Randomized reply length. Built 2026-10-18 and live: `core/length.py` scales a short statement's
+- [ ] T16 Randomized reply length. Built 2026-10-18 and live: `core/turn/length.py` scales a short statement's
       limit by 0.6 to 1.5, seeded per turn so replay matches (idea from a companion app config that picks a
       random word range per reply). **Measured 2026-10-23 on 370 real turns:** limits ran 5 to 20 words, but
       replies sat near 15 to 20 whatever the limit (median 15 at a limit of 5 to 8 or 9 to 12, about 19 at 13

@@ -120,6 +120,26 @@ ignore_imports = [
 ]
 
 [[tool.importlinter.contracts]]
+id = "direction"
+name = "imports point down: turn and memory, the registry, features, loops, core, lib"
+type = "layers"
+# The turn's stages and the memory side run features, so they sit above them; what a feature uses
+# (the turn's values, Feature, the judge runner, curate) sits below. The store facade knows every
+# feature's queries and types by design, so a chain through it is not a feature being imported.
+layers = [
+    "companion.turn | companion.memory",
+    "companion.registry",
+    "companion.features",
+    "companion.loops",
+    "companion.core",
+    "companion.lib",
+]
+ignore_imports = [
+    "companion.store.sqlite.** -> companion.features.*.store",
+    "companion.store.sqlite.** -> companion.features.*.logic",
+]
+
+[[tool.importlinter.contracts]]
 id = "lib-knows-nothing"
 name = "lib imports nothing from the companion"
 type = "forbidden"
