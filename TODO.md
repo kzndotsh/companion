@@ -252,6 +252,13 @@ When the answer comes, the card moves to Todo or Done.
       M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
       to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`). **Waits on:** the owner accepting ADR 0016
       (decision 1) after a few days of flags.
+- [ ] T16 Randomized reply length. Built 2026-10-18 and live: `core/length.py` scales a short statement's
+      limit by 0.6 to 1.5, seeded per turn so replay matches (idea from a companion app config that picks a
+      random word range per reply). **Measured 2026-10-23 on 370 real turns:** limits ran 5 to 20 words, but
+      replies sat near 15 to 20 whatever the limit (median 15 at a limit of 5 to 8 or 9 to 12, about 19 at 13
+      to 20), and about two thirds went over it; the limit also shrinks with their message, so this is not a
+      clean test. **Waits on:** the owner saying whether reply lengths feel samey. If yes: a length check in
+      code with a redraw, like the em dash; if no, park it.
 
 ## Todo
 
@@ -331,12 +338,6 @@ Ordered. Pull from the top.
       is a prompt version plus a measured eval. Hypotheses only; the sources are mostly assertion. Experiment 1
       (parrot audit) done: persona v28 removed the quoted samples ("scattered", 5 of 6 on the mood fixture to
       0); superseded by v36 and v40, which dropped the quoted mood examples too.
-- [ ] T16 Randomized reply length. **Built 2026-10-18, not measured:** `core/length.py` scales a short
-      statement's limit by 0.6 to 1.5 from the turn id; the eval's `+len` still sends the unvaried limit, so
-      measuring it needs a seeded `+len`. The length note gives the same limit for the same message length, so
-      reply lengths feel uniform. Vary the limit a little in code each turn (sometimes shorter, sometimes
-      longer), seeded per turn so replay still matches. Idea from a published companion app config that
-      picks a random word range per reply. Measure with `+len` against the fixed note.
 - [ ] T17 Closeness stage. A stage computed in code from real history (how long they have talked, how much
       they have shared, how often they flirt), not from points a judge hands out for compliments, picks one
       note line from "just met, already kind of likes them" up to "close" (ADR 0014). It paces intimacy by how
