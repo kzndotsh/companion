@@ -23,7 +23,6 @@ REASON_ALLOWED = {"core/types.py": 1, "loops/route.py": 2, "loops/calibrate.py":
 DEFAULT_CAP = 450
 CAPS = {
     "loops/fast.py": 145,
-    "daemon.py": 572,
     "store/sqlite/store.py": 536,
 }
 NOQA_CAP = 64  # lint exceptions in src; each new one replaces an old one

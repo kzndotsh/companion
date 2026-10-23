@@ -9,15 +9,15 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.clock import utc_now
-from companion.core.merging import NOTE, PICK, merged_kind
 from companion.core.types import Belief, BeliefId, RelationshipId
 from companion.features.consolidate.logic import HELD, Label, Relation
 from companion.features.consolidate.store import MemoryCheck
+from companion.features.merging.logic import NOTE, PICK, merged_kind
+from companion.features.merging.store import Proposal
 from companion.features.worth.logic import ASK_ABOUT_THE_BOT, ASK_ROUTINE
 from companion.features.worth.logic import ASKED as WORTH_ASKED
 from companion.features.worth.logic import Label as Worth
 from companion.loops.curate import merge, retire
-from companion.store.sqlite.merges import Proposal
 from companion.store.sqlite.store import Store
 
 ASKED = (Label.OUT_OF_DATE, Label.OVERSTATED, Label.PASSING)

@@ -44,6 +44,7 @@ from companion.features.invented import store as invented
 from companion.features.invented.logic import Statement
 from companion.features.lore.logic import Kind as ViewKind
 from companion.features.lore.logic import Labelled as ViewLabel
+from companion.features.merging import store as merges
 from companion.features.names import store as names
 from companion.features.names.logic import Row as NameRow
 from companion.features.openloops import store as open_loops
@@ -62,7 +63,6 @@ from companion.store.sqlite import (
     flags,
     labels,
     ledger,
-    merges,
     mood,
     reflect,
     settings,

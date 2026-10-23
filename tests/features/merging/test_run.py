@@ -3,12 +3,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from tests.conftest import REL, T0
-
 from companion.core.extractor import Extraction
 from companion.core.types import Belief, Json, Utterance
-from companion.loops.merging import propose
+from companion.features.merging.run import propose
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 
 class Grouper:
@@ -67,7 +66,7 @@ async def test_keep_apart_from_the_writer_proposes_nothing(
 async def test_a_pick_is_proposed_again_alone_with_new_wording(
     tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
 ) -> None:
-    from companion.loops.merging import repick  # noqa: PLC0415
+    from companion.features.merging.run import repick  # noqa: PLC0415
 
     store, made = _store(tmp_path, utterance, belief)
     first = store.add_merge_proposal(REL, [b.id for b in made], "all three", prompt="g", at=T0)

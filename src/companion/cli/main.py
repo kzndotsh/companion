@@ -6,7 +6,7 @@ import sys
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
-from companion import daemon
+from companion import commands, daemon
 from companion.cli import (
     address,
     backup,
@@ -203,7 +203,7 @@ def _replay(a: argparse.Namespace) -> int:
 
 def _reflect(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    return _out(asyncio.run(daemon.reflect_now(db, rel, from_start=bool(a.from_start))))
+    return _out(asyncio.run(commands.reflect_now(db, rel, from_start=bool(a.from_start))))
 
 
 def _run(a: argparse.Namespace) -> int:
@@ -216,17 +216,17 @@ def _run(a: argparse.Namespace) -> int:
 
 def _invented(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    return _out(asyncio.run(daemon.invented_now(db, rel, int(a.days), float(a.cap), a.dump)))
+    return _out(asyncio.run(commands.invented_now(db, rel, int(a.days), float(a.cap), a.dump)))
 
 
 def _callbacks(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    return _out(asyncio.run(daemon.callbacks_now(db, rel, int(a.days), float(a.cap))))
+    return _out(asyncio.run(commands.callbacks_now(db, rel, int(a.days), float(a.cap))))
 
 
 def _rebuild(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    return _out(asyncio.run(daemon.rebuild_now(db, rel)))
+    return _out(asyncio.run(commands.rebuild_now(db, rel)))
 
 
 def _fixture_dirs(a: argparse.Namespace) -> tuple[Path, ...]:
@@ -278,7 +278,7 @@ def _backup(a: argparse.Namespace) -> int:
 
 def _map(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(daemon.label_now(db, rel)) if a.label else ""
+    first = asyncio.run(commands.label_now(db, rel)) if a.label else ""
     return _out(first + knowing.run(db, rel) + "\n")
 
 
@@ -292,19 +292,19 @@ def _initiative(a: argparse.Namespace) -> int:
 
 def _lore(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(daemon.lore_now(db, rel, again=a.relabel)) if a.label or a.relabel else ""
+    first = asyncio.run(commands.lore_now(db, rel, again=a.relabel)) if a.label or a.relabel else ""
     return _out(first + lore.run(db, rel))
 
 
 def _names(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(daemon.names_now(db, rel)) if a.read else ""
+    first = asyncio.run(commands.names_now(db, rel)) if a.read else ""
     return _out(first + names.run(db, rel))
 
 
 def _episodes(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(daemon.episodes_now(db, rel)) if a.write else ""
+    first = asyncio.run(commands.episodes_now(db, rel)) if a.write else ""
     return _out(first + episodes.run(db, rel))
 
 
@@ -355,11 +355,11 @@ def _approve(a: argparse.Namespace) -> int:
 def _memory(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     if a.action == "group":
-        return _out(asyncio.run(daemon.group_now(db, rel)))
+        return _out(asyncio.run(commands.group_now(db, rel)))
     if a.action == "context":
-        return _out(asyncio.run(daemon.context_now(db, rel)))
+        return _out(asyncio.run(commands.context_now(db, rel)))
     if a.action == "label":
-        return _out(asyncio.run(daemon.worth_now(db, rel)))
+        return _out(asyncio.run(commands.worth_now(db, rel)))
     return _out(memory.review(db, rel))
 
 

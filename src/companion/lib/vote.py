@@ -1,8 +1,7 @@
-"""How many times a small model reads one question, and when its reads agree (ADR 0019).
+"""Asking the same question several times and acting only when every answer agrees.
 
-Code acts on a model's label only where every read gives it; a failed read is never agreement.
-Each feature keeps its own rule for what agreement means when reads differ (`features/worth`,
-`features/lore`, `core/merging.py`); a plain "all the same" lives here.
+A failed or unreadable answer (None) is never agreement. A caller with its own rule for answers
+that differ keeps that rule itself; a plain "all the same" lives here.
 """
 
 from __future__ import annotations

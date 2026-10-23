@@ -12,7 +12,7 @@ the feature READMEs under `src/companion/features/` (context, worth, the memory 
   a pair three times; read as the same, the new quote becomes evidence on the old memory instead; read
   as a conflict (replaces or contradicts) all three times, it is a question for the owner, who keeps
   one or both (J11). Memories about one thing (one moment split into pieces, one interest restated)
-  are grouped three times each night for the last two days (`system/memory-group`, `core/merging.py`;
+  are grouped three times each night for the last two days (`system/memory-group`, `features/merging/logic.py`;
   `companion memory group` for the whole store); each agreed group, with one wording that keeps every
   detail (`system/memory-merge`), is a merge question in `memory review`, and a conflict between two
   pieces of a pending merge is held back. `COMPANION_CONSOLIDATE` is shadow (log only) unless `on` or

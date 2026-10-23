@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.core.merging import agreed, read_claim, read_groups
+from companion.features.merging.logic import agreed, read_claim, read_groups
 
 
 def test_groups_are_read_from_labels_and_bad_labels_are_ignored() -> None:

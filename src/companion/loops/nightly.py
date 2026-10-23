@@ -12,8 +12,8 @@ from companion.core.extractor import Extractor
 from companion.core.types import RelationshipId
 from companion.features.consolidate.run import nightly
 from companion.features.episodes.run import write_closed
+from companion.features.merging import run as merging
 from companion.features.worth.run import expire_routine
-from companion.loops import merging
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.nightly")

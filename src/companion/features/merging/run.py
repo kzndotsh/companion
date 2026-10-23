@@ -10,7 +10,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 
 from companion.core.extractor import Extractor
-from companion.core.merging import (
+from companion.core.spend import purpose
+from companion.core.types import Belief, RelationshipId
+from companion.features.merging.logic import (
     GROUP,
     GROUP_SCHEMA,
     PICK,
@@ -22,8 +24,6 @@ from companion.core.merging import (
     read_claim,
     read_groups,
 )
-from companion.core.spend import purpose
-from companion.core.types import Belief, RelationshipId
 from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store
 
