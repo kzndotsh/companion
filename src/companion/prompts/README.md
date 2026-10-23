@@ -103,7 +103,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/reminder-ask` | note | a reminder they asked for has an unclear time: ask about that one thing (J50) | v1 |
 | `notes/reminder-cancelled` | note | a reminder they asked to drop is dropped: say so (J50) | v1 |
 | `system/ack` | system | the ack judge, `core/ack.py` | v2 |
-| `system/callback-judge` | system | the callback check, `core/callbacks.py`, `companion callbacks` | v2 |
+| `system/callback-judge` | system | the callback check, `features/callbacks/logic.py`, `companion callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v8 |
 | `system/frames` | system | the frame judge, `core/frames.py` | v2 |

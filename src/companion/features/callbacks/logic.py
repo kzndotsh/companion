@@ -11,7 +11,6 @@ all false matches).
 
 from __future__ import annotations
 
-import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
@@ -20,8 +19,6 @@ from companion.prompts import get
 
 PROMPT = get("system/callback-judge")
 SYSTEM = PROMPT.text
-_LINE = re.compile(r"^- (.+?)(?: \(mentioned [^)]*\))?$")
-_USER_BLOCKS = ("[What you remember", "[Also known", "[Older")
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -47,20 +44,6 @@ class Check:
     @property
     def landed(self) -> bool:
         return self.callback and self.accurate and self.fitting and not self.forced
-
-
-def memories_from_card(card: str) -> list[str]:
-    """The memories about the user that a stored card held, without the companion's own views."""
-    out: list[str] = []
-    keep = False
-    for line in card.splitlines():
-        if line.startswith("["):
-            keep = line.startswith(_USER_BLOCKS)
-            continue
-        m = _LINE.match(line.rstrip("]"))
-        if keep and m:
-            out.append(m.group(1))
-    return out
 
 
 def label(memories: Sequence[str]) -> dict[str, str]:

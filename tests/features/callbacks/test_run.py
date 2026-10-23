@@ -23,7 +23,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.callbacks import check_new
+from companion.features.callbacks.run import check_new
 from companion.loops.fast import Conversation
 from companion.store.sqlite.store import Store
 

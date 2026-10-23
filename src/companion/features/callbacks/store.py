@@ -7,8 +7,8 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.callbacks import Check
 from companion.core.types import RelationshipId, TurnId
+from companion.features.callbacks.logic import Check
 from companion.lib.sqlite.db import iso, write_tx
 
 

@@ -190,3 +190,22 @@ def render(card: Card, tz: tzinfo = UTC) -> str:
             "say so plainly:\n" + "\n".join(f"- {b.claim}" for b in card.views) + "]"
         )
     return "\n".join(parts)
+
+
+# How a stored card is read back: the user's memory blocks and one memory per line.
+_LINE = re.compile(r"^- (.+?)(?: \(mentioned [^)]*\))?$")
+_USER_BLOCKS = ("[What you remember", "[Also known", "[Older")
+
+
+def memories_from_card(card: str) -> list[str]:
+    """The memories about the user that a stored card held, without the companion's own views."""
+    out: list[str] = []
+    keep = False
+    for line in card.splitlines():
+        if line.startswith("["):
+            keep = line.startswith(_USER_BLOCKS)
+            continue
+        m = _LINE.match(line.rstrip("]"))
+        if keep and m:
+            out.append(m.group(1))
+    return out

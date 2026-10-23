@@ -5,19 +5,19 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from companion.core.callbacks import (
+from companion.core.card import memories_from_card
+from companion.core.clock import utc_now
+from companion.core.extractor import Extractor
+from companion.core.spend import purpose
+from companion.core.types import RelationshipId
+from companion.features.callbacks.logic import (
     PROMPT,
     SCHEMA,
     SYSTEM,
     build_prompt,
     label,
-    memories_from_card,
     parse,
 )
-from companion.core.clock import utc_now
-from companion.core.extractor import Extractor
-from companion.core.spend import purpose
-from companion.core.types import RelationshipId
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.callbacks")

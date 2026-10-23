@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from companion.core.callbacks import memories_from_card
+from companion.core.card import memories_from_card
 from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
 from companion.core.invented import PROMPT, SCHEMA, SYSTEM, build_prompt, parse

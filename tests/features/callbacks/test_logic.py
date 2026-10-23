@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from companion.core.callbacks import Check, label, memories_from_card, parse, report
+from companion.core.card import memories_from_card
 from companion.core.types import Json
+from companion.features.callbacks.logic import Check, label, parse, report
 
 CARD = (
     "Right now it is Sunday 13:09.\n"
