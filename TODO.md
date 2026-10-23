@@ -264,6 +264,9 @@ Ordered. Pull from the top.
       run of apologies, no help once three are in the history). **2026-10-23:** a persona paragraph (v42)
       measured within noise on 5 recorded turns and not shipped. Left: the turn after a run of own-ups,
       8 to 11 of 12 under every version; the history full of its own apologies is the likely pull.
+      **Next, at the review of 2026-10-26:** count from the log the replies that owned a slip since the
+      note went live, and how many came right after another. If runs still happen, test leaving its own
+      apologies out of the history it reads (about a cent, with A33); if not, leave it.
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
       **Partial 2026-10-20:** invited guesses are live (a small judge on short questions, the recall look-up
