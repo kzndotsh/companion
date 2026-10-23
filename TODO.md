@@ -225,6 +225,15 @@ Ordered. Pull from the top.
       run of apologies, no help once three are in the history). Next, after a top-up: a persona line so a
       plain remark is not read as a correction, and a short reason instead of "sorry", measured on the
       recorded turns.
+- [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
+      later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
+      **Partial 2026-10-20:** invited guesses are live (a small judge on short questions, the recall look-up
+      picks what may fit, never anything sensitive, one note to guess once as a question), each logged with
+      what was offered. **2026-10-23:** 2 guesses so far. "you know what time?" got "shower time?" when they
+      meant coffee: the look-up offered shower and dinner memories and none about their most repeated habit,
+      the case the card was opened for. Next: offer their most repeated habits beside the look-up's picks,
+      measured on that turn. Later, with enough guesses: score them by kind from the next message, and only
+      then guesses it forms on its own.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
@@ -501,17 +510,6 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 - [ ] J14 Who-they-are summary: a short running prose summary of who the user is (and who the companion is),
       updated in the background from the beliefs and shown every turn beside the card (SullyOS's room
       plates, field survey: "knows the person" rather than "finds a message"). Lossless rules from A18.
-- [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
-      later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
-      **Owner flag 2026-10-19:** "you know what time it is?" was answered with the clock; they meant coffee
-      time. Their coffee mentions are spread over the day (8:30 to 17:00 over five days), so an hourly pattern
-      would not have caught it; knowing coffee is their most repeated ritual (13 memories) and playing along
-      with a guess ("coffee time? 👀") would have.
-      **Partial 2026-10-20:** invited guesses are live: a small judge on short questions, the recall
-      look-up picks what may fit (never anything sensitive), one note to guess once as a question; every
-      one is logged with what was offered (reason "guess: they invited a guess"). Left: once that log
-      holds enough guesses, score them by kind from the next message (confirmed, corrected, ignored)
-      and only then consider guesses it forms on its own.
 - [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
       does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] J19 Regression gate: a command that runs the key fixtures and fails when a prompt or persona change
