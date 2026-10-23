@@ -18,7 +18,6 @@ from companion.core.frames import (
 )
 from companion.core.history import HISTORY_LIMIT
 from companion.core.prompt.prefix import Prefix
-from companion.core.relevance import Embedder
 from companion.core.talker import Talker
 from companion.core.types import (
     Frame,
@@ -27,6 +26,7 @@ from companion.core.types import (
     TraceId,
     TurnId,
 )
+from companion.core.vectors import Embedder
 from companion.loops.assemble import assemble
 from companion.loops.beside import shadows
 from companion.loops.hear import listen

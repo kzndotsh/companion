@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from companion.core.relevance import build_prompt, eligible, nearest, parse, unit
+from companion.core.relevance import build_prompt, eligible, parse
 from companion.core.types import Belief, BeliefId, Frame, Json, Provenance
+from companion.core.vectors import nearest, unit
 
 
 def test_held_memories_only_when_they_share_and_never_crisis(belief: Callable[..., Belief]) -> None:

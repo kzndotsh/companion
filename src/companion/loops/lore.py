@@ -22,9 +22,9 @@ from companion.core.lore import (
     parse,
     prompt,
 )
-from companion.core.relevance import Embedder, nearest
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Frame, RelationshipId
+from companion.core.vectors import Embedder, nearest
 from companion.loops.features import Feature, Offer, Offered
 from companion.loops.reads import read_times
 from companion.loops.turn import Heard, Turn, decide, is_casual

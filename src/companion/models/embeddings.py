@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import httpx
 
-from companion.core.relevance import Embedded, unit
+from companion.core.vectors import Embedded, unit
 from companion.models.openrouter import check
 from companion.models.wire import number, obj, seq
 

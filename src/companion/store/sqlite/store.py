@@ -20,7 +20,6 @@ from companion.core.openloops import LoopState, OpenLoop
 from companion.core.promises import Promise
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
-from companion.core.relevance import Vector
 from companion.core.replay import TurnRecord
 from companion.core.spend import SpendEvent
 from companion.core.types import (
@@ -41,6 +40,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.core.vectors import Vector
 from companion.core.views import ViewState, parse_mode
 from companion.features.reminders import store as reminders
 from companion.features.reminders.store import Reminder

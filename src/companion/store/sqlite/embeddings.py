@@ -7,8 +7,8 @@ from array import array
 from collections.abc import Mapping
 from datetime import datetime
 
-from companion.core.relevance import Vector
 from companion.core.types import BeliefId, RelationshipId
+from companion.core.vectors import Vector
 from companion.store.sqlite.db import iso, write_tx
 
 

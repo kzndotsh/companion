@@ -7,7 +7,6 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.relevance import Embedded, unit
 from companion.core.types import (
     Frame,
     Json,
@@ -18,6 +17,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.core.vectors import Embedded, unit
 from companion.loops.consolidate import SameCheck
 from companion.loops.slow import reflect_once
 from companion.store.sqlite.store import Store

@@ -25,10 +25,10 @@ from companion.core.extractor import Extractor
 from companion.core.flags import parse_flag
 from companion.core.invented import report as invented_report
 from companion.core.prompt.prefix import build_prefix
-from companion.core.relevance import Embedder
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
+from companion.core.vectors import Embedder
 from companion.features.reminders.run import deliver_due
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops import merging

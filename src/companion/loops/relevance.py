@@ -27,17 +27,10 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.extractor import Extractor
-from companion.core.relevance import (
-    PROMPT,
-    SCHEMA,
-    Embedder,
-    build_prompt,
-    eligible,
-    nearest,
-    parse,
-)
+from companion.core.relevance import PROMPT, SCHEMA, build_prompt, eligible, parse
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Json, RelationshipId
+from companion.core.vectors import Embedder, nearest
 from companion.loops.ask import Judge, ask
 from companion.store.sqlite.store import Store
 

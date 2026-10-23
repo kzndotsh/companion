@@ -28,13 +28,13 @@ from companion.core.nudges import SCHEMA as AWAY_SCHEMA
 from companion.core.nudges import parse as parse_away
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.relevance import SHADOW as RELEVANCE_SHADOW
-from companion.core.relevance import Embedder
 from companion.core.spend import purpose
 from companion.core.types import (
     DecisionKind,
     Frame,
     Speaker,
 )
+from companion.core.vectors import Embedder
 from companion.loops.hooks import stated
 from companion.loops.reads import read_times
 from companion.loops.relevance import shadow as relevance_shadow

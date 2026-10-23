@@ -7,8 +7,8 @@ from pathlib import Path
 from tests.conftest import REL, T0
 
 from companion.core.lore import Kind, Labelled
-from companion.core.relevance import Embedded, unit
 from companion.core.types import Belief, Subject, Utterance
+from companion.core.vectors import Embedded, unit
 from companion.loops.lore import nearest_tastes
 from companion.store.sqlite.store import Store
 

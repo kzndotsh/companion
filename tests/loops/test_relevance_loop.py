@@ -9,7 +9,7 @@ import pytest
 from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.extractor import Extraction
-from companion.core.relevance import SHADOW, Embedded, unit
+from companion.core.relevance import SHADOW
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -24,6 +24,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.core.vectors import Embedded, unit
 from companion.loops.fast import Conversation
 from companion.store.sqlite.store import Store
 

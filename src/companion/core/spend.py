@@ -16,9 +16,9 @@ from dataclasses import dataclass
 
 from companion.core.extractor import Extraction, Extractor
 from companion.core.prompt.request import TalkerRequest
-from companion.core.relevance import Embedded, Embedder
 from companion.core.talker import Reply, Talker
 from companion.core.types import Json
+from companion.core.vectors import Embedded, Embedder
 
 
 @dataclass(frozen=True, slots=True)

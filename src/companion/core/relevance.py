@@ -9,13 +9,10 @@ with whether each was already on the card, so the two can be compared before eit
 
 from __future__ import annotations
 
-import math
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from typing import Protocol
+from collections.abc import Sequence
 
 from companion.core.frames import is_assertable
-from companion.core.types import Belief, BeliefId, Json
+from companion.core.types import Belief, Json
 from companion.prompts import get
 
 PROMPT = get("system/relevance")
@@ -23,7 +20,6 @@ SHADOW = "relevance: what it would have kept in mind (shadow)"
 LIVE = "relevance: what it was shown"
 GATE = 0.42  # live: the small model picks only when the closest memory is this near (1 turn in 5)
 SHOWN = 2  # live: at most this many picks reach the talker, none already on the card
-SHORTLIST = 15
 MAX_PICKS = 3
 MAX_SENSITIVITY = 2  # never a crisis-level memory on its own
 HELD = 2  # held memories only on a turn where they share something, as on the card
@@ -34,43 +30,12 @@ SCHEMA: dict[str, Json] = {
     "required": ["labels"],
 }
 
-Vector = tuple[float, ...]
-
-
-@dataclass(frozen=True, slots=True)
-class Embedded:
-    vectors: tuple[Vector, ...]
-    model: str
-    cost_usd: float
-
-
-class Embedder(Protocol):
-    async def embed(self, texts: Sequence[str]) -> Embedded: ...
-
-
-def unit(v: Sequence[float]) -> Vector:
-    norm = math.sqrt(sum(x * x for x in v)) or 1.0
-    return tuple(x / norm for x in v)
-
-
-def dot(a: Vector, b: Vector) -> float:
-    return sum(x * y for x, y in zip(a, b, strict=True))
-
 
 def eligible(beliefs: Sequence[Belief], *, sharing: bool) -> list[Belief]:
     """What may be looked up this turn: stated for real, never crisis-level, and held (sensitive)
     memories only when they are sharing something, the same rule as the card."""
     top = MAX_SENSITIVITY if sharing else HELD - 1
     return [b for b in beliefs if is_assertable(b) and b.sensitivity <= top]
-
-
-def nearest(
-    query: Vector, beliefs: Sequence[Belief], vectors: Mapping[BeliefId, Vector], k: int = SHORTLIST
-) -> list[tuple[Belief, float]]:
-    """The k memories whose embedding is closest to the query, closest first. A memory with no
-    embedding yet is left out."""
-    scored = [(b, dot(query, vectors[b.id])) for b in beliefs if b.id in vectors]
-    return sorted(scored, key=lambda x: -x[1])[:k]
 
 
 def build_prompt(last_reply: str | None, said: str, shortlist: Sequence[Belief]) -> str:
@@ -96,14 +61,7 @@ __all__ = [
     "PROMPT",
     "SCHEMA",
     "SHADOW",
-    "SHORTLIST",
-    "Embedded",
-    "Embedder",
-    "Vector",
     "build_prompt",
-    "dot",
     "eligible",
-    "nearest",
     "parse",
-    "unit",
 ]
