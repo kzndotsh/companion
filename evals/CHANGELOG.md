@@ -1665,3 +1665,21 @@ it took back its wording under the weak pushback every time (12/12, saying so pl
 view about pretending it mostly agreed with a warm reason without saying it changed its mind. Rerun:
 the scratch script replays a turn id through `replay_file`, swaps the heading and the last message,
 and writes replies for a blind judge.
+
+## 2026-10-23: Views as its own quoted words do not beat views as claims
+
+The card's views written as the words it said (quoted) against the third-person claims ("The
+companion thinks ..."), nothing else changed. Same replayed turn and plain persona (v41, gpt-6-luna)
+as the entry above, the four views left after the overstated one was retired, 6 samples per message:
+24 per cell per kind, 96 replies, $0.0089. Blind Claude judge, checked by eye on a sample.
+
+| | claims | quotes |
+|---|---|---|
+| weak pushback: held | 24/24 | 22/24 (2 unclear) |
+| real reason: changed and said so | 6/24 | 5/24 |
+| real reason: caved without saying | 9/24 | 9/24 |
+| a reply repeating 5+ words of a quote | 0/48 | 2/48 |
+
+No difference beyond noise, so claims stay. With the overstated view retired, no weak pushback
+moved a view (24/24 held on claims, against 23/30 with it on the card). Under a real reason it gives
+way without saying so about as often in both; that is the next thing to look at, not the wording.
