@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from companion.core.guess import INVITED as GUESS_INVITED
-from companion.core.guess import NOTE as GUESS_NOTE
-from companion.core.guess import likely as guess_likely
-from companion.core.guess import note as guess_note
 from companion.core.types import Frame
+from companion.features.guess.logic import INVITED as GUESS_INVITED
+from companion.features.guess.logic import NOTE as GUESS_NOTE
+from companion.features.guess.logic import likely as guess_likely
+from companion.features.guess.logic import note as guess_note
 from companion.loops.features import Feature, Offer, Offered
 from companion.loops.turn import Heard, Turn, decide, is_casual, mark
 
@@ -20,8 +20,15 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from companion.core.extractor import Extractor
-from companion.core.guess import JUDGE, MAX_OFFERED, SCHEMA, judge_prompt, offerable, parse
 from companion.core.types import Belief, Utterance
+from companion.features.guess.logic import (
+    JUDGE,
+    MAX_OFFERED,
+    SCHEMA,
+    judge_prompt,
+    offerable,
+    parse,
+)
 from companion.loops.ask import Judge, ask
 from companion.loops.recall import look_up
 

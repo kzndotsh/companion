@@ -4,11 +4,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.basics import name_belief
 from companion.core.extractor import Extraction
-from companion.core.guess import INVITED
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -23,8 +21,10 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.guess.logic import INVITED
 from companion.loops.fast import Conversation
 from companion.store.sqlite.store import Store
+from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 
 class Guesser(Judge):

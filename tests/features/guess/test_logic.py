@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from companion.core.guess import likely, note, offerable, parse
 from companion.core.types import Belief
+from companion.features.guess.logic import likely, note, offerable, parse
 
 
 def test_only_short_questions_reach_the_judge() -> None:

@@ -12,8 +12,8 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.guess import JUDGE, SCHEMA, parse
 from companion.daemon import load_dotenv
+from companion.features.guess.logic import JUDGE, SCHEMA, parse
 from companion.models.openrouter import OpenRouterExtractor
 
 pytestmark = pytest.mark.live
