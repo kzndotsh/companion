@@ -143,8 +143,6 @@ Each item ends with the thing that tells us it is done. The cards are below.
 
 ### Next
 
-- **Agreeing to please** (J52): a persona line so a plain remark is not taken as a correction and it does
-  not claim to know what it cannot see. Needs credits for the eval.
 - **Burst merge** (J29): a short wait for quiet before a reply, if cut-off replies keep happening.
 - **A crisis path for acute messages** (R16, on hold). The listening judge already labels them and does
   nothing. Needs the owner's design.
@@ -259,11 +257,6 @@ When the answer comes, the card moves to Todo or Done.
       to 20), and about two thirds went over it; the limit also shrinks with their message, so this is not a
       clean test. **Waits on:** the owner saying whether reply lengths feel samey. If yes: a length check in
       code with a redraw, like the em dash; if no, park it.
-
-## Todo
-
-Ordered. Pull from the top.
-
 - [ ] J52 Agreeing to please (owner flags 2026-10-22, "it is very hard on itself"): it owns slips three
       replies in a row, invents slips to own, and once in about 12 draws claims to know news it cannot see.
       A known pattern (sycophancy under correction, worse in long and warm chats). **Partial 2026-10-22:**
@@ -274,6 +267,7 @@ Ordered. Pull from the top.
       **Next, at the review of 2026-10-26:** count from the log the replies that owned a slip since the
       note went live, and how many came right after another. If runs still happen, test leaving its own
       apologies out of the history it reads (about a cent, with A33); if not, leave it.
+      **Waits on:** the count at the review of 2026-10-26 (above).
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
       **Partial 2026-10-20:** invited guesses are live (a small judge on short questions, the recall look-up
@@ -284,27 +278,14 @@ Ordered. Pull from the top.
       hints (`system/guess-invite` v2), and the look-up then offers the ritual: 0/12 to 11/12 on that turn.
       Next, with enough guesses: score them by kind from the next message, and only then guesses it forms
       on its own.
-- [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
-      does not regenerate them (eval-harness audit: lm-eval, lighteval).
-- [ ] T4 Fix `no-claimed-perception` on DeepSeek, fixture first. Measured on v25 (30 samples): DeepSeek
-      11/30, Luna 30/30. Fails with invented sensation similes when asked how it feels.
-- [ ] T12 (see also A33: strip the leading sentence and stage directions from assistant turns in the
-      injected history only) Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
-      reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
-      before any change; the memory card carries what older turns held. Measured 2026-10-17: a detail
-      beyond the window is lost (12/12 in view, 0/12 out) unless the card holds it, and the card only
-      updates after 90 seconds of quiet. See `evals/CHANGELOG.md`.
+      **Waits on:** enough logged guesses to score by kind.
 - [ ] J45 Cheesy add-on jokes. A fine reply gets a witty line bolted on ("the sandwich had to carry the meal
       on its own"); at least five flags 2026-10-16 to 10-19. **Partial 2026-10-19:** five real turns as local
       fixtures; about 45% of replies add a joke on v36; wording does not fix it (v37, the ban replaced by a
       positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
       joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150 (within noise)
       plain. Left: watch live flags; banter they started is let through by design.
-- [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, and a redraw that
-      still has one is drawn once more (2026-10-22). Missed inferences (an object they mentioned; what a song meant to them): low
-      reasoning made them worse and slower (9/30 to 4/30, 11/30 to 4/30), so reasoning stays off; likely a
-      model limit, testable against another talker. "you seem sleepy" answered "haha, a little" (a body claim),
-      not yet looked at.
+      **Waits on:** live flags on bolted-on jokes; none named it since 2026-10-19.
 - [ ] J48 Getting to know them on purpose (owner flag 2026-10-19: it never asked their name). It asks plenty
       (34% of replies) but only about the thing just said; memory has 17 beliefs about food and none about
       values or their name. Design in `docs/inbox/2026-10-19-getting-to-know-them.md`: a map of them by
@@ -324,20 +305,7 @@ Ordered. Pull from the top.
       place), three agreeing reads, the memory checked strictly, at most daily and twice per basic. Replayed
       over six days: no question would have been asked; the flagged "getting old" found their birthday in
       memory. No sharing first to draw them out (an engagement lever).
-- [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
-      flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
-      bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
-      size examples) shipped 2026-10-19: 6/30 without a retelling on that turn and short reactions elsewhere, plainer and more
-      alike, which the owner accepted. Ideas for varied reactions in
-      `docs/inbox/2026-10-19-varied-short-reactions-to-minor-vents.md`. **2026-10-20:** the pool shipped
-      (note v6, three size examples drawn per turn): 22 different replies in 30 against 7. Left: the real
-      laundry turn still retells 27 of 30 on v41, whatever has been tried.
-- [ ] T15 Prompt experiments from the guides review (`docs/research/2026-10-18_prompting-guides-review.md`): a
-      parrot audit of quoted sample phrases in the persona and notes, a trimmed persona against v26, positive
-      rewrites of the notes, a stock-phrase note from the owner's marks, and a read of the Luna model page. Each
-      is a prompt version plus a measured eval. Hypotheses only; the sources are mostly assertion. Experiment 1
-      (parrot audit) done: persona v28 removed the quoted samples ("scattered", 5 of 6 on the mood fixture to
-      0); superseded by v36 and v40, which dropped the quoted mood examples too.
+      **Waits on:** the review of 2026-10-26: a week of shadow map picks and the hook read by the owner.
 - [ ] T17 Closeness stage. A stage computed in code from real history (how long they have talked, how much
       they have shared, how often they flirt), not from points a judge hands out for compliments, picks one
       note line from "just met, already kind of likes them" up to "close" (ADR 0014). It paces intimacy by how
@@ -347,6 +315,28 @@ Ordered. Pull from the top.
       long quiet spell, so it does not flicker; a step-down never guilts them.
       **2026-10-20:** rethought as a mirror of what they have shown that sets ceilings on other features,
       not a ladder or a note; `docs/inbox/2026-10-20-closeness-as-a-mirror-not-a-ladder.md`. Could answer T2.
+      **Waits on:** the owner's say on the design (with T2).
+
+## Todo
+
+Ordered. Pull from the top.
+
+- [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
+      does not regenerate them (eval-harness audit: lm-eval, lighteval).
+- [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, and a redraw that
+      still has one is drawn once more (2026-10-22). Missed inferences (an object they mentioned; what a song meant to them): low
+      reasoning made them worse and slower (9/30 to 4/30, 11/30 to 4/30), so reasoning stays off; likely a
+      model limit, testable against another talker. "you seem sleepy" answered "haha, a little" (a body claim),
+      not yet looked at.
+- [ ] T12 (see also A33: strip the leading sentence and stage directions from assistant turns in the
+      injected history only) Try a shorter history window for self-copying (last 5 to 10 exchanges). Measured: phrase
+      reuse 25% to 8% on a roleplay loop, restating unchanged, emoji up. Needs a long-memory check
+      before any change; the memory card carries what older turns held. Measured 2026-10-17: a detail
+      beyond the window is lost (12/12 in view, 0/12 out) unless the card holds it, and the card only
+      updates after 90 seconds of quiet. See `evals/CHANGELOG.md`.
+- [ ] T4 Fix `no-claimed-perception` on DeepSeek, fixture first. Measured on v25 (30 samples): DeepSeek
+      11/30, Luna 30/30. Fails with invented sensation similes when asked how it feels.
+      Measured on DeepSeek V4; re-check on V4.1 Flash, the roleplay talker since 2026-10-19, before any fix.
 
 ## Backlog
 
@@ -354,6 +344,12 @@ Unordered within each group. Pull a card into Todo when it is next.
 
 ### From the roadmap and inbox notes
 
+- [ ] T15 Prompt experiments from the guides review (`docs/research/2026-10-18_prompting-guides-review.md`): a
+      parrot audit of quoted sample phrases in the persona and notes, a trimmed persona against v26, positive
+      rewrites of the notes, a stock-phrase note from the owner's marks, and a read of the Luna model page. Each
+      is a prompt version plus a measured eval. Hypotheses only; the sources are mostly assertion. Experiment 1
+      (parrot audit) done: persona v28 removed the quoted samples ("scattered", 5 of 6 on the mood fixture to
+      0); superseded by v36 and v40, which dropped the quoted mood examples too.
 - [ ] R15 Extend the rejected list to beliefs: when a belief about the user is retired by hand, no
       later automatic write may recreate it and its evidence leaves recall. Today only retired views
       are protected. (A20 in the audit synthesis)
@@ -544,6 +540,15 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
 Parked by the owner, or until something named happens (a flag, a voice mode, a tool, a second user).
 Each card says what would bring it back.
 
+- [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
+      flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
+      bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
+      size examples) shipped 2026-10-19: 6/30 without a retelling on that turn and short reactions elsewhere, plainer and more
+      alike, which the owner accepted. Ideas for varied reactions in
+      `docs/inbox/2026-10-19-varied-short-reactions-to-minor-vents.md`. **2026-10-20:** the pool shipped
+      (note v6, three size examples drawn per turn): 22 different replies in 30 against 7. Left: the real
+      laundry turn still retells 27 of 30 on v41, whatever has been tried.
+      Parked 2026-10-23: every fix tried; back with a new idea or a new flag.
 - [ ] T10 Reflective restatement. **Parked by the user on 2026-10-17.** Measured at 7% of real replies,
       clustered in one chat; the habit check cannot catch it. Research and options in
       `docs/inbox/2026-10-17-restating-the-users-point-research-and-measurement.md`.
