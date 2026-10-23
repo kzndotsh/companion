@@ -29,6 +29,7 @@ from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalke
 from companion.core.talker import Talker
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.core.vectors import Embedder
+from companion.features.context.run import write_missing
 from companion.features.episodes.run import write_closed
 from companion.features.lore.run import label_views
 from companion.features.names.run import read_names
@@ -38,7 +39,6 @@ from companion.io.telegram import Commands, Hooks, Telegram
 from companion.loops import merging
 from companion.loops.callbacks import check_new
 from companion.loops.consolidate import SameCheck
-from companion.loops.context import write_missing
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.invented import check_new as check_invented

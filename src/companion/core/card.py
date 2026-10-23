@@ -14,9 +14,9 @@ from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta, tzinfo
 
-from companion.core.context import wants_context
 from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.types import Belief, BeliefId, BeliefKind
+from companion.features.context.logic import wants_context
 
 HOLD_AT = 2
 MAX_ITEMS = 15
