@@ -7,7 +7,7 @@ from pathlib import Path
 
 from companion.core.freshness import status, when_phrase
 from companion.core.types import RelationshipId
-from companion.core.views import ViewMode, gates, is_settled, parse_mode
+from companion.core.views import ViewMode, gates, is_settled, overstated, parse_mode
 from companion.loops.curate import approve, close_duplicates, merge, retire
 from companion.memory.calibrate import report, reviewed_views
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
@@ -89,6 +89,9 @@ def opinions(db: Path, relationship: str) -> str:
             else ("auto-eligible" if g.eligible and mode is ViewMode.AUTO else "not in the card")
         )
         age = when_phrase(support.get(b.id, b.valid_from), now)
+        hedge = overstated(b)
+        if hedge is not None:
+            mark += f", OVERSTATED (it said {hedge!r})"
         lines.append(f"{b.id[:8]} [{b.kind}] {mark}, {state} ({n} day(s), last {age})  {b.claim}")
         lines.append(f'    "{b.evidence[0].quote}"')
     settled = sum(is_settled(b, days) for b in found)

@@ -876,3 +876,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## Request assembly: the views heading no longer says they were approved
 - From 2026-10-23 the card's heading over its own views reads "Views of your own that you have expressed. Hold to them unless…", without "and they have approved". In `auto` mode a view can reach the card by the rule, not by the owner, so the old words could be untrue; in `review` mode every view shown is approved either way. Measured first (`evals/CHANGELOG.md`, 2026-10-23): no difference in how views are held, at 30 samples per cell. `core/card.py`; old turns replay from their recorded card, so replay is unaffected.
+
+## Request assembly: a view stored firmer than it was said never installs itself
+- From 2026-10-23 a view whose every quote carries a hedge ("probably", "maybe", "kind of", "sometimes") while its claim keeps none is overstated (`core/views.py` `overstated`, a gate beside the others): in `auto` mode it never reaches the card on its own. The owner's approval still wins, and `companion opinions` and `companion approve` show the hedge it lost. In `review` mode, the one in use, nothing the talker is sent changes. Found when a view held under no pushback turned out to be one item of a list stored as the answer; 8 of 11 hedged quotes had been stored without their hedge.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Callable
 from datetime import datetime
 
@@ -23,6 +24,7 @@ from companion.core.views import (
     card_views,
     gates,
     is_settled,
+    overstated,
     parse_mode,
 )
 from tests.conftest import REL, T0
@@ -351,3 +353,34 @@ def test_a_volunteered_rule_a_taste_and_a_promise_are_still_kept(
     ok, _ = parse_views({"beliefs": [item]})
     got = to_view(ok[0], {"m1": _mine(utterance)}, REL, NOW, lambda: "b1")
     assert isinstance(got, Belief)
+
+
+def _said(belief: Callable[..., Belief], claim: str, *quotes: str) -> Belief:
+    b = _own(belief, "s", claim=claim, quote=quotes[0])
+    evidence = tuple(dataclasses.replace(b.evidence[0], quote=q) for q in quotes)
+    return dataclasses.replace(b, evidence=evidence)
+
+
+def test_a_view_stored_firmer_than_it_was_said_is_overstated_and_never_installs_itself(
+    belief: Callable[..., Belief],
+) -> None:
+    soft = _said(
+        belief,
+        "The companion thinks faking it would make it worse.",
+        "trying to fake it would probably make me worse",
+    )
+    assert overstated(soft) == "probably"
+    assert not gates(soft, {soft.id: 3}, {soft.id: False}).eligible
+    firm = _own(belief, "f")
+    assert gates(firm, {firm.id: 3}, {firm.id: False}).eligible
+
+
+def test_a_view_said_firmly_once_or_still_soft_is_not_overstated(
+    belief: Callable[..., Belief],
+) -> None:
+    firm = _said(belief, "The companion likes jazz.", "probably jazz", "jazz, no question")
+    kept = _said(
+        belief, "The companion thinks tears can come without a reason.", "sometimes tears show up"
+    )
+    assert overstated(firm) is None
+    assert overstated(kept) is None

@@ -15,6 +15,7 @@ from companion.core.types import (
     RelationshipId,
     TraceId,
 )
+from companion.core.views import overstated
 from companion.loops.record import Recorder
 from companion.store.sqlite.decisions import CLOSED
 from companion.store.sqlite.store import Store
@@ -123,12 +124,14 @@ def approve(store: Store, rel: RelationshipId, id_prefix: str, now: datetime | N
     if source is None:
         msg = f"view {view.id} cites an utterance missing from the ledger"
         raise ValueError(msg)
+    hedge = overstated(view)
     store.approve_view(view.id, now)
     Recorder(store, rel, source.session_id, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
         "approved by the user: this view now reaches the card",
         {"belief_id": view.id, "claim": view.claim},
     )
-    return f"approved  {view.claim}"
+    warn = f"\n  note: it said {hedge!r}; the claim is firmer than its words" if hedge else ""
+    return f"approved  {view.claim}{warn}"
 
 
 def retire_implicated_views(
