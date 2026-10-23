@@ -524,7 +524,11 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       listening, frame, react, habits), calibrated against the existing live tests before switching
       (decision-layer audit; the owner prefers this to running judges locally).
 - [ ] J24 Inform without waking: events such as reactions or quiet notices carry a "wakes a reply" flag,
-      default no, so only a real message starts a reply (Neuro SDK audit).
+      default no, so only a real message starts a reply (Neuro SDK audit). **Shelved by the owner
+      2026-10-23:** today only text is heard, so nothing can wake it by accident; a plain note that they
+      reacted changed nothing (0/96 mentions), so reactions would only be quiet offline feedback, never a
+      score to raise. Research, the measurement and stickers and photos (which get silence today) in
+      `docs/inbox/2026-10-23-reactions-and-other-inputs.md`.
 - [ ] J27 Per-gate shadow analysis before initiative goes live: for each hold (quiet hours, cap, mid-chat),
       how many reach-outs it stopped and what they would have said (Alice audit).
 - [ ] J28 Catch up after a restart: messages sent while the bot was down or restarting are picked up and
