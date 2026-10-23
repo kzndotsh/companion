@@ -5,14 +5,15 @@ from datetime import UTC
 from pathlib import Path
 
 import pytest
-from tests.conftest import REL, T0
 
-from companion.cli.promises import run
 from companion.core.extractor import Extraction
-from companion.core.promises import Proposed, to_promise
 from companion.core.types import Frame, Json, Speaker, Utterance
 from companion.features.openloops.run import Reading, catch_up_loops
+from companion.features.promises.cli import run
+from companion.features.promises.logic import Proposed, to_promise
+from companion.features.promises.run import read_promises
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 SORRY = "sorry! i won't call you buddy again, promise"
 
@@ -94,7 +95,12 @@ def store(tmp_path: Path, utterance: Callable[..., Utterance]) -> Store:
 
 async def _catch_up(store: Store, model: Reads, *, promises: bool = True) -> None:
     await catch_up_loops(
-        store, model, REL, (T0, UTC), lambda r, d: None, Reading(40, 4, 1, promises=promises)
+        store,
+        model,
+        REL,
+        (T0, UTC),
+        lambda r, d: None,
+        Reading(40, 4, 1, promises=read_promises if promises else None),
     )
 
 

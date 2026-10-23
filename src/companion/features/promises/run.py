@@ -11,9 +11,9 @@ from datetime import datetime, tzinfo
 
 from companion.core.beliefs.extract import build_user_prompt
 from companion.core.extractor import Extractor
-from companion.core.promises import PROMPT, SCHEMA, SYSTEM, parse, to_promise
 from companion.core.spend import purpose
 from companion.core.types import Json, Utterance, UtteranceId
+from companion.features.promises.logic import PROMPT, SCHEMA, SYSTEM, parse, to_promise
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.promises")

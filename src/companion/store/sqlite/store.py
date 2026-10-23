@@ -12,7 +12,6 @@ from pathlib import Path
 from companion.core.callbacks import Check
 from companion.core.invented import Statement
 from companion.core.mood import Effect, Said
-from companion.core.promises import Promise
 from companion.core.prompt.prefix import Prefix
 from companion.core.reflect import ReflectRun
 from companion.core.replay import TurnRecord
@@ -47,6 +46,9 @@ from companion.features.names.logic import Row as NameRow
 from companion.features.openloops import store as open_loops
 from companion.features.openloops.logic import LoopState, OpenLoop
 from companion.features.openloops.store import ReachOut
+from companion.features.promises import store as promises
+from companion.features.promises.logic import Promise
+from companion.features.promises.store import Recorded as RecordedPromise
 from companion.features.reminders import store as reminders
 from companion.features.reminders.store import Reminder
 from companion.store.sqlite import (
@@ -62,14 +64,12 @@ from companion.store.sqlite import (
     memory_checks,
     merges,
     mood,
-    promises,
     reflect,
     settings,
     turns,
     view_kinds,
 )
 from companion.store.sqlite.db import open_db
-from companion.store.sqlite.promises import Recorded as RecordedPromise
 
 VIEWS_MODE_KEY = "views.mode"
 

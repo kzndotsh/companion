@@ -52,6 +52,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.openloops.run import Reading, catch_up_loops
+from companion.features.promises.run import read_promises
 from companion.loops.record import Recorder
 from companion.loops.registry import FEATURES
 from companion.loops.views import WANT_KINDS, check_views
@@ -396,7 +397,7 @@ async def reflect_from(
         rel,
         (now, local),
         run.log,
-        Reading(BATCH, CONTEXT, promises=options.promises),
+        Reading(BATCH, CONTEXT, promises=read_promises if options.promises else None),
     )
     wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
     new_wants = users.accepted_ids & wanted

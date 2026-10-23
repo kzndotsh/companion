@@ -53,7 +53,6 @@ from companion.features.openloops.logic import (
 )
 from companion.features.openloops.store import ReachOut
 from companion.loops.features import Feature, Offer, Offered, quiet
-from companion.loops.promises import read_promises
 from companion.loops.record import Recorder
 from companion.loops.turn import decide
 from companion.prompts import get
@@ -279,6 +278,14 @@ def drafter(extractor: Extractor) -> Draft:
 MAX_TRIES = 3  # a batch that keeps failing is let go, so plans can never block on one
 
 
+# A reader of its own messages in the same batch: the cost, or None when its call failed so the
+# batch is read again. The slow loop passes the promise reader (J12) when it is on.
+type OwnReader = Callable[
+    [Store, Extractor, Mapping[str, Utterance], set[UtteranceId], tuple[datetime, tzinfo], Log],
+    Awaitable[float | None],
+]
+
+
 @dataclass(frozen=True, slots=True)
 class Reading:
     """Where the open-loop pass reads from: its batch size, the context before it, and how many
@@ -287,7 +294,7 @@ class Reading:
     batch: int
     context: int
     batches: int = 3
-    promises: bool = False  # also read its own messages for promises (J12, shadow)
+    promises: OwnReader | None = None  # also reads its own messages, for promises (J12, shadow)
 
 
 async def catch_up_loops(  # noqa: PLR0913, PLR0917
@@ -309,9 +316,8 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
             break
         upto = (batch[-1].at, batch[-1].id)
         targets = {u.id for u in batch if u.speaker is Speaker.USER}
-        own: set[UtteranceId] = (
-            {u.id for u in batch if u.speaker is Speaker.COMPANION} if reading.promises else set()
-        )
+        mine = {u.id for u in batch if u.speaker is Speaker.COMPANION}
+        own: set[UtteranceId] = mine if reading.promises is not None else set()
         if not targets and not own:
             store.record_loop_run(rel, upto, ok=True, reason="none of their messages", at=now)
             continue
@@ -321,7 +327,11 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
             if targets
             else LoopCounts()
         )
-        spent = await read_promises(store, extractor, window, own, when, note) if own else 0.0
+        spent = (
+            await reading.promises(store, extractor, window, own, when, note)
+            if own and reading.promises is not None
+            else 0.0
+        )
         if counts is not None and spent is not None:
             store.record_loop_run(rel, upto, ok=True, reason="read", at=now)
             total = _add(total, replace(counts, cost_usd=counts.cost_usd + spent))

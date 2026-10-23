@@ -18,8 +18,5 @@ What it notices about their near future and what it would do with it. Reaching o
   go with the reason logged.
 - When they say they are stepping away and stay gone, the tick drafts one light nudge, in shadow
   (`src/companion/features/nudges/README.md`).
-- The promises the companion makes in its own replies are read in the open-loop batch (J12,
-  `core/promises.py`, `system/promise-read`): a model labels standing or once and a word it said it
-  would stop using; code keeps one only if its quote is in that message, said for real, not hedged and
-  forward looking. Shadow only (`COMPANION_PROMISES`, `off` to skip): recorded and listed by
-  `companion promises`, never shown to the talker yet.
+- The promises the companion makes in its own replies are read in the open-loop batch, in shadow
+  (`src/companion/features/promises/README.md`).

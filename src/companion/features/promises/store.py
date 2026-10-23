@@ -6,8 +6,8 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.promises import Kind, Promise
 from companion.core.types import RelationshipId, UtteranceId
+from companion.features.promises.logic import Kind, Promise
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
