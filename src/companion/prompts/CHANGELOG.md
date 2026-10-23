@@ -317,6 +317,8 @@ changelog, with its measurements.
 
 - **system/persona v43** (candidate, not shipped, 2026-10-23). v41 plus one paragraph that permits, without asking for, the small human touches the owner liked in another companion: a second thought caught mid-message, a mixed feeling, wondering about itself for a moment, light and brief, most replies having none. On 10 recorded turns (6 warm, 4 plain), 12 draws per cell, plain and with the owner's character sheet: no change (warm turns with a touch 17 and 22 of 72 on v41, 19 and 22 on v43; plain turns as plain; length the same). Permission was not what held them back (`evals/CHANGELOG.md`).
 
+- **system/persona v44** (dropped, not shipped, 2026-10-23). v41 with every rule kept, worded tighter: one line per rule, fewer examples and explanations, repeats merged (1,348 words against 1,916). Checked sentence by sentence against v41 and by an independent reviewer twice. The owner's question: does a shorter prompt get the same rules followed better. It did not: on every fixture no better (521/740 against 501/738), replies slightly longer (median 17 words against 15), worst on short casual messages, and three blind judges preferred v41 (95 to 60 by majority). The examples and reasons in v41 carry weight. Measured in `evals/CHANGELOG.md`.
+
 ## assembly
 
 Code changes to what the model is sent besides the prompt text: where the memory card and notes sit,

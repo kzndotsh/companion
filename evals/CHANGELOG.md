@@ -1708,3 +1708,23 @@ the limit; how often it uses them is. Not shipped. Also seen: letting the look-u
 instead of 2 changes little, because the picker seldom picks more than two (1.0 added a turn against
 0.8). Lesson on the method: a first run that put every test message on one shared recent history
 looked like a gain (25% to 34%), and the judge was counting references to that history.
+
+## 2026-10-23: A tighter persona with the same rules is not better (v44 against v41)
+
+The owner asked whether saying the same rules in fewer words would help. v44 is v41 with every rule
+kept and worded tighter (1,348 words against 1,916), checked sentence by sentence against v41 and by
+an independent reviewer twice; a first draft at half the length had silently dropped about twenty
+rules and qualifiers. Plain persona, gpt-6-luna, all 185 fixtures (public and local), 4 samples each,
+1,480 replies, $0.24.
+
+- Fixtures: v41 521/740, v44 501/738 (p = 0.31, within noise). Most groups identical; the losses
+  sit on short casual messages (46/123 against 34/124, p = 0.10) and practical questions (19/20
+  against 15/20). Replies ran slightly longer on v44 (median 17 words against 15).
+- Three blind pairwise judges (Claude Haiku, Sonnet, Opus) on 220 pairs from the 110 scripted
+  fixtures, which reply is the better friend's text: v41 preferred by all three (90/62, 110/83,
+  98/61 with the rest ties; majority 95 to 60, p about 0.006; all three agreed on 52 against 28).
+  Both stronger judges preferred the shorter reply about two to one, as the rubric asks.
+
+Read as: the examples and reasons in v41 are not padding; without them the length rule loosens.
+Dropped. Rerun: `uv run companion eval --variants v41.md,v44.md --samples 4 --cap 0.3`, then pair
+two samples per scripted fixture blind for the judges.
