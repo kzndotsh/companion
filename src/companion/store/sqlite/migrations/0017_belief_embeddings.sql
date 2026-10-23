@@ -1,4 +1,4 @@
--- An embedding of each memory's claim, for the relevance look-up (`core/relevance.py`). Unit-length
+-- An embedding of each memory's claim, for the relevance look-up (`features/relevance`). Unit-length
 -- float32 vectors; one row per memory and model, the newest wins. Append-only.
 
 CREATE TABLE belief_embeddings (

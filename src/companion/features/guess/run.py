@@ -2,25 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-from companion.core.types import Frame
-from companion.features.guess.logic import INVITED as GUESS_INVITED
-from companion.features.guess.logic import NOTE as GUESS_NOTE
-from companion.features.guess.logic import likely as guess_likely
-from companion.features.guess.logic import note as guess_note
-from companion.loops.features import Feature, Offer, Offered
-from companion.loops.turn import Heard, Turn, decide, is_casual, mark
-
-if TYPE_CHECKING:
-    from companion.loops.fast import Conversation
-    from companion.loops.notes import Moment
-
 from collections.abc import Sequence
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from companion.core.extractor import Extractor
-from companion.core.types import Belief, Utterance
+from companion.core.types import Belief, Frame, Utterance
+from companion.features.guess.logic import INVITED as GUESS_INVITED
 from companion.features.guess.logic import (
     JUDGE,
     MAX_OFFERED,
@@ -29,8 +17,17 @@ from companion.features.guess.logic import (
     offerable,
     parse,
 )
+from companion.features.guess.logic import NOTE as GUESS_NOTE
+from companion.features.guess.logic import likely as guess_likely
+from companion.features.guess.logic import note as guess_note
 from companion.loops.ask import Judge, ask
+from companion.loops.features import Feature, Offer, Offered
 from companion.loops.recall import look_up
+from companion.loops.turn import Heard, Turn, decide, is_casual, mark
+
+if TYPE_CHECKING:
+    from companion.loops.fast import Conversation
+    from companion.loops.notes import Moment
 
 TIMEOUT_SECONDS = 3.0
 INVITE = Judge(

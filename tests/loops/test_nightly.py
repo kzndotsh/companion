@@ -45,3 +45,24 @@ def test_a_night_is_missed_only_after_more_than_a_day(tmp_path: Path) -> None:
     store.set_setting(REL, LAST_RUN, T0.isoformat(), T0)
     assert not missed(store, REL, T0 + timedelta(hours=20))
     assert missed(store, REL, T0 + MISSED_AFTER + timedelta(minutes=1))
+
+
+async def test_a_night_where_every_step_failed_is_not_recorded_so_it_is_made_up(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = Store(tmp_path / "rel.sqlite")
+
+    async def fails(*_: object, **__: object) -> None:
+        raise RuntimeError("judge down")
+
+    def fails_now(*_: object, **__: object) -> None:
+        raise RuntimeError("store busy")
+
+    monkeypatch.setattr(nightly_module, "nightly", fails)
+    monkeypatch.setattr(nightly_module.merging, "recent", fails)
+    monkeypatch.setattr(nightly_module, "expire_routine", fails_now)
+    monkeypatch.setattr(nightly_module, "write_closed", fails)
+    failed = await night(store, None, REL, UTC, mode="shadow")  # type: ignore[arg-type]
+    assert len(failed) == 4
+    assert store.setting(REL, LAST_RUN) is None
+    assert missed(store, REL, T0)

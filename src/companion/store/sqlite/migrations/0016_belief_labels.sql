@@ -1,4 +1,4 @@
--- Which part of their life each memory is about and how personal it is (J48, `core/knowing.py`).
+-- Which part of their life each memory is about and how personal it is (J48, `features/knowing`).
 -- A model labels, code counts. A memory can be labelled again; the newest row wins. Append-only.
 
 CREATE TABLE belief_labels (

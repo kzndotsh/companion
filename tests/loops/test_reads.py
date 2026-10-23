@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from companion.core.agreement import unanimous
 from companion.core.extractor import Extraction
 from companion.core.types import Json
@@ -49,3 +51,18 @@ def test_agreement_needs_every_read_and_never_counts_a_failed_one() -> None:
     assert unanimous(["a", "a", None]) is None
     assert unanimous(["a", "b", "a"]) is None
     assert unanimous(["a", "a"]) is None
+
+
+class Slow:
+    """Answers after a delay longer than any limit the test sets."""
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        del system, user, schema
+        await asyncio.sleep(1)
+        return Extraction(A, "m", 0.01, 1)
+
+
+async def test_a_read_slower_than_the_limit_is_a_none_read() -> None:
+    got = await read_times(Slow(), "s", "u", {}, _label, spend="t", timeout=0.01)
+    assert got.values == (None, None, None)
+    assert got.cost_usd == 0.0

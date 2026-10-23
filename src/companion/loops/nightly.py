@@ -31,7 +31,9 @@ async def night(
     store: Store, judge: Extractor, rel: RelationshipId, zone: tzinfo, *, mode: str
 ) -> list[str]:
     """Run every step once, each on its own; the names of those that failed. The run is recorded
-    either way, so a failing step is tried again the next night, not in a loop."""
+    when at least one step worked, so one step that keeps failing is tried again the next night,
+    not in a loop, while a night where every step failed (the judge down) is made up at the next
+    start."""
 
     async def check() -> None:
         await nightly(store, judge, rel, utc_now(), zone, mode=mode)
@@ -58,5 +60,6 @@ async def night(
         except Exception:
             log.exception("nightly %s failed; the other steps still run", name)
             failed.append(name)
-    store.set_setting(rel, LAST_RUN, utc_now().isoformat(), utc_now())
+    if len(failed) < len(steps):
+        store.set_setting(rel, LAST_RUN, utc_now().isoformat(), utc_now())
     return failed

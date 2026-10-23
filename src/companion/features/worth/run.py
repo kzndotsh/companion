@@ -1,5 +1,5 @@
-"""Labelling memories as about their life, about the bot, or routine (`core/worth.py`). New
-memories are acted on when the three reads agree; memories kept before become questions."""
+"""Labelling memories as about their life, about the bot, or routine (`logic.py`). New memories
+are acted on when the three reads agree; memories kept before become questions."""
 
 from __future__ import annotations
 

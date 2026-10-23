@@ -1,4 +1,4 @@
-"""OpenRouter embeddings, for the relevance look-up (`core/relevance.py`). Vectors come back unit
+"""OpenRouter embeddings, for the relevance look-up (`features/relevance`). Vectors come back unit
 length, so a dot product is the cosine."""
 
 from __future__ import annotations

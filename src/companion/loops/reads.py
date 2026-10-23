@@ -41,13 +41,15 @@ async def read_times[T](  # noqa: PLR0913
     *,
     spend: str,
     times: int = READS,
+    timeout: float | None = None,
 ) -> Reads[T]:
-    """The same question asked `times` times at once."""
+    """The same question asked `times` times at once; with a timeout, a read slower than that many
+    seconds is a None read."""
 
     async def one() -> tuple[T | None, float, str]:
         try:
             with purpose(spend):
-                got = await extractor.extract(system, user, schema)
+                got = await asyncio.wait_for(extractor.extract(system, user, schema), timeout)
         except Exception as err:
             log.warning("%s read failed: %r", spend, err)
             return None, 0.0, ""

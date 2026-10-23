@@ -85,10 +85,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
   live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
-- A line for the system block is a note source in `loops/notes.py` `SOURCES`, in the order it is sent:
+- A line for the system block is a note source, named in `ORDER` in `loops/notes.py` in the order it is sent:
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
-  `assemble`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
+  `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
   failed one adds nothing that turn. A shadow look-up runs through `beside` in `loops/beside.py`, which logs a failure.
 - A turn runs in stages, one module each: `loops/hear.py` (a reaction instead of a reply, the listening
   read), `loops/route.py` (which talker), `loops/notes.py` `look` (the look-ups), `loops/assemble.py` (the
@@ -101,7 +101,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
   reaches its note as `Lookups.found[name]`. Registered: the memory map, names, context, worth, relevance,
   recent times, topic-spent, guess, lore and reminders.
-- Features are moving into one folder each under `src/companion/features/` (reminders so far): `logic.py`
+- Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it
   works). import-linter keeps a feature's logic pure, keeps features from importing each other, and lets only
   a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests mirror the folder

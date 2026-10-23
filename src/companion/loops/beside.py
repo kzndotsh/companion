@@ -24,7 +24,6 @@ from companion.core.nudges import PROMPT as AWAY_PROMPT
 from companion.core.nudges import SCHEMA as AWAY_SCHEMA
 from companion.core.nudges import parse as parse_away
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
-from companion.core.spend import purpose
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -36,6 +35,8 @@ from companion.features.names.logic import index as name_index
 from companion.features.names.logic import mentioned
 from companion.features.relevance.logic import SHADOW as RELEVANCE_SHADOW
 from companion.features.relevance.run import shadow as relevance_shadow
+from companion.loops.ask import Judge, ask
+from companion.loops.hooks import TIMEOUT_SECONDS as HOOK_TIMEOUT
 from companion.loops.hooks import stated
 from companion.loops.reads import read_times
 from companion.loops.turn import Heard, Turn, decide, is_casual
@@ -44,6 +45,9 @@ if TYPE_CHECKING:
     from companion.loops.fast import Conversation
 
 log = logging.getLogger("companion.turn")
+AWAY_JUDGE = Judge(
+    "nudge", AWAY_PROMPT, AWAY_SCHEMA, parse_away, timeout=8.0, unread="no nudge for this message"
+)
 
 
 _BESIDE: set[asyncio.Task[None]] = set()  # shadow look-ups still running, kept from collection
@@ -117,15 +121,10 @@ def _away_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None)
         return
 
     async def run(judge: Extractor) -> None:
-        try:
-            with purpose("nudge"):
-                got = await judge.extract(AWAY_PROMPT.text, f"USER: {t.text}", AWAY_SCHEMA)
-        except Exception as err:  # a failed read only means no nudge for this message
-            log.debug("away read failed: %r", err)
+        got = await ask(judge, AWAY_JUDGE, f"USER: {t.text}")
+        if got is None:
             return
-        read = parse_away(got.data)
-        if read is None:
-            return
+        read = got.value
         decide(
             c,
             t,
@@ -135,7 +134,7 @@ def _away_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None)
                 "minutes": read[1],
                 "said": t.text,
                 "model": got.model,
-                "prompt": AWAY_PROMPT.ref,
+                "prompt": got.ref,
             },
         )
 
@@ -157,7 +156,15 @@ def _hook_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None)
     async def run(judge: Extractor) -> None:
         last = [u.text for u in t.prior if u.speaker is Speaker.COMPANION][-1:]
         said = (f"COMPANION: {last[0]}\n" if last else "") + f"USER: {t.text}"
-        got = await read_times(judge, HOOK_PROMPT.text, said, HOOK_SCHEMA, read_basic, spend="hook")
+        got = await read_times(
+            judge,
+            HOOK_PROMPT.text,
+            said,
+            HOOK_SCHEMA,
+            read_basic,
+            spend="hook",
+            timeout=HOOK_TIMEOUT,
+        )
         basic = agreed(got.values)  # a failed read means no shadow pick this turn
         if basic is None or not may_ask(basic, asked, t.now):
             return
