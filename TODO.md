@@ -543,6 +543,11 @@ Replaces R3 (record the lore it invents) and J6 (its own time away, now LR4).
 Parked by the owner, or until something named happens (a flag, a voice mode, a tool, a second user).
 Each card says what would bring it back.
 
+- [ ] Two draft character sheets kept beside the live one (private, `data/characters/`, never committed),
+      kept by the owner 2026-10-23: `ani-emo` (her own emoticons and kaomoji; she used them on her own,
+      mostly one, and copied the owner's no less) and `ani-short` (the same sheet worded tighter, not
+      measured; the tighter persona v44 measured worse, so expect the same). Measurements in
+      `evals/CHANGELOG.md`. Comes back if the code-picked mark wants a sheet list, or to delete.
 - [ ] T14 Minor vents retold back ("…when you're ready to crash and the bed's still waiting on laundry"),
       flagged "repeating" 2026-10-19. **Partial:** the real turn retells 30/30 under the old note, a note that
       bans the clause, a six-word cap, a short history and DeepSeek. Note v5 (a short reaction only, with two
