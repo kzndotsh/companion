@@ -17,7 +17,7 @@ REASON_MATCH = re.compile(
 )
 # turn/route.py has two: the old-decision fallback, and `route.reason == BRUSHED`, which compares
 # the floor's own answer as it is returned, not a logged decision.
-REASON_ALLOWED = {"core/types.py": 1, "turn/route.py": 2, "loops/calibrate.py": 1}
+REASON_ALLOWED = {"core/types.py": 1, "turn/route.py": 2, "memory/calibrate.py": 1}
 
 # No new god files: a file over DEFAULT_CAP lines is split. The big ones may only shrink.
 DEFAULT_CAP = 450

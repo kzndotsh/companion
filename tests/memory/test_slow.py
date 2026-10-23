@@ -19,7 +19,7 @@ from companion.core.types import (
 )
 from companion.core.vectors import Embedded, unit
 from companion.features.consolidate.run import SameCheck
-from companion.loops.slow import reflect_once
+from companion.memory.slow import reflect_once
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")

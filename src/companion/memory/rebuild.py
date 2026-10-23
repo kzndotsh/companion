@@ -8,7 +8,7 @@ from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
 from companion.core.types import RelationshipId
 from companion.loops.curate import close
-from companion.loops.slow import ReflectOptions, reflect_from
+from companion.memory.slow import ReflectOptions, reflect_from
 from companion.store.sqlite.store import Store
 
 

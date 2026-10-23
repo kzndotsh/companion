@@ -29,9 +29,9 @@ from companion.core.types import (
 from companion.core.views import card_views, is_settled
 from companion.loops.conversation import Conversation
 from companion.loops.curate import retire_implicated_views
-from companion.loops.rebuild import rebuild
-from companion.loops.slow import reflect_once
-from companion.loops.views import check_views, views_implicated
+from companion.memory.rebuild import rebuild
+from companion.memory.slow import reflect_once
+from companion.memory.views import check_views, views_implicated
 from companion.store.sqlite import replay as store_replay
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
 from companion.turn.fast import handle
@@ -480,7 +480,7 @@ async def test_a_turn_that_carried_no_views_never_asks_the_model(store: Store) -
 
 
 async def test_calibration_compares_the_gates_with_the_users_decisions(store: Store) -> None:
-    from companion.loops.calibrate import reviewed_views  # noqa: PLC0415
+    from companion.memory.calibrate import reviewed_views  # noqa: PLC0415
 
     _two_day_view(store, "good")  # gates would adopt it, and the user approves it
     store.insert_belief(
@@ -518,7 +518,7 @@ async def test_calibration_compares_the_gates_with_the_users_decisions(store: St
     assert by["good"].gates.eligible
     assert by["bad"].verdict == "retired"
     assert by["bad"].gates.eligible  # the gates would have let it through, and the user rejected it
-    from companion.loops.calibrate import report  # noqa: PLC0415
+    from companion.memory.calibrate import report  # noqa: PLC0415
 
     text = report(rows)
     assert "1 of 2 adopted views were ones you wanted (50%)" in text
@@ -528,8 +528,8 @@ async def test_calibration_compares_the_gates_with_the_users_decisions(store: St
 async def test_a_user_reason_containing_the_word_duplicate_still_counts_as_a_decision(
     store: Store,
 ) -> None:
-    from companion.loops.calibrate import reviewed_views  # noqa: PLC0415
     from companion.loops.curate import retire  # noqa: PLC0415
+    from companion.memory.calibrate import reviewed_views  # noqa: PLC0415
 
     _two_day_view(store, "v")
     retire(store, REL, "v", "near-duplicate of an approved view")
@@ -537,8 +537,8 @@ async def test_a_user_reason_containing_the_word_duplicate_still_counts_as_a_dec
 
 
 async def test_a_mechanical_dedupe_closure_is_not_a_user_decision(store: Store) -> None:
-    from companion.loops.calibrate import reviewed_views  # noqa: PLC0415
     from companion.loops.curate import close_duplicates  # noqa: PLC0415
+    from companion.memory.calibrate import reviewed_views  # noqa: PLC0415
 
     _two_day_view(store, "keep")
     store.insert_belief(
@@ -552,7 +552,7 @@ async def test_a_retired_view_is_not_recorded_again_when_the_ledger_is_re_read(
     store: Store,
 ) -> None:
     from companion.loops.curate import retire  # noqa: PLC0415
-    from companion.loops.slow import reflect_from  # noqa: PLC0415
+    from companion.memory.slow import reflect_from  # noqa: PLC0415
 
     _say(store, 1, Speaker.COMPANION, VIEW_TEXT)
     await reflect_once(store, Routed(views=[_view("m1", "lazy is a flaw")]), REL)

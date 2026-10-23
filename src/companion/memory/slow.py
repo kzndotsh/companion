@@ -55,7 +55,7 @@ from companion.features.consolidate.run import SameCheck
 from companion.features.openloops.run import Reading, catch_up_loops
 from companion.features.promises.run import read_promises
 from companion.loops.record import Recorder
-from companion.loops.views import WANT_KINDS, check_views
+from companion.memory.views import WANT_KINDS, check_views
 from companion.registry import FEATURES
 from companion.store.sqlite.store import Store
 

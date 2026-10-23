@@ -29,8 +29,8 @@ from companion.features.lore.run import label_views
 from companion.features.merging import run as merging
 from companion.features.names.run import read_names
 from companion.features.worth.run import label
-from companion.loops.rebuild import rebuild
-from companion.loops.slow import reflect_from
+from companion.memory.rebuild import rebuild
+from companion.memory.slow import reflect_from
 from companion.store.sqlite.store import Store
 
 

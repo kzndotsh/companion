@@ -4,11 +4,11 @@ from datetime import UTC, timedelta
 from pathlib import Path
 
 import pytest
-from tests.conftest import REL, T0
 
-import companion.loops.nightly as nightly_module
-from companion.loops.nightly import LAST_RUN, MISSED_AFTER, missed, night
+import companion.memory.nightly as nightly_module
+from companion.memory.nightly import LAST_RUN, MISSED_AFTER, missed, night
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 
 async def test_one_failing_step_does_not_skip_the_others_and_the_run_is_kept(

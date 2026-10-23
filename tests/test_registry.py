@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.loops import slow
+from companion.memory import slow
 from companion.registry import FEATURES
 from companion.turn.notes import SOURCES
 
