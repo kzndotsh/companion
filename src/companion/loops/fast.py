@@ -29,7 +29,6 @@ from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name
 from companion.core.card import EVENT_SHOWN_DAYS, Card, build_card, render
 from companion.core.clock import now_line, utc_now
 from companion.core.extractor import Extractor
-from companion.core.floor import INTIMATE_CHECK
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
 )
@@ -38,7 +37,6 @@ from companion.core.frames import (
     Judgement,
     companion_frame,
     is_assertable,
-    needs_judge,
     scene_frame,
 )
 from companion.core.frames import render_reason as frame_reason
@@ -52,14 +50,9 @@ from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
 from companion.core.prompt.sections import tagged
-from companion.core.quip import PROMPT as QUIP_PROMPT
 from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
 from companion.core.react import decide as decide_reaction
-from companion.core.recheck import DASHED as EM_DASH_CHECK
-from companion.core.recheck import QUIP, code_checks
-from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
-from companion.core.recheck import eligible as recheck_eligible
 from companion.core.relevance import Embedder
 from companion.core.replay import TAIL, TurnRecord
 from companion.core.talker import Reply, Talker
@@ -81,19 +74,16 @@ from companion.core.views import ViewState, card_views, why
 from companion.loops.ack import judge
 from companion.loops.basics import judge_name
 from companion.loops.beside import shadows
-from companion.loops.floor import judge_intimate
 from companion.loops.frames import inputs_hash as frames_inputs_hash
-from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.listen import judge_listening
 from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.notes import Lookups, Moment, look, notes_for
 from companion.loops.persist import TheirMessage, store_user, their_message
-from companion.loops.quip import judge_quip
-from companion.loops.react import judge_reaction
 from companion.loops.record import Recorder
 from companion.loops.route import route_turn
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
+from companion.loops.talk import await_beside, checked, start_beside
 from companion.loops.turn import Heard, Turn, decide, mark, recorder
 from companion.store.sqlite.decisions import REACTED
 from companion.store.sqlite.store import Store
@@ -197,33 +187,6 @@ def _mark_start(t: Turn, in_scene: Frame, card: Card, card_text: str) -> None:
         f" card {len(card_text)} chars ({len(card.usable)} usable, {len(card.held)} held,"
         f" {len(card.older)} older, {len(card.dropped)} dropped, {len(card.views)} views),"
         f" text {len(t.text)} chars",
-    )
-
-
-async def _await_beside(
-    t: Turn,
-    talk: asyncio.Future[Reply],
-    framing: asyncio.Future[Any] | None,
-    feeling: asyncio.Future[Any] | None,
-) -> tuple[Reply, Any, Any]:
-    """The reply, then the frame and reaction judgements that ran beside it, marking each."""
-    reply = await talk
-    _mark_reply(t, reply)
-    outcome = await framing if framing is not None else None
-    if framing is not None:
-        mark(t, "frame judge done")
-    felt = await feeling if feeling is not None else None
-    if feeling is not None:
-        mark(t, "reaction judge done")
-    return reply, outcome, felt
-
-
-def _mark_reply(t: Turn, reply: Reply) -> None:
-    mark(
-        t,
-        f"talker done: {reply.model} {reply.latency_ms}ms in={reply.input_tokens}"
-        f" cache_read={reply.cache_read_tokens} cost=${reply.cost_usd:.5f},"
-        f" {len(reply.text.split())} words",
     )
 
 
@@ -342,135 +305,6 @@ def _stopped_by_cap(
         reason=f"daily spend cap reached: ${spent:.2f} of ${c.daily_cap_usd or 0:.2f}, no reply",
     )
     return NOTICE if first_notice_today(c.store, c.rel, now) else ""
-
-
-def _start_beside(
-    c: Conversation, t: Turn, request: TalkerRequest, talker: Talker
-) -> tuple[
-    asyncio.Future[Reply],
-    asyncio.Future[tuple[Judgement, str, str] | None] | None,
-    asyncio.Future[tuple[ReactJudgement, str, str] | None] | None,
-]:
-    """Start the reply, and beside it the frame judge and the reaction judge, so neither adds a
-    wait. A confident acknowledgement cancels all of them."""
-    talk = asyncio.ensure_future(talker.reply(request))
-    if c.judge is None:
-        return talk, None, None
-    framing = (
-        asyncio.ensure_future(judge_frame(c.judge, t.prior, t.text))
-        if needs_judge(t.text, t.prior, t.now)
-        else None
-    )
-    return talk, framing, asyncio.ensure_future(judge_reaction(c.judge, t.prior, t.text))
-
-
-async def _redraw_empty(c: Conversation, t: Turn, request: TalkerRequest, talker: Talker) -> Reply:
-    """An empty reply would be a silent turn (seen in 2 to 3% of long scene replies in tests): ask
-    the same model once more, and send whatever comes back."""
-    again = await talker.reply(request)
-    _mark_reply(t, again)
-    decide(c, t, "resampled", reason="resampled: the model returned no text")
-    return again
-
-
-async def _recheck(  # noqa: PLR0913, PLR0917
-    c: Conversation,
-    t: Turn,
-    request: TalkerRequest,
-    reply: Reply,
-    heard: Heard | None,
-    in_scene: Frame,
-    talker: Talker,
-) -> Reply:
-    """The reply to send: the first, or one fresh draw when the first fails a check (two when the
-    redraw still has an em dash: one redraw left 4 of 10 dashes in). On an ordinary
-    turn every check runs and the result is logged; in a scene or on a serious turn only the code
-    checks run, and only a resample is logged."""
-    severity = heard[0].severity if heard is not None else None
-    scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
-    code_only = scene or severity == RECHECK_SERIOUS
-    if not c.resample:
-        return reply
-    if not reply.text.strip():
-        return await _redraw_empty(c, t, request, talker)
-    if not code_only and not recheck_eligible(severity=severity, in_scene=False, reply=reply.text):
-        return reply
-    failed = code_checks(reply.text, t.text, scene=scene)
-    if code_only and not failed:
-        return reply  # a scene or a serious turn gets only the code checks; a pass is not logged
-    detail: dict[str, Json] = {}
-    if not failed and c.judge is not None:
-        judged = await judge_quip(c.judge, t.text, reply.text)
-        if judged is not None:
-            detail = {"scorer": judged[1], "prompt": QUIP_PROMPT.ref}
-            if judged[0]:
-                failed.append(QUIP)
-    mark(t, f"recheck: {', '.join(failed) or 'passed'}")
-    again = None
-    if failed:
-        again = await talker.reply(request)
-        _mark_reply(t, again)
-        detail |= {"discarded": reply.text, "checks": list[Json](failed)}
-        still = [x for x in code_checks(again.text, t.text, scene=scene) if x == EM_DASH_CHECK]
-        if still and again.text:  # the model that dashes once often dashes again: one more draw
-            detail |= {"discarded_again": again.text}
-            third = await talker.reply(request)
-            _mark_reply(t, third)
-            again = third if third.text else again
-    reason = f"resampled: {', '.join(failed)}" if failed else "kept: the reply passed its checks"
-    decide(c, t, "recheck", detail or None, reason=reason)
-    return again if again is not None and again.text else reply
-
-
-async def _checked(  # noqa: PLR0913, PLR0917
-    c: Conversation,
-    t: Turn,
-    request: TalkerRequest,
-    reply: Reply,
-    heard: Heard | None,
-    in_scene: Frame,
-    talker: Talker,
-    *,
-    held: bool,
-) -> Reply:
-    """The reply after its checks: the habit checks on an ordinary turn, the floor's on a held
-    one."""
-    reply = await _recheck(c, t, request, reply, heard, in_scene, talker)
-    return await _hold_check(c, t, request, reply, talker) if held else reply
-
-
-async def _hold_check(
-    c: Conversation, t: Turn, request: TalkerRequest, reply: Reply, talker: Talker
-) -> Reply:
-    """On a turn the floor held, the reply must not be intimate (ADR 0017). An intimate or unread
-    reply is drawn again with the same request, then once more with only their last message in
-    view, so the history that pulled it along is gone. If all three read as intimate, nothing is
-    sent this turn. Every step is logged with what was discarded; no reply is written by code."""
-    if c.judge is None:
-        return reply
-    lean = TalkerRequest(prefix=request.prefix, messages=request.messages[-1:], card=request.card)
-    tries = (request, lean)
-    discarded: list[Json] = []
-    for attempt in range(len(tries) + 1):
-        if await judge_intimate(c.judge, reply.text) is False:
-            break
-        discarded.append(reply.text)
-        if attempt < len(tries):
-            reply = await talker.reply(tries[attempt])
-            _mark_reply(t, reply)
-    else:
-        reply = Reply(text="", model=reply.model, latency_ms=reply.latency_ms)
-    if discarded:
-        sent = ["a second reply", "a reply drawn with only their last message", "nothing"]
-        decide(
-            c,
-            t,
-            "floor: held reply",
-            {"discarded": discarded, "prompt": INTIMATE_CHECK.ref},
-            reason="floor: a reply on a held turn read as intimate,"
-            f" sent {sent[len(discarded) - 1]}",
-        )
-    return reply
 
 
 def _with_reaction(
@@ -684,10 +518,10 @@ async def _turn(
         asm.view_state,
     )
     shadows(c, t, in_scene, heard, card)
-    talk, framing, feeling = _start_beside(c, t, request, talker)
+    talk, framing, feeling = start_beside(c, t, request, talker)
     try:
-        reply, outcome, felt = await _await_beside(t, talk, framing, feeling)
-        reply = await _checked(c, t, request, reply, heard, in_scene, talker, held=held)
+        reply, outcome, felt = await await_beside(t, talk, framing, feeling)
+        reply = await checked(c, t, request, reply, heard, in_scene, talker, held=held)
     except BaseException:
         await _stop(talk, framing, feeling)
         raise
