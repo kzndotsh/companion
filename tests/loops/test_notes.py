@@ -41,7 +41,9 @@ def test_notes_come_in_the_listed_order_and_writes_wait(store: Store) -> None:
     t = Turn(SESSION, "t1", NOW, [], "hi")  # type: ignore[arg-type]
     from companion.core.types import Frame  # noqa: PLC0415
 
-    notes = notes_for(Moment(convo, t, Frame.REAL, None, Lookups(reminder="[set]"), True, []))
+    notes = notes_for(
+        Moment(convo, t, Frame.REAL, None, Lookups(found={"reminder": "[set]"}), True, [])
+    )
     assert notes.lines[-1] == "[set]"
     assert HOLD_NOTE.text in notes.lines
     assert notes.after == ()  # not read as casual, so no name is asked and nothing is used up
@@ -134,10 +136,13 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
     async def tastes(*_: object) -> tuple[str, ...]:
         return ("rainy days",)
 
+    from companion.loops.features import Feature  # noqa: PLC0415
+
     monkeypatch.setattr(notes, "LOOK_SECONDS", 0.2)
-    monkeypatch.setattr(notes, "_reminder", hangs)
+    monkeypatch.setattr(
+        notes, "FEATURES", (Feature("lore", look=tastes), Feature("reminder", look=hangs))
+    )
     monkeypatch.setattr(notes, "_topic_spent", fails)
-    monkeypatch.setattr(notes, "_tastes", tastes)
     convo = Conversation(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, "t1", NOW, [], "hi")  # type: ignore[arg-type]
     from companion.core.types import Frame  # noqa: PLC0415
@@ -145,4 +150,5 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
     began = time.monotonic()
     got = await notes.look(convo, t, Frame.REAL, None, None)
     assert time.monotonic() - began < 2
-    assert (got.reminder, got.spent, got.tastes) == (None, False, ("rainy days",))
+    assert got.spent is False
+    assert dict(got.found) == {"lore": ("rainy days",)}  # the hung reminder look-up is left out

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Coroutine, Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, cast
 
@@ -35,7 +35,6 @@ from companion.core.length import LengthTarget, length_target
 from companion.core.listening import PROMPT as LISTEN_PROMPT
 from companion.core.listening import listening_note, repair_note, rude_note
 from companion.core.listening import render_reason as render_listening
-from companion.core.lore import lore_note
 from companion.core.mood import PARAMS_VERSION as MOOD_PARAMS
 from companion.core.mood import WINDOW as MOOD_WINDOW
 from companion.core.mood import Effect as MoodEffect
@@ -49,8 +48,6 @@ from companion.core.recall import recall_note
 from companion.core.relevance import GATE as RELEVANCE_GATE
 from companion.core.relevance import LIVE as RELEVANCE_LIVE
 from companion.core.relevance import SHOWN as RELEVANCE_SHOWN
-from companion.core.reminders import PROMPT as REMINDER_PROMPT
-from companion.core.reminders import likely as reminder_likely
 from companion.core.topics import EVERY_TURNS as TOPIC_EVERY
 from companion.core.topics import NOTE as TOPIC_NOTE
 from companion.core.topics import SPENT as TOPIC_SPENT
@@ -65,14 +62,12 @@ from companion.core.types import (
     Utterance,
 )
 from companion.loops.episodes import write_closed
+from companion.loops.features import Feature, Offer
 from companion.loops.guess import Invited, invited_guess
-from companion.loops.lore import nearest_tastes
+from companion.loops.lore import LORE
 from companion.loops.recall import Recalled, look_up
 from companion.loops.relevance import shadow as relevance_look_up
-from companion.loops.reminders import ASKED as REMINDER_ASKED
-from companion.loops.reminders import act as reminder_act
-from companion.loops.reminders import log_decision as reminder_log
-from companion.loops.reminders import read_slots as reminder_slots
+from companion.loops.reminders import REMINDERS
 from companion.loops.topics import judge_spent
 from companion.prompts import get
 
@@ -102,38 +97,9 @@ class Lookups:
     recalled: Recalled | None = None
     spent: bool = False
     guess: Invited | None = None
-    tastes: tuple[str, ...] = ()  # its own tastes to show it this turn (ADR 0020)
-    reminder: str | None = (
-        None  # a reminder they asked for was set, cancelled or needs asking (J50)
-    )
     relevant: tuple[tuple[BeliefId, str], ...] = ()  # memories near their message (ADR 0018)
     recent: tuple[Told, ...] = ()  # what the two of them did recently, when it bears (J12, J49)
-
-
-LORE_SHOWN = "lore: its own tastes nearest their message"
-
-
-async def _tastes(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
-) -> tuple[str, ...]:
-    """Its tastes nearest their message on an ordinary turn (ADR 0020), as the words it said. In
-    shadow they are logged and not shown."""
-    if c.lore == "off" or c.embedder is None or not is_casual(t, in_scene, heard):
-        return ()
-    found = await nearest_tastes(c.store, c.embedder, c.rel, c.embed_model, t.text, t.now)
-    if found is None or not found.tastes:
-        return ()
-    decide(
-        c,
-        t,
-        LORE_SHOWN + ("" if c.lore == "on" else " (shadow)"),
-        {
-            "tastes": [str(b.id) for b, _ in found.tastes],
-            "scores": [round(s, 3) for _, s in found.tastes],
-            "claims": [b.claim for b, _ in found.tastes],
-        },
-    )
-    return tuple(b.evidence[0].quote for b, _ in found.tastes) if c.lore == "on" else ()
+    found: Mapping[str, object] = field(default_factory=dict[str, object])  # by feature name
 
 
 async def look(
@@ -148,14 +114,13 @@ async def look(
     async def no_guess() -> Invited | None:
         return None
 
-    jobs: dict[str, Coroutine[object, object, object]] = {
+    jobs: dict[str, Awaitable[object]] = {
         "recall": _recall(c, t, heard or read),
         "spent": _topic_spent(c, t, in_scene, heard),
         "guess": no_guess() if asked_to_recall else _invited_guess(c, t, in_scene, heard),
-        "tastes": _tastes(c, t, in_scene, heard),
-        "reminder": _reminder(c, t),
         "relevant": _relevant(c, t, in_scene, heard),
         "recent": _recent_times(c, t, in_scene),
+        **{f.name: f.look(c, t, in_scene, heard) for f in FEATURES if f.look is not None},
     }
     tasks = {name: asyncio.ensure_future(job) for name, job in jobs.items()}
     _, late = await asyncio.wait(tasks.values(), timeout=LOOK_SECONDS)
@@ -173,10 +138,9 @@ async def look(
         recalled=cast("Recalled | None", got.get("recall")),
         spent=got.get("spent") is True,
         guess=cast("Invited | None", got.get("guess")),
-        tastes=cast("tuple[str, ...]", got.get("tastes", ())),
-        reminder=cast("str | None", got.get("reminder")),
         relevant=cast("tuple[tuple[BeliefId, str], ...]", got.get("relevant", ())),
         recent=cast("tuple[Told, ...]", got.get("recent", ())),
+        found={f.name: got[f.name] for f in FEATURES if f.name in got},
     )
 
 
@@ -247,27 +211,6 @@ async def _relevant(
         for row in (rows if isinstance(rows, list) else [])
         if isinstance(row, dict) and isinstance(row.get("claim"), str) and "id" in row
     )
-
-
-async def _reminder(c: Conversation, t: Turn) -> str | None:
-    """When they ask to be reminded or checked on, or answer its asking when (J50): read the words,
-    let code set the time, and say in a note what happened."""
-    last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
-    asked = last is not None and any(
-        d.has_key(REMINDER_ASKED) for d in c.store.decisions_for_turn(c.rel, last.turn_id)
-    )
-    if c.judge is None or not c.reminders or not reminder_likely(t.text, asked_when=asked):
-        return None
-    mark(t, "reminder judge")
-    zone = named_zone()
-    slots = await reminder_slots(c.judge, t.prior, t.text, t.now, zone)
-    done = reminder_act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
-    if done is None:
-        return None
-    reminder_log(
-        c, t.session, t.turn, done.reason, t.now, done.detail | {"prompt": REMINDER_PROMPT.ref}
-    )
-    return done.note
 
 
 async def _invited_guess(
@@ -515,16 +458,6 @@ class Moment:
 
 
 @dataclass(frozen=True, slots=True)
-class Offer:
-    """What one note source gives the turn: lines for the system block, and the writes it makes
-    once the reply is stored (a cap used, a plan marked asked), so a failed turn uses none."""
-
-    lines: tuple[str, ...] = ()
-    after: tuple[Callable[[], None], ...] = ()
-    tail: tuple[str, ...] = ()  # lines sent after the history, where they weigh most
-
-
-@dataclass(frozen=True, slots=True)
 class Notes:
     lines: tuple[str, ...]
     after: tuple[Callable[[], None], ...]
@@ -662,13 +595,18 @@ def _guess(m: Moment, _: Offered) -> Offer:
     return Offer((note,) if note else ())
 
 
-def _lore(m: Moment, _: Offered) -> Offer:
-    note = lore_note(f'you said: "{q}"' for q in m.looked.tastes)
-    return Offer((note,) if note else ())
+# The features the turn runs by declaration (`loops/features.py`), in the order their notes go.
+FEATURES: tuple[Feature, ...] = (LORE, REMINDERS)
 
 
-def _reminded(m: Moment, _: Offered) -> Offer:
-    return Offer((m.looked.reminder,) if m.looked.reminder else ())
+def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
+    note = f.note
+    assert note is not None
+
+    def source(m: Moment, _: Offered) -> Offer:
+        return note(m, m.looked.found.get(f.name))
+
+    return source
 
 
 # Every note, in the order it reaches the system block. A source sees what the ones before it
@@ -691,8 +629,7 @@ SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
     ("loop", _loop),
     ("topic", _topic),
     ("guess", _guess),
-    ("lore", _lore),
-    ("reminder", _reminded),
+    *((f.name, _feature_note(f)) for f in FEATURES if f.note is not None),
 )
 
 

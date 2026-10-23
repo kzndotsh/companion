@@ -7,6 +7,7 @@ import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING, cast
 
 from companion.core.extractor import Extractor
 from companion.core.lore import (
@@ -17,14 +18,21 @@ from companion.core.lore import (
     SHOWN,
     agreed,
     lore,
+    lore_note,
     parse,
     prompt,
 )
 from companion.core.relevance import Embedder, nearest
 from companion.core.spend import purpose
-from companion.core.types import Belief, BeliefId, RelationshipId
+from companion.core.types import Belief, BeliefId, Frame, RelationshipId
+from companion.loops.features import Feature, Offer
 from companion.loops.reads import read_times
+from companion.loops.turn import Heard, Turn, decide, is_casual
 from companion.store.sqlite.store import Store
+
+if TYPE_CHECKING:
+    from companion.loops.fast import Conversation
+    from companion.loops.notes import Moment
 
 log = logging.getLogger("companion.lore")
 
@@ -116,3 +124,40 @@ async def nearest_tastes(  # noqa: PLR0913, PLR0917
         have = {**have, **fresh}
     near = nearest(got.vectors[0], tastes, have, k=SHOWN)
     return Nearest(tuple((b, s) for b, s in near if s >= GATE), got.cost_usd)
+
+
+LORE_SHOWN = "lore: its own tastes nearest their message"
+
+
+async def tastes_for_turn(
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+) -> tuple[str, ...]:
+    """Its tastes nearest their message on an ordinary turn (ADR 0020), as the words it said. In
+    shadow they are logged and not shown."""
+    if c.lore == "off" or c.embedder is None or not is_casual(t, in_scene, heard):
+        return ()
+    found = await nearest_tastes(c.store, c.embedder, c.rel, c.embed_model, t.text, t.now)
+    if found is None or not found.tastes:
+        return ()
+    decide(
+        c,
+        t,
+        LORE_SHOWN + ("" if c.lore == "on" else " (shadow)"),
+        {
+            "tastes": [str(b.id) for b, _ in found.tastes],
+            "scores": [round(s, 3) for _, s in found.tastes],
+            "claims": [b.claim for b, _ in found.tastes],
+        },
+    )
+    return tuple(b.evidence[0].quote for b, _ in found.tastes) if c.lore == "on" else ()
+
+
+def lore_offer(m: Moment, found: object) -> Offer:
+    """Its tastes as the words it said, in one note (`notes/lore`)."""
+    del m
+    quotes = cast("tuple[str, ...]", found or ())
+    note = lore_note(f'you said: "{q}"' for q in quotes)
+    return Offer((note,) if note else ())
+
+
+LORE = Feature("lore", look=tastes_for_turn, note=lore_offer)

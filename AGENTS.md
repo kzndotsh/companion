@@ -94,6 +94,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   request), `loops/talk.py` (the talker and the reply checks), `loops/beside.py` (shadow tasks) and
   `loops/persist.py` (their message kept once, the reply stored). `loops/fast.py` is only the driver: change a
   stage in its module.
+- A feature with a look-up before the reply and a note declares them as a `Feature` in its own module
+  (`loops/features.py`; lore and reminders so far) and is one line in `FEATURES` in `loops/notes.py`: no
+  field on `Lookups`, no branch in `look`, no hand-written entry in `SOURCES`. Its look-up runs with the others
+  under the deadline, and what it found reaches its note as `Lookups.found[name]`.
 - Ask a judge through `loops/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.

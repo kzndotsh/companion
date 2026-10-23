@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
-from companion.core.clock import now_line
+from companion.core.clock import named_zone, now_line
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
 from companion.core.history import HISTORY_LIMIT, to_messages
@@ -33,6 +33,7 @@ from companion.core.reminders import (
     Slots,
     ask_note,
     cancelled_note,
+    likely,
     matching,
     parse,
     plain,
@@ -53,12 +54,15 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.ask import Judge, ask
+from companion.loops.features import Feature, Offer
 from companion.loops.record import Recorder
 from companion.loops.spendcap import over_cap
+from companion.loops.turn import Heard, Turn, mark
 from companion.store.sqlite.reminders import Reminder
 
 if TYPE_CHECKING:
     from companion.loops.fast import Conversation
+    from companion.loops.notes import Moment
 
 log = logging.getLogger("companion.reminders")
 TIMEOUT_SECONDS = 8.0
@@ -241,3 +245,34 @@ async def deliver_due(
         log.info("reminder %s sent%s: %s", r.id[:8], " late" if late else "", text)
         sent += 1
     return sent
+
+
+async def reminder_for_turn(
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+) -> str | None:
+    """When they ask to be reminded or checked on, or answer its asking when (J50): read the words,
+    let code set the time, and say in a note what happened."""
+    del in_scene, heard
+    last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
+    asked = last is not None and any(
+        d.has_key(ASKED) for d in c.store.decisions_for_turn(c.rel, last.turn_id)
+    )
+    if c.judge is None or not c.reminders or not likely(t.text, asked_when=asked):
+        return None
+    mark(t, "reminder judge")
+    zone = named_zone()
+    slots = await read_slots(c.judge, t.prior, t.text, t.now, zone)
+    done = act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
+    if done is None:
+        return None
+    log_decision(c, t.session, t.turn, done.reason, t.now, done.detail | {"prompt": PROMPT.ref})
+    return done.note
+
+
+def reminder_offer(m: Moment, found: object) -> Offer:
+    """The note saying a reminder was set, cancelled, or what to ask."""
+    del m
+    return Offer((found,) if isinstance(found, str) and found else ())
+
+
+REMINDERS = Feature("reminder", look=reminder_for_turn, note=reminder_offer)

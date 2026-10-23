@@ -162,4 +162,9 @@ Steps 4 and 5 are churn: hundreds of import edits and conflicts for any session 
   whole turn, which also fixed a turn whose look-ups or card failed losing it. `loops/fast.py` went from
   1,044 to 224 lines. Left of step 1: the typed stage values (`Arrived`, `Heard`, `Routed`, ...); today the
   stages still pass loose arguments.
+- 2026-10-23, step 1 finished: each stage returns a typed value (`Listened`, `Routed`, `Answered`) and owns
+  its stop-on-error; the driver reads as the stages; `loops/fast.py` is 145 lines.
+- 2026-10-23, step 3 begun: `Feature` (look and note so far) in `loops/features.py`; lore and reminders
+  declare theirs in their own modules and are registered in `FEATURES`. Next: the after-memory, nightly
+  and command parts, then more features, then the layout pilot.
 
