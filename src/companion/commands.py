@@ -1,48 +1,27 @@
-"""The one-off commands that run a model outside the bot (`companion callbacks`, `memory group`,
-`reflect` and the rest): each opens the store and the judges' model, does one job, and says what it
-did and what it cost. What it spends counts toward the day's spend."""
+"""Running a one-off command outside the bot: `run` opens the store and the judges' model and hands
+them to a job (each feature's own is in its `cli.py`); reflecting and rebuilding memory live here.
+What a command spends counts toward the day's spend."""
 
 from __future__ import annotations
 
-import json
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
 
-from companion.core.clock import local_zone, utc_now
-from companion.core.extractor import Extractor
 from companion.core.spend import MeteredExtractor, SpendEvent
 from companion.core.types import RelationshipId
 from companion.daemon import extractor, load_dotenv
-from companion.features.callbacks.logic import report
-from companion.features.callbacks.run import check_new
-from companion.features.context.run import write_missing
-from companion.features.episodes.run import write_closed
-from companion.features.invented.logic import report as invented_report
-from companion.features.invented.run import check_new as check_invented
-from companion.features.knowing.run import label_new
-from companion.features.lore.run import label_views
-from companion.features.merging import run as merging
-from companion.features.names.run import read_names
-from companion.features.worth.run import label
+from companion.loops.services import Services
 from companion.memory.rebuild import rebuild
 from companion.memory.slow import reflect_from
 from companion.store.sqlite.store import Store
 
 
-@dataclass(frozen=True, slots=True)
-class _Services:
-    store: Store
-    judge: Extractor  # metered: what a command spends counts toward the day's spend
-    rel: RelationshipId
-
-
 @asynccontextmanager
-async def _services(db: Path, relationship: str) -> AsyncGenerator[_Services]:
+async def _services(db: Path, relationship: str) -> AsyncGenerator[Services]:
     """What a one-off command needs: the store, the judges' model and the relationship. Closed
     after."""
     load_dotenv(Path(".env"))
@@ -54,90 +33,15 @@ async def _services(db: Path, relationship: str) -> AsyncGenerator[_Services]:
 
     try:
         async with httpx.AsyncClient() as client:
-            yield _Services(store, MeteredExtractor(extractor(client), sink, "command"), rel)
+            yield Services(store, MeteredExtractor(extractor(client), sink, "command"), rel)
     finally:
         store.close()
 
 
-async def callbacks_now(db: Path, relationship: str, days: int, cap_usd: float) -> str:
-    """Judge recent replies for callbacks, then report. For `companion callbacks`."""
-    start = utc_now() - timedelta(days=days)
+async def run(db: Path, relationship: str, job: Callable[[Services], Awaitable[str]]) -> str:
+    """Open the store and the judges' model, run one command's job, and close them."""
     async with _services(db, relationship) as x:
-        judged, spent = await check_new(x.store, x.judge, x.rel, start, cap_usd)
-        verdicts = x.store.callback_checks_since(x.rel, start)
-        replies = {t: x.store.reply_text(x.rel, t) for t, c in verdicts if c.callback}
-    shown = [(replies[t], c) for t, c in verdicts if c.callback][-8:]
-    head = f"judged {judged} new replies for ${spent:.4f}\n"
-    return head + report([c for _, c in verdicts], days, shown)
-
-
-async def invented_now(
-    db: Path, relationship: str, days: int, cap_usd: float, dump: Path | None = None
-) -> str:
-    """Judge recent replies for made-up facts about the user, then report (G42)."""
-    start = utc_now() - timedelta(days=days)
-    async with _services(db, relationship) as x:
-        judged, spent = await check_invented(x.store, x.judge, x.rel, start, cap_usd)
-        checks = x.store.invented_since(x.rel, start)
-        if dump is not None:
-            dump.write_text(
-                json.dumps(x.store.invented_candidates(x.rel, start), ensure_ascii=False, indent=1)
-            )
-    return f"judged {judged} new replies for ${spent:.4f}\n" + invented_report(checks, days)
-
-
-async def label_now(db: Path, relationship: str) -> str:
-    """Label memories that have no label yet, for `companion map --label`."""
-    async with _services(db, relationship) as x:
-        done = await label_new(x.store, x.judge, x.rel, utc_now(), batches=10)
-    return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"
-
-
-async def group_now(db: Path, relationship: str) -> str:
-    """Propose merges across every day and the whole store, for `companion memory group`."""
-    async with _services(db, relationship) as x:
-        done = await merging.everything(x.store, x.judge, x.rel, utc_now(), local_zone())
-    return f"proposed {done.groups} merges, ${done.cost_usd:.4f}; answer them in memory review\n"
-
-
-async def context_now(db: Path, relationship: str) -> str:
-    """Write what they were talking about for every memory that wants it, for `memory context`."""
-    async with _services(db, relationship) as x:
-        done = await write_missing(x.store, x.judge, x.rel, utc_now(), limit=1000)
-    return f"wrote {done.written} notes on what was being talked about, ${done.cost_usd:.4f}\n"
-
-
-async def worth_now(db: Path, relationship: str) -> str:
-    """Label every memory kept before the rule; each change becomes a question, `memory label`."""
-    async with _services(db, relationship) as x:
-        done = await label(x.store, x.judge, x.rel, utc_now(), act_since=None, limit=1000)
-    return (
-        f"labelled {done.labelled}, {done.questions} questions for memory review,"
-        f" ${done.cost_usd:.4f}\n"
-    )
-
-
-async def episodes_now(db: Path, relationship: str) -> str:
-    """Write a record of every finished stretch of chat that has none, for `companion episodes`."""
-    async with _services(db, relationship) as x:
-        done = await write_closed(x.store, x.judge, x.rel, utc_now())
-    return f"wrote {done.written} episodes, ${done.cost_usd:.4f}\n"
-
-
-async def lore_now(db: Path, relationship: str, *, again: bool = False) -> str:
-    """Label its views that have no kind yet (or all of them, `again`), for `companion lore`."""
-    async with _services(db, relationship) as x:
-        done = await label_views(x.store, x.judge, x.rel, utc_now(), batches=10, again=again)
-    return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"
-
-
-async def names_now(db: Path, relationship: str) -> str:
-    """List the names in memories not read yet, for `companion names --read`."""
-    async with _services(db, relationship) as x:
-        done = await read_names(x.store, x.judge, x.rel, utc_now(), batches=10)
-    return (
-        f"read {done.read} memories, {done.names} names, {done.left} left, ${done.cost_usd:.4f}\n"
-    )
+        return await job(x)
 
 
 async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) -> str:

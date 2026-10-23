@@ -4,6 +4,7 @@
 |---|---|
 | `logic.py` | pure: its rules, prompts' parsing and notes |
 | `run.py` | effects: its `Feature` and what it does with the store and models |
+| `cli.py` | `companion memory label`: label every memory kept before the rule (`label_now`) |
 
 Its prompts stay in `src/companion/prompts/`.
 

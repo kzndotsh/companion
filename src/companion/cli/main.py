@@ -24,13 +24,18 @@ from companion.cli import shadows as shadows_cli
 from companion.cli.target import find_db, resolve_db, resolve_relationship
 from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
+from companion.features.callbacks import cli as callbacks
+from companion.features.context import cli as context
 from companion.features.episodes import cli as episodes
+from companion.features.invented import cli as invented
 from companion.features.knowing import cli as knowing
 from companion.features.lore import cli as lore
+from companion.features.merging import cli as merging
 from companion.features.mood import cli as mood
 from companion.features.names import cli as names
 from companion.features.promises import cli as promises
 from companion.features.reminders import cli as reminders
+from companion.features.worth import cli as worth
 
 
 def _db_args(p: argparse.ArgumentParser, *, relationship: bool = True) -> None:
@@ -216,12 +221,22 @@ def _run(a: argparse.Namespace) -> int:
 
 def _invented(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    return _out(asyncio.run(commands.invented_now(db, rel, int(a.days), float(a.cap), a.dump)))
+    return _out(
+        asyncio.run(
+            commands.run(
+                db, rel, lambda x: invented.judge_now(x, int(a.days), float(a.cap), a.dump)
+            )
+        )
+    )
 
 
 def _callbacks(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    return _out(asyncio.run(commands.callbacks_now(db, rel, int(a.days), float(a.cap))))
+    return _out(
+        asyncio.run(
+            commands.run(db, rel, lambda x: callbacks.judge_now(x, int(a.days), float(a.cap)))
+        )
+    )
 
 
 def _rebuild(a: argparse.Namespace) -> int:
@@ -278,7 +293,7 @@ def _backup(a: argparse.Namespace) -> int:
 
 def _map(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(commands.label_now(db, rel)) if a.label else ""
+    first = asyncio.run(commands.run(db, rel, knowing.label_now)) if a.label else ""
     return _out(first + knowing.run(db, rel) + "\n")
 
 
@@ -292,19 +307,23 @@ def _initiative(a: argparse.Namespace) -> int:
 
 def _lore(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(commands.lore_now(db, rel, again=a.relabel)) if a.label or a.relabel else ""
+    first = (
+        asyncio.run(commands.run(db, rel, lambda x: lore.label_now(x, again=a.relabel)))
+        if a.label or a.relabel
+        else ""
+    )
     return _out(first + lore.run(db, rel))
 
 
 def _names(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(commands.names_now(db, rel)) if a.read else ""
+    first = asyncio.run(commands.run(db, rel, names.read_now)) if a.read else ""
     return _out(first + names.run(db, rel))
 
 
 def _episodes(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    first = asyncio.run(commands.episodes_now(db, rel)) if a.write else ""
+    first = asyncio.run(commands.run(db, rel, episodes.write_now)) if a.write else ""
     return _out(first + episodes.run(db, rel))
 
 
@@ -355,11 +374,11 @@ def _approve(a: argparse.Namespace) -> int:
 def _memory(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     if a.action == "group":
-        return _out(asyncio.run(commands.group_now(db, rel)))
+        return _out(asyncio.run(commands.run(db, rel, merging.group_now)))
     if a.action == "context":
-        return _out(asyncio.run(commands.context_now(db, rel)))
+        return _out(asyncio.run(commands.run(db, rel, context.write_now)))
     if a.action == "label":
-        return _out(asyncio.run(commands.worth_now(db, rel)))
+        return _out(asyncio.run(commands.run(db, rel, worth.label_now)))
     return _out(memory.review(db, rel))
 
 

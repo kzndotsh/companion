@@ -5,8 +5,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from companion.core.clock import utc_now
 from companion.core.types import DecisionKind, RelationshipId
 from companion.features.names.logic import SHADOW, index
+from companion.features.names.run import read_names
+from companion.loops.services import Services
 from companion.store.sqlite.store import Store
 
 
@@ -31,3 +34,11 @@ def run(db: Path, relationship: str) -> str:
         f" (shadow). {left} memories not read yet."
     )
     return "\n".join(lines) + "\n"
+
+
+async def read_now(x: Services) -> str:
+    """List the names in memories not read yet, for `companion names --read`."""
+    done = await read_names(x.store, x.judge, x.rel, utc_now(), batches=10)
+    return (
+        f"read {done.read} memories, {done.names} names, {done.left} left, ${done.cost_usd:.4f}\n"
+    )

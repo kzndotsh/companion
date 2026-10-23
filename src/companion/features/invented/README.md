@@ -8,6 +8,7 @@ conversation nor its memory supports. Measured on demand, never on the reply pat
 | `logic.py` | pure: the judge's prompt, which statements count, the rate |
 | `run.py` | effects: judging new replies within a spend cap, each turn once (`check_new`) |
 | `store.py` | its queries (the tables are in `store/sqlite/migrations/0025_invented_checks.sql`) |
+| `cli.py` | `companion invented`: judge recent replies within a cap, then the rate (`judge_now`) |
 
 Its prompt stays in `src/companion/prompts/` (`system/invented-judge`).
 

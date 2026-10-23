@@ -5,8 +5,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from companion.core.clock import local_zone
+from companion.core.clock import local_zone, utc_now
 from companion.core.types import RelationshipId
+from companion.features.episodes.run import write_closed
+from companion.loops.services import Services
 from companion.store.sqlite.store import Store
 
 
@@ -27,3 +29,9 @@ def run(db: Path, relationship: str) -> str:
             f"{start:%a %d %b %H:%M}-{end:%H:%M}  {e.kind:8} {e.messages:4} msgs{marks}\n  {e.gist}"
         )
     return "\n".join(lines) + "\n"
+
+
+async def write_now(x: Services) -> str:
+    """Write a record of every finished stretch of chat that has none, for `companion episodes`."""
+    done = await write_closed(x.store, x.judge, x.rel, utc_now())
+    return f"wrote {done.written} episodes, ${done.cost_usd:.4f}\n"

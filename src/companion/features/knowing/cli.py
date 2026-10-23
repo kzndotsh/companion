@@ -6,9 +6,11 @@ from __future__ import annotations
 from collections import Counter
 from pathlib import Path
 
-from companion.core.clock import local_zone
+from companion.core.clock import local_zone, utc_now
 from companion.core.types import DecisionKind, Depth, Domain, RelationshipId
 from companion.features.knowing.logic import WOULD_ASK, pick_gap
+from companion.features.knowing.run import label_new
+from companion.loops.services import Services
 from companion.store.sqlite.store import Store
 
 SHOWN_PICKS = 7
@@ -42,3 +44,9 @@ def run(db: Path, relationship: str) -> str:
             domain = (d.detail or {}).get("domain", "?")
             out.append(f"  {d.at.astimezone(zone):%a %d %b %H:%M}  {domain}")
     return "\n".join(out)
+
+
+async def label_now(x: Services) -> str:
+    """Label memories that have no label yet, for `companion map --label`."""
+    done = await label_new(x.store, x.judge, x.rel, utc_now(), batches=10)
+    return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"

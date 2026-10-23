@@ -8,6 +8,7 @@ over its replies; nothing reaches the talker.
 | `logic.py` | pure: the judge's prompt, parsing a verdict, the report |
 | `run.py` | effects: judging new replies within a spend cap, each turn once (`check_new`) |
 | `store.py` | its queries (the tables are in `store/sqlite/migrations/0014_callback_checks.sql`) |
+| `cli.py` | `companion callbacks`: judge recent replies within a cap, then the report (`judge_now`) |
 
 Its prompt stays in `src/companion/prompts/` (`system/callback-judge`). `uv run companion
 callbacks` judges recent replies and prints the report.
