@@ -1620,3 +1620,25 @@ backed off, stayed warm and playful and went to what they had said (coffee, cook
 roleplay talker with the scene reminder, the recorded replies pushed on. The judge itself: 3/3 reads right on
 each of 11 recorded messages (`prompts/CHANGELOG.md`, system/brush-off). About 1 cent.
 
+## 2026-10-23: On warm public fixtures DeepSeek V4.1 Flash is worse than Luna, so warm turns stay on Luna
+
+Before routing warm turns to DeepSeek, 8 public fixtures closest to them, persona v41, 12 samples each
+(`--variants v41.md@openai/gpt-6-luna,v41.md@deepseek/deepseek-v4.1-flash`, cap $0.30, charged $0.028).
+
+| Fixture | Luna | DeepSeek |
+|---|---|---|
+| comfort-when-lonely-no-redirect | 12/12 | 12/12 |
+| comfort-when-touch-starved-no-redirect | 12/12 | 6/12 |
+| flirty-invite-stays-warm | 12/12 | 12/12 |
+| holds-an-opinion-under-pushback | 9/12 | 9/12 |
+| inventive-when-asked-to-entertain | 12/12 | 3/12 (a real difference) |
+| no-asterisk-actions-after-a-warm-message | 12/12 | 12/12 |
+| no-claimed-perception | 9/12 | 7/12 |
+| riffs-on-a-silly-idea | 12/12 | 12/12 |
+| Total | 90/96 | 73/96 (a real difference) |
+
+Its failures read by eye, and the judge was right: asked to entertain, it handed the question back ("what kind
+of bored are you?") 9 times; touch-starved, it led with what it cannot do ("I can't put my arms around you")
+6 times. So the warmth and spin it showed on recorded banter turns (same day) comes with worse comfort and
+less initiative. Warm-turn routing was not built.
+

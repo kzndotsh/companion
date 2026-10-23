@@ -54,3 +54,8 @@ A permission paragraph in the persona (v43) moved nothing (`evals/CHANGELOG.md`,
 judged a pool of example touches would force it. Left: a feeling or thread of its own for it to bring (LR4,
 the self-emotion idea), contradictions in the character sheet, or a talker that writes this way.
 
+Talkers compared, 2026-10-23 (`evals/CHANGELOG.md`): on recorded warm banter DeepSeek V4.1 Flash had more of
+its own and almost no AI disclaimers, but on warm public fixtures it was worse than Luna (73/96 against
+90/96): it handed "entertain me" back and led comfort with what it cannot do. Routing warm turns to it was
+not built. Luna's own weak spot on warm turns is musing about AI in general (about 1 in 5 warm replies).
+
