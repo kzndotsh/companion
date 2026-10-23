@@ -1683,3 +1683,28 @@ as the entry above, the four views left after the overstated one was retired, 6 
 No difference beyond noise, so claims stay. With the overstated view retired, no weak pushback
 moved a view (24/24 held on claims, against 23/30 with it on the card). Under a real reason it gives
 way without saying so about as often in both; that is the next thing to look at, not the wording.
+
+## 2026-10-23: Filling half the card by closeness to their message does not bring up more memories
+
+Before this, the relevance logs showed the card rarely holds what a message is about: of the three
+memories closest to each message, 10% were on the card (69 of 660), and on nearly every turn the
+small model's picks included one the card lacked. Measured: today's card (15 slots, by kind then
+recency) against a split card (the first 8 slots as today, the other 7 by closeness to the message,
+from the same embeddings). Each test message ran on its own recorded turn, with its own history and
+the memories that existed then, on the plain persona (v41, gpt-6-luna): 26 real turns, 16 where a
+memory scored near the message (0.42 or more) and 10 where none did, 6 samples per cell, 312 replies,
+$0.029. A blind Claude judge saw each turn's last messages, so what was already in the conversation
+did not count as remembering.
+
+| | today | split |
+|---|---|---|
+| near: brought up a fitting memory | 6/96 | 4/96 |
+| nothing near: brought one up | 0/60 | 2/60 |
+| forced or invented | 0 | 0 |
+
+It almost never reaches past the conversation for a memory (about 1 reply in 20 where one would
+fit), and putting the near memories on the card did not change that. The card's contents are not
+the limit; how often it uses them is. Not shipped. Also seen: letting the look-up add 4 memories
+instead of 2 changes little, because the picker seldom picks more than two (1.0 added a turn against
+0.8). Lesson on the method: a first run that put every test message on one shared recent history
+looked like a gain (25% to 34%), and the judge was counting references to that history.
