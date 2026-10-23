@@ -21,7 +21,7 @@ from companion.core.episodes import NOTE as EPISODES_NOTE
 from companion.core.episodes import Told, period
 from companion.core.episodes import note as episodes_note
 from companion.core.episodes import recent as recent_times
-from companion.core.floor import HOLD_NOTE
+from companion.core.floor import BRUSH_NOTE, HOLD_NOTE
 from companion.core.frames import (
     scene_note,
 )
@@ -475,6 +475,7 @@ class Moment:
     held: bool  # the floor held this turn (ADR 0017)
     beliefs: Sequence[Belief]  # the memories that may be stated as true
     on_card: frozenset[BeliefId] = frozenset()  # what the card already shows this turn
+    brushed: bool = False  # they pushed the flirting or the scene back (`system/brush-off`)
 
     @property
     def casual(self) -> bool:
@@ -586,6 +587,10 @@ def _hold(m: Moment, _: Offered) -> Offer:
     return Offer((HOLD_NOTE.text,) if m.held else ())
 
 
+def _brush(m: Moment, _: Offered) -> Offer:
+    return Offer((BRUSH_NOTE.text,) if m.brushed else ())
+
+
 def _name(m: Moment, so_far: Offered) -> Offer:
     return Offer() if so_far["check-in"].lines else _ask_name(m)
 
@@ -648,6 +653,7 @@ SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
     ("check-in", _check_in),
     ("mood", _mood_line),
     ("hold", _hold),
+    ("brush-off", _brush),
     ("name", _name),
     ("map", _map),
     ("loop", _loop),

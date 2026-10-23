@@ -9,6 +9,7 @@
 "notes/clock" = "v1"
 "notes/clock-gap" = "v1"
 "notes/floor-hold" = "v1"
+"notes/brush-off" = "v1"
 "notes/habit-echo" = "v1"
 "notes/habit-moves" = "v1"
 "notes/habit-opener" = "v1"
@@ -88,4 +89,5 @@
 "system/memory-context" = "v1"
 "system/memory-worth" = "v1"
 "system/explicit-lead" = "v1"
+"system/brush-off" = "v1"
 "system/episode-gist" = "v2"

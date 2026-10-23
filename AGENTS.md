@@ -271,7 +271,7 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
   only their message), and if all read intimate nothing is sent; no reply is written by code. The roleplay
   talker also sees the character sheet's `## In roleplay and intimate moments` section; the everyday one
   never does. A `## Scene reminder` at the end of that section is sent after the history on roleplay
-  turns (`TalkerRequest.tail`), where it weighs most; its words live in the private sheet. "Scene" means only a pretend scene in progress (the frame judge's label); a scene ends when they step out of it or come back after two hours or more (`core/frames.py` `SCENE_GAP`).
+  turns (`TalkerRequest.tail`), where it weighs most; its words live in the private sheet. When they push the flirting or the scene back, even jokingly, a small judge says so (`system/brush-off`, asked only of a turn the roleplay talker would answer) and that turn goes to the everyday talker with `notes/brush-off`; the floor still comes first. "Scene" means only a pretend scene in progress (the frame judge's label); a scene ends when they step out of it or come back after two hours or more (`core/frames.py` `SCENE_GAP`).
 
 **Working with the owner**
 - Plain English, short, and say what changed and what it was measured on. Lead with what matters.

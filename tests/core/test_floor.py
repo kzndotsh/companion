@@ -65,3 +65,23 @@ def test_intimate_talk_waits_until_it_is_under_way_but_a_scene_never_does() -> N
         in_play=True, intimate=True, allow_intimate=True, judged_age_coded=False, under_way=False
     )
     assert scene.talker is Talker.ROLEPLAY
+
+
+def test_a_push_back_goes_to_the_everyday_talker_without_a_hold_but_the_floor_comes_first() -> None:
+    from companion.core.floor import BRUSHED  # noqa: PLC0415
+
+    def route(**over: object):
+        base: dict[str, object] = {
+            "in_play": True,
+            "intimate": False,
+            "allow_intimate": True,
+            "judged_age_coded": False,
+            "declined": True,
+        }
+        return choose(**{**base, **over})  # pyright: ignore[reportArgumentType]
+
+    pushed = route()
+    assert (pushed.talker, pushed.reason, pushed.held) == (Talker.EVERYDAY, BRUSHED, False)
+    assert route(in_play=False, intimate=True).reason == BRUSHED
+    assert route(judged_age_coded=True).held  # the floor's own hold, with its check
+    assert route(declined=False).talker is Talker.ROLEPLAY

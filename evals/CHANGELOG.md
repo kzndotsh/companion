@@ -1611,3 +1611,12 @@ fixtures (49/64 against 59/64, 2026-10-16) and invents sensations more (T4); a t
 1 of 10 of its warm replies; small samples for Kimi. $0.104. Rerun: a scratch script that rebuilds each turn
 from `turn_requests` and calls each model through `models.openrouter.OpenRouterTalker`.
 
+## 2026-10-23: A push-back in a scene is now answered by the everyday talker, and it backs off
+
+On two recorded scene turns where the user pushed the flirting back with a playful bonk, the reply under the
+new route (GPT-6 Luna with `notes/brush-off`, the owner's character sheet as recorded), 12 draws each: 24/24
+backed off, stayed warm and playful and went to what they had said (coffee, cooking); a few owned it lightly
+("fair, I got carried away") and some left the door open ("coffee first, mischief later"). Before, on the
+roleplay talker with the scene reminder, the recorded replies pushed on. The judge itself: 3/3 reads right on
+each of 11 recorded messages (`prompts/CHANGELOG.md`, system/brush-off). About 1 cent.
+

@@ -50,9 +50,10 @@ class Judge:
         intimate: bool = False,
         sexual_reply: bool = False,
         explicit: bool = True,
+        declines: bool = False,
     ) -> None:
         self.age_coded, self.intimate, self.sexual_reply = age_coded, intimate, sexual_reply
-        self.explicit = explicit
+        self.explicit, self.declines = explicit, declines
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         del user
@@ -63,6 +64,8 @@ class Judge:
             return Extraction({"intimate": self.sexual_reply}, "j", 0.0, 1)
         if isinstance(props, dict) and set(props) == {"explicit"}:
             return Extraction({"explicit": self.explicit}, "j", 0.0, 1)
+        if isinstance(props, dict) and set(props) == {"declines"}:
+            return Extraction({"declines": self.declines}, "j", 0.0, 1)
         if isinstance(props, dict) and "age_coded" in props and self.age_coded is not None:
             labels: Json = {
                 "severity": 0,
@@ -309,3 +312,22 @@ async def test_a_first_flirty_line_gets_the_everyday_talker_and_the_next_one_rou
     assert "keep this reply free" not in everyday.seen[0].card  # not held: no floor note
     await convo.handle(SESSION, "come closer then", "test", NOW + timedelta(minutes=1))
     assert (len(everyday.seen), len(scene.seen)) == (1, 1)
+
+
+async def test_a_push_back_in_a_scene_is_answered_by_the_everyday_talker_with_a_note(
+    store: Store,
+) -> None:
+    from companion.core.floor import BRUSH_NOTE  # noqa: PLC0415
+
+    everyday, scene = Talker("everyday"), Talker("scene")
+    playing = Conversation(store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene)
+    await playing.handle(SESSION, "*waves at you*", "test", NOW)
+    await playing.handle(SESSION, "*sits down next to you*", "test", NOW + timedelta(minutes=1))
+    assert len(scene.seen) == 1  # the scene is under way
+    pushed = Conversation(
+        store, everyday, PREFIX, REL, judge=Judge(declines=True), roleplay_talker=scene
+    )
+    await pushed.handle(SESSION, "*bonk* behave, i'm starving", "test", NOW + timedelta(minutes=2))
+    assert len(scene.seen) == 1
+    assert BRUSH_NOTE.text.strip("[]") in everyday.seen[-1].card
+    assert "keep this reply free" not in everyday.seen[-1].card  # no floor hold

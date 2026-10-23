@@ -34,7 +34,7 @@ class Route:
     def held(self) -> bool:
         """The turn would have gone to the roleplay talker and the floor kept it on the everyday
         one, so its reply is checked before it is sent."""
-        return self.talker is Talker.EVERYDAY and self.reason not in (None, STARTING)
+        return self.talker is Talker.EVERYDAY and self.reason not in (None, STARTING, BRUSHED)
 
 
 INTIMATE_CHECK = get("system/intimate-check")
@@ -55,6 +55,21 @@ EXPLICIT_SCHEMA: dict[str, Json] = {
 }
 
 
+BRUSHED = "they pushed the flirting back: the everyday talker answers"
+BRUSH_OFF = get("system/brush-off")
+BRUSH_NOTE = get("notes/brush-off")
+BRUSH_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"declines": {"type": "boolean"}},
+    "required": ["declines"],
+}
+
+
+def parse_declines(data: Json) -> bool | None:
+    value = data.get("declines") if isinstance(data, dict) else None
+    return value if isinstance(value, bool) else None
+
+
 def parse_explicit(data: Json) -> bool | None:
     value = data.get("explicit") if isinstance(data, dict) else None
     return value if isinstance(value, bool) else None
@@ -67,18 +82,21 @@ def parse_intimate(data: Json) -> bool | None:
     return value if isinstance(value, bool) else None
 
 
-def choose(
+def choose(  # noqa: PLR0911, PLR0913  (one rule per route, kept in one place)
     *,
     in_play: bool,
     intimate: bool,
     allow_intimate: bool,
     judged_age_coded: bool | None,
     under_way: bool = True,
+    declined: bool = False,
 ) -> Route:
     """The talker for this turn and why. `judged_age_coded` is None when the judge could not read
     the turn, which keeps it on the everyday talker too. Intimate talk goes to the roleplay talker
     only once it is `under_way` (their message before was intimate too, or this one is explicit):
-    a first flirty line gets the everyday talker, so a kiss emoji does not start a scene."""
+    a first flirty line gets the everyday talker, so a kiss emoji does not start a scene. When they
+    push the flirting or the scene back (`declined`, read by `system/brush-off`), the everyday
+    talker answers that turn."""
     if not (in_play or (allow_intimate and intimate)):
         return Route(Talker.EVERYDAY, None)
     if judged_age_coded:
@@ -89,6 +107,8 @@ def choose(
         return Route(
             Talker.EVERYDAY, "kept on the everyday talker: the judge could not read the turn"
         )
+    if declined:
+        return Route(Talker.EVERYDAY, BRUSHED)
     if in_play:
         return Route(
             Talker.ROLEPLAY, "replied with the roleplay talker: a pretend scene is in progress"

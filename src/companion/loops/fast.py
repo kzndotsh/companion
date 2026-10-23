@@ -29,7 +29,17 @@ from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name
 from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, Card, build_card, render
 from companion.core.clock import now_line, utc_now
 from companion.core.extractor import Extractor, from_fallback
-from companion.core.floor import EXPLICIT_LEAD, EXPLICIT_SCHEMA, INTIMATE_CHECK, parse_explicit
+from companion.core.floor import (
+    BRUSH_OFF,
+    BRUSH_SCHEMA,
+    BRUSHED,
+    EXPLICIT_LEAD,
+    EXPLICIT_SCHEMA,
+    INTIMATE_CHECK,
+    Route,
+    parse_declines,
+    parse_explicit,
+)
 from companion.core.floor import Talker as RouteTalker
 from companion.core.floor import choose as choose_route
 from companion.core.frames import (
@@ -116,6 +126,7 @@ from companion.store.sqlite.decisions import REACTED
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
+BRUSH_SECONDS = 4.0  # a slow brush-off read routes the turn as before
 
 
 def _id() -> str:
@@ -363,7 +374,7 @@ def _stopped_by_cap(
 
 async def _route(
     c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
-) -> tuple[Talker, bool, Heard | None]:
+) -> tuple[Talker, bool, Heard | None, bool]:
     """The talker for this turn (ADR 0017): the roleplay talker for a pretend scene, or for intimate
     talk when COMPANION_ROUTE_INTIMATE allows it, unless the floor keeps it on the everyday talker.
     Logged when it is anything but the plain everyday choice.
@@ -374,7 +385,7 @@ async def _route(
     scene turn can still look something up when they say it forgot.
     """
     if c.roleplay_talker is None:
-        return c.talker, False, heard
+        return c.talker, False, heard, False
     in_play = in_scene is Frame.PLAY
     read = heard
     if read is None and in_play and c.judge is not None:
@@ -384,19 +395,48 @@ async def _route(
     under_way = True
     if intimate and c.route_intimate and not in_play:
         under_way = _intimate_before(c, t) or await _explicit(c, t)
-    route = choose_route(
-        in_play=in_play,
-        intimate=intimate,
-        under_way=under_way,
-        allow_intimate=c.route_intimate,
-        judged_age_coded=read[0].age_coded
-        if read is not None and not from_fallback(read[1])
-        else None,
-    )
+
+    def route_for(*, declined: bool = False) -> Route:
+        return choose_route(
+            in_play=in_play,
+            intimate=intimate,
+            under_way=under_way,
+            allow_intimate=c.route_intimate,
+            judged_age_coded=read[0].age_coded
+            if read is not None and not from_fallback(read[1])
+            else None,
+            declined=declined,
+        )
+
+    route = route_for()
+    if route.talker is RouteTalker.ROLEPLAY and await _declines(c, t):
+        route = route_for(declined=True)
     if route.reason is not None:
         decide(c, t, "route", reason=route.reason)
     talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
-    return talker, route.held, read
+    return talker, route.held, read, route.reason == BRUSHED
+
+
+async def _declines(c: Conversation, t: Turn) -> bool:
+    """Whether their message pushes the flirting or the scene back, even jokingly
+    (`system/brush-off`), asked only of a turn the roleplay talker would answer. A failed read is
+    no: the turn goes where it would have."""
+    if c.judge is None:
+        return False
+    mark(t, "brush-off judge")
+    lines = [f"{u.speaker.value.upper()}: {u.text}" for u in t.prior[-6:]]
+    said = "\n".join(["Conversation:", *lines, "", f"Newest USER message: {t.text}"])
+    try:
+        with purpose("route"):
+            got = await asyncio.wait_for(
+                c.judge.extract(BRUSH_OFF.text, said, BRUSH_SCHEMA), BRUSH_SECONDS
+            )
+    except Exception as err:
+        log.warning("brush-off judge failed or timed out; routed as before: %r", err)
+        return False
+    declines = parse_declines(got.data) is True
+    decide(c, t, "brush-off", {"declines": declines, "scorer": got.model, "prompt": BRUSH_OFF.ref})
+    return declines
 
 
 def _intimate_before(c: Conversation, t: Turn) -> bool:
@@ -849,6 +889,7 @@ def _assemble(  # noqa: PLR0913
     looked: Lookups,
     *,
     held: bool = False,
+    brushed: bool = False,
     roleplay: bool = False,
 ) -> _Assembled:
     """The request for this turn: the card, the clock and every note (`loops/notes.py`)."""
@@ -875,7 +916,7 @@ def _assemble(  # noqa: PLR0913
     clock = now_line(now, theirs[-1].at if theirs else None)
     pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
     on_card = frozenset(b.id for b in (*card.usable, *card.held, *card.older))
-    notes = notes_for(Moment(c, t, in_scene, heard, looked, held, assertable, on_card))
+    notes = notes_for(Moment(c, t, in_scene, heard, looked, held, assertable, on_card, brushed))
     card_text = tagged(
         "\n".join([clock, *([pinned] if pinned else []), *shown, *notes.lines]), memory=False
     )
@@ -918,12 +959,21 @@ async def _handle_turn(
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
     try:
-        talker, held, read = await _route(c, t, in_scene, heard)
+        talker, held, read, brushed = await _route(c, t, in_scene, heard)
     except BaseException:
         _store_user(c, t, channel, Frame.REAL)
         raise
     looked = await look(c, t, in_scene, heard, read)
-    asm = _assemble(c, t, in_scene, heard, looked, held=held, roleplay=talker is c.roleplay_talker)
+    asm = _assemble(
+        c,
+        t,
+        in_scene,
+        heard,
+        looked,
+        held=held,
+        brushed=brushed,
+        roleplay=talker is c.roleplay_talker,
+    )
     request, card_text, card, views, view_state = (
         asm.request,
         asm.card_text,

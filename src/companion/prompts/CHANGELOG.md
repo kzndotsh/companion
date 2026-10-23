@@ -859,3 +859,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## Request assembly: a scene ends after a two-hour gap
 - From 2026-10-23 a pretend scene is no longer "in progress" when their last message was two hours ago or more (`core/frames.py` `scene_frame`, `SCENE_GAP`, the same gap that cuts episodes). Before, a scene started by one action in asterisks held over a two-hour gap, so a casual message hours later went to the roleplay talker with the scene note and reminder (two flags). The next message after a gap is read fresh by the frame judge; it can still open a new scene. Reminders and the reach-out gate use the same rule.
 
+## system/brush-off
+- **system/brush-off v1** (current). New. When the companion has been flirting or playing a scene and their message pushes it back, even jokingly (a playful bonk, "behave", "not now", food first), the turn goes to the everyday talker instead of the roleplay talker, with `notes/brush-off` (`core/floor.py` `BRUSHED`, `loops/fast.py` `_declines`). Asked only of a turn the roleplay talker would answer; a failed or slow read (4 s) routes as before. The age floor comes first, and a brush-off is not a floor hold, so no intimate check runs. Read three times on 11 recorded messages from one scene: the 3 push-backs 3/3, the 7 that flirted back or carried on 0/3 as push-backs, and an ambiguous "need food too" right after a push-back read as one 3/3.
+
+## notes/brush-off
+- **notes/brush-off v1** (current). New, with `system/brush-off`: drop the flirting for now, answer what they actually said, warm and normal, let them bring it back; no mentioning it, apologising or explaining.
+

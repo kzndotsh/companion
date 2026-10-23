@@ -62,6 +62,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |
 | `notes/floor-hold` | note | a turn the floor kept on the everyday talker: stay warm, nothing sexual, no explaining (ADR 0017) | v1 |
+| `notes/brush-off` | note | they pushed the flirting or the scene back: drop it, answer what they said, warm and normal | v1 |
 | `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy, `core/habits.py` | v1 |
 | `notes/habit-moves` | note | the habit finder found a habit | v1 |
 | `notes/habit-opener` | note | an opening word is overused | v1 |
@@ -112,6 +113,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
 | `system/listening` | system | the listening judge, `core/listening.py` | v7 |
 | `system/explicit-lead` | system | whether their message itself is sexually explicit, read only when intimate talk would start on the roleplay talker (ADR 0017) | v1 |
+| `system/brush-off` | system | whether their message pushes the flirting or the scene back, even jokingly; asked only of a turn the roleplay talker would answer | v1 |
 | `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
 | `system/memory-map` | system | labels each memory with the part of their life it is about and how personal it is (J48) | v1 |
 | `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding (shadow) | v1 |
