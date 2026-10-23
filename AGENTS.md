@@ -105,6 +105,10 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - Every feature in shadow has a row in `core/shadows.py` with a review date and what it is judged on
   (`companion shadows` lists them, overdue first); a test fails when a setting defaults to shadow without
   one. At its review it graduates or is removed, and its row goes.
+- `tests/loops/test_chaos.py` runs whole turns against judges that fail, stall, answer from the fallback
+  model or return junk at random (seeded): their message is stored once, a turn ends in a reply, a reaction
+  or the floor's logged withholding, and a judge that always fails sends the talker what no judge would.
+  Any change to the turn must keep it passing.
 - Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, `named_zone`). A test enforces it.
 
 **Evals**
