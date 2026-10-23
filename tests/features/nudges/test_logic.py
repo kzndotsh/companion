@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, timedelta
 
-from companion.core.nudges import Away, Kind, Look, due, parse, wait
+from companion.features.nudges.logic import Away, Kind, Look, due, parse, wait
 from tests.conftest import T0
 
 SHOWER = Away("t1", "shower time now", Kind.BRIEF, 30, T0)

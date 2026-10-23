@@ -9,6 +9,7 @@ from companion.features.guess.run import GUESS
 from companion.features.knowing.run import KNOWING
 from companion.features.lore.run import LORE
 from companion.features.names.run import NAMES
+from companion.features.nudges.run import NUDGES
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
 from companion.features.topics.run import TOPICS
@@ -26,4 +27,5 @@ FEATURES: tuple[Feature, ...] = (
     GUESS,
     LORE,
     REMINDERS,
+    NUDGES,
 )

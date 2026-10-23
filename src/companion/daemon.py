@@ -34,6 +34,7 @@ from companion.features.episodes.run import write_closed
 from companion.features.knowing.run import label_new
 from companion.features.lore.run import label_views
 from companion.features.names.run import read_names
+from companion.features.nudges.run import tick_nudge
 from companion.features.reminders.run import deliver_due
 from companion.features.worth.run import label
 from companion.io.telegram import Commands, Hooks, Telegram
@@ -44,7 +45,6 @@ from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.invented import check_new as check_invented
 from companion.loops.nightly import missed, night
-from companion.loops.nudges import tick_nudge
 from companion.loops.openloops import Ticker, drafter, tick
 from companion.loops.slow import reflect_from, reflect_once
 from companion.loops.spendcap import over_cap

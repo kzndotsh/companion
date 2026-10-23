@@ -6,14 +6,29 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, tzinfo
+from typing import TYPE_CHECKING
 
+from companion.core.card import Card
 from companion.core.clock import local_midnight
 from companion.core.extractor import Extractor
 from companion.core.initiative import Caps
-from companion.core.nudges import (
+from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
+from companion.core.spend import purpose
+from companion.core.types import (
+    DecisionKind,
+    Frame,
+    RelationshipId,
+    SessionId,
+    Speaker,
+    TraceId,
+    TurnId,
+)
+from companion.features.nudges.logic import (
     AWAY,
     DRAFT,
     DRAFT_SCHEMA,
+    PROMPT,
+    SCHEMA,
     WOULD_NUDGE,
     Away,
     Kind,
@@ -21,19 +36,17 @@ from companion.core.nudges import (
     draft_prompt,
     due,
     newest,
+    parse,
 )
-from companion.core.spend import purpose
-from companion.core.types import (
-    DecisionKind,
-    RelationshipId,
-    SessionId,
-    Speaker,
-    TraceId,
-    TurnId,
-)
+from companion.loops.ask import Judge, ask
+from companion.loops.features import Feature
 from companion.loops.openloops import short_draft
 from companion.loops.record import Recorder
+from companion.loops.turn import Heard, Turn, decide
 from companion.store.sqlite.store import Store
+
+if TYPE_CHECKING:
+    from companion.loops.fast import Conversation
 
 log = logging.getLogger("companion.nudges")
 SESSION = SessionId("initiative")
@@ -107,3 +120,38 @@ async def tick_nudge(  # noqa: PLR0913
     )
     log.info("nudge shadow: would send %r (%s)", text, reason)
     return text
+
+
+AWAY_JUDGE = Judge("nudge", PROMPT, SCHEMA, parse, timeout=8.0, unread="no nudge for this message")
+
+
+async def away_in_turn(
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
+) -> None:
+    """Record when they say they are stepping away and for about how long, so the tick can nudge
+    if they stay gone (shadow). Runs beside any real, not serious turn, not only casual ones:
+    "gotta run" is exactly the message to read, and the judge tells a goodbye apart."""
+    del card
+    serious = heard is None or heard[0].severity >= RECHECK_SERIOUS
+    if c.judge is None or serious or in_scene is not Frame.REAL:
+        return
+    got = await ask(c.judge, AWAY_JUDGE, f"USER: {t.text}")
+    if got is None:
+        return
+    kind, minutes = got.value
+    decide(
+        c,
+        t,
+        AWAY,
+        {
+            "kind": kind.value,
+            "minutes": minutes,
+            "said": t.text,
+            "model": got.model,
+            "prompt": got.ref,
+        },
+    )
+
+
+# Whether they are stepping away, read beside the turn; the nudge itself is drafted by the tick.
+NUDGES = Feature("nudges", shadow=away_in_turn)

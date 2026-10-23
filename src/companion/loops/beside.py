@@ -16,17 +16,11 @@ from companion.core.hooks import SCHEMA as HOOK_SCHEMA
 from companion.core.hooks import TOPIC as HOOK_TOPIC
 from companion.core.hooks import WOULD_ASK as HOOK_WOULD_ASK
 from companion.core.hooks import agreed, may_ask, read_basic
-from companion.core.nudges import AWAY as AWAY_REASON
-from companion.core.nudges import PROMPT as AWAY_PROMPT
-from companion.core.nudges import SCHEMA as AWAY_SCHEMA
-from companion.core.nudges import parse as parse_away
-from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.types import (
     DecisionKind,
     Frame,
     Speaker,
 )
-from companion.loops.ask import Judge, ask
 from companion.loops.hooks import TIMEOUT_SECONDS as HOOK_TIMEOUT
 from companion.loops.hooks import stated
 from companion.loops.reads import read_times
@@ -37,9 +31,6 @@ if TYPE_CHECKING:
     from companion.loops.fast import Conversation
 
 log = logging.getLogger("companion.turn")
-AWAY_JUDGE = Judge(
-    "nudge", AWAY_PROMPT, AWAY_SCHEMA, parse_away, timeout=8.0, unread="no nudge for this message"
-)
 
 
 _BESIDE: set[asyncio.Task[None]] = set()  # shadow look-ups still running, kept from collection
@@ -61,41 +52,11 @@ def beside(job: Coroutine[object, object, None]) -> None:
 
 def shadows(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
     """What runs in shadow on a turn and never changes the reply: each feature's shadow look-up,
-    whether they are stepping away, and the basic it would ask about."""
+    and the basic it would ask about."""
     for feature in FEATURES:
         if feature.shadow is not None:
             beside(feature.shadow(c, t, in_scene, heard, card))
     _hook_beside(c, t, in_scene, heard)
-    _away_beside(c, t, in_scene, heard)
-
-
-def _away_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> None:
-    """Record when they say they are stepping away and for about how long, so the tick can nudge
-    if they stay gone (shadow). Runs beside any real, not serious turn, not only casual ones:
-    "gotta run" is exactly the message to read, and the judge tells a goodbye apart."""
-    serious = heard is None or heard[0].severity >= RECHECK_SERIOUS
-    if c.judge is None or serious or in_scene is not Frame.REAL:
-        return
-
-    async def run(judge: Extractor) -> None:
-        got = await ask(judge, AWAY_JUDGE, f"USER: {t.text}")
-        if got is None:
-            return
-        read = got.value
-        decide(
-            c,
-            t,
-            AWAY_REASON,
-            {
-                "kind": read[0].value,
-                "minutes": read[1],
-                "said": t.text,
-                "model": got.model,
-                "prompt": got.ref,
-            },
-        )
-
-    beside(run(c.judge))
 
 
 def _hook_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> None:

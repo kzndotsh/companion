@@ -5,8 +5,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from companion.core.nudges import AWAY, WOULD_NUDGE
 from companion.core.types import DecisionKind, RelationshipId
+from companion.features.nudges.logic import AWAY, WOULD_NUDGE
 from companion.loops.openloops import HELD
 from companion.store.sqlite.store import Store
 

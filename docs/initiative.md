@@ -16,12 +16,8 @@ What it notices about their near future and what it would do with it. Reaching o
   due three hours on, and is never a reach-out The open-loop pass keeps its own bookmark
   (`open_loop_runs`): a failed call is read again next pass, and a batch that fails three times is let
   go with the reason logged.
-- When they say they are stepping away now ("shower time", "brb"; `system/away`, read beside any
-  real, not serious turn) and then stay quiet at least twice as long as that and an hour, the
-  15-minute tick drafts one light nudge (`core/nudges.py`, `system/nudge-draft`): one per time away,
-  never in quiet hours, never after a goodbye, gone after six hours, at most two a day, and any
-  message from them cancels it. Shadow only, under `COMPANION_INITIATIVE`; read it with `uv run
-  companion initiative`.
+- When they say they are stepping away and stay gone, the tick drafts one light nudge, in shadow
+  (`src/companion/features/nudges/README.md`).
 - The promises the companion makes in its own replies are read in the open-loop batch (J12,
   `core/promises.py`, `system/promise-read`): a model labels standing or once and a word it said it
   would stop using; code keeps one only if its quote is in that message, said for real, not hedged and
