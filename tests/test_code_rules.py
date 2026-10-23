@@ -15,14 +15,14 @@ REASON_MATCH = re.compile(
     r"reason\.(startswith|endswith|find|index)\(|\breason\s*(==|!=)"
     r"|\bin\s+[\w.]*\breason\b|re\.(match|search|fullmatch)\([^)\n]*\breason\b"
 )
-# loops/route.py has two: the old-decision fallback, and `route.reason == BRUSHED`, which compares
+# turn/route.py has two: the old-decision fallback, and `route.reason == BRUSHED`, which compares
 # the floor's own answer as it is returned, not a logged decision.
-REASON_ALLOWED = {"core/types.py": 1, "loops/route.py": 2, "loops/calibrate.py": 1}
+REASON_ALLOWED = {"core/types.py": 1, "turn/route.py": 2, "loops/calibrate.py": 1}
 
 # No new god files: a file over DEFAULT_CAP lines is split. The big ones may only shrink.
 DEFAULT_CAP = 450
 CAPS = {
-    "loops/fast.py": 145,
+    "turn/fast.py": 145,
     "store/sqlite/store.py": 536,
 }
 NOQA_CAP = 64  # lint exceptions in src; each new one replaces an old one

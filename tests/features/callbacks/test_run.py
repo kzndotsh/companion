@@ -25,8 +25,8 @@ from companion.core.types import (
 )
 from companion.features.callbacks.run import check_new
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
 NOW = datetime(2026, 10, 18, 17, 0, tzinfo=UTC)

@@ -42,8 +42,8 @@ from companion.core.types import (
 )
 from companion.loops.features import Feature, Lookups, Moment, Offer, Offered
 from companion.loops.recall import Recalled, look_up
-from companion.loops.registry import FEATURES
 from companion.prompts import get
+from companion.registry import FEATURES
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

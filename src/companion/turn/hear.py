@@ -21,10 +21,10 @@ from companion.core.types import (
     Frame,
     Speaker,
 )
-from companion.loops.ack import judge
-from companion.loops.listen import judge_listening
 from companion.loops.turn import Heard, Listened, Turn, decide, mark, stop
 from companion.store.sqlite.decisions import REACTED
+from companion.turn.ack import judge
+from companion.turn.listen import judge_listening
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

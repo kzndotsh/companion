@@ -12,9 +12,9 @@ from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.topics.logic import SPENT
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from companion.turn.fast import handle
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 
 class Spent(Judge):

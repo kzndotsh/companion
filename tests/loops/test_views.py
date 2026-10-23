@@ -29,12 +29,12 @@ from companion.core.types import (
 from companion.core.views import card_views, is_settled
 from companion.loops.conversation import Conversation
 from companion.loops.curate import retire_implicated_views
-from companion.loops.fast import handle
 from companion.loops.rebuild import rebuild
 from companion.loops.slow import reflect_once
 from companion.loops.views import check_views, views_implicated
 from companion.store.sqlite import replay as store_replay
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
+from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
 T0 = datetime(2026, 10, 15, 12, 0, tzinfo=UTC)

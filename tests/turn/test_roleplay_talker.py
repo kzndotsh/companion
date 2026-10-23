@@ -21,8 +21,8 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
 SESSION = SessionId("s")
@@ -342,7 +342,7 @@ def test_a_route_is_read_from_its_detail_and_an_old_one_by_its_reason() -> None:
         TraceId,
         TurnId,
     )
-    from companion.loops.route import routed_to_roleplay  # noqa: PLC0415
+    from companion.turn.route import routed_to_roleplay  # noqa: PLC0415
 
     def route(reason: str, detail: dict[str, Json] | None) -> Decision:
         return Decision(
@@ -369,7 +369,7 @@ def test_a_route_is_read_from_its_detail_and_an_old_one_by_its_reason() -> None:
 async def test_a_failing_shadow_look_up_is_logged(caplog: pytest.LogCaptureFixture) -> None:
     import asyncio  # noqa: PLC0415
 
-    from companion.loops.beside import beside  # noqa: PLC0415
+    from companion.turn.beside import beside  # noqa: PLC0415
 
     async def boom() -> None:
         raise RuntimeError("embedder down")

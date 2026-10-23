@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.basics import name_belief
 from companion.core.types import (
@@ -19,8 +19,8 @@ from companion.core.types import (
 )
 from companion.features.knowing.logic import WOULD_ASK
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 
 @pytest.fixture

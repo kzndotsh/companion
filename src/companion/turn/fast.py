@@ -21,23 +21,23 @@ from companion.core.types import (
     TraceId,
     TurnId,
 )
-from companion.loops.assemble import assemble
-from companion.loops.beside import shadows
 from companion.loops.conversation import Conversation
-from companion.loops.hear import listen
-from companion.loops.notes import look
-from companion.loops.persist import (
+from companion.loops.record import Recorder
+from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
+from companion.loops.turn import Turn
+from companion.turn.assemble import assemble
+from companion.turn.beside import shadows
+from companion.turn.hear import listen
+from companion.turn.notes import look
+from companion.turn.persist import (
     TheirMessage,
     finish,
     reaction_only,
     store_user,
     their_message,
 )
-from companion.loops.record import Recorder
-from companion.loops.route import route_turn
-from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
-from companion.loops.talk import talk
-from companion.loops.turn import Turn
+from companion.turn.route import route_turn
+from companion.turn.talk import talk
 
 log = logging.getLogger("companion.turn")
 

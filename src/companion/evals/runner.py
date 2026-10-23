@@ -23,7 +23,7 @@ from companion.core.talker import Reply, Talker
 from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
 from companion.evals.judge import grade, grade_empathy
-from companion.loops.quip import judge_quip
+from companion.turn.quip import judge_quip
 
 CONCURRENCY = 4
 FREE_SPACING_SECONDS = 3.1

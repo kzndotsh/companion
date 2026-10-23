@@ -13,9 +13,9 @@ from companion.features.reminders.logic import Kind
 from companion.features.reminders.run import ASKED, CANCELLED, SET, deliver_due
 from companion.features.reminders.store import Reminder
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from companion.turn.fast import handle
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 # NOW is Monday 19 Oct 2026, 17:00 UTC: 13:00 in New York
 

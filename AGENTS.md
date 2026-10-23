@@ -86,19 +86,19 @@ rules: `core` imports nothing from the shell, only `store` and `lib/sqlite` impo
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
   live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
-- A line for the system block is a note source, named in `ORDER` in `loops/notes.py` in the order it is sent:
+- A line for the system block is a note source, named in `ORDER` in `turn/notes.py` in the order it is sent:
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
   `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
-  failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `loops/beside.py` runs each beside the turn and logs a failure.
-- A turn runs in stages, one module each: `loops/hear.py` (a reaction instead of a reply, the listening
-  read), `loops/route.py` (which talker), `loops/notes.py` `look` (the look-ups), `loops/assemble.py` (the
-  request), `loops/talk.py` (the talker and the reply checks), `loops/beside.py` (shadow tasks) and
-  `loops/persist.py` (their message kept once, the reply stored). `loops/fast.py` is only the driver: change a
-  stage in its module.
+  failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `turn/beside.py` runs each beside the turn and logs a failure.
+- A turn runs in stages, one module each: `turn/hear.py` (a reaction instead of a reply, the listening
+  read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the
+  request), `turn/talk.py` (the talker and the reply checks), `turn/beside.py` (shadow tasks) and
+  `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(convo, ...)`; the
+  `Conversation` it runs is plain data in `loops/conversation.py`): change a stage in its module.
 - A feature declares its parts as a `Feature` in its own module (`loops/features.py`): a look-up before the
-  reply, a note, steps after a memory pass, and a look-up in shadow beside the turn. It is one line in `FEATURES` (`loops/registry.py`); a note
-  also goes by name in `ORDER` in `loops/notes.py`, which is checked when the module loads. No field on
+  reply, a note, steps after a memory pass, and a look-up in shadow beside the turn. It is one line in `FEATURES` (`companion/registry.py`); a note
+  also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
   reaches its note as `Lookups.found[name]`. Registered: the memory map, names, context, worth, relevance,
   recent times, topic-spent, guess, open loops, lore, reminders, nudges and the basics hook.

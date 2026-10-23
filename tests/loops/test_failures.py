@@ -14,8 +14,8 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import RelationshipId, SessionId, Speaker
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
 SESSION = SessionId("s")

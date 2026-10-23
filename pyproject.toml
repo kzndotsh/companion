@@ -76,6 +76,8 @@ forbidden_modules = [
     "companion.cli",
     "companion.models",
     "companion.loops",
+    "companion.turn",
+    "companion.registry",
     "companion.io",
     "companion.daemon",
     "companion.evals",
@@ -91,6 +93,8 @@ forbidden_modules = [
     "companion.cli",
     "companion.models",
     "companion.loops",
+    "companion.turn",
+    "companion.registry",
     "companion.io",
     "companion.daemon",
     "companion.evals",
@@ -110,7 +114,7 @@ modules = ["companion.features.*"]
 ignore_imports = [
     "companion.store.sqlite.** -> companion.features.*.store",
     "companion.store.sqlite.** -> companion.features.*.logic",
-    "companion.loops.registry -> companion.features.**",
+    "companion.registry -> companion.features.**",
 ]
 
 [[tool.importlinter.contracts]]
@@ -121,6 +125,8 @@ source_modules = ["companion.lib"]
 forbidden_modules = [
     "companion.core",
     "companion.loops",
+    "companion.turn",
+    "companion.registry",
     "companion.features",
     "companion.store",
     "companion.models",
@@ -143,6 +149,8 @@ source_modules = [
     "companion.cli",
     "companion.models",
     "companion.loops",
+    "companion.turn",
+    "companion.registry",
     "companion.io",
     "companion.daemon",
     "companion.evals",

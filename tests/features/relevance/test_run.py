@@ -25,9 +25,9 @@ from companion.core.types import (
 from companion.core.vectors import Embedded, unit
 from companion.features.relevance.logic import SHADOW
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from companion.turn.fast import handle
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 
 class Embedder:
@@ -180,8 +180,8 @@ async def test_with_listening_switched_off_the_live_look_up_does_not_run(store: 
 def test_a_pick_not_on_the_card_reaches_the_notes(store: Store) -> None:
     from companion.core.types import Frame as F  # noqa: PLC0415
     from companion.loops.features import Lookups, Moment  # noqa: PLC0415
-    from companion.loops.notes import notes_for  # noqa: PLC0415
     from companion.loops.turn import Turn  # noqa: PLC0415
+    from companion.turn.notes import notes_for  # noqa: PLC0415
 
     convo = Conversation(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, TurnId("t1"), NOW, [], "fries sound good")

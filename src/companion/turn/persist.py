@@ -42,13 +42,13 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import why
-from companion.loops.assemble import Assembled, CardLog
-from companion.loops.basics import judge_name
-from companion.loops.frames import inputs_hash as frames_inputs_hash
-from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.moves import find_habits
 from companion.loops.turn import Answered, Turn, decide, mark, recorder
 from companion.store.sqlite.decisions import REACTED
+from companion.turn.assemble import Assembled, CardLog
+from companion.turn.basics import judge_name
+from companion.turn.frames import inputs_hash as frames_inputs_hash
+from companion.turn.frames import schema_hash as frames_schema_hash
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

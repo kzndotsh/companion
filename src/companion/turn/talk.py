@@ -24,11 +24,11 @@ from companion.core.types import (
     Frame,
     Json,
 )
-from companion.loops.floor import judge_intimate
-from companion.loops.frames import judge_frame
-from companion.loops.quip import judge_quip
-from companion.loops.react import judge_reaction
 from companion.loops.turn import Answered, Heard, Routed, Turn, decide, mark, stop
+from companion.turn.floor import judge_intimate
+from companion.turn.frames import judge_frame
+from companion.turn.quip import judge_quip
+from companion.turn.react import judge_reaction
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation

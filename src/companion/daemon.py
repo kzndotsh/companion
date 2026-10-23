@@ -31,7 +31,6 @@ from companion.io.telegram import Commands, Hooks, Telegram
 from companion.lib import logs, retry
 from companion.loops import curate
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.loops.nightly import missed, night
 from companion.loops.slow import reflect_once
 from companion.loops.spendcap import over_cap
@@ -40,6 +39,7 @@ from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import RefusalFallback, TalkerFallback
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"

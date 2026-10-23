@@ -32,9 +32,9 @@ from companion.core.types import (
 )
 from companion.core.views import ViewState, card_views
 from companion.loops.features import Lookups, Moment
-from companion.loops.notes import notes_for
 from companion.loops.record import Recorder
 from companion.loops.turn import Heard, Turn, decide, mark
+from companion.turn.notes import notes_for
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation
@@ -125,7 +125,7 @@ def assemble(  # noqa: PLR0913
     brushed: bool = False,
     roleplay: bool = False,
 ) -> Assembled:
-    """The request for this turn: the card, the clock and every note (`loops/notes.py`)."""
+    """The request for this turn: the card, the clock and every note (`turn/notes.py`)."""
     store, now = c.store, t.now
     view_state = store.view_state(c.rel)
     views = card_views(store.self_beliefs(c.rel), view_state)

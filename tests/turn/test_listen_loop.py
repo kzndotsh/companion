@@ -12,8 +12,8 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId, SessionId
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
 SESSION = SessionId("s")
@@ -195,7 +195,7 @@ async def test_the_rude_note_rides_the_system_block_only_when_they_snapped(
 
 async def test_a_judge_that_fails_once_is_asked_again() -> None:
     from companion.core.extractor import Extraction  # noqa: PLC0415
-    from companion.loops.listen import judge_listening  # noqa: PLC0415
+    from companion.turn.listen import judge_listening  # noqa: PLC0415
 
     class Flaky:
         def __init__(self) -> None:

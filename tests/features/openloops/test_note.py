@@ -9,9 +9,9 @@ from companion.core.basics import name_belief
 from companion.core.types import Frame, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.openloops.logic import LoopState, OpenLoop
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from companion.turn.fast import handle
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 
 @pytest.fixture

@@ -15,14 +15,14 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
 from companion.core.ack import ReactAndReply, Reaction
 from companion.core.extractor import FALLBACK, Extraction
 from companion.core.types import Json, Speaker, TurnId
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
 MESSAGES = (
     "hey, how's your day",
@@ -158,7 +158,7 @@ async def test_a_judge_that_always_fails_sends_the_talker_what_no_judge_would(
 async def test_a_turn_that_fails_after_listening_still_keeps_their_message_once(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import companion.loops.fast as fast  # noqa: PLC0415
+    import companion.turn.fast as fast  # noqa: PLC0415
 
     async def broken(*_: object) -> None:
         msg = "look-ups broke"

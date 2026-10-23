@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from companion.loops import slow
-from companion.loops.notes import SOURCES
-from companion.loops.registry import FEATURES
+from companion.registry import FEATURES
+from companion.turn.notes import SOURCES
 
 
 def test_every_feature_part_is_run_where_it_belongs() -> None:

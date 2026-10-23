@@ -4,7 +4,6 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.basics import ASKED as ASKED_NAME
 from companion.core.floor import HOLD_NOTE
@@ -14,11 +13,12 @@ from companion.core.talker import Reply
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
-from companion.loops.notes import SOURCES, Lookups, Moment, notes_for
 from companion.loops.turn import Turn
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
+from companion.turn.notes import SOURCES, Lookups, Moment, notes_for
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 
 @pytest.fixture
@@ -150,7 +150,7 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
     import asyncio  # noqa: PLC0415
     import time  # noqa: PLC0415
 
-    import companion.loops.notes as notes  # noqa: PLC0415
+    import companion.turn.notes as notes  # noqa: PLC0415
 
     async def hangs(*_: object) -> str | None:
         await asyncio.sleep(30)

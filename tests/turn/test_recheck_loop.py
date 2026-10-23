@@ -11,8 +11,8 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId, SessionId
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
 NOW = datetime(2026, 10, 19, 17, 0, tzinfo=UTC)

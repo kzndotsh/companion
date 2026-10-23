@@ -11,10 +11,10 @@ from companion.core.spend import SpendEvent
 from companion.core.talker import Reply
 from companion.core.types import RelationshipId, SessionId, Speaker
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.loops.spendcap import NOTICE, over_cap
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
 SESSION = SessionId("s")

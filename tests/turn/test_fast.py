@@ -27,11 +27,11 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.loops.conversation import Conversation
-from companion.loops.fast import handle
 from companion.models.anthropic import AnthropicTalker
 from companion.models.openrouter import OpenRouterTalker
 from companion.store.sqlite import replay as store_replay
 from companion.store.sqlite.store import Store
+from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
 SESSION = SessionId("s")

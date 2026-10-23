@@ -2,7 +2,7 @@
 
 A feature lists only the parts it has. Its look-up runs with the others before the reply, side by
 side under the turn's deadline; its note reads what the look-up found and joins the notes, in the
-order of `ORDER` in `loops/notes.py`. Adding a feature is its module plus one line there: no
+order of `ORDER` in `turn/notes.py`. Adding a feature is its module plus one line there: no
 field on `Lookups`, no branch in `look`, no entry written by hand in `SOURCES`.
 """
 
@@ -38,7 +38,7 @@ class Offer:
 
 type Look = Callable[[Conversation, Turn, Frame, Heard | None], Awaitable[object]]
 # A look-up in shadow: run beside the turn once the reply is out, with the card it was sent; it logs
-# what it would have done and never changes the reply. A failure is logged by `loops/beside.py`.
+# what it would have done and never changes the reply. A failure is logged by `turn/beside.py`.
 type Shadow = Callable[
     [Conversation, Turn, Frame, Heard | None, Card], Coroutine[object, object, None]
 ]

@@ -1,8 +1,8 @@
 # How a reply is made
 
 The reply path's own behaviour, stage by stage, beyond what each feature's README says. The stages
-live in `loops/` (`hear`, `route`, `notes`, `assemble`, `talk`, `beside`, `persist`; `fast.py` is
-the driver).
+live in `turn/` (`hear`, `route`, `notes`, `assemble`, `talk`, `beside`, `persist`; `fast.py` is
+the driver, `handle(convo, ...)`).
 
 - Each message outside a scene is read for how serious it is before the reply, and code adds a
   listening note (`core/listening.py`). `COMPANION_LISTEN=off` turns it off. Acute messages (severity
