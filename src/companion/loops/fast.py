@@ -29,17 +29,7 @@ from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name
 from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, Card, build_card, render
 from companion.core.clock import now_line, utc_now
 from companion.core.extractor import Extractor, from_fallback
-from companion.core.floor import (
-    BRUSH_OFF,
-    BRUSH_SCHEMA,
-    BRUSHED,
-    EXPLICIT_LEAD,
-    EXPLICIT_SCHEMA,
-    INTIMATE_CHECK,
-    Route,
-    parse_declines,
-    parse_explicit,
-)
+from companion.core.floor import BRUSHED, INTIMATE_CHECK, Route
 from companion.core.floor import Talker as RouteTalker
 from companion.core.floor import choose as choose_route
 from companion.core.frames import (
@@ -108,7 +98,8 @@ from companion.core.types import (
 from companion.core.views import ViewState, card_views, why
 from companion.loops.ack import judge
 from companion.loops.basics import judge_name
-from companion.loops.floor import judge_intimate
+from companion.loops.floor import DECLINES, EXPLICIT, explicit_lead, judge_intimate
+from companion.loops.floor import declines as judge_declines
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
@@ -127,7 +118,6 @@ from companion.store.sqlite.decisions import REACTED
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.turn")
-BRUSH_SECONDS = 4.0  # a slow brush-off read routes the turn as before
 
 
 def _id() -> str:
@@ -427,25 +417,18 @@ def _routed_to_roleplay(d: Decision) -> bool:
 
 
 async def _declines(c: Conversation, t: Turn) -> bool:
-    """Whether their message pushes the flirting or the scene back, even jokingly
-    (`system/brush-off`), asked only of a turn the roleplay talker would answer. A failed read is
-    no: the turn goes where it would have."""
+    """Whether their message pushes the flirting or the scene back, asked only of a turn the
+    roleplay talker would answer. A failed read is no: the turn goes where it would have."""
     if c.judge is None:
         return False
     mark(t, "brush-off judge")
-    lines = [f"{u.speaker.value.upper()}: {u.text}" for u in t.prior[-6:]]
-    said = "\n".join(["Conversation:", *lines, "", f"Newest USER message: {t.text}"])
-    try:
-        with purpose("route"):
-            got = await asyncio.wait_for(
-                c.judge.extract(BRUSH_OFF.text, said, BRUSH_SCHEMA), BRUSH_SECONDS
-            )
-    except Exception as err:
-        log.warning("brush-off judge failed or timed out; routed as before: %r", err)
-        return False
-    declines = parse_declines(got.data) is True
-    decide(c, t, "brush-off", {"declines": declines, "scorer": got.model, "prompt": BRUSH_OFF.ref})
-    return declines
+    got = await judge_declines(c.judge, t.prior, t.text)
+    found = got is not None and got.value
+    detail: dict[str, Json] = {"declines": found, "prompt": DECLINES.prompt.ref}
+    if got is not None:
+        detail["scorer"] = got.model
+    decide(c, t, "brush-off", detail)
+    return found
 
 
 def _intimate_before(c: Conversation, t: Turn) -> bool:
@@ -464,21 +447,14 @@ def _intimate_before(c: Conversation, t: Turn) -> bool:
 
 
 async def _explicit(c: Conversation, t: Turn) -> bool:
-    """Whether their message itself is sexually explicit (`system/explicit-lead`): then intimacy
-    starts on the roleplay talker at once. A failed read is no."""
+    """Whether their message itself is sexually explicit: then intimacy starts on the roleplay
+    talker at once. A failed read is no."""
     if c.judge is None:
         return False
     mark(t, "explicit-lead judge")
-    lines = [f"{u.speaker.value.upper()}: {u.text}" for u in t.prior[-4:]]
-    said = "\n".join(["Conversation:", *lines, "", f"Newest USER message: {t.text}"])
-    try:
-        with purpose("floor"):
-            got = await c.judge.extract(EXPLICIT_LEAD.text, said, EXPLICIT_SCHEMA)
-    except Exception as err:
-        log.warning("explicit-lead judge failed: %r", err)
-        return False
-    found = parse_explicit(got.data) is True
-    decide(c, t, "explicit lead", {"explicit": found, "prompt": EXPLICIT_LEAD.ref})
+    got = await explicit_lead(c.judge, t.prior, t.text)
+    found = got is not None and got.value
+    decide(c, t, "explicit lead", {"explicit": found, "prompt": EXPLICIT.prompt.ref})
     return found
 
 

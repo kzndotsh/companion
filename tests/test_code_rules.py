@@ -17,7 +17,7 @@ REASON_ALLOWED = {"core/types.py": 1, "loops/fast.py": 1, "loops/calibrate.py": 
 # No new god files: a file over DEFAULT_CAP lines is split. The big ones may only shrink.
 DEFAULT_CAP = 450
 CAPS = {
-    "loops/fast.py": 1044,
+    "loops/fast.py": 1020,
     "loops/notes.py": 708,
     "daemon.py": 572,
     "store/sqlite/store.py": 537,
