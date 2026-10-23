@@ -3,6 +3,23 @@ yet). Run nightly and by `companion episodes --write`."""
 
 from __future__ import annotations
 
+import asyncio
+from typing import TYPE_CHECKING, cast
+
+from companion.core.clock import named_zone
+from companion.core.episodes import GAP_BACK as EPISODE_GAP
+from companion.core.episodes import NOTE as EPISODES_NOTE
+from companion.core.episodes import Told, period
+from companion.core.episodes import note as episodes_note
+from companion.core.episodes import recent as recent_times
+from companion.core.types import Frame, Json, Speaker
+from companion.loops.features import Feature, Offer, Offered
+from companion.loops.turn import Heard, Turn, decide, mark
+
+if TYPE_CHECKING:
+    from companion.loops.fast import Conversation
+    from companion.loops.notes import Moment
+
 import logging
 import uuid
 from dataclasses import dataclass
@@ -98,3 +115,50 @@ async def write_closed(
         )
         written += 1
     return Written(written, cost)
+
+
+EPISODE_SECONDS = 8.0  # writing a just-ended stretch before the reply; slower means it is left out
+EPISODES_SHOWN = "episodes: what the two of them did recently, shown"
+
+
+async def recent_for_turn(
+    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+) -> tuple[Told, ...]:
+    """What the two of them did recently, when their words point at a time or they come back after
+    a gap (J12, J49). A stretch not yet recorded is written first. Logged; shown only when on."""
+    del heard
+    if c.episodes == "off" or c.judge is None or in_scene is not Frame.REAL:
+        return ()
+    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
+    last = theirs[-1].at if theirs else None
+    zone = named_zone()
+    pointed = period(t.text, t.now, zone) is not None
+    back = last is not None and t.now - last >= EPISODE_GAP
+    if not (pointed or back):
+        return ()
+    mark(t, "recent times")
+    try:
+        await asyncio.wait_for(write_closed(c.store, c.judge, c.rel, t.now), EPISODE_SECONDS)
+    except Exception as err:  # what is already recorded is still shown
+        log.warning("writing episodes before the reply failed: %r", err)
+    ends = [(e.start_at, e.end_at, e.gist) for e in c.store.episodes(c.rel)]
+    told = recent_times(ends, t.text, last, t.now, zone)
+    if told:
+        detail: dict[str, Json] = {
+            "mode": c.episodes,
+            "why": "pointed at a time" if pointed else "back after a gap",
+            "shown": [f"{x.when}: {x.gist}" for x in told],
+            "note": EPISODES_NOTE.ref,
+        }
+        shadow = "" if c.episodes == "on" else " (shadow, not sent)"
+        decide(c, t, EPISODES_SHOWN, detail, reason=EPISODES_SHOWN + shadow)
+    return tuple(told) if c.episodes == "on" else ()
+
+
+def recent_offer(m: Moment, found: object, so_far: Offered) -> Offer:
+    del m, so_far
+    text = episodes_note(cast("tuple[Told, ...]", found or ()))
+    return Offer((text,) if text else ())
+
+
+EPISODES = Feature("recent", look=recent_for_turn, note=recent_offer)

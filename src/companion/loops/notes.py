@@ -15,12 +15,7 @@ from companion.core.ack import (
 from companion.core.basics import ASK_EVERY as ASK_NAME_EVERY
 from companion.core.basics import ASKED as ASKED_NAME
 from companion.core.basics import ask_name, knows_name
-from companion.core.clock import local_zone, named_zone
-from companion.core.episodes import GAP_BACK as EPISODE_GAP
-from companion.core.episodes import NOTE as EPISODES_NOTE
-from companion.core.episodes import Told, period
-from companion.core.episodes import note as episodes_note
-from companion.core.episodes import recent as recent_times
+from companion.core.clock import local_zone
 from companion.core.floor import BRUSH_NOTE, HOLD_NOTE
 from companion.core.frames import (
     scene_note,
@@ -41,9 +36,6 @@ from companion.core.openloops import LoopState, loop_note, loop_note_ref, pick_n
 from companion.core.ownup import owned_note
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import recall_note
-from companion.core.relevance import GATE as RELEVANCE_GATE
-from companion.core.relevance import LIVE as RELEVANCE_LIVE
-from companion.core.relevance import SHOWN as RELEVANCE_SHOWN
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -52,11 +44,9 @@ from companion.core.types import (
     Speaker,
     Utterance,
 )
-from companion.loops.episodes import write_closed
 from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.recall import Recalled, look_up
 from companion.loops.registry import FEATURES
-from companion.loops.relevance import shadow as relevance_look_up
 from companion.prompts import get
 
 if TYPE_CHECKING:
@@ -64,16 +54,12 @@ if TYPE_CHECKING:
 from companion.loops.turn import Heard, Turn, decide, is_casual, mark
 
 log = logging.getLogger("companion.turn")
-RELEVANT_NOTE = get("notes/relevant")
 CHECK_IN_NOTE = get("notes/check-in")
 CHECKED_IN = "check-in: asked how they are after a heavy last talk"
 CHECK_IN_GAP = timedelta(hours=3)  # away at least this long since their last message
 HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
 SERIOUS = 2
-LIVE_SECONDS = 3.0  # a slow look-up only means no memories are offered this turn
-EPISODE_SECONDS = 8.0  # writing a just-ended stretch before the reply; slower means it is left out
 LOOK_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
-EPISODES_SHOWN = "episodes: what the two of them did recently, shown"
 LOOP_OFFERED = "open loop: offered as a note when they wrote"
 LOOP_NOTE_EVERY = timedelta(hours=24)
 
@@ -83,8 +69,6 @@ class Lookups:
     """What a reply waits for besides the judges: a recall, whether a topic is spent, a guess."""
 
     recalled: Recalled | None = None
-    relevant: tuple[tuple[BeliefId, str], ...] = ()  # memories near their message (ADR 0018)
-    recent: tuple[Told, ...] = ()  # what the two of them did recently, when it bears (J12, J49)
     found: Mapping[str, object] = field(default_factory=dict[str, object])  # by feature name
 
 
@@ -97,8 +81,6 @@ async def look(
     past 15 s (architecture audit, 2026-10-23)."""
     jobs: dict[str, Awaitable[object]] = {
         "recall": _recall(c, t, heard or read),
-        "relevant": _relevant(c, t, in_scene, heard),
-        "recent": _recent_times(c, t, in_scene),
         **{f.name: f.look(c, t, in_scene, heard) for f in FEATURES if f.look is not None},
     }
     tasks = {name: asyncio.ensure_future(job) for name, job in jobs.items()}
@@ -115,78 +97,7 @@ async def look(
             got[name] = task.result()
     return Lookups(
         recalled=cast("Recalled | None", got.get("recall")),
-        relevant=cast("tuple[tuple[BeliefId, str], ...]", got.get("relevant", ())),
-        recent=cast("tuple[Told, ...]", got.get("recent", ())),
         found={f.name: got[f.name] for f in FEATURES if f.name in got},
-    )
-
-
-async def _recent_times(c: Conversation, t: Turn, in_scene: Frame) -> tuple[Told, ...]:
-    """What the two of them did recently, when their words point at a time or they come back after
-    a gap (J12, J49). A stretch not yet recorded is written first. Logged; shown only when on."""
-    if c.episodes == "off" or c.judge is None or in_scene is not Frame.REAL:
-        return ()
-    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
-    last = theirs[-1].at if theirs else None
-    zone = named_zone()
-    pointed = period(t.text, t.now, zone) is not None
-    back = last is not None and t.now - last >= EPISODE_GAP
-    if not (pointed or back):
-        return ()
-    mark(t, "recent times")
-    try:
-        await asyncio.wait_for(write_closed(c.store, c.judge, c.rel, t.now), EPISODE_SECONDS)
-    except Exception as err:  # what is already recorded is still shown
-        log.warning("writing episodes before the reply failed: %r", err)
-    ends = [(e.start_at, e.end_at, e.gist) for e in c.store.episodes(c.rel)]
-    told = recent_times(ends, t.text, last, t.now, zone)
-    if told:
-        detail: dict[str, Json] = {
-            "mode": c.episodes,
-            "why": "pointed at a time" if pointed else "back after a gap",
-            "shown": [f"{x.when}: {x.gist}" for x in told],
-            "note": EPISODES_NOTE.ref,
-        }
-        shadow = "" if c.episodes == "on" else " (shadow, not sent)"
-        decide(c, t, EPISODES_SHOWN, detail, reason=EPISODES_SHOWN + shadow)
-    return tuple(told) if c.episodes == "on" else ()
-
-
-async def _relevant(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
-) -> tuple[tuple[BeliefId, str], ...]:
-    """With the look-up on (ADR 0018): the memories a small model picks as bearing on their message,
-    asked only when the closest memory is near (GATE), outside a scene. Logged either way. With no
-    listening read (the judge failed) it still runs, as a turn that is not sharing, so nothing held
-    is offered."""
-    if c.relevance != "on" or c.embedder is None or c.judge is None:
-        return ()
-    if in_scene is not Frame.REAL:
-        return ()
-    mark(t, "relevance look-up")
-    replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
-    found = await relevance_look_up(
-        c.store,
-        c.embedder,
-        c.judge,
-        c.rel,
-        model=c.embed_model,
-        said=t.text,
-        last_reply=replies[-1] if replies else None,
-        sharing=heard is not None and heard[0].severity >= 1,
-        on_card=(),
-        now=t.now,
-        gate=RELEVANCE_GATE,
-        timeout=LIVE_SECONDS,
-    )
-    if found is None:
-        return ()
-    decide(c, t, RELEVANCE_LIVE, found.detail)
-    rows = found.detail.get("picked")
-    return tuple(
-        (BeliefId(str(row["id"])), str(row["claim"]))
-        for row in (rows if isinstance(rows, list) else [])
-        if isinstance(row, dict) and isinstance(row.get("claim"), str) and "id" in row
     )
 
 
@@ -489,18 +400,6 @@ def _loop(m: Moment, so_far: Offered) -> Offer:
     return _loop_note(m, quiet=_quiet(m, so_far))
 
 
-def _relevant_note(m: Moment, _: Offered) -> Offer:
-    picks = [claim for bid, claim in m.looked.relevant if bid not in m.on_card][:RELEVANCE_SHOWN]
-    if not picks:
-        return Offer()
-    return Offer((RELEVANT_NOTE.render(items="\n".join(f"- {p}" for p in picks)),))
-
-
-def _recent_note(m: Moment, _: Offered) -> Offer:
-    text = episodes_note(m.looked.recent)
-    return Offer((text,) if text else ())
-
-
 def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
     note = f.note
     assert note is not None
@@ -511,26 +410,61 @@ def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
     return source
 
 
+# The notes that are not features' own, by name.
+_LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
+    "base": _base,
+    "listening": _listening,
+    "rude": _rude,
+    "repair": _repair,
+    "owned": _owned,
+    "recall": _recalled,
+    "check-in": _check_in,
+    "mood": _mood_line,
+    "hold": _hold,
+    "brush-off": _brush,
+    "name": _name,
+    "map": _map,
+    "loop": _loop,
+}
+
 # Every note, in the order it reaches the system block. A source sees what the ones before it
 # offered: a plan or a move on waits while their name is asked, a move on knows a plan was offered.
-SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
-    ("base", _base),
-    ("listening", _listening),
-    ("rude", _rude),
-    ("repair", _repair),
-    ("owned", _owned),
-    ("recall", _recalled),
-    ("relevant", _relevant_note),
-    ("recent", _recent_note),
-    ("check-in", _check_in),
-    ("mood", _mood_line),
-    ("hold", _hold),
-    ("brush-off", _brush),
-    ("name", _name),
-    ("map", _map),
-    ("loop", _loop),
-    *((f.name, _feature_note(f)) for f in FEATURES if f.note is not None),
+ORDER: tuple[str, ...] = (
+    "base",
+    "listening",
+    "rude",
+    "repair",
+    "owned",
+    "recall",
+    "relevant",
+    "recent",
+    "check-in",
+    "mood",
+    "hold",
+    "brush-off",
+    "name",
+    "map",
+    "loop",
+    "topic",
+    "guess",
+    "lore",
+    "reminder",
 )
+
+
+def _sources() -> tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...]:
+    """The notes in ORDER, local or a feature's, checked when the module loads: a name with no note,
+    or a feature's note left out or placed twice, stops the bot at start rather than silently."""
+    noted = {f.name: f for f in FEATURES if f.note is not None}
+    missing = [n for n in ORDER if n not in _LOCAL and n not in noted]
+    unplaced = [n for n in noted if ORDER.count(n) != 1] + [n for n in _LOCAL if n not in ORDER]
+    if missing or unplaced or len(set(ORDER)) != len(ORDER):
+        msg = f"notes order: no source for {missing}, not placed once: {unplaced}"
+        raise RuntimeError(msg)
+    return tuple((n, _LOCAL[n] if n in _LOCAL else _feature_note(noted[n])) for n in ORDER)
+
+
+SOURCES = _sources()
 
 
 def notes_for(m: Moment) -> Notes:

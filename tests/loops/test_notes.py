@@ -11,8 +11,9 @@ from companion.core.floor import HOLD_NOTE
 from companion.core.ownup import NOTE as OWNED_NOTE
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
+from companion.loops.episodes import EPISODES_SHOWN
 from companion.loops.fast import Conversation
-from companion.loops.notes import EPISODES_SHOWN, SOURCES, Lookups, Moment, notes_for
+from companion.loops.notes import SOURCES, Lookups, Moment, notes_for
 from companion.loops.turn import Turn
 from companion.store.sqlite.episodes import Episode
 from companion.store.sqlite.replay import replay_file

@@ -164,9 +164,16 @@ def test_a_pick_not_on_the_card_reaches_the_notes(store: Store) -> None:
     convo = Conversation(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, TurnId("t1"), NOW, [], "fries sound good")
     pick = ((BeliefId("food"), "The user likes fries."),)
-    shown = notes_for(Moment(convo, t, F.REAL, None, Lookups(relevant=pick), False, []))
+    shown = notes_for(Moment(convo, t, F.REAL, None, Lookups(found={"relevant": pick}), False, []))
     assert any("The user likes fries." in line for line in shown.lines)
     hidden = Moment(
-        convo, t, F.REAL, None, Lookups(relevant=pick), False, [], frozenset({BeliefId("food")})
+        convo,
+        t,
+        F.REAL,
+        None,
+        Lookups(found={"relevant": pick}),
+        False,
+        [],
+        frozenset({BeliefId("food")}),
     )
     assert not any("fries" in line for line in notes_for(hidden).lines)
