@@ -865,3 +865,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/brush-off
 - **notes/brush-off v1** (current). New, with `system/brush-off`: drop the flirting for now, answer what they actually said, warm and normal, let them bring it back; no mentioning it, apologising or explaining.
 
+## Request assembly: the look-ups run side by side under one deadline
+- From 2026-10-23 the look-ups a reply waits for (recall, topic spent, guess, its tastes, reminders, relevance, recent times) run side by side, and the reply waits for them at most 9 s together (`loops/notes.py` `look`, `LOOK_SECONDS`); one still running then, or one that raised, adds nothing that turn. Before, they ran one after another and their own limits could stack past 15 s (an architecture audit). The relevance look-up now also runs when the listening judge failed, as a turn that is not sharing, so no held memory is offered; before, a failed listening read silently switched it off.
+

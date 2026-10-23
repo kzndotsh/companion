@@ -114,3 +114,35 @@ async def test_recent_times_reach_the_talker_only_when_on_and_the_log_says_which
     turn = store.history_before(REL, later + timedelta(minutes=1), 4)[-2].turn_id
     [logged] = [d for d in store.decisions_for_turn(REL, turn) if d.has_key(EPISODES_SHOWN)]
     assert ("not sent" in logged.reason) == (mode == "shadow")
+
+
+async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
+    store: Store, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import asyncio  # noqa: PLC0415
+    import time  # noqa: PLC0415
+
+    import companion.loops.notes as notes  # noqa: PLC0415
+
+    async def hangs(*_: object) -> str | None:
+        await asyncio.sleep(30)
+        return "[set]"
+
+    async def fails(*_: object) -> bool:
+        raise RuntimeError("judge down")
+
+    async def tastes(*_: object) -> tuple[str, ...]:
+        return ("rainy days",)
+
+    monkeypatch.setattr(notes, "LOOK_SECONDS", 0.2)
+    monkeypatch.setattr(notes, "_reminder", hangs)
+    monkeypatch.setattr(notes, "_topic_spent", fails)
+    monkeypatch.setattr(notes, "_tastes", tastes)
+    convo = Conversation(store, Talker(), PREFIX, REL)
+    t = Turn(SESSION, "t1", NOW, [], "hi")  # type: ignore[arg-type]
+    from companion.core.types import Frame  # noqa: PLC0415
+
+    began = time.monotonic()
+    got = await notes.look(convo, t, Frame.REAL, None, None)
+    assert time.monotonic() - began < 2
+    assert (got.reminder, got.spent, got.tastes) == (None, False, ("rainy days",))

@@ -331,3 +331,48 @@ async def test_a_push_back_in_a_scene_is_answered_by_the_everyday_talker_with_a_
     assert len(scene.seen) == 1
     assert BRUSH_NOTE.text.strip("[]") in everyday.seen[-1].card
     assert "keep this reply free" not in everyday.seen[-1].card  # no floor hold
+
+
+def test_a_route_is_read_from_its_detail_and_an_old_one_by_its_reason() -> None:
+    from companion.core.types import (  # noqa: PLC0415
+        Decision,
+        DecisionId,
+        DecisionKind,
+        TraceId,
+        TurnId,
+    )
+    from companion.loops.fast import _routed_to_roleplay  # pyright: ignore[reportPrivateUsage]  # noqa: PLC0415
+
+    def route(reason: str, detail: dict[str, Json] | None) -> Decision:
+        return Decision(
+            DecisionId("d"),
+            REL,
+            SESSION,
+            TurnId("t"),
+            TraceId("t"),
+            DecisionKind.POLICY,
+            reason,
+            NOW,
+            detail=detail,
+            key="route",
+        )
+
+    assert _routed_to_roleplay(route("anything", {"talker": "roleplay"}))
+    assert not _routed_to_roleplay(
+        route("replied with the roleplay talker: x", {"talker": "everyday"})
+    )
+    assert _routed_to_roleplay(route("replied with the roleplay talker: a scene", None))
+    assert not _routed_to_roleplay(route("floor: kept on the everyday talker", None))
+
+
+async def test_a_failing_shadow_look_up_is_logged(caplog: pytest.LogCaptureFixture) -> None:
+    import asyncio  # noqa: PLC0415
+
+    from companion.loops.fast import _beside  # pyright: ignore[reportPrivateUsage]  # noqa: PLC0415
+
+    async def boom() -> None:
+        raise RuntimeError("embedder down")
+
+    _beside(boom())
+    await asyncio.sleep(0.05)
+    assert "shadow look-up failed" in caplog.text

@@ -88,7 +88,8 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - A line for the system block is a note source in `loops/notes.py` `SOURCES`, in the order it is sent:
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
-  `_assemble`.
+  `_assemble`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
+  failed one adds nothing that turn. A shadow look-up runs through `_beside` in `loops/fast.py`, which logs a failure.
 - Ask a small model the same question several times with `loops/reads.py` `read_times` (each failed or
   unreadable read is None) and count agreement with `core/agreement.py` (`READS`, `unanimous`); a
   feature states what a failed read means for it (no agreement, or try the batch again later).

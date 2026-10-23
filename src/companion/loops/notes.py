@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from companion.core.ack import (
     inputs_hash,
@@ -89,6 +89,7 @@ HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make
 SERIOUS = 2
 LIVE_SECONDS = 3.0  # a slow look-up only means no memories are offered this turn
 EPISODE_SECONDS = 8.0  # writing a just-ended stretch before the reply; slower means it is left out
+LOOK_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
 EPISODES_SHOWN = "episodes: what the two of them did recently, shown"
 LOOP_OFFERED = "open loop: offered as a note when they wrote"
 LOOP_NOTE_EVERY = timedelta(hours=24)
@@ -138,15 +139,44 @@ async def _tastes(
 async def look(
     c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, read: Heard | None
 ) -> Lookups:
-    recalled = await _recall(c, t, heard or read)
-    spent = await _topic_spent(c, t, in_scene, heard)
+    """Every look-up the reply waits for, run side by side under one deadline (LOOK_SECONDS). Each
+    has its own limit too; one still running at the deadline, or one that raised, gives nothing
+    this turn and the reply goes ahead. Before, they ran one after another and their limits stacked
+    past 15 s (architecture audit, 2026-10-23)."""
     asked_to_recall = heard is not None and heard[0].recall
-    guess = None if asked_to_recall else await _invited_guess(c, t, in_scene, heard)
-    tastes = await _tastes(c, t, in_scene, heard)
-    reminder = await _reminder(c, t)
-    relevant = await _relevant(c, t, in_scene, heard)
+
+    async def no_guess() -> Invited | None:
+        return None
+
+    jobs: dict[str, Coroutine[object, object, object]] = {
+        "recall": _recall(c, t, heard or read),
+        "spent": _topic_spent(c, t, in_scene, heard),
+        "guess": no_guess() if asked_to_recall else _invited_guess(c, t, in_scene, heard),
+        "tastes": _tastes(c, t, in_scene, heard),
+        "reminder": _reminder(c, t),
+        "relevant": _relevant(c, t, in_scene, heard),
+        "recent": _recent_times(c, t, in_scene),
+    }
+    tasks = {name: asyncio.ensure_future(job) for name, job in jobs.items()}
+    _, late = await asyncio.wait(tasks.values(), timeout=LOOK_SECONDS)
+    for task in late:
+        task.cancel()
+    got: dict[str, object] = {}
+    for name, task in tasks.items():
+        if task in late:
+            log.warning("look-up %s still running at the turn's deadline; left out", name)
+        elif task.exception() is not None:
+            log.warning("look-up %s failed; left out: %r", name, task.exception())
+        else:
+            got[name] = task.result()
     return Lookups(
-        recalled, spent, guess, tastes, reminder, relevant, await _recent_times(c, t, in_scene)
+        recalled=cast("Recalled | None", got.get("recall")),
+        spent=got.get("spent") is True,
+        guess=cast("Invited | None", got.get("guess")),
+        tastes=cast("tuple[str, ...]", got.get("tastes", ())),
+        reminder=cast("str | None", got.get("reminder")),
+        relevant=cast("tuple[tuple[BeliefId, str], ...]", got.get("relevant", ())),
+        recent=cast("tuple[Told, ...]", got.get("recent", ())),
     )
 
 
@@ -185,8 +215,10 @@ async def _relevant(
     c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> tuple[tuple[BeliefId, str], ...]:
     """With the look-up on (ADR 0018): the memories a small model picks as bearing on their message,
-    asked only when the closest memory is near (GATE), outside a scene. Logged either way."""
-    if c.relevance != "on" or c.embedder is None or c.judge is None or heard is None:
+    asked only when the closest memory is near (GATE), outside a scene. Logged either way. With no
+    listening read (the judge failed) it still runs, as a turn that is not sharing, so nothing held
+    is offered."""
+    if c.relevance != "on" or c.embedder is None or c.judge is None:
         return ()
     if in_scene is not Frame.REAL:
         return ()
@@ -200,7 +232,7 @@ async def _relevant(
         model=c.embed_model,
         said=t.text,
         last_reply=replies[-1] if replies else None,
-        sharing=heard[0].severity >= 1,
+        sharing=heard is not None and heard[0].severity >= 1,
         on_card=(),
         now=t.now,
         gate=RELEVANCE_GATE,

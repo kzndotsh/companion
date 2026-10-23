@@ -7,7 +7,7 @@ import contextlib
 import dataclasses
 import logging
 import uuid
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -93,6 +93,7 @@ from companion.core.talker import Reply, Talker
 from companion.core.types import (
     Belief,
     BeliefId,
+    Decision,
     DecisionKind,
     Frame,
     Json,
@@ -412,9 +413,17 @@ async def _route(
     if route.talker is RouteTalker.ROLEPLAY and await _declines(c, t):
         route = route_for(declined=True)
     if route.reason is not None:
-        decide(c, t, "route", reason=route.reason)
+        decide(c, t, "route", {"talker": route.talker.value}, reason=route.reason)
     talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
     return talker, route.held, read, route.reason == BRUSHED
+
+
+def _routed_to_roleplay(d: Decision) -> bool:
+    """Whether a route decision sent the turn to the roleplay talker. Read from its detail; a
+    decision from before the detail was kept matches by how its reason begins."""
+    if isinstance(d.detail, dict) and "talker" in d.detail:
+        return d.detail["talker"] == RouteTalker.ROLEPLAY.value
+    return d.reason.startswith("replied with the roleplay talker")
 
 
 async def _declines(c: Conversation, t: Turn) -> bool:
@@ -446,7 +455,7 @@ def _intimate_before(c: Conversation, t: Turn) -> bool:
     if not theirs:
         return False
     for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
-        if d.has_key("route") and d.reason.startswith("replied with the roleplay talker"):
+        if d.has_key("route") and _routed_to_roleplay(d):
             return True
         labels = d.detail.get("labels") if d.has_key("listening") and d.detail else None
         if isinstance(labels, dict) and labels.get("intimate") is True:
@@ -727,6 +736,20 @@ async def _listening(c: Conversation, t: Turn, in_scene: Frame) -> Heard | None:
 _BESIDE: set[asyncio.Task[None]] = set()  # shadow look-ups still running, kept from collection
 
 
+def _beside(job: Coroutine[object, object, None]) -> None:
+    """Run a shadow look-up beside the turn, kept from collection until it ends. A failure is
+    logged, never raised and never silent."""
+    task = asyncio.get_running_loop().create_task(job)
+    _BESIDE.add(task)
+
+    def done(finished: asyncio.Task[None]) -> None:
+        _BESIDE.discard(finished)
+        if not finished.cancelled() and finished.exception() is not None:
+            log.warning("shadow look-up failed: %r", finished.exception())
+
+    task.add_done_callback(done)
+
+
 def _relevance_beside(
     c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
 ) -> None:
@@ -760,9 +783,7 @@ def _relevance_beside(
             return
         decide(c, t, RELEVANCE_SHADOW, found.detail)
 
-    task = asyncio.get_running_loop().create_task(run(c.embedder, c.judge))
-    _BESIDE.add(task)
-    task.add_done_callback(_BESIDE.discard)
+    _beside(run(c.embedder, c.judge))
 
 
 def _shadows(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
@@ -805,9 +826,7 @@ def _away_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None)
             },
         )
 
-    task = asyncio.get_running_loop().create_task(run(c.judge))
-    _BESIDE.add(task)
-    task.add_done_callback(_BESIDE.discard)
+    _beside(run(c.judge))
 
 
 def _hook_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> None:
@@ -846,9 +865,7 @@ def _hook_beside(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None)
             },
         )
 
-    task = asyncio.get_running_loop().create_task(run(c.judge))
-    _BESIDE.add(task)
-    task.add_done_callback(_BESIDE.discard)
+    _beside(run(c.judge))
 
 
 def _names_shadow(
