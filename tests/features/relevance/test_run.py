@@ -6,10 +6,8 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
-from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 from companion.core.extractor import Extraction
-from companion.core.relevance import SHADOW
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -25,8 +23,10 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.vectors import Embedded, unit
+from companion.features.relevance.logic import SHADOW
 from companion.loops.fast import Conversation
 from companion.store.sqlite.store import Store
+from tests.loops.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 
 class Embedder:
@@ -135,7 +135,7 @@ async def test_memories_are_embedded_once(store: Store) -> None:
 
 
 async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Store) -> None:
-    from companion.core.relevance import LIVE  # noqa: PLC0415
+    from companion.features.relevance.logic import LIVE  # noqa: PLC0415
 
     talker = Talker()
     convo = Conversation(

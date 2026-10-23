@@ -27,9 +27,9 @@ from companion.core.knowing import Depth, Domain
 from companion.core.spend import purpose
 from companion.core.types import Belief, RelationshipId
 from companion.core.vectors import Embedder, nearest
+from companion.features.relevance.run import embed_missing
 from companion.loops.curate import log_would_close, retire
 from companion.loops.reads import read_times
-from companion.loops.relevance import embed_missing
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.consolidate")

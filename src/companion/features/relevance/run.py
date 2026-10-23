@@ -7,10 +7,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from companion.core.relevance import GATE as RELEVANCE_GATE
-from companion.core.relevance import LIVE as RELEVANCE_LIVE
-from companion.core.relevance import SHOWN as RELEVANCE_SHOWN
 from companion.core.types import Frame, Speaker
+from companion.features.relevance.logic import GATE as RELEVANCE_GATE
+from companion.features.relevance.logic import LIVE as RELEVANCE_LIVE
+from companion.features.relevance.logic import SHOWN as RELEVANCE_SHOWN
 from companion.loops.features import Feature, Offer, Offered
 from companion.loops.turn import Heard, Turn, decide, mark
 from companion.prompts import get
@@ -27,10 +27,10 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.extractor import Extractor
-from companion.core.relevance import PROMPT, SCHEMA, build_prompt, eligible, parse
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Json, RelationshipId
 from companion.core.vectors import Embedder, nearest
+from companion.features.relevance.logic import PROMPT, SCHEMA, build_prompt, eligible, parse
 from companion.loops.ask import Judge, ask
 from companion.store.sqlite.store import Store
 
