@@ -11,6 +11,7 @@ from companion.core.context import AFTER, BEFORE, PROMPT, SCHEMA, build_prompt, 
 from companion.core.extractor import Extractor
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId
+from companion.loops.features import Feature
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.context")
@@ -53,3 +54,6 @@ async def write_missing(
         written += 1
     log.debug("memory context: %d written, $%.4f", written, cost)
     return Written(written, cost)
+
+
+CONTEXT = Feature("context", after_theirs=write_missing)  # what a feeling was about (J51)

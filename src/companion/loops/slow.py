@@ -11,7 +11,7 @@ import logging
 import uuid
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, replace
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, tzinfo
 from typing import TYPE_CHECKING, Protocol
 
 from companion.core.beliefs.dedupe import is_duplicate_candidate
@@ -51,14 +51,10 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.context import write_missing
-from companion.loops.knowing import label_new
-from companion.loops.names import read_names
 from companion.loops.openloops import Reading, catch_up_loops
 from companion.loops.record import Recorder
 from companion.loops.registry import FEATURES
 from companion.loops.views import WANT_KINDS, check_views
-from companion.loops.worth import label
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:  # a type only: consolidate imports curate, which imports this module
@@ -144,22 +140,11 @@ class _Spent(Protocol):
 _Step = Callable[[Store, Extractor, RelationshipId, datetime], Awaitable[_Spent]]
 
 
-async def _sort_new(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
-) -> _Spent:
-    """About their life, about the bot, or routine; acted on for memories from the last day."""
-    return await label(store, extractor, rel, now, act_since=now - timedelta(days=1))
-
-
-# What runs once a pass has stored new memories of theirs, in order: the map of their life, names,
-# what they were talking about, what kind of memory it is, then each feature's own step. For new
-# views of its own, each feature's step (lore labels them).
-AFTER_THEIRS: tuple[_Step, ...] = (
-    label_new,
-    read_names,
-    write_missing,
-    _sort_new,
-    *(f.after_theirs for f in FEATURES if f.after_theirs is not None),
+# What runs once a pass has stored new memories of theirs, and new views of its own: each feature's
+# step, in the registry's order (the map of their life, names, what they were talking about, what
+# kind of memory it is; for views, lore).
+AFTER_THEIRS: tuple[_Step, ...] = tuple(
+    f.after_theirs for f in FEATURES if f.after_theirs is not None
 )
 AFTER_OWN: tuple[_Step, ...] = tuple(f.after_own for f in FEATURES if f.after_own is not None)
 

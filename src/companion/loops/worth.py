@@ -5,12 +5,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from companion.core.context import AFTER, BEFORE, build_prompt
 from companion.core.extractor import Extractor
 from companion.core.types import Belief, RelationshipId
 from companion.core.worth import PROMPT, ROUTINE_DAYS, SCHEMA, Label, read, to_ask, verdict
+from companion.loops.features import Feature
 from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store
 
@@ -88,3 +89,13 @@ def expire_routine(store: Store, rel: RelationshipId, now: datetime) -> int:
             retire(store, rel, b.id, EXPIRED, now)
             gone += 1
     return gone
+
+
+async def sort_new(
+    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
+) -> Labelled:
+    """About their life, about the bot, or routine; acted on for memories from the last day."""
+    return await label(store, extractor, rel, now, act_since=now - timedelta(days=1))
+
+
+WORTH = Feature("worth", after_theirs=sort_new)

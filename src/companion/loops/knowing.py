@@ -16,6 +16,7 @@ from companion.core.knowing import (
 )
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId
+from companion.loops.features import Feature
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.knowing")
@@ -56,3 +57,6 @@ async def label_new(
     left = sum(b.id not in have for b in store.user_beliefs(rel))
     log.debug("memory labels: %d labelled, %d left, $%.4f", done, left, cost)
     return Labelled(done, left, cost)
+
+
+KNOWING = Feature("memory map", after_theirs=label_new)  # each new memory placed in their life

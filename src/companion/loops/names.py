@@ -11,6 +11,7 @@ from companion.core.extractor import Extractor
 from companion.core.names import BATCH, PROMPT, SCHEMA, parse, prompt
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId
+from companion.loops.features import Feature
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.names")
@@ -53,3 +54,6 @@ async def read_names(
     left = sum(b.id not in seen for b in store.user_beliefs(rel))
     log.debug("memory names: %d read, %d names, %d left, $%.4f", done, found, left, cost)
     return NamesRead(done, found, left, cost)
+
+
+NAMES = Feature("names", after_theirs=read_names)  # the names in new memories, for fetch on mention
