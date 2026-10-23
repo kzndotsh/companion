@@ -12,12 +12,12 @@ SRC = Path(__file__).resolve().parents[1] / "src" / "companion"
 # only places allowed: the key fallback itself, a route decision from before its detail was kept,
 # and belief closure reasons, which have no keys.
 REASON_MATCH = re.compile(r"reason\.(startswith|endswith)\(")
-REASON_ALLOWED = {"core/types.py": 1, "loops/fast.py": 1, "loops/calibrate.py": 1}
+REASON_ALLOWED = {"core/types.py": 1, "loops/route.py": 1, "loops/calibrate.py": 1}
 
 # No new god files: a file over DEFAULT_CAP lines is split. The big ones may only shrink.
 DEFAULT_CAP = 450
 CAPS = {
-    "loops/fast.py": 1008,
+    "loops/fast.py": 910,
     "loops/notes.py": 708,
     "daemon.py": 572,
     "store/sqlite/store.py": 537,

@@ -28,10 +28,8 @@ from companion.core.address import address_note
 from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name_belief
 from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, Card, build_card, render
 from companion.core.clock import now_line, utc_now
-from companion.core.extractor import Extractor, from_fallback
-from companion.core.floor import BRUSHED, INTIMATE_CHECK, Route
-from companion.core.floor import Talker as RouteTalker
-from companion.core.floor import choose as choose_route
+from companion.core.extractor import Extractor
+from companion.core.floor import INTIMATE_CHECK
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
 )
@@ -83,7 +81,6 @@ from companion.core.talker import Reply, Talker
 from companion.core.types import (
     Belief,
     BeliefId,
-    Decision,
     DecisionKind,
     Frame,
     Json,
@@ -98,8 +95,7 @@ from companion.core.types import (
 from companion.core.views import ViewState, card_views, why
 from companion.loops.ack import judge
 from companion.loops.basics import judge_name
-from companion.loops.floor import DECLINES, EXPLICIT, explicit_lead, judge_intimate
-from companion.loops.floor import declines as judge_declines
+from companion.loops.floor import judge_intimate
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import judge_frame
 from companion.loops.frames import schema_hash as frames_schema_hash
@@ -113,6 +109,7 @@ from companion.loops.react import judge_reaction
 from companion.loops.reads import read_times
 from companion.loops.record import Recorder
 from companion.loops.relevance import shadow as relevance_shadow
+from companion.loops.route import route_turn
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.loops.turn import Heard, Turn, decide, is_casual, mark, recorder
 from companion.store.sqlite.decisions import REACTED
@@ -362,101 +359,6 @@ def _stopped_by_cap(
         reason=f"daily spend cap reached: ${spent:.2f} of ${c.daily_cap_usd or 0:.2f}, no reply",
     )
     return NOTICE if first_notice_today(c.store, c.rel, now) else ""
-
-
-async def _route(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
-) -> tuple[Talker, bool, Heard | None, bool]:
-    """The talker for this turn (ADR 0017): the roleplay talker for a pretend scene, or for intimate
-    talk when COMPANION_ROUTE_INTIMATE allows it, unless the floor keeps it on the everyday talker.
-    Logged when it is anything but the plain everyday choice.
-
-    The listening judge does not run in a scene, so a scene turn is read here, for routing only.
-    The frame is the one the previous turn left, so the first message of a scene is answered by
-    the everyday talker and the next ones by the roleplay talker. Returns that read too, so a
-    scene turn can still look something up when they say it forgot.
-    """
-    if c.roleplay_talker is None:
-        return c.talker, False, heard, False
-    in_play = in_scene is Frame.PLAY
-    read = heard
-    if read is None and in_play and c.judge is not None:
-        mark(t, "floor: reading the scene turn")
-        read = await judge_listening(c.judge, t.prior, t.text)  # for routing only, no note
-    intimate = read is not None and read[0].intimate
-    under_way = True
-    if intimate and c.route_intimate and not in_play:
-        under_way = _intimate_before(c, t) or await _explicit(c, t)
-
-    def route_for(*, declined: bool = False) -> Route:
-        return choose_route(
-            in_play=in_play,
-            intimate=intimate,
-            under_way=under_way,
-            allow_intimate=c.route_intimate,
-            judged_age_coded=read[0].age_coded
-            if read is not None and not from_fallback(read[1])
-            else None,
-            declined=declined,
-        )
-
-    route = route_for()
-    if route.talker is RouteTalker.ROLEPLAY and await _declines(c, t):
-        route = route_for(declined=True)
-    if route.reason is not None:
-        decide(c, t, "route", {"talker": route.talker.value}, reason=route.reason)
-    talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
-    return talker, route.held, read, route.reason == BRUSHED
-
-
-def _routed_to_roleplay(d: Decision) -> bool:
-    """Whether a route decision sent the turn to the roleplay talker. Read from its detail; a
-    decision from before the detail was kept matches by how its reason begins."""
-    if isinstance(d.detail, dict) and "talker" in d.detail:
-        return d.detail["talker"] == RouteTalker.ROLEPLAY.value
-    return d.reason.startswith("replied with the roleplay talker")
-
-
-async def _declines(c: Conversation, t: Turn) -> bool:
-    """Whether their message pushes the flirting or the scene back, asked only of a turn the
-    roleplay talker would answer. A failed read is no: the turn goes where it would have."""
-    if c.judge is None:
-        return False
-    mark(t, "brush-off judge")
-    got = await judge_declines(c.judge, t.prior, t.text)
-    found = got is not None and got.value
-    detail: dict[str, Json] = {"declines": found, "prompt": DECLINES.prompt.ref}
-    if got is not None:
-        detail["scorer"] = got.model
-    decide(c, t, "brush-off", detail)
-    return found
-
-
-def _intimate_before(c: Conversation, t: Turn) -> bool:
-    """Whether their message before this one was read as intimate, or answered by the roleplay
-    talker: intimate talk already under way."""
-    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
-    if not theirs:
-        return False
-    for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
-        if d.has_key("route") and _routed_to_roleplay(d):
-            return True
-        labels = d.detail.get("labels") if d.has_key("listening") and d.detail else None
-        if isinstance(labels, dict) and labels.get("intimate") is True:
-            return True
-    return False
-
-
-async def _explicit(c: Conversation, t: Turn) -> bool:
-    """Whether their message itself is sexually explicit: then intimacy starts on the roleplay
-    talker at once. A failed read is no."""
-    if c.judge is None:
-        return False
-    mark(t, "explicit-lead judge")
-    got = await explicit_lead(c.judge, t.prior, t.text)
-    found = got is not None and got.value
-    decide(c, t, "explicit lead", {"explicit": found, "prompt": EXPLICIT.prompt.ref})
-    return found
 
 
 def _start_beside(
@@ -944,7 +846,7 @@ async def _turn(
         mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
-    talker, held, read, brushed = await _route(c, t, in_scene, heard)
+    talker, held, read, brushed = await route_turn(c, t, in_scene, heard)
     looked = await look(c, t, in_scene, heard, read)
     asm = _assemble(
         c,

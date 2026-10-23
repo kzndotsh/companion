@@ -341,7 +341,7 @@ def test_a_route_is_read_from_its_detail_and_an_old_one_by_its_reason() -> None:
         TraceId,
         TurnId,
     )
-    from companion.loops.fast import _routed_to_roleplay  # pyright: ignore[reportPrivateUsage]  # noqa: PLC0415
+    from companion.loops.route import routed_to_roleplay  # noqa: PLC0415
 
     def route(reason: str, detail: dict[str, Json] | None) -> Decision:
         return Decision(
@@ -357,12 +357,12 @@ def test_a_route_is_read_from_its_detail_and_an_old_one_by_its_reason() -> None:
             key="route",
         )
 
-    assert _routed_to_roleplay(route("anything", {"talker": "roleplay"}))
-    assert not _routed_to_roleplay(
+    assert routed_to_roleplay(route("anything", {"talker": "roleplay"}))
+    assert not routed_to_roleplay(
         route("replied with the roleplay talker: x", {"talker": "everyday"})
     )
-    assert _routed_to_roleplay(route("replied with the roleplay talker: a scene", None))
-    assert not _routed_to_roleplay(route("floor: kept on the everyday talker", None))
+    assert routed_to_roleplay(route("replied with the roleplay talker: a scene", None))
+    assert not routed_to_roleplay(route("floor: kept on the everyday talker", None))
 
 
 async def test_a_failing_shadow_look_up_is_logged(caplog: pytest.LogCaptureFixture) -> None:
