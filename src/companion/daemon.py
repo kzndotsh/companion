@@ -31,6 +31,7 @@ from companion.core.types import Favorite, FavoriteId, Flag, FlagId, Relationshi
 from companion.core.vectors import Embedder
 from companion.features.context.run import write_missing
 from companion.features.episodes.run import write_closed
+from companion.features.knowing.run import label_new
 from companion.features.lore.run import label_views
 from companion.features.names.run import read_names
 from companion.features.reminders.run import deliver_due
@@ -42,7 +43,6 @@ from companion.loops.consolidate import SameCheck
 from companion.loops.curate import rebuild, retire_implicated_views
 from companion.loops.fast import Conversation
 from companion.loops.invented import check_new as check_invented
-from companion.loops.knowing import label_new
 from companion.loops.nightly import missed, night
 from companion.loops.nudges import tick_nudge
 from companion.loops.openloops import Ticker, drafter, tick

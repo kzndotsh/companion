@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from companion.core.knowing import (
+from companion.core.types import Belief, BeliefId, Json
+from companion.features.knowing.logic import (
     Depth,
     Domain,
     Label,
@@ -10,7 +11,6 @@ from companion.core.knowing import (
     parse_labels,
     pick_gap,
 )
-from companion.core.types import Belief, BeliefId, Json
 
 
 def _labels(pairs: list[tuple[str, Domain]]) -> dict[BeliefId, Label]:

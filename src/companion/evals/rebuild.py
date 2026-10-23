@@ -11,8 +11,8 @@ from pathlib import Path
 from companion.core.card import build_card, render
 from companion.core.frames import is_assertable
 from companion.core.history import to_messages
-from companion.core.knowing import Depth, Domain
 from companion.core.prompt.request import TalkerRequest
+from companion.features.knowing.logic import Depth, Domain
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
 

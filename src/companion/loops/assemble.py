@@ -18,7 +18,6 @@ from companion.core.frames import (
 )
 from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.history import to_messages
-from companion.core.knowing import Depth, Domain
 from companion.core.prompt.request import TalkerRequest, build_request
 from companion.core.prompt.sections import tagged
 from companion.core.replay import TAIL
@@ -30,6 +29,7 @@ from companion.core.types import (
     Speaker,
 )
 from companion.core.views import ViewState, card_views
+from companion.features.knowing.logic import Depth, Domain
 from companion.loops.notes import Lookups, Moment, notes_for
 from companion.loops.record import Recorder
 from companion.loops.turn import Heard, Turn, decide, mark

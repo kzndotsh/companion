@@ -21,7 +21,6 @@ from companion.core.frames import (
     scene_note,
 )
 from companion.core.habits import habit_note
-from companion.core.knowing import MAP_EVERY, WOULD_ASK, pick_gap
 from companion.core.length import LengthTarget, length_target
 from companion.core.listening import PROMPT as LISTEN_PROMPT
 from companion.core.listening import listening_note, repair_note, rude_note
@@ -44,6 +43,7 @@ from companion.core.types import (
     Speaker,
     Utterance,
 )
+from companion.features.knowing.logic import MAP_EVERY, WOULD_ASK, pick_gap
 from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.recall import Recalled, look_up
 from companion.loops.registry import FEATURES
