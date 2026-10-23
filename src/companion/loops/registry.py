@@ -10,6 +10,7 @@ from companion.loops.knowing import KNOWING
 from companion.loops.lore import LORE
 from companion.loops.names import NAMES
 from companion.loops.reminders import REMINDERS
+from companion.loops.topics import TOPICS
 from companion.loops.worth import WORTH
 
-FEATURES: tuple[Feature, ...] = (KNOWING, NAMES, CONTEXT, WORTH, GUESS, LORE, REMINDERS)
+FEATURES: tuple[Feature, ...] = (KNOWING, NAMES, CONTEXT, WORTH, TOPICS, GUESS, LORE, REMINDERS)

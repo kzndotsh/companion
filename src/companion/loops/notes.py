@@ -44,11 +44,6 @@ from companion.core.recall import recall_note
 from companion.core.relevance import GATE as RELEVANCE_GATE
 from companion.core.relevance import LIVE as RELEVANCE_LIVE
 from companion.core.relevance import SHOWN as RELEVANCE_SHOWN
-from companion.core.topics import EVERY_TURNS as TOPIC_EVERY
-from companion.core.topics import NOTE as TOPIC_NOTE
-from companion.core.topics import SPENT as TOPIC_SPENT
-from companion.core.topics import likely as topic_likely
-from companion.core.topics import topic_note
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -62,7 +57,6 @@ from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.recall import Recalled, look_up
 from companion.loops.registry import FEATURES
 from companion.loops.relevance import shadow as relevance_look_up
-from companion.loops.topics import judge_spent
 from companion.prompts import get
 
 if TYPE_CHECKING:
@@ -89,7 +83,6 @@ class Lookups:
     """What a reply waits for besides the judges: a recall, whether a topic is spent, a guess."""
 
     recalled: Recalled | None = None
-    spent: bool = False
     relevant: tuple[tuple[BeliefId, str], ...] = ()  # memories near their message (ADR 0018)
     recent: tuple[Told, ...] = ()  # what the two of them did recently, when it bears (J12, J49)
     found: Mapping[str, object] = field(default_factory=dict[str, object])  # by feature name
@@ -104,7 +97,6 @@ async def look(
     past 15 s (architecture audit, 2026-10-23)."""
     jobs: dict[str, Awaitable[object]] = {
         "recall": _recall(c, t, heard or read),
-        "spent": _topic_spent(c, t, in_scene, heard),
         "relevant": _relevant(c, t, in_scene, heard),
         "recent": _recent_times(c, t, in_scene),
         **{f.name: f.look(c, t, in_scene, heard) for f in FEATURES if f.look is not None},
@@ -123,7 +115,6 @@ async def look(
             got[name] = task.result()
     return Lookups(
         recalled=cast("Recalled | None", got.get("recall")),
-        spent=got.get("spent") is True,
         relevant=cast("tuple[tuple[BeliefId, str], ...]", got.get("relevant", ())),
         recent=cast("tuple[Told, ...]", got.get("recent", ())),
         found={f.name: got[f.name] for f in FEATURES if f.name in got},
@@ -196,40 +187,6 @@ async def _relevant(
         (BeliefId(str(row["id"])), str(row["claim"]))
         for row in (rows if isinstance(rows, list) else [])
         if isinstance(row, dict) and isinstance(row.get("claim"), str) and "id" in row
-    )
-
-
-async def _topic_spent(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> bool:
-    """Whether a small topic has run its course: asked of its own judge only on a likely moment on
-    a casual turn, so the listening judge, which carries the age floor, stays as it was."""
-    if c.judge is None or not is_casual(t, in_scene, heard) or not topic_likely(t.prior, t.text):
-        return False
-    mark(t, "topic judge")
-    return await judge_spent(c.judge, t.prior, t.text)
-
-
-def _topic_note(m: Moment, *, quiet: bool, loop_offered: bool) -> Offer:
-    """When a small topic has run its course, one line to move on, at most once in EVERY_TURNS of
-    their messages. Recorded with the move it named once the reply is stored."""
-    c, t = m.c, m.t
-    if not m.looked.spent or "?" in t.text:
-        return Offer()  # a question of theirs is answered, never moved past
-    theirs = [u.turn_id for u in t.prior if u.speaker is Speaker.USER][-(TOPIC_EVERY - 1) :]
-    recent = any(
-        d.has_key(TOPIC_SPENT) for turn in theirs for d in c.store.decisions_for_turn(c.rel, turn)
-    )
-    found = topic_note(
-        spent=True,
-        casual=quiet,
-        moved_recently=recent,
-        local_hour=t.now.astimezone(local_zone()).hour,
-        loop_offered=loop_offered,
-    )
-    if found is None:
-        return Offer()
-    note, move = found
-    return Offer(
-        (note,), (lambda: decide(c, t, TOPIC_SPENT, {"move": move.ref, "note": TOPIC_NOTE.ref}),)
     )
 
 
@@ -532,10 +489,6 @@ def _loop(m: Moment, so_far: Offered) -> Offer:
     return _loop_note(m, quiet=_quiet(m, so_far))
 
 
-def _topic(m: Moment, so_far: Offered) -> Offer:
-    return _topic_note(m, quiet=_quiet(m, so_far), loop_offered=bool(so_far["loop"].lines))
-
-
 def _relevant_note(m: Moment, _: Offered) -> Offer:
     picks = [claim for bid, claim in m.looked.relevant if bid not in m.on_card][:RELEVANCE_SHOWN]
     if not picks:
@@ -576,7 +529,6 @@ SOURCES: tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...] = (
     ("name", _name),
     ("map", _map),
     ("loop", _loop),
-    ("topic", _topic),
     *((f.name, _feature_note(f)) for f in FEATURES if f.note is not None),
 )
 

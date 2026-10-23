@@ -140,9 +140,14 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
 
     monkeypatch.setattr(notes, "LOOK_SECONDS", 0.2)
     monkeypatch.setattr(
-        notes, "FEATURES", (Feature("lore", look=tastes), Feature("reminder", look=hangs))
+        notes,
+        "FEATURES",
+        (
+            Feature("lore", look=tastes),
+            Feature("topic", look=fails),
+            Feature("reminder", look=hangs),
+        ),
     )
-    monkeypatch.setattr(notes, "_topic_spent", fails)
     convo = Conversation(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, "t1", NOW, [], "hi")  # type: ignore[arg-type]
     from companion.core.types import Frame  # noqa: PLC0415
@@ -150,5 +155,4 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
     began = time.monotonic()
     got = await notes.look(convo, t, Frame.REAL, None, None)
     assert time.monotonic() - began < 2
-    assert got.spent is False
-    assert dict(got.found) == {"lore": ("rainy days",)}  # the hung reminder look-up is left out
+    assert dict(got.found) == {"lore": ("rainy days",)}  # the failing and the hung are left out
