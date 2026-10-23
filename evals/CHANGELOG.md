@@ -1589,3 +1589,25 @@ persona paragraphs in a row moved nothing: what the owner liked is not held back
 how this model writes. $0.044. Rerun: a scratch script rebuilding each turn from `turn_requests` with each
 persona version.
 
+## 2026-10-23: DeepSeek V4.1 Flash writes warmer turns with more of its own than Luna, and almost never disclaims
+
+The same 10 recorded turns (6 warm or playful, 4 plain), persona v41, on three talkers: GPT-6 Luna (12 draws
+per cell, from the v43 run), DeepSeek V4.1 Flash (8 per cell) and Kimi K3 (warm turns, character sheet only, 4
+per cell, for cost). 424 replies labelled blind in one batch by a Haiku reader (a different reader pass from
+the v43 table, so compare rows within this table only); a sample read by eye.
+
+| Warm turns | Luna | DeepSeek | Kimi |
+|---|---|---|---|
+| A human touch, plain persona | 1/72 | 6/48 | |
+| A human touch, character sheet | 2/72 | 12/48 | 3/24 |
+| Its own spin (vivid), plain / sheet | 9/72, 7/72 | 17/48, 10/48 | 5/24 (sheet) |
+| An AI disclaimer, plain / sheet | 14/72, 13/72 | 2/48, 0/48 | 0/24 |
+| A touch read as forced | 4/144 | 9/96 | 2/24 |
+
+On plain turns DeepSeek had its own spin in 42 of 64 against Luna's 29 of 96, with no disclaimers from either.
+By eye on a reflective warm message, Luna mused about AI in general; DeepSeek and Kimi answered as
+themselves, with a joke or a feeling. Caveats: DeepSeek scored lower than Luna on the public everyday
+fixtures (49/64 against 59/64, 2026-10-16) and invents sensations more (T4); a touch read as forced in about
+1 of 10 of its warm replies; small samples for Kimi. $0.104. Rerun: a scratch script that rebuilds each turn
+from `turn_requests` and calls each model through `models.openrouter.OpenRouterTalker`.
+
