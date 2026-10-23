@@ -9,13 +9,10 @@ So a note is written for those memories only and shown beside them on the card.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-
-from companion.core.types import Belief, BeliefKind, Json, Speaker, Utterance
+from companion.core.types import Belief, BeliefKind, Json
 from companion.prompts import get
 
 PROMPT = get("system/memory-context")
-BEFORE, AFTER = 6, 1  # messages around the quote that the note is written from
 MAX_WORDS = 25
 SENSITIVE = 2
 
@@ -29,13 +26,6 @@ SCHEMA: dict[str, Json] = {
 def wants_context(b: Belief) -> bool:
     """A feeling or state, or a sensitive memory: where the moment carries the meaning."""
     return b.kind is BeliefKind.STATE or b.sensitivity >= SENSITIVE
-
-
-def build_prompt(b: Belief, around: Sequence[Utterance]) -> str:
-    lines = [f"{'USER' if u.speaker is Speaker.USER else 'COMPANION'}: {u.text}" for u in around]
-    return "\n".join(
-        [f"Memory: {b.claim}", f'Their words: "{b.evidence[0].quote}"', "", "Conversation:", *lines]
-    )
 
 
 def parse(data: Json) -> str | None:

@@ -7,8 +7,9 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from companion.core.context import AFTER, BEFORE, PROMPT, SCHEMA, build_prompt, parse, wants_context
+from companion.core.context import PROMPT, SCHEMA, parse, wants_context
 from companion.core.extractor import Extractor
+from companion.core.quoted import AFTER, BEFORE, build_prompt
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId
 from companion.loops.features import Feature
