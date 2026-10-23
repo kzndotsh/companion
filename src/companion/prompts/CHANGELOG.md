@@ -873,3 +873,6 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - The live relevance look-up runs without a listening read only when the listening judge is on and its read failed (as a turn that is not sharing). With `COMPANION_LISTEN=off` it does not run, as before; the shadow copy follows the same rule.
 - The two shadow reads beside a turn now have limits too: the stepping-away read (`system/away`) goes through the runner with 8 s, and each of the basics hook's three reads (`system/basics-hook`) has 5 s, a slow read counting as failed. Neither reaches the talker; a slow read only means no nudge, or no hook pick, for that message.
 
+
+## Request assembly: the views heading no longer says they were approved
+- From 2026-10-23 the card's heading over its own views reads "Views of your own that you have expressed. Hold to them unless…", without "and they have approved". In `auto` mode a view can reach the card by the rule, not by the owner, so the old words could be untrue; in `review` mode every view shown is approved either way. Measured first (`evals/CHANGELOG.md`, 2026-10-23): no difference in how views are held, at 30 samples per cell. `core/card.py`; old turns replay from their recorded card, so replay is unaffected.

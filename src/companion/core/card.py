@@ -185,7 +185,7 @@ def render(card: Card, tz: tzinfo = UTC) -> str:
         )
     if card.views:
         parts.append(
-            "[Views of your own that you have expressed and they have approved. Hold to them "
+            "[Views of your own that you have expressed. Hold to them "
             "unless they give you a real reason to change your mind. If you do change your mind, "
             "say so plainly:\n" + "\n".join(f"- {b.claim}" for b in card.views) + "]"
         )
