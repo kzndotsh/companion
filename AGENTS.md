@@ -14,7 +14,8 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 | Where | What |
 |---|---|
 | `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here |
-| `docs/features.md` | how each feature works, with its module and setting: read the entry before changing a feature |
+| `src/companion/features/<name>/README.md` | how each feature works, with its files and setting: read it before changing the feature |
+| `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md`, `docs/memory.md` | how the reply path, Telegram delivery, plans and reach-outs, and memory over time work, for what is not a feature folder |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
@@ -150,8 +151,9 @@ rules: `core` imports nothing from the shell, and only `store` imports `sqlite3`
 - Restart with `just restart` in a terminal the owner can see, never as a hidden background job or under a
   timeout (it runs the bot in the foreground). It stops the old process first. Two bots on one token fight over updates. After a
   restart, confirm the "up as" line shows the new prefix and persona.
-- How each feature works, and the module that holds it, is in `docs/features.md`. When you change a
-  feature, change its entry there in the same commit.
+- How a feature works is in its folder's `README.md`; the reply path, delivery, initiative and memory
+  over time are in `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md` and `docs/memory.md`. When you
+  change one, change its description in the same commit.
 
 **Working with the owner**
 - Plain English, short, and say what changed and what it was measured on. Lead with what matters.
