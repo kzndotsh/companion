@@ -152,3 +152,24 @@ async def test_a_judge_that_always_fails_sends_the_talker_what_no_judge_would(
         sent[name] = [(_unvaried(r.card), r.tail) for r in talker.seen]
         store.close()
     assert sent["fails"] == sent["none"]
+
+
+async def test_a_turn_that_fails_after_listening_still_keeps_their_message_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import companion.loops.fast as fast  # noqa: PLC0415
+
+    async def broken(*_: object) -> None:
+        msg = "look-ups broke"
+        raise RuntimeError(msg)
+
+    monkeypatch.setattr(fast, "look", broken)
+    store = Store(tmp_path / "rel.sqlite")
+    convo = _conversation(store, Chaos(1, only="answer"), Talker())
+    with pytest.raises(RuntimeError, match="look-ups broke"):
+        await convo.handle(SESSION, "hey there", "test", NOW)
+    theirs = [u for u in store.history_before(REL, NOW + timedelta(minutes=1), 10)]
+    assert [(u.speaker, u.text, u.frame.value) for u in theirs] == [
+        (Speaker.USER, "hey there", "real")
+    ]
+    store.close()

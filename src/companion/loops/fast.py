@@ -107,6 +107,7 @@ from companion.loops.hooks import stated
 from companion.loops.listen import judge_listening
 from companion.loops.moves import HabitMemory, find_habits
 from companion.loops.notes import Lookups, Moment, look, notes_for
+from companion.loops.persist import TheirMessage, store_user, their_message
 from companion.loops.quip import judge_quip
 from companion.loops.react import judge_reaction
 from companion.loops.reads import read_times
@@ -355,7 +356,7 @@ def _stopped_by_cap(
         return None
     turn = TurnId(_id())
     t = Turn(session, turn, now, [], text)
-    _store_user(c, t, channel, Frame.REAL)
+    store_user(c, t, channel, Frame.REAL)
     Recorder(c.store, c.rel, session, turn, TraceId(turn), now).decide(
         "daily spend cap reached",
         reason=f"daily spend cap reached: ${spent:.2f} of ${c.daily_cap_usd or 0:.2f}, no reply",
@@ -585,22 +586,6 @@ async def _hold_check(
             f" sent {sent[len(discarded) - 1]}",
         )
     return reply
-
-
-def _store_user(c: Conversation, t: Turn, channel: str, frame: Frame) -> Utterance:
-    said = Utterance(
-        UtteranceId(_id()),
-        c.rel,
-        t.session,
-        t.turn,
-        Speaker.USER,
-        t.text,
-        frame,
-        channel,
-        t.now,
-    )
-    c.store.append_utterance(said)
-    return said
 
 
 def _with_reaction(
@@ -934,6 +919,15 @@ async def _handle_turn(
     prior = store.history_before(rel, now, HISTORY_LIMIT)
     t = Turn(session, turn, now, prior, text)
     in_scene = scene_frame(prior, now)
+    async with their_message(c, t, channel) as keep:
+        return await _turn(c, t, keep, in_scene, channel)
+
+
+async def _turn(
+    c: Conversation, t: Turn, keep: TheirMessage, in_scene: Frame, channel: str
+) -> str | Reaction | ReactAndReply:
+    """The stages of one turn, inside the guard that keeps their message."""
+    store, rel, turn, now, text = c.store, c.rel, t.turn, t.now, t.text
     listening = asyncio.ensure_future(_listening(c, t, in_scene))
     heard: Heard | None = None
     try:
@@ -942,20 +936,15 @@ async def _handle_turn(
             heard = await listening
     except BaseException:
         await _stop(listening)
-        _store_user(c, t, channel, Frame.REAL)
         raise
     if reaction is not None:
         await _stop(listening)
-        said = _store_user(c, t, channel, in_scene)
+        said = keep.store(in_scene)
         await _capture_name(c, t, said)
         mark(t, "done: reaction only")
         log.info("turn %s | ack -> %s\n  you: %s", turn[:8], reaction.emoji, text)
         return reaction
-    try:
-        talker, held, read, brushed = await _route(c, t, in_scene, heard)
-    except BaseException:
-        _store_user(c, t, channel, Frame.REAL)
-        raise
+    talker, held, read, brushed = await _route(c, t, in_scene, heard)
     looked = await look(c, t, in_scene, heard, read)
     asm = _assemble(
         c,
@@ -981,17 +970,16 @@ async def _handle_turn(
         reply = await _checked(c, t, request, reply, heard, in_scene, talker, held=held)
     except BaseException:
         await _stop(talk, framing, feeling)
-        _store_user(c, t, channel, Frame.REAL)
         raise
     user_frame = frame_resolve(outcome[0] if outcome else None, fallback=in_scene)
-    said = _store_user(c, t, channel, user_frame)
+    said = keep.store(user_frame)
     if framing is not None:
         _log_frame(c, t, outcome, user_frame)
     store.record_turn(
         TurnRecord(
             turn,
             rel,
-            session,
+            t.session,
             request.prefix.sha256,
             "",
             request_sha256(request),
