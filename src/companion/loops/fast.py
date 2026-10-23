@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import dataclasses
 import logging
 import uuid
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from companion.core.ack import PROMPT as ACK_PROMPT
@@ -23,11 +21,8 @@ from companion.core.ack import (
     render_reason,
     schema_hash,
 )
-from companion.core.address import KEY as ADDRESS_KEY
-from companion.core.address import address_note
 from companion.core.basics import NAME_CAPTURE, asked_for_name, knows_name, name_belief
-from companion.core.card import EVENT_SHOWN_DAYS, Card, build_card, render
-from companion.core.clock import now_line, utc_now
+from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
 from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
@@ -36,29 +31,23 @@ from companion.core.frames import PROMPT as FRAMES_PROMPT
 from companion.core.frames import (
     Judgement,
     companion_frame,
-    is_assertable,
     scene_frame,
 )
 from companion.core.frames import render_reason as frame_reason
 from companion.core.frames import resolve as frame_resolve
-from companion.core.freshness import HORIZON_DAYS, when_phrase
-from companion.core.history import HISTORY_LIMIT, to_messages
-from companion.core.knowing import Depth, Domain
+from companion.core.history import HISTORY_LIMIT
 from companion.core.listening import SERIOUS
 from companion.core.moves import PROMPT as HABITS_PROMPT
 from companion.core.moves import replies_to_read
 from companion.core.prompt.prefix import Prefix
-from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
-from companion.core.prompt.sections import tagged
+from companion.core.prompt.request import request_sha256
 from companion.core.react import PROMPT as REACT_PROMPT
 from companion.core.react import Judgement as ReactJudgement
 from companion.core.react import decide as decide_reaction
 from companion.core.relevance import Embedder
-from companion.core.replay import TAIL, TurnRecord
+from companion.core.replay import TurnRecord
 from companion.core.talker import Reply, Talker
 from companion.core.types import (
-    Belief,
-    BeliefId,
     DecisionKind,
     Frame,
     Json,
@@ -70,15 +59,16 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.core.views import ViewState, card_views, why
+from companion.core.views import why
 from companion.loops.ack import judge
+from companion.loops.assemble import CardLog, assemble
 from companion.loops.basics import judge_name
 from companion.loops.beside import shadows
 from companion.loops.frames import inputs_hash as frames_inputs_hash
 from companion.loops.frames import schema_hash as frames_schema_hash
 from companion.loops.listen import judge_listening
 from companion.loops.moves import HabitMemory, find_habits
-from companion.loops.notes import Lookups, Moment, look, notes_for
+from companion.loops.notes import look
 from companion.loops.persist import TheirMessage, store_user, their_message
 from companion.loops.record import Recorder
 from companion.loops.route import route_turn
@@ -93,56 +83,6 @@ log = logging.getLogger("companion.turn")
 
 def _id() -> str:
     return uuid.uuid4().hex
-
-
-@dataclass(frozen=True, slots=True)
-class _CardLog:
-    """Records where each belief went this turn: into the card, or held back."""
-
-    record: Recorder
-    view_reasons: dict[BeliefId, str]
-
-    def write(self, card: Card) -> None:
-        for b in card.usable:
-            self._one(DecisionKind.SURFACE, b, "in the card")
-        for b in card.held:
-            self._one(
-                DecisionKind.WITHHOLD, b, f"sensitivity {b.sensitivity}: known, held for listening"
-            )
-        for b in card.older:
-            self._one(DecisionKind.SURFACE, b, "in the card as older, possibly out of date")
-        if card.kept_back:
-            self.record.decide(
-                "card: held left out",
-                {"kept_back": [b.id for b in card.kept_back]},
-                reason=f"card: {len(card.kept_back)} held beliefs left out, the turn is casual",
-            )
-        if card.crowded:
-            self.record.decide(
-                "card: crowded out",
-                {"crowded": [b.id for b in card.crowded]},
-                reason=f"card: {len(card.crowded)} current beliefs crowded out, it holds "
-                f"{len(card.usable) + len(card.held)}",
-            )
-        for b in card.dropped:
-            self._one(DecisionKind.WITHHOLD, b, self._why_dropped(b, card))
-        for b in card.views:
-            self._one(DecisionKind.SURFACE, b, self.view_reasons[b.id])
-
-    @staticmethod
-    def _why_dropped(b: Belief, card: Card) -> str:
-        last = when_phrase(card.aged[b.id].last_supported, card.now)
-        horizon = HORIZON_DAYS[b.kind]
-        if horizon is None:  # an event: history, only left out once it is an old one-day moment
-            return (
-                f"a one-day moment of daily life last mentioned {last}, not shown after"
-                f" {EVENT_SHOWN_DAYS} days; still in memory"
-            )
-        return f"stale: last mentioned {last}, past its {horizon}-day horizon, so left out"
-
-    def _one(self, kind: DecisionKind, belief: Belief, reason: str) -> None:
-        key = "card: surfaced" if kind is DecisionKind.SURFACE else "card: withheld"
-        self.record.decide(key, reason=reason, kind=kind, belief=belief.id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -178,16 +118,6 @@ class Conversation:
         if capped is not None:
             return capped
         return await _handle_turn(self, session, text, channel, now)
-
-
-def _mark_start(t: Turn, in_scene: Frame, card: Card, card_text: str) -> None:
-    mark(
-        t,
-        f"start: {len(t.prior)} history messages, scene={in_scene.value},"
-        f" card {len(card_text)} chars ({len(card.usable)} usable, {len(card.held)} held,"
-        f" {len(card.older)} older, {len(card.dropped)} dropped, {len(card.views)} views),"
-        f" text {len(t.text)} chars",
-    )
 
 
 async def _ack_reaction(c: Conversation, t: Turn) -> Reaction | None:
@@ -394,74 +324,11 @@ def _persist_reply(c: Conversation, t: Turn, reply: Reply, user_frame: Frame, ch
     return reply.text
 
 
-@dataclass(frozen=True, slots=True)
-class _Assembled:
-    """What one turn sends and what it needs to record afterwards."""
-
-    request: TalkerRequest
-    card_text: str
-    card: Card
-    views: Sequence[Belief]
-    view_state: ViewState
-    after: Sequence[Callable[[], None]] = ()  # the notes' writes, made once the turn is stored
-
-
 async def _listening(c: Conversation, t: Turn, in_scene: Frame) -> Heard | None:
     """How serious the message is and what they are doing. Not asked in a scene."""
     if c.judge is None or not c.listen or in_scene is not Frame.REAL:
         return None
     return await judge_listening(c.judge, t.prior, t.text)
-
-
-def _assemble(  # noqa: PLR0913
-    c: Conversation,
-    t: Turn,
-    in_scene: Frame,
-    heard: Heard | None,
-    looked: Lookups,
-    *,
-    held: bool = False,
-    brushed: bool = False,
-    roleplay: bool = False,
-) -> _Assembled:
-    """The request for this turn: the card, the clock and every note (`loops/notes.py`)."""
-    store, now = c.store, t.now
-    view_state = store.view_state(c.rel)
-    views = card_views(store.self_beliefs(c.rel), view_state)
-    assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
-    sharing = heard is not None and heard[0].severity >= 1
-    labels = store.belief_labels(c.rel)
-    everyday = {
-        bid for bid, x in labels.items() if x.domain is Domain.DAILY and x.depth is Depth.SURFACE
-    }
-    card = build_card(
-        assertable,
-        store.last_support(c.rel),
-        now,
-        views=views,
-        show_held=sharing,
-        everyday=everyday,
-        contexts=store.belief_contexts(c.rel),
-    )
-    shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
-    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
-    clock = now_line(now, theirs[-1].at if theirs else None)
-    pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
-    on_card = frozenset(b.id for b in (*card.usable, *card.held, *card.older))
-    notes = notes_for(Moment(c, t, in_scene, heard, looked, held, assertable, on_card, brushed))
-    card_text = tagged(
-        "\n".join([clock, *([pinned] if pinned else []), *shown, *notes.lines]), memory=False
-    )
-    prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
-    request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
-    scene = [c.scene_reminder] if roleplay and c.scene_reminder else []
-    tail = "\n".join([*scene, *notes.tail])  # after the history, where it weighs most
-    if tail:
-        request = dataclasses.replace(request, tail=tail)
-        decide(c, t, TAIL, {"text": tail})  # what replay needs to rebuild it
-    store.save_prefix(prefix)
-    _mark_start(t, in_scene, card, card_text)
-    return _Assembled(request, card_text, card, views, view_state, notes.after)
 
 
 async def _handle_turn(
@@ -500,7 +367,7 @@ async def _turn(
         return reaction
     talker, held, read, brushed = await route_turn(c, t, in_scene, heard)
     looked = await look(c, t, in_scene, heard, read)
-    asm = _assemble(
+    asm = assemble(
         c,
         t,
         in_scene,
@@ -542,7 +409,7 @@ async def _turn(
             card_text,
         )
     )
-    _CardLog(recorder(c, t), {b.id: why(b, view_state) for b in views}).write(card)
+    CardLog(recorder(c, t), {b.id: why(b, view_state) for b in views}).write(card)
     log.info(
         "turn %s | %s %dms in=%d cache_read=%d cache_write=%d%s\n  you: %s\n  it:  %s",
         turn[:8],
