@@ -27,6 +27,7 @@ from companion.cli import (
 )
 from companion.cli import eval as eval_cli
 from companion.cli import prompts as prompts_cli
+from companion.cli import shadows as shadows_cli
 from companion.cli.target import find_db, resolve_db, resolve_relationship
 from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
@@ -142,6 +143,7 @@ def _parser() -> argparse.ArgumentParser:
     _db_args(sub.add_parser("spend", help="what the paid calls cost, by purpose"))
     _db_args(sub.add_parser("initiative", help="open loops and what shadow mode would send"))
     _state_commands(sub.add_parser)
+    sub.add_parser("shadows", help="every feature in shadow, its review date and the overdue ones")
     pr = sub.add_parser("prompts", help="the current version of every prompt, or the text of one")
     pr.add_argument("which", nargs="?", help="a prompt name, optionally name@version")
     _db_args(sub.add_parser("beliefs", help="what it currently believes, with quotes"))
@@ -255,6 +257,10 @@ def _eval(a: argparse.Namespace) -> int:
 
 def _spend(a: argparse.Namespace) -> int:
     return _out(spend.run(*_target(a)))
+
+
+def _shadows(_: argparse.Namespace) -> int:
+    return _out(shadows_cli.run())
 
 
 def _prompts(a: argparse.Namespace) -> int:
@@ -382,6 +388,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "backup": _backup,
     "address": _address,
     "prompts": _prompts,
+    "shadows": _shadows,
     "spend": _spend,
     "beliefs": _beliefs,
     "views": _views,
