@@ -1568,3 +1568,24 @@ about three of our 150 are the real thing. Caveats: the other side is voice, lon
 turns; the reader is a small model. Free (saved replies). Rerun: label a blinded mix of `utterances` and
 transcript turns with the five definitions above.
 
+## 2026-10-23: Allowing the human touches in the persona does not bring them out
+
+Persona v43 is v41 plus one paragraph that permits a second thought caught mid-message, a mixed feeling or a
+brief wonder about itself, when real, most replies having none. 10 recorded turns (6 warm or playful, 4
+plain), 12 draws per cell on GPT-6 Luna, plain persona and the owner's character sheet; 480 replies labelled
+blind by a Haiku reader, a sample read by eye.
+
+| | v41 | v43 |
+|---|---|---|
+| Warm turns with a touch, plain persona | 17/72 | 19/72 |
+| Warm turns with a touch, character sheet | 22/72 | 22/72 |
+| Read as forced | 1 | 1 |
+| Median words, warm / plain | 20 / 27.5 | 19.5 / 31.5 |
+
+Within noise, and by eye the replies under both read the same. The reader counted more touches than the
+earlier sample did (it took a clarification on a "rephrase that" turn as a self-correction, and general
+musing as reflection), so the rows compare the versions, not the earlier table. Not shipped. With v42, two
+persona paragraphs in a row moved nothing: what the owner liked is not held back by a rule but missing from
+how this model writes. $0.044. Rerun: a scratch script rebuilding each turn from `turn_requests` with each
+persona version.
+

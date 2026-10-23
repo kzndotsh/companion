@@ -50,3 +50,7 @@ never paced in beats. Our persona pushes the other way on purpose (short, plain,
 the open question is where the owner wants this, and since wording rarely moves a habit, a code-chosen
 note now and then is the likelier lever than a persona line.
 
+A permission paragraph in the persona (v43) moved nothing (`evals/CHANGELOG.md`, 2026-10-23), and the owner
+judged a pool of example touches would force it. Left: a feeling or thread of its own for it to bring (LR4,
+the self-emotion idea), contradictions in the character sheet, or a talker that writes this way.
+

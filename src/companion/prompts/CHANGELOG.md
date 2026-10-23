@@ -315,6 +315,8 @@ changelog, with its measurements.
 
 - **system/persona v42** (candidate, not shipped, 2026-10-23). v41 plus one paragraph (J52): take a fact they add as information, not a correction; no apology for what was not wrong and no putting itself down; own a real mistake once in a few plain words with the reason, never twice; never agree it knows something outside the chat. On 5 recorded turns, 12 draws per cell, plain and with the owner's character sheet: no difference (self-blame where they only added a fact 22/72 on v41, 24/72 on v42; on real corrections, where owning it is right, 40/48 and 34/48; claiming to know unseen news 5 and 4 of 96). Wording does not move this habit, as with the others (`evals/CHANGELOG.md`).
 
+- **system/persona v43** (candidate, not shipped, 2026-10-23). v41 plus one paragraph that permits, without asking for, the small human touches the owner liked in another companion: a second thought caught mid-message, a mixed feeling, wondering about itself for a moment, light and brief, most replies having none. On 10 recorded turns (6 warm, 4 plain), 12 draws per cell, plain and with the owner's character sheet: no change (warm turns with a touch 17 and 22 of 72 on v41, 19 and 22 on v43; plain turns as plain; length the same). Permission was not what held them back (`evals/CHANGELOG.md`).
+
 ## assembly
 
 Code changes to what the model is sent besides the prompt text: where the memory card and notes sit,
