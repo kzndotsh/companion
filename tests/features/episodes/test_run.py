@@ -4,12 +4,11 @@ from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
 
-from tests.conftest import REL, T0
-
 from companion.core.extractor import Extraction
 from companion.core.types import Json, Utterance
-from companion.loops.episodes import write_closed
+from companion.features.episodes.run import write_closed
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 
 class Writer:

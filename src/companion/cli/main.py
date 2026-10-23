@@ -11,7 +11,6 @@ from companion.cli import (
     address,
     backup,
     beliefs,
-    episodes,
     favorites,
     flags,
     initiative,
@@ -29,6 +28,7 @@ from companion.cli import shadows as shadows_cli
 from companion.cli.target import find_db, resolve_db, resolve_relationship
 from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
+from companion.features.episodes import cli as episodes
 from companion.features.lore import cli as lore
 from companion.features.reminders import cli as reminders
 

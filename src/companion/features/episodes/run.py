@@ -7,12 +7,12 @@ import asyncio
 from typing import TYPE_CHECKING, cast
 
 from companion.core.clock import named_zone
-from companion.core.episodes import GAP_BACK as EPISODE_GAP
-from companion.core.episodes import NOTE as EPISODES_NOTE
-from companion.core.episodes import Told, period
-from companion.core.episodes import note as episodes_note
-from companion.core.episodes import recent as recent_times
 from companion.core.types import Frame, Json, Speaker
+from companion.features.episodes.logic import GAP_BACK as EPISODE_GAP
+from companion.features.episodes.logic import NOTE as EPISODES_NOTE
+from companion.features.episodes.logic import Told, period
+from companion.features.episodes.logic import note as episodes_note
+from companion.features.episodes.logic import recent as recent_times
 from companion.loops.features import Feature, Offer, Offered
 from companion.loops.turn import Heard, Turn, decide, mark
 
@@ -25,7 +25,10 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from companion.core.episodes import (
+from companion.core.extractor import Extractor
+from companion.core.spend import purpose
+from companion.core.types import DecisionKind, RelationshipId, TurnId
+from companion.features.episodes.logic import (
     GAP,
     PROMPT,
     SCHEMA,
@@ -38,10 +41,7 @@ from companion.core.episodes import (
     top_severity,
     transcript,
 )
-from companion.core.extractor import Extractor
-from companion.core.spend import purpose
-from companion.core.types import DecisionKind, RelationshipId, TurnId
-from companion.store.sqlite.episodes import Episode
+from companion.features.episodes.store import Episode
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.episodes")

@@ -10,9 +10,9 @@ from datetime import datetime, timedelta, tzinfo
 from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
 from companion.core.types import RelationshipId
+from companion.features.episodes.run import write_closed
 from companion.loops import merging
 from companion.loops.consolidate import nightly
-from companion.loops.episodes import write_closed
 from companion.loops.worth import expire_routine
 from companion.store.sqlite.store import Store
 

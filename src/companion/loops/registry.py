@@ -3,10 +3,10 @@ their notes go in this order, and so do their steps after a memory pass."""
 
 from __future__ import annotations
 
+from companion.features.episodes.run import EPISODES
 from companion.features.lore.run import LORE
 from companion.features.reminders.run import REMINDERS
 from companion.loops.context import CONTEXT
-from companion.loops.episodes import EPISODES
 from companion.loops.features import Feature
 from companion.loops.guess import GUESS
 from companion.loops.knowing import KNOWING

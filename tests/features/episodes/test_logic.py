@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from companion.core.episodes import Kind, Stretch, firsts, kind, stretches
 from companion.core.types import (
     Frame,
     RelationshipId,
@@ -12,6 +11,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.episodes.logic import Kind, Stretch, firsts, kind, stretches
 from tests.conftest import T0
 
 
@@ -54,7 +54,7 @@ def test_heavy_wins_then_scene_then_everyday_and_firsts_are_named_once() -> None
 
 
 def test_a_line_longer_than_a_summary_is_not_kept() -> None:
-    from companion.core.episodes import MAX_WORDS, parse  # noqa: PLC0415
+    from companion.features.episodes.logic import MAX_WORDS, parse  # noqa: PLC0415
 
     assert parse({"gist": " A cozy  evening. "}) == "A cozy evening."
     assert parse({"gist": "word " * (MAX_WORDS + 1)}) is None
@@ -65,7 +65,7 @@ def test_words_point_at_a_time_from_a_seven_oclock_day() -> None:
     from datetime import datetime  # noqa: PLC0415
     from zoneinfo import ZoneInfo  # noqa: PLC0415
 
-    from companion.core.episodes import period, when_said  # noqa: PLC0415
+    from companion.features.episodes.logic import period, when_said  # noqa: PLC0415
 
     z = ZoneInfo("America/New_York")
     evening = datetime(2026, 10, 21, 20, 43, tzinfo=z)
@@ -84,7 +84,7 @@ def test_recent_shows_the_time_pointed_at_else_the_last_one_after_a_gap() -> Non
     from datetime import datetime  # noqa: PLC0415
     from zoneinfo import ZoneInfo  # noqa: PLC0415
 
-    from companion.core.episodes import recent  # noqa: PLC0415
+    from companion.features.episodes.logic import recent  # noqa: PLC0415
 
     z = ZoneInfo("America/New_York")
     ends = [
