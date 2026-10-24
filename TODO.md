@@ -241,6 +241,11 @@ When the answer comes, the card moves to Todo or Done.
       light drafted nudge, logged. Replayed over six days: 18 times away, none nudged, since they always
       wrote again sooner. If it reads needy, tighten to rule A (only after they said they would be back).
       **Waits on:** the review of 2026-10-24.
+- [ ] Q3 Do the redrawn replies beat the canned ones? `system/quip` v3 (2026-10-24) redraws a reply it
+      reads as a canned generic reaction, and the redraw is sent unread. Once about 20 redraws are logged
+      (the first draw is kept in the decision detail), give the pairs blind to two subagent judges: keep it
+      if the redraw usually wins, look at what the judge fires on if it is a toss-up, turn it off if it
+      loses. Owner agreed 2026-10-24. **Waits on:** the logs, from about 2026-10-28.
 - [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
       fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
 - [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
