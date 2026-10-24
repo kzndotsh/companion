@@ -40,3 +40,13 @@ def test_only_stepping_away_is_read_and_minutes_are_clamped() -> None:
     assert parse({"away": "goodbye", "minutes": 30}) is None
     assert parse({"away": "none", "minutes": 0}) is None
     assert parse({"away": "brief", "minutes": True}) is None
+
+
+def test_a_goodbye_or_no_time_away_is_a_readable_answer_and_junk_is_not() -> None:
+    from companion.features.nudges.logic import Answer, Kind, read  # noqa: PLC0415
+
+    assert read({"away": "none", "minutes": 0}) == Answer(None)
+    assert read({"away": "goodbye", "minutes": 0}) == Answer(None)
+    assert read({"away": "brief", "minutes": 20}) == Answer((Kind.BRIEF, 20))
+    assert read({"away": "brief"}) is None
+    assert read("junk") is None

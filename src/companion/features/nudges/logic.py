@@ -68,6 +68,22 @@ def parse(data: Json) -> tuple[Kind, int] | None:
     return Kind(str(kind)), max(MINUTES[0], min(MINUTES[1], minutes))
 
 
+@dataclass(frozen=True, slots=True)
+class Answer:
+    """A readable answer: the time away, or None for a goodbye or not stepping away at all."""
+
+    away: tuple[Kind, int] | None
+
+
+def read(data: Json) -> Answer | None:
+    """The judge's answer; None only when it cannot be read, so "not stepping away" is not a
+    failure in the log."""
+    if isinstance(data, dict) and data.get("away") in ("goodbye", "none"):
+        return Answer(None)
+    found = parse(data)
+    return None if found is None else Answer(found)
+
+
 def wait(a: Away) -> timedelta:
     return max(MIN_WAIT, timedelta(minutes=2 * a.minutes))
 

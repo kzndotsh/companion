@@ -36,7 +36,7 @@ from companion.features.nudges.logic import (
     draft_prompt,
     due,
     newest,
-    parse,
+    read,
 )
 from companion.loops.ask import Judge, ask
 from companion.loops.current import Heard, Turn, decide
@@ -121,7 +121,7 @@ async def tick_nudge(  # noqa: PLR0913
     return text
 
 
-AWAY_JUDGE = Judge("nudge", PROMPT, SCHEMA, parse, timeout=8.0, unread="no nudge for this message")
+AWAY_JUDGE = Judge("nudge", PROMPT, SCHEMA, read, timeout=8.0, unread="no nudge for this message")
 
 
 async def away_in_turn(
@@ -135,9 +135,9 @@ async def away_in_turn(
     if c.judge is None or serious or in_scene is not Frame.REAL:
         return
     got = await ask(c.judge, AWAY_JUDGE, f"USER: {t.text}")
-    if got is None:
+    if got is None or got.value.away is None:
         return
-    kind, minutes = got.value
+    kind, minutes = got.value.away
     decide(
         c,
         t,
