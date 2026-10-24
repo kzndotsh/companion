@@ -26,7 +26,7 @@ SHADOWS: tuple[Shadow, ...] = (
         "reaching out first about a due plan",
         "initiative",
         "companion initiative",
-        date(2026, 10, 24),
+        date(2026, 10, 31),
         "would-sends that read right to the owner, none in quiet hours or mid-chat"
         " (A6, J27, J35 before live)",
     ),
@@ -34,7 +34,7 @@ SHADOWS: tuple[Shadow, ...] = (
         "a nudge after they stepped away and stayed gone",
         "initiative",
         "companion initiative",
-        date(2026, 10, 24),
+        date(2026, 10, 31),
         "drafts that do not read needy, at most two a day",
     ),
     Shadow(
