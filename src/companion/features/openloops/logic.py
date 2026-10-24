@@ -314,12 +314,16 @@ class Making:
     now: datetime
     tz: tzinfo
     new_id: Callable[[], str]
+    loose: bool = False  # a hedged plan ("maybe") becomes a note-only loop (COMPANION_LOOP_NOTES)
 
 
 def _why_not(
-    raw: RawLoop, source: Utterance | None, when: datetime | None, now: datetime
+    raw: RawLoop, source: Utterance | None, when: datetime | None, made: Making
 ) -> str | None:
+    now = made.now
+    hedged_ok = made.loose and raw.certainty == "maybe"
     checks = (
+        (raw.sensitivity >= SENSITIVE, "sensitive, never raised on its own"),
         (
             source is None,
             "cited message not found and no single message of theirs holds the quote",
@@ -332,13 +336,15 @@ def _why_not(
         (source is not None and not _holds(source, raw.quote), "the quote is not in their message"),
         (raw.scale == "minutes", "minute-scale, not worth asking about later"),
         (raw.about_companion, "about the companion or this chat, not their life"),
-        (raw.certainty != "firm", f"not a firm plan ({raw.certainty}), a friend would not ask"),
+        (
+            raw.certainty != "firm" and not hedged_ok,
+            f"not a firm plan ({raw.certainty}), a friend would not ask",
+        ),
         (raw.kind not in set(LoopKind), f"unknown kind {raw.kind!r}"),
         (
             source is not None and when is None,
             "a celebration or encouragement needs a day after today to land on",
         ),
-        (raw.sensitivity >= SENSITIVE, "sensitive, never raised on its own"),
         (not raw.claim or len(raw.claim) > MAX_CLAIM_CHARS, "no usable claim"),
         (
             when is not None and when < now - timedelta(days=MAX_PAST_DAYS),
@@ -352,13 +358,14 @@ def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenL
     """The loop to record, or the reason it must not be."""
     source = _source(raw, index)
     same_day = raw.scale in SAME_DAY_SCALES
+    hedged = raw.certainty != "firm"  # only a "maybe" gets this far, and only when loose
     if source is None:
         when = None
     elif same_day:
         when = source.at + NOTE_DELAY
     else:
         when = follow_up_time(raw.when, raw.scale, source.at, made.tz, raw.kind)
-    problem = _why_not(raw, source, when, made.now)
+    problem = _why_not(raw, source, when, made)
     if problem is not None or source is None or when is None:
         return problem or "no source"
     return OpenLoop(
@@ -371,7 +378,7 @@ def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenL
         sensitivity=max(raw.sensitivity, 0),
         created_at=made.now,
         kind=LoopKind.FOLLOW_UP if same_day else LoopKind(raw.kind),
-        note_only=same_day,
+        note_only=same_day or hedged,  # asked when they write, never a reach-out
     )
 
 

@@ -78,6 +78,7 @@ class ReflectOptions:
     same: SameCheck | None = None  # write-time check against existing memories (ADR 0019)
     promises: bool = False  # read its own messages for promises it made (J12, shadow)
     embed: tuple[Embedder, str] | None = None  # embed new memories after the pass (model name)
+    loose_loops: bool = False  # hedged plans become note-only loops (COMPANION_LOOP_NOTES)
 
 
 @dataclass(frozen=True, slots=True)
@@ -160,8 +161,11 @@ async def reflect_once(  # noqa: PLR0913
     *,
     promises: bool = False,
     embed: tuple[Embedder, str] | None = None,
+    loose_loops: bool = False,
 ) -> ReflectResult:
-    options = ReflectOptions(now, same=same, promises=promises, embed=embed)
+    options = ReflectOptions(
+        now, same=same, promises=promises, embed=embed, loose_loops=loose_loops
+    )
     return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), options)
 
 
@@ -399,7 +403,12 @@ async def reflect_from(
         rel,
         (now, local),
         run.log,
-        Reading(BATCH, CONTEXT, promises=read_promises if options.promises else None),
+        Reading(
+            BATCH,
+            CONTEXT,
+            promises=read_promises if options.promises else None,
+            loose=options.loose_loops,
+        ),
     )
     wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
     new_wants = users.accepted_ids & wanted

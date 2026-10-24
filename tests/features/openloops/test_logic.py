@@ -290,3 +290,27 @@ def test_the_note_never_says_it_remembered_and_carries_the_claim() -> None:
     note = loop_note(_loop("a", LoopKind.FOLLOW_UP, _at(20), claim="the vet visit"))
     assert "the vet visit" in note
     assert "If it fits naturally" in note
+
+
+def _loose(raw: RawLoop, u: Utterance) -> OpenLoop | str:
+    return to_loop(raw, {"m1": u}, Making(REL, MON, UTC, lambda: "loop-1", loose=True))
+
+
+def test_a_hedged_plan_is_a_note_only_loop_when_loose_and_rejected_when_strict() -> None:
+    u = _utt("going to the vet tomorrow")
+    maybe = _raw(certainty="maybe")
+    loose = _loose(maybe, u)
+    assert isinstance(loose, OpenLoop)
+    assert loose.note_only  # asked when they write, never a reach-out
+    assert _make(maybe, u) == "not a firm plan (maybe), a friend would not ask"
+    assert _loose(_raw(certainty="wish"), u) == "not a firm plan (wish), a friend would not ask"
+    firm = _loose(_raw(), u)
+    assert isinstance(firm, OpenLoop)
+    assert not firm.note_only
+
+
+def test_a_sensitive_item_is_rejected_as_sensitive_whatever_else_is_wrong() -> None:
+    u = _utt("going to the vet tomorrow")
+    hedged_and_sensitive = _raw(certainty="maybe", sensitivity=2, scale="minutes")
+    assert _make(hedged_and_sensitive, u) == "sensitive, never raised on its own"
+    assert _loose(hedged_and_sensitive, u) == "sensitive, never raised on its own"

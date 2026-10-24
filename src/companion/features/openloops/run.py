@@ -88,6 +88,8 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
     targets: set[UtteranceId],
     when: tuple[datetime, tzinfo],
     note: Log,
+    *,
+    loose: bool = False,
 ) -> LoopCounts | None:
     """Record the open loops in the targeted messages, and close the ones they settle. None when
     the call itself failed, so the caller can keep the batch for another try."""
@@ -105,7 +107,7 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
         note("open loops: the answer was malformed and was ignored", {"model": result.model})
         return LoopCounts(cost_usd=result.cost_usd)
     known = {normalise(lp.claim) for lp in store.open_loops(rel)}
-    made = Making(rel, now, tz, _id)
+    made = Making(rel, now, tz, _id, loose=loose)
     stored = rejected = 0
     for item in raw:
         outcome = to_loop(item, window, made)
@@ -295,6 +297,7 @@ class Reading:
     context: int
     batches: int = 3
     promises: OwnReader | None = None  # also reads its own messages, for promises (J12, shadow)
+    loose: bool = False  # hedged plans become note-only loops (COMPANION_LOOP_NOTES=loose)
 
 
 async def catch_up_loops(  # noqa: PLR0913, PLR0917
@@ -323,7 +326,9 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
             continue
         window = index_window([*store.history_before(rel, batch[0].at, reading.context), *batch])
         counts = (
-            await extract_open_loops(store, extractor, rel, window, targets, when, note)
+            await extract_open_loops(
+                store, extractor, rel, window, targets, when, note, loose=reading.loose
+            )
             if targets
             else LoopCounts()
         )

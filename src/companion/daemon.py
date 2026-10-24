@@ -363,7 +363,13 @@ async def run(data_dir: Path) -> None:
             try:
                 result = await retry.retry_on_network_error(
                     lambda: reflect_once(
-                        store, reflector, rel, same=same, promises=s.on("promises"), embed=embed
+                        store,
+                        reflector,
+                        rel,
+                        same=same,
+                        promises=s.on("promises"),
+                        embed=embed,
+                        loose_loops=s.on("loop notes"),
                     ),
                     REFLECT_RETRY_DELAYS,
                     "reflect",

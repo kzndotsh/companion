@@ -6,22 +6,22 @@ Things they said about their own near future that a friend would ask about later
 
 ## How it works
 
-**Reading plans.** The open-loop pass runs inside the slow loop's batch, after the beliefs, with one small-model call per batch (`system/openloops`, purpose `loops`). It has its own bookmark (`open_loop_runs`), so it never depends on the belief pass. It reads up to 40 messages per batch, with 4 messages of earlier context, and up to 3 batches per pass. The model only labels: the quote, a short claim, when it happens as they said it, a scale (`minutes`, `hours`, `days`, `unknown`), a sensitivity from 0 to 3, a certainty (`firm`, `maybe`, `wish`), whether it is about the companion, and a kind. Code decides what to keep. A candidate is dropped, with the reason logged, when:
+**Reading plans.** The open-loop pass runs inside the slow loop's batch, after the beliefs, with one small-model call per batch (`system/openloops`, purpose `loops`). It has its own bookmark (`open_loop_runs`), so it never depends on the belief pass. It reads up to 40 messages per batch, with 4 messages of earlier context, and up to 3 batches per pass. The model only labels: the quote, a short claim, when it happens as they said it, a scale (`minutes`, `hours`, `days`, `unknown`), a sensitivity from 0 to 3, a certainty (`firm`, `maybe`, `wish`), whether it is about the companion, and a kind. Code decides what to keep. A candidate is dropped, with the reason logged, when (checked in this order, so a sensitive one is always logged as sensitive):
 
+- sensitivity is 2 or more, so a sensitive plan is never raised on its own
 - the cited message is not found, or no single message of theirs holds the quote
 - it was not said by them for real (a scene or the companion's own words)
 - the quote is not word for word in their message
 - the scale is `minutes`, or it is about the companion or the chat
-- the certainty is not `firm`, or the kind is unknown
+- the certainty is `wish`, or `maybe` while `COMPANION_LOOP_NOTES=off` (strict), or the kind is unknown
 - a celebration or encouragement has no day after today to land on
-- sensitivity is 2 or more, so a sensitive plan is never raised on its own
 - the claim is empty or over 160 characters
 - the follow-up time was already more than 3 days past
 - the same claim (lower-cased, letters and digits only) is already recorded
 
 A kept loop is stored with the exact quote and its source message, and logged as `open loop recorded from their own words` with the prompt `name@version`. The same call also lists the waiting loops with labels (`L1`, `L2`) and asks which of them their new messages settle. A loop is closed as `resolved` only when the label exists, the message is theirs and real, and the quote is in it, so a loop they bring up themselves is never asked about.
 
-**Kinds and times.** The kind sets when it falls due. A follow-up is the morning after the thing happens, at 10:00 local time. When nothing says when, it is 3 days after the day they said it, at 10:00. A celebration (their own occasion on a known day) is marked at 10:00 on the day. An encouragement (something big they face on a known day) comes at 8:30 on the day, just after quiet hours. A celebration or encouragement needs a day after today, or it is dropped. Dates are read from "tomorrow", "next week", "next month", weekday names, "weekend" and a written date such as a month and a day, taken as the next time it comes round. A plan for later today (scale `hours`) becomes a note-only loop, due 3 hours after the message, and is never a reach-out.
+**Kinds and times.** The kind sets when it falls due. A follow-up is the morning after the thing happens, at 10:00 local time. When nothing says when, it is 3 days after the day they said it, at 10:00. A celebration (their own occasion on a known day) is marked at 10:00 on the day. An encouragement (something big they face on a known day) comes at 8:30 on the day, just after quiet hours. A celebration or encouragement needs a day after today, or it is dropped. Dates are read from "tomorrow", "next week", "next month", weekday names, "weekend" and a written date such as a month and a day, taken as the next time it comes round. A plan for later today (scale `hours`) becomes a note-only loop, due 3 hours after the message, and is never a reach-out. A hedged plan (certainty `maybe`, such as "may watch a movie tonight") becomes a note-only loop too, by default (`COMPANION_LOOP_NOTES=loose`, the owner's choice of 2026-10-24): asked once when they next write, never a reach-out. `off` makes it strict again, rejecting every plan that is not firm.
 
 **The note when they write.** On a casual turn (read as not serious, not in a scene, not a goodbye) with no name question, no check-in and nothing held, one due loop becomes a note in the system block (`pick_note`). It sits after the name and memory-map notes and before the topic notes. Rules:
 
