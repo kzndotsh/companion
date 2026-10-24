@@ -1759,3 +1759,18 @@ explicitness by three blind Claude judges (Haiku, Sonnet, Opus; 6, 6 and 7 expli
 on": 43 roleplay replies become 8, in the 3 runs that went explicit (one from its first message). The
 9 runs left with the everyday talker hold all three "too fast" marks and none of the favourites. No
 model calls: the judges were subagents.
+
+## 2026-10-24: Moving the habit note after the history does not stop a running bit
+
+A mark said a playful running bit had dragged on for many messages. The habit check had named the bit
+from its second reply on, and the habit note carried it, without effect. Tested: the habit note in the
+system block (as live) against the same line after the history, on the 4 recorded turns whose note
+named the bit, plain persona and the owner's character, 8 samples per cell, gpt-6-luna; 128 replies,
+$0.0115. Three blind Claude judges (Haiku, Sonnet, Opus) labelled each reply extends, nod or drops.
+
+By majority: extends 19/64 with the note in the block, 20/64 after it (p = 0.85); nearly all replies
+natural either way. Per turn the bit follows the message: one line that itself carried the bit was
+extended 16/16 in both cells, and the two last turns were extended 0 to 1 of 16 in both. Live, those
+last turns had been answered by the roleplay talker, which did extend it; under the explicit-only
+routing of the same day they go to the everyday talker, which lets it go. Not shipped. Read as: the
+drag came mostly from the misrouting, and a placement change does nothing for it.
