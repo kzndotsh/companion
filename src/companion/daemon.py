@@ -231,9 +231,8 @@ CATCH_UP = timedelta(minutes=5)  # after a start, a missed night runs this much 
 
 async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId, s: Settings) -> None:
     """The night's memory work once a night (ADR 0019, `memory/nightly.py`), each step on its own. A
-    night missed while the bot was down is made up CATCH_UP after it starts."""
-    if not s.on("memory check"):
-        return
+    night missed while the bot was down is made up CATCH_UP after it starts. The memory check's
+    switch turns off that step only, never the night."""
 
     async def run() -> None:
         if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:

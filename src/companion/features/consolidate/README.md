@@ -2,7 +2,7 @@
 
 Keeps memory tidy without letting a model decide what the person is. Each night it rereads memories a week old, and when the memory pass writes a new memory it checks that against its nearest existing one.
 
-**Status:** shadow (review by 2026-10-26, judged on closes and questions that match the owner's own review). `COMPANION_CONSOLIDATE`: `shadow` (default, logs only), `on` (acts), `off` (skips it, and with it the whole night's work: grouping, routine expiry and episodes). Runs nightly at 04:00 and at write time inside the memory pass.
+**Status:** shadow (review by 2026-10-26, judged on closes and questions that match the owner's own review). `COMPANION_CONSOLIDATE`: `shadow` (default, logs only), `on` (acts), `off` (skips this check and the write-time pair check; the rest of the night's work still runs). Runs nightly at 04:00 and at write time inside the memory pass.
 
 ## How it works
 

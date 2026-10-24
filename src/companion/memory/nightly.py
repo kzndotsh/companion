@@ -47,8 +47,9 @@ async def night(
     async def episodes() -> None:
         await write_closed(store, judge, rel, utc_now())
 
+    # The memory check is the only step behind its switch; the rest of the night's work always runs.
     steps: tuple[tuple[str, Callable[[], Awaitable[None]]], ...] = (
-        ("memory check", check),
+        *((("memory check", check),) if mode != "off" else ()),
         ("grouping", group),
         ("routine expiry", routine),
         ("episodes", episodes),
