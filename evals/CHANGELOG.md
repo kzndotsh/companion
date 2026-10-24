@@ -1748,3 +1748,14 @@ A mark of its own is easy to give, and after the history it is used and varied (
 `notes/own-mark`, eval flag `+mark`). It does not touch the copying: about 60% on these fixtures
 whatever is offered, so the copying is the model's habit with the mark last in view, not a lack of
 its own. Not wired into the bot yet.
+
+## 2026-10-24: Intimate routing on explicit messages only, checked on every past run
+
+Three marks since 2026-10-22 said intimate talk started too fast. Cause: two messages in a row read as
+intimate sent the reply to the roleplay talker and its explicit sheet, and light flirting reads as
+intimate. Every past run of such turns (12 runs, 55 messages with the one before each) was read for
+explicitness by three blind Claude judges (Haiku, Sonnet, Opus; 6, 6 and 7 explicit; agreed on
+53/55) with the `system/explicit-lead` question. Rule "route once a message is explicit, then carry
+on": 43 roleplay replies become 8, in the 3 runs that went explicit (one from its first message). The
+9 runs left with the everyday talker hold all three "too fast" marks and none of the favourites. No
+model calls: the judges were subagents.

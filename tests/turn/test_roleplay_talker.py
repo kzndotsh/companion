@@ -295,7 +295,7 @@ async def test_you_forgot_in_a_scene_looks_it_up_and_an_empty_look_up_adds_nothi
     assert "holds nothing on it" not in card
 
 
-async def test_a_first_flirty_line_gets_the_everyday_talker_and_the_next_one_routes(
+async def test_flirting_stays_with_the_everyday_talker_until_a_message_is_explicit(
     store: Store,
 ) -> None:
     everyday, scene = Talker("everyday"), Talker("scene")
@@ -312,7 +312,13 @@ async def test_a_first_flirty_line_gets_the_everyday_talker_and_the_next_one_rou
     assert (len(everyday.seen), len(scene.seen)) == (1, 0)
     assert "keep this reply free" not in everyday.seen[0].card  # not held: no floor note
     await handle(convo, SESSION, "come closer then", "test", NOW + timedelta(minutes=1))
-    assert (len(everyday.seen), len(scene.seen)) == (1, 1)
+    assert (len(everyday.seen), len(scene.seen)) == (2, 0)  # a run of flirting is not under way
+    convo.judge.explicit = True  # type: ignore[union-attr]
+    await handle(convo, SESSION, "take it off", "test", NOW + timedelta(minutes=2))
+    assert (len(everyday.seen), len(scene.seen)) == (2, 1)
+    convo.judge.explicit = False  # type: ignore[union-attr]
+    await handle(convo, SESSION, "mm yes", "test", NOW + timedelta(minutes=3))
+    assert (len(everyday.seen), len(scene.seen)) == (2, 2)  # under way: it carries on
 
 
 async def test_a_push_back_in_a_scene_is_answered_by_the_everyday_talker_with_a_note(

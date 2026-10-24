@@ -93,10 +93,10 @@ def choose(  # noqa: PLR0911, PLR0913  (one rule per route, kept in one place)
 ) -> Route:
     """The talker for this turn and why. `judged_age_coded` is None when the judge could not read
     the turn, which keeps it on the everyday talker too. Intimate talk goes to the roleplay talker
-    only once it is `under_way` (their message before was intimate too, or this one is explicit):
-    a first flirty line gets the everyday talker, so a kiss emoji does not start a scene. When they
-    push the flirting or the scene back (`declined`, read by `system/brush-off`), the everyday
-    talker answers that turn."""
+    only once it is `under_way` (their message before was already answered by it, or this one
+    is explicit): flirting, however long, gets the everyday talker, so it never starts a scene.
+    When they push the flirting or the scene back (`declined`, read by `system/brush-off`), the
+    everyday talker answers that turn."""
     if not (in_play or (allow_intimate and intimate)):
         return Route(Talker.EVERYDAY, None)
     if judged_age_coded:

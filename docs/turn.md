@@ -22,8 +22,8 @@ the driver, `handle(convo, ...)`).
   on or off; `uv run companion mood --replay 7` rebuilds it over past messages from the same rules.
 - Which talker answers is chosen in code (`core/turn/floor.py`, ADR 0017): the roleplay talker for a
   pretend scene, or for intimate talk when `COMPANION_ROUTE_INTIMATE=on` once it is under way (their
-  message before was intimate too, or this one is explicit by `system/explicit-lead`; a first flirty
-  line gets the everyday talker), unless the listening judge reads the turn as age-coded or could not
+  message before was already answered by the roleplay talker, or this one is explicit by
+  `system/explicit-lead`; flirting, however long, stays with the everyday talker), unless the listening judge reads the turn as age-coded or could not
   read it (a fallback model's reading counts as unread). That floor is code, not a setting. A held
   turn gets a note, its reply is read by an intimate check and redrawn (the last draw sees only their
   message), and if all read intimate nothing is sent; no reply is written by code. The roleplay talker

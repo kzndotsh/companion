@@ -75,7 +75,7 @@ Today it is reached through Telegram, its only integration for now.
 **Safety and models**
 
 - **Routes roleplay to a second model.** Pretend scenes, and intimate talk if the operator allows it
-  (once it is under way or explicit; a first flirty line stays with the everyday model), go to a less
+  (once one of their messages is explicit; flirting stays with the everyday model), go to a less
   restrictive model, above an age floor in code that no setting changes
   ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
 - **Checks its own replies.** A reply with a known habit (an em dash, an AI disclaimer nobody asked for,

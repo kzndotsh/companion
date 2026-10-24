@@ -103,18 +103,16 @@ async def _declines(c: Conversation, t: Turn) -> bool:
 
 
 def _intimate_before(c: Conversation, t: Turn) -> bool:
-    """Whether their message before this one was read as intimate, or answered by the roleplay
-    talker: intimate talk already under way."""
+    """Whether their message before this one was answered by the roleplay talker: intimate talk
+    already under way. Flirting before it does not count, since a run of flirty lines reads as
+    intimate (2026-10-24); only an explicit message starts it, and then it carries on."""
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     if not theirs:
         return False
-    for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
-        if d.has_key("route") and routed_to_roleplay(d):
-            return True
-        labels = d.detail.get("labels") if d.has_key("listening") and d.detail else None
-        if isinstance(labels, dict) and labels.get("intimate") is True:
-            return True
-    return False
+    return any(
+        d.has_key("route") and routed_to_roleplay(d)
+        for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id)
+    )
 
 
 async def _explicit(c: Conversation, t: Turn) -> bool:
