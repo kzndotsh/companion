@@ -12,7 +12,7 @@ The command looks at turns since a start time (`--days`, default 7) that have a 
 
 The judge answers with five fields: `callback`, `memories` (labels), `accurate`, `fitting` and `forced`. A reply landed only when it is a callback, accurate, fitting and not forced. An answer is unreadable when a flag is not a boolean, when `memories` is not a list, or when it claims a callback but names no known label. Unlabelled names are dropped.
 
-Spend is capped (`--cap`, default 0.10 dollars). Before each turn the loop stops if the spend so far has reached the cap. A call that raises, or an unreadable answer, skips that turn with a log line and leaves it for the next run. A verdict is stored once per turn, append-only, with the judge model and the prompt version, so a later run pays only for new turns. The call goes straight through `extract` with `purpose("callbacks")`, not through the judge runner in `loops/ask.py`.
+Spend is capped (`--cap`, default 0.10 dollars). Before each turn the loop stops if the spend so far has reached the cap. A call that raises, or an unreadable answer, skips that turn with a log line and leaves it for the next run. A verdict is stored once per turn, append-only, with the judge model and the prompt version, so a later run pays only for new turns. The call goes through the judge runner (`loops/ask.py`, purpose `callbacks`, a 30 s limit). The run's cap counts the cost of readable answers only; the spend ledger records every call.
 
 The report shows replies checked, callbacks found, and how many landed, were wrong (not accurate) or were forced or out of place. It then lists up to the last 8 callbacks, each with a clipped reply and the first memory it used.
 

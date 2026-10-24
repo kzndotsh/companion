@@ -1,4 +1,5 @@
-"""Judging new replies for callbacks, within a spend cap. Each turn is judged once."""
+"""Judging new replies for callbacks, within a spend cap. Each turn is judged once, through the
+judge runner; a failed or unreadable read leaves the turn for the next run."""
 
 from __future__ import annotations
 
@@ -8,19 +9,19 @@ from datetime import datetime
 from companion.core.card import memories_from_card
 from companion.core.clock import utc_now
 from companion.core.extractor import Extractor
-from companion.core.spend import purpose
 from companion.core.types import RelationshipId
 from companion.features.callbacks.logic import (
     PROMPT,
     SCHEMA,
-    SYSTEM,
     build_prompt,
     label,
     parse,
 )
+from companion.loops.ask import Judge, ask
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.callbacks")
+TIMEOUT_SECONDS = 30.0  # a command, not a turn: no reply waits on it
 
 
 async def check_new(
@@ -35,19 +36,18 @@ async def check_new(
         labelled = label(memories_from_card(turn.card))
         if not labelled:
             continue
-        try:
-            with purpose("callbacks"):
-                result = await extractor.extract(
-                    SYSTEM, build_prompt(turn.recent, labelled, turn.reply), SCHEMA
-                )
-        except Exception as err:  # a refused or failed call skips the turn, never the run
-            log.warning("callback check on %s failed; left for the next run: %r", turn.turn_id, err)
+        judge = Judge(
+            "callbacks",
+            PROMPT,
+            SCHEMA,
+            lambda data, labelled=labelled: parse(data, labelled),
+            timeout=TIMEOUT_SECONDS,
+            unread="the turn is left for the next run",
+        )
+        got = await ask(extractor, judge, build_prompt(turn.recent, labelled, turn.reply))
+        if got is None:
             continue
-        spent += result.cost_usd
-        check = parse(result.data, labelled)
-        if check is None:
-            log.debug("callback check on %s was unreadable; left for the next run", turn.turn_id)
-            continue
-        store.add_callback_check(rel, turn.turn_id, check, result.model, PROMPT.ref, utc_now())
+        spent += got.cost_usd
+        store.add_callback_check(rel, turn.turn_id, got.value, got.model, got.ref, utc_now())
         judged += 1
     return judged, spent
