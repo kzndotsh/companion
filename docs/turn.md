@@ -37,7 +37,7 @@ the driver, `handle(convo, ...)`).
   (`core/frames.py` `SCENE_GAP`).
 - Replies are checked before they are sent (`core/recheck.py`): on an ordinary turn (not serious,
   not a scene) an em dash, an AI disclaimer nobody asked for, the clock line or a tag copied from the
-  system block, the stock "that sounds X, especially when" line, the stage direction "a beat" and
+  system block, the stock "X, especially when" or "X, even when" line, the stage direction "a beat" and
   markdown that shows raw (outside scenes), by code, and a joke bolted onto an ordinary message by the
   quip judge; in a scene or on a serious turn only the code checks. On a fail the same model is asked
   once more (twice if the redraw still has an em dash) and the last reply goes out whatever it is; the

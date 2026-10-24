@@ -46,11 +46,14 @@ _COPIED_CARD = re.compile(
 )
 
 
-# A stock sympathy line: "that sounds exhausting, especially when ..." (flagged 2026-10-20; 13 of
-# 1,056 replies so far, nearly all of them this shape).
+# A stock line: an evaluation, then ", especially when/with/the ..." or ", even when ..." ("that
+# sounds exhausting, especially when ..."; flagged 2026-10-20 and 10-22). The first version caught
+# only "that sounds X, especially when" (13 of 1,048 replies) and let the same move through in
+# other words; this one catches 38 (3.6%), nearly all that move. "Even if" and "especially piano"
+# are left.
 _ESPECIALLY = re.compile(
-    r"\b(?:that|it|this)(?:['\u2019]s| is| sounds| must be| feels| can feel| would be)\b"
-    r"[^.!?\n]{0,70}?,\s*especially\s+(?:when|while|if|since|with|after|because|on)\b",
+    r",\s*(?:especially\s+(?:when|while|if|since|with|after|because|on|the|that|this|for)"
+    r"|even\s+when)\b",
     re.IGNORECASE,
 )
 
@@ -75,7 +78,7 @@ def code_checks(reply: str, said: str = "", *, scene: bool = False) -> list[str]
     if _COPIED_CARD.search(reply):
         failed.append("the clock line or a tag copied from the system block")
     if _ESPECIALLY.search(reply):
-        failed.append("the stock 'that sounds X, especially when' line")
+        failed.append("the stock 'X, especially when' line")
     if _A_BEAT.search(reply):
         failed.append("the stage direction 'a beat'")
     if not scene and _MARKDOWN.search(reply):

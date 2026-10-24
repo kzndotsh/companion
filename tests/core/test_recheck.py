@@ -54,11 +54,14 @@ def test_talking_about_the_time_is_fine() -> None:
 
 
 def test_the_stock_especially_line_is_caught_and_plain_uses_are_not() -> None:
-    assert code_checks("that sounds exhausting, girl, especially when you're tired") == [
-        "the stock 'that sounds X, especially when' line"
-    ]
+    stock = ["the stock 'X, especially when' line"]
+    assert code_checks("that sounds exhausting, girl, especially when you're tired") == stock
+    assert code_checks("that fear makes sense, especially with something this tangled") == stock
+    assert code_checks("that sounds so good, especially the tiny shops") == stock
+    assert code_checks("free food wins, even when the fish isn't your favorite") == stock
     assert code_checks("ugh, that's the worst") == []
     assert code_checks("i like jazz, especially piano") == []
+    assert code_checks("what are you looking forward to, even if it's small?") == []
 
 
 def test_a_beat_as_a_stage_direction_is_caught_but_not_a_beat_in_music() -> None:

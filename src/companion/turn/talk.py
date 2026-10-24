@@ -81,7 +81,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     checks run, and only a resample is logged."""
     severity = heard[0].severity if heard is not None else None
     scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
-    code_only = scene or severity == RECHECK_SERIOUS
+    code_only = scene or (severity is not None and severity >= RECHECK_SERIOUS)
     if not c.resample:
         return reply
     if not reply.text.strip():

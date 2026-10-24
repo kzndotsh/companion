@@ -125,7 +125,7 @@ async def test_a_serious_turn_gets_the_code_checks_but_never_the_joke_judge(stor
     talker = Talker("that sounds hard, especially when you're tired", PLAIN)
     assert await _say(store, talker, judge) == PLAIN
     assert judge.quip_calls == 0
-    assert _reasons(store) == ["resampled: the stock 'that sounds X, especially when' line"]
+    assert _reasons(store) == ["resampled: the stock 'X, especially when' line"]
     clean = Talker(JOKE)
     assert (
         await _say(store, clean, Judge(2, joke=True)) == JOKE
@@ -150,3 +150,11 @@ async def test_the_third_draw_is_sent_whatever_it_is(store: Store) -> None:
     talker = Talker("a—b", "c—d", "e—f")
     assert await _say(store, talker, Judge()) == "e—f"
     assert talker.calls == 3
+
+
+async def test_an_acute_turn_gets_the_code_checks_too(store: Store) -> None:
+    judge = Judge(3, joke=True)
+    talker = Talker("i hear you—please stay with me", PLAIN)
+    assert await _say(store, talker, judge) == PLAIN
+    assert judge.quip_calls == 0
+    assert _reasons(store) == ["resampled: an em dash"]

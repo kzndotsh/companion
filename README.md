@@ -79,7 +79,7 @@ Today it is reached through Telegram, its only integration for now.
   restrictive model, above an age floor in code that no setting changes
   ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
 - **Checks its own replies.** A reply with a known habit (an em dash, an AI disclaimer nobody asked for,
-  the clock line copied from its own notes, the stock "that sounds X, especially when" line, the stage
+  the clock line copied from its own notes, the stock "X, especially when" or "X, even when" line, the stage
   direction "a beat", markdown that shows raw in a chat, and on ordinary turns a joke bolted onto an
   ordinary message) is drawn once more, twice if an em dash survives, and so is an empty reply.
   Nothing is ever edited.
