@@ -2,7 +2,7 @@
 
 A light nudge when they step away and stay gone much longer than they said, the way a friend might tease about a long shower. It exists so the owner can see how the looser rule behaves, so it only drafts and records.
 
-**Status:** shadow (review by 2026-10-24, judged on drafts that do not read needy, at most two a day). Switch: `COMPANION_INITIATIVE` (`shadow` default, `off`), which stops only the tick. Reading whether they stepped away runs beside the turn whatever it says, and the nudge is drafted on the 15-minute tick. Nothing is ever sent.
+**Status:** shadow (review by 2026-10-24, judged on drafts that do not read needy, at most two a day). Switch: `COMPANION_INITIATIVE` (`shadow` default, `off`). `off` stops both the read beside the turn of whether they stepped away and the 15-minute tick that drafts the nudge. Nothing is ever sent.
 
 ## How it works
 

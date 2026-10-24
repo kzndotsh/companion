@@ -13,7 +13,8 @@ There are two ways it can bring up something the person mentioned:
   a note on a casual turn, so the companion asks about it naturally. This is live, and it is part of
   open loops.
 - **Unprompted, by reaching out.** A tick every 15 minutes decides whether to send a message first.
-  This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`).
+  This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`). `off` also stops the
+  read of whether they stepped away, which only feeds nudges; the note in the chat is not affected.
 
 The two never double up. A plan brought up in the chat is marked asked, so it is never also a
 reach-out.

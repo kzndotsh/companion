@@ -132,7 +132,7 @@ async def away_in_turn(
     "gotta run" is exactly the message to read, and the judge tells a goodbye apart."""
     del card
     serious = heard is None or heard[0].severity >= RECHECK_SERIOUS
-    if c.judge is None or serious or in_scene is not Frame.REAL:
+    if not c.initiative or c.judge is None or serious or in_scene is not Frame.REAL:
         return
     got = await ask(c.judge, AWAY_JUDGE, f"USER: {t.text}")
     if got is None or got.value.away is None:
