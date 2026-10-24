@@ -76,6 +76,7 @@ def _variants(specs: list[str]) -> list[Variant]:
                 spec.tags,
                 spec.tags_notes,
                 lore=spec.lore,
+                mark=spec.mark,
                 tail=character.scene_reminder if character is not None and spec.roleplay else "",
             )
         )

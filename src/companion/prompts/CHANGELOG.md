@@ -599,6 +599,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/mood-cozy v1** (superseded). The cozy line from ADR 0016 (relaxed, warm, unhurried, a bit affectionate, a bit shorter), shown by the `+mood-cozy` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
 - **notes/mood-cozy v2** (candidate, eval only; current). Describes the behaviour without the word "cozy", and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.
 
+## notes/own-mark
+- **notes/own-mark v1** (current, behind `COMPANION_MARKS`, off until measured). New. Code picks one of its own emoticons or kaomoji (never one in their message, never one in its last six replies) and offers it: on every turn where their message has an emoticon, and on about one casual turn in four otherwise. The owner's flags: it copied their :3 and :P (30% of replies after one, 1% otherwise); a note against copying and a list in the character sheet did not stop it (`evals/CHANGELOG.md`). `features/marks`.
+
 ## notes/mood-flat
 - **notes/mood-flat v1** (superseded). The flat line from ADR 0016 (shorter and plainer, no emoji, never asks to be cheered up), shown by the `+mood-flat` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
 - **notes/mood-flat v2** (candidate, eval only; current). "Lower energy than usual" instead of "flat", and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.

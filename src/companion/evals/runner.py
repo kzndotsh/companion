@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import re
+import uuid
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
@@ -23,6 +24,8 @@ from companion.core.turn.length import length_target
 from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
 from companion.evals.judge import grade, grade_empathy
+from companion.features.marks.logic import note as mark_note
+from companion.features.marks.logic import pick
 from companion.turn.quip import judge_quip
 
 CONCURRENCY = 4
@@ -49,6 +52,7 @@ class Variant:
     tags_notes: bool = False  # only the clock and the notes in tags; memory stays as it is
     lore: bool = False  # show the fixture's own tastes as the lore note (ADR 0020)
     tail: str = ""  # a character's scene reminder after the history, as the bot sends it in scenes
+    mark: bool = False  # offer one of its own emoticons, a fresh pick on every request
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,6 +101,7 @@ def request_for(
     lore: str | None = None,
 ) -> TalkerRequest:
     messages = list(base.messages)
+    tail = variant.tail
     if variant.history is not None:
         messages = messages[-variant.history :]
     if not variant.keep_card:
@@ -108,6 +113,10 @@ def request_for(
         card = f"{card}\n{note}" if card else note
     if variant.echo and (echo := echo_note(messages[-1].content)):
         card = f"{card}\n{echo}" if card else echo
+    if variant.mark:
+        mine = [m.content for m in messages[:-1] if m.role == "assistant"]
+        if (mark := pick(uuid.uuid4().hex, messages[-1].content, mine)) is not None:
+            tail = f"{tail}\n{mark_note(mark)}" if tail else mark_note(mark)
     if variant.listen and listening:
         card = f"{card}\n{listening}" if card else listening
     if variant.lore and lore:
@@ -117,9 +126,7 @@ def request_for(
         card = f"{card}\n{line}" if card else line
     if variant.tags or variant.tags_notes:
         card = tagged(card, memory=variant.tags)
-    return TalkerRequest(
-        prefix=variant.prefix, messages=tuple(messages), card=card, tail=variant.tail
-    )
+    return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card, tail=tail)
 
 
 @dataclass(frozen=True, slots=True)

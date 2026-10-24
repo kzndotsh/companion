@@ -1728,3 +1728,23 @@ rules and qualifiers. Plain persona, gpt-6-luna, all 185 fixtures (public and lo
 Read as: the examples and reasons in v41 are not padding; without them the length rule loosens.
 Dropped. Rerun: `uv run companion eval --variants v41.md,v44.md --samples 4 --cap 0.3`, then pair
 two samples per scripted fixture blind for the judges.
+
+## 2026-10-23: Offering a mark of its own does not stop it copying theirs
+
+The owner's flag, raised four times: it copies their :3, :P, xD (30% of real replies after one, 1%
+otherwise), and on its own uses emoji, almost never a text emoticon. Tried at the root, not as a
+redraw: give it marks of its own. Gpt-6-luna, v41, the four copying fixtures (20 samples) and eight
+everyday ones (8 samples), with the owner's character unless said; about $0.05 in all.
+
+| | copied theirs | used a mark of its own | different marks |
+|---|---|---|---|
+| sheet as is | 46/80 | 0/80 | 0 |
+| sheet listing her own marks (`ani-emo`) | about the same, worse on the real turn | half of everyday replies | mostly one |
+| code offers one mark, note in the system block | 53/80 | 10/80 | 6 |
+| code offers one mark, note after the history | 52/80 | 66/80 | 20 |
+| plain persona, note in the system block | 67/80 (61 without) | 6/80 | 3 |
+
+A mark of its own is easy to give, and after the history it is used and varied (`features/marks`,
+`notes/own-mark`, eval flag `+mark`). It does not touch the copying: about 60% on these fixtures
+whatever is offered, so the copying is the model's habit with the mark last in view, not a lack of
+its own. Not wired into the bot yet.

@@ -41,6 +41,7 @@ class Spec:
     tags: bool = False
     tags_notes: bool = False
     lore: bool = False
+    mark: bool = False  # offer one of its own emoticons (`features/marks`), on every request
 
     @property
     def label(self) -> str:
@@ -53,6 +54,7 @@ class Spec:
             + ("+listen" if self.listen else "")
             + (f"+as-{self.character}" if self.character else "")
             + ("+echo" if self.echo else "")
+            + ("+mark" if self.mark else "")
             + (f"+mood-{'.'.join(self.mood)}" if self.mood else "")
             + ("+resample" if self.resample else "")
             + ("+roleplay" if self.roleplay else "")
@@ -73,6 +75,7 @@ SWITCHES = (
     "len",
     "listen",
     "echo",
+    "mark",
     "resample",
     "roleplay",
     "tags",
@@ -114,7 +117,7 @@ def parse_spec(text: str) -> Spec:
     if not ok:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional +nocard, +hN, +low, +medium,"
-            " +high, +len, +listen, +echo, +mood-STATE, +resample, +roleplay, +as-CHARACTER,"
+            " +high, +len, +listen, +echo, +mark, +mood-STATE, +resample, +roleplay, +as-CHARACTER,"
             " +cardN or +cardall, +histN, +tags, +tagsnotes, +lore"
             " and @model"
         )
@@ -137,6 +140,7 @@ def parse_spec(text: str) -> Spec:
         "tags" in on,
         "tagsnotes" in on,
         lore="lore" in on,
+        mark="mark" in on,
     )
 
 
