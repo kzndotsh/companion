@@ -61,7 +61,7 @@ async def nightly(  # noqa: PLR0913
     *,
     mode: str,
 ) -> Night:
-    checked = store.checked_memories(rel)
+    checked = store.checked_memories(rel, CHECK.ref)  # a new version reads every memory again
     support = store.last_support(rel)
     labels = store.belief_labels(rel)
     everyday = {

@@ -74,3 +74,20 @@ async def test_out_of_date_is_a_question_and_a_young_memory_waits(
     night = await nightly(store, judge, REL, LATER, UTC, mode="on")
     assert (night.closed, night.questions) == (0, 1)
     assert [c.belief_id for c in store.unanswered_checks(REL, ["out_of_date"])] == ["spill"]
+
+
+async def test_a_new_version_of_the_check_reads_every_memory_again(
+    spill: tuple[Store, Belief], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import dataclasses  # noqa: PLC0415
+
+    import companion.features.consolidate.run as run  # noqa: PLC0415
+
+    store, _ = spill
+    judge = Judge("keep")
+    await nightly(store, judge, REL, LATER, UTC, mode="shadow")
+    await nightly(store, judge, REL, LATER + timedelta(days=1), UTC, mode="shadow")
+    assert judge.calls == 3  # read once (three reads), not again under the same version
+    monkeypatch.setattr(run, "CHECK", dataclasses.replace(run.CHECK, version="v99"))
+    await nightly(store, judge, REL, LATER + timedelta(days=2), UTC, mode="shadow")
+    assert judge.calls == 6
