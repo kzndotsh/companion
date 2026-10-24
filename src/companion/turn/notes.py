@@ -23,6 +23,7 @@ from companion.core.turn.listening import PROMPT as LISTEN_PROMPT
 from companion.core.turn.listening import listening_note, repair_note, rude_note
 from companion.core.turn.listening import render_reason as render_listening
 from companion.core.turn.ownup import owned_note
+from companion.core.turn.questions import question_note
 from companion.core.types import (
     Frame,
     Json,
@@ -188,6 +189,21 @@ def _owned(m: Moment, so_far: Offered) -> Offer:
     return Offer(tail=(note,) if note else ())
 
 
+# Notes that ask them something themselves: with one of these the turn's question is the point.
+ASKING = ("check-in", "name", "loop")
+
+
+def _questions(m: Moment, so_far: Offered) -> Offer:
+    """When its last replies were all questions, a note to ask nothing this time: outside a scene,
+    not on a serious turn, and not when another note asks them something. After the history."""
+    serious = m.heard is not None and m.heard[0].severity >= SERIOUS
+    if m.in_scene is not Frame.REAL or serious or any(so_far[n].lines for n in ASKING):
+        return Offer()
+    replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]
+    note = question_note(replies)
+    return Offer(tail=(note,) if note else ())
+
+
 def _recalled(m: Moment, _: Offered) -> Offer:
     recalled = m.looked.recalled
     if recalled is None:
@@ -260,6 +276,7 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "check-in": _check_in,
     "hold": _hold,
     "brush-off": _brush,
+    "questions": _questions,
 }
 
 # Every note, in the order it reaches the system block. A source sees what the ones before it
@@ -286,6 +303,7 @@ ORDER: tuple[str, ...] = (
     "lore",
     "mark",
     "reminder",
+    "questions",
 )
 
 

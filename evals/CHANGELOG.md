@@ -1790,3 +1790,18 @@ and 100 unmarked replies, $0.03: right 88% of the times it said generic (6 flags
 62% of the wholly generic. The flagged reply itself was caught 3 of 3. Shipped: a generic reaction is
 drawn once more on ordinary turns. Not yet measured: whether the redraw comes back specific; the
 recheck decision keeps the first reply, so the logs can tell.
+
+## 2026-10-24: After three questions in a row, a note to ask none breaks the run
+
+30 real everyday turns from 2026-10-15 on that came after three or more question replies in a row,
+replayed on the plain persona v41 and `openai/gpt-6-luna`, one draw without and one with the note
+after the history (same history and card as sent; about $0.02 a run). Asked a question: 14/30
+without; 1/30 with a first wording ("ask nothing: react, or add a thought"), 0/30 with the shipped
+`notes/question-run` v1 ("ask none, but still give them something to answer"). Two blind judges
+(Claude Haiku and Sonnet, as subagents) chose the reply a friend would rather get. First wording:
+preferred 11/30 and 15/30, and read as a dead end far more often, so it was dropped. Shipped
+wording: preferred 16/30 and 17/30, within noise, and a dead end in 3/30 against 5 and 7 of 30
+without it (dead end counted as nothing natural to answer, a question not required). So it stops
+the run without making the reply worse; whether it reads better is not shown. Rerun: the scratch
+script picks the turns from the ledger by the same rule (questions counted by a `?`).
+

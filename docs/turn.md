@@ -78,13 +78,17 @@ as bracketed text (`core/prompt/sections.py`).
 The notes are chosen by code from models' labels, never written by a model (ADR 0014). They go in a
 fixed order (`ORDER` in `turn/notes.py`), and the order is checked when the bot starts. A few lines
 go after the history instead, as a system message, because there they change behaviour and in the
-system block they did not (measured twice). These are the owned-it note, the character's scene
-reminder and the offer of an emoticon of its own. Whatever is sent after the history is logged with
+system block they did not (measured twice). These are the owned-it note, the question-run note,
+the character's scene reminder and the offer of an emoticon of its own. Whatever is sent after the history is logged with
 the turn, so a replay rebuilds it.
 
 When one of its last two replies owned a slip ("my bad", "I got that wrong"), the next turn outside a
 scene gets `notes/owned-it` after the history: that was enough, no more apologies or self-blame
 (`core/turn/ownup.py`).
+
+When each of its last three replies asked them a question, the next turn outside a scene, not
+serious and with no other note asking them something gets `notes/question-run` after the history:
+ask nothing this time, but leave them something to answer (`core/turn/questions.py`).
 
 ## Checking the reply
 

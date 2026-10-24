@@ -9,6 +9,8 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.floor import HOLD_NOTE
 from companion.core.turn.ownup import NOTE as OWNED_NOTE
+from companion.core.turn.questions import NOTE as QUESTION_NOTE
+from companion.core.turn.questions import RUN
 from companion.features.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
@@ -117,6 +119,26 @@ async def test_after_it_owns_a_slip_the_next_turn_says_enough_after_the_history(
     assert OWNED_NOTE.text not in sent.card  # in the system block it moved nothing
     turn = store.history_before(REL, later + timedelta(minutes=1), 4)[-2].turn_id
     assert replay_file(tmp_path / "rel.sqlite", turn).matched  # replay rebuilds what came after
+
+
+class _Asking(Talker):
+    async def reply(self, request: TalkerRequest) -> Reply:
+        await super().reply(request)
+        return Reply(text="ooh, which one?", model="fake", latency_ms=1)
+
+
+@pytest.mark.parametrize(("severity", "noted"), [(0, True), (2, False)])
+async def test_after_a_run_of_questions_the_next_turn_asks_none_unless_it_is_serious(
+    store: Store, severity: int, *, noted: bool
+) -> None:
+    for i in range(RUN):
+        convo = Conversation(store, _Asking(), PREFIX, REL, judge=Judge())
+        await handle(convo, SESSION, f"hey {i}", "t", NOW + timedelta(minutes=i))
+    talker = Talker()
+    convo = Conversation(store, talker, PREFIX, REL, judge=Judge(severity=severity))
+    await handle(convo, SESSION, "a movie", "t", NOW + timedelta(minutes=RUN))
+    assert (talker.seen[0].tail == QUESTION_NOTE.text) == noted
+    assert QUESTION_NOTE.text not in talker.seen[0].card
 
 
 @pytest.mark.parametrize("mode", ["on", "shadow"])
