@@ -1,28 +1,67 @@
 # Reminders (J50)
 
-Reminders and check-ins they ask for, one-off only, live (`COMPANION_REMINDERS`, on unless `off`).
+A reminder or check-in they ask for in the chat ("remind me at 8 to take the dog out", "check in on me in a few days"), sent later in the companion's own voice. One-off only. It exists so a plain request lands at the time they meant, with code and not the model owning the clock.
+
+**Status:** live. Switch: `COMPANION_REMINDERS` (`on` default, `off`). Runs before the reply (a look-up and a note), and on a 60-second timer that sends what is due.
+
+## How it works
+
+**Reading a request.** Before the reply, code looks for reminder words in their message (remind, reminder, check in on me, ping me, text me, don't let me forget, ask me how, and similar), or notes that the companion's last reply asked them when. Only then does it ask a small model to read the message (`system/reminder-read`, 8 s limit, one try, with the last 4 messages for context). A fallback model's answer counts as unread. A failed or unreadable read means no reminder this turn and the reply goes on as usual. The model reads slots and never sets the clock: whether it is a set, a cancel or neither, a reminder or a check-in, their words for the thing, and the parts of when (day words, hour and minute, am or pm if said, part of the day, minutes from now, whether it repeats). The read runs under the look-up deadline of the turn.
+
+**Working out the time.** Code turns the slots into a time in the machine's named zone (`named_zone`, so a time after a clock change keeps its wall time). The rules:
+
+- Minutes from now are added to now. Otherwise the day is today, tomorrow, a number of days on (3 if none was said), the next time a weekday comes, or a date.
+- A part of the day has a fixed hour: morning 9:00, afternoon 15:00, evening 18:00, night 20:00. "Tonight" alone is 20:00.
+- A bare hour is the next one still to come. It asks when both the morning and the evening one are still ahead today, or on another day.
+- A time with no day that has passed today means tomorrow.
+- A reminder with no time asks "what time".
+- A check-in with no time is set at a time picked once, at random, from five-minute marks between 16:00 and 20:00, at least 30 minutes ahead. If that window has gone and no day was said, it moves to tomorrow's. It is told back only as the part of the day ("Thursday evening").
+- A vague time code filled in ("in a few days", a check-in with no hour) is said back with an offer to change it.
+
+It asks instead of guessing for a bare "at 8" when both are still ahead, "next friday" (this one or the next), a time already gone, a time past 60 days, and a repeating request ("only one-off reminders can be set for now, so offer to set just the next one"). A cancel matches pending reminders that share a word with what they named (words under 3 letters and filler aside), or the only pending one when nothing is named. No match means no note.
+
+**The note.** One note after the other notes (it is the last in order, in the system block) says what happened: set, with the time code worked out, or what to ask, or that one was cancelled. The reply confirms in its own words. The decision is logged as `reminders: set`, `reminders: asked them when` (also the key that marks the next answer as worth reading) or `reminders: cancelled`, with the prompt `name@version`. Every reminder is stored with their quote, the due time in UTC, the local wall time and the zone. Its state is its newest event (`pending`, `claimed`, `sent`, `late`, `expired`, `cancelled`). Nothing is deleted.
+
+**Sending.** Every 60 seconds the timer picks up reminders that are due.
+
+- A pretend scene in progress holds them until it ends.
+- One that fell due before the bot started and is more than 2 hours late is let go, marked `expired` and logged.
+- A due one is claimed once in a single statement, so it cannot go out twice.
+- The everyday talker writes it with `system/reminder-send` as a tail after the history, with the clock line in the system block. If a code check fails (`code_checks` in `core/recheck.py`) it is drawn once more, and the second draw goes out whatever it is.
+- If the daily spend cap is reached, the talker cannot be asked, or it says nothing, their words go out marked (a reminder as the alarm clock emoji and the thing, a check-in as a short "how did it go" line). The reason is stored with the sent event.
+- A send that fails puts the reminder back to `pending` to try next minute.
+- A sent message is stored as the companion's own, once. One sent more than 5 minutes after its time is marked `late`.
+- It is logged as `reminders: sent` or `reminders: sent late`, with who wrote it and the prompt.
+
+**Never.** It never repeats a reminder, never guesses a vague time silently, and never lets the model pick the time.
+
+## Files
 
 | File | What |
 |---|---|
 | `logic.py` | pure: reading the parts of when, working out the time, the notes and the send instruction |
-| `run.py` | effects: the turn's look-up and note (`REMINDERS`), acting on a read, sending when due |
+| `run.py` | effects: the turn's look-up and note, acting on a read, sending when due (`REMINDERS`, `deliver_due`) |
 | `store.py` | its queries (the tables are in `store/sqlite/migrations/0026_reminders.sql`) |
 | `cli.py` | `companion reminders`, `--cancel ID` |
 
-Its prompts stay in `src/companion/prompts/` (`system/reminder-read`, `system/reminder-send`,
-`notes/reminder-*`), with every other prompt.
+## Prompts
 
-How it works:
+- `system/reminder-read`: reads a request into slots. A failed or unreadable answer means no reminder that turn.
+- `system/reminder-send`: the tail that tells the talker what to write when a reminder is due. If it fails, their words go out marked.
+- `notes/reminder-set`: says it was set, with the time in words.
+- `notes/reminder-ask`: says what to ask about the time.
+- `notes/reminder-cancelled`: says one was cancelled.
 
-Reminders they ask for are live, one-off only. A
-message with reminder words, or the answer when it just asked when, is read by `system/reminder-read`
-into their words for the thing and the parts of when; code works out the time in the machine's named
-zone (`named_zone`, so a time after a clock change keeps its wall time) and asks instead of guessing (a
-bare "at 8" with both still ahead, "next friday", a time gone, past sixty days, a repeating one). One
-note says it was set, with the time code worked out, or what to ask, or that one was cancelled. Every
-minute due ones are claimed once, written by the everyday talker with `system/reminder-send` as the tail,
-drawn once more on a code-check fail, and sent; their words go out marked when the talker fails or the
-cap is reached. A pretend scene holds them until it ends; one missed while the bot was down by over two
-hours is let go. A check-in with no time is set at a time picked once between 4 and 8 pm and confirmed
-only as the part of the day ("Thursday evening"). `companion reminders` lists them, `--cancel ID`
-drops one; `COMPANION_REMINDERS=off`.
+## Commands
+
+- `uv run companion reminders`: lists them, soonest first, with state, kind and what they said.
+- `uv run companion reminders --cancel ID`: drops a pending one (the first characters of its id are enough, and exactly one must match). It is recorded, not deleted.
+
+## Measured
+
+- 2026-10-21: `system/reminder-read` v1 on 41 made-up requests at a fixed time, 41/41 twice, including asks, cancels and 5 lines that must set nothing. The talker wrote 12 due messages, all short, all passed the code checks (`evals/CHANGELOG.md`).
+- 2026-10-21: a check-in with no time lands at a picked time between 4 and 8 pm, 41/41 again (`evals/CHANGELOG.md`).
+
+## Tests
+
+`tests/features/reminders/`
