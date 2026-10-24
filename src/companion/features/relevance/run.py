@@ -20,9 +20,8 @@ from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, 
 from companion.core.vectors import Embedder, nearest
 from companion.features.relevance.logic import GATE as RELEVANCE_GATE
 from companion.features.relevance.logic import LIVE as RELEVANCE_LIVE
-from companion.features.relevance.logic import PROMPT, SCHEMA, build_prompt, eligible, parse
+from companion.features.relevance.logic import PROMPT, SCHEMA, SHOWN, build_prompt, eligible, parse
 from companion.features.relevance.logic import SHADOW as RELEVANCE_SHADOW
-from companion.features.relevance.logic import SHOWN as RELEVANCE_SHOWN
 from companion.loops.ask import Judge, ask
 from companion.loops.current import Heard, Turn, decide, mark
 from companion.loops.embed import embed_missing
@@ -36,7 +35,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.relevance")
 TIMEOUT_SECONDS = 10.0
-SHOWN = 3
+LOGGED_NEAREST = 3  # nearest memories written to the decision, for reading the look-up later
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,8 +101,8 @@ async def look_up(  # noqa: PLR0913
             picked = got.value
             pick_cost, pick_model = got.cost_usd, got.model
     detail: dict[str, Json] = {
-        "nearest": [_row(b, on_card, s) for b, s in alone[:SHOWN]],
-        "nearest_in_context": [_row(b, on_card, s) for b, s in shortlist[:SHOWN]],
+        "nearest": [_row(b, on_card, s) for b, s in alone[:LOGGED_NEAREST]],
+        "nearest_in_context": [_row(b, on_card, s) for b, s in shortlist[:LOGGED_NEAREST]],
         "picked": [_row(b, on_card) for b in picked],
         "searched": len(pool),
         "embed_ms": embed_ms,
@@ -213,7 +212,7 @@ async def relevant_for_turn(
 def relevant_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     del so_far
     picked = cast("tuple[tuple[BeliefId, str], ...]", found or ())
-    picks = [claim for bid, claim in picked if bid not in m.on_card][:RELEVANCE_SHOWN]
+    picks = [claim for bid, claim in picked if bid not in m.on_card][:SHOWN]
     if not picks:
         return Offer()
     return Offer((RELEVANT_NOTE.render(items="\n".join(f"- {p}" for p in picks)),))
