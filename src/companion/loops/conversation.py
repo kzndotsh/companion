@@ -37,4 +37,5 @@ class Conversation:
     scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
     relevance: str = "shadow"  # on (picks shown when a memory is near), shadow or off (ADR 0018)
     reminders: bool = True  # reminders they ask for are read and set (J50)
+    marks: bool = False  # offer one of its own emoticons now and then (`features/marks`)
     episodes: str = "off"  # what they did together lately, when it bears: on, shadow or off (J12)

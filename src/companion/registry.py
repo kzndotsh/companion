@@ -10,6 +10,7 @@ from companion.features.guess.run import GUESS
 from companion.features.hooks.run import HOOKS
 from companion.features.knowing.run import KNOWING
 from companion.features.lore.run import LORE
+from companion.features.marks.run import MARKS
 from companion.features.mood.run import MOOD
 from companion.features.moves.run import MOVES
 from companion.features.names.run import NAMES
@@ -35,6 +36,7 @@ FEATURES: tuple[Feature, ...] = (
     GUESS,
     OPENLOOPS,
     LORE,
+    MARKS,
     REMINDERS,
     NUDGES,
     HOOKS,
