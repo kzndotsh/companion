@@ -10,6 +10,7 @@ never one they just used or one it used lately. Pure.
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Sequence
 from importlib.resources import files
 
@@ -29,6 +30,14 @@ MARKS: tuple[str, ...] = tuple(
 )
 
 
+def _used(mark: str, text: str) -> bool:
+    """Whether the mark stands on its own in the text: a word mark as a whole word, a symbol mark
+    not glued to other symbols, so ✧ inside (｡•̀ᴗ-)✧ is not ✧ used."""
+    edge = r"\b" if mark.isalnum() else ""
+    before, after = (edge, edge) if edge else (r"(?<![^\w\s])", r"(?![^\w\s])")
+    return re.search(before + re.escape(mark) + after, text) is not None
+
+
 def _draw(seed: str, n: int) -> int:
     """A number below n that depends only on the seed: the same turn always draws the same."""
     return int.from_bytes(hashlib.sha256(seed.encode()).digest()[:8], "big") % n
@@ -42,7 +51,7 @@ def offered(seed: str, theirs: str) -> bool:
 def pick(seed: str, theirs: str, recent: Sequence[str]) -> str | None:
     """One of its marks, never one in their message or its last RECENT replies; None if all are."""
     used = " ".join([theirs, *recent[-RECENT:]])
-    free = [m for m in MARKS if m not in used]
+    free = [m for m in MARKS if not _used(m, used)]
     return free[_draw(seed + ":mark", len(free))] if free else None
 
 
