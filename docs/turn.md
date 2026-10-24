@@ -97,7 +97,9 @@ A reply is checked before it is sent (`core/recheck.py`). Code catches these:
 - the stage direction "a beat"
 - markdown that would show raw, outside scenes
 
-On an ordinary turn, a small judge also catches a joke bolted onto an ordinary message. In a scene, or
+On an ordinary turn, a small judge also catches a joke bolted onto an ordinary message, and a canned
+generic reaction that could sit under any message ("that sounds so good", "X is always the best part",
+restating their point back as praise), in one call (`system/quip`). In a scene, or
 on a serious or acute turn, only the code checks run.
 
 When a check fails, the same model is asked once more, or twice if the redraw still has an em dash,

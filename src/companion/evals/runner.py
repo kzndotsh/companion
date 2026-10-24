@@ -195,7 +195,7 @@ async def run_eval(plan: Plan, models: Models) -> Results:
             ):
                 results.spent += checked[3]
                 cost += checked[3]
-                if checked[0] and (
+                if (checked[0].joke or checked[0].generic) and (
                     again := await _reply_with_retry(models.talker_for(v.model, v.effort), req)
                 ):
                     results.spent += again.cost_usd

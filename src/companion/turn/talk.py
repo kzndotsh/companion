@@ -13,7 +13,7 @@ from companion.core.frames import (
 )
 from companion.core.prompt.request import TalkerRequest
 from companion.core.recheck import DASHED as EM_DASH_CHECK
-from companion.core.recheck import QUIP, code_checks
+from companion.core.recheck import GENERIC, QUIP, code_checks
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.recheck import eligible as recheck_eligible
 from companion.core.talker import Reply, Talker
@@ -96,8 +96,10 @@ async def _recheck(  # noqa: PLR0913, PLR0917
         judged = await judge_quip(c.judge, t.text, reply.text)
         if judged is not None:
             detail = {"scorer": judged[1], "prompt": QUIP_PROMPT.ref}
-            if judged[0]:
+            if judged[0].joke:
                 failed.append(QUIP)
+            if judged[0].generic:
+                failed.append(GENERIC)
     mark(t, f"recheck: {', '.join(failed) or 'passed'}")
     again = None
     if failed:

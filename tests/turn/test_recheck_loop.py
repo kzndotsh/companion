@@ -36,8 +36,9 @@ class Talker:
 
 
 class Judge:
-    def __init__(self, severity: int = 0, *, joke: bool = False) -> None:
+    def __init__(self, severity: int = 0, *, joke: bool = False, generic: bool = False) -> None:
         self.severity, self.joke = severity, joke
+        self.generic = generic
         self.quip_calls = 0
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
@@ -57,7 +58,7 @@ class Judge:
             }
         elif "added_joke" in props:
             self.quip_calls += 1
-            data = {"added_joke": self.joke}
+            data = {"added_joke": self.joke, "generic": self.generic}
         return Extraction(data=data, model="j", cost_usd=0.0, latency_ms=1)
 
 
@@ -158,3 +159,10 @@ async def test_an_acute_turn_gets_the_code_checks_too(store: Store) -> None:
     assert await _say(store, talker, judge) == PLAIN
     assert judge.quip_calls == 0
     assert _reasons(store) == ["resampled: an em dash"]
+
+
+async def test_a_canned_generic_reaction_is_drawn_once_more(store: Store) -> None:
+    judge = Judge(0, generic=True)
+    talker = Talker("ooh, that sounds so good", PLAIN)
+    assert await _say(store, talker, judge) == PLAIN
+    assert _reasons(store) == ["resampled: a canned generic reaction"]

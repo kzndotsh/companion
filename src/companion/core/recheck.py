@@ -18,6 +18,7 @@ SERIOUS = 2
 EM_DASH = "—"
 DASHED = "an em dash"  # the reason a reply with one fails
 QUIP = "a joke bolted onto an ordinary message"
+GENERIC = "a canned generic reaction"
 
 
 def eligible(*, severity: int | None, in_scene: bool, reply: str) -> bool:

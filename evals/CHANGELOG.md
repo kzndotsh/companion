@@ -1774,3 +1774,19 @@ extended 16/16 in both cells, and the two last turns were extended 0 to 1 of 16 
 last turns had been answered by the roleplay talker, which did extend it; under the explicit-only
 routing of the same day they go to the everyday talker, which lets it go. Not shipped. Read as: the
 drag came mostly from the misrouting, and a placement change does nothing for it.
+
+## 2026-10-24: Canned generic reactions, counted and caught by the joke judge
+
+A mark called a reply generic: a canned verdict that agrees in general terms ("X is always the best
+part") before another question. Four readers (Claude Sonnet subagents) read all 1,057 everyday
+replies in full and marked every such line: 173 (16%), 18% before 2026-10-20 and 12% since; 27
+wholly generic. Shapes: restating their point as praise or validation 52, "that sounds + adjective"
+41, canned filler 19, "X is the best part / such a vibe" 13, praise then question 8, the rest comfort,
+platitudes and "glad you told me". Checked by eye on a sample; the readers were loose on "filler".
+
+A second label on the joke judge (`system/quip` v3, haiku 5.5) was scored against them on 100 marked
+and 100 unmarked replies, $0.03: right 88% of the times it said generic (6 flags on unmarked replies,
+5 of them comfort lines on serious turns where it never runs), and caught 46% of the marked ones,
+62% of the wholly generic. The flagged reply itself was caught 3 of 3. Shipped: a generic reaction is
+drawn once more on ordinary turns. Not yet measured: whether the redraw comes back specific; the
+recheck decision keeps the first reply, so the logs can tell.
