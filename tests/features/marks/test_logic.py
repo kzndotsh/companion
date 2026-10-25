@@ -29,6 +29,13 @@ def test_the_note_names_the_mark() -> None:
     assert "(╯°□°)╯︵ ┻━┻" in note("(╯°□°)╯︵ ┻━┻")
 
 
+def test_when_they_used_a_mark_the_note_names_it_as_theirs() -> None:
+    offer = note("(｡•̀ᴗ-)✧", "some chicken and tater tots :3")
+    assert ":3" in offer
+    assert "(｡•̀ᴗ-)✧" in offer
+    assert ":3" not in note("(｡•̀ᴗ-)✧", "some chicken and tater tots")
+
+
 def test_the_list_holds_the_kaomoji_as_written() -> None:
     assert "(╯°□°)╯︵ ┻━┻" in MARKS
     assert "¯\\_(ツ)_/¯" in MARKS

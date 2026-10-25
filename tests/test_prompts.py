@@ -15,6 +15,7 @@ PLACEHOLDERS = {
     "notes/recall": {"items"},
     "notes/relevant": {"items"},
     "notes/own-mark": {"mark"},
+    "notes/own-mark-theirs": {"mark", "theirs"},
     "notes/recent-times": {"items"},
     "notes/lore": {"items"},
     "notes/listening-trivial": {"examples"},

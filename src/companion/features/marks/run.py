@@ -1,6 +1,7 @@
 """Offering one of its own marks on a turn (owner's choice, 2026-10-23): sent after the history,
-where it is used (66 of 80 replies, 20 different marks); in the system block it was not. It does not
-stop it copying theirs. A casual turn only; logged with the mark offered once the turn is stored."""
+where it is used (66 of 80 replies, 20 different marks); in the system block it was not. When their
+message has a mark, the note names that one as theirs, which mostly stops it copying. A casual turn
+only; logged with the mark offered once the turn is stored."""
 
 from __future__ import annotations
 
@@ -19,7 +20,7 @@ def mark_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     mark = pick(str(t.turn), t.text, mine)
     if mark is None:
         return Offer()
-    return Offer(tail=(note(mark),), after=(lambda: decide(c, t, OFFERED, {"mark": mark}),))
+    return Offer(tail=(note(mark, t.text),), after=(lambda: decide(c, t, OFFERED, {"mark": mark}),))
 
 
 # One of its own emoticons now and then, never theirs (`COMPANION_MARKS`, on unless `off`).

@@ -116,7 +116,8 @@ def request_for(
     if variant.mark:
         mine = [m.content for m in messages[:-1] if m.role == "assistant"]
         if (mark := pick(uuid.uuid4().hex, messages[-1].content, mine)) is not None:
-            tail = f"{tail}\n{mark_note(mark)}" if tail else mark_note(mark)
+            offer = mark_note(mark, messages[-1].content)
+            tail = f"{tail}\n{offer}" if tail else offer
     if variant.listen and listening:
         card = f"{card}\n{listening}" if card else listening
     if variant.lore and lore:

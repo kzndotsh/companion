@@ -79,6 +79,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/mood-cozy` | note | the cozy mood line, shown when `COMPANION_MOOD=on` and cozy is among the strongest states (ADR 0016) | v2 |
 | `notes/mood-flat` | note | the flat mood line; measured, but the engine has no source for flat yet (waits for J6), so it is not shown | v2 |
 | `notes/own-mark` | note | one emoticon of its own offered by code, never one of theirs, `features/marks` | v1 |
+| `notes/own-mark-theirs` | note | the same offer when their message has a mark, naming that one as theirs to leave to them, `features/marks` | v1 |
 | `notes/mood-playful` | note | the playful mood line, shown when `COMPANION_MOOD=on` and playful is among the strongest states (ADR 0016) | v2 |
 | `notes/mood-tender` | note | the tender mood line, shown when `COMPANION_MOOD=on` and tender is among the strongest states (ADR 0016) | v2 |
 | `notes/trivial-reactions` | data | the pool of short reactions a minor-vent note draws three size examples from (T14) | v1 |

@@ -18,6 +18,7 @@ from companion.core.turn.habits import EMOTICON
 from companion.prompts import get
 
 NOTE = get("notes/own-mark")
+THEIRS_NOTE = get("notes/own-mark-theirs")  # when their message has a mark: named as theirs
 OFFERED = "mark: one of its own offered"
 EVERY = 4  # on a casual turn with no mark of theirs, one in this many is offered one
 RECENT = 6  # its replies a mark must not have been used in
@@ -55,5 +56,10 @@ def pick(seed: str, theirs: str, recent: Sequence[str]) -> str | None:
     return free[_draw(seed + ":mark", len(free))] if free else None
 
 
-def note(mark: str) -> str:
-    return NOTE.render(mark=mark)
+def note(mark: str, theirs: str = "") -> str:
+    """The offer. When their message has a mark, the note names it as theirs: offering one of its
+    own alone left it copying theirs in 14 of 40 replies, naming theirs too in 4 of 40."""
+    found = EMOTICON.search(theirs)
+    if found is None:
+        return NOTE.render(mark=mark)
+    return THEIRS_NOTE.render(theirs=found.group(0), mark=mark)

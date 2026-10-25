@@ -1805,3 +1805,14 @@ without it (dead end counted as nothing natural to answer, a question not requir
 the run without making the reply worse; whether it reads better is not shown. Rerun: the scratch
 script picks the turns from the ledger by the same rule (questions counted by a `?`).
 
+## 2026-10-24: Naming their emoticon as theirs mostly stops the copying
+
+Owner flag: after their :3 the reply had both :3 and the mark it was offered. On that turn, 12 draws
+each, gpt-6-luna with the owner's character and the turn's own card and history: `notes/own-mark`
+copied :3 11/12; a note that first names their mark as theirs ("They used :3 just now. That one is
+theirs, so leave it to them.") then offers its own, 0/12. Then 20 real everyday turns from
+2026-10-15 on where their message had an emoticon, the mark picked by `features/marks` as live, 2
+draws each: copied theirs 14/40 against 4/40 (35% to 10%). Its own mark was used less with the new
+note on the flagged turn (5/12 against 12/12), so it still often uses an emoji or nothing. Shipped
+as `notes/own-mark-theirs`. About $0.03. Rerun: the scratch script replays the turns from the ledger.
+

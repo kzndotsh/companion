@@ -24,8 +24,10 @@ def _offer(tmp_path: Path, text: str, heard: Heard, *, marks: bool = True) -> tu
 
 def test_their_mark_brings_one_of_its_own_after_the_history_never_theirs(tmp_path: Path) -> None:
     [line] = _offer(tmp_path, "home finally :3", CALM)
-    assert any(m in line for m in MARKS)
-    assert ":3" not in line
+    offered = line.rsplit("yours: ", 1)[1]
+    assert any(m in offered for m in MARKS)
+    assert ":3" not in offered
+    assert "They used :3" in line  # theirs is named as theirs, not offered
 
 
 def test_switched_off_or_on_a_serious_turn_nothing_is_offered(tmp_path: Path) -> None:
