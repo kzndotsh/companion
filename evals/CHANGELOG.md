@@ -1960,3 +1960,14 @@ moving-abroad pair is removed from the memory-conflict set as two-sided (Haiku n
 false alarms of 19); the reminder pair "in 3 days" and "in a few days" is consistent (a reminder
 needs a time, a check-in uses the window) and now says so.
 
+## 2026-10-25: The empathy grader's prompt contradicted its own cases
+
+`system/judge-empathy` v1 scored a question about "the cause of an event" 0, so "did they at least say
+why?" after a friend cancelled failed on every model 9 of 9, while "do you think it was intentional?"
+passed; and only a sympathy word counted as a reaction. v2 counts a question about someone's reason
+or intent, and warmth carried by the line itself, with examples that are not the suite's own lines
+(with the suite's own lines as examples the scores were higher, which was teaching to the test).
+The live empathy suite, 12 cases by 3 reads: Haiku 30/36 with v1 and v2; DeepSeek 25 to 31; GPT-6
+Luna 28 to 36. The eval runner keeps Haiku as its grader (`cli/eval.py` `JUDGE_MODEL`), so for
+the bot's evals v2 changes little; Luna would grade best but is the talker under test.
+

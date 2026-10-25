@@ -120,7 +120,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/habits` | system | the habit finder, `features/moves/logic.py` | v2 |
 | `system/intimate-check` | system | reads whether a reply on a held turn is intimate (sexual, not affection) (ADR 0017) | v1 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
-| `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v1 |
+| `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v2 |
 | `system/listening` | system | the listening judge, `core/turn/listening.py` | v7 |
 | `system/explicit-lead` | system | whether their message itself is sexually explicit, read only when intimate talk would start on the roleplay talker (ADR 0017) | v1 |
 | `system/brush-off` | system | whether their message pushes the flirting or the scene back, even jokingly; asked only of a turn the roleplay talker would answer | v1 |

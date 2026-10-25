@@ -706,7 +706,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/judge v1** (current). From commit 973b63b on 2026-10-15: feat(evals): replay recorded turns against persona variants, with a judge, a spend cap and nine fixtures
 
 ## system/judge-empathy
-- **system/judge-empathy v1** (current). From commit 7bbfebf on 2026-10-18: feat(evals): an epitome check scores reaction, interpretation, exploration and support; the everyday listening note requires one new thing; trivial vents still only restate (T14)
+- **system/judge-empathy v2** (current, eval grader). Two contradictions fixed. A question about someone's reason or intent now counts as exploration (v1 scored "the cause of an event" 0, so a friend's "did they at least say why?" failed in 9 of 9 reads on every model while "do you think it was intentional?" passed), and warmth carried by the line itself counts as a reaction without a sympathy word. The examples in the prompt are not the test's own lines. On the empathy suite (36 graded reads): Haiku 30 with v1 and 30 with v2, DeepSeek 25 then 31, GPT-6 Luna 28 then 36. The eval grader stays on Haiku: Luna is the talker under test and does not grade itself.
+- **system/judge-empathy v1** (superseded). From commit 7bbfebf on 2026-10-18: feat(evals): an epitome check scores reaction, interpretation, exploration and support; the everyday listening note requires one new thing; trivial vents still only restate (T14)
 
 ## system/listening
 - **system/listening v1** (superseded). From commit cef7800 on 2026-10-17: feat(listening): each message is read for how serious it is before the reply and code adds a note (sympathy, one plain thing, or the weight named with a pointer to a doctor); calibrated 59/60; fixtures and a +listen variant
