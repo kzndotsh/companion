@@ -18,6 +18,9 @@ from companion.models import anthropic, embeddings, openrouter
 
 ROLEPLAY_MODEL = "deepseek/deepseek-v4.1-flash"
 DEFAULT_DAILY_CAP_USD = 10.0
+# The crisis risk judge reads on DeepSeek first: Haiku's provider refused many crisis messages
+# (judge bake-off, evals/CHANGELOG.md, 2026-10-25). Haiku answers when DeepSeek refuses.
+JUDGE_MODELS = "crisis=deepseek/deepseek-v4.1-flash"
 
 OFF = frozenset({"off", "0", "no", "false"})
 ON = frozenset({"on", "1", "yes", "true"})
@@ -72,6 +75,25 @@ def _daily_cap(raw: str) -> float | None:
     return value if value > 0 else None
 
 
+def _judge_models(raw: str) -> Mapping[str, str]:
+    """COMPANION_JUDGE_MODELS, `judge=provider/model` pairs separated by commas; "none" or "off"
+    sends every judge to the shared model. Anything else stops the bot with what is wrong."""
+    if raw.strip().lower() in ("none", "off", ""):
+        return {}
+    out: dict[str, str] = {}
+    for pair in raw.split(","):
+        name, sep, model = (part.strip() for part in pair.partition("="))
+        provider, slash, rest = model.partition("/")
+        if not (sep and name and provider and slash and rest) or name in out or " " in model:
+            msg = (
+                f"COMPANION_JUDGE_MODELS: {pair.strip()!r} is not judge=provider/model"
+                " (or the judge is named twice)"
+            )
+            raise SystemExit(msg)
+        out[name] = model
+    return out
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     switches: Mapping[str, str]  # by startup-line label
@@ -82,6 +104,7 @@ class Settings:
     roleplay_model: str | None  # None: the everyday model plays scenes too
     talker_fallback: str | None  # answers when the everyday talker fails or stalls (J21)
     embed_model: str
+    judge_models: Mapping[str, str]  # judge name to the model it reads on first
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> Settings:
@@ -102,6 +125,7 @@ class Settings:
             if not has_key or fallback.lower() == "none"
             else fallback or roleplay,
             embed_model=env.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
+            judge_models=_judge_models(env.get("COMPANION_JUDGE_MODELS", JUDGE_MODELS)),
         )
 
     def mode(self, label: str) -> str:
@@ -124,6 +148,11 @@ class Settings:
         """The startup line's settings part, `label value` each."""
         out = [
             f"roleplay {self.roleplay_model or 'the same model'}",
+            *(
+                [f"judges {','.join(f'{k}={v}' for k, v in self.judge_models.items())}"]
+                if self.judge_models
+                else []
+            ),
             f"daily cap {self.cap_text}",
             f"pace {self.pace}",
         ]

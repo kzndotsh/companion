@@ -118,6 +118,9 @@ values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed
 - Ask a small model the same question several times with `loops/reads.py` `read_times` (each failed or
   unreadable read is None) and count agreement with `lib/vote.py` (`READS`, `unanimous`); a
   feature states what a failed read means for it (no agreement, or try the batch again later).
+- Judges share one model (Haiku, DeepSeek on a refusal) unless `COMPANION_JUDGE_MODELS` names the judge
+  (by its `Judge` name or `read_times` `spend`); then it reads on that model first and Haiku second
+  (`models/fallback.py` `ByJudge`). Route a judge there, never by choosing a model in a feature.
 - Record a decision through `loops/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
   `_decide(c, t, ...)`), never by building `Decision(...)` by hand. Code that looks a past decision up
   matches its key (`decided_since`, `Decision.has_key`), never its reason text; decisions from before keys

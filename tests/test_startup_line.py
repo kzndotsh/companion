@@ -37,6 +37,7 @@ def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
         f"up as telegram-1 | persona {persona} (prefix abcdef012345) | character none"
         f" | prompts {prompts.set_hash()}"
         f" | everyday {daemon.openrouter.DEFAULT_MODEL} | roleplay {ROLEPLAY_MODEL}"
+        " | judges crisis=deepseek/deepseek-v4.1-flash"
         " | daily cap $10.00 | pace natural | split on | listen on | initiative shadow"
         " | mood shadow | resample on | intimate stays"
         " | relevance on | talker fallback deepseek/deepseek-v4.1-flash | memory check shadow"
@@ -231,3 +232,13 @@ def test_the_crisis_path_is_shadow_unless_on_or_off(monkeypatch: pytest.MonkeyPa
     for raw, shown in (("", "shadow"), ("on", "on"), ("off", "off"), ("x", "shadow")):
         monkeypatch.setenv("COMPANION_CRISIS", raw)
         assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(f"| crisis {shown}")
+
+
+def test_judge_models_are_shown_unless_there_are_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("COMPANION_JUDGE_MODELS", "crisis=a/b,listen=c/d")
+    line = daemon.startup_line(RelationshipId("t"), "a" * 12)
+    assert " | roleplay the same model | judges crisis=a/b,listen=c/d | daily cap " in line
+    monkeypatch.setenv("COMPANION_JUDGE_MODELS", "none")
+    line = daemon.startup_line(RelationshipId("t"), "a" * 12)
+    assert "judges" not in line
+    assert " | roleplay the same model | daily cap " in line

@@ -18,10 +18,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+from collections.abc import Mapping
 
 import httpx
 
-from companion.core.extractor import FALLBACK, Extraction, Extractor
+from companion.core.extractor import FALLBACK, Extraction, Extractor, current_judge
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply, Talker
 from companion.core.types import Json
@@ -43,6 +44,22 @@ class RefusalFallback:
             log.warning("the first model refused (403); asking the fallback model")
         got = await self._second.extract(system, user, schema)
         return Extraction(got.data, got.model + FALLBACK, got.cost_usd, got.latency_ms)
+
+
+class ByJudge:
+    """A model per judge (`COMPANION_JUDGE_MODELS`): a call made while a judge named in `routes` is
+    asked (`ask`, `read_times`) goes to that judge's extractor, every other call to `shared`. The
+    daemon builds each route as its own model first and the shared first model on a refusal
+    (2026-10-25: the crisis risk judge reads on DeepSeek, since Haiku's provider refused many crisis
+    messages)."""
+
+    def __init__(self, shared: Extractor, routes: Mapping[str, Extractor]) -> None:
+        self._shared, self._routes = shared, routes
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        name = current_judge()
+        chosen = self._routes.get(name, self._shared) if name is not None else self._shared
+        return await chosen.extract(system, user, schema)
 
 
 HEDGE_SECONDS = 10.0

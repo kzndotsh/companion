@@ -5,12 +5,15 @@ import asyncio
 import httpx
 import pytest
 
-from companion.core.extractor import Extraction, from_fallback
+from companion.core.extractor import FALLBACK, Extraction, from_fallback
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json
-from companion.models.fallback import RefusalFallback, TalkerFallback
+from companion.loops.ask import Judge, ask
+from companion.loops.reads import read_times
+from companion.models.fallback import ByJudge, RefusalFallback, TalkerFallback
+from companion.prompts import get
 
 
 class Refuses:
@@ -114,3 +117,59 @@ async def test_both_failing_raises_and_a_superseded_turn_cancels_both() -> None:
         await task
     assert first.cancelled
     assert second.cancelled
+
+
+class _Named:
+    def __init__(self, model: str) -> None:
+        self.model = model
+        self.calls = 0
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        del system, user, schema
+        self.calls += 1
+        return Extraction({"declines": True}, self.model, 0.001, 5)
+
+
+def _parse_declines(data: Json) -> bool | None:
+    value = data.get("declines") if isinstance(data, dict) else None
+    return value if isinstance(value, bool) else None
+
+
+def _judge(name: str, *, trust_fallback: bool = True) -> Judge[bool]:
+    return Judge(
+        name,
+        get("system/brush-off"),
+        {},
+        _parse_declines,
+        timeout=1.0,
+        unread="nothing changes",
+        trust_fallback=trust_fallback,
+    )
+
+
+async def test_a_named_judge_reads_on_its_own_model_first() -> None:
+    shared, own = _Named("shared/model"), _Named("own/model")
+    routed = ByJudge(shared, {"risk": RefusalFallback(own, _Named("first/model"))})
+    got = await read_times(routed, "s", "u", {}, _parse_declines, spend="risk", times=3)
+    assert got.model == "own/model"
+    assert (own.calls, shared.calls) == (3, 0)
+
+
+async def test_a_named_judge_falls_back_to_the_shared_first_model_on_a_refusal() -> None:
+    shared, first = _Named("shared/model"), _Named("first/model")
+    routed = ByJudge(shared, {"risk": RefusalFallback(Refuses(403), first)})
+    got = await ask(routed, _judge("risk"), "u")
+    assert got is not None
+    assert got.model == "first/model" + FALLBACK  # the decision names the model that answered
+    assert (first.calls, shared.calls) == (1, 0)
+    assert await ask(routed, _judge("risk", trust_fallback=False), "u") is None
+
+
+async def test_an_unnamed_judge_and_a_call_outside_a_judge_go_to_the_shared_model() -> None:
+    shared, own = _Named("shared/model"), _Named("own/model")
+    routed = ByJudge(shared, {"risk": own})
+    got = await ask(routed, _judge("listen"), "u")
+    assert got is not None
+    assert got.model == "shared/model"
+    await routed.extract("s", "u", {})  # the memory pass, say: no judge is being asked
+    assert (shared.calls, own.calls) == (2, 0)

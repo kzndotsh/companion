@@ -14,7 +14,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from companion.core.extractor import Extractor, from_fallback
+from companion.core.extractor import Extractor, from_fallback, judging
 from companion.core.spend import purpose
 from companion.core.types import Json
 from companion.lib.prompts import Prompt
@@ -48,7 +48,7 @@ async def ask[T](extractor: Extractor, judge: Judge[T], user: str) -> Read[T] | 
     got = None
     for attempt in range(1, judge.attempts + 1):
         try:
-            with purpose(judge.name):
+            with purpose(judge.name), judging(judge.name):
                 got = await asyncio.wait_for(
                     extractor.extract(judge.prompt.text, user, judge.schema), judge.timeout
                 )

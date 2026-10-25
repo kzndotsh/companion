@@ -166,8 +166,9 @@ All optional. Set them in `.env`.
 | `COMPANION_MODEL` | `openai/gpt-6-luna` | the everyday talker |
 | `COMPANION_ROLEPLAY_MODEL` | `deepseek/deepseek-v4.1-flash` | pretend scenes, and intimate talk when allowed; `none` uses the everyday model |
 | `COMPANION_TALKER_FALLBACK` | the roleplay model | answers when the everyday talker errors or has not replied in 10 s (first answer wins); the roleplay talker falls back to the everyday model; `none` turns it off |
-| `COMPANION_REFLECT_MODEL` | `anthropic/claude-haiku-5.5` | the judges and the memory pass |
+| `COMPANION_REFLECT_MODEL` | `anthropic/claude-haiku-5.5` | the judges and the memory pass, except a judge named in `COMPANION_JUDGE_MODELS` |
 | `COMPANION_FALLBACK_MODEL` | `deepseek/deepseek-v4.1-flash` | asked only when the judges' model refuses a call; the floor never relies on its answers; `none` disables it |
+| `COMPANION_JUDGE_MODELS` | `crisis=deepseek/deepseek-v4.1-flash` | a model per judge, as `judge=provider/model` pairs separated by commas: a judge named here reads on that model first and on the judges' model when it refuses (that answer counts as the fallback's). The default puts the crisis risk judge on DeepSeek, since Haiku's provider refuses many crisis messages; `none` sends every judge to the judges' model. A malformed value stops the bot at start |
 | `COMPANION_EMBED_MODEL` | `openai/text-embedding-3-small` | embeddings for the memory look-up and the repeat check |
 
 **Behaviour**

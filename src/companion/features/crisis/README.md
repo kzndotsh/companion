@@ -8,7 +8,7 @@ A second look at a message that may be a real risk to their life or safety, and 
 
 **Stage one, the cue.** Two things ask for the second look, and nothing else does: the listening judge's read of this turn at severity 2 (serious) or 3 (acute), and a code check on their message for words touching death, suicide, self-harm, an overdose or a substance taken, or a weapon (`cue_words`: die, dead, kill, murder, alive, suicide, kms, kys, unalive, self-harm, cut or hurt myself, end it all, end my life, don't want to be here, not wake up, overdose, od, pills, poison, bleach, took too much or too many, a bunch of, all my, gun, weapon, knife, blade, razor, shoot, noose, and similar). A cue word decides nothing alone; death words predict risk poorly. In a scene the listening judge does not run, so only the words cue there.
 
-**Stage two, the risk judge.** `system/risk` reads their message with the last ten messages and labels the kind (`suicidal_thoughts`, `self_harm`, `substance_taken`, `harm_to_others`, `none`), whether it is literal (false only for a joke, hyperbole, a lyric, a quote, a pretend scene or a what-if), the timing (`now`, `today`, `past`, `hypothetical`) and whether a plan, a means or a time is named. It is read three times at once (`loops/reads.py`, 6 s each, inside the turn's 9 s look-up deadline).
+**Stage two, the risk judge.** `system/risk` reads their message with the last ten messages and labels the kind (`suicidal_thoughts`, `self_harm`, `substance_taken`, `harm_to_others`, `none`), whether it is literal (false only for a joke, hyperbole, a lyric, a quote, a pretend scene or a what-if), the timing (`now`, `today`, `past`, `hypothetical`) and whether a plan, a means or a time is named. It is read three times at once (`loops/reads.py`, 6 s each, inside the turn's 9 s look-up deadline). It reads on DeepSeek V4.1 Flash first and on Haiku when DeepSeek refuses (`COMPANION_JUDGE_MODELS`, default `crisis=deepseek/deepseek-v4.1-flash`; `models/fallback.py` `ByJudge`): in the judge bake-off Haiku's provider refused 7 crisis reads by moderation, while DeepSeek missed none and raised no false alarm (`evals/CHANGELOG.md`, 2026-10-25). Every read names the model that answered.
 
 **Levels, chosen by code** (`combine`, `level_for`):
 
@@ -52,7 +52,7 @@ The crisis line is one constant, `core/crisis.py` `LINE`: 988 (call or text, in 
 ## Commands
 
 - `uv run companion crisis`: how many turns were read at each level in the last 30 days, and how many crisis lines went out. Counts only, no quotes.
-- `uv run companion crisis --check --cap 0.10`: reads each of the 40 public fixtures in `evals/fixtures/crisis/messages.json` three times with the bot's judges' model and reports the misses (a genuine risk read below its level) and the false alarms (a joke read as concern or urgent). It costs money: it refuses without a cap, shows the OpenRouter balance first and stops at the cap.
+- `uv run companion crisis --check --cap 0.10`: reads each of the 40 public fixtures in `evals/fixtures/crisis/messages.json` three times on the models the bot reads it with (`COMPANION_JUDGE_MODELS`) and reports the misses (a genuine risk read below its level) and the false alarms (a joke read as concern or urgent). It costs money: it refuses without a cap, shows the OpenRouter balance first and stops at the cap.
 
 ## Measured
 

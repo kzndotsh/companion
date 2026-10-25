@@ -100,7 +100,9 @@ fixtures. The risk judge is checked by eye and against a second model.
 
 **Since:** built in shadow behind `COMPANION_CRISIS` (2026-10-25), not yet measured. The first screen
 is the listening read at severity 2 or 3 or a code check for cue words (`features/crisis/logic.py`
-`cue_words`); the risk judge is `system/risk`, read three times (`features/crisis/run.py`); code
+`cue_words`); the risk judge is `system/risk`, read three times (`features/crisis/run.py`), on DeepSeek V4.1 Flash
+first and Haiku second, since Haiku's provider refused many crisis messages in the judge bake-off
+(`COMPANION_JUDGE_MODELS`, 2026-10-25); code
 chooses the level (`combine`, `level_for`): every read failed is concern, and a substance taken or a
 plan in the past only is concern, not urgent. A split joke allows one light check
 (`notes/crisis-light`) at most once a day. The concern note is `notes/crisis-concern`; the urgent

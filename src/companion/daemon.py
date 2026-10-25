@@ -7,6 +7,7 @@ import asyncio
 import logging
 import os
 import uuid
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -39,7 +40,7 @@ from companion.memory.nightly import missed, night
 from companion.memory.slow import reflect_once
 from companion.memory.views import views_implicated
 from companion.models import anthropic, embeddings, openrouter
-from companion.models.fallback import RefusalFallback, TalkerFallback
+from companion.models.fallback import ByJudge, RefusalFallback, TalkerFallback
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -73,16 +74,27 @@ def _need(name: str) -> str:
     return value
 
 
-def extractor(client: httpx.AsyncClient) -> Extractor:
-    """The judges' and the memory pass's model, with a second model for calls the first refuses."""
+def extractor(client: httpx.AsyncClient, routes: Mapping[str, str] | None = None) -> Extractor:
+    """The judges' and the memory pass's model, with a second model for calls the first refuses.
+    With `routes` (judge name to model, `COMPANION_JUDGE_MODELS`), a judge named there reads on its
+    own model first and on the shared first model when that one refuses (`ByJudge`)."""
     key = _need("OPENROUTER_API_KEY")
     first = openrouter.OpenRouterExtractor(
         key, client, os.environ.get("COMPANION_REFLECT_MODEL", REFLECT_MODEL)
     )
     second = os.environ.get("COMPANION_FALLBACK_MODEL", FALLBACK_MODEL)
-    if second.lower() == "none":
-        return first
-    return RefusalFallback(first, openrouter.OpenRouterExtractor(key, client, second))
+    shared: Extractor = (
+        first
+        if second.lower() == "none"
+        else RefusalFallback(first, openrouter.OpenRouterExtractor(key, client, second))
+    )
+    if not routes:
+        return shared
+    own = {
+        name: RefusalFallback(openrouter.OpenRouterExtractor(key, client, model), first)
+        for name, model in routes.items()
+    }
+    return ByJudge(shared, own)
 
 
 def _talker(client: httpx.AsyncClient, s: Settings) -> Talker:
@@ -145,7 +157,6 @@ def _metered_models(
         store.record_spend(rel, event, datetime.now(UTC))
 
     scene = _roleplay_talker(client, s)
-    shared = extractor(client)
     fallback = s.talker_fallback
     talker = _with_fallback(client, _talker(client, s), fallback)
     roleplay = (
@@ -154,8 +165,8 @@ def _metered_models(
     return (
         MeteredTalker(talker, sink, "talker"),
         MeteredTalker(roleplay, sink, "roleplay talker") if roleplay is not None else None,
-        MeteredExtractor(shared, sink, "judge"),
-        MeteredExtractor(shared, sink, "memory"),
+        MeteredExtractor(extractor(client, s.judge_models), sink, "judge"),
+        MeteredExtractor(extractor(client), sink, "memory"),
     )
 
 

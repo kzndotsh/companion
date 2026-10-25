@@ -1,6 +1,7 @@
-"""`companion crisis --check --cap D`: the risk judge on the public fixtures (ADR 0022), with the
-bot's own judges' model. It costs money, so it needs a cap, shows the OpenRouter balance first and
-refuses when the balance is below the cap. The check itself is `features/crisis/cli.py`."""
+"""`companion crisis --check --cap D`: the risk judge on the public fixtures (ADR 0022), on the
+models the bot reads it with (`COMPANION_JUDGE_MODELS`). It costs money, so it needs a cap, shows
+the OpenRouter balance first and refuses when the balance is below the cap. The check
+itself is `features/crisis/cli.py`."""
 
 from __future__ import annotations
 
@@ -13,6 +14,7 @@ from companion.daemon import extractor, load_dotenv
 from companion.features.crisis.cli import check, load_cases
 from companion.lib.vote import READS
 from companion.models.credits import credits
+from companion.settings import Settings
 
 EST_READ = 0.0006  # dollars per risk read, a guess for the plan line only
 
@@ -33,4 +35,4 @@ async def run(path: Path, cap: float) -> str:
             header += f"OpenRouter balance ${before.balance:.4f}\n"
             if before.balance < cap:
                 return header + "the balance is below the cap: top up or lower --cap\n"
-        return header + await check(cases, extractor(client), cap)
+        return header + await check(cases, extractor(client, Settings.from_env().judge_models), cap)
