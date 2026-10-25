@@ -2149,3 +2149,32 @@ Result:
 Cost: about $0.03. Rerun: `uv run pytest -m live tests/live/test_now_read.py -s -o addopts=""`; the
 scratch script `now_real.py` on the extracted messages; the fixture with the rendered note `@tail`.
 
+## 2026-10-25: bland replies that hand their message back (flag "basic reply that i see often")
+
+What: every casual exchange since 2026-10-22 (226 message and reply pairs, real frame) labelled by two
+Claude subagents (Sonnet, Haiku) as adds (its own take with a reason, a detail they may not know, a
+callback, an idea, a bit that builds on theirs, a question that goes somewhere new), echo (agrees with
+or restates their message, maybe with a flourish or a stock frame; a question only asking them to say
+more counts) or other. Then 12 turns both called echo were replayed 6 times each under four versions
+and judged blind by the same two models (288 replies): as sent; a note stating that its last replies
+mostly gave their words back; a note asking for one thing of its own (its own take or pick with a
+reason, a detail they may not know, a bit that builds on theirs); DeepSeek V4.1 Flash as sent.
+
+Result:
+- How common: Sonnet called 107 of 226 replies echo (47%), Haiku 55 (24%); they agreed on 65% of
+  labels and both called 48 echo (21%). Either way far above the 7% counted on 2026-10-17, which asked
+  only whether a reply mainly restated a personal share.
+- Replays, adds of 72 (Sonnet / Haiku): as sent 15 / 7; the fact note 15 / 13 (no effect, unlike the
+  fact note for the meal not yet eaten, which was about the world rather than its own style); the
+  asking note 61 / 62, with forced replies 5 / 2; DeepSeek 35 / 25.
+- Read by eye: the asking note's replies are mostly better, but its words came back as a new template
+  ("I'd pick the potatoes" four times, "my vote is", "i'm voting for"), and every forced reply came on
+  a turn where they were comforting the companion: there it shoved in opinions about a show instead of
+  taking the kindness. The listening judge read nearly all these turns as severity 0, stance other,
+  so it cannot tell such a moment apart today.
+
+Decision: not built. The model can add something when asked, so the default is the problem, not
+ability; what to build is a move chosen by code for the moment, described without quotable words and
+varied, and kept off tender moments. Cost: about $0.20 in replies; judging by subagents, $0.
+Rerun: scratch scripts `pairs_recent.py`, `bland_proto.py` and the two judging briefs.
+
