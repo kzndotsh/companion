@@ -351,30 +351,29 @@ range, and two variants are compared for whether the gap is real or within noise
 
 ## How it is built
 
-**The repo**
-
-- `src/companion/`: the bot itself.
-- `tests/`: the automatic tests, run before every commit.
-- `evals/`: test conversations for measuring how replies change, and a log of what was measured.
-- `docs/`: how things work, the decisions made and why (`docs/adr/`), and ideas not yet built (`docs/inbox/`).
-- `data/`: your private data: the database, logs, backups and character sheets. Never committed.
-- `scripts/`: small helpers, like the one behind `just restart`.
-
-**Inside `src/companion/`**
-
-- `turn/`: what happens to one message, from reading it to sending the reply.
-- `memory/`: building and tidying memory between messages and overnight.
-- `features/`: one folder per feature (reminders, the calendar, moods, the crisis path and so on), each
-  with a README saying how it works.
-- `prompts/`: every text the models are given, each version kept.
-- `core/` and `loops/`: the shared rules and building blocks the features use.
-- `models/`: talking to the AI models.
-- `io/`: talking to Telegram, and pacing replies like someone typing.
-- `store/`: the database.
-- `cli/` and `evals/`: the `companion` command and the eval runner.
-- `lib/`: small general helpers.
-- The files at the top start the bot (`daemon.py`), read the settings (`settings.py`), list the
-  features (`registry.py`), take backups (`backups.py`) and load a character sheet (`characters.py`).
+```
+companion/
+├── src/companion/        the bot
+│   ├── turn/             what happens to one message, from reading it to replying
+│   ├── memory/           building and tidying memory, between messages and overnight
+│   ├── features/         one folder per feature, each with a README on how it works
+│   ├── prompts/          every text the models are given, each version kept
+│   ├── core/  loops/     shared rules and building blocks the features use
+│   ├── models/           talking to the AI models
+│   ├── io/               talking to Telegram, pacing replies like typing
+│   ├── store/            the database
+│   ├── cli/              the `companion` command
+│   ├── evals/            the eval runner
+│   ├── lib/              small general helpers
+│   ├── daemon.py         starts the bot
+│   ├── settings.py       reads the settings
+│   └── registry.py       the list of features
+├── tests/                automatic tests, run before every commit
+├── evals/                test conversations, and what was measured
+├── docs/                 how things work, decisions (adr/) and ideas (inbox/)
+├── scripts/              small helpers, like the one behind `just restart`
+└── data/                 your private data: database, logs, backups. Never committed
+```
 
 The code is kept in layers that only use the layers below them, checked on every commit. The details,
 for anyone changing it, are in [AGENTS.md](AGENTS.md).
