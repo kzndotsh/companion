@@ -22,7 +22,6 @@ from companion.prompts import get
 PROMPT = get("system/away")
 DRAFT = get("system/nudge-draft")
 AWAY = "away: they stepped away"
-WOULD_NUDGE = "nudge (shadow): would send"
 MIN_WAIT = timedelta(hours=1)
 GONE = timedelta(hours=6)
 PER_DAY = 2

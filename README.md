@@ -116,6 +116,7 @@ its review it goes live or is removed; `uv run companion shadows` lists them, ov
 |---|---|---|
 | Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` |
 | One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` |
+| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` |
 | What it would ask to get to know them | always shadow for now | `companion map` |
 | A light question when their words touch a basic it does not know (age, work, home, place) | always shadow for now | the decision log |
 | The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review`, the decision log |
@@ -187,6 +188,7 @@ All optional. Set them in `.env`.
 | Variable | Default | What it does |
 |---|---|---|
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
+| `COMPANION_REACH` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
 | `COMPANION_CONSOLIDATE` | `shadow` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 
@@ -330,7 +332,7 @@ prompts and how a request is assembled is in [src/companion/prompts/](src/compan
   new views are sorted (taste, stance, rule, self, lived). A separate pass, with its own bookmark,
   records the plans they mention and the promises it made in its replies. Feelings and sensitive
   memories get their note on what was being talked about, and each new memory its keep label.
-- **Every 15 minutes,** the reach-out gate looks at due plans (shadow).
+- **Every 15 minutes,** the reach-out gate looks at due plans, times away and its own reasons to reach out (shadow).
 - **At 04:00,** the memory check reads each settled memory (shadow), memories about one thing from the
   last two days are grouped into merge proposals, one day's routines a week old are closed, and the
   stretches of chat that ended are written as episodes.

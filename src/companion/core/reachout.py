@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import datetime, time, tzinfo
 
 MAX_DRAFT_WORDS = 18
+# The key of a nudge it would send (features/nudges), read by any reach-out that counts its own.
+WOULD_NUDGE = "nudge (shadow): would send"
 
 
 @dataclass(frozen=True, slots=True)

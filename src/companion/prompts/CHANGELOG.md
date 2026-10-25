@@ -777,6 +777,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/nudge-draft
 - **system/nudge-draft v1** (current). New. The shadow draft of the one nudge: light and warm, fits what they went to do, under about twelve words, no guilt, no "I missed you", nothing about their silence and no question that demands an answer.
 
+## system/reach-draft
+- **system/reach-draft v1** (current). New (ADR 0021, shadow). Writes the one message it would send first for its own reasons: a thought, a time they keep, or missing them, about the one thing code chose (a memory of theirs that is a thread or a like and not sensitive, one of its own tastes, or a line from a recent stretch of chat). Light and affectionate, one thing, 18 words or fewer; it may say it missed them now and then, never with time or blame. The prompt is a request; the rules are code: `short_draft` cuts or drops a long draft and `features/reach/logic.py` `needy` drops (never rewrites) a draft about waiting, being forgotten or ignored, how long they were gone, why they went quiet, urgency, or making them responsible for how it feels. Not measured yet: shadow drafts are for the owner to mark.
+
 ## system/invented-judge
 - **system/invented-judge v1** (current). New (G42, J9: the made-up facts rate). Reads a reply with the 40 messages before it and the memory card it had, and lists each statement asserting a fact about the user's own life with what supports it (conversation, memory or none). Code keeps only quotes from the reply that are said to them (you, your). Never on the reply path: `companion invented`. On 367 real replies a stronger reader confirmed only about one flag in twelve, so its flags are candidates; the rate is what the stronger reader confirms (`--dump`).
 

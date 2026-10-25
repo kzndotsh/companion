@@ -28,7 +28,7 @@ Nudges do not use the other reach-out caps (the daily one, the 20-hour gap, the 
 
 | File | What |
 |---|---|
-| `logic.py` | pure: reading the answer, how long to wait, when a nudge is due and why not, the draft prompt (`AWAY`, `WOULD_NUDGE`) |
+| `logic.py` | pure: reading the answer, how long to wait, when a nudge is due and why not, the draft prompt (`AWAY`; the nudge's key `WOULD_NUDGE` is in `core/reachout.py`, so other reach-outs can count it) |
 | `run.py` | effects: the stepping-away read beside the turn, and the tick that drafts a nudge (`NUDGES`, `tick_nudge`) |
 
 ## Prompts

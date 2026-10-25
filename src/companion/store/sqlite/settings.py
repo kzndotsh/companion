@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from datetime import datetime
 
 from companion.core.spend import SpendEvent
 from companion.core.types import BeliefId, Json, RelationshipId
 from companion.lib.sqlite.db import iso, write_tx
+
+log = logging.getLogger("companion.store")
 
 
 def set_value(
@@ -73,6 +76,9 @@ def record_spend(
                 iso(at),
             ),
         )
+    log.debug(
+        "spend %s %s $%.5f in=%d", event.purpose, event.model, event.cost_usd, event.input_tokens
+    )
 
 
 def spend_since(

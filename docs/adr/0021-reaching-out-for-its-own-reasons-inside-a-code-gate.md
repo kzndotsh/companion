@@ -91,6 +91,15 @@ zone is a named zone.
 2. Live with `normal` once about five drafts across the kinds read well and land at sensible times.
 3. A kind whose live reach-outs mostly go unanswered or get flagged is switched off.
 
+## Consequences
+
+- In shadow a would-send counts as a conversation it started and as a message they have not yet
+  answered, so the share, the six-hour gap and the wait after an unanswered one hold in shadow the way
+  they would live.
+- The plan and stepping-away reasons keep their own ticks and caps; their reach-outs count toward the
+  gap, the unanswered rule and the share. The rhythm is `core/rhythm.py`, the rest is
+  `features/reach/` (built 2026-10-24, shadow).
+
 ## Rejected
 
 - A model deciding when to speak, or how often.

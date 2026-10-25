@@ -54,6 +54,7 @@ from companion.features.openloops.store import ReachOut
 from companion.features.promises import store as promises
 from companion.features.promises.logic import Promise
 from companion.features.promises.store import Recorded as RecordedPromise
+from companion.features.reach import store as reach
 from companion.features.reminders import store as reminders
 from companion.features.reminders.store import Reminder
 from companion.store.sqlite import (
@@ -215,13 +216,6 @@ class Store:
 
     def record_spend(self, rel: RelationshipId, event: SpendEvent, at: datetime) -> None:
         settings.record_spend(self._conn, rel, event, at)
-        log.debug(
-            "spend %s %s $%.5f in=%d",
-            event.purpose,
-            event.model,
-            event.cost_usd,
-            event.input_tokens,
-        )
 
     def add_open_loop(self, loop: OpenLoop) -> None:
         open_loops.add_loop(self._conn, loop)
@@ -258,6 +252,12 @@ class Store:
 
     def reach_outs(self, rel: RelationshipId, since: datetime | None = None) -> list[ReachOut]:
         return open_loops.reach_outs_since(self._conn, rel, since)
+
+    def add_own_reach_out(self, r: reach.Own) -> None:
+        reach.add(self._conn, r)
+
+    def own_reach_outs(self, rel: RelationshipId, since: datetime | None = None) -> list[reach.Own]:
+        return reach.since(self._conn, rel, since)
 
     def callbacks_unchecked(
         self, rel: RelationshipId, since: datetime

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from companion.core.card import Card
 from companion.core.clock import local_midnight
 from companion.core.extractor import Extractor
-from companion.core.reachout import Caps, short_draft
+from companion.core.reachout import WOULD_NUDGE, Caps, short_draft
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.spend import purpose
 from companion.core.types import (
@@ -29,7 +29,6 @@ from companion.features.nudges.logic import (
     DRAFT_SCHEMA,
     PROMPT,
     SCHEMA,
-    WOULD_NUDGE,
     Away,
     Kind,
     Look,

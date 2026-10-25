@@ -1,17 +1,26 @@
-"""`companion initiative`: the open loops, what shadow mode would have sent, and the nudges after
-they stepped away (times away it read, and the nudges it would have sent)."""
+"""`companion initiative`: the open loops, what shadow mode would have sent, the nudges after
+they stepped away (times away it read, and the nudges it would have sent), and its reach-outs for
+its own reasons (ADR 0021): their learned rhythm, its share against the dial, its would-sends and
+its holds."""
 
 from __future__ import annotations
 
+from datetime import datetime
 from pathlib import Path
 
+from companion.core.clock import local_zone, utc_now
+from companion.core.reachout import WOULD_NUDGE
 from companion.core.types import DecisionKind, RelationshipId
-from companion.features.nudges.logic import AWAY, WOULD_NUDGE
+from companion.features.nudges.logic import AWAY
 from companion.features.openloops.run import HELD
+from companion.features.reach import cli as own_reasons
+from companion.features.reach.logic import dial
+from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
 
-def run(db: Path, relationship: str) -> str:
+def run(db: Path, relationship: str, now: datetime | None = None) -> str:
+    """`now` pins the time for a test; the wall clock otherwise."""
     store = Store(db)
     rel = RelationshipId(relationship)
     try:
@@ -23,6 +32,9 @@ def run(db: Path, relationship: str) -> str:
         nudges = [
             d for d in store.decisions_of_kind(rel, DecisionKind.INITIATE) if d.has_key(WOULD_NUDGE)
         ]
+        own = own_reasons.lines(
+            store, rel, (now or utc_now(), local_zone()), dial(Settings.from_env().mode("reach"))
+        )
     finally:
         store.close()
     out = ["open loops (state, kind, when to reach out, what they said)"]
@@ -43,4 +55,5 @@ def run(db: Path, relationship: str) -> str:
         f"  [after {(d.detail or {}).get('said', '')!r:.60}]"
         for d in nudges
     ] or ["  none yet"]
+    out += ["", *own]
     return "\n".join(out) + "\n"

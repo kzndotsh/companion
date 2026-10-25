@@ -41,7 +41,7 @@ There is no single overall system prompt. The talker's request has three parts, 
 Everything else is a separate small model call with its own system prompt and a short excerpt of the
 chat, and none of them sees the persona: the ack, frame, reaction, listening and habit judges, the quip
 check, the intimate check on held turns, the name capture, the recall look-up, the extractors for memory,
-the open-loop extractor and the follow-up draft, the callback judge, and the view checks. A call the
+the open-loop extractor and the follow-up draft, the reach-out draft, the callback judge, and the view checks. A call the
 judges' model refuses goes to a fallback model, whose answers the floor never relies on. Each logs
 `name@version` in its decision.
 
@@ -132,6 +132,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/basics-known` | system | whether a memory states a basic fact outright, before the hook would ask (J48 hook) | v1 |
 | `system/away` | system | whether their message leaves the chat now (brief, back, goodbye) and for about how long, for the nudge (shadow) | v1 |
 | `system/nudge-draft` | system | the one light nudge after they stayed away much longer than they said (shadow) | v1 |
+| `system/reach-draft` | system | one short message first for its own reasons (a thought, a time they keep, missing them), about the one thing code chose; a code check drops a needy draft (ADR 0021, shadow) | v1 |
 | `system/invented-judge` | system | statements in a reply about the user and what supports each, for the made-up facts rate (G42); flags are candidates | v1 |
 | `system/reminder-read` | system | whether a message asks to be reminded, checked on or to cancel one, and the words of when; code works out the time (J50) | v1 |
 | `system/reminder-send` | system | the instruction sent after the history when a reminder is due: one short message naming it (J50) | v1 |

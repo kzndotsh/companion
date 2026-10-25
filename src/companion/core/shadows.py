@@ -38,6 +38,14 @@ SHADOWS: tuple[Shadow, ...] = (
         "drafts that do not read needy, at most two a day",
     ),
     Shadow(
+        "reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021)",
+        "initiative",
+        "companion initiative",
+        date(2026, 10, 30),
+        "drafts the owner marks as wanted, landing at sensible times in their learned hours,"
+        " none needy or guilt-laden",
+    ),
+    Shadow(
         "what it would ask to get to know them (the map)",
         None,
         "companion map",

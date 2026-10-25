@@ -26,6 +26,8 @@ from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck
 from companion.features.nudges.run import tick_nudge
 from companion.features.openloops.run import Ticker, drafter, tick
+from companion.features.reach.logic import Kind, dial
+from companion.features.reach.run import Reacher, tick_reach
 from companion.features.reminders.run import deliver_due
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.lib import logs, retry
@@ -269,10 +271,12 @@ async def _daily_backups(data_dir: Path, db: Path) -> None:
 def _start_initiative(
     store: Store, rel: RelationshipId, judge: Extractor, s: Settings
 ) -> asyncio.Task[None] | None:
-    """The timer that looks at open loops. In shadow mode it records and sends nothing."""
+    """The timer that looks at open loops, times away and its own reasons to reach out (ADR 0021).
+    In shadow mode it records and sends nothing."""
     if not s.on("initiative"):
         return None
     ticker, draft = Ticker(), drafter(judge)
+    reacher = Reacher(dial(s.mode("reach")), judge, s.daily_cap)
     log = logging.getLogger("companion.initiative")
 
     async def loop() -> None:
@@ -281,8 +285,10 @@ def _start_initiative(
             if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
                 continue
             try:
-                await tick(store, rel, utc_now(), local_zone(), draft, ticker)
-                await tick_nudge(store, rel, utc_now(), local_zone(), judge)
+                plan = (await tick(store, rel, utc_now(), local_zone(), draft, ticker)).send
+                nudged = await tick_nudge(store, rel, utc_now(), local_zone(), judge) is not None
+                first = Kind.PLAN if plan else Kind.AWAY if nudged else None
+                await tick_reach(store, rel, (utc_now(), local_zone()), reacher, first)
             except Exception:
                 log.exception("initiative tick failed; will try again next time")
 

@@ -1,45 +1,82 @@
 # Plans, reach-outs and nudges
 
-How the companion notices what the person has coming up, and what it would do with it. Everything
+How the companion notices what the person has coming up, and when it would write first. Everything
 that would send a message unprompted runs in shadow for now: it drafts and records what it would have
 sent, and sends nothing. `uv run companion initiative` shows what it would have done, and
 `uv run companion shadows` shows when each part is due for review.
 
 ## Two ways to bring something up
 
-There are two ways it can bring up something the person mentioned:
+A plan of theirs that is due can be offered to the talker as a note on a casual turn, so the
+companion asks about it naturally when they next write. This is live, and it is part of open loops.
 
-- **In the chat, when they next write.** A plan of theirs that is due can be offered to the talker as
-  a note on a casual turn, so the companion asks about it naturally. This is live, and it is part of
-  open loops.
-- **Unprompted, by reaching out.** A tick every 15 minutes decides whether to send a message first.
-  This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`). `off` also stops the
-  read of whether they stepped away, which only feeds nudges; the note in the chat is not affected.
+Everything else is reaching out: a tick every 15 minutes decides whether to send a message first.
+This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`). `off` stops the whole tick and
+also the read of whether they stepped away, which only feeds nudges; the note in the chat is not
+affected. The two never double up: a plan brought up in the chat is marked asked, so it is never also
+a reach-out.
 
-The two never double up. A plan brought up in the chat is marked asked, so it is never also a
-reach-out.
+## Why it would write first
 
-## What can be reached out about
+People who like each other write first because something made them think of the other, because it is
+the time they usually talk, or because they miss them (ADR 0021). Code chooses the reason, the moment
+and the one thing a message is about; a model only writes the words, after every check has passed.
+There are five reasons, and when several apply the first in this order is the one it acts on:
 
-Open loops are things they said about their own near future: a firm plan, an event, something they
-are waiting on. A loop is closed when they settle it themselves, and a pure gate decides when it is
-due. How loops are read, timed and closed is in `src/companion/features/openloops/README.md` (ADR
-0015).
+- **A plan of theirs.** A firm plan, appointment or occasion they mentioned falls due. How plans are
+  read, timed and closed is in `src/companion/features/openloops/README.md` (ADR 0015).
+- **Stepping away.** They said "brb" or "shower time" and stayed gone much longer than that, so one
+  light nudge. See `src/companion/features/nudges/README.md`.
+- **A time they keep.** They wrote within the same hour on most of the last week, say first thing in
+  the morning, so now and then it is the one to say hi at that hour.
+- **A thought.** Something it knows comes to mind: a thread or a like of theirs from memory that is not
+  sensitive, one of its own tastes (ADR 0020), or a line from a recent stretch of chat. Code picks it
+  the same way for the same day, so a replay gives the same answer.
+- **Missing them.** The pause since they last wrote is longer than their usual pause, and it is an
+  hour they usually write.
 
-Nudges are for when they said they were stepping away ("brb", "shower time") and then stayed gone
-much longer than that. The tick drafts one light nudge. See `src/companion/features/nudges/README.md`.
+Every reason is weighed on every tick and logged with why it applied or not. How the last three work
+is in `src/companion/features/reach/README.md`.
 
-## The caps every reach-out keeps
+## Their rhythm
 
-Both kinds keep the same caps (`core/reachout.py`):
+"Usual" is learned from when they write, not fixed. From the last two weeks of their messages, code
+works out their pauses between conversations (a new one starts after two hours of quiet), the hours
+they write, and the hours they almost never write. Before there is history it uses a baseline of a
+12-hour pause and waking hours from 9 AM to 10 PM. The baseline gives way to their own numbers as it
+sees more conversations, fully from twenty, so a few odd days early on cannot swing it. Someone who
+works nights gets quiet hours in the day. Missing them never starts before eight hours, whatever the
+data says. The numbers, and how much of them is still the baseline, go with every decision and are
+shown by `companion initiative`.
 
-- never in quiet hours (23:00 to 08:00 local)
-- never while they are mid-chat
-- at most one plan reach-out a day, at least 20 hours apart
-- after one unanswered reach-out it waits 72 hours, and after two it waits for them to write first
+## How often
 
-A drafted reach-out must be short (18 words at most, or a short question taken from its first
-sentence). Nudges add their own limits on top, such as at most two a day.
+The dial is a share, not a count: `COMPANION_REACH` says what share of the conversations over the last
+two weeks it may start. `rare` is about one in eight, `light` one in five, `normal` one in four, `warm`
+one in three (the default) and `clingy` one in two; `off` stops these reasons and leaves plans and
+nudges as they are. Its own messages are at least six hours apart. In shadow a message it would have
+sent counts as a conversation it started, so shadow paces itself the way live would.
+
+Inside the dial it follows how they answer. When its last message was answered later than their usual
+pause, or in a few words, the dial steps down one level until they start a conversation themselves.
+
+## What it never does
+
+These are rules in code, checked before and after the draft, not requests in a prompt:
+
+- never in their quiet hours, never mid-chat (any message in the last 90 minutes), never during a
+  pretend scene, and a mood never triggers one (ADR 0016)
+- never a second message while the last one is unanswered: it waits for them to write first
+- never a sensitive memory, and one specific thing per message, 18 words or fewer
+- never guilt, need or blame: a draft that mentions waiting, being forgotten or ignored, how long they
+  were gone, asks why they went quiet or whether they are okay, adds urgency or a cliffhanger, or makes
+  them responsible for how it feels is dropped, never rewritten
+- never a paid call before every cheap check has passed, and none once the daily spend cap is reached
+- never counting streaks or optimising how often they write
+
+Plans and nudges keep their own caps as before (`core/reachout.py`): plan reach-outs at most once a day
+and 20 hours apart, nudges at most twice a day. Their reach-outs count toward the six-hour gap, the
+unanswered rule and the share above.
 
 ## Related
 
