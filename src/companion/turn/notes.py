@@ -30,7 +30,7 @@ from companion.core.types import (
     Json,
     Speaker,
 )
-from companion.loops.features import Feature, Lookups, Moment, Offer, Offered
+from companion.loops.features import Feature, Lookups, Moment, Offer, Offered, asking
 from companion.loops.recall import Recalled, look_up
 from companion.prompts import get
 from companion.registry import FEATURES
@@ -204,10 +204,6 @@ def _owned(m: Moment, so_far: Offered) -> Offer:
     return Offer(tail=(note,) if note else ())
 
 
-# Notes that ask them something themselves: with one of these the turn's question is the point.
-ASKING = ("check-in", "name", "loop", "crisis", "game")
-
-
 def _game(m: Moment, _: Offered) -> Offer:
     """When they asked it to keep asking them things, a note after the history to ask the next
     one: outside a scene, not on a serious turn and not on one the crisis path reads as a risk."""
@@ -222,11 +218,7 @@ def _questions(m: Moment, so_far: Offered) -> Offer:
     """When its last replies were all questions, a note to ask nothing this time: outside a scene,
     not on a serious turn, and not when another note asks them something. After the history."""
     serious = m.heard is not None and m.heard[0].severity >= SERIOUS
-    if (
-        m.in_scene is not Frame.REAL
-        or serious
-        or any(so_far[n].lines or so_far[n].tail for n in ASKING)
-    ):
+    if m.in_scene is not Frame.REAL or serious or asking(so_far):
         return Offer()
     replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]
     note = question_note(replies)
@@ -335,6 +327,7 @@ ORDER: tuple[str, ...] = (
     "reminder",
     "crisis",
     "game",
+    "calendar",
     "questions",
 )
 

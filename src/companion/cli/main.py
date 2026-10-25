@@ -25,6 +25,7 @@ from companion.cli import shadows as shadows_cli
 from companion.cli.target import find_db, resolve_db, resolve_relationship
 from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
+from companion.features.calendar import cli as calendar
 from companion.features.callbacks import cli as callbacks
 from companion.features.context import cli as context
 from companion.features.crisis import cli as crisis
@@ -91,6 +92,7 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
         "--write", action="store_true", help="write the ones not written yet (a model call)"
     )
     _db_args(ep)
+    _db_args(add("calendar", help="the occasions in the next 30 days and what was offered lately"))
     rm = add("reminders", help="the reminders they asked for, with what became of each")
     rm.add_argument("--cancel", metavar="ID", help="drop a pending one")
     _db_args(rm)
@@ -349,6 +351,10 @@ def _reminders(a: argparse.Namespace) -> int:
     return _out(reminders.run(*_target(a), cancel=a.cancel))
 
 
+def _calendar(a: argparse.Namespace) -> int:
+    return _out(calendar.run(*_target(a)))
+
+
 def _promises(a: argparse.Namespace) -> int:
     return _out(promises.run(*_target(a), wrong=a.wrong, retire=a.retire))
 
@@ -418,6 +424,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "mood": _mood,
     "promises": _promises,
     "reminders": _reminders,
+    "calendar": _calendar,
     "episodes": _episodes,
     "names": _names,
     "lore": _lore,

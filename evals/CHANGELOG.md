@@ -1971,3 +1971,15 @@ The live empathy suite, 12 cases by 3 reads: Haiku 30/36 with v1 and v2; DeepSee
 Luna 28 to 36. The eval runner keeps Haiku as its grader (`cli/eval.py` `JUDGE_MODEL`), so for
 the bot's evals v2 changes little; Luna would grade best but is the talker under test.
 
+## 2026-10-25: Occasions: a plain note names the day, and some days are left out
+
+Scripted first messages on Halloween with the date only in the clock line: 0/12 named it, also with
+"(Halloween)" added to the clock line; a note after the history: 12/12. Then the calendar's three
+notes on 12 days (6 draws each, GPT-6 Luna, the owner's character, through `evals/sample.py`): with
+"don't assume they celebrate it" in the note, Thanksgiving 0/6, New Year's Eve 1/6, a one-month date
+0/6, and hedges like "merry christmas, if you're celebrating"; with a direct note ("mention it
+lightly ... unless what they said makes it a bad moment"), every day 6/6, and a lonely message on
+Christmas got comfort that named the day gently. It also wished "happy Memorial Day", "happy
+Veterans Day", "happy Columbus Day" and "happy Good Friday", so those, MLK Day, Presidents' Day and
+Juneteenth are left out. About $0.06.
+

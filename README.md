@@ -70,6 +70,9 @@ Today it is reached through Telegram, its only integration for now.
   looked up as one of their habits or routines.
 - **Does not interview.** After three replies in a row that each asked a question, a note after the
   history says to ask none this time but still leave them something to answer.
+- **Notices the day.** On a casual turn code may add one note after the history: a US holiday or
+  cultural day ("if it fits"), the lead-up to a big one, or a month, a hundred days or a year since
+  they first talked (`features/calendar`).
 - **Has emoticons of its own.** On casual turns code offers it one of its own marks and kaomoji; when
   their message has one, the note names that one as theirs, so it stops copying it.
 - **Reacts like a person to small vents.** A short reaction, with varied size examples drawn per turn so
@@ -187,6 +190,7 @@ All optional. Set them in `.env`.
 | `COMPANION_MARKS` | `on` | one of its own emoticons offered after the history on casual turns: always when their message has one, else about one in four; never theirs or a recent one (`features/marks`); `off` stops it |
 | `COMPANION_LOOP_NOTES` | `loose` | a hedged plan of theirs ("may watch a movie tonight") becomes a note-only loop, asked once when they next write and never a reach-out (`features/openloops`); `off` keeps only firm plans |
 | `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
+| `COMPANION_CALENDAR` | `on` | one note after the history on a casual turn about the day: a US public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years (`features/calendar`); `off` stops it |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 
 **Shadow features**
@@ -257,6 +261,7 @@ uv run companion lore           # its own tastes (lore); --label labels new view
 uv run companion names          # things named in memory; --read reads new memories for names first
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
 uv run companion reminders      # the reminders they asked for and what became of each; --cancel ID
+uv run companion calendar       # the occasions in the next 30 days, lead-ups included, and what was offered lately
 uv run companion retire <id> --reason "..."      # close one memory
 uv run companion merge <id> <id> --claim "..."   # merge memories that say one thing, keeping every quote
 uv run companion address        # how they want to be referred to; --set TEXT changes it

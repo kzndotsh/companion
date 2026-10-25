@@ -112,7 +112,7 @@ The notes are chosen by code from models' labels, never written by a model (ADR 
 fixed order (`ORDER` in `turn/notes.py`), and the order is checked when the bot starts. A few lines
 go after the history instead, as a system message, because there they change behaviour and in the
 system block they did not (measured twice). These are the owned-it note, the question-game and question-run notes,
-the character's scene reminder, the crisis notes and the offer of an emoticon of its own. Whatever is sent after the history is logged with
+the character's scene reminder, the crisis notes, the offer of an emoticon of its own and the calendar's note. Whatever is sent after the history is logged with
 the turn, so a replay rebuilds it.
 
 When one of its last two replies owned a slip ("my bad", "I got that wrong"), the next turn outside a
@@ -125,6 +125,14 @@ ask nothing this time, but leave them something to answer (`core/turn/questions.
 their last three messages told it to ask them things ("ask me anything"), with no long pause since,
 `notes/question-game` asks for the next question instead, and the question-run note stays out
 (`core/turn/game.py`).
+
+On a casual turn that is not held and has no other note asking them something, the calendar
+(`features/calendar`, `COMPANION_CALENDAR`) may add one occasion after the history: the relationship's
+date (a month, a hundred days, six months, a year since their first message, `notes/occasion-us`),
+else a US public or cultural day (`notes/occasion-day`), else a big day tomorrow or in two days
+(`notes/occasion-soon`). Each is offered once, a lead-up once per big day, and logged as
+`calendar: offered` once the turn is stored. The calendar counts as a note that asks them something,
+so the question-run note stays out on that turn.
 
 ## Checking the reply
 

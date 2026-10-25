@@ -38,6 +38,9 @@ class Conversation:
     relevance: str = "shadow"  # on (picks shown when a memory is near), shadow or off (ADR 0018)
     reminders: bool = True  # reminders they ask for are read and set (J50)
     initiative: bool = True  # reach-outs and the reads that only feed them (nudges' away read)
+    calendar: bool = (
+        False  # a note about the day: a holiday, a lead-up, their date (`features/calendar`)
+    )
     marks: bool = False  # offer one of its own emoticons now and then (`features/marks`)
     episodes: str = "off"  # what they did together lately, when it bears: on, shadow or off (J12)
     crisis: str = "off"  # the crisis path: on, shadow (reads and logs only) or off (ADR 0022)

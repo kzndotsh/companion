@@ -30,7 +30,8 @@ There is no single overall system prompt. The talker's request has three parts, 
    rude note, the recall finds (`notes/recall`), the mood line (`notes/mood-*`), the floor's hold note on
    a held turn (`notes/floor-hold`), and the ask-name or ask-pronouns note (`notes/ask-name`,
    `notes/ask-pronouns`). A few notes go after the history instead, among them the crisis notes
-   (`notes/crisis-concern`, `notes/crisis-light`) when `COMPANION_CRISIS=on` (ADR 0022).
+   (`notes/crisis-concern`, `notes/crisis-light`) when `COMPANION_CRISIS=on` (ADR 0022) and the
+   calendar's (`notes/occasion-*`).
    Notes and memory ride here and never in a user message, because anything in a user message can be read
    as something they said.
    With `COMPANION_CHARACTER` set, block 1 is the persona, then `system/character-frame`, then the
@@ -112,6 +113,9 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/reminder-set` | note | a reminder they asked for is set: confirm it with the time code worked out (J50) | v1 |
 | `notes/reminder-ask` | note | a reminder they asked for has an unclear time: ask about that one thing (J50) | v1 |
 | `notes/reminder-cancelled` | note | a reminder they asked to drop is dropped: say so (J50) | v1 |
+| `notes/occasion-day` | note | after the history on a casual turn: today is a public or cultural day; a light nod if it fits, assuming no celebration, plans or family (`features/calendar`) | v1 |
+| `notes/occasion-soon` | note | after the history: a big day is tomorrow or in two days; if it fits, lightly ask whether they have anything planned, once per big day (`features/calendar`) | v1 |
+| `notes/occasion-us` | note | after the history: a month, a hundred days, six months or a year since they first talked; a light, warm nod (`features/calendar`) | v1 |
 | `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
 | `system/callback-judge` | system | the callback check, `features/callbacks/logic.py`, `companion callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |

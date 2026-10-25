@@ -57,6 +57,15 @@ def quiet(m: Moment, so_far: Offered) -> bool:
     return m.casual and not so_far["name"].lines and not so_far["check-in"].lines and not m.held
 
 
+# Notes that ask them something themselves: with one of these the turn's question is the point.
+ASKING = ("check-in", "name", "loop", "crisis", "game", "calendar")
+
+
+def asking(so_far: Offered) -> bool:
+    """Whether a note offered so far asks them something this turn."""
+    return any(o.lines or o.tail for n in ASKING if (o := so_far.get(n)) is not None)
+
+
 class Spent(Protocol):
     @property
     def cost_usd(self) -> float: ...

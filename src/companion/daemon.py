@@ -366,6 +366,7 @@ async def run(data_dir: Path) -> None:
             reminders=s.on("reminders"),
             episodes=s.mode("episodes"),
             marks=s.on("marks"),
+            calendar=s.on("calendar"),
             initiative=s.on("initiative"),
             crisis=s.mode("crisis"),
             serious_message=character.serious if character is not None else "",

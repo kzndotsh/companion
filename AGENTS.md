@@ -32,7 +32,7 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar
 uv run companion memory review | group | promises | names | lore   # questions for the owner, merge proposals, shadow lists
 uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
 uv run companion invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge

@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE"]
 dependencies = [
+    "holidays==0.107",
     "httpx>=0.28.1",
 ]
 

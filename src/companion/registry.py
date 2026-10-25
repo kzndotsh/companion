@@ -4,6 +4,7 @@ their notes go in this order, and so do their steps after a memory pass."""
 from __future__ import annotations
 
 from companion.features.basics.run import BASICS
+from companion.features.calendar.run import CALENDAR
 from companion.features.context.run import CONTEXT
 from companion.features.crisis.run import CRISIS
 from companion.features.episodes.run import EPISODES
@@ -41,5 +42,6 @@ FEATURES: tuple[Feature, ...] = (
     REMINDERS,
     CRISIS,
     NUDGES,
+    CALENDAR,
     HOOKS,
 )

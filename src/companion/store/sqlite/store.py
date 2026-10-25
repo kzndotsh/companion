@@ -34,6 +34,7 @@ from companion.core.types import (
 )
 from companion.core.vectors import Vector
 from companion.core.views import ViewState, parse_mode
+from companion.features.calendar import store as calendar
 from companion.features.callbacks import store as callbacks
 from companion.features.callbacks.logic import Check
 from companion.features.consolidate import store as memory_checks
@@ -458,6 +459,14 @@ class Store:
 
     def turns_since_reaction(self, rel: RelationshipId) -> int | None:
         return decisions.turns_since_reaction(self._conn, rel)
+
+    def first_message_at(self, rel: RelationshipId) -> datetime | None:
+        return calendar.first_message(self._conn, rel)
+
+    def calendar_offered(
+        self, rel: RelationshipId, since: datetime
+    ) -> list[tuple[datetime, dict[str, Json]]]:
+        return calendar.offered_since(self._conn, rel, since)
 
     def decided_since(self, rel: RelationshipId, reason: str, since: datetime) -> bool:
         return decisions.decided_since(self._conn, rel, reason, since)
