@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -82,6 +83,10 @@ def _utt(text: str, speaker: Speaker = Speaker.USER, frame: Frame = Frame.REAL) 
     return Utterance(
         UtteranceId("u1"), REL, SessionId("s"), TurnId("t"), speaker, text, frame, "test", MON
     )
+
+
+def _said_at(text: str, at: datetime) -> Utterance:
+    return replace(_utt(text), at=at)
 
 
 def _raw(**over: object) -> RawLoop:
@@ -369,3 +374,17 @@ def test_same_as_is_read_from_the_answer_and_may_be_missing() -> None:
     }
     assert (parse({"loops": [item | {"same_as": " l2 "}]}) or [])[0].same_as == "L2"
     assert (parse({"loops": [item]}) or [])[0].same_as == ""
+
+
+def test_a_celebration_is_never_settled_before_its_day() -> None:
+    day = datetime(2026, 12, 4, 10, tzinfo=UTC)
+    party = _loop("b", ThreadKind.CELEBRATE, day)
+    early = _said_at("All done", day - timedelta(days=40))
+    raw = RawResolution("L1", "m1", "All done")
+    assert to_resolution(raw, {"L1": party}, {"m1": early}) == (
+        "a celebration is not settled before its day"
+    )
+    on_the_day = _said_at("All done", day + timedelta(hours=2))
+    assert to_resolution(raw, {"L1": party}, {"m1": on_the_day}) == (party, "All done")
+    follow = _loop("f", ThreadKind.FOLLOW_UP, day)
+    assert to_resolution(raw, {"L1": follow}, {"m1": early}) == (follow, "All done")

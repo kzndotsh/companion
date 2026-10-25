@@ -22,6 +22,9 @@ from companion.prompts import get
 SENSITIVE = 2
 FOLLOW_UP_HOUR = 10
 CELEBRATE_TIME = time(10)
+# A celebration falls due at 10:00 on its day; a message from before that day cannot settle it (a
+# birthday was once closed weeks early by an unrelated "all done").
+CELEBRATE_EARLY = timedelta(hours=10)
 ENCOURAGE_TIME = time(8, 30)  # just after quiet hours, before most things start
 UNDATED_DAYS = 3
 MAX_PAST_DAYS = 3
@@ -238,6 +241,8 @@ def to_resolution(
         return "not settled by something they said for real"
     if not _holds(source, raw.quote):
         return "the quote is not in their message"
+    if loop.kind is ThreadKind.CELEBRATE and source.at < loop.follow_up_at - CELEBRATE_EARLY:
+        return "a celebration is not settled before its day"
     return loop, evidence_from(source, raw.quote).quote
 
 
