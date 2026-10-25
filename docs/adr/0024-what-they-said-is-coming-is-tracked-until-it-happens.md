@@ -32,7 +32,11 @@ fix is state the code keeps, not another rule for the model.
 small model labels their message as one of `soon` (something of theirs is about to happen, and they
 are still here), `leaving` (they are going now and will be away), `back` (they are back), `done` (the
 thing they said was coming has happened) or `none`, with a short phrase for what and the minutes it
-likely takes. It runs whether or not reaching out is on, since the note is in the chat. One reader,
+likely takes. It reads their message after the companion's message before it, so a short answer
+("soon lol" to "are you making coffee?") reads with what it answers; plans days away, needs not acted
+on now, and talk about changes to the companion are `none`. Both were measured: alone it missed short
+answers, and with context but without those named it read talk about the companion's new features as
+something coming. It runs while the note or reaching out is on. One reader,
 not a second one beside the old: the old reader's job is a case of the new one.
 
 **Code keeps the state.** Each label is a decision (key `now: what is happening with them`). What is
@@ -48,6 +52,10 @@ decisions.
 
 **Shadow first.** In shadow the reader and the state run and the note is logged as it would be sent,
 never sent; nudges read the state either way.
+
+**Measured before shipping** (`evals/CHANGELOG.md`): the reader was right on 38 of 38 invented
+messages and agreed with two Claude labellers on 37 of 37 real ones; the note as built cut the slip on
+the flagged turn to 1 of 60, against 20 of 140 with nothing, with no send-offs.
 
 ## Consequences
 
