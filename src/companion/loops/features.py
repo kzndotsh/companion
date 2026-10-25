@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
     from companion.core.card import Card
     from companion.core.extractor import Extractor
+    from companion.core.turn.mentions import Candidate
     from companion.core.types import RelationshipId
     from companion.loops.conversation import Conversation
     from companion.store.sqlite.store import Store
@@ -50,6 +51,9 @@ Offered = Mapping[str, Offer]  # what the notes before this one offered, by name
 
 # A note gets what its look-up found (None when it found nothing) and what earlier notes offered.
 type Note = Callable[[Moment, object, Offered], Offer]
+# What a feature would bring up on its own this turn, its best only, chosen across features by one
+# picker (`turn/mention.py`); it gets what its look-up found. No gating, no cap, no write.
+type Mention = Callable[[Moment, object], Candidate | None]
 
 
 def quiet(m: Moment, so_far: Offered) -> bool:
@@ -81,6 +85,7 @@ class Feature:
     after_own: Step | None = None  # after a memory pass stored new views of its own
     shadow: Shadow | None = None
     after_turn: AfterTurn | None = None
+    mention: Mention | None = None  # what it would bring up on its own this turn (ADR 0023)
 
 
 @dataclass(frozen=True, slots=True)

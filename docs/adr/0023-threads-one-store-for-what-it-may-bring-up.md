@@ -3,7 +3,12 @@
 **Status:** accepted 2026-10-25 by the owner. Step 1 built 2026-10-25 (open loops are `features/threads/`,
 each row with its source). Step 2 built 2026-10-25: the learned pace in shadow, and plan check-ins on the
 shared reach gate; the casual test was already one (`quiet`). Nudges moved onto the shared gate the
-same day, every reach-out's draft passes one needy check, and the old caps were deleted. Asked for by the owner after the brainstorm in
+same day, every reach-out's draft passes one needy check, and the old caps were deleted. Step 5 built 2026-10-25:
+one picker for what it brings up (`turn/mention.py`): plans and the calendar's days are candidates
+(`Feature.mention`), ranked so a day that passes beats what can wait, one a day across sources unless
+the new one ranks higher; the pace and how they met it cover every source and the check-in. Calendar
+occasions stay computed, not stored as threads: storing them needed a table rebuild and quotes for
+public days that nobody said. Asked for by the owner after the brainstorm in
 `docs/inbox/2026-10-25-natural-reasons-to-talk.md`, which approved four new hooks: the interrupted
 story, weekly rhythms, a topic gone quiet, and milestones and pending outcomes.
 

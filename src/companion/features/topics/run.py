@@ -69,8 +69,9 @@ def _move_on(m: Moment, found: object, *, casual: bool, loop_offered: bool) -> O
 
 
 def topic_offer(m: Moment, found: object, so_far: Offered) -> Offer:
-    """On a quiet turn, knowing whether a plan of theirs was just offered as a note."""
-    return _move_on(m, found, casual=quiet(m, so_far), loop_offered=bool(so_far["loop"].lines))
+    """On a quiet turn, knowing whether a plan of theirs was just brought up: the picker sends a
+    plan in the system block and a day after the history (`turn/mention.py`)."""
+    return _move_on(m, found, casual=quiet(m, so_far), loop_offered=bool(so_far["mention"].lines))
 
 
 TOPICS = Feature("topic", look=spent_for_turn, note=topic_offer)

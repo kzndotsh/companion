@@ -19,12 +19,12 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.calendar.logic import DAY_NOTE, OFFERED, THEIRS_NOTE, US_NOTE
-from companion.features.calendar.run import calendar_offer
 from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
 from companion.loops.features import Lookups, Moment, Offer
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from companion.turn.mention import mention_note
 from tests.features.marks.test_run import CALM, HEAVY
 from tests.turn.test_mood_loop import PREFIX, REL, SESSION, Judge, Talker
 
@@ -55,7 +55,7 @@ def _tail(
     convo = Conversation(store, Talker(), PREFIX, REL, calendar=on)
     t = Turn(SESSION, TurnId("t1"), now, [], "hey, what's up")
     m = Moment(convo, t, frame, heard, Lookups(), False, [])  # type: ignore[arg-type]
-    return calendar_offer(m, None, so_far if so_far is not None else QUIET)
+    return mention_note(m, so_far if so_far is not None else QUIET)
 
 
 def test_on_a_casual_turn_the_day_goes_after_the_history_and_nowhere_else(store: Store) -> None:
@@ -113,7 +113,7 @@ async def test_offered_once_a_day_and_logged_only_when_the_turn_is_stored(store:
     assert NOTE not in third.seen[0].tail
 
 
-def _remember(
+def remember(
     store: Store, bid: str, claim: str, *, sensitivity: int = 0, frame: Frame = Frame.REAL
 ) -> None:
     said = Utterance(
@@ -148,11 +148,11 @@ def _remember(
 
 
 def test_their_birthday_from_memory_comes_before_the_public_day(store: Store) -> None:
-    _remember(store, "b1", "The user's birthday is October 31.")
+    remember(store, "b1", "The user's birthday is October 31.")
     assert _tail(store, HALLOWEEN).tail == (THEIRS_NOTE.render(name="their birthday"),)
 
 
 def test_a_sensitive_or_pretend_date_is_never_marked(store: Store) -> None:
-    _remember(store, "b1", "The user's anniversary is October 31.", sensitivity=2)
-    _remember(store, "b2", "The user's birthday is October 31.", frame=Frame.PLAY)
+    remember(store, "b1", "The user's anniversary is October 31.", sensitivity=2)
+    remember(store, "b2", "The user's birthday is October 31.", frame=Frame.PLAY)
     assert _tail(store, HALLOWEEN).tail == (NOTE,)

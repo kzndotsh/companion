@@ -15,14 +15,14 @@ Days worth a word: their own yearly dates from memory, US public and cultural da
 
 **The pick.** At most one occasion a turn, in a fixed order: one of theirs, the relationship's date, a public or cultural day, then a lead-up (one of theirs before a big day's). An occasion is never offered twice: each on its day once, and a lead-up once per big day in total (both lead-up days share one key). What was offered is read from the decisions of the last three days.
 
-**The note.** On a casual turn (read as not serious, outside a scene and not a goodbye), not held by the floor, with no name question, check-in, open loop, crisis note or question game that turn, the picked occasion becomes one line after the history:
+**The note.** The picked occasion is the calendar's candidate (`calendar_candidate`, `Feature.mention`) for the one thing brought up on its own; the picker in `turn/mention.py` decides across the calendar and plans (ADR 0023): on a casual turn, not held, with no earlier note asking them something, the best by rank (their own day, then the relationship's, then a public or cultural day, then a lead-up, with plans ranked among them), one a day across sources unless the new one ranks higher. A brought-up occasion is one line after the history:
 
 - a public or cultural day: `notes/occasion-day` ("Today is Halloween. If it fits, a light nod to it is welcome...", never assuming they celebrate it, have plans or have family around);
 - a lead-up: `notes/occasion-soon` ("Halloween is in two days. If it fits, you could lightly ask whether they have anything planned...");
 - one of their dates: `notes/occasion-theirs` ("Today is their birthday. Mark it warmly in a few words...", never saying it remembered or looked it up); its lead-up uses `notes/occasion-soon`;
 - the relationship's date: `notes/occasion-us` ("It has been a month since the two of you first talked...").
 
-The calendar counts as a note that asks them something (its offer says `asks`, read by `asking` in `loops/features.py`), so the question-run note stays out on that turn. Once the turn is stored the offer is logged as `calendar: offered`, with the occasion's key, name, day, kind, how, when and region. A failed turn offers nothing and uses nothing up.
+What the picker brings up asks them something (its offer says `asks`), so the question-run note stays out on that turn. Once the turn is stored the offer is logged as `calendar: offered`, with the occasion's key, name, day, kind, how, when, region, its rank and what the learned pace said. A failed turn offers nothing and uses nothing up.
 
 **Never.** It never assumes a celebration, a religion, plans or company; never on a serious turn, in a scene, on a goodbye or on a turn the crisis path reads as a risk; never more than one occasion a turn; never a sensitive date or one tied to a loss from memory.
 
@@ -31,7 +31,7 @@ The calendar counts as a note that asks them something (its offer says `asks`, r
 | File | What |
 |---|---|
 | `logic.py` | pure: the occasions for a day (`occasions`), their dates from memory (`yearly`, `their_dates`, `Dated`), the relationship's dates (`together`, `add_months`), the pick (`pick`), the note text (`note`), `REGION`, `OFFERED` |
-| `run.py` | effects: their dates read from memory (`theirs`), the note after the history on a casual turn, logged once the turn is stored (`CALENDAR`) |
+| `run.py` | effects: their dates read from memory (`theirs`), the occasion as a candidate for the picker with its rank (`calendar_candidate`, `rank`, `CALENDAR`) |
 | `store.py` | its queries: the time of their first message, and the occasions offered since a time |
 | `cli.py` | `companion calendar` |
 

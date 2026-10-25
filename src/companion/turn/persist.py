@@ -45,6 +45,7 @@ from companion.store.sqlite.decisions import REACTED
 from companion.turn.assemble import Assembled, CardLog
 from companion.turn.frames import inputs_hash as frames_inputs_hash
 from companion.turn.frames import schema_hash as frames_schema_hash
+from companion.turn.mention import read_met
 from companion.turn.values import Answered
 
 if TYPE_CHECKING:
@@ -131,6 +132,7 @@ async def after_turn(c: Conversation, t: Turn, said: Utterance, sent: str | None
     for feature in FEATURES:
         if feature.after_turn is not None:
             await feature.after_turn(c, t, said, sent)
+    await read_met(c, t, said, sent)
 
 
 def log_frame(

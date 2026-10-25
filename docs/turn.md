@@ -139,13 +139,17 @@ their last three messages told it to ask them things ("ask me anything"), with n
 `notes/question-game` asks for the next question instead, and the question-run note stays out
 (`core/turn/game.py`).
 
-On a casual turn that is not held and has no other note asking them something, the calendar
-(`features/calendar`, `COMPANION_CALENDAR`) may add one occasion after the history: the relationship's
-date (a month, a hundred days, six months, a year since their first message, `notes/occasion-us`),
-else a US public or cultural day (`notes/occasion-day`), else a big day tomorrow or in two days
-(`notes/occasion-soon`). Each is offered once, a lead-up once per big day, and logged as
-`calendar: offered` once the turn is stored. The calendar counts as a note that asks them something,
-so the question-run note stays out on that turn.
+What it brings up on its own is chosen once a turn across features (`turn/mention.py`, ADR 0023):
+each feature with a `mention` offers its best candidate (a due plan of theirs, a day from the
+calendar), and on a casual turn that is not held and has no earlier note asking them something, the
+picker takes the best by rank (`core/turn/mentions.py` `Rank`: their own day, something they face
+today, the relationship's date, a public or cultural day, a follow-up, a lead-up). One a day across
+sources, unless the new one ranks higher, so a morning follow-up never holds back a birthday. A plan
+goes in the system block and a day after the history; either asks them something, so the question-run
+note stays out. It is logged under its source's key with its rank once the turn is stored, and how
+their next message met it is read for the learned pace (shadow), as is the check-in after a heavy
+talk. The notes that may ask them something themselves (guess, reminder, crisis, question game) come
+before it in `ORDER`, so it always knows.
 
 ## Checking the reply
 

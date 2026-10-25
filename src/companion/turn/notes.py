@@ -23,6 +23,7 @@ from companion.core.turn.length import LengthTarget, length_target
 from companion.core.turn.listening import PROMPT as LISTEN_PROMPT
 from companion.core.turn.listening import listening_note, repair_note, rude_note
 from companion.core.turn.listening import render_reason as render_listening
+from companion.core.turn.mentions import CHECKED_IN
 from companion.core.turn.ownup import owned_note
 from companion.core.turn.questions import question_note
 from companion.core.types import (
@@ -34,6 +35,7 @@ from companion.loops.features import Feature, Lookups, Moment, Offer, Offered, a
 from companion.loops.recall import Recalled, look_up
 from companion.prompts import get
 from companion.registry import FEATURES
+from companion.turn.mention import mention_note
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation
@@ -41,7 +43,6 @@ from companion.loops.current import Heard, Turn, decide, mark
 
 log = logging.getLogger("companion.turn")
 CHECK_IN_NOTE = get("notes/check-in")
-CHECKED_IN = "check-in: asked how they are after a heavy last talk"
 CHECK_IN_GAP = timedelta(hours=3)  # away at least this long since their last message
 HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
 SERIOUS = 2
@@ -298,11 +299,13 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "hold": _hold,
     "brush-off": _brush,
     "game": _game,
+    "mention": mention_note,
     "questions": _questions,
 }
 
 # Every note, in the order it reaches the system block. A source sees what the ones before it
-# offered: a plan or a move on waits while their name is asked, a move on knows a plan was offered.
+# offered: what it brings up on its own (`mention`) waits while their name is asked or any note
+# before it asks them something, and a move on knows a plan was brought up.
 ORDER: tuple[str, ...] = (
     "moves",
     "base",
@@ -319,15 +322,14 @@ ORDER: tuple[str, ...] = (
     "brush-off",
     "name",
     "memory map",
-    "loop",
-    "topic",
     "guess",
-    "lore",
-    "mark",
     "reminder",
     "crisis",
     "game",
-    "calendar",
+    "mention",
+    "topic",
+    "lore",
+    "mark",
     "questions",
 )
 

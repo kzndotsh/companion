@@ -132,7 +132,10 @@ together.
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
   also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
-  reaches its note as `Lookups.found[name]`. `FEATURES` in `registry.py` is the list of what is
+  reaches its note as `Lookups.found[name]`. A feature that would bring something up on its own declares
+  a `mention` (its best candidate, `core/turn/mentions.py` `Candidate`), not a note: one picker
+  (`turn/mention.py`) gates, ranks, counts one a day and logs it, and a new mentioning feature names its
+  decision key in `KEYS` there (checked when the module loads). `FEATURES` in `registry.py` is the list of what is
   registered, in the order the after-steps run.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it

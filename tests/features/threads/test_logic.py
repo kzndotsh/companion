@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from companion.core.turn.mentions import Met, pace, pace_holds, parse_met
 from companion.core.types import (
     Frame,
     Json,
@@ -18,7 +19,6 @@ from companion.core.types import (
 from companion.features.threads.logic import (
     NOTE_DELAY,
     Making,
-    Met,
     RawLoop,
     RawResolution,
     Thread,
@@ -27,10 +27,7 @@ from companion.features.threads.logic import (
     follow_up_time,
     loop_labels,
     loop_note,
-    pace,
-    pace_holds,
     parse,
-    parse_met,
     parse_resolved,
     pick_note,
     render_open_loops,

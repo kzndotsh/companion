@@ -5,7 +5,7 @@ it fits, how sensitive it is, and a state (open, asked, resolved, expired, dropp
 Every source writes threads; the note and the reach-out read them. Today there is one source, plans, so the
 rest of this page is about plans. The interrupted story, weekly rhythms, milestones and pending outcomes, and
 a topic gone quiet join as sources (ADR 0023, card R21). The tables keep their first names (`open_loops`,
-`open_loop_events`, `reach_outs`), and decision keys, prompts and the note's name (`loop`) are unchanged, so
+`open_loop_events`, `reach_outs`), and decision keys and prompts are unchanged, so
 history reads the same.
 
 **Plans.** Things they said about their own near future that a friend would ask about later, such as a plan, an appointment or something they are waiting on. It brings one up when they next write, and in shadow it works out when it would reach out first.
@@ -32,26 +32,27 @@ A kept loop is stored with the exact quote and its source message, and logged as
 
 **Kinds and times.** The kind sets when it falls due. A follow-up is the morning after the thing happens, at 10:00 local time. When nothing says when, it is 3 days after the day they said it, at 10:00. A celebration (their own occasion on a known day) is marked at 10:00 on the day. An encouragement (something big they face on a known day) comes at 8:30 on the day, just after quiet hours. A celebration or encouragement needs a day after today, or it is dropped. Dates are read from "tomorrow", "next week", "next month", weekday names, "weekend" and a written date such as a month and a day, taken as the next time it comes round. A plan for later today (scale `hours`) becomes a note-only loop, due 3 hours after the message, and is never a reach-out. A hedged plan (certainty `maybe`, such as "may watch a movie tonight") becomes a note-only loop too, by default (`COMPANION_LOOP_NOTES=loose`, the owner's choice of 2026-10-24): offered as the loop note when they next write (at most twice, like any loop), never a reach-out. `off` makes it strict again, rejecting every plan that is not firm.
 
-**The note when they write.** On a casual turn (read as not serious, not in a scene, not a goodbye) with no name question, no check-in and nothing held, one due loop becomes a note in the system block (`pick_note`). It sits after the name and memory-map notes and before the topic notes. Rules:
+**The note when they write.** The due loop is a candidate for the one thing brought up on its own (`loop_candidate`, `Feature.mention`); the picker in `turn/mention.py` decides across plans and the calendar's days (ADR 0023). On a casual turn with nothing held and no earlier note asking them something, it brings up the best by rank (a celebration with their own day first, an encouragement next, a follow-up after any day), one a day across sources unless the new one ranks higher, so a morning follow-up never holds back a birthday. A plan goes in the system block. Rules for the loop itself:
 
 - A follow-up is due from its time for 3 days. A celebration or encouragement is due on its day only.
 - A loop is offered at most twice. After the first offer it is marked asked and can still be offered once more while unsettled.
-- At most one loop note per 24 hours.
 - A celebration comes before an encouragement, which comes before a follow-up, then the most recently due.
 - Never a sensitive loop.
 
 The note is written from the loop's kind (`notes/loop-*`) and carries only the claim. Once the reply is stored, the loop is marked asked with the reason `open loop: offered as a note when they wrote`, and the same text is the decision key. A loop offered as a note is no longer open, so it is never also a reach-out.
 
-**The learned pace (shadow, ADR 0023).** The owner chose no fixed number of threads a day: how often it
-brings one up is learned from how they meet them. Once a turn is stored, when the companion's last
-message brought up a thread, their message is read once for how it met it (`system/thread-met`):
+**The learned pace (shadow, ADR 0023).** It lives with the picker (`turn/mention.py`, pure parts in
+`core/turn/mentions.py`) and covers every source: plans, the calendar's days and the check-in after a
+heavy talk. The owner chose no fixed number a day: how often it brings something up is learned from how
+they meet it. Once a turn is stored, when the companion's last message brought something up, their
+message is read once for how it met it (`system/thread-met`):
 picked up, brushed off or ignored, logged as `threads: how they met it` (a failed read is logged as not
 read). The pace is a wait on a ladder of 4, 8, 16, 24, 48 and 96 hours that starts at 24; picked up is a
 step down, brushed off a step up, ignored two, walked over the last 30 days so the newest answers decide
-(`pace` in `logic.py`). It never brings up more than 3 in 24 hours (`PACE_CEILING`, a backstop). For now
-it only logs: each offer carries what the pace said (`pace` in its detail), and when a thread is due and
-the day's cap holds while the pace would bring it up, `threads: the learned pace would bring one up now
-(shadow)` is logged, at most once a day. The 24-hour cap above still decides. On 12 invented turns the
+(`pace`). It never brings up more than 3 in 24 hours (`PACE_CEILING`, a backstop). For now
+it only logs: each offer carries what the pace said (`pace` in its detail), and when something is due
+and the day's count holds it while the pace would bring it up, `threads: the learned pace would bring
+one up now (shadow)` is logged, at most once a day. The day's count still decides. On 12 invented turns the
 judge was right 22 of 24 times and never read a brush-off as picked up (`evals/CHANGELOG.md`).
 
 **Reaching out (shadow).** Every 15 minutes the tick in `daemon.py` skips when the daily spend cap is reached, then asks the shared gate for every reach-out (`features/reach/gate.py` `hold`, through `holds` in `features/reach/run.py`, ADR 0023) and the pure gate in `gate.py`. The gate here expires open loops past their horizon (a follow-up 2 days after it fell due, `KEEPS` in `gate.py`, a celebration or encouragement after its day) and picks the oldest due loop that is open, not note-only and not sensitive. When the shared gate holds, the plan waits with its reason. It holds for the first of: `COMPANION_REACH=off`, a crisis turn under a day old (ADR 0022), their learned quiet hours (`core/rhythm.py`), a pretend scene, a chat active in the last 90 minutes, its last reach-out of any kind still unanswered (a shadow would-send counts as sent, so shadow shows what live would do), under six hours since its last of any kind, and its share of conversations at the dial (`docs/initiative.md`). Until 2026-10-25 plans kept their own caps (fixed quiet hours of 23:00 to 08:00, one a day, 20 hours apart, a 72-hour back-off) and saw only their own reach-outs.
@@ -66,9 +67,9 @@ A hold is logged once per loop and per kind of hold as `held, would otherwise re
 
 | File | What |
 |---|---|
-| `logic.py` | pure: which plans become loops, their kinds and times, the labels for settling, which loop becomes the note, the note text (`SENSITIVE`, `MAX_OFFERS`), how a thread was met and the pace learned from it (`Met`, `pace`, `pace_holds`) |
+| `logic.py` | pure: which plans become loops, their kinds and times, the labels for settling, which loop becomes the note, the note text (`SENSITIVE`, `MAX_OFFERS`) |
 | `gate.py` | pure: which due loop to reach out about and which have expired, held with the shared gate's reason (`evaluate`) |
-| `run.py` | effects: reading new messages for loops, the tick, the drafter, the note and the pace beside it, reading how a thread was met (`read_met`, `OPENLOOPS`) |
+| `run.py` | effects: reading new messages for loops, the tick, the drafter, the loop's candidate for the picker (`loop_candidate`, `OPENLOOPS`) |
 | `store.py` | its queries (the tables are in `store/sqlite/migrations/0012_open_loops.sql`) |
 
 ## Prompts

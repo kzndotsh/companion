@@ -1,19 +1,21 @@
-"""The calendar's note: on a casual turn, the one occasion today holds (their own dates from memory
-first), sent after the history,
-where a note about the day was used 12 of 12 times and the date alone 0 of 12 (2026-10-25). Logged
-with the occasion once the turn is stored, so a failed turn offers nothing."""
+"""The calendar's candidate: the one occasion today holds (their own dates from memory first), sent
+after the history when the picker brings it up (`turn/mention.py`), where a note about the day was
+used 12 of 12 times and the date alone 0 of 12 (2026-10-25)."""
 
 from __future__ import annotations
 
 from datetime import datetime, time
 
 from companion.core.clock import named_zone
+from companion.core.turn.mentions import Candidate, Rank
 from companion.core.types import Frame, Json, RelationshipId
 from companion.features.calendar.logic import (
     LOOKBACK,
     OFFERED,
     REGION,
     Dated,
+    How,
+    Kind,
     Occasion,
     note,
     occasions,
@@ -21,8 +23,7 @@ from companion.features.calendar.logic import (
     their_dates,
     when,
 )
-from companion.loops.current import decide
-from companion.loops.features import Feature, Moment, Offer, Offered, asking, quiet
+from companion.loops.features import Feature, Moment
 from companion.store.sqlite.store import Store
 
 
@@ -44,13 +45,21 @@ def theirs(store: Store, rel: RelationshipId) -> tuple[Dated, ...]:
     return their_dates([(b.claim, b.sensitivity) for b in memories if b.frame is Frame.REAL])
 
 
-def calendar_offer(m: Moment, found: object, so_far: Offered) -> Offer:
-    """Nothing when switched off, on a turn that is not casual or quiet, or when another note asks
-    them something; else the picked occasion, never one offered already."""
+_RANK = {Kind.THEIRS: Rank.THEIRS, Kind.RELATIONSHIP: Rank.US}
+
+
+def rank(o: Occasion) -> Rank:
+    """A lead-up waits behind any day itself; a day of theirs comes first."""
+    return Rank.LEAD_UP if o.how is How.LEAD_UP else _RANK.get(o.kind, Rank.DAY)
+
+
+def calendar_candidate(m: Moment, found: object) -> Candidate | None:
+    """The occasion today holds (their own dates from memory first), never one offered in the
+    last few days; nothing when switched off. The picker decides whether it is brought up."""
     del found
     c, t = m.c, m.t
-    if not c.calendar or not quiet(m, so_far) or asking(so_far):
-        return Offer()
+    if not c.calendar:
+        return None
     zone = named_zone()
     local = t.now.astimezone(zone)
     today = local.date()
@@ -60,15 +69,12 @@ def calendar_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     met = first.astimezone(zone).date() if first else None
     o = pick(occasions(today, REGION, met, theirs(c.store, c.rel)), offered)
     if o is None:
-        return Offer()
+        return None
     detail = _detail(o, local)
     reason = f"calendar: offered {o.name} ({o.how.value.replace('_', ' ')}, {detail['when']})"
-    return Offer(
-        tail=(note(o, today),),
-        after=(lambda: decide(c, t, OFFERED, detail, reason=reason),),
-        asks=True,
-    )
+    return Candidate(rank(o), note(o, today), True, OFFERED, o.name, detail, reason)
 
 
-# Holidays, cultural days and the relationship's dates (`COMPANION_CALENDAR`, on unless off).
-CALENDAR = Feature("calendar", note=calendar_offer)
+# Holidays, cultural days, their own dates and the relationship's (`COMPANION_CALENDAR`, on unless
+# off): a candidate for the one thing brought up when they write.
+CALENDAR = Feature("calendar", mention=calendar_candidate)

@@ -13,8 +13,8 @@ from pathlib import Path
 import httpx
 import pytest
 
+from companion.core.turn.mentions import MET_PROMPT, MET_SCHEMA, Met, met_prompt, parse_met
 from companion.daemon import load_dotenv
-from companion.features.threads.logic import MET_PROMPT, MET_SCHEMA, Met, met_prompt, parse_met
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 

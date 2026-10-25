@@ -10,10 +10,10 @@ from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.basics.logic import name_belief
 from companion.features.threads.logic import Thread, ThreadState
-from companion.features.threads.run import MET, PACE_SOONER
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from companion.turn.mention import MET, PACE_SOONER
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 
