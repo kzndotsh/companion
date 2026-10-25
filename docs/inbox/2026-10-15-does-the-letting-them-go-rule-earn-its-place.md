@@ -1,5 +1,7 @@
 # Does the "letting them go" persona rule earn its place?
 
+**Status (2026-10-25):** not built; parked, card R13.
+
 Added 2026-10-15. Nothing is decided. This is parked until there is something to test it with.
 
 ## The rule

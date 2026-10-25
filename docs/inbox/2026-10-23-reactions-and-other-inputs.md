@@ -1,5 +1,7 @@
 # Reactions and the other inputs the bot never hears (shelved)
 
+**Status (2026-10-25):** not built; shelved by the owner 2026-10-23, card J24.
+
 From J24 ("inform without waking"), researched and measured 2026-10-23. Shelved by the owner; kept
 here so the work is not redone.
 

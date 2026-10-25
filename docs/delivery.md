@@ -12,8 +12,8 @@ received, the reply in progress included, and only then exits, for up to 30 seco
 after 30 seconds, can still lose a message that was received but not answered.
 
 A plain message that arrives while the previous one is still being answered, either being written or
-held before sending, replaces that answer. The dropped reply is marked undelivered, so the new reply
-sees both of their messages. Commands never replace anything.
+held before sending, replaces that answer, and the new reply sees both of their messages. A reply
+that was already written and then dropped is marked undelivered. Commands never replace anything.
 
 ## Sending
 

@@ -8,13 +8,13 @@ Days worth a word: US public and cultural days, the lead-up to a big one, and th
 
 **The occasions.** Code works out what today holds, in the machine's named zone (`named_zone`):
 
-- **Public and cultural days** come from the `holidays` library for the region (`REGION`, "US", set in one place): its `PUBLIC` category (New Year's Day, Martin Luther King Jr. Day, Presidents' Day, Memorial Day, Juneteenth, Independence Day, Labor Day, Columbus Day, Veterans Day, Thanksgiving, Christmas Day) and its `UNOFFICIAL` one (Groundhog Day, Valentine's Day, St. Patrick's Day, Good Friday, Easter, Mother's Day, Father's Day, Halloween, Christmas Eve, New Year's Eve). Observed stand-ins (a Friday off for a Saturday holiday) are left out. Names are put in plain words (`PLAIN`). New Year's Eve, Christmas Eve, Mother's Day and Father's Day are also written in code and used only when the library lacks them for the region.
+- **Public and cultural days** come from the `holidays` library for the region (`REGION`, "US", set in one place): its `PUBLIC` category and its `UNOFFICIAL` one, with observed stand-ins (a Friday off for a Saturday holiday) left out. Names are put in plain words (`PLAIN`). Days of remembrance, civic, religious and contested days are then dropped (`LEFT_OUT`: Martin Luther King Jr. Day, Presidents' Day, Memorial Day, Juneteenth, Columbus Day, Veterans Day, Good Friday). What is left: New Year's Day, Groundhog Day, Valentine's Day, St. Patrick's Day, Easter, Mother's Day, Father's Day, Independence Day, Labor Day, Halloween, Thanksgiving, Christmas Eve, Christmas Day and New Year's Eve. New Year's Eve, Christmas Eve, Mother's Day and Father's Day are also written in code and used only when the library lacks them for the region.
 - **The relationship's dates** come from the local date of their first message in the ledger: a month, a hundred days, six months, a year and each year after. A month past a short month's end lands on its last day (31 January, then 28 or 29 February).
 - **Lead-ups** for the big days (New Year's Eve, Valentine's Day, Halloween, Thanksgiving, Christmas Day): two days before ("in two days") and the day before ("tomorrow").
 
 **The pick.** At most one occasion a turn, in a fixed order: the relationship's date, then a public or cultural day, then a lead-up. An occasion is never offered twice: each on its day once, and a lead-up once per big day in total (both lead-up days share one key). What was offered is read from the decisions of the last three days.
 
-**The note.** On a casual turn (the listening judge read it as not serious, outside a scene, not a goodbye, and no crisis concern), not held by the floor, with no name question, check-in, open loop, crisis note or question game that turn, the picked occasion becomes one line after the history:
+**The note.** On a casual turn (read as not serious, outside a scene and not a goodbye), not held by the floor, with no name question, check-in, open loop, crisis note or question game that turn, the picked occasion becomes one line after the history:
 
 - a public or cultural day: `notes/occasion-day` ("Today is Halloween. If it fits, a light nod to it is welcome...", never assuming they celebrate it, have plans or have family around);
 - a lead-up: `notes/occasion-soon` ("Halloween is in two days. If it fits, you could lightly ask whether they have anything planned...");
@@ -46,7 +46,8 @@ The calendar counts as a note that asks them something (`ASKING` in `loops/featu
 ## Measured
 
 - 2026-10-25: scripted first messages on 12 days, 6 draws each, owner's character: the first wording (with "don't assume they celebrate it") named Thanksgiving 0/6, New Year's Eve 1/6 and a one-month date 0/6 and hedged ("merry christmas, if you're celebrating"); the direct wording named every day 6/6, and on a lonely Christmas message it kept to comfort ("christmas can make the quiet feel louder"). It also wished a "happy Memorial Day" and a "happy Good Friday", so days of remembrance, civic, religious and contested days are left out (`LEFT_OUT`).
-- 2026-10-25: scripted Halloween first messages, 12 draws each on the live talker: it named the day 0/12 with the date in the clock line, 0/12 with "(Halloween)" in the clock line, 12/12 with a note after the history; an ordinary morning 0/12 (`docs/inbox/2026-10-25-a-calendar-of-occasions.md`). The shipped wording, lead-ups and the relationship's dates are not yet measured.
+- 2026-10-25: scripted Halloween first messages, 12 draws each on the live talker: it named the day 0/12 with the date in the clock line, 0/12 with "(Halloween)" in the clock line, 12/12 with a note after the history; an ordinary morning 0/12 (`docs/inbox/2026-10-25-a-calendar-of-occasions.md`, `evals/CHANGELOG.md`, about $0.06).
+- 2026-10-25: the shipped notes replayed on the same 12 days: every day named 6 of 6 (commit 8c4ec26). Lead-ups on a real conversation are not yet measured.
 
 ## Tests
 

@@ -7,8 +7,8 @@ being talked about, shown beside the memory on the card.
 
 ## How it works
 
-After each memory pass that stored new memories of theirs, code takes current memories that want a note and have
-none: a feeling or state, or a sensitive one (sensitivity 2 or more). Tastes, events and projects get none.
+After each memory pass that accepted new memories of theirs, code takes current memories that want a note and have
+none: a feeling or state, or a sensitive one (sensitivity 2 or more). Tastes, events and projects get none (unless sensitive).
 Up to 20 per pass (`limit`), and 1000 from the command. For each, the model reads the memory and the messages
 around its quote (6 before and 1 after) and writes one short clause. Code keeps it only if it is non-empty and
 at most 25 words, drops a full stop and lowers the first letter. The clause is stored with the prompt version,

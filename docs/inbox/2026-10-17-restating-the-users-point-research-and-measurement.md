@@ -1,5 +1,7 @@
 # Restating the user's point: what the research says and what we measured
 
+**Status (2026-10-25):** measured, not fixed; parked by the owner, card T10.
+
 Added 2026-10-17. Parked by the owner. Not a task. Replaces the Todo card T10, now in the backlog.
 
 ## The behaviour

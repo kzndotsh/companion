@@ -1,5 +1,7 @@
 # Prompting and humanizing guides to review
 
+**Status (2026-10-25):** reviewed 2026-10-18 (`docs/research/2026-10-18_prompting-guides-review.md`); no card for acting on it.
+
 Added 2026-10-18. **Reviewed the same day:** see `docs/research/2026-10-18_prompting-guides-review.md` for
 what each says, what lines up with our measurements and six candidate experiments. The original list
 is kept below.

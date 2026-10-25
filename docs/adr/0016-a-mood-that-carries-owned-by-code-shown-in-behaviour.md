@@ -1,8 +1,8 @@
 # 0016. A mood that carries: a few named states, owned by code, shown only in behaviour
 
-**Status:** proposed 2026-10-18 (TODO J5). Built 2026-10-19 (`core/mood.py`). Soaking in real use before
-it is accepted: `COMPANION_MOOD` is `shadow` by default (the mood is worked out and logged, and the
-model is sent nothing new). `on` sends the line, `off` does neither.
+**Status:** proposed 2026-10-18 (TODO J5). Built 2026-10-19 (now `features/mood/`). Still awaiting
+acceptance, soaking in real use: `COMPANION_MOOD` is `shadow` by default (the mood is worked out and
+logged, and the model is sent nothing new). `on` sends the line, `off` does neither.
 
 **Context.** A companion that is the same at 2 AM and 2 PM, and the same after a long warm chat as
 after silence, feels like a script. The mood should change with time and with how the conversation goes,

@@ -6,7 +6,7 @@ A reminder or check-in they ask for in the chat ("remind me at 8 to take the dog
 
 ## How it works
 
-**Reading a request.** Before the reply, code looks for reminder words in their message (remind, reminder, check in on me, ping me, text me, don't let me forget, ask me how, and similar), or notes that the companion's last reply asked them when. Only then does it ask a small model to read the message (`system/reminder-read`, 8 s limit, one try, with the last 4 messages for context). A fallback model's answer counts as unread. A failed or unreadable read means no reminder this turn and the reply goes on as usual. The model reads slots and never sets the clock: whether it is a set, a cancel or neither, a reminder or a check-in, their words for the thing, and the parts of when (day words, hour and minute, am or pm if said, part of the day, minutes from now, whether it repeats). The read runs under the look-up deadline of the turn.
+**Reading a request.** Before the reply, code looks for reminder words in their message (remind, reminder, check in on me, ping me, nudge me, text me, message me, don't let me forget, make sure I, ask me how, tell me at or in, and similar), or notes that the companion's last reply asked them when. Only then does it ask a small model to read the message (`system/reminder-read`, 8 s limit, one try, with the last 4 messages for context). A fallback model's answer counts as unread. A failed or unreadable read means no reminder this turn and the reply goes on as usual. The model reads slots and never sets the clock: whether it is a set, a cancel or neither, a reminder or a check-in, their words for the thing, and the parts of when (day words, hour and minute, am or pm if said, part of the day, minutes from now, whether it repeats). The read runs under the look-up deadline of the turn. A reader that fills a hour of 0 for a time nobody gave is not trusted: hour 0 (and its minute) is dropped unless their words say midnight, 12 am or 00:xx, so the part of the day they named decides, or it asks (`trusted` in `logic.py`). The schema lets an unsaid day count, hour, minute or minutes-from-now be null.
 
 **Working out the time.** Code turns the slots into a time in the machine's named zone (`named_zone`, so a time after a clock change keeps its wall time). The rules:
 
@@ -20,7 +20,7 @@ A reminder or check-in they ask for in the chat ("remind me at 8 to take the dog
 
 It asks instead of guessing for a bare "at 8" when both are still ahead, "next friday" (this one or the next), a time already gone, a time past 60 days, and a repeating request ("only one-off reminders can be set for now, so offer to set just the next one"). A cancel matches pending reminders that share a word with what they named (words under 3 letters and filler aside), or the only pending one when nothing is named. No match means no note.
 
-**The note.** One note after the other notes (it is the last in order, in the system block) says what happened: set, with the time code worked out, or what to ask, or that one was cancelled. The reply confirms in its own words. The decision is logged as `reminders: set`, `reminders: asked them when` (also the key that marks the next answer as worth reading) or `reminders: cancelled`, with the prompt `name@version`. Every reminder is stored with their quote, the due time in UTC, the local wall time and the zone. Its state is its newest event (`pending`, `claimed`, `sent`, `late`, `expired`, `cancelled`). Nothing is deleted.
+**The note.** One note in the system block (after the mark note and before the crisis, game, calendar and question notes) says what happened: set, with the time code worked out, or what to ask, or that one was cancelled. The reply confirms in its own words. The decision is logged as `reminders: set`, `reminders: asked them when` (also the key that marks the next answer as worth reading) or `reminders: cancelled`, with the prompt `name@version`. Every reminder is stored with their quote, the due time in UTC, the local wall time and the zone. Its state is its newest event (`pending`, `claimed`, `sent`, `late`, `expired`, `cancelled`). Nothing is deleted.
 
 **Sending.** Every 60 seconds the timer picks up reminders that are due.
 
@@ -61,6 +61,7 @@ It asks instead of guessing for a bare "at 8" when both are still ahead, "next f
 
 - 2026-10-21: `system/reminder-read` v1 on 41 made-up requests at a fixed time, 41/41 twice, including asks, cancels and 5 lines that must set nothing. The talker wrote 12 due messages, all short, all passed the code checks (`evals/CHANGELOG.md`).
 - 2026-10-21: a check-in with no time lands at a picked time between 4 and 8 pm, 41/41 again (`evals/CHANGELOG.md`).
+- 2026-10-25: judge bake-off on the live reminders suite (41 cases): Haiku 41, GPT-6 Luna 32, DeepSeek 39. Luna filled optional integers with 0, so "this evening" read as midnight; the schema now lets them be null and hour 0 counts only when they said midnight, which brought Luna to 40 of 41 (commit 2691f18, `evals/CHANGELOG.md`). Haiku stays the judge.
 
 ## Tests
 

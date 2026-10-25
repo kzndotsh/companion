@@ -9,7 +9,7 @@ back in replies. The code wanted to give the talker a clock, the memory card and
 
 - **First block:** the persona, byte-identical turn to turn so it caches.
 - **Second block:** everything else the code wants the model to know this turn, built in
-  `_assemble` (`loops/fast.py`):
+  `_assemble` (`loops/fast.py`, now `assemble` in `turn/assemble.py`):
   - the clock line;
   - the name they like to be called, when one is pinned (`notes/address`);
   - the memory card, with held memories only on turns rated severity 1 or more;

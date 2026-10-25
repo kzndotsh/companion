@@ -6,9 +6,9 @@ A light nudge when they step away and stay gone much longer than they said, the 
 
 ## How it works
 
-**Reading a time away.** Beside any real turn that is not serious (not in a scene, severity below 2), a small model reads the message alone (`system/away`, 8 s limit, one try, purpose `nudge`). It answers one of four things: `brief` (leaving now for something short), `back` (leaving now and will return), `goodbye` (leaving for the night or for good), or `none`. It also gives the minutes it expects them to be away, which code clamps to between 10 and 180. A goodbye, `none` or a bad answer records nothing. A goodbye or no time away is a readable answer, not a failure. A call that fails or times out means no nudge for that message. A fallback model's answer counts. Each time away is a `away: they stepped away` decision (a policy decision) holding the kind, the minutes, their words, and the prompt `name@version`.
+**Reading a time away.** Beside any real turn that is not serious (not in a scene, severity below 2, and the listening read ran), a small model reads the message alone (`system/away`, 8 s limit, one try, purpose `nudge`). It answers one of four things: `brief` (leaving now for something short), `back` (leaving now and will return), `goodbye` (leaving for the night or for good), or `none`. It also gives the minutes it expects them to be away, which code clamps to between 10 and 180. A goodbye, `none` or a bad answer records nothing. A goodbye or no time away is a readable answer, not a failure. A call that fails or times out means no nudge for that message. A fallback model's answer counts. Each time away is a `away: they stepped away` decision (a policy decision) holding the kind, the minutes, their words, and the prompt `name@version`.
 
-**The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` looks at their newest recorded time away. It holds, with a reason, for the first of these:
+**The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` (`daemon.py`) looks at their newest recorded time away. It holds, with a reason, for the first of these:
 
 - no time away is recorded
 - a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022)
@@ -21,7 +21,7 @@ A light nudge when they step away and stay gone much longer than they said, the 
 
 Nudges do not use the other reach-out caps (the daily one, the 20-hour gap, the 90 quiet minutes, the backoff). Only their own limits above apply. The reason is rendered from the numbers by code.
 
-**The draft.** When nothing holds it, a small model writes one light message (`system/nudge-draft`, purpose `initiative`), given what they said and how many minutes ago it was. The prompt asks for under about twelve words and no guilt, no "I missed you" and no question about their silence. Code cuts a draft over 18 words to its first sentence only if that is a question, else drops it (`short_draft` in `core/reachout.py`). A failure gives an empty draft. The result is logged as the decision `nudge (shadow): would send` (an initiate decision) with the turn it is about, their words, the draft and the prompt. Nothing is sent. The same decisions set the one-per-time-away and two-a-day counts.
+**The draft.** When nothing holds it, a small model writes one light message (`system/nudge-draft`, purpose `initiative`), given what they said and how many minutes ago it was. The prompt asks for under about twelve words and no guilt, no "I missed you" and no question about their silence. Code cuts a draft over 18 words to its first sentence only if that is a question, else drops it (`short_draft` in `core/reachout.py`). A failure gives an empty draft. The result is logged as the decision `nudge (shadow): would send` (an initiate decision) with the turn it is about, their words, the draft and the prompt. Nothing is sent. A drafted nudge also counts as the tick's first reach-out, so the own-reasons reach-out (ADR 0021) does not draft in the same tick. The same decisions set the one-per-time-away and two-a-day counts.
 
 **Never.** It never nudges after a goodbye, in quiet hours, after they came back, or twice about one time away.
 
@@ -44,6 +44,7 @@ Nudges do not use the other reach-out caps (the daily one, the 20-hour gap, the 
 ## Measured
 
 - 2026-10-20: `system/away` read all 855 real, not serious messages. The first wording found 37 times away but also read things already done. The second found 18, nearly all real. Replayed with the gate, no nudge in six days, because they always wrote again sooner (`evals/CHANGELOG.md`).
+- 2026-10-24 (first review, commit 9f5980d): neither this nor reaching out had drafted anything, because every time away ended within a minute, so there was nothing to judge. Review moved to 2026-10-31.
 
 ## Tests
 

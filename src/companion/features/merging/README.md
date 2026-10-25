@@ -2,7 +2,7 @@
 
 Finds memories about one thing (one moment split into pieces, one interest restated) and proposes each group as a single memory. The memory pass often splits a moment into several memories, and this puts them back together for the owner to approve.
 
-**Status:** live as proposals only, and nothing is merged without the owner. No switch of its own: it runs inside the nightly step, which `COMPANION_CONSOLIDATE=off` skips (see consolidate). Runs nightly at 04:00 and from a command.
+**Status:** live as proposals only, and nothing is merged without the owner. No switch of its own: the nightly grouping step always runs, even when `COMPANION_CONSOLIDATE=off` skips the nightly memory check (see consolidate). Runs nightly at 04:00 local time (`memory/nightly.py`, after the memory check) and from a command.
 
 ## How it works
 
@@ -18,7 +18,7 @@ Finds memories about one thing (one moment split into pieces, one interest resta
 - Pick records which members belong together, by number. The next nightly or `group` run calls `repick`, which writes the wording for just those members and proposes them again alone (if every member is still current and that set was not asked before).
 - A note keeps the proposal open for another time. Keep apart closes it. A proposal whose memories have since closed is marked gone.
 
-Spend is tagged `consolidate`. The grouping judge can propose looser groups, such as two related likes, and those are the owner's to keep apart.
+Spend is tagged `consolidate`, which is also the name `COMPANION_JUDGE_MODELS` uses to route the three grouping reads (the wording call uses the shared judge model). The grouping judge can propose looser groups, such as two related likes, and those are the owner's to keep apart.
 
 ## Files
 

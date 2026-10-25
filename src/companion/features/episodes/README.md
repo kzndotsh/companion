@@ -19,6 +19,8 @@ Keeps a record of the times the two of them spent together, so when they say "la
 - The note `notes/recent-times` lists them, in the system block, with the instruction to let it shape the answer and bring it up only if they do.
 - The decision "episodes: what the two of them did recently, shown" is logged with the mode, why ("pointed at a time" or "back after a gap"), the lines and the note's `name@version`. In shadow its reason adds "(shadow, not sent)" and nothing reaches the talker.
 
+The reach feature also reads these lines: a recent everyday stretch (not a heavy one) can be a thing the companion reaches out about (`features/reach/run.py`).
+
 Nothing in an episode line is ever shown to them. The log is append-only and a line is never deleted.
 
 ## Files

@@ -2,7 +2,7 @@
 
 **Status:** accepted 2026-10-25 by the owner (card R16). Built behind `COMPANION_CRISIS`, shadow
 first: it reads and logs every level but changes nothing until its fixtures pass and the owner turns
-it on.
+it on. Review by 2026-11-01 (`core/shadows.py`).
 
 ## Context
 

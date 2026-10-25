@@ -15,8 +15,8 @@ A second look at a message that may be a real risk to their life or safety, and 
 - **Fail safe.** Every read failed: concern. A failed or unreadable read counts as literal and stands for any reading, so when one failed, every readable read's labels count. Only three readable reads all saying "not literal" stand down.
 - **Figurative.** All three reads readable and none literal.
 - **None.** No cue, no judge, or the literal reads found no risk kind. When a read still gave a risk kind (a joke touched the subject and the reads split), one light check is allowed, at most once a day.
-- **Urgent.** A literal risk with timing now; or a plan or means, or a substance taken, unless it is all in the past.
-- **Concern.** Any other literal risk: thoughts of suicide or self-harm, or of hurting someone, without a plan or a now.
+- **Urgent.** A literal risk with a plan or means, or a substance taken, unless the timing is past; or self-harm with timing now.
+- **Concern.** Any other literal risk: thoughts of suicide or self-harm, or of hurting someone, even happening now, without a plan or means. Having the thoughts now is concern, not urgent (with "now" alone urgent, 7 of 10 concern fixtures read urgent).
 
 For the kind, the most serious any counted read gave wins (substance taken, then suicidal thoughts, self-harm, harm to others); for the timing the most pressing; a plan or means if any read named one.
 
@@ -56,7 +56,8 @@ The crisis line is one constant, `core/crisis.py` `LINE`: 988 (call or text, in 
 
 ## Measured
 
-- Not yet. The fixture check has not been run; the review asks for no genuine risk missed in it, the jokes not raised, and no false alarm in real chat.
+- 2026-10-25, 40 public fixtures (10 concern, 10 urgent, 14 figurative, 6 none), three reads each, about $0.02 a run, three runs: no genuine risk read below its level and no joke, lyric, scene or hyperbole read as a risk. With the first level rule 7 of the 10 concern cases read urgent; after the rule above, 39 of 40 matched exactly, the one left over an urge to self-harm right now read urgent (the safe side) (`evals/CHANGELOG.md`).
+- 2026-10-25, judge bake-off on the 40 cases: Haiku 0 missed, 0 false alarms, 7 reads refused by moderation; GPT-6 Luna 0 missed, 1 false alarm; DeepSeek 0 missed, 0 false alarms. That is why the judge reads on DeepSeek first. Real chat has not yet been judged: the review also asks for no false alarm there.
 
 ## Tests
 

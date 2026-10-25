@@ -1,5 +1,7 @@
 # Getting to know them, on purpose
 
+**Status (2026-10-25):** partly built: asking a name and pronouns, a name capture, memories labelled by domain and depth, and a basics hook in shadow (`src/companion/features/basics/`, `hooks/`), card J48; the rest waits on the review of 2026-10-26.
+
 Added 2026-10-19. A design sketch to discuss, not a task yet.
 
 ## The problem

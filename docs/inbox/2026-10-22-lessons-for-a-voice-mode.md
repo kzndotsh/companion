@@ -1,5 +1,7 @@
 # Lessons for a voice mode, if one is built
 
+**Status (2026-10-25):** not built; no voice mode exists, parked until one does, no card.
+
 Added 2026-10-22. An idea, not a task. From the read-only audit of another open companion repo
 (local research folder, 2026-10-16), which has voice with barge-in.
 

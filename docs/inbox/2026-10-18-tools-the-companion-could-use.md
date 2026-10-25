@@ -1,5 +1,7 @@
 # Tools the companion could use
 
+**Status (2026-10-25):** partly built the code-decides way: recall look-up and reminders (`src/companion/features/reminders/`); web search and true tool calls are not built, no card.
+
 Added 2026-10-18. To brainstorm; nothing decided.
 
 ## How tools usually work

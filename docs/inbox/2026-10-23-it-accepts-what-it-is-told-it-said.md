@@ -1,5 +1,7 @@
 # It accepts what it is told it said
 
+**Status (2026-10-25):** not built; noted as rare in real chats (8812e20), no card.
+
 Noticed while measuring how it holds its own views (`evals/CHANGELOG.md`, 2026-10-23). One test
 message told it "when you said you get tired too…". It had never said that: none of its past
 messages do. Of 24 replies, 10 apologised for having said it ("I shouldn't have said I get tired

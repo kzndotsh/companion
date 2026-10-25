@@ -7,21 +7,27 @@ reply whatever feature is involved. What each feature adds along the way is in i
 ## The stages
 
 A turn runs in stages, one module each under `src/companion/turn/`, driven by `handle(convo, ...)` in
-`fast.py`:
+`fast.py`. Before any of them, at the daily spend cap (`COMPANION_DAILY_CAP_USD`) their message is kept,
+nothing paid runs, and they are told once that day (`messages/spend-cap`).
 
-1. **Hear** (`hear.py`). First it decides whether the message needs a reply at all or only a
+1. **Hear** (`hear.py`). Side by side, it decides whether the message needs a reply at all or only a
    reaction emoji, and reads how serious it is (the listening read, below).
 2. **Route** (`route.py`). It chooses which talker answers: the everyday model or the roleplay model.
 3. **Look** (`notes.py`). Every feature that looks something up before the reply does so here, side
    by side, under one 9 s deadline. A look-up that is late or fails simply adds nothing that turn.
 4. **Assemble** (`assemble.py`). It builds the request: the persona, the history, and a system block
-   holding the clock, the memory card and the notes. `Layout` lays the request out from those parts
+   holding the clock (weekday, date and time, and how long since their last message, from
+   `core/clock.py`), the memory card and the notes. `Layout` lays the request out from those parts
    with no store in reach; `companion eval` lays out a scripted fixture with it too, and passes each
    reply through `checked` in `talk.py`, so a sample is what the person would receive.
-5. **Talk** (`talk.py`). The talker writes the reply, and the reply checks run on it.
+5. **Talk** (`talk.py`). The talker writes the reply, with a reaction judge and, when a cue or a scene
+   calls for it, the frame judge beside it; then the reply checks run on it.
 6. **Persist** (`persist.py`). Their message, the reply and every decision are stored, and each
-   feature's step after the turn runs. Shadow look-ups run beside it (`beside.py`) and never change
-   the reply.
+   feature's step after the turn runs. Shadow look-ups start once the request is assembled and run
+   beside the rest of the turn (`beside.py`); they never change the reply.
+
+On an urgent crisis turn with the path on, a fixed message follows the reply (the crisis path,
+below).
 
 The values each stage hands the next live in `turn/values.py`. The conversation the turn runs in is
 plain data in `loops/conversation.py`.
@@ -43,8 +49,8 @@ features only act on casual turns. With `COMPANION_CRISIS=on`, a turn the crisis
 is never casual (`Moment.casual`).
 
 When they come back 3 hours or more after a talk that turned serious (severity 2 within its last 12
-hours), the next ordinary message gets one gentle note to ask how they are now (`notes/check-in`),
-once per heavy talk.
+hours), their next message outside a scene that is not itself serious gets one gentle note to ask
+how they are now (`notes/check-in`), once per heavy talk.
 
 ## The crisis path
 
@@ -58,11 +64,12 @@ only three reads all saying it is a joke, a lyric, a scene or a what-if stand do
 
 - **None or figurative**: nothing, or, when the reads split on a joke that touched the subject, one
   light check after the history at most once a day (`notes/crisis-light`).
-- **Concern** (a literal risk without a plan, a means or a now): `notes/crisis-concern` after the
-  history, no length cap, and the turn is not casual.
-- **Urgent** (a plan or a means, now, or something taken): the same note, and code's own fixed
-  message with the crisis line after the reply (the sheet's `## Crisis message` section, or
-  `messages/crisis-line`), at most once an hour.
+- **Concern** (a literal risk with no plan or means and nothing taken, having the thoughts now
+  included, or every read failed): `notes/crisis-concern` after the history, no length cap, and the
+  turn is not casual.
+- **Urgent** (a plan or a means or something taken, unless it is all in the past, or self-harm
+  happening now): the same note, and code's own fixed message with the crisis line after the reply
+  (the sheet's `## Crisis message` section, or `messages/crisis-line`), at most once an hour.
 
 On a concern or urgent turn a scene ends for that turn and the everyday talker answers, a reply that
 names means or methods in a how-to way is drawn once more, and reaching out first holds for a day.
@@ -145,11 +152,11 @@ A reply is checked before it is sent (`core/recheck.py`). Code catches these:
 - the stage direction "a beat"
 - markdown that would show raw, outside scenes
 
-On an ordinary turn, a small judge also catches a joke bolted onto an ordinary message, and a canned
-generic reaction that could sit under any message ("that sounds so good", "X is always the best part",
-restating their point back as praise), in one call (`system/quip`). In a scene, on a
-serious or acute turn, or when the listening judge could not read the turn, only the code checks
-run.
+On a turn the listening judge read as not serious, a small judge also catches a joke bolted onto
+an ordinary message, and a canned generic reaction that could sit under any message ("that sounds so
+good", "X is always the best part", restating their point back as praise), in one call
+(`system/quip`). In a scene, on a serious or acute turn, or when the listening judge could not read
+the turn, only the code checks run.
 
 On a turn the crisis path reads as concern or urgent, code also catches a reply that names means or
 methods in a how-to way (a lethal dose, a number of pills, "the easiest way to") and draws it once
@@ -158,7 +165,8 @@ more, with the path on (`features/crisis/logic.py` `method_words`).
 When a check fails, the same model is asked once more, or twice if the redraw still has an em dash,
 and the last reply goes out whatever it is. The first is kept in the decision detail. Nothing is ever
 edited. An empty reply is drawn once more instead of leaving the turn silent.
-`COMPANION_RESAMPLE=off` turns the checks off.
+`COMPANION_RESAMPLE=off` turns these checks and the empty redraw off; the crisis method check and the
+floor's check still run.
 
 ## When a model fails
 

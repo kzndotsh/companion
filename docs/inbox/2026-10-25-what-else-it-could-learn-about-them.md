@@ -1,5 +1,8 @@
 # What else it could learn about them, and how
 
+**Status (2026-10-25):** pronouns are built as a basic it asks for after the name
+(`src/companion/features/basics/`, `notes/ask-pronouns`). The ideas below are not built.
+
 Not a task. Ideas from 2026-10-25, after pronouns joined the name as a basic it asks for and birthday
 and school joined the hook. Each item says what it would feed and how it should be learned: **ask**
 (once, lightly, on a casual turn), **ask when touched** (only when their own words open the door),

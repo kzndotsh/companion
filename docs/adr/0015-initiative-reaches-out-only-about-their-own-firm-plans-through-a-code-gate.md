@@ -18,14 +18,14 @@ future, and code decides whether and when.
   sensitivity, certainty, whether it is about the companion, and its kind). Code keeps only firm plans
   about their own life and never records a sensitive one (2 or 3), so a sensitive loop can never be
   raised. Nothing is triggered by their silence, their mood or a timer alone.
-- **When.** The kind sets the time (`core/openloops.py`):
+- **When.** The kind sets the time (`core/openloops.py`, now `features/openloops/logic.py`):
   - follow-up: the morning after it happens;
   - celebrate: the day itself, mid-morning;
   - encourage: early that morning, just after quiet hours.
 
   A celebration or encouragement expires at the end of its day. A follow-up keeps two days. A loop they
   settle themselves ("it went fine") is closed as resolved and never asked about.
-- **The gate.** A pure function (`core/initiative.py`) checks, in order: quiet hours (11 PM to 8 AM,
+- **The gate.** A pure function (`core/initiative.py`, now `features/openloops/gate.py`) checks, in order: quiet hours (11 PM to 8 AM,
   their zone), a scene in progress, one reach-out a day, at least 20 hours since the last, a back-off
   after an unanswered live reach-out (72 hours; after two in a row it waits for them to write first),
   and an active chat (90 minutes). The first that holds is the reason. A hold never drops a loop; it

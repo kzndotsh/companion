@@ -1,5 +1,7 @@
 # Resample a reply that fails a code check
 
+**Status (2026-10-25):** built for replies: code checks redraw a reply once or twice (`docs/turn.md`, `COMPANION_RESAMPLE`, J47); a queue-time repeat filter for reach-outs is not built, card A9.
+
 Added 2026-10-18. An idea, not a task.
 
 ## The idea

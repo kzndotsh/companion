@@ -1,7 +1,8 @@
 # 0020. The companion's own lore lives in its views, labelled by kind, and is shown when the moment touches it
 
-**Status:** proposed 2026-10-20. Phase 1 (the labels) and phase 2 (tastes shown, measured, on) built the same day. Accepted, or changed,
-once phase 2 is measured.
+**Status:** proposed 2026-10-20. Phase 1 (the labels) and phase 2 (tastes shown when a message
+touches them) were built and measured that day and have been on since. It is accepted, or changed, at
+the owner's review of 2026-10-27, which reads a week of its tastes in use.
 
 **Context.** A personality forms from small invented details: what it likes, what it finds funny, a name
 it chose. Left loose, those details are said once and forgotten, so tomorrow it may say the opposite. The

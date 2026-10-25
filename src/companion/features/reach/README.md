@@ -21,7 +21,7 @@ The one thing is chosen for every kind and handed to the drafter with it, so a t
 **The gate.** When a kind applies, a pure gate (`gate.py`) holds it for the first of these, in order, with a reason written from the numbers:
 
 1. the dial is `off`
-2. a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022)
+2. a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022; the hold is logged only once `COMPANION_CRISIS` is on, so in shadow it changes nothing)
 3. one of their quiet hours (learned)
 4. a pretend scene in progress
 5. the chat was active in the last 90 minutes
@@ -60,7 +60,7 @@ The one thing is chosen for every kind and handed to the drafter with it, so a t
 
 ## Measured
 
-- Nothing yet: built 2026-10-24 in shadow. The owner reads the would-sends for three to five days before any of it goes live (ADR 0021).
+- Nothing measured yet: built and accepted 2026-10-24 in shadow (ADR 0021), and `system/reach-draft` has had no eval or bake-off. The 2026-10-24 shadow review of the older reach-out and nudge ticks found nothing drafted yet to judge. The owner reads the would-sends for three to five days before any of it goes live.
 
 ## Tests
 

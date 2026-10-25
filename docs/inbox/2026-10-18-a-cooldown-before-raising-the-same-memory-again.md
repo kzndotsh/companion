@@ -1,5 +1,7 @@
 # A cooldown before raising the same memory again
 
+**Status (2026-10-25):** not built; undecided, card G16.
+
 Added 2026-10-18. Undecided; the owner wants to weigh it.
 
 ## The idea

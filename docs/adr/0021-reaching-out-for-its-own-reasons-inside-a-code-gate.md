@@ -1,6 +1,7 @@
 # 0021. Reaching out for its own reasons, inside a code gate
 
-**Status:** accepted 2026-10-25 by the owner; to be built in shadow first. Replaces the "what can be
+**Status:** accepted 2026-10-25 by the owner, and built in shadow the same day (`features/reach/`,
+`core/rhythm.py`; nothing is sent), review by 2026-10-30 (`core/shadows.py`). Replaces the "what can be
 reached out about" part and the back-off counts of ADR 0015; its gate, logging, paid-calls-last and
 shadow-first rules stand.
 
@@ -88,7 +89,7 @@ zone is a named zone.
 
 1. Shadow for three to five days: every reason, every would-send with its draft and its kind, and
    every hold, readable with `uv run companion initiative`. The owner marks drafts wanted or not.
-2. Live with `normal` once about five drafts across the kinds read well and land at sensible times.
+2. Live with `warm` (the owner's default) once about five drafts across the kinds read well and land at sensible times.
 3. A kind whose live reach-outs mostly go unanswered or get flagged is switched off.
 
 ## Consequences

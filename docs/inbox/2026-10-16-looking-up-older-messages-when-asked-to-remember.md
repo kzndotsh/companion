@@ -1,5 +1,7 @@
 # Looking up older messages when the user asks it to remember
 
+**Status (2026-10-25):** not built; replayed 2026-10-20 and the search added little, card R2.
+
 Added 2026-10-16. Nothing is decided. This is an idea to look at later, not a task.
 
 ## What happens now

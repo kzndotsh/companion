@@ -25,10 +25,13 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
   `turn/assemble.py`): the length note, the habit notes, the owned-it and question-run notes after the
   history, and so on. The fixture gives the readings a judge would: `labels` for the listening judge
   and `lore` for the lore look-up. Every other judge and look-up finds nothing, as when one fails
-  live. It already asked what to call them that day, so the name note stays out. A recorded turn
+  live. It already asked what to call them that day, so the name note stays out. The throwaway
+  conversation has the live bot's defaults (the emoticon offer on, mood in shadow, a redraw when
+  a reply fails a check). A recorded turn
   replays the request it logged. Then every reply passes the turn's reply checks and their redraws
   (`turn/talk.py`: the em dash, an unasked disclaimer, a copied clock line, the stock lines,
-  markdown, an empty reply, and the quip judge, which is asked for real). The table's replies
+  markdown, an empty reply, and the quip judge, which is asked for real on the eval's judge model,
+  Haiku, `JUDGE_MODEL` in `cli/eval.py`). The table's replies
   (`--show`) and the saved results say what made a sample draw again. As live, a turn with no
   listening reading, so a fixture without `labels`, gets the code checks but not the quip judge,
   and none of the notes that need a casual turn (such as the emoticon offer); add
@@ -84,18 +87,36 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
 ## Reading the numbers
 
 - Three samples per cell is a smoke test, not evidence. Differences of one or two samples between
-  variants are noise. Use `--samples 5` or more on the fixtures that matter before deciding.
-- The judge is a model and can be wrong. On the first run it agreed with a human reading on 23 of
+  variants are noise. Do not act on fewer than about 12 samples per cell, and use 30 on a signal
+  that matters.
+- The judge is a model (Haiku, `JUDGE_MODEL` in `cli/eval.py`; `system/judge` and
+  `system/judge-empathy`) and can be wrong. On the first run it agreed with a human reading on 23 of
   24 judged replies. Read the replies (`--show`) for anything that decides a change.
 - Fixtures marked as measuring "the talker alone" test the model without the live loop's other
   decisions, such as the acknowledgement route.
 
 ## Live tests
 
-Opt-in tests call the real models, cost cents, and check that a judge agrees with a person on invented
-examples: `uv run pytest -m live tests/live/test_ack_judge.py -s`, and likewise
-`test_extraction_rules.py`, `test_listening_judge.py` and `test_empathy_judge.py`. They are skipped in
-`just check` and CI.
+Opt-in tests in `tests/live/` call the real models, cost cents, and check that a judge agrees with a
+person on invented examples: the ack, listening, empathy, guess, reminder-read, repair, topic-spent
+and memory-conflict judges and the memory extraction rules, plus a check that the provider serves
+cached prompt tokens (`test_cache.py`). The graded judge suites run on `COMPANION_LIVE_JUDGE_MODEL`
+(default `anthropic/claude-haiku-5.5`, as the bot runs; `tests/live/models.py`), so one suite can be
+compared across models. Run them all with
+`COMPANION_LIVE_JUDGE_MODEL=<model> uv run pytest tests/live -m live -s -o addopts=""`, or one file
+with `uv run pytest -m live tests/live/test_ack_judge.py -s`. They are skipped in `just check` and CI.
+
+## The crisis fixtures
+
+`evals/fixtures/crisis/messages.json` holds 40 generic messages, each with a few messages before it
+and the level it should read (concern, urgent, figurative or none). `uv run companion crisis --check
+--cap 0.10` reads each three times with the risk judge (`system/risk`) on the models the bot reads it
+with (`COMPANION_JUDGE_MODELS`, DeepSeek V4.1 Flash first by default), shows the OpenRouter balance
+first, refuses when the balance is below the cap, and stops at the cap. It reports the misses (a
+genuine risk read below its level) and the false alarms (a joke, lyric, scene or hyperbole read as a
+risk), and lists every case read at another level. The runner lives in `cli/crisis.py` and
+`features/crisis/cli.py`; it is not part of `companion eval`, whose fixture loader reads only the
+top level of each fixtures directory.
 
 ## Adding a fixture
 

@@ -20,8 +20,10 @@ Today it is reached through Telegram, its only integration for now.
   nothing is ever deleted: memories are retired, closed or marked
   ([ADR 0001](docs/adr/0001-a-belief-is-a-quoted-claim-with-a-frame.md),
   [0002](docs/adr/0002-the-ledger-never-deletes.md)).
-- **Shows the right memories.** Each turn's card holds fifteen memories. Sensitive ones only come into
-  view when they are sharing something. A one-day moment of daily life, or a personal event on a given
+- **Shows the right memories.** Each turn's card holds fifteen memories. After their boundaries and its
+  promises, what they said in the last twelve hours comes first (up to eight), so a meal named this
+  afternoon is not crowded off. Sensitive ones only come into view when they are sharing something.
+  A one-day moment of daily life, or a personal event on a given
   day, leaves the card a week after it was last mentioned. Feelings and sensitive memories carry a short
   note on what was being talked about.
 - **Looks things up.** When they ask it to remember, or say it forgot, a small model searches all of
@@ -55,7 +57,10 @@ Today it is reached through Telegram, its only integration for now.
 - **Checks in.** Coming back hours after a talk that turned serious, it gently asks how they are now,
   once.
 - **Follows up.** Things they say about their near future become open loops. When one falls due, it is
-  brought up lightly the next time they write. Reaching out first runs in shadow only.
+  brought up lightly the next time they write. Reaching out first, about a plan, after they stepped
+  away or for its own reasons (a thought, a time they keep, missing them, at a share of conversations
+  the owner sets), runs in shadow only; with the crisis path on it is held for a day after a risk turn
+  ([ADR 0021](docs/adr/0021-reaching-out-for-its-own-reasons-inside-a-code-gate.md)).
 - **Reminds them.** "Remind me at 8pm to take the dog out" or "check up on me in a few days about the
   interview": a small model reads the words, code works out the time and asks when it is unclear, and
   the reminder comes when due in its own voice. One-off only; a pretend scene holds it until it ends.
@@ -70,9 +75,14 @@ Today it is reached through Telegram, its only integration for now.
   looked up as one of their habits or routines.
 - **Does not interview.** After three replies in a row that each asked a question, a note after the
   history says to ask none this time but still leave them something to answer.
-- **Notices the day.** On a casual turn code may add one note after the history: a US holiday or
-  cultural day ("if it fits"), the lead-up to a big one, or a month, a hundred days or a year since
-  they first talked (`features/calendar`).
+- **Keeps a question game going.** When they ask it to keep asking them things ("ask me anything"), a
+  note after the history asks it for the next question, outside scenes and serious turns.
+- **Knows the date.** The clock line gives the weekday, the date and the time, so it can place what
+  they name.
+- **Notices the day.** On a casual turn code may add one note after the history: a warm or fun US
+  public or cultural day ("if it fits", never assuming they celebrate it), the lead-up to a big one,
+  or a month, a hundred days, six months or a year since they first talked. Each is offered once, and
+  no model chooses it (`features/calendar`).
 - **Has emoticons of its own.** On casual turns code offers it one of its own marks and kaomoji; when
   their message has one, the note names that one as theirs, so it stops copying it.
 - **Reacts like a person to small vents.** A short reaction, with varied size examples drawn per turn so
@@ -99,6 +109,11 @@ Today it is reached through Telegram, its only integration for now.
   Nothing is ever edited.
 - **Never goes silent.** If the talker errors, or has not answered in ten seconds, a fallback model
   answers too and the first reply wins.
+- **Judges per model.** The judges share one small model, with a second for calls it refuses; a judge
+  can be given its own model (`COMPANION_JUDGE_MODELS`), and the crisis risk judge reads on DeepSeek
+  first, since the shared model's provider refused many crisis messages.
+- **Stops without losing a message.** On a stop or restart it fetches nothing more and answers what it
+  already received, the reply in progress included, for up to 30 seconds.
 
 **Running and learning**
 
@@ -110,7 +125,9 @@ Today it is reached through Telegram, its only integration for now.
   marks, and measurements on recorded turns, decide what gets built next. `/mode` answers which model
   wrote the last reply and whether a scene is under way. None of the three ever reaches the model.
 - **Measures itself.** An eval runner replays recorded and scripted turns against persona and model
-  variants, with a spend cap, the real OpenRouter charge, and a margin of error on every result. The
+  variants, with a spend cap, the real OpenRouter charge, and a margin of error on every result. A
+  sample is made by the turn's own code: its notes, its request and its reply checks and redraws
+  (`+raw` skips them), so it is what they would have received. The
   made-up facts rate (`companion invented`) counts replies that state something about them that
   nothing supports.
 
@@ -119,18 +136,18 @@ Today it is reached through Telegram, its only integration for now.
 Some features are new enough that they only log what they would do. Each has a review date, and at
 its review it goes live or is removed; `uv run companion shadows` lists them, overdue first.
 
-| Feature | Setting | Read it with |
-|---|---|---|
-| Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` |
-| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` |
-| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` |
-| What it would ask to get to know them | always shadow for now | `companion map` |
-| A light question when their words touch a basic it does not know (age, work, home, place) | always shadow for now | the decision log |
-| The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review`, the decision log |
-| The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` |
-| The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` |
-| Memories about a name they mention, left off the card | always shadow for now | `companion names` |
-| The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log |
+| Feature | Setting | Read it with | Review by |
+|---|---|---|---|
+| Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-31 |
+| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-31 |
+| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-30 |
+| What it would ask to get to know them | always shadow for now | `companion map` | 2026-10-26 |
+| A light question when their words touch a basic it does not know (age, work, home, place, birthday, school) | always shadow for now | the decision log | 2026-10-26 |
+| The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review` | 2026-10-26 |
+| The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` | 2026-10-26 |
+| The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-27 |
+| Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-27 |
+| The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-01 |
 
 ## Quick start
 
@@ -156,7 +173,7 @@ just run
 
 Use `just restart` after a change. It stops the old process first, because two bots on one token
 fight over updates. The "up as" line shows the persona, the prompt set, the models and every
-setting that is on or in shadow.
+setting with its value.
 
 ### Settings
 
@@ -201,7 +218,7 @@ All optional. Set them in `.env`.
 | `COMPANION_REACH` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
 | `COMPANION_CONSOLIDATE` | `shadow` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
-| `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads every message for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a day's hold on reaching out first), `off` skips it |
+| `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads a message that is serious or uses crisis words for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a scene set aside for the turn, a reply that names means drawn once more, a day's hold on reaching out first), `off` skips it |
 
 **Running**
 
@@ -233,7 +250,7 @@ In the Telegram chat:
 See what the bot has done:
 
 ```bash
-uv run companion flags          # replies marked /flag
+uv run companion flags          # replies marked /flag; --to-fav ID moves one to favourites
 uv run companion favorites      # replies marked /fav
 uv run companion replay <turn_id> --show-prompt   # rebuild a turn and everything it sent
 uv run companion spend          # model spend by purpose
@@ -255,7 +272,10 @@ Look after memory:
 uv run companion beliefs        # what it holds about the user, with quotes
 uv run companion memory review  # answer the memory check's questions and merge proposals until you quit
 uv run companion memory group   # group memories about one thing across the whole store into merge proposals
+uv run companion memory context # write the missing notes on what a feeling or sensitive memory was about
+uv run companion memory label   # keep-label memories kept before the rule; each change becomes a question
 uv run companion opinions       # its own views, tentative or settled
+uv run companion views          # how its views reach the card; --mode auto, review or off
 uv run companion approve <id>   # let one of its own views reach the card
 uv run companion lore           # its own tastes (lore); --label labels new views, --relabel all of them
 uv run companion names          # things named in memory; --read reads new memories for names first
@@ -266,7 +286,10 @@ uv run companion retire <id> --reason "..."      # close one memory
 uv run companion merge <id> <id> --claim "..."   # merge memories that say one thing, keeping every quote
 uv run companion address        # how they want to be referred to; --set TEXT changes it
 uv run companion backup         # snapshot now; --list, or --restore FILE with the bot stopped
-uv run companion reflect        # run the memory pass now instead of waiting for a quiet moment
+uv run companion reflect        # run the memory pass now instead of waiting for a quiet moment; --from-start rereads it all
+uv run companion dedupe         # close memories that rest on the same words
+uv run companion rebuild        # restate every memory under the current rules
+uv run companion calibrate      # compare the automatic gates with your approvals
 ```
 
 Run an eval:
@@ -290,20 +313,24 @@ src/companion/
   memory/      the memory pass after a quiet spell, the nightly work, rebuilds and the views
   registry.py  the features a turn and a memory pass run
   features/    one folder per feature (relevance, reminders, open loops, mood, marks, lore, names,
-               ...), each with pure logic.py, effects in run.py, its queries in store.py, a cli.py
+               calendar, crisis, reach, ...), each with pure logic.py, effects in run.py, its queries in store.py, a cli.py
                and a README on how it works
   loops/       what a feature uses: the turn's values and Conversation, Feature, ask (a judge),
                reads (asking several times), record (decisions), curate, embed
-  core/        pure shared rules: memory and the card, frames, the reply checks, pacing and
-               splitting; core/turn/ holds the reply path's own pure rules
+  core/        pure shared rules: memory and the card, frames, the reply checks, the crisis levels,
+               their rhythm, the shadow list; core/turn/ holds the reply path's own pure rules
   lib/         small helpers that know nothing about the companion
   prompts/     every prompt as versioned text, with a manifest and a changelog
   models/      OpenRouter and Anthropic clients, embeddings, the fallbacks, the credits meter
-  io/          Telegram
+  io/          Telegram, pacing like a person typing, splitting, and the graceful stop
   store/       SQLite, the only place besides lib/sqlite that imports sqlite3
   cli/         the `companion` command
   evals/       the eval runner and its statistics
-  daemon.py    starts it all, reads the settings (settings.py)
+  daemon.py    starts it all: the clients, the turn, the timers and the slash commands
+  settings.py  every setting, read once from the environment
+  commands.py  opens the store and the models for a one-off command
+  backups.py   snapshots of the database and character sheets
+  characters.py  a character sheet laid over the persona
 ```
 
 Imports point down: `turn/` and `memory/`, then the registry, then `features/`, `loops/`, `core/` and
@@ -320,20 +347,25 @@ what it gets to see.
    it is real talk, a story, a game or a what-if, whether it only needs a reaction, whether they ask
    it to remember or say it got them wrong, whether a small topic has run its course, and whether a
    short question invites a guess. A first intimate message is read once for whether it is explicit.
-2. **Build the card.** Code turns those labels into short notes and adds the clock, how they want to
-   be referred to, the memories in view, anything looked up, memories that bear on the message, what
+   A message read as serious, or with words touching death or self-harm, is read three times by the
+   crisis risk judge (shadow by default), and code picks the level.
+2. **Build the card.** Code turns those labels into short notes and adds the clock (weekday, date and
+   time), how they want to be referred to, the memories in view (today's first), anything looked up,
+   memories that bear on the message, what
    the two of them did at the time they point at, a check-in after a heavy talk, a due plan of theirs,
    its own tastes that the message touches, and the mood. A line that must weigh most (the scene
-   reminder, "you already owned that slip", "ask nothing this time", the offer of an emoticon of its
-   own) goes after the history instead. The
+   reminder, "you already owned that slip", "ask nothing this time", the next question in their
+   game, the day's occasion, the offer of an emoticon of its own, the crisis notes when the path is on)
+   goes after the history instead. The
    persona is the first system block and the card is the second, with the clock and the notes in
    `<clock>` and `<notes>` tags. Nothing from the card ever goes in the user's message.
 3. **Write the reply.** The talker sees the persona, the card, the last 40 messages and the new
    message exactly as typed. Pretend scenes, and intimate talk when allowed, go to the roleplay model,
    unless the floor keeps them on the everyday one. A stall or an error goes to the fallback model.
 4. **Check and deliver it.** A reply that fails a check is drawn once more. Then it is paced,
-   sometimes split (never roleplay), and sent. Beside it, in shadow, the names it was told and the
-   basics hook log what they would have done.
+   sometimes split (never roleplay), and sent. On an urgent crisis turn with the path on, code's
+   fixed message with the crisis line follows. Beside it, in shadow, the names, the basics hook and
+   the stepping-away read log what they would have done.
 
 The judges never see the persona, and each logs `name@version` with its decision. The full list of
 prompts and how a request is assembled is in [src/companion/prompts/](src/companion/prompts/README.md).
@@ -346,10 +378,13 @@ prompts and how a request is assembled is in [src/companion/prompts/](src/compan
   new views are sorted (taste, stance, rule, self, lived). A separate pass, with its own bookmark,
   records the plans they mention and the promises it made in its replies. Feelings and sensitive
   memories get their note on what was being talked about, and each new memory its keep label.
-- **Every 15 minutes,** the reach-out gate looks at due plans, times away and its own reasons to reach out (shadow).
-- **At 04:00,** the memory check reads each settled memory (shadow), memories about one thing from the
+- **Every minute,** reminders that have fallen due are sent.
+- **Every 15 minutes,** the reach-out gate looks at due plans, times away and its own reasons to reach
+  out, at the share `COMPANION_REACH` sets (shadow).
+- **At 04:00,** the memory check reads up to 40 memories (shadow), memories about one thing from the
   last two days are grouped into merge proposals, one day's routines a week old are closed, and the
-  stretches of chat that ended are written as episodes.
+  stretches of chat that ended are written as episodes. A night missed while the bot was down runs
+  five minutes after it starts.
 - **At every start and once a day,** the database and character sheets are backed up.
 
 ### Principles

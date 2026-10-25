@@ -1,5 +1,7 @@
 # Reacting to a message with an emoji, beyond acknowledgements
 
+**Status (2026-10-25):** partly built: a reaction alongside a reply is live (card G-react, 10b8404), and a reaction instead of a reply (`src/companion/turn/hear.py`); late reactions and other kinds are not built, no card.
+
 Added 2026-10-15. Partly built the same day: the first kind below (a reaction alongside a reply) now
 exists, behind a small judge, a confidence bar and a cooldown. The rest is still an idea.
 

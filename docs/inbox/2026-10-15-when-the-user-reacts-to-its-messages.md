@@ -1,5 +1,7 @@
 # What happens when the user reacts to one of the companion's messages
 
+**Status (2026-10-25):** not built; shelved by the owner, card J24 (see `2026-10-23-reactions-and-other-inputs.md`).
+
 Added 2026-10-15. Nothing is decided. This is an idea to look at later, not a task.
 
 ## What happens now

@@ -1,5 +1,7 @@
 # Afterglow: a mood after good news
 
+**Status (2026-10-25):** not built; no card.
+
 Added 2026-10-19. An idea, not a task.
 
 ## The idea

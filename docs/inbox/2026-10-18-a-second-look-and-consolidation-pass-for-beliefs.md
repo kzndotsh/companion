@@ -1,5 +1,7 @@
 # A second-look and consolidation pass for beliefs
 
+**Status (2026-10-25):** partly built: the nightly memory check and write-time pair check run in shadow (ADR 0019, `src/companion/features/consolidate/`, with `merging`); corrections superseding their target are not built, card A15.
+
 Added 2026-10-18 by the owner's idea: a loop that goes back over memory, corrects beliefs the first pass
 got wrong once it has more context, and merges overlapping ones into grouped summaries or insights.
 

@@ -9,8 +9,12 @@ sent, and sends nothing. `uv run companion initiative` shows what it would have 
 
 A plan of theirs that is due can be offered to the talker as a note on a casual turn, so the
 companion asks about it naturally when they next write. This is live, and it is part of open loops.
+The calendar (`src/companion/features/calendar/README.md`) reaches the chat the same way and only
+that way: an occasion is a note after the history on a casual turn (`docs/turn.md`). "A day" as a
+reason to write first is planned (phase 3 of the calendar plan) and not built.
 
-Everything else is reaching out: a tick every 15 minutes decides whether to send a message first.
+Everything else is reaching out: a tick every 15 minutes decides whether to send a message first,
+and skips that look entirely once the daily spend cap is reached.
 This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`). `off` stops the whole tick and
 also the read of whether they stepped away, which only feeds nudges; the note in the chat is not
 affected. The two never double up: a plan brought up in the chat is marked asked, so it is never also
@@ -62,7 +66,9 @@ pause, or in a few words, the dial steps down one level until they start a conve
 
 ## What it never does
 
-These are rules in code, checked before and after the draft, not requests in a prompt:
+These are rules in code, checked before and after the draft, not requests in a prompt. They bind
+its own reasons; plans and nudges keep their own caps (below), and share the crisis hold and the
+spend cap:
 
 - never in their quiet hours, never mid-chat (any message in the last 90 minutes), never during a
   pretend scene, and a mood never triggers one (ADR 0016)

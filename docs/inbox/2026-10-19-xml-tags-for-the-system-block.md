@@ -1,5 +1,7 @@
 # XML tags for the system block
 
+**Status (2026-10-25):** built for the clock and the notes, not the memory blocks (`core/prompt/sections.py`, `evals/CHANGELOG.md`, guide in `AGENTS.md`).
+
 Added 2026-10-19. **Acted on the same day:** measured and shipped for the clock and the notes, not the memory
 blocks (`evals/CHANGELOG.md`, `core/prompt/sections.py`).
 

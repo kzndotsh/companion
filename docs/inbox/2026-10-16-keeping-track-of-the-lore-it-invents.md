@@ -1,5 +1,7 @@
 # Keeping track of the backstory the companion invents
 
+**Status (2026-10-25):** built: ADR 0020 and `src/companion/features/lore/`, plus the `invented` feature that measures made-up facts.
+
 Added 2026-10-16. Decided on 2026-10-20 in ADR 0020 (its lore lives in its views, labelled by kind, and
 is shown when the moment touches it); kept here as the background.
 

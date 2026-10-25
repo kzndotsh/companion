@@ -1,5 +1,7 @@
 # How should it answer questions about the user's own body or appearance?
 
+**Status (2026-10-25):** not built; parked, card R12.
+
 Added 2026-10-15. From a live turn: replay it with
 `uv run companion replay 838f08c5b2324849a34cfb82234eb8a7`.
 

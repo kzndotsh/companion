@@ -1,5 +1,7 @@
 # Real messaging datasets for texting norms
 
+**Status (2026-10-25):** not built; no card.
+
 Added 2026-10-16. Nothing is decided. This is an idea to look at later, not a task.
 
 ## What I wondered

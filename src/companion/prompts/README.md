@@ -24,28 +24,38 @@ There is no single overall system prompt. The talker's request has three parts, 
    so the provider caches it.
 2. **System block 2, the card**, rebuilt each turn: the clock line (`notes/clock`, `notes/clock-gap`),
    how they want to be referred to (`notes/address`), the memory lines (what is known about them, with
-   how old each is; sensitive ones only on turns rated severity 1 or more; and the companion's own
-   approved views), then any notes that apply this turn: the habit notes (`notes/habit-*`), the scene note
-   (`notes/scene-*`), the length note (`notes/length*`), the listening note (`notes/listening-*`), the
-   rude note, the recall finds (`notes/recall`), the mood line (`notes/mood-*`), the floor's hold note on
-   a held turn (`notes/floor-hold`), and the ask-name or ask-pronouns note (`notes/ask-name`,
-   `notes/ask-pronouns`). A few notes go after the history instead, among them the crisis notes
-   (`notes/crisis-concern`, `notes/crisis-light`) when `COMPANION_CRISIS=on` (ADR 0022) and the
-   calendar's (`notes/occasion-*`).
-   Notes and memory ride here and never in a user message, because anything in a user message can be read
-   as something they said.
+   how old each is, what they said in the last 12 hours first after their boundaries and its promises;
+   sensitive ones only on turns rated severity 1 or more; and the companion's own views), then the
+   notes that apply this turn, in the order of `ORDER` in `turn/notes.py`: among them the habit notes
+   (`notes/habit-*`), the scene note (`notes/scene-*`), the length note (`notes/length*`), the
+   listening note (`notes/listening-*`), the rude and repair notes, the recall finds (`notes/recall`),
+   the mood line (`notes/mood-*`), the floor's hold note on a held turn (`notes/floor-hold`), the
+   ask-name or ask-pronouns note, and the features' notes (loops, topics, guess, lore, reminders). The
+   clock goes in `<clock>` tags and the notes in one `<notes>` block; the memory blocks stay bracketed
+   (`core/prompt/sections.py`).
+   Some notes go after the history instead, in one system message after their new message (after the
+   character sheet's scene reminder on a roleplay turn): `notes/owned-it`,
+   the marks offer (`notes/own-mark`, `notes/own-mark-theirs`), the due reminder
+   (`system/reminder-send`), the crisis notes (`notes/crisis-concern`, `notes/crisis-light`, when
+   `COMPANION_CRISIS=on`, ADR 0022), `notes/question-game`, the calendar's (`notes/occasion-*`) and
+   `notes/question-run`, in that order.
+   Notes and memory ride in system text and never in a user message, because anything in a user
+   message can be read as something they said.
    With `COMPANION_CHARACTER` set, block 1 is the persona, then `system/character-frame`, then the
    character sheet (`companion/characters.py`). The sheet wins on voice, taste, look and its own past;
    honesty, memory, closeness and limits still come from the persona.
    The roleplay talker (pretend scenes, and intimate talk when allowed; ADR 0017) gets the same block 1
    plus the sheet's `## In roleplay and intimate moments` section, which the everyday talker never sees.
-3. **The messages**: the last 40 messages of the conversation, then their new message exactly as typed.
+3. **The messages**: the last 40 messages of the conversation, then their new message exactly as typed,
+   then the tail of notes above, when there is one.
 
 Everything else is a separate small model call with its own system prompt and a short excerpt of the
 chat, and none of them sees the persona: the ack, frame, reaction, listening and habit judges, the risk judge, the quip
 check, the intimate check on held turns, the name and pronoun captures, the recall look-up, the extractors for memory,
 the open-loop extractor and the follow-up draft, the reach-out draft, the callback judge, and the view checks. A call the
-judges' model refuses goes to a fallback model, whose answers the floor never relies on. Each logs
+judges' model refuses goes to a fallback model, whose answers the floor never relies on. A judge named
+in `COMPANION_JUDGE_MODELS` reads on that model first and the shared judge model second (by default
+the risk judge, on DeepSeek V4.1 Flash; `models/fallback.py` `ByJudge`). Each logs
 `name@version` in its decision.
 
 To see exactly what a past turn sent: `uv run companion replay <turn_id> --show-prompt`. How the

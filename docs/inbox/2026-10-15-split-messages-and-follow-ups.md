@@ -1,5 +1,7 @@
 # Sending more than one message in a row, sometimes
 
+**Status (2026-10-25):** partly built: replies are split into two or three messages at sentence boundaries (card S1, `COMPANION_SPLIT`, `io/split.py`, `docs/delivery.md`); afterthoughts and double texts on a timer are not built, card R11.
+
 Added 2026-10-15. Nothing is decided. This is an idea to look at later, not a task.
 
 ## What was noticed

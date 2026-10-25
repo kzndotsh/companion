@@ -1,5 +1,9 @@
 # Turn stages, a feature shape and a feature-first layout (design sketch)
 
+**Status (2026-10-25):** built from 2026-10-23: the turn runs in stages under `src/companion/turn/`
+(`docs/turn.md`), and features live in `src/companion/features/`, each declared as a `Feature`
+(`loops/features.py`) and listed in `registry.py`. The sketch below is kept as the background.
+
 Design only: nothing here is built. It joins two proposals from the architecture audit of 2026-10-23,
 splitting the turn into named stages and sorting the code by feature, because the folder layout should
 come out of what a feature is, not before it. For the owner to read before any code moves.

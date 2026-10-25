@@ -15,7 +15,7 @@ goes to the roleplay talker should be the operator's choice, with one line no op
   (`COMPANION_ROLEPLAY_MODEL`, `none` to keep everything on the everyday talker).
 - **Models label, code routes (ADR 0014).** The listening judge labels each message `intimate` and
   `age_coded`; in a pretend scene, where the listening judge otherwise does not run, it is run for routing
-  alone, with no note. Code picks the talker in `core/floor.py` and logs every choice that is not the plain
+  alone, with no note. Code picks the talker in `core/floor.py` (now `core/turn/floor.py`) and logs every choice that is not the plain
   everyday one. No model chooses a talker.
 - **A fixed floor, in code, that no setting changes.** Romance or sex together with anything child-like
   never goes to the roleplay talker. A turn the judge reads as `age_coded`, or could not read at all, stays

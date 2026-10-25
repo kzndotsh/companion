@@ -32,8 +32,9 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar
-uv run companion memory review | group | promises | names | lore   # questions for the owner, merge proposals, shadow lists
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar | shadows | crisis
+uv run companion memory review | group   # questions for the owner, merge proposals
+uv run companion promises | names | lore   # shadow lists and its own tastes
 uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
 uv run companion invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
@@ -41,8 +42,8 @@ uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
 
 Strict ruff and basedpyright, a lefthook pre-commit, and import-linter run on every commit. Layer
-rules: `core` imports nothing from the shell, only `store` and `lib/sqlite` import `sqlite3`, and
-`lib` imports nothing from the companion (only the standard library and itself). `core` may import
+rules: `core` imports nothing from the shell, only `store`, `lib/sqlite` and a feature's `store.py` import
+`sqlite3`, and `lib` imports nothing from the companion. `core` may import
 `companion.prompts`, which only reads packaged text. Imports point down (`direction` contract):
 `turn/` (the reply path's stages) and `memory/` (slow loop, nightly, rebuild, views) run features, so
 they sit above `registry.py` and `features/`; what a feature uses sits below in `loops/` (the turn's
@@ -93,11 +94,14 @@ values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed
 - A line for the system block is a note source, named in `ORDER` in `turn/notes.py` in the order it is sent:
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
-  `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
+  `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. A note
+  that asks them something is named in `ASKING` (`loops/features.py`), so the question-run note stays out
+  that turn. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
   failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `turn/beside.py` runs each beside the turn and logs a failure.
 - A turn runs in stages, one module each: `turn/hear.py` (a reaction instead of a reply, the listening
   read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the
-  request), `turn/talk.py` (the talker and the reply checks), `turn/beside.py` (shadow tasks) and
+  request), `turn/crisis.py` (a risk read sets a scene aside and adds the fixed crisis-line message),
+  `turn/talk.py` (the talker and the reply checks), `turn/beside.py` (shadow tasks) and
   `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(convo, ...)`; the
   `Conversation` it runs is plain data in `loops/conversation.py`): change a stage in its module.
 - A feature declares its parts as a `Feature` in its own module (`loops/features.py`): a look-up before the
@@ -105,8 +109,9 @@ values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
   also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
-  reaches its note as `Lookups.found[name]`. Registered: the memory map, names, context, worth, relevance,
-  recent times, topic-spent, guess, open loops, lore, own marks, reminders, nudges and the basics hook.
+  reaches its note as `Lookups.found[name]`. Registered, in order: the memory map, the name and pronoun
+  questions (basics), moves, mood, names, context, worth, relevance, recent times, topic-spent, guess,
+  open loops, lore, own marks, reminders, the crisis path, nudges, the calendar and the basics hook.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it
   works). import-linter keeps a feature's logic pure, keeps features from importing each other, and lets only
@@ -120,22 +125,24 @@ values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed
   feature states what a failed read means for it (no agreement, or try the batch again later).
 - Judges share one model (Haiku, DeepSeek on a refusal) unless `COMPANION_JUDGE_MODELS` names the judge
   (by its `Judge` name or `read_times` `spend`); then it reads on that model first and Haiku second
-  (`models/fallback.py` `ByJudge`). Route a judge there, never by choosing a model in a feature.
+  (`models/fallback.py` `ByJudge`; by default the crisis judge reads on DeepSeek). Route a judge there, never by choosing a model in a feature.
 - Record a decision through `loops/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
-  `_decide(c, t, ...)`), never by building `Decision(...)` by hand. Code that looks a past decision up
+  `decide(c, t, ...)` from `loops/current.py`), never by building `Decision(...)` by hand. Code that looks a past decision up
   matches its key (`decided_since`, `Decision.has_key`), never its reason text; decisions from before keys
   match by how their reason begins.
 - Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the three
-  allowed fallbacks, no file over its line cap (600 lines; a file listed in it may only shrink), and no
-  more `noqa` comments than today. When a file shrinks, lower its cap.
+  allowed fallbacks, no file over 600 lines (a file listed in `CAPS` may be over it and may only shrink;
+  none is listed today, and when one shrinks, lower its cap), and no more than 64 `noqa` comments in
+  `src` (today's count; a new one replaces an old one).
 - Every feature in shadow has a row in `core/shadows.py` with a review date and what it is judged on
   (`companion shadows` lists them, overdue first); a test fails when a setting defaults to shadow without
   one. At its review it graduates or is removed, and its row goes.
-- `tests/loops/test_chaos.py` runs whole turns against judges that fail, stall, answer from the fallback
+- `tests/turn/test_chaos.py` runs whole turns against judges that fail, stall, answer from the fallback
   model or return junk at random (seeded): their message is stored once, a turn ends in a reply, a reaction
   or the floor's logged withholding, and a judge that always fails sends the talker what no judge would.
   Any change to the turn must keep it passing.
-- Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, `named_zone`). A test enforces it.
+- Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, `named_zone`). A test enforces it in `core/` and `loops/`
+  (`tests/core/test_clock_guard.py`).
 
 **Evals**
 - Every eval run has a spend cap, stated before the run. Check OpenRouter credits first. Keep
@@ -158,7 +165,8 @@ values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed
   `httpx` stays at WARNING because its URLs carry the bot token.
 - Never log or print the Telegram token. Telegram errors carry no URL (`TelegramError`).
 - Restart with `just restart` in a terminal the owner can see, never as a hidden background job or under a
-  timeout (it runs the bot in the foreground). It stops the old process first. Two bots on one token fight over updates. After a
+  timeout (it runs the bot in the foreground). It stops the old process first and waits while it answers
+  what it already received (up to 30 s). Two bots on one token fight over updates. After a
   restart, confirm the "up as" line shows the new prefix and persona.
 - How a feature works is in its folder's `README.md`; the reply path, delivery, initiative and memory
   over time are in `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md` and `docs/memory.md`. When you

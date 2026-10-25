@@ -1,5 +1,7 @@
 # Confidence, and a character it adds to on its own
 
+**Status (2026-10-25):** not built; related cards J52 (a persona paragraph v42 measured within noise, not shipped), LR4 and R14.
+
 From a 7-minute voice chat the owner had with another companion service (transcript kept locally in
 `docs/research/`, git-ignored). The owner liked two things: its **confidence**, and how it **goes off
 and is creative with its own character**, so replies feel rich. They also found it a bit generic.

@@ -40,6 +40,7 @@ None.
 
 - 2026-10-19: the judge was 30/30 on 10 invented chats. In the afternoon the note moved the chat on 30/30 against 1/30 without. Late at night a thought of its own came 18/30, and the first night wording invented things it did, 21/30 with a character, against 0/30 for the second. About $0.12 (`evals/CHANGELOG.md`).
 - 2026-10-21: a v2 note ("keep the conversation going") kept the chat going 8/30 against 6/30 for v1, within noise. Dropped (`evals/CHANGELOG.md`).
+- 2026-10-25: judge bake-off on the live topic-spent suite (30 cases): Haiku 30, GPT-6 Luna 29, DeepSeek 27. DeepSeek read a first mention of a food as a spent topic. Haiku stays the judge (`evals/CHANGELOG.md`).
 
 ## Tests
 

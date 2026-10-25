@@ -1,5 +1,7 @@
 # Varied short reactions to minor vents
 
+**Status (2026-10-25):** partly built: a pool of size examples shipped (`notes/listening-trivial` v6, 22 different replies in 30 against 7); the real laundry turn still retells 27 of 30; parked, card T14.
+
 Added 2026-10-19. An idea, not a task.
 
 ## The problem

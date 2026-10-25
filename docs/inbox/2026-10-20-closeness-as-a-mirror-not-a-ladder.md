@@ -1,5 +1,7 @@
 # Closeness as a mirror of what they have shown, not a ladder
 
+**Status (2026-10-25):** not built; waits on the owner's say with T2, card T17.
+
 Added 2026-10-20. An idea, not a task. It reshapes T17 (closeness stage) and could answer T2 (pacing).
 
 ## The original idea

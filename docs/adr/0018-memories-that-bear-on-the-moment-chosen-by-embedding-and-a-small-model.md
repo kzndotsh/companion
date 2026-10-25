@@ -1,8 +1,7 @@
 # 0018. Memories that bear on the moment, found by embedding and picked by a small model
 
-**Status:** proposed 2026-10-19. Built in shadow the same day (`core/relevance.py`,
-`loops/relevance.py`); live behind a gate since 2026-10-21 (see the update below): `COMPANION_RELEVANCE`
-is on unless `shadow` or `off`. Accepted, or changed, once a week of flags on turns that used it is read.
+**Status:** proposed 2026-10-19. Built in shadow the same day (now `features/relevance/`); live behind a
+gate since 2026-10-21 (see the update below): `COMPANION_RELEVANCE` is on unless `shadow` or `off`. Accepted, or changed, once a week of flags on turns that used it is read.
 
 **Context.** The card shows 15 memories a turn, ranked by kind and recency, out of about 135 ordinary ones
 (the card's own log, 2026-10-19: "131 current beliefs crowded out, it holds 15" on most recent turns). So

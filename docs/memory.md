@@ -17,8 +17,11 @@ fact about their life. Every acceptance and rejection is a logged decision. The 
 bookmark, so a pass that crashes or runs twice reads nothing it already finished.
 
 The same pass reads the companion's own messages for views it expressed. Those are gated before they
-can reach the card (ADR 0009). After a pass that stored something, each feature's step runs: labelling
-the memory map, listing names, writing context, judging worth, embedding the new memories.
+can reach the card (ADR 0009). The same pass also reads plans for open loops
+(`src/companion/features/openloops/README.md`). After a pass that stored new memories of theirs, each
+feature's step runs in the registry's order: labelling the memory map, listing names, writing context
+and judging worth; then the new memories are embedded. After a pass that stored new views of its own,
+the lore step labels them (`src/companion/features/lore/README.md`).
 
 ## How memory reaches the model
 
@@ -44,10 +47,12 @@ message but are not on the card can still reach the model through the relevance 
 
 Each night at 04:00 local, the night's memory work runs (`src/companion/memory/nightly.py`). Each step
 runs on its own, so one failing does not skip the rest, and a night missed while the bot was down is
-made up five minutes after it starts. The steps are:
+made up five minutes after it starts. Nothing runs that night once the daily spend cap is reached. The
+steps are:
 
 - the memory check, which reads week-old memories and closes faded passing moments or raises
-  questions (`src/companion/features/consolidate/README.md`)
+  questions (`src/companion/features/consolidate/README.md`); `COMPANION_CONSOLIDATE=off` skips this
+  step only
 - grouping memories about one thing into merge questions (`src/companion/features/merging/README.md`)
 - retiring routine moments a week after they were last mentioned
   (`src/companion/features/worth/README.md`)
@@ -60,8 +65,8 @@ raised, and nothing is merged automatically.
 ## Backups
 
 The database and the character sheets are snapshotted at every start (before migrations) and once a
-day (`src/companion/backups.py`), and each copy is checked. The newest 7 daily copies and 7 others are
-kept in `data/backups/` (`COMPANION_BACKUP_DIR`).
+day (`src/companion/backups.py`), and each database copy is checked. The newest 7 daily copies and 7
+others are kept in `data/backups/` (`COMPANION_BACKUP_DIR`).
 
 `uv run companion backup --restore FILE` refuses to run while the bot is running. It keeps the current
 database first, and replaces nothing unless the copy passes its check.

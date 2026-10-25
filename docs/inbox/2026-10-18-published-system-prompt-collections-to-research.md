@@ -1,5 +1,7 @@
 # Published system prompt collections to research
 
+**Status (2026-10-25):** not built; no review found in `docs/research/`, no card.
+
 Added 2026-10-18. Not reviewed yet.
 
 ## The links

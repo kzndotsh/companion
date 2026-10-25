@@ -9,7 +9,7 @@ No switch. It lists names after each memory pass and matches them beside the tur
 
 ## How it works
 
-Listing. After each memory pass that stored new memories of theirs, up to 60 current memories not yet read are
+Listing. After each memory pass that stored new memories of theirs, up to 60 current memories about them (not its own views) not yet read are
 sent in one batch (`BATCH`), each under a short ref, with the names already known so the model reuses them. The
 model lists each specific named thing (a person, pet, place, band, song, show, game, project or brand) with
 its other ways of being said and the refs of the memories about it. Code keeps only refs it showed and terms
