@@ -36,8 +36,10 @@ class Talker:
 
 
 class Judge:
-    def __init__(self, severity: int = 0, *, joke: bool = False, generic: bool = False) -> None:
-        self.severity, self.joke = severity, joke
+    def __init__(
+        self, severity: int = 0, *, joke: bool = False, generic: bool = False, deaf: bool = False
+    ) -> None:
+        self.severity, self.joke, self.deaf = severity, joke, deaf
         self.generic = generic
         self.quip_calls = 0
 
@@ -46,7 +48,7 @@ class Judge:
         props = schema["properties"]
         assert isinstance(props, dict)
         data: Json = None
-        if "severity" in props:
+        if "severity" in props and not self.deaf:
             data = {
                 "severity": self.severity,
                 "stance": "other",
@@ -100,6 +102,16 @@ async def test_the_second_reply_is_sent_whatever_it_is(store: Store) -> None:
 
 async def test_an_em_dash_is_caught_by_code_without_asking_the_judge(store: Store) -> None:
     judge = Judge()
+    talker = Talker("ugh—too crispy", PLAIN)
+    assert await _say(store, talker, judge) == PLAIN
+    assert judge.quip_calls == 0
+    assert _reasons(store) == ["resampled: an em dash"]
+
+
+async def test_when_listening_fails_the_code_checks_still_run_but_not_the_judge(
+    store: Store,
+) -> None:
+    judge = Judge(deaf=True, joke=True)
     talker = Talker("ugh—too crispy", PLAIN)
     assert await _say(store, talker, judge) == PLAIN
     assert judge.quip_calls == 0

@@ -868,6 +868,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## Request assembly: a reply cut off is read as the part that arrived
 - From 2026-10-22 a reply sent as two or three messages that is cut off after the first went out (a newer message superseded it, or a later part failed to send) is marked undelivered, and what arrived is added beside it at the same time and turn (`Store.mark_partly_delivered`, decision `reply partly delivered`). Before, the whole reply stayed in what the model read, so it could take for seen a part the user never got. Nothing is removed: the whole reply stays in the ledger with its mark.
 
+## Reply checks: an unread turn still gets the code checks
+- From 2026-10-24 a turn the listening judge could not read gets the code checks (em dash, AI disclaimer, copied card or tag, the stock line, "a beat", raw markdown) and their redraws, as a serious turn does; the joke and canned-reaction judge still runs only on a turn read as ordinary. Before, an unread turn skipped every check, so a failed listening call let an em dash or a disclaimer through. Found while building evals on the turn's own check path. `turn/talk.py` `_recheck`.
+
 ## Request assembly: a lone reaction does not start a scene
 - From 2026-10-24 a message that is only a short action in asterisks (three words at most, such as "*explodes*") no longer puts a pretend scene in progress on its own; a second pretend message of theirs does (`core/frames.py` `reaction`, `scene_frame`). Seen in use: after a playful "*explodes*", a sincere next message went to the other talker with the reminder sent after the history, and the reply escalated. The reaction is still stored as play, so nothing from it enters memory as fact. Of 15 scenes since 2026-10-15, only that one began this way; scenes begun by a longer action ("*nuzzles into you snuggling you*") start as before.
 
