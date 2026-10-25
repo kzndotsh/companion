@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, timedelta
+from datetime import timedelta
 
-from companion.core.crisis import HOLD_REASON
+from companion.core.reachout import Held
 from companion.features.nudges.logic import Away, Kind, Look, due, parse, wait
 from tests.conftest import T0
 
@@ -22,17 +22,17 @@ def _look(**kw: object) -> Look:
 def test_a_nudge_waits_twice_the_time_away_and_an_hour_at_least() -> None:
     assert wait(SHOWER) == timedelta(hours=1)
     assert wait(Away("t", "errand", Kind.BRIEF, 50, T0)) == timedelta(minutes=100)
-    assert due(_look(), T0 + timedelta(minutes=50), UTC)[1] == "not long enough yet"
-    assert due(_look(), T0 + timedelta(minutes=70), UTC)[0] == SHOWER
+    assert due(_look(), T0 + timedelta(minutes=50), None)[1] == "not long enough yet"
+    assert due(_look(), T0 + timedelta(minutes=70), None)[0] == SHOWER
 
 
 def test_anything_from_them_or_a_past_nudge_or_the_day_cap_holds_it() -> None:
     later = T0 + timedelta(minutes=90)
-    assert due(_look(last_theirs=T0 + timedelta(minutes=5)), later, UTC)[1] == "they came back"
-    assert due(_look(nudged=frozenset({"t1"})), later, UTC)[1] == "already nudged about it"
-    assert due(_look(nudges_today=2), later, UTC)[1] == "already 2 today"
-    assert due(_look(), T0 + timedelta(hours=7), UTC)[1] == "gone too long; past nudging"
-    assert due(_look(away=None), later, UTC)[1] == "no time away"
+    assert due(_look(last_theirs=T0 + timedelta(minutes=5)), later, None)[1] == "they came back"
+    assert due(_look(nudged=frozenset({"t1"})), later, None)[1] == "already nudged about it"
+    assert due(_look(nudges_today=2), later, None)[1] == "already 2 today"
+    assert due(_look(), T0 + timedelta(hours=7), None)[1] == "gone too long; past nudging"
+    assert due(_look(away=None), later, None)[1] == "no time away"
 
 
 def test_only_stepping_away_is_read_and_minutes_are_clamped() -> None:
@@ -53,5 +53,7 @@ def test_a_goodbye_or_no_time_away_is_a_readable_answer_and_junk_is_not() -> Non
     assert read("junk") is None
 
 
-def test_a_crisis_turn_under_a_day_old_holds_it() -> None:
-    assert due(_look(crisis=True), T0 + timedelta(minutes=70), UTC) == (None, HOLD_REASON)
+def test_the_shared_gate_holds_it_with_its_reason_once_it_is_due() -> None:
+    quiet = Held("quiet hours", "3:00 is one of their quiet hours")
+    assert due(_look(), T0 + timedelta(minutes=70), quiet) == (None, quiet.why)
+    assert due(_look(), T0 + timedelta(minutes=50), quiet)[1] == "not long enough yet"

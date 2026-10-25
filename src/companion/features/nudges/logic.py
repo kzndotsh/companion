@@ -12,11 +12,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, timedelta
 from enum import StrEnum
 
-from companion.core.crisis import HOLD_REASON
-from companion.core.reachout import Caps, in_quiet_hours
+from companion.core.reachout import Held
 from companion.core.types import Json
 from companion.prompts import get
 
@@ -94,28 +93,28 @@ class Look:
 
     away: Away | None
     last_theirs: datetime | None
-    nudged: frozenset[str]  # turns already nudged
+    nudged: frozenset[str]  # turns already nudged, or tried and dropped
     nudges_today: int
-    crisis: bool = False  # a concern or urgent turn under a day old (ADR 0022)
 
 
-def due(look: Look, now: datetime, tz: tzinfo, caps: Caps = Caps()) -> tuple[Away | None, str]:  # noqa: B008
-    """The time away to nudge about now, or None with the first reason that holds it."""
+def due(look: Look, now: datetime, held: Held | None) -> tuple[Away | None, str]:
+    """The time away to nudge about now, or None with the first reason that holds it. `held` is the
+    shared gate's answer for any reach-out now (ADR 0023): quiet hours, a scene, an active chat,
+    the last one unanswered, the gap, the share and a crisis turn."""
     a = look.away
     if a is None:
         return None, "no time away"
     holds = (
-        (look.crisis, HOLD_REASON),
         (look.last_theirs is not None and look.last_theirs > a.at, "they came back"),
         (a.turn in look.nudged, "already nudged about it"),
         (now - a.at > GONE, "gone too long; past nudging"),
         (now - a.at < wait(a), "not long enough yet"),
-        (in_quiet_hours(now, tz, caps), "quiet hours"),
         (look.nudges_today >= PER_DAY, f"already {look.nudges_today} today"),
+        (held is not None, held.why if held is not None else ""),
     )
-    held = next((why for hit, why in holds if hit), None)
-    if held is not None:
-        return None, held
+    why = next((why for hit, why in holds if hit), None)
+    if why is not None:
+        return None, why
     gone = (now - a.at).total_seconds() / 60
     return a, f"stepped away {gone:.0f} minutes ago, about {a.minutes} expected"
 

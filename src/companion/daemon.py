@@ -300,7 +300,9 @@ def _start_initiative(
                 when = (utc_now(), local_zone())
                 held = holds(store, rel, when, reacher)
                 plan = (await tick(store, rel, *when, draft, ticker, held=held)).send
-                nudged = await tick_nudge(store, rel, utc_now(), local_zone(), judge) is not None
+                nudged = (
+                    not plan and await tick_nudge(store, rel, when[0], judge, held=held) is not None
+                )
                 first = Kind.PLAN if plan else Kind.AWAY if nudged else None
                 await tick_reach(store, rel, (utc_now(), local_zone()), reacher, first)
             except Exception:

@@ -13,8 +13,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, tzinfo
 
-from companion.core.reachout import Caps
 from companion.features.threads.logic import SENSITIVE, Thread, ThreadKind, ThreadState
+
+KEEPS = timedelta(days=2)  # a follow-up not reached out about by then expires
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,12 +31,10 @@ def evaluate(
     now: datetime,
     tz: tzinfo,
     held: str | None,
-    caps: Caps = Caps(),  # noqa: B008
 ) -> Verdict:
     """Pick the loop to ask about, or hold with the shared gate's reason."""
     live = [lp for lp in loops if lp.state is ThreadState.OPEN]
-    horizon = timedelta(days=caps.expire_days)
-    expired = tuple(lp for lp in live if _past(lp, now, tz, horizon))
+    expired = tuple(lp for lp in live if _past(lp, now, tz))
     due = sorted(
         (
             lp
@@ -56,8 +55,8 @@ def evaluate(
     return Verdict(True, f"due {since:.0f}h ago and nothing holds it: {pick.claim}", pick, expired)
 
 
-def _past(loop: Thread, now: datetime, tz: tzinfo, horizon: timedelta) -> bool:
+def _past(loop: Thread, now: datetime, tz: tzinfo) -> bool:
     """A follow-up keeps for a couple of days; a celebration or encouragement for its day only."""
     if loop.kind is ThreadKind.FOLLOW_UP:
-        return now > loop.follow_up_at + horizon
+        return now > loop.follow_up_at + KEEPS
     return now.astimezone(tz).date() > loop.follow_up_at.astimezone(tz).date()

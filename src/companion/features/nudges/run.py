@@ -5,14 +5,13 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, tzinfo
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.card import Card
 from companion.core.clock import local_midnight
-from companion.core.crisis import reach_held
 from companion.core.extractor import Extractor
-from companion.core.reachout import WOULD_NUDGE, Caps, draft_text
+from companion.core.reachout import WOULD_NUDGE, Held, checked
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.spend import purpose
 from companion.core.types import (
@@ -49,6 +48,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.nudges")
 SESSION = SessionId("initiative")
+NUDGE_DROPPED = "nudge (shadow): draft dropped, not sent"
 
 
 def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
@@ -70,40 +70,49 @@ def aways(store: Store, rel: RelationshipId) -> list[Away]:
 def _look(store: Store, rel: RelationshipId, now: datetime) -> Look:
     theirs = [u.at for u in store.history_before(rel, now, 40) if u.speaker is Speaker.USER]
     sent = store.decisions_with_key(rel, WOULD_NUDGE)
+    tried = [*sent, *store.decisions_with_key(rel, NUDGE_DROPPED)]
     nudged = frozenset(
         str(d.detail.get("turn"))
-        for d in sent
+        for d in tried
         if isinstance(d.detail, dict) and d.detail.get("turn")
     )
     today = sum(1 for d in sent if d.at >= local_midnight(now))
-    held = reach_held(lambda key, since: store.decided_since(rel, key, since), now)
-    return Look(newest(aways(store, rel)), max(theirs, default=None), nudged, today, held)
+    return Look(newest(aways(store, rel)), max(theirs, default=None), nudged, today)
 
 
-async def tick_nudge(  # noqa: PLR0913
+async def tick_nudge(
     store: Store,
     rel: RelationshipId,
     now: datetime,
-    tz: tzinfo,
     extractor: Extractor | None,
     *,
-    caps: Caps = Caps(),  # noqa: B008
+    held: Held | None,
 ) -> str | None:
-    """One look: when a time away is due a nudge, draft it and record it (shadow). The draft, or
-    None when nothing was due."""
-    away, reason = due(_look(store, rel, now), now, tz, caps)
+    """One look, with the shared gate's hold: when a time away is due a nudge, draft it and record
+    it (shadow). The draft, or None when nothing was due or the draft failed or read as needy; a
+    dropped draft is logged and that time away is not tried again."""
+    away, reason = due(_look(store, rel, now), now, held)
     if away is None:
         log.debug("nudge: %s", reason)
         return None
-    text = ""
+    text, dropped = "", "no drafter"
     if extractor is not None:
         try:
             with purpose("initiative"):
                 got = await extractor.extract(DRAFT.text, draft_prompt(away, now), DRAFT_SCHEMA)
             message = got.data.get("message") if isinstance(got.data, dict) else None
-            text = draft_text(message) if isinstance(message, str) else ""
+            text, dropped = checked(message) if isinstance(message, str) else ("", "no message")
         except Exception:
             log.warning("could not draft the nudge", exc_info=True)
+            dropped = "the draft call failed"
+    if not text:
+        _record(store, rel, now).decide(
+            NUDGE_DROPPED,
+            {"turn": away.turn, "said": away.said, "why": dropped, "prompt": DRAFT.ref},
+            reason=f"{NUDGE_DROPPED}: {dropped}",
+        )
+        log.info("nudge dropped: %s", dropped)
+        return None
     _record(store, rel, now).decide(
         WOULD_NUDGE,
         {

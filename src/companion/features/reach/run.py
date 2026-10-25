@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, tzinfo
 from companion.core.crisis import reach_held
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
-from companion.core.reachout import WOULD_NUDGE, Held
+from companion.core.reachout import WOULD_NUDGE, Held, checked
 from companion.core.rhythm import WINDOW, kept_hour, learn
 from companion.core.types import (
     BeliefKind,
@@ -42,7 +42,6 @@ from companion.features.reach.logic import (
     Look,
     Pool,
     Thing,
-    checked,
     choose,
     consider,
     draft_input,

@@ -22,6 +22,7 @@ from companion.features.reach.run import Reacher, holds
 from companion.features.threads.gate import Verdict
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.run import (
+    DRAFT_DROPPED,
     HELD,
     Draft,
     Reading,
@@ -332,3 +333,19 @@ async def test_a_batch_that_keeps_failing_is_let_go_after_three_tries(store: Sto
     calls = model.calls
     await _catch_up(store, model)
     assert model.calls == calls  # nothing left to read
+
+
+async def test_a_needy_check_in_draft_is_dropped_once_and_the_plan_stays_open(store: Store) -> None:
+    calls: list[str] = []
+
+    async def needy(loop: Thread) -> str:
+        calls.append(loop.id)
+        return "where have you been?? how did the vet go"
+
+    await _recorded(store)
+    assert not (await _tick(store, LATER, needy)).send
+    assert not (await _tick(store, LATER + timedelta(minutes=15), needy)).send
+    assert len(calls) == 1
+    assert store.reach_outs(REL) == []
+    assert len(store.decisions_with_key(REL, DRAFT_DROPPED)) == 1
+    assert store.open_loops(REL)[0].state is ThreadState.OPEN

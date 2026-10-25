@@ -57,8 +57,8 @@ shown by `companion initiative`.
 
 The dial is a share, not a count: `COMPANION_REACH` says what share of the conversations over the last
 two weeks it may start. `rare` is about one in eight, `light` one in five, `normal` one in four, `warm`
-one in three (the default) and `clingy` one in two; `off` stops these reasons and plan check-ins
-(they ask the same gate, ADR 0023), and leaves nudges as they are. Its own messages are at least six hours apart. In shadow a message it would have
+one in three (the default) and `clingy` one in two; `off` stops these reasons, plan check-ins and
+nudges, which all ask the same gate (ADR 0023). Its own messages are at least six hours apart. In shadow a message it would have
 sent counts as a conversation it started, so shadow paces itself the way live would.
 
 Inside the dial it follows how they answer. When its last message was answered later than their usual
@@ -67,9 +67,8 @@ pause, or in a few words, the dial steps down one level until they start a conve
 ## What it never does
 
 These are rules in code, checked before and after the draft, not requests in a prompt. They bind
-its own reasons and, since ADR 0023, plan check-ins, which ask the same gate (`features/reach/gate.py`
-`hold`, through `holds` in `features/reach/run.py`); nudges keep their own caps (below), and share the
-crisis hold and the spend cap:
+every reach-out, which since ADR 0023 all ask the same gate (`features/reach/gate.py` `hold`, through
+`holds` in `features/reach/run.py`):
 
 - never in their quiet hours, never mid-chat (any message in the last 90 minutes), never during a
   pretend scene, and a mood never triggers one (ADR 0016)
@@ -85,12 +84,12 @@ crisis hold and the spend cap:
   path only logs, and nothing holds
 - never counting streaks or optimising how often they write
 
-Nudges keep their own caps as before (`core/reachout.py`): at most twice a day, inside fixed quiet hours
-of 23:00 to 08:00. Plan check-ins no longer have caps of their own: they wait on the same gate as its own
-reasons, so they use the learned quiet hours, wait while its last of any kind is unanswered, keep six
-hours from its last of any kind, and count toward the share. The needy check on the draft still binds
-only its own reasons. Nudges and plan check-ins count toward the six-hour gap, the unanswered rule and
-the share above.
+Since 2026-10-25 every reach-out waits on this one gate (ADR 0023): its own reasons, plan check-ins and
+nudges alike use the learned quiet hours, wait while its last of any kind is unanswered, keep six hours
+from its last of any kind, and count toward the share. Each kind keeps only what is its own on top: a
+plan is asked about once, a nudge at most twice a day and once per time away. Every draft passes the
+same needy check (`checked` in `core/reachout.py`); a dropped plan or nudge draft is logged, never
+counted as sent, and not drafted again.
 
 ## Related
 

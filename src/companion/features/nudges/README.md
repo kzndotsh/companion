@@ -8,20 +8,19 @@ A light nudge when they step away and stay gone much longer than they said, the 
 
 **Reading a time away.** Beside any real turn that is not serious (not in a scene, severity below 2, and the listening read ran), a small model reads the message alone (`system/away`, 8 s limit, one try, purpose `nudge`). It answers one of four things: `brief` (leaving now for something short), `back` (leaving now and will return), `goodbye` (leaving for the night or for good), or `none`. It also gives the minutes it expects them to be away, which code clamps to between 10 and 180. A goodbye, `none` or a bad answer records nothing. A goodbye or no time away is a readable answer, not a failure. A call that fails or times out means no nudge for that message. A fallback model's answer counts. Each time away is a `away: they stepped away` decision (a policy decision) holding the kind, the minutes, their words, and the prompt `name@version`.
 
-**The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` (`daemon.py`) looks at their newest recorded time away. It holds, with a reason, for the first of these:
+**The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` (`daemon.py`) looks at their newest recorded time away. It is skipped on a tick when a plan check-in would go. It holds, with a reason, for the first of these:
 
 - no time away is recorded
-- a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022)
 - they wrote after it (any message from them cancels it)
 - it was already nudged (one nudge per time away)
 - more than 6 hours have passed, so it is past nudging
 - not yet twice the minutes they said, and not yet an hour (the longer of the two)
-- quiet hours, 23:00 to 08:00 local time (`Caps` in `core/reachout.py`, shared with open loops)
 - already 2 nudges today
+- the shared gate every reach-out asks holds it (`holds` in `features/reach/run.py`, ADR 0023, passed in by the daemon): a crisis turn under a day old, their learned quiet hours, a scene, a chat active in the last 90 minutes, its last reach-out of any kind unanswered, under six hours since its last of any kind, or its share of conversations at the dial
 
-Nudges do not use the other reach-out caps (the daily one, the 20-hour gap, the 90 quiet minutes, the backoff). Only their own limits above apply. The reason is rendered from the numbers by code.
+Since 2026-10-25 nudges use the shared gate instead of fixed quiet hours of 23:00 to 08:00. One effect: a short time away is nudged no sooner than 90 minutes after the last message, the shared gate's active chat, where an hour was enough before. The reason is rendered from the numbers by code.
 
-**The draft.** When nothing holds it, a small model writes one light message (`system/nudge-draft`, purpose `initiative`), given what they said and how many minutes ago it was. The prompt asks for under about twelve words and no guilt, no "I missed you" and no question about their silence. Code keeps the draft whole, however long; only an empty one is dropped (`draft_text` in `core/reachout.py`). A failure gives an empty draft. The result is logged as the decision `nudge (shadow): would send` (an initiate decision) with the turn it is about, their words, the draft and the prompt. Nothing is sent. A drafted nudge also counts as the tick's first reach-out, so the own-reasons reach-out (ADR 0021) does not draft in the same tick. The same decisions set the one-per-time-away and two-a-day counts.
+**The draft.** When nothing holds it, a small model writes one light message (`system/nudge-draft`, purpose `initiative`), given what they said and how many minutes ago it was. The prompt asks for under about twelve words and no guilt, no "I missed you" and no question about their silence. Code keeps the draft whole, however long, and drops one that is empty, failed, or reads as needy (`checked` in `core/reachout.py`, the check every reach-out's draft passes). A dropped draft is logged as `nudge (shadow): draft dropped, not sent` with why, does not count as a nudge, and that time away is not drafted again. A kept one is logged as the decision `nudge (shadow): would send` (an initiate decision) with the turn it is about, their words, the draft and the prompt. Nothing is sent. A drafted nudge also counts as the tick's first reach-out, so the own-reasons reach-out (ADR 0021) does not draft in the same tick. The same decisions set the one-per-time-away and two-a-day counts.
 
 **Never.** It never nudges after a goodbye, in quiet hours, after they came back, or twice about one time away.
 

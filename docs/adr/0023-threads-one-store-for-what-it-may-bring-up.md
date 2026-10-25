@@ -2,7 +2,8 @@
 
 **Status:** accepted 2026-10-25 by the owner. Step 1 built 2026-10-25 (open loops are `features/threads/`,
 each row with its source). Step 2 built 2026-10-25: the learned pace in shadow, and plan check-ins on the
-shared reach gate; the casual test was already one (`quiet`), and nudges keep their own caps for now. Asked for by the owner after the brainstorm in
+shared reach gate; the casual test was already one (`quiet`). Nudges moved onto the shared gate the
+same day, every reach-out's draft passes one needy check, and the old caps were deleted. Asked for by the owner after the brainstorm in
 `docs/inbox/2026-10-25-natural-reasons-to-talk.md`, which approved four new hooks: the interrupted
 story, weekly rhythms, a topic gone quiet, and milestones and pending outcomes.
 

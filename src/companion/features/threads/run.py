@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import Extractor
-from companion.core.reachout import Caps, Held, draft_text
+from companion.core.reachout import Held, checked, draft_text
 from companion.core.spend import purpose
 from companion.core.types import (
     DecisionKind,
@@ -194,6 +194,7 @@ class Ticker:
 
 
 HELD = "held, would otherwise reach out"  # the key of a reach-out the gate held back
+DRAFT_DROPPED = "open loop: the check-in draft was dropped, not sent"
 
 
 def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
@@ -210,12 +211,16 @@ async def tick(  # noqa: PLR0913, PLR0917
     ticker: Ticker,
     *,
     held: Held | None,
-    caps: Caps = Caps(),  # noqa: B008
 ) -> Verdict:
     """One look at the open loops, with the shared gate's hold (ADR 0023; None when nothing holds a
     reach-out now). In shadow mode a verdict to send is recorded with a drafted message and the
-    loop is marked asked, but nothing is sent."""
-    verdict = evaluate(store.open_loops(rel), now, tz, held.why if held else None, caps)
+    loop is marked asked, but nothing is sent. A draft that failed or reads as needy is dropped,
+    logged, and that loop is not drafted again (it can still come up when they write)."""
+    dropped = {
+        str((d.detail or {}).get("loop_id")) for d in store.decisions_with_key(rel, DRAFT_DROPPED)
+    }
+    loops = [lp for lp in store.open_loops(rel) if lp.id not in dropped]
+    verdict = evaluate(loops, now, tz, held.why if held else None)
     for lp in verdict.expired:
         store.open_loop_event(lp.id, ThreadState.EXPIRED, "past its follow-up horizon", now)
         _record(store, rel, now).decide(
@@ -235,7 +240,14 @@ async def tick(  # noqa: PLR0913, PLR0917
             )
             log.info("initiative held: %s (%s)", verdict.loop.claim, verdict.reason)
         return verdict
-    text = await draft(verdict.loop) if draft is not None else ""
+    text, why = checked(await draft(verdict.loop) if draft is not None else "")
+    if not text:
+        detail["why"] = why
+        _record(store, rel, now).decide(DRAFT_DROPPED, detail, reason=f"{DRAFT_DROPPED}: {why}")
+        log.info(
+            "initiative: the check-in draft about %s was dropped (%s)", verdict.loop.claim, why
+        )
+        return Verdict(False, f"{DRAFT_DROPPED}: {why}", verdict.loop, verdict.expired)
     store.add_reach_out(ReachOut(_id(), rel, verdict.loop.id, "shadow", text, verdict.reason, now))
     store.open_loop_event(verdict.loop.id, ThreadState.ASKED, "shadow reach-out, not sent", now)
     detail["draft"] = text
