@@ -2016,3 +2016,19 @@ Decision: the owner's to make (ADR 0023 put the interrupted story first). Cost: 
 the extraction script (a 2-hour gap, 8 messages before and 4 after) kept in the session scratchpad as
 `endings.py`, then two blind raters on its output.
 
+## 2026-10-25: waiting-on-news is already read by the plan reader in loose mode
+
+What: the one real unfinished ending from the count above (something they were waiting to hear back on,
+"we shall see") had been rejected by the plan reader on 2026-10-23 as "not a firm plan (maybe)", a day
+before hedged plans became note-only loops (`COMPANION_LOOP_NOTES=loose`). The same stretch of chat was
+replayed through `extract_open_loops` with `loose=True` on a copy of the database, Haiku, three runs.
+
+Result: 3 of 3 kept it, as a note-only follow-up due three days later, which the note asks about on a
+casual turn ("any news on..."). So waiting-on-news needs no new source. But every run stored it twice,
+from two messages about the same thing, with differently worded claims; the claim check (`normalise`)
+only catches identical wording. The ledger already holds the same kind of repeat (a birthday recorded
+three times over two days). A repeat thread can be brought up twice. That, not a new source, is the gap.
+
+Cost: $0.0012. Rerun: the scratch script `replay_loop.py` (a database copy, the target message id, the
+model), kept in the session scratchpad.
+
