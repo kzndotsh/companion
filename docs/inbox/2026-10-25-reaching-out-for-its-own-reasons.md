@@ -33,7 +33,9 @@ by a model deciding to speak. A model only writes the words, after every check h
   baseline and is learned as they talk:
   - **Baseline**, before there is history: a pause of 12 hours, and waking hours of 9 AM to 10 PM.
   - **Learned**: their own pauses between chats (the 75th percentile over the last two weeks) and
-    the hours they actually write, both recomputed by code from the ledger each tick.
+    the hours they actually write, both recomputed by code from the ledger each tick. Their quiet
+    hours are learned the same way, as the hours they almost never write, so someone on night
+    shifts gets reached out to in their day, not ours; the fixed 11 PM to 8 AM is only the baseline.
   - **Blended by how much it has seen**: the weight on their own numbers grows with the number of
     chats it has seen (full weight from 20), so a few odd days early on cannot swing it. Never
     under 8 hours whatever the data says.
@@ -55,12 +57,22 @@ and after drafting, not requests in a prompt:
   being ignored, or how long they have been gone; a draft that fails is dropped, not rewritten.
 - Never urgency, cliffhangers, streaks, or anything that makes them responsible for how it feels.
 - One specific thing per message, short (18 words or fewer), in the character's voice.
-- Never in quiet hours, never mid-chat, never during a scene; a mood never triggers one (ADR 0016).
+- Never in their quiet hours (learned, as above), never mid-chat, never during a scene; a mood never
+  triggers one (ADR 0016).
+- Light and affectionate, never about the relationship itself: in couples' texting, affectionate
+  messages go with more satisfaction and texts that work through problems with less.
 
-**How often: a dial they set, and their replies.** `COMPANION_REACH` with `off`, `rare` (one every
-two days at most), `normal` (one a day, the default) and `clingy` (up to two a day, at least six
-hours apart). Inside the dial, code follows how they answer: a reach-out answered warmly keeps the
-pace; one answered late, briefly, or not at all lowers it a step until they reach out themselves.
+**How often: a share of the conversations it starts, not a fixed count.** In couples' texting, the
+strongest link to satisfaction in one study was feeling that both start conversations about equally,
+more than what the texts said. So the dial is the share of conversations it starts, measured over
+the last two weeks, rather than messages a day, and it scales with how often they talk:
+`COMPANION_REACH` from `off` through `rare` (about one in eight), `light` (one in five), `normal`
+(one in four), `warm` (one in three) to `clingy` (about one in two, as often as they do), with a
+floor of six hours between any two of its own. Five steps, so there is always a middle. Inside the
+dial, code follows how they answer: a reach-out answered warmly keeps the pace; one answered late,
+briefly, or not at all lowers it a step until they reach out themselves. For comparison, one
+companion app (Nomi) offers four fixed cadences, from about an hour to about four days, and after
+no reply waits about twice as long before trying again.
 This is the "user-chosen dial" from the parked pacing card (T2), and it is never an engagement lever:
 nothing counts streaks or optimises how many messages they send.
 
@@ -86,11 +98,29 @@ zone is a named zone.
 
 ## Questions for the owner
 
-1. The default dial: `normal`, or `clingy` to match the character?
-2. Quiet hours stay 11 PM to 8 AM?
-3. Which kinds first: all four, or start with missing them and a thought?
-4. Should a reach-out ever say it missed them in so many words, or only show it ("thought of you
-   when...")?
+1. The default dial: `normal` (one conversation in four) or `warm` (one in three)?
+2. Answered: quiet hours and usual hours are learned from their writing, with 11 PM to 8 AM only as
+   the baseline.
+3. Answered by research (below): all the kinds, each kept or switched off by its outcomes.
+4. "I missed you": research on manipulative companions finds the harm in guilt and fear of missing
+   out (in one audit about 37% of farewells from companion apps used such tactics, which raised
+   engagement through anger and curiosity and also raised churn and the sense of being
+   manipulated), not in affection, and affectionate texts go with happier couples. Proposed: it may
+   say it missed them now and then, as warmth, never with time or blame ("you've been gone two
+   days", "I was waiting"), and the guilt check enforces that.
+5. After an unanswered reach-out: wait for them to write first (as proposed), or allow one more
+   after about three of their usual pauses, as one app does?
+
+## Sources
+
+- De Freitas, Oğuz-Uğuralp, Uğuralp, "Emotional Manipulation by AI Companions" (Harvard Business
+  School working paper, 2025), via news.harvard.edu and library.hbs.edu.
+- A 2018 study of 205 young adults on texting and relationship satisfaction (Ohadi et al.), via
+  psychologytoday.com: similarity in who initiates contact was the strongest predictor.
+- A BYU study of 276 young adults in committed relationships (Schade et al.), via ksl.com:
+  affectionate texts helped, texting through problems went with lower satisfaction.
+- Nomipedia, "When Your Nomi Messages You First" (community wiki): cadences and quiet hours.
+- Portela and Granell-Canut 2017, cited in arXiv 1904.02743: untimely proactive turns felt annoying.
 
 ## Reverses if
 
