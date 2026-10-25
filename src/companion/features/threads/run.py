@@ -54,6 +54,7 @@ from companion.features.threads.logic import (
     parse_resolved,
     pick_note,
     render_open_loops,
+    repeats,
     to_loop,
     to_resolution,
 )
@@ -117,11 +118,17 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
     known = {normalise(lp.claim) for lp in store.open_loops(rel)}
     made = Making(rel, now, tz, _id, loose=loose)
     stored = rejected = 0
-    for item in raw:
+    earlier: dict[str, str] = {}
+    for i, item in enumerate(raw, start=1):
         outcome = to_loop(item, window, made)
+        repeat = repeats(item, labels, earlier)
+        earlier[f"N{i}"] = item.kind
         if isinstance(outcome, str):
             rejected += 1
             note(f"open loop rejected: {outcome}", {"claim": item.claim, "quote": item.quote})
+        elif repeat is not None:
+            rejected += 1
+            note(f"open loop rejected: {repeat}", {"claim": item.claim, "quote": item.quote})
         elif normalise(outcome.claim) in known:
             rejected += 1
             note("open loop rejected: already recorded", {"claim": outcome.claim})

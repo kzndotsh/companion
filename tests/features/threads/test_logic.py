@@ -33,6 +33,7 @@ from companion.features.threads.logic import (
     parse_resolved,
     pick_note,
     render_open_loops,
+    repeats,
     to_loop,
     to_resolution,
 )
@@ -341,3 +342,30 @@ def test_the_pace_waits_its_time_and_never_passes_the_ceiling() -> None:
     assert "ceiling" in (pace_holds(wait, three, now) or "")
     assert parse_met({"met": "ignored"}) is Met.IGNORED
     assert parse_met({"met": "maybe"}) is None
+
+
+def test_a_repeat_of_the_same_kind_is_named_and_another_kind_is_not() -> None:
+    due = datetime(2026, 10, 20, 10, tzinfo=UTC)
+    open_loop = _loop("a", ThreadKind.FOLLOW_UP, due)
+    labels = {"L1": open_loop}
+    assert "open loop" in (repeats(_raw(same_as="L1"), labels, {}) or "")
+    assert repeats(_raw(same_as="L1", kind="celebrate"), labels, {}) is None
+    assert "N1" in (repeats(_raw(same_as="N1"), {}, {"N1": "follow_up"}) or "")
+    assert repeats(_raw(same_as="N2"), labels, {"N1": "follow_up"}) is None
+    assert repeats(_raw(), labels, {"N1": "follow_up"}) is None
+
+
+def test_same_as_is_read_from_the_answer_and_may_be_missing() -> None:
+    item: dict[str, Json] = {
+        "ref": "m1",
+        "quote": "q",
+        "claim": "c",
+        "when": "",
+        "scale": "days",
+        "sensitivity": 0,
+        "certainty": "firm",
+        "about_companion": False,
+        "kind": "follow_up",
+    }
+    assert (parse({"loops": [item | {"same_as": " l2 "}]}) or [])[0].same_as == "L2"
+    assert (parse({"loops": [item]}) or [])[0].same_as == ""

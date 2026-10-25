@@ -25,6 +25,7 @@ history reads the same.
 - a celebration or encouragement has no day after today to land on
 - the claim is empty or over 160 characters
 - the follow-up time was already more than 3 days past
+- the reader marks it as the same thing as a waiting loop of the same kind (`same_as`, `L1`) or as an earlier item in its own answer (`N1`), logged as `open loop rejected: the same thing as ...`; a different kind is kept, so a birthday marked on the day and asked about after stay two (`repeats`, `system/openloops` v4)
 - the same claim (lower-cased, letters and digits only) is already recorded
 
 A kept loop is stored with the exact quote and its source message, and logged as `open loop recorded from their own words` with the prompt `name@version`. The same call also lists the waiting loops with labels (`L1`, `L2`) and asks which of them their new messages settle. A loop is closed as `resolved` only when the label exists, the message is theirs and real, and the quote is in it, so a loop they bring up themselves is never asked about.

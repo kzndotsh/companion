@@ -2032,3 +2032,23 @@ three times over two days). A repeat thread can be brought up twice. That, not a
 Cost: $0.0012. Rerun: the scratch script `replay_loop.py` (a database copy, the target message id, the
 model), kept in the session scratchpad.
 
+## 2026-10-25: repeat threads, by meaning and by the reader's own label (system/openloops v4)
+
+What: the plan reader stored one waiting-on thing twice, worded from two sides. First tried meaning:
+88 real plan claims and 11 invented pairs embedded with the memory embedder
+(`openai/text-embedding-3-small`). Repeats across days scored 0.79 or more and the nearest different
+pair 0.75, but repeats told from two sides scored 0.56 to 0.67 and different plans said together up
+to 0.57 ("might watch a movie tonight" against "might go for a run tonight"), so no cutoff separates
+them. Then `system/openloops` v4: each loop carries `same_as`, the label of an open loop (L1) or an
+earlier item in its answer (N1) it repeats, and code drops a repeat of the same kind.
+
+Result, Haiku: the real stretch replayed three times stored the thing once each time (3 of 3; before,
+twice each time). Invented cases, two runs each, 8 of 8 right: a thing over two messages became one,
+two plans on one day stayed two, a repeat of an open loop a day later added nothing, and something else
+beside an open loop was kept. A first version of the cases used a lease and exam results, which the
+reader marked sensitive and dropped for that reason, and ran without loose mode; both were faults of the
+test and were replaced with neutral things. Small and partly invented: a check that the label works.
+
+Cost: under a cent. Rerun: `uv run pytest -m live tests/live/test_loop_repeats.py -s -o addopts=""`,
+and the scratch replay `replay_loop.py`.
+

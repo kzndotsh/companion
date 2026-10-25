@@ -89,6 +89,7 @@ class RawLoop:
     certainty: str = "firm"
     about_companion: bool = False
     kind: str = ThreadKind.FOLLOW_UP
+    same_as: str = ""  # the reader's label for the loop this repeats: "L2" open, "N1" its own first
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +119,7 @@ SCHEMA: dict[str, Json] = {
                     "certainty": {"type": "string", "enum": list(CERTAINTIES)},
                     "about_companion": {"type": "boolean"},
                     "kind": {"type": "string", "enum": [k.value for k in ThreadKind]},
+                    "same_as": {"type": "string"},
                 },
                 "required": [
                     "ref",
@@ -129,6 +131,7 @@ SCHEMA: dict[str, Json] = {
                     "certainty",
                     "about_companion",
                     "kind",
+                    "same_as",
                 ],
             },
         },
@@ -169,6 +172,7 @@ def _raw(item: Json) -> RawLoop | None:
         str(text["certainty"]).strip().lower(),
         about,
         str(text["kind"]).strip().lower(),
+        same_as.strip().upper() if isinstance(same_as := item.get("same_as"), str) else "",
     )
 
 
@@ -193,6 +197,19 @@ def parse_resolved(data: Json) -> list[RawResolution]:
         if isinstance(loop, str) and isinstance(ref, str) and isinstance(quote, str):
             out.append(RawResolution(loop.strip(), ref.strip(), quote))
     return out
+
+
+def repeats(raw: RawLoop, labels: Mapping[str, Thread], earlier: Mapping[str, str]) -> str | None:
+    """Why this item repeats a loop already known, from the reader's own label (`same_as`), or None.
+    `earlier` maps the reader's labels for the items before it in the same answer (N1, N2) to their
+    kinds. Only the same kind repeats: a birthday marked on the day and asked about after are
+    two."""
+    open_loop = labels.get(raw.same_as)
+    if open_loop is not None and open_loop.kind == raw.kind:
+        return f"the same thing as an open loop: {open_loop.claim}"
+    if earlier.get(raw.same_as) == raw.kind:
+        return f"the same thing as item {raw.same_as} in this answer"
+    return None
 
 
 def loop_labels(loops: Sequence[Thread]) -> dict[str, Thread]:
