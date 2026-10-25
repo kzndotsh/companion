@@ -1869,3 +1869,15 @@ casual turn in five (at first one in two, mostly scene and topic words); its eff
 measured. A pronoun note that said "use it every time": 15 recent ordinary turns, 4 draws each, the
 pet name it planted in 8/60 replies with the old wording, 0/60 with `notes/address` v2. About $0.05.
 
+## 2026-10-25: Dividers in the history after a long pause change nothing
+
+A reply that came back after 22 hours greeted them with a running bit from the night before, and
+one word from it then ran through the evening. The history is the last 40 messages with no times
+in them, so the idea was a system line in the history wherever their chat paused two hours or more
+("[22 hours later: Saturday 19:01]"), as a chat app shows a date divider. On that turn, 30 draws
+each, gpt-6-luna: the old bit came back in 1/30 without dividers and 4/30 with them (the flagged
+greeting was a rare draw). On 6 other turns after a pause of 6 hours or more, 3 draws each, a blind
+judge (Sonnet) preferred the divided reply 8, the plain one 6, tie 4; carried on as if no time had
+passed 2 against 1. Not shipped. The run of the word came from the replies copying their own recent
+wording, which the pet-word count in the habit note now names. About $0.03.
+
