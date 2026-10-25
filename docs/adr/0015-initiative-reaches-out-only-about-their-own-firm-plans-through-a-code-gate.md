@@ -1,6 +1,7 @@
 # 0015. Initiative reaches out only about their own firm plans, through a code gate, shadow first
 
-**Status:** accepted 2026-10-18, recording what was built on 2026-10-17 and 2026-10-18 (card A1 of the
+**Status:** accepted 2026-10-18; what can be reached out about and the back-off counts are replaced
+by ADR 0021 (2026-10-25). Originally recording what was built on 2026-10-17 and 2026-10-18 (card A1 of the
 audit synthesis). Still shadow mode only: nothing is sent.
 
 **Context.** The audits found no project that closes the loop on a reach-out. The common failures were

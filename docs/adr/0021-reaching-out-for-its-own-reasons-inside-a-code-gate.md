@@ -1,7 +1,8 @@
-# Draft ADR: reaching out for its own reasons, inside a code gate
+# 0021. Reaching out for its own reasons, inside a code gate
 
-**Status:** proposal, 2026-10-25. Would become ADR 0021 and replace the "what can be reached out
-about" part of ADR 0015. Nothing here is built.
+**Status:** accepted 2026-10-25 by the owner; to be built in shadow first. Replaces the "what can be
+reached out about" part and the back-off counts of ADR 0015; its gate, logging, paid-calls-last and
+shadow-first rules stand.
 
 ## Context
 
@@ -96,20 +97,15 @@ zone is a named zone.
 - Counting streaks, maximising replies, or any message whose purpose is to bring them back.
 - Reacting to silence with concern ("are you okay? you've been quiet").
 
-## Questions for the owner
+## Settled with the owner
 
-1. The default dial: `normal` (one conversation in four) or `warm` (one in three)?
-2. Answered: quiet hours and usual hours are learned from their writing, with 11 PM to 8 AM only as
-   the baseline.
-3. Answered by research (below): all the kinds, each kept or switched off by its outcomes.
-4. "I missed you": research on manipulative companions finds the harm in guilt and fear of missing
-   out (in one audit about 37% of farewells from companion apps used such tactics, which raised
-   engagement through anger and curiosity and also raised churn and the sense of being
-   manipulated), not in affection, and affectionate texts go with happier couples. Proposed: it may
-   say it missed them now and then, as warmth, never with time or blame ("you've been gone two
-   days", "I was waiting"), and the guilt check enforces that.
-5. After an unanswered reach-out: wait for them to write first (as proposed), or allow one more
-   after about three of their usual pauses, as one app does?
+1. The default dial is `warm` (about one conversation in three).
+2. Quiet hours and usual hours are learned from their writing; 11 PM to 8 AM is only the baseline.
+3. All the kinds, each kept or switched off by its outcomes.
+4. It may say it missed them now and then, as warmth, never with time or blame; the guilt check
+   enforces that.
+5. After an unanswered reach-out it waits for them to write first. Open to revisit with live
+   outcomes (one app tries again after about twice the wait).
 
 ## Sources
 
