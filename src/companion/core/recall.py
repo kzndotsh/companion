@@ -36,9 +36,21 @@ def candidates(beliefs: Sequence[Belief]) -> dict[str, Belief]:
     return {f"r{i}": b for i, b in enumerate(usable, start=1)}
 
 
-def build_prompt(topic: str, labelled: Mapping[str, Belief]) -> str:
-    lines = [f"[{label}] {b.claim}" for label, b in labelled.items()]
-    return "\n".join([f"They asked you to remember: {topic}", "", "What you know:", *lines])
+def build_prompt(
+    topic: str,
+    labelled: Mapping[str, Belief],
+    when: Mapping[str, str] | None = None,
+    today: str = "",
+) -> str:
+    """The question and the numbered list. With `when` (label to "today", "3 days ago") and `today`,
+    each line says when it was last said, so "what I had earlier" can find today's meal: without
+    them the judge picked older food preferences instead (owner's flag 2026-10-25)."""
+    lines = [
+        f"[{label}] {b.claim}" + (f" (said {when[label]})" if when and label in when else "")
+        for label, b in labelled.items()
+    ]
+    head = [f"Today is {today}."] if today else []
+    return "\n".join([*head, f"They asked you to remember: {topic}", "", "What you know:", *lines])
 
 
 def parse(data: Json, labelled: Mapping[str, Belief]) -> list[Belief]:

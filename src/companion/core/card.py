@@ -26,6 +26,11 @@ MAX_OLDER = 3
 # memory and the look-ups still find it; it just stops taking one of the card's places. Other
 # events, such as starting a project or getting a job, are history and stay.
 EVENT_SHOWN_DAYS = 7
+# What they said in the last few hours goes first after their boundaries and its promises: a meal
+# named three hours earlier was crowded off a full card, since events sort last (flag 2026-10-25).
+RECENT = timedelta(hours=12)
+RECENT_SLOTS = 8  # with 4, a busy evening's newer memories still pushed the meal off
+RULES = frozenset({BeliefKind.BOUNDARY, BeliefKind.PROMISE})  # always first, whatever is recent
 KIND_ORDER = {
     kind: i
     for i, kind in enumerate(
@@ -102,9 +107,15 @@ def build_card(  # noqa: PLR0913
         (b for b in beliefs if aged[b.id].status is Freshness.STALE),
         key=lambda b: -aged[b.id].last_supported.timestamp(),
     )
-    ordered = sorted(
+    by_kind = sorted(
         current, key=lambda b: (KIND_ORDER[b.kind], -aged[b.id].last_supported.timestamp())
     )
+    rules = [b for b in by_kind if b.kind in RULES]
+    newest = sorted(current, key=lambda b: -aged[b.id].last_supported.timestamp())
+    recent = [b for b in newest if b not in rules and now - aged[b.id].last_supported <= RECENT][
+        :RECENT_SLOTS
+    ]
+    ordered = [*rules, *recent, *(b for b in by_kind if b not in rules and b not in recent)]
     ranked, crowded = ordered[:max_items], ordered[max_items:]
     older_pool = [b for b in stale if b.sensitivity < HOLD_AT]
     older = tuple(older_pool[:MAX_OLDER])

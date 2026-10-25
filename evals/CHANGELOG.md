@@ -1881,3 +1881,16 @@ judge (Sonnet) preferred the divided reply 8, the plain one 6, tie 4; carried on
 passed 2 against 1. Not shipped. The run of the word came from the replies copying their own recent
 wording, which the pet-word count in the habit note now names. About $0.03.
 
+## 2026-10-25: What they said today comes first on the card
+
+A reply did not know a meal named three hours and about 80 messages earlier: the memory was saved,
+but events sort last on a 15-item card and it was crowded out, and the recall look-up, asked when
+they said it forgot, picked older food preferences. The recall list with today's date and "said
+today" on each line: the meal picked 2/5 reads, against 0/5 without (Haiku 5.5, about $0.002). The
+card with recent memories first (12 hours): with 4 places the meal was still crowded out by newer
+memories on a busy evening; with 8 places, after boundaries and promises, the reply named the meal
+12/12 on the flagged turn against 0/12 (gpt-6-luna, owner's character). On 12 other recent ordinary
+turns where the card changed, one draw each, a blind judge (Sonnet) split 5 to 5 with 2 ties; its
+one "out-of-place callback" was the earlier meal mentioned while talking about food, read by eye as
+fitting. About $0.02.
+

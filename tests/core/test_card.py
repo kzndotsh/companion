@@ -193,3 +193,36 @@ def test_a_dated_happening_leaves_the_card_after_a_week_but_history_stays(
     shown = {b.id for b in (*card.usable, *card.held, *card.older)}
     assert "past" in shown
     assert "dated" not in shown
+
+
+def test_what_they_said_in_the_last_hours_goes_first(belief: Callable[..., Belief]) -> None:
+    now = NOW + timedelta(days=30)
+    many = [
+        _b(belief, f"p{i}", f"pref {i}", kind=BeliefKind.PREFERENCE, valid_from=T0 + timedelta(i))
+        for i in range(20)
+    ]
+    meal = _b(
+        belief,
+        "meal",
+        "Had soup for dinner",
+        kind=BeliefKind.EVENT,
+        valid_from=now - timedelta(hours=3),
+    )
+    card = build_card([*many, meal], {}, now, max_items=5)
+    assert card.usable[0].claim == "Had soup for dinner"  # an event, which would sort last
+    old = _b(belief, "old", "Had toast", kind=BeliefKind.EVENT, valid_from=now - timedelta(days=2))
+    assert old not in build_card([*many, old], {}, now, max_items=5).usable
+
+
+def test_boundaries_stay_first_even_before_what_is_recent(belief: Callable[..., Belief]) -> None:
+    now = NOW + timedelta(days=30)
+    boundary = _b(belief, "bd", "Wants fewer questions", kind=BeliefKind.BOUNDARY, valid_from=T0)
+    meal = _b(
+        belief,
+        "meal",
+        "Had soup for dinner",
+        kind=BeliefKind.EVENT,
+        valid_from=now - timedelta(hours=1),
+    )
+    card = build_card([meal, boundary], {}, now)
+    assert [b.claim for b in card.usable] == ["Wants fewer questions", "Had soup for dinner"]

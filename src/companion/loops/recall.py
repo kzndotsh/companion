@@ -4,12 +4,15 @@ model only means nothing is looked up; the reply goes out as it would have."""
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import datetime
 
+from companion.core.clock import local_zone
 from companion.core.extractor import Extractor
+from companion.core.freshness import when_phrase
 from companion.core.recall import PROMPT, SCHEMA, build_prompt, candidates, parse
-from companion.core.types import Belief
+from companion.core.types import Belief, BeliefId
 from companion.loops.ask import Judge, ask
 
 log = logging.getLogger("companion.recall")
@@ -24,9 +27,23 @@ class Recalled:
     model: str
 
 
-async def look_up(extractor: Extractor, beliefs: Sequence[Belief], topic: str) -> Recalled | None:
-    """The beliefs that bear on what they asked it to remember, or None if the look-up failed."""
+async def look_up(
+    extractor: Extractor,
+    beliefs: Sequence[Belief],
+    topic: str,
+    *,
+    said: Mapping[BeliefId, datetime] | None = None,
+    now: datetime | None = None,
+) -> Recalled | None:
+    """The beliefs that bear on what they asked it to remember, or None if the look-up failed. With
+    `said` (when each was last said) and `now`, each line carries how long ago."""
     labelled = candidates(beliefs)
+    when = (
+        {k: when_phrase(said.get(b.id, b.valid_from), now) for k, b in labelled.items()}
+        if said is not None and now is not None
+        else None
+    )
+    today = f"{now.astimezone(local_zone()):%A %d %B %Y}" if now is not None else ""
     if not labelled:
         return Recalled(topic, (), 0, "")
     judge = Judge(
@@ -37,7 +54,7 @@ async def look_up(extractor: Extractor, beliefs: Sequence[Belief], topic: str) -
         timeout=TIMEOUT_SECONDS,
         unread="nothing added",
     )
-    got = await ask(extractor, judge, build_prompt(topic, labelled))
+    got = await ask(extractor, judge, build_prompt(topic, labelled, when, today))
     if got is None:
         return None
     return Recalled(topic, tuple(got.value), len(labelled), got.model)

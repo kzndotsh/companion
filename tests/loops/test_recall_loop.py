@@ -165,3 +165,11 @@ def test_only_stated_beliefs_below_crisis_level_are_candidates_and_picks_are_cap
 def test_a_label_written_the_way_the_list_shows_it_is_still_read() -> None:
     labelled = candidates([_belief("b1", "The user always wants a burger.", "burger")])
     assert [b.id for b in parse({"labels": ["[r1]", " r1 "]}, labelled)] == ["b1"]
+
+
+def test_the_recall_list_can_say_when_each_was_said() -> None:
+    from companion.core.recall import build_prompt  # noqa: PLC0415
+
+    prompt = build_prompt("what i ate", {}, {}, "Saturday 24 October 2026")
+    assert prompt.startswith("Today is Saturday 24 October 2026.")
+    assert not build_prompt("what i ate", {}).startswith("Today")

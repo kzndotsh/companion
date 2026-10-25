@@ -884,6 +884,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## Request assembly: a reply cut off is read as the part that arrived
 - From 2026-10-22 a reply sent as two or three messages that is cut off after the first went out (a newer message superseded it, or a later part failed to send) is marked undelivered, and what arrived is added beside it at the same time and turn (`Store.mark_partly_delivered`, decision `reply partly delivered`). Before, the whole reply stayed in what the model read, so it could take for seen a part the user never got. Nothing is removed: the whole reply stays in the ledger with its mark.
 
+## Request assembly: what they said today comes first on the card, and recall knows the date
+- From 2026-10-25 the memory card puts their boundaries and its promises first, then up to 8 memories mentioned in the last 12 hours, newest first, then the rest by kind as before (`core/card.py` `RECENT`, `RECENT_SLOTS`, `RULES`). Owner's flag: asked what they had eaten, it did not know a meal they named three hours earlier; the meal was saved, but events sort last and 111 memories were crowded out. When they say it forgot, the recall look-up's list now starts with today's date and says when each memory was last said ("said today", "3 days ago"); the `system/recall` prompt is unchanged (`core/recall.py` `build_prompt`). Measured in `evals/CHANGELOG.md` (2026-10-25).
+
 ## Request assembly: a short question without its question mark gets no word cap
 - From 2026-10-25 a short message that asks it something without a "?" ("what about you", "ok, ask me something", "and you") gets no length note, as a question with one never did (`core/turn/length.py`). Before, "What about you" was capped as a 3-word statement at about 7 words.
 

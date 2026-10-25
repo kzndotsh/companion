@@ -110,7 +110,13 @@ async def _recall(c: Conversation, t: Turn, heard: Heard | None) -> Recalled | N
     if c.judge is None or heard is None or not heard[0].recall or not heard[0].topic:
         return None
     mark(t, f"recall look-up: {heard[0].topic!r}")
-    recalled = await look_up(c.judge, c.store.user_beliefs(c.rel), heard[0].topic)
+    recalled = await look_up(
+        c.judge,
+        c.store.user_beliefs(c.rel),
+        heard[0].topic,
+        said=c.store.last_support(c.rel),
+        now=t.now,
+    )
     found = recalled.picked if recalled is not None else ()
     reason = f"recall: they asked about {heard[0].topic!r}; " + (
         f"{len(found)} found" if recalled is not None else "the look-up failed"

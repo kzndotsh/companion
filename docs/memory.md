@@ -23,8 +23,9 @@ the memory map, listing names, writing context, judging worth, embedding the new
 ## How memory reaches the model
 
 On every turn, a memory card is built from the current memories (`core/card.py`) and placed in the
-system block. It holds up to 15 memories, ordered by kind (boundaries, promises and tells first, then
-traits, states, threads and preferences) and then by how recently each was mentioned. Up to 3 older
+system block. It holds up to 15 memories. Their boundaries and its promises come first, then up to 8 memories
+mentioned in the last 12 hours, newest first, so what they said this evening is in view; then the rest
+by kind (tells, traits, states, threads, preferences, events) and by how recently each was mentioned. Up to 3 older
 memories go in a separate block, marked as possibly out of date.
 
 A memory is never deleted (ADR 0002, 0008). It ages instead, measured from the last time it was
