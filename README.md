@@ -20,13 +20,13 @@ Today it is reached through Telegram, its only integration for now.
 - **Remembers with receipts.** Nothing enters memory without a quote, a speaker and a frame, and
   nothing is ever deleted: memories are retired, closed or marked
   ([ADR 0001](docs/adr/0001-a-belief-is-a-quoted-claim-with-a-frame.md),
-  [0002](docs/adr/0002-the-ledger-never-deletes.md)).
+  [0002](docs/adr/0002-the-ledger-never-deletes.md), [0010](docs/adr/0010-the-frame-is-set-when-a-message-is-stored.md)).
 - **Shows the right memories.** Each turn's card holds fifteen memories. After their boundaries and its
   promises, what they said in the last twelve hours comes first (up to eight), so a meal named this
   afternoon is not crowded off. Sensitive ones only come into view when they are sharing something.
   A one-day moment of daily life, or a personal event on a given
   day, leaves the card a week after it was last mentioned. Feelings and sensitive memories carry a short
-  note on what was being talked about.
+  note on what was being talked about ([ADR 0008](docs/adr/0008-beliefs-go-stale-they-are-not-deleted.md), [0012](docs/adr/0012-what-the-model-reads-besides-the-chat-goes-in-the-system-block.md)).
 - **Looks things up.** When they ask it to remember, or say it forgot, a small model searches all of
   memory and the finds ride that turn, in a pretend scene too. On every ordinary message, when a memory
   is close to what they said, a small model picks up to two that bear on it and they ride the turn
@@ -43,14 +43,14 @@ Today it is reached through Telegram, its only integration for now.
   referred to pinned in every turn, labels each memory by part of their life, and works out (in shadow) what it knows least
   and when their own words open the door to asking a basic it does not know.
 - **Asks about conflicts.** A new memory that may replace or contradict an older one is a question for
-  the owner, who keeps one or both.
+  the owner, who keeps one or both ([ADR 0019](docs/adr/0019-memory-tidies-itself-only-where-a-judge-matched-the-owner.md)).
 
 </details>
 
 <details>
 <summary><b>Listening and care</b>: reads how serious a message is, tells a real risk from a joke, repairs, checks in</summary>
 
-- **Listens.** Each message is read for how serious it is before the reply, and code adds a matching note.
+- **Listens.** Each message is read for how serious it is before the reply, and code adds a matching note ([ADR 0014](docs/adr/0014-models-label-and-code-chooses-the-note.md)).
 - **Takes a real risk seriously, and a joke as a joke.** A message that may be a risk to their life is
   read three times by a risk judge; code picks the level and fails safe. At concern it asks them
   directly and warmly and names a crisis line once; at urgent code also sends a fixed message with the
@@ -70,7 +70,7 @@ Today it is reached through Telegram, its only integration for now.
   brought up lightly the next time they write. Reaching out first, about a plan, after they stepped
   away or for its own reasons (a thought, a time they keep, missing them, at a share of conversations
   the owner sets), runs in shadow only; with the crisis path on it is held for a day after a risk turn
-  ([ADR 0021](docs/adr/0021-reaching-out-for-its-own-reasons-inside-a-code-gate.md)).
+  ([ADR 0021](docs/adr/0021-reaching-out-for-its-own-reasons-inside-a-code-gate.md), [0015](docs/adr/0015-initiative-reaches-out-only-about-their-own-firm-plans-through-a-code-gate.md)).
 - **Reminds them.** "Remind me at 8pm to take the dog out" or "check up on me in a few days about the
   interview": a small model reads the words, code works out the time and asks when it is unclear, and
   the reminder comes when due in its own voice. One-off only; a pretend scene holds it until it ends.
@@ -79,7 +79,7 @@ Today it is reached through Telegram, its only integration for now.
 - **Notices the day.** On a casual turn code may add one note after the history: a warm or fun US
   public or cultural day ("if it fits", never assuming they celebrate it), the lead-up to a big one,
   or a month, a hundred days, six months or a year since they first talked. Each is offered once, and
-  no model chooses it (`features/calendar`).
+  no model chooses it (`features/calendar`, [ADR 0014](docs/adr/0014-models-label-and-code-chooses-the-note.md)).
 - **Feels typed.** Replies are paced like a person typing, and long plain replies are sometimes sent
   as two or three messages. A new message that arrives first replaces the reply in progress; a reply
   cut off part way is remembered as only the part they received.
@@ -94,7 +94,7 @@ Today it is reached through Telegram, its only integration for now.
 - **Has tastes of its own.** It picks for itself and keeps its view under pushback without a reason
   (persona v41). The views it states about itself are sorted, and the tastes among them are shown back
   to it when a message touches them, so what it likes stays the same from day to day
-  ([ADR 0020](docs/adr/0020-the-companions-own-lore-lives-in-its-views-labelled-by-kind-and-shown-when-the-moment-touches-it.md)).
+  ([ADR 0020](docs/adr/0020-the-companions-own-lore-lives-in-its-views-labelled-by-kind-and-shown-when-the-moment-touches-it.md), [0009](docs/adr/0009-the-companions-views-are-recorded-and-gated-not-hand-approved.md), [0011](docs/adr/0011-the-companion-is-a-knowledgeable-friend-with-its-own-growing-personality.md)).
 - **Plays along with a guess.** When a short question invites one ("you know what time it is?"), it
   makes one playful guess from what memory holds, as a question; a hint at what it is time for is
   looked up as one of their habits or routines.
@@ -141,7 +141,7 @@ Today it is reached through Telegram, its only integration for now.
 
 - **Logs every decision with a reason written by code**
   ([ADR 0003](docs/adr/0003-every-choice-is-a-decision-with-a-reason.md),
-  [0006](docs/adr/0006-decisions-are-logged-by-code.md)).
+  [0006](docs/adr/0006-decisions-are-logged-by-code.md), [0013](docs/adr/0013-every-prompt-is-a-versioned-file.md)).
 - **Backs itself up** at every start and once a day, each copy checked.
 - **Learns from one person's marks.** `/flag` a reply that feels off, `/fav` one that delights. Those
   marks, and measurements on recorded turns, decide what gets built next. `/mode` answers which model
@@ -151,7 +151,7 @@ Today it is reached through Telegram, its only integration for now.
   sample is made by the turn's own code: its notes, its request and its reply checks and redraws
   (`+raw` skips them), so it is what they would have received. The
   made-up facts rate (`companion invented`) counts replies that state something about them that
-  nothing supports.
+  nothing supports ([ADR 0007](docs/adr/0007-evals-replay-recorded-turns-with-a-small-own-runner.md)).
 
 </details>
 
