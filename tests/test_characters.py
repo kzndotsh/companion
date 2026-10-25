@@ -48,9 +48,9 @@ def test_no_character_unless_the_setting_names_one(
 
 
 def test_an_eval_variant_can_name_a_character() -> None:
-    spec = parse_spec("v26.md+listen+as-mika")
+    spec = parse_spec("v26.md+as-mika+roleplay")
     assert spec.character == "mika"
-    assert spec.label == "v26.md+listen+as-mika"
+    assert spec.label == "v26.md+as-mika+roleplay"
 
 
 def test_the_in_scenes_section_reaches_only_the_roleplay_talker() -> None:

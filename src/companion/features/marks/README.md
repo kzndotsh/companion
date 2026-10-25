@@ -29,7 +29,8 @@ Once the turn is stored, the offer is logged as the decision `mark: one of its o
 
 ## Commands
 
-None. Measure it with the eval flag `+mark` on `uv run companion eval`.
+None. An eval sample offers a mark as the turn does, on a casual turn (a fixture with `labels` of
+severity 0), drawn afresh each sample.
 
 ## Measured
 

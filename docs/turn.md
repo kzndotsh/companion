@@ -15,7 +15,9 @@ A turn runs in stages, one module each under `src/companion/turn/`, driven by `h
 3. **Look** (`notes.py`). Every feature that looks something up before the reply does so here, side
    by side, under one 9 s deadline. A look-up that is late or fails simply adds nothing that turn.
 4. **Assemble** (`assemble.py`). It builds the request: the persona, the history, and a system block
-   holding the clock, the memory card and the notes.
+   holding the clock, the memory card and the notes. `Layout` lays the request out from those parts
+   with no store in reach; `companion eval` lays out a scripted fixture with it too, and passes each
+   reply through `checked` in `talk.py`, so a sample is what the person would receive.
 5. **Talk** (`talk.py`). The talker writes the reply, and the reply checks run on it.
 6. **Persist** (`persist.py`). Their message, the reply and every decision are stored, and each
    feature's step after the turn runs. Shadow look-ups run beside it (`beside.py`) and never change
@@ -109,8 +111,9 @@ A reply is checked before it is sent (`core/recheck.py`). Code catches these:
 
 On an ordinary turn, a small judge also catches a joke bolted onto an ordinary message, and a canned
 generic reaction that could sit under any message ("that sounds so good", "X is always the best part",
-restating their point back as praise), in one call (`system/quip`). In a scene, or
-on a serious or acute turn, only the code checks run.
+restating their point back as praise), in one call (`system/quip`). In a scene, on a
+serious or acute turn, or when the listening judge could not read the turn, only the code checks
+run.
 
 When a check fails, the same model is asked once more, or twice if the redraw still has an em dash,
 and the last reply goes out whatever it is. The first is kept in the decision detail. Nothing is ever

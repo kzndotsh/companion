@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from companion import prompts
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
@@ -24,11 +23,13 @@ from companion.evals.fixtures import (
 )
 from companion.evals.judge import judge_hash, parse
 from companion.evals.report import render_table
-from companion.evals.runner import Models, Plan, Variant, request_for, run_eval, strip_card
+from companion.evals.runner import Models, Plan, Variant, run_eval
+from companion.evals.sample import draw, recorded_request
 from companion.evals.variants import parse_spec
 
 PREFIX = build_prefix("You are steady and warm. " * 200)
 OTHER = build_prefix("You are blunt and brief. " * 200)
+MEMORY = "[What you remember about them. Use it naturally, never recite it:\n- likes tea]"
 CARD = (
     "[Thursday 12:00]\n[What you remember about them. Use it naturally, never recite it:\n"
     "- The user likes climbing. (told you Thu Oct 15)]\n"
@@ -128,8 +129,9 @@ def test_the_judge_is_hashed_and_off_menu_answers_are_rejected() -> None:
     assert parse({"verdict": "pass", "confidence": True}) is None
 
 
-def test_strip_card_keeps_the_clock_and_what_they_typed() -> None:
-    out = strip_card(CARD)
+def test_without_the_card_an_old_message_keeps_the_clock_and_what_they_typed() -> None:
+    req = recorded_request(_request(), Variant("a", OTHER, keep_card=False))
+    out = req.messages[-1].content
     assert "[Thursday 12:00]" in out
     assert out.endswith("hello")
     assert "remember" not in out
@@ -137,12 +139,12 @@ def test_strip_card_keeps_the_clock_and_what_they_typed() -> None:
 
 
 def test_a_variant_swaps_only_the_prefix_and_optionally_the_card() -> None:
-    base = _request()
-    with_card = request_for(base, Variant("a", OTHER))
-    no_card = request_for(base, Variant("b", OTHER, keep_card=False))
+    base = dataclasses.replace(_request(), card="Right now it is Monday.\n" + MEMORY, tail="[t]")
+    with_card = recorded_request(base, Variant("a", OTHER))
+    no_card = recorded_request(base, Variant("b", OTHER, keep_card=False))
     assert with_card.prefix is OTHER
-    assert with_card.messages == base.messages
-    assert "remember" not in no_card.messages[-1].content
+    assert (with_card.messages, with_card.card, with_card.tail) == (base.messages, base.card, "[t]")
+    assert no_card.card == "Right now it is Monday."
     assert no_card.messages[0] == base.messages[0]
 
 
@@ -154,46 +156,6 @@ def test_reasoning_stays_off_unless_a_variant_asks_for_it() -> None:
     on = OpenRouterTalker("k", None, "m", reasoning_effort="low").body(req)  # type: ignore[arg-type]
     assert off["reasoning"] == {"enabled": False}
     assert on["reasoning"] == {"effort": "low", "exclude": True}
-
-
-def test_the_length_variant_adds_the_note_for_a_short_statement_only() -> None:
-    from companion.core.prompt.request import Message, TalkerRequest  # noqa: PLC0415
-
-    short = TalkerRequest(OTHER, (Message("user", "just got home"),), card="clock")
-    asked = TalkerRequest(OTHER, (Message("user", "what is for dinner?"),), card="clock")
-    on = Variant("a", OTHER, length=True)
-    assert "Their message was short" in request_for(short, on).card
-    assert request_for(short, on).card.startswith("clock\n")
-    assert request_for(asked, on).card == "clock"
-    assert request_for(short, Variant("b", OTHER)).card == "clock"
-
-
-def test_the_listen_variant_adds_the_fixtures_note_only_when_asked() -> None:
-    from companion.core.prompt.request import Message, TalkerRequest  # noqa: PLC0415
-
-    base = TalkerRequest(OTHER, (Message("user", "hi"),), card="clock")
-    on = request_for(base, Variant("a", OTHER, listen=True), "[a note]")
-    assert on.card == "clock\n[a note]"
-    assert request_for(base, Variant("b", OTHER), "[a note]").card == base.card
-    assert request_for(base, Variant("c", OTHER, listen=True), None).card == base.card
-
-
-def test_a_mood_variant_adds_its_lines_after_the_others_and_none_changes_nothing() -> None:
-    base = TalkerRequest(OTHER, (Message("user", "hi"),), card="clock")
-    two = request_for(base, Variant("a", OTHER, listen=True, mood=("cozy", "playful")), "[a note]")
-    lines = two.card.split("\n")
-    assert lines[:2] == ["clock", "[a note]"]
-    assert lines[2:] == [
-        prompts.get("notes/mood-cozy").text,
-        prompts.get("notes/mood-playful").text,
-    ]
-    assert request_for(base, Variant("b", OTHER)) == base
-
-
-@pytest.mark.parametrize("bad", ["v31.md+mood-sleepy", "v31.md+mood-cozy.cozy", "v31.md+mood-"])
-def test_an_unknown_or_repeated_mood_is_refused(bad: str) -> None:
-    with pytest.raises(ValueError, match="bad variant"):
-        parse_spec(bad)
 
 
 def test_a_script_can_carry_the_labels_the_judge_would_give() -> None:
@@ -263,10 +225,12 @@ def test_the_epitome_check_parses_and_the_judge_hash_covers_it() -> None:
 
 
 def test_a_history_variant_keeps_only_the_last_messages() -> None:
-    base = _request()
-    short = request_for(base, Variant("a", OTHER, history=2))
+    base = TalkerRequest(
+        PREFIX, (Message("user", "a"), Message("assistant", "b"), Message("user", "c"))
+    )
+    short = recorded_request(base, Variant("a", OTHER, history=2))
     assert short.messages == base.messages[-2:]
-    assert request_for(base, Variant("b", OTHER)).messages == base.messages
+    assert recorded_request(base, Variant("b", OTHER)).messages == base.messages
 
 
 @pytest.mark.parametrize(
@@ -278,9 +242,10 @@ def test_a_history_variant_keeps_only_the_last_messages() -> None:
         ("v10.md+h10", "v10.md", True, None, 10),
         ("v10.md+nocard+h6@a/b", "v10.md", False, "a/b", 6),
         ("v10.md+low", "v10.md", True, None, None),
-        ("v10.md+len", "v10.md", True, None, None),
-        ("v10.md+listen", "v10.md", True, None, None),
-        ("v31.md+mood-cozy.playful@a/b", "v31.md", True, "a/b", None),
+        ("v10.md+raw", "v10.md", True, None, None),
+        ("v41.md@openai/gpt-6-luna", "v41.md", True, "openai/gpt-6-luna", None),
+        ("v31.md+note=scratch/mood.md@card@a/b", "v31.md", True, "a/b", None),
+        ("v31.md+nocard+note=a.md@tail+note=b.md@card", "v31.md", False, None, None),
     ],
 )
 def test_variant_specs(
@@ -296,7 +261,28 @@ def test_variant_specs(
     assert spec.label == text
 
 
-@pytest.mark.parametrize("bad", ["v10", "v10.md+cardless", "", "v10.md+h0", "v10.md+hx"])
+def test_a_note_switch_names_its_file_and_place() -> None:
+    spec = parse_spec("v31.md+note=x/a.md@tail+note=b.md@card@m/n")
+    assert spec.notes == (("x/a.md", "tail"), ("b.md", "card"))
+    assert (spec.model, spec.raw) == ("m/n", False)
+    assert parse_spec("v31.md+raw").raw
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        "v10",
+        "v10.md+cardless",
+        "",
+        "v10.md+h0",
+        "v10.md+hx",
+        "v10.md+listen",
+        "v10.md+mood-cozy",
+        "v10.md+resample",
+        "v10.md+note=a.md",
+        "v10.md+note=a.md@middle",
+    ],
+)
 def test_bad_variant_specs_are_refused(bad: str) -> None:
     with pytest.raises(ValueError, match="bad variant"):
         parse_spec(bad)
@@ -412,18 +398,19 @@ def test_a_malformed_script_is_refused(script: Json) -> None:
         parse_fixture(raw)
 
 
-def test_a_script_becomes_a_request_shaped_like_a_real_one() -> None:
-    from companion.cli.eval import script_request  # noqa: PLC0415
-
+async def test_a_script_becomes_a_request_shaped_like_a_real_one() -> None:
     f = parse_fixture(_scripted())
-    assert f.script is not None
-    req = script_request(f.script, PREFIX)
+    talker = Talker()
+    drawn = await draw(f, Variant("a", PREFIX, raw=True), None, talker, Judge())
+    req = drawn.request
+    assert talker.seen == [req]
     assert req.prefix is PREFIX
     assert [m.role for m in req.messages] == ["user", "assistant", "user"]
-    last = req.messages[-1].content
-    assert last == "how are you"
-    assert req.card.startswith("Right now it is Thursday 12:00.")
+    assert req.messages[-1].content == "how are you"
+    assert req.card.startswith("<clock>Right now it is Thursday 12:00.</clock>")
     assert "[What you remember" in req.card
+    no_card = await draw(f, Variant("b", PREFIX, keep_card=False, raw=True), None, talker, Judge())
+    assert "remember" not in no_card.request.card
 
 
 def test_directories_that_do_not_exist_are_skipped_and_ids_must_stay_unique(
@@ -446,13 +433,23 @@ async def test_a_failing_provider_costs_samples_not_the_run(
     monkeypatch.setattr(runner_module, "RETRY_WAIT_SECONDS", 0.0)
 
     class Down:
-        async def reply(self, request: object) -> object:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def reply(self, request: TalkerRequest) -> Reply:
             del request
+            self.calls += 1
             msg = "429"
             raise RuntimeError(msg)
 
-    got = await runner_module._reply_with_retry(Down(), object())  # type: ignore[arg-type]
-    assert got is None
+    down = Down()
+    res = await run_eval(
+        _plan(_fixture(MaxWords(5)), [Variant("a", PREFIX)], samples=2),
+        Models(lambda m, e: down, Judge()),
+    )
+    cell = res.cells[("f1", "a")]
+    assert (len(cell.samples), cell.skipped) == (0, 2)
+    assert down.calls == 2 * runner_module.RETRIES
 
 
 async def test_run_refuses_when_the_balance_is_below_the_cap(
@@ -509,7 +506,7 @@ def test_the_memory_blocks_are_swapped_in_place_and_the_rest_kept() -> None:
 
 
 def test_tags_keep_every_word_and_gather_the_notes() -> None:
-    from companion.evals.runner import tagged  # noqa: PLC0415
+    from companion.core.prompt.sections import tagged  # noqa: PLC0415
 
     card = (
         "Right now it is Friday 19:40.\n"
@@ -521,7 +518,6 @@ def test_tags_keep_every_word_and_gather_the_notes() -> None:
     memory = "What you remember about them. Use it naturally, never recite it:\n- likes tea"
     assert f"<memory>\n{memory}\n</memory>" in out
     assert out.endswith("<notes>\nA pretend scene is in progress.\n</notes>")
-    assert parse_spec("v40.md+tags").label == "v40.md+tags"
     kept = tagged(card, memory=False)
     assert "[What you remember about them. Use it naturally, never recite it:\n- likes tea]" in kept
     assert "<notes>" in kept

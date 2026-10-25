@@ -1,58 +1,30 @@
-"""Replay recorded turns against variants, score every reply, and stop at a spend cap.
+"""Run fixtures against variants, score every reply, and stop at a spend cap.
 
-A variant is a persona (a prefix) and optionally a model, with the state card kept or stripped. The
-recorded history and your message are reused exactly, so the only thing that changes between
+A variant is a persona (a prefix) and optionally a model, with the request's shape around it. Each
+sample is what the person would receive: the turn's own notes and reply checks (`evals/sample.py`).
+A recorded turn's history and message are reused exactly, so the only thing that changes between
 variants is the thing under test.
 """
 
 from __future__ import annotations
 
 import asyncio
-import re
-import uuid
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
-from companion import prompts
-from companion.core.extractor import Extractor
-from companion.core.prompt.prefix import Prefix
-from companion.core.prompt.request import Message, TalkerRequest
-from companion.core.prompt.sections import tagged
+from companion.core.extractor import Extraction, Extractor
+from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply, Talker
-from companion.core.turn.habits import echo_note
-from companion.core.turn.length import length_target
+from companion.core.types import Json
 from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
 from companion.evals.judge import grade, grade_empathy
-from companion.features.marks.logic import note as mark_note
-from companion.features.marks.logic import pick
-from companion.turn.quip import judge_quip
+from companion.evals.sample import Variant, draw
 
 CONCURRENCY = 4
 FREE_SPACING_SECONDS = 3.1
 RETRIES = 3
 RETRY_WAIT_SECONDS = 2.0
-_CARD_BLOCK = re.compile(r"^\[(?:What you remember|Also known).*?\]\n?", re.MULTILINE | re.DOTALL)
-
-
-@dataclass(frozen=True, slots=True)
-class Variant:
-    label: str
-    prefix: Prefix
-    keep_card: bool = True
-    model: str | None = None
-    history: int | None = None  # keep only this many of the last messages
-    effort: str | None = None  # reasoning effort; None keeps it off, as in the bot
-    length: bool = False  # add the length note the bot adds to a short statement
-    listen: bool = False  # add the listening note a fixture's labels would produce
-    echo: bool = False  # add the note against copying their emoji, when they used one
-    mood: tuple[str, ...] = ()  # candidate mood lines to add (ADR 0016), measured before building
-    resample: bool = False  # one fresh reply when the quip check fires (J45)
-    tags: bool = False  # the system block in XML-style sections instead of bracketed lines
-    tags_notes: bool = False  # only the clock and the notes in tags; memory stays as it is
-    lore: bool = False  # show the fixture's own tastes as the lore note (ADR 0020)
-    tail: str = ""  # a character's scene reminder after the history, as the bot sends it in scenes
-    mark: bool = False  # offer one of its own emoticons, a fresh pick on every request
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,7 +33,7 @@ class Sample:
     verdicts: tuple[Verdict, ...]
     latency_ms: int
     cost_usd: float
-    resampled: bool = False
+    redrawn: tuple[str, ...] = ()  # the checks that made the turn draw again, in order
 
     @property
     def outcome(self) -> Verdict:
@@ -89,47 +61,6 @@ class Results:
     charged: float | None = None  # what OpenRouter's meter moved by, read after the run
 
 
-def strip_card(content: str) -> str:
-    """The user message without the memory blocks, keeping the clock line and what they typed."""
-    return _CARD_BLOCK.sub("", content)
-
-
-def request_for(
-    base: TalkerRequest,
-    variant: Variant,
-    listening: str | None = None,
-    lore: str | None = None,
-) -> TalkerRequest:
-    messages = list(base.messages)
-    tail = variant.tail
-    if variant.history is not None:
-        messages = messages[-variant.history :]
-    if not variant.keep_card:
-        last = messages[-1]
-        messages[-1] = Message(last.role, strip_card(last.content))
-    card = base.card if variant.keep_card else ""
-    if variant.length and (size := length_target(messages[-1].content)):
-        note = size.note
-        card = f"{card}\n{note}" if card else note
-    if variant.echo and (echo := echo_note(messages[-1].content)):
-        card = f"{card}\n{echo}" if card else echo
-    if variant.mark:
-        mine = [m.content for m in messages[:-1] if m.role == "assistant"]
-        if (mark := pick(uuid.uuid4().hex, messages[-1].content, mine)) is not None:
-            offer = mark_note(mark, messages[-1].content)
-            tail = f"{tail}\n{offer}" if tail else offer
-    if variant.listen and listening:
-        card = f"{card}\n{listening}" if card else listening
-    if variant.lore and lore:
-        card = f"{card}\n{lore}" if card else lore
-    for state in variant.mood:
-        line = prompts.get(f"notes/mood-{state}").text
-        card = f"{card}\n{line}" if card else line
-    if variant.tags or variant.tags_notes:
-        card = tagged(card, memory=variant.tags)
-    return TalkerRequest(prefix=variant.prefix, messages=tuple(messages), card=card, tail=tail)
-
-
 @dataclass(frozen=True, slots=True)
 class Plan:
     fixtures: Sequence[Fixture]
@@ -137,12 +68,10 @@ class Plan:
     variants: Sequence[Variant]
     samples: int
     cap_usd: float
-    listening: Mapping[str, str] = field(default_factory=dict[str, str])
     # a request rebuilt for one variant of one recorded turn (+cardN, +histN), by (fixture, label)
     rebuilt: Mapping[tuple[str, str], TalkerRequest] = field(
         default_factory=dict[tuple[str, str], TalkerRequest]
     )
-    lore: Mapping[str, str] = field(default_factory=dict[str, str])  # the lore note per fixture
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,14 +80,36 @@ class Models:
     judge: Extractor
 
 
-async def _reply_with_retry(talker: Talker, req: TalkerRequest) -> Reply | None:
-    """A provider that rate-limits or errors costs one sample, not the whole run."""
-    for attempt in range(RETRIES):
-        try:
-            return await talker.reply(req)
-        except Exception:
-            await asyncio.sleep(RETRY_WAIT_SECONDS * (attempt + 1))
-    return None
+class _Metered:
+    """The variant's talker as a sample uses it: a provider that rate-limits or errors is tried
+    again, and every reply's cost is added up, redraws included."""
+
+    def __init__(self, talker: Talker) -> None:
+        self.talker, self.spent = talker, 0.0
+
+    async def reply(self, request: TalkerRequest) -> Reply:
+        for attempt in range(RETRIES - 1):
+            try:
+                return self._count(await self.talker.reply(request))
+            except Exception:
+                await asyncio.sleep(RETRY_WAIT_SECONDS * (attempt + 1))
+        return self._count(await self.talker.reply(request))
+
+    def _count(self, reply: Reply) -> Reply:
+        self.spent += reply.cost_usd
+        return reply
+
+
+class _MeteredJudge:
+    """The reply checks' judge, with what it cost added up."""
+
+    def __init__(self, judge: Extractor) -> None:
+        self.judge, self.spent = judge, 0.0
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        got = await self.judge.extract(system, user, schema)
+        self.spent += got.cost_usd
+        return got
 
 
 def _free(model: str | None) -> bool:
@@ -180,28 +131,21 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 results.stopped_by_cap = True
                 cell.skipped += 1
                 return
-            base = plan.rebuilt.get((f.id, v.label), plan.requests[f.id])
-            req = request_for(base, v, plan.listening.get(f.id), plan.lore.get(f.id))
-            reply = await _reply_with_retry(models.talker_for(v.model, v.effort), req)
+            recorded = plan.rebuilt.get((f.id, v.label), plan.requests.get(f.id))
+            talker = _Metered(models.talker_for(v.model, v.effort))
+            judge = _MeteredJudge(models.judge)
+            try:
+                drawn = await draw(f, v, recorded, talker, judge)
+            except Exception:
+                drawn = None  # a provider that kept failing costs one sample, not the run
             if (v.model or "").endswith(":free"):
                 await asyncio.sleep(FREE_SPACING_SECONDS)  # OpenRouter allows 20 a minute
-            if reply is None:
+            cost = talker.spent + judge.spent
+            results.spent += cost
+            if drawn is None:
                 cell.skipped += 1
                 return
-            results.spent += reply.cost_usd
-            cost = reply.cost_usd
-            resampled = False
-            if v.resample and (
-                checked := await judge_quip(models.judge, req.messages[-1].content, reply.text)
-            ):
-                results.spent += checked[3]
-                cost += checked[3]
-                if (checked[0].joke or checked[0].generic) and (
-                    again := await _reply_with_retry(models.talker_for(v.model, v.effort), req)
-                ):
-                    results.spent += again.cost_usd
-                    cost += again.cost_usd
-                    reply, resampled = again, True
+            reply, req = drawn.reply, drawn.request
             verdicts: list[Verdict] = []
             for check in f.checks:
                 if isinstance(check, JudgeCheck):
@@ -217,7 +161,7 @@ async def run_eval(plan: Plan, models: Models) -> Results:
                 else:
                     verdicts.append(run_deterministic(check, reply.text))
             cell.samples.append(
-                Sample(reply.text, tuple(verdicts), reply.latency_ms, cost, resampled)
+                Sample(reply.text, tuple(verdicts), reply.latency_ms, cost, drawn.redrawn)
             )
 
     await asyncio.gather(

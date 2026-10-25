@@ -11,13 +11,10 @@ import httpx
 
 from companion import characters, prompts
 from companion.core.clock import utc_now
-from companion.core.prompt.prefix import Prefix, build_prefix
-from companion.core.prompt.request import Message, TalkerRequest
+from companion.core.prompt.prefix import build_prefix
+from companion.core.prompt.request import TalkerRequest
 from companion.core.replay import ReplayError
 from companion.core.talker import Talker
-from companion.core.turn.length import length_target
-from companion.core.turn.listening import SERIOUS, listening_note, rude_note
-from companion.core.turn.listening import Judgement as ListenJudgement
 from companion.daemon import load_dotenv
 from companion.evals import judge as judge_module
 from companion.evals.fixtures import (
@@ -25,14 +22,12 @@ from companion.evals.fixtures import (
     Fixture,
     FixtureError,
     JudgeCheck,
-    Script,
     load_fixtures,
 )
 from companion.evals.rebuild import rebuilt
 from companion.evals.report import render_replies, render_table, save
 from companion.evals.runner import Models, Plan, Variant, run_eval
-from companion.evals.variants import parse_spec
-from companion.features.lore.logic import lore_note
+from companion.evals.variants import Place, parse_spec
 from companion.models.credits import charged_since, credits
 from companion.models.kiro import PREFIX as KIRO
 from companion.models.kiro import KiroTalker, kiro_key
@@ -64,23 +59,29 @@ def _variants(specs: list[str]) -> list[Variant]:
             Variant(
                 spec.label,
                 prefix,
-                spec.keep_card,
-                spec.model,
-                spec.history,
-                spec.effort,
-                spec.length,
-                spec.listen,
-                spec.echo,
-                spec.mood,
-                spec.resample,
-                spec.tags,
-                spec.tags_notes,
-                lore=spec.lore,
-                mark=spec.mark,
-                tail=character.scene_reminder if character is not None and spec.roleplay else "",
+                keep_card=spec.keep_card,
+                model=spec.model,
+                history=spec.history,
+                effort=spec.effort,
+                roleplay=spec.roleplay,
+                scene=character.scene_reminder if character is not None and spec.roleplay else "",
+                raw=spec.raw,
+                card_notes=_notes(spec.notes, "card"),
+                tail_notes=_notes(spec.notes, "tail"),
             )
         )
     return out
+
+
+def _notes(notes: tuple[tuple[str, Place], ...], place: Place) -> tuple[str, ...]:
+    """The text of each `+note=PATH@place` file, read once before the run."""
+    try:
+        return tuple(
+            Path(path).read_text(encoding="utf-8").strip() for path, at in notes if at == place
+        )
+    except OSError as err:
+        msg = f"cannot read a +note file: {err}"
+        raise ValueError(msg) from err
 
 
 def _rebuilt(
@@ -104,9 +105,9 @@ def _rebuilt(
 
 
 def _inputs(
-    fixtures: list[Fixture], specs: list[str], db: Path | None, prefix: Prefix
+    fixtures: list[Fixture], specs: list[str], db: Path | None
 ) -> tuple[dict[str, TalkerRequest], dict[tuple[str, str], TalkerRequest]] | str:
-    requests = _requests(fixtures, db, prefix)
+    requests = _requests(fixtures, db)
     if isinstance(requests, str):
         return requests
     again = _rebuilt(fixtures, specs, db)
@@ -134,40 +135,6 @@ def describe(fixtures: list[Fixture]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def script_request(script: Script, prefix: Prefix) -> TalkerRequest:
-    """Build the request a fixture script describes, shaped like a real one: the user's words, and
-    a system block with the clock line and an optional memory block."""
-    messages = [
-        Message("user" if role == "user" else "assistant", text) for role, text in script.history
-    ]
-    messages.append(Message("user", script.user))
-    clock = script.clock or "Right now it is Thursday 12:00."
-    card = "\n".join(part for part in (clock, script.memory) if part)
-    return TalkerRequest(prefix=prefix, messages=tuple(messages), card=card)
-
-
-def _listening_notes(fixtures: list[Fixture]) -> dict[str, str]:
-    """The notes each fixture's labels would produce, for the `+listen` variant: the length line a
-    serious message gets, then the listening note, as the bot sends them."""
-    out: dict[str, str] = {}
-    for f in fixtures:
-        labels = f.labels or (f.script.labels if f.script is not None else None)
-        if labels is not None:
-            severity, stance, vague, medical, rude = labels
-            replies = (
-                [text for role, text in f.script.history if role == "assistant"] if f.script else []
-            )
-            judged = ListenJudgement(severity, stance, vague, medical, rude)
-            note = listening_note(judged, replies, seed=f.id)
-            size = length_target("", severity=severity) if severity >= SERIOUS else None
-            notes = [
-                n for n in (size.note if size else None, note, rude_note(judged)) if n is not None
-            ]
-            if notes:
-                out[f.id] = "\n".join(notes)
-    return out
-
-
 def estimate(fixtures: list[Fixture], variants: int, samples: int) -> float:
     calls = variants * samples
     return sum(
@@ -189,15 +156,14 @@ class EvalArgs:
     dry_run: bool
 
 
-def _requests(
-    fixtures: list[Fixture], db: Path | None, prefix: Prefix
-) -> dict[str, TalkerRequest] | str:
-    """Each fixture's request, or why one cannot be built."""
+def _requests(fixtures: list[Fixture], db: Path | None) -> dict[str, TalkerRequest] | str:
+    """Each recorded turn's logged request, or why one cannot be read. A scripted fixture is laid
+    out per sample by the turn's own notes (`evals/sample.py`)."""
     out: dict[str, TalkerRequest] = {}
     for f in fixtures:
         if f.script is not None:
-            out[f.id] = script_request(f.script, prefix)
-        elif db is None or f.turn is None:
+            continue
+        if db is None or f.turn is None:
             return f"fixture {f.id} replays a recorded turn and needs a local database (--db)\n"
         else:
             try:
@@ -234,7 +200,7 @@ async def run(a: EvalArgs) -> str:
                 header
                 + "the balance is below the cap and the bot shares it: top up or lower --cap\n"
             )
-        built = _inputs(fixtures, a.specs, db, variants[0].prefix)
+        built = _inputs(fixtures, a.specs, db)
         if isinstance(built, str):
             return built
         requests, rebuilt_requests = built
@@ -251,15 +217,7 @@ async def run(a: EvalArgs) -> str:
             )
 
         models = Models(talker_for, OpenRouterExtractor(key, client, JUDGE_MODEL))
-        listening = _listening_notes(fixtures)
-        lore = {
-            f.id: note
-            for f in fixtures
-            if f.script is not None and (note := lore_note(f.script.lore))
-        }
-        plan = Plan(
-            fixtures, requests, variants, samples, cap, listening, rebuilt_requests, lore=lore
-        )
+        plan = Plan(fixtures, requests, variants, samples, cap, rebuilt_requests)
         results = await run_eval(plan, models)
         if before is not None:
             results.charged = await charged_since(key, client, before, results.spent)

@@ -75,7 +75,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/listening-offer-serious` | note | added to the severity 2 note | v2 |
 | `notes/listening-serious` | note | listening note, severity 2 | v7 |
 | `notes/listening-trivial` | note | listening note, severity 0 | v6 |
-| `notes/mood-buzzing` | note | dropped candidate mood line for buzzing (ADR 0016), kept for the `+mood-buzzing` eval flag | v1 |
+| `notes/mood-buzzing` | note | dropped candidate mood line for buzzing (ADR 0016), kept to try with the `+note=src/companion/prompts/notes/mood-buzzing/v1.md@card` eval switch | v1 |
 | `notes/mood-cozy` | note | the cozy mood line, shown when `COMPANION_MOOD=on` and cozy is among the strongest states (ADR 0016) | v2 |
 | `notes/mood-flat` | note | the flat mood line; measured, but the engine has no source for flat yet (waits for J6), so it is not shown | v2 |
 | `notes/own-mark` | note | one emoticon of its own offered by code, never one of theirs, `features/marks` | v1 |

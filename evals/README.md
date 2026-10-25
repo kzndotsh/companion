@@ -19,17 +19,34 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
     and a generic description, never the conversation, and need your database. They live in
     `evals/local/`, which is **gitignored**, and are for private regression checks on your own
     real conversations. Their ids end in `-local` so the two sets never mix up in a table.
+- **A sample is what the person would receive**, made by the turn's own code (`evals/sample.py`). A
+  script's history is stored in a throwaway conversation, a minute apart, and the turn's own notes
+  are chosen for that moment (`turn/notes.py`) and laid out as a live request (`Layout` in
+  `turn/assemble.py`): the length note, the habit notes, the owned-it and question-run notes after the
+  history, and so on. The fixture gives the readings a judge would: `labels` for the listening judge
+  and `lore` for the lore look-up. Every other judge and look-up finds nothing, as when one fails
+  live. It already asked what to call them that day, so the name note stays out. A recorded turn
+  replays the request it logged. Then every reply passes the turn's reply checks and their redraws
+  (`turn/talk.py`: the em dash, an unasked disclaimer, a copied clock line, the stock lines,
+  markdown, an empty reply, and the quip judge, which is asked for real). The table's replies
+  (`--show`) and the saved results say what made a sample draw again. As live, a turn with no
+  listening reading, so a fixture without `labels`, gets the code checks but not the quip judge,
+  and none of the notes that need a casual turn (such as the emoticon offer); add
+  `labels` to a fixture that should be read as an ordinary turn.
 - A **variant** is a persona version (`v41.md`, from `src/companion/prompts/system/persona/`) with optional
-  flags, in any order, and `@model` last: `+nocard` drops the memory block, `+h10` keeps the last 10
-  messages of history, `+low`, `+medium` or `+high` turns reasoning on, `+len` adds the length note and
-  `+listen` adds the listening note the fixture's labels would produce, `+echo` the note against
-  copying their emoji, `+as-NAME` lays a character sheet over the persona, `+mood-STATE` (or two joined
-  with a dot) adds a mood line, `+resample` draws once more when the quip check fires, and `+roleplay`
-  builds the roleplay talker's prompt (with `+as-NAME`, its sheet section too). `+tags` puts the whole
-  system block in XML-style tags and `+tagsnotes` only the clock and the notes (as the bot does), and
-  `+lore` shows a script's `lore` tastes as the companion's own (ADR 0020). The recorded history and the
-  user's message are reused exactly, so only the thing under test changes. To try another version of a
-  non-persona prompt, set `COMPANION_PROMPT_OVERRIDES` for the run.
+  switches, in any order, and `@model` last: `+nocard` drops the memory block, `+h10` keeps the last 10
+  messages of history, `+low`, `+medium` or `+high` turns reasoning on, `+as-NAME` lays a character
+  sheet over the persona, and `+roleplay` builds the roleplay talker's prompt and answers as in a
+  pretend scene (with `+as-NAME`, its sheet section and scene reminder too). `+raw` keeps the model's
+  first reply, with no checks and no redraws. `+note=PATH@card` adds that file's text to the notes in
+  the system block and `+note=PATH@tail` sends it after the history, to try a note before it is
+  built; a note file holds one bracketed line, as the files in `prompts/notes/` do. The recorded
+  history and the user's message are reused exactly, so only the thing under test changes. To try
+  another version of an existing prompt, set `COMPANION_PROMPT_OVERRIDES` for the run.
+- **Old reruns.** The switches that added one note each (`+len`, `+listen`, `+echo`, `+mark`,
+  `+mood-STATE`, `+resample`, `+tags`, `+tagsnotes`, `+lore`) were removed on 2026-10-24, when a
+  sample became what the turn sends; to rerun an entry in `CHANGELOG.md` from before then, check out
+  the commit of its date.
 - Free models for cross-model checks. `@kiro/claude-sonnet-4.6` (or another Kiro model) sends the talker
   request through the local Kiro gateway at `KIRO_GATEWAY_URL` (default `http://127.0.0.1:9000`) with
   `KIRO_GATEWAY_API_KEY` or `PROXY_API_KEY`; Kiro has no system role (the gateway pastes ours into the
@@ -42,8 +59,8 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
   `pass`, `fail` or `unclear` for one criterion; `epitome` scores a reply 0 to 2 on reaction,
   interpretation, exploration and support and passes with a reaction plus a strong interpretation, an
   exploration or support. A script (or a recorded turn) can carry `labels` (severity, stance, vague,
-  medical) so `+listen` can add the matching note, and `lore` (a list of its own tastes) for `+lore`. `unclear` is unscored and never
-  counts as a failure. The judge prompt and schema are hashed into every result.
+  medical, rude), the listening judge's reading, and a script `lore` (a list of its own tastes), what
+  the lore look-up would find. `unclear` is unscored and never counts as a failure. The judge prompt and schema are hashed into every result.
 - A sample passes only if every check passes. Cells read `passes/scored`, with `+k?` for unscored.
 - **A spend cap is mandatory.** The runner adds up the cost each response reports and stops at the
   cap, saying so in the table. Before a run it shows the OpenRouter balance and refuses when the cap is

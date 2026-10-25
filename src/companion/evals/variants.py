@@ -1,25 +1,32 @@
 """Variant specs: `v10.md`, `v10.md+nocard`, `v10.md+h10` or `v10.md@provider/model`.
 
-`+low`, `+medium` or `+high` turns the model's reasoning on at that effort. The bot has it off.
+A sample is what the person would receive: the turn's own notes and reply checks
+(`evals/sample.py`). `+raw` keeps the model's first reply, with no checks and no redraws.
+`+note=PATH@card` adds that file's text to the notes in the system block, and `+note=PATH@tail`
+sends it after the history, to try a note before it is built. `+nocard` drops the memory block.
 `+h10` keeps only the last 10 messages of history, the last one being what the user just typed.
-`+len` adds the length note the bot adds to a short statement. `+listen` adds the listening note
-the labels in a fixture's script would produce. `+as-mika` lays the character `mika` over the
-persona, as `COMPANION_CHARACTER=mika` does for the bot. `+echo` adds the note against copying
-their emoji or emoticon, on a message that has one. `+mood-cozy` adds the candidate mood line for
-one state, and `+mood-cozy.playful` for two (ADR 0016), to measure a mood before it is built.
-`+resample` draws one fresh reply when the quip check says the first bolted on a joke (J45).
-`+roleplay` builds the roleplay talker's prompt: with `+as-CHARACTER`, its sheet section too.
-Flags combine: `v10.md+nocard+h10@provider/model`.
+`+low`, `+medium` or `+high` turns the model's reasoning on at that effort; the bot has it off.
+`+as-mika` lays the character `mika` over the persona, as `COMPANION_CHARACTER=mika` does for the
+bot. `+roleplay` builds the roleplay talker's prompt and answers as in a pretend scene: with
+`+as-CHARACTER`, its sheet section and scene reminder too. `+cardN` and `+histN` rebuild a recorded
+turn (`evals/rebuild.py`). Flags combine, with `@model` last: `v10.md+nocard+h10@provider/model`.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import Literal
 
 EFFORTS = ("low", "medium", "high")
-MOODS = ("cozy", "tender", "playful", "buzzing", "flat")
 _HISTORY = re.compile(r"h(\d+)")
+_CARD = re.compile(r"card(\d+)")
+_HIST = re.compile(r"hist(\d+)")
+_NOTE = re.compile(r"note=([^@]+)@(card|tail)")
+_LAST_NOTE = re.compile(r"(note=[^@]+@(?:card|tail))(?:@(.+))?")
+ALL = 10_000  # +cardall: every memory in force at the time
+
+type Place = Literal["card", "tail"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,19 +36,12 @@ class Spec:
     model: str | None = None
     history: int | None = None
     effort: str | None = None
-    length: bool = False
-    listen: bool = False
     character: str | None = None
-    echo: bool = False
-    mood: tuple[str, ...] = ()
-    resample: bool = False
     roleplay: bool = False
     card: int | None = None  # rebuild a recorded turn's card with this many memories (+cardN)
     long_history: int | None = None  # rebuild a recorded turn with this many messages (+histN)
-    tags: bool = False
-    tags_notes: bool = False
-    lore: bool = False
-    mark: bool = False  # offer one of its own emoticons (`features/marks`), on every request
+    raw: bool = False  # the model's first reply, without the turn's checks and redraws
+    notes: tuple[tuple[str, Place], ...] = ()  # (file, where): a note tried before it is built
 
     @property
     def label(self) -> str:
@@ -50,56 +50,40 @@ class Spec:
             + ("" if self.keep_card else "+nocard")
             + ("" if self.history is None else f"+h{self.history}")
             + ("" if self.effort is None else f"+{self.effort}")
-            + ("+len" if self.length else "")
-            + ("+listen" if self.listen else "")
             + (f"+as-{self.character}" if self.character else "")
-            + ("+echo" if self.echo else "")
-            + ("+mark" if self.mark else "")
-            + (f"+mood-{'.'.join(self.mood)}" if self.mood else "")
-            + ("+resample" if self.resample else "")
             + ("+roleplay" if self.roleplay else "")
             + ("" if self.card is None else f"+card{'all' if self.card >= ALL else self.card}")
             + ("" if self.long_history is None else f"+hist{self.long_history}")
-            + ("+tags" if self.tags else "")
-            + ("+tagsnotes" if self.tags_notes else "")
-            + ("+lore" if self.lore else "")
+            + ("+raw" if self.raw else "")
+            + "".join(f"+note={path}@{where}" for path, where in self.notes)
             + (f"@{self.model}" if self.model else "")
         )
 
 
-_CARD = re.compile(r"card(\d+)")
-_HIST = re.compile(r"hist(\d+)")
-ALL = 10_000  # +cardall: every memory in force at the time
-SWITCHES = (
-    "nocard",
-    "len",
-    "listen",
-    "echo",
-    "mark",
-    "resample",
-    "roleplay",
-    "tags",
-    "tagsnotes",
-    "lore",
-)
+def _split(text: str) -> tuple[list[str], str]:
+    """The persona and flags, and the model after the last `@` that is not a note's place."""
+    *flags, last = text.split("+")
+    if found := _LAST_NOTE.fullmatch(last):
+        return [*flags, found.group(1)], found.group(2) or ""
+    last, _, model = last.partition("@")
+    return [*flags, last], model
 
 
 def parse_spec(text: str) -> Spec:
-    rest, _, model = text.partition("@")
-    persona, *flags = rest.split("+")
+    (persona, *flags), model = _split(text)
     history: int | None = None
     effort: str | None = None
     character: str | None = None
-    mood: tuple[str, ...] = ()
     card: int | None = None
     long_history: int | None = None
+    notes: list[tuple[str, Place]] = []
     on: set[str] = set()
     ok = persona.endswith(".md")
     for flag in flags:
-        if flag in SWITCHES:
+        if flag in ("nocard", "roleplay", "raw"):
             on.add(flag)
-        elif flag.startswith("mood-") and _moods(flag.removeprefix("mood-")):
-            mood = tuple(flag.removeprefix("mood-").split("."))
+        elif m := _NOTE.fullmatch(flag):
+            notes.append((m.group(1), "card" if m.group(2) == "card" else "tail"))
         elif flag.startswith("as-") and len(flag) > len("as-"):
             character = flag.removeprefix("as-")
         elif flag in EFFORTS:
@@ -117,33 +101,20 @@ def parse_spec(text: str) -> Spec:
     if not ok:
         msg = (
             f"bad variant {text!r}: expected NAME.md with optional +nocard, +hN, +low, +medium,"
-            " +high, +len, +listen, +echo, +mark, +mood-STATE, +resample, +roleplay, +as-CHARACTER,"
-            " +cardN or +cardall, +histN, +tags, +tagsnotes, +lore"
-            " and @model"
+            " +high, +as-CHARACTER, +roleplay, +cardN or +cardall, +histN, +raw,"
+            " +note=PATH@card or +note=PATH@tail, and @model"
         )
         raise ValueError(msg)
     return Spec(
         persona,
-        "nocard" not in on,
-        model or None,
-        history,
-        effort,
-        "len" in on,
-        "listen" in on,
-        character,
-        "echo" in on,
-        mood,
-        "resample" in on,
-        "roleplay" in on,
-        card,
-        long_history,
-        "tags" in on,
-        "tagsnotes" in on,
-        lore="lore" in on,
-        mark="mark" in on,
+        keep_card="nocard" not in on,
+        model=model or None,
+        history=history,
+        effort=effort,
+        character=character,
+        roleplay="roleplay" in on,
+        card=card,
+        long_history=long_history,
+        raw="raw" in on,
+        notes=tuple(notes),
     )
-
-
-def _moods(text: str) -> bool:
-    names = text.split(".")
-    return 1 <= len(names) <= 2 and len(set(names)) == len(names) and set(names) <= set(MOODS)

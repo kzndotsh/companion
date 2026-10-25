@@ -109,7 +109,8 @@ def render_replies(
         for v in variants:
             for s in results.cells[(f.id, v.label)].samples:
                 flat = s.reply.strip().replace("\n\n", " / ").replace("\n", " ")
-                out.append(f"  [{v.label}] {s.outcome.upper():7} {flat}")
+                redrawn = f"(redrawn: {', '.join(s.redrawn)}) " if s.redrawn else ""
+                out.append(f"  [{v.label}] {s.outcome.upper():7} {redrawn}{flat}")
     return "\n".join(out)
 
 

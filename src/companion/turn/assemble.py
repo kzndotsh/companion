@@ -16,6 +16,7 @@ from companion.core.frames import (
 )
 from companion.core.freshness import HORIZON_DAYS, when_phrase
 from companion.core.history import to_messages
+from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request
 from companion.core.prompt.sections import tagged
 from companion.core.replay import TAIL
@@ -29,12 +30,13 @@ from companion.core.types import (
     Domain,
     Frame,
     Speaker,
+    Utterance,
 )
 from companion.core.views import ViewState, card_views
 from companion.loops.current import Heard, Turn, decide, mark
 from companion.loops.features import Lookups, Moment
 from companion.loops.record import Recorder
-from companion.turn.notes import notes_for
+from companion.turn.notes import Notes, notes_for
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation
@@ -103,6 +105,32 @@ def _mark_start(t: Turn, in_scene: Frame, card: Card, card_text: str) -> None:
 
 
 @dataclass(frozen=True, slots=True)
+class Layout:
+    """A turn's request from its parts, with no store in reach: the eval runner lays out a scripted
+    fixture with this too, so a sample is shaped as the person's turn would be."""
+
+    prefix: Prefix
+    prior: Sequence[Utterance]
+    text: str
+    clock: str
+    pinned: str | None
+    memory: Sequence[str]  # the rendered memory block, or nothing
+    notes: Notes
+    scene: str = ""  # the character's scene reminder, on a roleplay turn
+
+    def request(self) -> TalkerRequest:
+        """The system block in tags, the history and their message, then the scene reminder and
+        the notes' tail after the history, where it weighs most."""
+        pinned = [self.pinned] if self.pinned else []
+        card = tagged(
+            "\n".join([self.clock, *pinned, *self.memory, *self.notes.lines]), memory=False
+        )
+        request = build_request(self.prefix, to_messages(self.prior), self.text, "", card)
+        tail = "\n".join([*([self.scene] if self.scene else []), *self.notes.tail])
+        return dataclasses.replace(request, tail=tail) if tail else request
+
+
+@dataclass(frozen=True, slots=True)
 class Assembled:
     """What one turn sends and what it needs to record afterwards."""
 
@@ -150,16 +178,11 @@ def assemble(  # noqa: PLR0913
     pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
     on_card = frozenset(b.id for b in (*card.usable, *card.held, *card.older))
     notes = notes_for(Moment(c, t, in_scene, heard, looked, held, assertable, on_card, brushed))
-    card_text = tagged(
-        "\n".join([clock, *([pinned] if pinned else []), *shown, *notes.lines]), memory=False
-    )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
-    request = build_request(prefix, to_messages(t.prior), t.text, "", card_text)
-    scene = [c.scene_reminder] if roleplay and c.scene_reminder else []
-    tail = "\n".join([*scene, *notes.tail])  # after the history, where it weighs most
-    if tail:
-        request = dataclasses.replace(request, tail=tail)
-        decide(c, t, TAIL, {"text": tail})  # what replay needs to rebuild it
+    scene = c.scene_reminder if roleplay else ""
+    request = Layout(prefix, t.prior, t.text, clock, pinned, shown, notes, scene).request()
+    if request.tail:
+        decide(c, t, TAIL, {"text": request.tail})  # what replay needs to rebuild it
     store.save_prefix(prefix)
-    _mark_start(t, in_scene, card, card_text)
-    return Assembled(request, card_text, card, views, view_state, notes.after)
+    _mark_start(t, in_scene, card, request.card)
+    return Assembled(request, request.card, card, views, view_state, notes.after)

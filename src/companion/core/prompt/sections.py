@@ -22,8 +22,8 @@ _SECTIONS = (
 
 def tagged(card: str, *, memory: bool = True) -> str:
     """The same system block with each part in a tag: the clock, each memory block, and every
-    other bracketed line gathered under notes. The words inside are unchanged (`+tags`). With
-    `memory` off the memory blocks stay bracketed as they are (`+tagsnotes`)."""
+    other bracketed line gathered under notes. The words inside are unchanged. With `memory` off
+    the memory blocks stay bracketed as they are, as the turn sends them."""
     parts: list[str] = []
     notes: list[str] = []
     rest = card

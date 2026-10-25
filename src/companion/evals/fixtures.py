@@ -58,7 +58,7 @@ class Script:
     labels: tuple[int, str, bool, bool, bool] | None = (
         None  # severity, stance, vague, medical, rude
     )
-    lore: tuple[str, ...] = ()  # its own tastes, shown by the +lore variant (ADR 0020)
+    lore: tuple[str, ...] = ()  # its own tastes, as the lore look-up would find them (ADR 0020)
 
 
 @dataclass(frozen=True, slots=True)
