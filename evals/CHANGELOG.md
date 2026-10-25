@@ -1816,3 +1816,17 @@ draws each: copied theirs 14/40 against 4/40 (35% to 10%). Its own mark was used
 note on the flagged turn (5/12 against 12/12), so it still often uses an emoji or nothing. Shipped
 as `notes/own-mark-theirs`. About $0.03. Rerun: the scratch script replays the turns from the ledger.
 
+## 2026-10-24: Pretend scenes stay with the roleplay talker
+
+Question: could the everyday talker answer pretend scenes that are not explicit, so the talker does not
+switch on a light bit of play (owner flags on the mode switching too eagerly)? The 56 turns routed to
+the roleplay talker only because a scene was in progress, replayed once on each: gpt-6-luna with the
+everyday sheet and no scene reminder, deepseek-v4.1-flash with the roleplay sheet and the reminder,
+same card and history (about $0.04). Two blind judges (Claude Sonnet and Haiku, as subagents). The
+everyday talker's reply was preferred 13/56 and 11/56; it refused or stepped out of the scene in
+17 and 16 (a code count of refusal wording found 11), the roleplay talker in 0. On the turns where it
+stayed in the scene it still lost (13 of 39, 11 of 40). The roleplay talker pushed past the user's own
+intensity in 3 and 2 of 56, the everyday talker in 0. Many turns routed as "a scene" were already
+intimate. So moving light scenes to the everyday talker is dropped; the issue is when a scene starts
+and the occasional escalation, not which talker plays it.
+
