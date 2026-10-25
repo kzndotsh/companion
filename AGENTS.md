@@ -6,7 +6,7 @@ Read this first. `CLAUDE.md` is a symlink to this file, so every agent sees the 
 
 A Telegram companion bot that tries to be the most human-like AI companion, plus the memory engine
 under it. One person talks to it, marks a reply `/flag` when it feels off and `/fav` when it
-delights, and those marks set priorities. It runs from `src/companion`. It is a single-user,
+delights, and those marks set priorities. It runs from `src/companion`. It is a single-user
 project: the bot runs on the owner's machine, and the repo is pushed to a GitHub remote (`origin`).
 
 ## Where things live
@@ -32,6 +32,7 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
+just inbox some idea   # jot an idea into docs/inbox/
 uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar | shadows | crisis
 uv run companion memory review | group   # questions for the owner, merge proposals
 uv run companion promises | names | lore   # shadow lists and its own tastes
@@ -129,14 +130,13 @@ together.
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
   also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
-  reaches its note as `Lookups.found[name]`. Registered, in order: the memory map, the name and pronoun
-  questions (basics), moves, mood, names, context, worth, relevance, recent times, topic-spent, guess,
-  open loops, lore, own marks, reminders, the crisis path, nudges, the calendar and the basics hook.
+  reaches its note as `Lookups.found[name]`. `FEATURES` in `registry.py` is the list of what is
+  registered, in the order the after-steps run.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it
   works). import-linter keeps a feature's logic pure, keeps features from importing each other, and lets only
   a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests mirror the folder
-  (`tests/features/<name>/`). Move one with a script, never by hand, one feature per commit.
+  (`tests/features/<name>/`).
 - Ask a judge through `loops/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.

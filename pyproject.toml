@@ -166,7 +166,7 @@ forbidden_modules = [
 
 [[tool.importlinter.contracts]]
 id = "only-store-owns-sqlite"
-name = "only store and lib.sqlite import sqlite3"
+name = "only store, lib.sqlite and a feature's store.py import sqlite3"
 type = "forbidden"
 source_modules = [
     "companion.core",
