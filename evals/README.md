@@ -2,6 +2,10 @@
 
 Replay a recorded turn against a persona variant, score the reply, and print one table.
 
+For the method as a whole (why we measure, the other ways we measure, blind judging with Claude
+subagents, costs, reading a result), read [docs/evals.md](../docs/evals.md). This file is the runner's
+reference.
+
 ```bash
 uv run companion eval --list                         # the fixtures
 uv run companion eval --variants v40.md,v41.md --dry-run   # the plan, an upper estimate and the balance
