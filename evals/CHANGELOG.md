@@ -1907,3 +1907,36 @@ refused the judge's first model on many of these messages (403, nothing charged)
 model (DeepSeek V4.1 Flash) answered each time; the crisis path counts the fallback's reading, so in
 practice the fallback reads these messages.
 
+## 2026-10-25: Judge bake-off: Haiku, GPT-6 Luna and DeepSeek on every graded judge
+
+Every graded live suite (`tests/live`, now on `COMPANION_LIVE_JUDGE_MODEL`), the 40 crisis cases and
+the 200 hand-labelled replies for the canned-reaction judge, on Haiku 5.5, GPT-6 Luna and DeepSeek
+V4.1 Flash, fallback off so a refusal shows. $0.31 in all (Haiku $0.13, Luna $0.07, DeepSeek $0.11);
+the live suites took 472 s, 452 s and 280 s.
+
+| Judge | Haiku | Luna | DeepSeek |
+|---|---|---|---|
+| listening, exact of 60 | 58 | 57 (stance 54) | 60 |
+| empathy, agreement of 36 (bar 31) | 30 | 28 | 25 |
+| memory rules, 14 cases | all pass | 2 fail | 2 fail |
+| reminders of 41 | 41 | 32, then 40 after the schema fix | 39 |
+| repair of 63 | 63 | 63 | 61 |
+| topic spent of 30 | 30 | 29 | 27 |
+| guess of 27 | 27 | 27 | 27 |
+| memory conflicts: caught of 14, false alarms of 20 | 14, 3 | 14, 1 | 14, 0 |
+| reply or react | all pass | all pass | all pass |
+| crisis, missed / false alarm of 40 | 0 / 0, 7 reads refused by moderation | 0 / 1 | 0 / 0 |
+| canned reaction, precision / recall | 87% / 48% | 95% / 18% | 94% / 16% |
+
+Three Claude readers (Haiku) read the raw outputs case by case and a Sonnet reader combined them.
+Most gaps of 1 to 3 points are within noise at 30 to 60 cases; the real ones are the memory rules
+(Luna stored a declined invitation as their preference in 1 of 3 runs, DeepSeek a small-talk
+recommendation as the companion's taste in 3 of 3), the canned-reaction recall, Haiku's crisis
+refusals, and Luna's reminders, which were our schema: optional integers it filled with 0 (fixed;
+40/41 after). DeepSeek also read a first mention of a food as a spent topic and "i'm not married??"
+as a repair. Kept: Haiku for the judges. The crisis judge already reads through the fallback when
+Haiku is refused; whether it should run on DeepSeek first is open. Doubtful test expectations the
+readers found (two empathy cases, a moving-abroad conflict pair, "in 3 days" against "in a few days")
+and the single-rater hand labels of the canned-reaction set are worth a second look before those
+numbers are quoted. Rerun: `COMPANION_LIVE_JUDGE_MODEL=<model> uv run pytest tests/live -m live -s -o addopts=""`.
+

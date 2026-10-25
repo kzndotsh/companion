@@ -158,3 +158,12 @@ def test_a_cancel_drops_the_one_it_names_or_the_only_one() -> None:
     assert matching(pending, "the dog thing") == ["a"]
     assert matching(pending, "that") == []
     assert matching([("a", "take the dog out")], "that") == ["a"]
+
+
+def test_hour_zero_is_midnight_only_when_they_say_so() -> None:
+    from companion.features.reminders.logic import Ask, Kind, Slots, trusted  # noqa: PLC0415
+
+    placeholder = Slots(Ask.SET, Kind.REMINDER, "take the dog out", hour=0, part="evening")
+    assert trusted(placeholder, "remind me this evening to take the dog out").hour is None
+    assert trusted(placeholder, "remind me at midnight to take the dog out").hour == 0
+    assert trusted(placeholder, "remind me at 12am").hour == 0

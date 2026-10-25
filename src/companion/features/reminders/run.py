@@ -52,6 +52,7 @@ from companion.features.reminders.logic import (
     send_instruction,
     set_note,
     spoken,
+    trusted,
 )
 from companion.features.reminders.store import Reminder
 from companion.loops.ask import Judge, ask
@@ -93,7 +94,7 @@ async def read_slots(
     judge: Extractor, prior: Sequence[Utterance], said: str, now: datetime, tz: tzinfo
 ) -> Slots | None:
     got = await ask(judge, READER, read_prompt(prior, said, now, tz))
-    return None if got is None else got.value
+    return None if got is None else trusted(got.value, said)
 
 
 def act(  # noqa: PLR0913, PLR0917

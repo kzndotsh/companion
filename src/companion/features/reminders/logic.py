@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, time, timedelta, tzinfo
 from enum import StrEnum
 from random import Random
@@ -56,15 +56,15 @@ SCHEMA: dict[str, Json] = {
             "type": "string",
             "enum": ["unsaid", "today", "tonight", "tomorrow", "in_days", "weekday", "date"],
         },
-        "days": {"type": "integer"},
+        "days": {"type": ["integer", "null"]},
         "weekday": {"type": "string"},
         "next_said": {"type": "boolean"},
         "on_date": {"type": "string"},
-        "hour": {"type": "integer"},
-        "minute": {"type": "integer"},
+        "hour": {"type": ["integer", "null"]},
+        "minute": {"type": ["integer", "null"]},
         "ampm": {"type": "string", "enum": ["am", "pm", "unsaid"]},
         "part": {"type": "string", "enum": ["morning", "afternoon", "evening", "night", "unsaid"]},
-        "in_minutes": {"type": "integer"},
+        "in_minutes": {"type": ["integer", "null"]},
         "repeats": {"type": "boolean"},
     },
     "required": ["ask", "kind", "thing", "day", "ampm", "part", "repeats"],
@@ -137,6 +137,19 @@ def parse(data: Json) -> Slots | None:
         in_minutes=_int(data.get("in_minutes")),
         repeats=data.get("repeats") is True,
     )
+
+
+# Midnight said in so many words. A reader that writes hour 0 for "no time given" (one model did
+# for "this evening" and "later", judge bake-off 2026-10-25) would set a midnight reminder.
+_MIDNIGHT = re.compile(r"\bmidnight\b|\b12\s*a\.?m\b|\b00[:.]\d\d\b|\b0:\d\d\b", re.IGNORECASE)
+
+
+def trusted(s: Slots, said: str) -> Slots:
+    """The reading with hour 0 kept only when their words say midnight; otherwise no hour, so the
+    part of the day they named decides, or it asks."""
+    if s.hour == 0 and not _MIDNIGHT.search(said):
+        return replace(s, hour=None, minute=0)
+    return s
 
 
 def _day(s: Slots, today: date) -> date | str:  # noqa: PLR0911
