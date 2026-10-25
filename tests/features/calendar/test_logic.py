@@ -6,6 +6,7 @@ import pytest
 
 from companion.features.calendar.logic import (
     REGION,
+    Dated,
     How,
     Kind,
     Occasion,
@@ -14,7 +15,9 @@ from companion.features.calendar.logic import (
     note,
     occasions,
     pick,
+    their_dates,
     together,
+    yearly,
 )
 
 
@@ -91,3 +94,53 @@ def test_days_of_remembrance_and_contested_days_are_left_out() -> None:
     ]
     assert not set(year) & LEFT_OUT
     assert "Halloween" in year
+
+
+@pytest.mark.parametrize(
+    ("claim", "want"),
+    [
+        (
+            "The user turns 30 on December 4th (their birthday is December 4).",
+            ("their birthday", 12, 4),
+        ),
+        ("The user's sister's birthday is on the 3rd of March.", ("their sister's birthday", 3, 3)),
+        (
+            "The user and their partner have an anniversary on June 12.",
+            ("their anniversary", 6, 12),
+        ),
+        ("Their birthday is Sept. 9th", ("their birthday", 9, 9)),
+        ("The anniversary of their dad dying is May 2.", None),
+        ("Their mom passed on April 9; the anniversary is hard.", None),
+        ("The user started a new job on March 3.", None),
+        ("On 2026-10-24 the user had chicken for dinner.", None),
+        ("Their birthday is February 31.", None),
+    ],
+)
+def test_a_yearly_date_is_read_from_a_memory_and_a_hard_one_never(
+    claim: str, want: tuple[str, int, int] | None
+) -> None:
+    assert yearly(claim) == (Dated(*want) if want else None)
+
+
+def test_their_dates_skip_a_sensitive_memory_and_come_once() -> None:
+    birthday = "Their birthday is December 4."
+    found = their_dates([(birthday, 0), (birthday, 1), ("Their anniversary is June 12.", 2)])
+    assert found == (Dated("their birthday", 12, 4),)
+    assert Dated("their birthday", 2, 29).on(2027) == date(2027, 2, 28)
+
+
+def test_their_own_date_comes_first_and_has_a_lead_up() -> None:
+    birthday = Dated("their birthday", 11, 15)
+    day = occasions(date(2026, 11, 15), REGION, date(2026, 10, 15), [birthday])
+    assert [(o.name, o.kind) for o in day][:2] == [
+        ("their birthday", Kind.THEIRS),
+        ("a month", Kind.RELATIONSHIP),
+    ]
+    first = pick(day, set())
+    assert first is not None
+    assert first.kind is Kind.THEIRS
+    assert note(first, date(2026, 11, 15)).startswith("[Today is their birthday. Mark it warmly")
+    soon = pick(occasions(date(2026, 11, 13), REGION, None, [birthday]), set())
+    assert soon is not None
+    assert (soon.how, soon.kind) == (How.LEAD_UP, Kind.THEIRS)
+    assert note(soon, date(2026, 11, 13)).startswith("[Their birthday is in two days.")

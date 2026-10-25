@@ -2,8 +2,8 @@
 
 **Status (2026-10-25):** phase 1 built as `src/companion/features/calendar/` (`COMPANION_CALENDAR`,
 on): US public and cultural days, the relationship's dates and lead-ups to the big days, as a note
-after the history. Their own dates from memory, seasons and other calendar moments, the region, and "a
-day" as a reach-out kind are not built.
+after the history. Their own yearly dates from memory were added the same day (R19). Seasons and other calendar
+moments, the region, and "a day" as a reach-out kind are not built.
 
 Not a task yet. A plan from 2026-10-25, for a feature that gives the companion natural reasons to
 talk: holidays, seasons, their own dates and the relationship's.

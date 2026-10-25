@@ -2067,3 +2067,18 @@ better served by R19.
 
 Cost: $0. Rerun: the same two word searches over current user beliefs, read by eye.
 
+## 2026-10-25: their birthday from memory (R19, notes/occasion-theirs v1)
+
+What: the calendar now reads their yearly dates from memory and sends `notes/occasion-theirs` after
+the history on the day. New public fixture `occasion-their-birthday-on-the-day` (a casual "good
+morning" on their birthday), persona v41 on GPT-6 Luna, 12 samples each with the note (`+note=PATH@tail`)
+and without.
+
+Result: 12/12 against 0/12, a real difference. Every reply greeted them and wished a happy birthday in
+a line, varied, none saying it remembered or looked it up, none assuming plans. The canned-reaction
+check redrew 10 of the 12, reading a birthday wish as a stock line; the redrawn replies read as well,
+so it cost a call each and changed nothing. Noted for that check's review (Q3, 2026-10-28). On the real
+memory, the date reader finds one date, their birthday, and no false ones.
+
+Cost: $0.0074. Rerun: `uv run companion eval --variants "v41.md+note=NOTE@tail@openai/gpt-6-luna,v41.md@openai/gpt-6-luna" --fixture occasion-their-birthday-on-the-day --samples 12 --cap 0.05`, NOTE a file holding `notes/occasion-theirs` rendered with "their birthday".
+

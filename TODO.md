@@ -220,7 +220,7 @@ removed. Live notes listed here are read from the log and the owner's marks.
 - **Location** (R18, owner flag 2026-10-25: it would be useful if it knew where they are). One answer feeds
   the crisis line's region (ADR 0022 defaults to 988), the calendar's region (US by default) and the time
   zone. Needs the owner's say on how: a location shared once in Telegram, or asked as a basic.
-- **The calendar's later phases** (R19): their own dates from memory (a birthday, an anniversary),
+- **The calendar's later phases** (R19): their own dates from memory are done; left are
   "a day" as a reach-out kind in shadow with ADR 0021, region from a shared location (R18), and calendar
   moments (a season, the clocks changing). Lead-ups are done.
 - **Before any reach-out goes live:** outcome per reach-out (A6), the per-gate shadow analysis (J27) and
@@ -471,8 +471,9 @@ Ordered. Pull from the top.
       location shared once in Telegram, could set all three (ADR 0022 already names learning their country as
       a basic worth knowing). **Needs decision** on how it learns it (decision 8), then a design and a fixture.
 - [ ] R19 The calendar's later phases (plan in `docs/inbox/2026-10-25-a-calendar-of-occasions.md`). Live since
-      2026-10-25: US public and cultural days, lead-ups to the big days and the relationship's dates. Left:
-      their own yearly dates from memory (a birthday, an anniversary; never a hard date), "a day" as a
+      2026-10-25: US public and cultural days, lead-ups to the big days, the relationship's dates, and their
+      own yearly dates from memory (a birthday, an anniversary, with lead-ups; never a sensitive or hard
+      date; 12/12 on a birthday morning). Left: "a day" as a
       reach-out kind in shadow beside ADR 0021's kinds, region from a shared location (R18), and calendar
       moments (a season, the clocks changing). Measure first: the shipped wording, the lead-ups and the
       relationship's dates are not yet measured; Halloween 2026-10-31 is the first real day.

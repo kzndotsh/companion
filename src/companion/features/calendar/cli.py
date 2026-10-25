@@ -9,6 +9,7 @@ from pathlib import Path
 from companion.core.clock import named_zone, utc_now
 from companion.core.types import RelationshipId
 from companion.features.calendar.logic import REGION, How, occasions, when
+from companion.features.calendar.run import theirs
 from companion.store.sqlite.store import Store
 
 DAYS = 30
@@ -24,13 +25,16 @@ def run(db: Path, relationship: str, *, now: datetime | None = None) -> str:
         first = store.first_message_at(rel)
         since = datetime.combine(today - timedelta(days=DAYS), time.min, tzinfo=zone)
         offered = store.calendar_offered(rel, since)
+        dates = theirs(store, rel)
     finally:
         store.close()
     first_met = first.astimezone(zone).date() if first is not None else None
-    lines = [f"the next {DAYS} days ({REGION}; first talked {first_met or 'not yet'}):"]
+    known = ", ".join(f"{d.name} {d.month}/{d.day}" for d in dates) or "none"
+    lines = [f"their dates from memory: {known}"]
+    lines.append(f"the next {DAYS} days ({REGION}; first talked {first_met or 'not yet'}):")
     for ahead in range(DAYS):
         day = today + timedelta(days=ahead)
-        for o in occasions(day, REGION, first_met):
+        for o in occasions(day, REGION, first_met, dates):
             what = f"{o.name} {when(o, day)}" if o.how is How.LEAD_UP else o.name
             kind = "lead-up" if o.how is How.LEAD_UP else o.kind.value
             lines.append(f"  {day:%Y-%m-%d %a}  {kind:12} {what}")

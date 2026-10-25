@@ -1,4 +1,5 @@
-"""The calendar's note: on a casual turn, the one occasion today holds, sent after the history,
+"""The calendar's note: on a casual turn, the one occasion today holds (their own dates from memory
+first), sent after the history,
 where a note about the day was used 12 of 12 times and the date alone 0 of 12 (2026-10-25). Logged
 with the occasion once the turn is stored, so a failed turn offers nothing."""
 
@@ -7,19 +8,22 @@ from __future__ import annotations
 from datetime import datetime, time
 
 from companion.core.clock import named_zone
-from companion.core.types import Json
+from companion.core.types import Frame, Json, RelationshipId
 from companion.features.calendar.logic import (
     LOOKBACK,
     OFFERED,
     REGION,
+    Dated,
     Occasion,
     note,
     occasions,
     pick,
+    their_dates,
     when,
 )
 from companion.loops.current import decide
 from companion.loops.features import Feature, Moment, Offer, Offered, asking, quiet
+from companion.store.sqlite.store import Store
 
 
 def _detail(o: Occasion, today: datetime) -> dict[str, Json]:
@@ -32,6 +36,12 @@ def _detail(o: Occasion, today: datetime) -> dict[str, Json]:
         "when": when(o, today.date()),
         "region": REGION,
     }
+
+
+def theirs(store: Store, rel: RelationshipId) -> tuple[Dated, ...]:
+    """Their yearly dates from what memory holds about them: said for real, never sensitive."""
+    memories = store.user_beliefs(rel)
+    return their_dates([(b.claim, b.sensitivity) for b in memories if b.frame is Frame.REAL])
 
 
 def calendar_offer(m: Moment, found: object, so_far: Offered) -> Offer:
@@ -47,7 +57,8 @@ def calendar_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     first = c.store.first_message_at(c.rel)
     since = datetime.combine(today - LOOKBACK, time.min, tzinfo=zone)
     offered = {str(d.get("occasion")) for _, d in c.store.calendar_offered(c.rel, since)}
-    o = pick(occasions(today, REGION, first.astimezone(zone).date() if first else None), offered)
+    met = first.astimezone(zone).date() if first else None
+    o = pick(occasions(today, REGION, met, theirs(c.store, c.rel)), offered)
     if o is None:
         return Offer()
     detail = _detail(o, local)

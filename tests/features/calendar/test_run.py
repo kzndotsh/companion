@@ -5,8 +5,20 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.types import Frame, Speaker, TurnId, Utterance, UtteranceId
-from companion.features.calendar.logic import DAY_NOTE, OFFERED, US_NOTE
+from companion.core.types import (
+    Belief,
+    BeliefId,
+    BeliefKind,
+    Evidence,
+    Frame,
+    Provenance,
+    Speaker,
+    Subject,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
+from companion.features.calendar.logic import DAY_NOTE, OFFERED, THEIRS_NOTE, US_NOTE
 from companion.features.calendar.run import calendar_offer
 from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
@@ -99,3 +111,48 @@ async def test_offered_once_a_day_and_logged_only_when_the_turn_is_stored(store:
     assert store.decided_since(REL, OFFERED, HALLOWEEN)
     third = await say("not much", HALLOWEEN + timedelta(minutes=3))
     assert NOTE not in third.seen[0].tail
+
+
+def _remember(
+    store: Store, bid: str, claim: str, *, sensitivity: int = 0, frame: Frame = Frame.REAL
+) -> None:
+    said = Utterance(
+        UtteranceId(f"u-{bid}"),
+        REL,
+        SESSION,
+        TurnId(f"t-{bid}"),
+        Speaker.USER,
+        claim,
+        frame,
+        "test",
+        HALLOWEEN - timedelta(days=10),
+    )
+    store.append_utterance(said)
+    store.insert_belief(
+        Belief(
+            id=BeliefId(bid),
+            relationship_id=REL,
+            subject=Subject.USER,
+            kind=BeliefKind.TRAIT,
+            claim=claim,
+            evidence=(Evidence(said.id, claim),),
+            provenance=Provenance.STATED if frame is Frame.REAL else Provenance.PLAYED,
+            speaker=Speaker.USER,
+            frame=frame,
+            confidence=0.8,
+            valid_from=said.at,
+            recorded_at=said.at,
+            sensitivity=sensitivity,
+        )
+    )
+
+
+def test_their_birthday_from_memory_comes_before_the_public_day(store: Store) -> None:
+    _remember(store, "b1", "The user's birthday is October 31.")
+    assert _tail(store, HALLOWEEN).tail == (THEIRS_NOTE.render(name="their birthday"),)
+
+
+def test_a_sensitive_or_pretend_date_is_never_marked(store: Store) -> None:
+    _remember(store, "b1", "The user's anniversary is October 31.", sensitivity=2)
+    _remember(store, "b2", "The user's birthday is October 31.", frame=Frame.PLAY)
+    assert _tail(store, HALLOWEEN).tail == (NOTE,)

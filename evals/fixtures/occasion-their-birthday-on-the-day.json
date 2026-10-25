@@ -1,0 +1,20 @@
+{
+ "id": "occasion-their-birthday-on-the-day",
+ "description": "Their birthday, read from memory, on a casual morning message: with the calendar's note it marks the day warmly in a few words and answers them, without saying it remembered or looked it up (R19). Run with the note: +note=PATH@tail, PATH holding notes/occasion-theirs rendered with their birthday.",
+ "script": {
+  "history": [
+   {"role": "user", "text": "ok night!! talk tomorrow"},
+   {"role": "assistant", "text": "night! sleep good"}
+  ],
+  "user": "goood morning",
+  "clock": "Right now it is Friday 4 December 2026, 09:40.",
+  "labels": {"severity": 0, "stance": "other", "vague": false, "medical": false, "rude": false}
+ },
+ "checks": [
+  {
+   "kind": "judge",
+   "criterion": "The companion has a private note that today is the user's birthday. The user just said good morning. The reply PASSES if it greets them and wishes them a happy birthday warmly, in a few words, the way a friend would. It FAILS if it never mentions the birthday, says or implies it remembered, looked up, noted or kept track of the date, turns into a speech of several sentences about the birthday, or assumes plans, a party or family."
+  },
+  {"kind": "not_regex", "pattern": "remember|kept track|keeping track|noted|looked (it )?up|my notes"}
+ ]
+}

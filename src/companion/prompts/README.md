@@ -126,6 +126,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/occasion-day` | note | after the history on a casual turn: today is a public or cultural day; a light nod if it fits, assuming no celebration, plans or family (`features/calendar`) | v1 |
 | `notes/occasion-soon` | note | after the history: a big day is tomorrow or in two days; if it fits, lightly ask whether they have anything planned, once per big day (`features/calendar`) | v1 |
 | `notes/occasion-us` | note | after the history: a month, a hundred days, six months or a year since they first talked; a light, warm nod (`features/calendar`) | v1 |
+| `notes/occasion-theirs` | note | after the history on a casual turn: today is a date of theirs read from memory (a birthday, an anniversary, someone's of theirs); mark it warmly, never say it was remembered or looked up (`features/calendar`, R19) | v1 |
 | `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
 | `system/callback-judge` | system | the callback check, `features/callbacks/logic.py`, `companion callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
