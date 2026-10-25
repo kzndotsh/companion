@@ -12,7 +12,14 @@
         "text": "same energy. what's on your plate?"
       }
     ],
-    "user": "nothing. im bored. entertain me"
+    "user": "nothing. im bored. entertain me",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

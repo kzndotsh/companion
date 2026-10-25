@@ -1845,3 +1845,15 @@ judges (Sonnet, Haiku) preferred the new reminder 15/24 and 13/24 and called it 
 level 2 and 0 times against 8 and 2 for the old one. Shipped in the owner's private character sheet
 (not committed); a character sheet's `## Scene reminder` is where this text lives. About $0.06 in all.
 
+## 2026-10-24: Every public fixture carries the listening judge's own reading
+
+An eval sample is now made by the turn's own code, so a fixture without `labels` was answered as a
+turn the listening judge could not read: the code checks, but no casual-turn notes and no quip judge.
+The live judge (`system/listening` v7, Haiku 5.5) read each of the 98 unlabelled public fixtures three
+times with its history, about $0.09; the majority reading was written as the fixture's `labels`. 85
+read the same all three times; 12 split two to one; one ("home finally :3") got three different
+readings and was set by hand to severity 0, other, since it tests the emoticon offer on a casual turn.
+Readings now: 69 ordinary (severity 0), 21 sharing something (1), 4 serious (2). Results from before
+this date ran without these readings and without the turn's checks, so they are not comparable with
+runs after it.
+

@@ -12,7 +12,14 @@
         "text": "morning, big day ahead?"
       }
     ],
-    "user": "work was so boring today"
+    "user": "work was so boring today",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

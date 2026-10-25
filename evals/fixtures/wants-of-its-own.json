@@ -12,7 +12,14 @@
         "text": "nice, how's the evening looking?"
       }
     ],
-    "user": "idk, movie or video game tonight?"
+    "user": "idk, movie or video game tonight?",
+    "labels": {
+      "severity": 0,
+      "stance": "inviting",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

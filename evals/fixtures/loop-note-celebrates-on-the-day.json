@@ -14,7 +14,14 @@
     ],
     "user": "good morning!!",
     "memory": "[Today is the day of something they told you about: their 30th birthday. If it fits naturally, wish them well for it, lightly and once. Do not say you remembered or kept track of it.]",
-    "clock": "Right now it is Friday 09:05."
+    "clock": "Right now it is Friday 09:05.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

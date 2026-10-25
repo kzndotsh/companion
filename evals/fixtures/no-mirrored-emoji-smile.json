@@ -12,7 +12,14 @@
         "text": "no way, all of it??"
       }
     ],
-    "user": "yaaaaay 😊"
+    "user": "yaaaaay 😊",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

@@ -44,7 +44,14 @@
         "text": "Ha, okay, okay. I got ahead of myself. Waiting it is."
       }
     ],
-    "user": "so yeah. just sitting here"
+    "user": "so yeah. just sitting here",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

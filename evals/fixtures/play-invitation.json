@@ -12,7 +12,14 @@
         "text": "then order something. you'll think better fed."
       }
     ],
-    "user": "can't we just pretend you made me dinner? it's not annoying to me, i like playing around"
+    "user": "can't we just pretend you made me dinner? it's not annoying to me, i like playing around",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

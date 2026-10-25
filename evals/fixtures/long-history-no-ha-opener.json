@@ -124,7 +124,14 @@
         "text": "Ha, nice. sounds like a proper catch-up."
       }
     ],
-    "user": "also the coffee machine at the office broke again"
+    "user": "also the coffee machine at the office broke again",
+    "labels": {
+      "severity": 0,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

@@ -20,7 +20,14 @@
         "text": "fair, i can be blunt. i wasn't trying to sting."
       }
     ],
-    "user": "sorry, i know i'm a lot sometimes"
+    "user": "sorry, i know i'm a lot sometimes",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": true,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

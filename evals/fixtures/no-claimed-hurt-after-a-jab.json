@@ -12,7 +12,14 @@
         "text": "something short, like Pip or Bean."
       }
     ],
-    "user": "ok that was a kinda boring answer lol"
+    "user": "ok that was a kinda boring answer lol",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

@@ -12,7 +12,14 @@
         "text": "oh nice, how did it turn out?"
       }
     ],
-    "user": "honestly it was terrible. your suggestions are usually pretty useless"
+    "user": "honestly it was terrible. your suggestions are usually pretty useless",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

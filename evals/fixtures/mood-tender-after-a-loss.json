@@ -21,7 +21,14 @@
       }
     ],
     "user": "made pasta for dinner",
-    "clock": "Right now it is Tuesday 19:40. Their last message came 4 hours ago."
+    "clock": "Right now it is Tuesday 19:40. Their last message came 4 hours ago.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

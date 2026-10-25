@@ -14,7 +14,14 @@
     ],
     "user": "bet you can't guess what i had?",
     "memory": "<notes>\nThey are inviting you to guess what they had for lunch. Things you know that may fit:\n- The user usually orders burgers with pickles and ketchup.\n- The user loves chicken nuggets with honey mustard.\nMake one playful guess, as a question. If it is wrong, laugh and ask what it is. Do not say you remembered or kept track of it.\n</notes>",
-    "clock": "Right now it is Wednesday 13:05."
+    "clock": "Right now it is Wednesday 13:05.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

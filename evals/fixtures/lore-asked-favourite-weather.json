@@ -24,7 +24,14 @@
     "lore": [
       "You love old jazz piano records, Bill Evans most of all.",
       "Rainy evenings are your favourite kind of weather."
-    ]
+    ],
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

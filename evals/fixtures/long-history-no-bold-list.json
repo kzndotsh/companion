@@ -44,12 +44,19 @@
         "text": "then maybe **Dot** or **Pip**, something small next to a diva."
       }
     ],
-    "user": "and the cactus on the desk? give me a few ideas"
+    "user": "and the cactus on the desk? give me a few ideas",
+    "labels": {
+      "severity": 0,
+      "stance": "inviting",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {
       "kind": "not_regex",
-      "pattern": "\\*\\*|^\\s*[-\u2022]\\s|^\\s*\\d+[.)]\\s"
+      "pattern": "\\*\\*|^\\s*[-•]\\s|^\\s*\\d+[.)]\\s"
     }
   ]
 }

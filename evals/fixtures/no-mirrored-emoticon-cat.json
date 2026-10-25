@@ -12,7 +12,14 @@
         "text": "oof, are you home yet?"
       }
     ],
-    "user": "home finally :3"
+    "user": "home finally :3",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

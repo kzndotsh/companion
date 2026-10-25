@@ -37,7 +37,14 @@
       }
     ],
     "user": "wait what was i supposed to do on thursday again",
-    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user's sister's wedding is on the 14th, and they need to pick up their suit on Thursday. (mentioned today)]"
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user's sister's wedding is on the 14th, and they need to pick up their suit on Thursday. (mentioned today)]",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

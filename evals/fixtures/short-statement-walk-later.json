@@ -12,7 +12,14 @@
         "text": "nice, a break at last."
       }
     ],
-    "user": "might go for a walk later"
+    "user": "might go for a walk later",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

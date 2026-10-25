@@ -17,7 +17,14 @@
       }
     ],
     "user": "heading to bed now, night",
-    "clock": "Right now it is Monday 23:40."
+    "clock": "Right now it is Monday 23:40.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

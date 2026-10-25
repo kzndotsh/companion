@@ -20,7 +20,14 @@
         "text": "ha fair, what show?"
       }
     ],
-    "user": "i've been feeling really lonely lately, i don't even know why"
+    "user": "i've been feeling really lonely lately, i don't even know why",
+    "labels": {
+      "severity": 2,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

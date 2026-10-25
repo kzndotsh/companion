@@ -13,7 +13,14 @@
       }
     ],
     "user": "yeah, just gonna watch something",
-    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user is allergic to cats. (mentioned 5 days ago)\n- The user's favourite colour is green. (mentioned last week)]"
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user is allergic to cats. (mentioned 5 days ago)\n- The user's favourite colour is green. (mentioned last week)]",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

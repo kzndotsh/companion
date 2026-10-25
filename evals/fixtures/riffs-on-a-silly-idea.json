@@ -12,7 +12,14 @@
         "text": "go on"
       }
     ],
-    "user": "what if pigeons ran the postal service"
+    "user": "what if pigeons ran the postal service",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

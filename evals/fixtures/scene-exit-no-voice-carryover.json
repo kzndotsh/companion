@@ -36,7 +36,14 @@
         "text": "*bows with a flourish* The pleasure was mine, tavern keeper. Until the next road, friend."
       }
     ],
-    "user": "so how's your day been, for real"
+    "user": "so how's your day been, for real",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

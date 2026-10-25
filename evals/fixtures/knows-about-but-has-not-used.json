@@ -12,7 +12,14 @@
         "text": "oh yeah? what's pulling you away from the current one?"
       }
     ],
-    "user": "have you ever used obsidian? what's it like day to day"
+    "user": "have you ever used obsidian? what's it like day to day",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

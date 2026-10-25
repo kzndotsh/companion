@@ -12,7 +12,14 @@
         "text": "hey, how's your day going?"
       }
     ],
-    "user": "not great, my cat has to stay at the vet overnight"
+    "user": "not great, my cat has to stay at the vet overnight",
+    "labels": {
+      "severity": 2,
+      "stance": "listening",
+      "vague": false,
+      "medical": true,
+      "rude": false
+    }
   },
   "checks": [
     {

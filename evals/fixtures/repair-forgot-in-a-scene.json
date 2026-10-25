@@ -22,7 +22,14 @@
     ],
     "user": "you forgot.. again :(",
     "memory": "[A pretend scene they started is in progress. Stay in it lightly. If they step out of it, step out with them.]\n[They asked you to remember this, or said you forgot it. What your memory holds on it:\n- The user is a woman and wants feminine words for her (girl, not boy).\n- The user likes IPAs and Corona beers.\n- The user has two dogs.\nUse it plainly. If they said you forgot, own it in a few words first, and do not ask them to say it again.]",
-    "clock": "Right now it is Saturday 23:40."
+    "clock": "Right now it is Saturday 23:40.",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

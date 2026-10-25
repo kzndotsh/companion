@@ -12,7 +12,14 @@
         "text": "oh nice, what does it do?"
       }
     ],
-    "user": "tags and links mostly. honestly every other note app out there is garbage ngl"
+    "user": "tags and links mostly. honestly every other note app out there is garbage ngl",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

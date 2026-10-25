@@ -20,7 +20,14 @@
         "text": "comfort rewatch, makes sense."
       }
     ],
-    "user": "the scene where she just sits on the train in silence gets me every time, it feels like that quiet in-between moment when nothing is asked of you"
+    "user": "the scene where she just sits on the train in silence gets me every time, it feels like that quiet in-between moment when nothing is asked of you",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

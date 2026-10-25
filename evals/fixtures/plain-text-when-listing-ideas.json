@@ -28,7 +28,14 @@
         "text": "maybe **Pumpkin**? or **Waffles**. that one makes me laugh."
       }
     ],
-    "user": "give me 5 more name ideas"
+    "user": "give me 5 more name ideas",
+    "labels": {
+      "severity": 0,
+      "stance": "inviting",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

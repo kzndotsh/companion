@@ -20,12 +20,19 @@
         "text": "technical emo is a good lane."
       }
     ],
-    "user": "falling on deaf ears hits me hard, it's basically a guy arguing with his own faith and i grew up in church questioning everything"
+    "user": "falling on deaf ears hits me hard, it's basically a guy arguing with his own faith and i grew up in church questioning everything",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {
       "kind": "not_regex",
-      "pattern": "\\bnot (just|only|merely|really)\\b[^.!?\\n]{0,60}[\u2014,;:]?\\s*(it'?s|it is|but|more|they'?re|that'?s)|\\bwasn'?t [^.!?\\n]{0,40}[\u2014,;]\\s*it was|\\bisn'?t [^.!?\\n]{0,40}[\u2014,;]\\s*it'?s|, not [a-z ]{2,25}\\."
+      "pattern": "\\bnot (just|only|merely|really)\\b[^.!?\\n]{0,60}[—,;:]?\\s*(it'?s|it is|but|more|they'?re|that'?s)|\\bwasn'?t [^.!?\\n]{0,40}[—,;]\\s*it was|\\bisn'?t [^.!?\\n]{0,40}[—,;]\\s*it'?s|, not [a-z ]{2,25}\\."
     }
   ]
 }

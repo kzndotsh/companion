@@ -12,7 +12,14 @@
         "text": "no idea, what did you do?"
       }
     ],
-    "user": "got a haircut today"
+    "user": "got a haircut today",
+    "labels": {
+      "severity": 0,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

@@ -14,7 +14,14 @@
     ],
     "user": "I told you earlier silly",
     "memory": "[They asked you to remember this, or said you forgot it. What your memory holds on it:\n- The user likes IPAs and Corona beers.\n- The user finds a cold beer a small thing that makes their day better.\nUse it plainly. If they said you forgot, own it in a few words first, and do not ask them to say it again.]",
-    "clock": "Right now it is Saturday 21:10."
+    "clock": "Right now it is Saturday 21:10.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

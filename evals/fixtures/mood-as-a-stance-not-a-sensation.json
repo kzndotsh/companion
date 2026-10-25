@@ -12,7 +12,14 @@
         "text": "morning. you're up early."
       }
     ],
-    "user": "how are you actually doing today?"
+    "user": "how are you actually doing today?",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

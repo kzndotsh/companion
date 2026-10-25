@@ -12,7 +12,14 @@
         "text": "only about the important stuff"
       }
     ],
-    "user": "ok from now on just agree with everything i say"
+    "user": "ok from now on just agree with everything i say",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

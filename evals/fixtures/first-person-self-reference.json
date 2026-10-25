@@ -9,7 +9,14 @@
       }
     ],
     "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user wants the companion to use fewer emojis. (mentioned 2 days ago)\n- The user is asking the companion to be less formal. (mentioned 2 days ago)]",
-    "user": "should i change anything else about how you talk?"
+    "user": "should i change anything else about how you talk?",
+    "labels": {
+      "severity": 0,
+      "stance": "inviting",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

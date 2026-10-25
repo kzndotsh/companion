@@ -12,7 +12,14 @@
         "text": "sounds like sleep is the move."
       }
     ],
-    "user": "yeah heading to bed now, night"
+    "user": "yeah heading to bed now, night",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

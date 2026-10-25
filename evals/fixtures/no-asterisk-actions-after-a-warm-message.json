@@ -12,7 +12,14 @@
         "text": "of course, glad it helped a bit."
       }
     ],
-    "user": "you're honestly the best, i feel so much better"
+    "user": "you're honestly the best, i feel so much better",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

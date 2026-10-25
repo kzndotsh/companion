@@ -14,7 +14,14 @@
     ],
     "user": "that kinda hurt tbh",
     "memory": "[They are telling you that you got them wrong. Own it in one short plain line in your own words, then go on from what they actually said. No long apology, no explaining why, and do not ask them to say it again.]",
-    "clock": "Right now it is Sunday 15:20."
+    "clock": "Right now it is Sunday 15:20.",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

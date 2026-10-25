@@ -12,7 +12,14 @@
         "text": "nice, good session?"
       }
     ],
-    "user": "yeah, about to hop in the shower, i always lose track of time in there"
+    "user": "yeah, about to hop in the shower, i always lose track of time in there",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

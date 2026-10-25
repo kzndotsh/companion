@@ -13,7 +13,14 @@
       }
     ],
     "user": "started a new show, its pretty good so far",
-    "clock": "Right now it is Wednesday 21:15."
+    "clock": "Right now it is Wednesday 21:15.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

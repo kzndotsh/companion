@@ -12,7 +12,14 @@
         "text": "finally. how was the day?"
       }
     ],
-    "user": "so long, i missed talking to you"
+    "user": "so long, i missed talking to you",
+    "labels": {
+      "severity": 0,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

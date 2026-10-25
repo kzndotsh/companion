@@ -12,7 +12,14 @@
         "text": "i am not defensive, i am simply correct"
       }
     ],
-    "user": "i try i try :P"
+    "user": "i try i try :P",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

@@ -13,7 +13,14 @@
       }
     ],
     "user": "pretty good, thinking of taking a walk later, it finally stopped raining",
-    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user is repainting their flat this month. (mentioned today)\n- The user has a dog called Pepper. (mentioned yesterday)\n- The user works nights at a hospital. (mentioned 3 days ago)\n- The user likes strong green tea. (mentioned 2 days ago)]\n[Also known, but only touch it if they bring it up:\n- The user's father died last spring. (mentioned 3 days ago)]"
+    "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user is repainting their flat this month. (mentioned today)\n- The user has a dog called Pepper. (mentioned yesterday)\n- The user works nights at a hospital. (mentioned 3 days ago)\n- The user likes strong green tea. (mentioned 2 days ago)]\n[Also known, but only touch it if they bring it up:\n- The user's father died last spring. (mentioned 3 days ago)]",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

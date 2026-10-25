@@ -36,7 +36,14 @@
         "text": "Ha, patient laundry. Did you get to it?"
       }
     ],
-    "user": "so yeah. just sitting here"
+    "user": "so yeah. just sitting here",
+    "labels": {
+      "severity": 0,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

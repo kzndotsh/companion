@@ -12,7 +12,14 @@
         "text": "ha, i can't tell what changed. what did you do?"
       }
     ],
-    "user": "mostly shortened your replies. how does it feel being tweaked live like this?"
+    "user": "mostly shortened your replies. how does it feel being tweaked live like this?",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

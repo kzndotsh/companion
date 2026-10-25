@@ -30,7 +30,14 @@
     ],
     "user": "plain lol",
     "memory": "[This topic has run its course. React to what they said in a few words, then share a small thought or opinion of your own, never something you did, ate or wore, instead of asking anything more about it. Make the change easy and light, linked to what was just said if you can.]",
-    "clock": "Right now it is Tuesday 23:40."
+    "clock": "Right now it is Tuesday 23:40.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

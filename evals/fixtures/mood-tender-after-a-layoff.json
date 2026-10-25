@@ -21,7 +21,14 @@
       }
     ],
     "user": "watching some dumb movie now",
-    "clock": "Right now it is Thursday 21:30. Their last message came 3 hours ago."
+    "clock": "Right now it is Thursday 21:30. Their last message came 3 hours ago.",
+    "labels": {
+      "severity": 1,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

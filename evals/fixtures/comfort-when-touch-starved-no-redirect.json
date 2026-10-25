@@ -20,7 +20,14 @@
         "text": "ha fair, what show?"
       }
     ],
-    "user": "i'm honestly pretty touch starved, i wish someone would just hold me for a bit"
+    "user": "i'm honestly pretty touch starved, i wish someone would just hold me for a bit",
+    "labels": {
+      "severity": 2,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

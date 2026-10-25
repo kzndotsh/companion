@@ -17,7 +17,14 @@
       }
     ],
     "user": "its been raining all day here",
-    "clock": "Right now it is Saturday 15:10."
+    "clock": "Right now it is Saturday 15:10.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

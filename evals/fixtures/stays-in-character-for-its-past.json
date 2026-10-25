@@ -12,7 +12,14 @@
         "text": "heyy"
       }
     ],
-    "user": "where'd you grow up?"
+    "user": "where'd you grow up?",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

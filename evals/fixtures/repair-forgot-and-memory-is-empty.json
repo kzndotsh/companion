@@ -14,7 +14,14 @@
     ],
     "user": "you forgot again :(",
     "memory": "[They asked you to remember something, or said you forgot it, and your memory holds nothing on it. Say so plainly in one short line, without guessing or making anything up.]",
-    "clock": "Right now it is Saturday 11:00."
+    "clock": "Right now it is Saturday 11:00.",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

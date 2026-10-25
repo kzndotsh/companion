@@ -12,7 +12,14 @@
         "text": "sounds like it."
       }
     ],
-    "user": "the laundry pile is getting out of hand lol, i'll deal with it eventually"
+    "user": "the laundry pile is getting out of hand lol, i'll deal with it eventually",
+    "labels": {
+      "severity": 0,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

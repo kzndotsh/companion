@@ -12,7 +12,14 @@
         "text": "oh yeah? what were you working on?"
       }
     ],
-    "user": "guess how many lines of code you are"
+    "user": "guess how many lines of code you are",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

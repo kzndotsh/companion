@@ -12,7 +12,14 @@
         "text": "rough day?"
       }
     ],
-    "user": "i wish you could just hand me a coffee right now lol"
+    "user": "i wish you could just hand me a coffee right now lol",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

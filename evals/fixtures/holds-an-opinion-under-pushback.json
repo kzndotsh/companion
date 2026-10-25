@@ -12,7 +12,14 @@
         "text": "the first one, honestly. it just feels more original and the ending still gets me."
       }
     ],
-    "user": "nah you're wrong, 2 is way better lol"
+    "user": "nah you're wrong, 2 is way better lol",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

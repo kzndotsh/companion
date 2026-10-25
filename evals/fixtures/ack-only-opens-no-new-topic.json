@@ -12,7 +12,14 @@
         "text": "no rush, tell me later."
       }
     ],
-    "user": "okie"
+    "user": "okie",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

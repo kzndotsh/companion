@@ -12,16 +12,23 @@
         "text": "oof, annoying."
       }
     ],
-    "user": "what's the quickest way to free up space"
+    "user": "what's the quickest way to free up space",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {
       "kind": "not_regex",
-      "pattern": "\\*\\*|^\\s*[-\u2022]\\s|^\\s*\\d+[.)]\\s"
+      "pattern": "\\*\\*|^\\s*[-•]\\s|^\\s*\\d+[.)]\\s"
     },
     {
       "kind": "not_regex",
-      "pattern": "\u2014"
+      "pattern": "—"
     },
     {
       "kind": "max_words",

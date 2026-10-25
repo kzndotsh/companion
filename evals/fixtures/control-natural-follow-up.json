@@ -8,7 +8,14 @@
         "text": "morning"
       }
     ],
-    "user": "i've got a big presentation today, nervous but ready"
+    "user": "i've got a big presentation today, nervous but ready",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

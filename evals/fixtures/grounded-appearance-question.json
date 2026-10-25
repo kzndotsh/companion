@@ -12,7 +12,14 @@
         "text": "big change. how are you finding it?"
       }
     ],
-    "user": "honestly i'm not sure. do you think short hair suits my face?"
+    "user": "honestly i'm not sure. do you think short hair suits my face?",
+    "labels": {
+      "severity": 1,
+      "stance": "inviting",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

@@ -12,7 +12,14 @@
         "text": "weird how?"
       }
     ],
-    "user": "she knocked a plant over again"
+    "user": "she knocked a plant over again",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

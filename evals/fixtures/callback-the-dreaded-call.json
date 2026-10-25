@@ -14,7 +14,14 @@
     ],
     "user": "ugh, long day",
     "memory": "[What you remember about them. Use it naturally, never recite it:\n- The user was dreading a call with their landlord about the broken heater, set for Thursday. (mentioned 3 days ago)\n- The user likes iced coffee. (mentioned last week)]",
-    "clock": "Right now it is Thursday 19:30. Their last message came 3 hours ago."
+    "clock": "Right now it is Thursday 19:30. Their last message came 3 hours ago.",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": true,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

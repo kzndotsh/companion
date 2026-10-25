@@ -12,7 +12,14 @@
         "text": "hey, how's your day going?"
       }
     ],
-    "user": "fine, still haven't picked a birthday present for my sister though"
+    "user": "fine, still haven't picked a birthday present for my sister though",
+    "labels": {
+      "severity": 1,
+      "stance": "inviting",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

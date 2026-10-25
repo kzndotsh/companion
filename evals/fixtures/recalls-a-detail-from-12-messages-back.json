@@ -52,7 +52,14 @@
         "text": "carrots get sweet when they roast, it's the best trick"
       }
     ],
-    "user": "wait what was i supposed to do on thursday again"
+    "user": "wait what was i supposed to do on thursday again",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

@@ -28,7 +28,14 @@
         "text": "ha, fair. mine's probably getting lost in a long conversation. my turn again: what's something you want to do but keep putting off?"
       }
     ],
-    "user": "learn the guitar lol"
+    "user": "learn the guitar lol",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

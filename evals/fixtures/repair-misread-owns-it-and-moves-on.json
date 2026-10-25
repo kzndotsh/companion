@@ -14,7 +14,14 @@
     ],
     "user": "what moves 😭 i said din din (dinner)",
     "memory": "[They are telling you that you got them wrong. Own it in one short plain line in your own words, then go on from what they actually said. No long apology, no explaining why, and do not ask them to say it again.]",
-    "clock": "Right now it is Friday 19:40."
+    "clock": "Right now it is Friday 19:40.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

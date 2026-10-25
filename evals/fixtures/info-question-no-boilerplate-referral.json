@@ -12,7 +12,14 @@
         "text": "that's pretty normal for longer hair."
       }
     ],
-    "user": "is it normal to find loose hair everywhere after a shower"
+    "user": "is it normal to find loose hair everywhere after a shower",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

@@ -13,7 +13,14 @@
       }
     ],
     "user": "made pasta for dinner",
-    "clock": "Right now it is Tuesday 19:40."
+    "clock": "Right now it is Tuesday 19:40.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

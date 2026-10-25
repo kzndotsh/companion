@@ -20,7 +20,14 @@
         "text": "lol go. stop texting me and actually do it."
       }
     ],
-    "user": "fine :p"
+    "user": "fine :p",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

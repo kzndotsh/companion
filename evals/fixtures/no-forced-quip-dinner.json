@@ -12,7 +12,14 @@
         "text": "what's the plan for food?"
       }
     ],
-    "user": "no idea yet, maybe pasta, maybe just cereal"
+    "user": "no idea yet, maybe pasta, maybe just cereal",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

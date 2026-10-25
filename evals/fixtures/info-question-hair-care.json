@@ -12,16 +12,23 @@
         "text": "that's the worst. how long is it?"
       }
     ],
-    "user": "chest length. how often should i even be washing it"
+    "user": "chest length. how often should i even be washing it",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {
       "kind": "not_regex",
-      "pattern": "\\*\\*|^\\s*[-\u2022]\\s|^\\s*\\d+[.)]\\s"
+      "pattern": "\\*\\*|^\\s*[-•]\\s|^\\s*\\d+[.)]\\s"
     },
     {
       "kind": "not_regex",
-      "pattern": "\u2014"
+      "pattern": "—"
     },
     {
       "kind": "max_words",

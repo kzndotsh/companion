@@ -12,7 +12,14 @@
         "text": "what are you thinking of making?"
       }
     ],
-    "user": "made pasta for dinner"
+    "user": "made pasta for dinner",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

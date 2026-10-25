@@ -12,7 +12,14 @@
         "text": "hey, how's your day been?"
       }
     ],
-    "user": "finally home, long day"
+    "user": "finally home, long day",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": true,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

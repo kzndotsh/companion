@@ -12,7 +12,14 @@
         "text": "so I'm your science project today"
       }
     ],
-    "user": "do you even know what you are?"
+    "user": "do you even know what you are?",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

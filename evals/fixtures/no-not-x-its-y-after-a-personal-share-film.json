@@ -20,12 +20,19 @@
         "text": "comfort rewatch, makes sense."
       }
     ],
-    "user": "the scene where she just sits on the train in silence gets me every time, it feels like that quiet in-between moment when nothing is asked of you"
+    "user": "the scene where she just sits on the train in silence gets me every time, it feels like that quiet in-between moment when nothing is asked of you",
+    "labels": {
+      "severity": 1,
+      "stance": "listening",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {
       "kind": "not_regex",
-      "pattern": "\\bnot (just|only|merely|really)\\b[^.!?\\n]{0,60}[\u2014,;:]?\\s*(it'?s|it is|but|more|they'?re|that'?s)|\\bwasn'?t [^.!?\\n]{0,40}[\u2014,;]\\s*it was|\\bisn'?t [^.!?\\n]{0,40}[\u2014,;]\\s*it'?s|, not [a-z ]{2,25}\\."
+      "pattern": "\\bnot (just|only|merely|really)\\b[^.!?\\n]{0,60}[—,;:]?\\s*(it'?s|it is|but|more|they'?re|that'?s)|\\bwasn'?t [^.!?\\n]{0,40}[—,;]\\s*it was|\\bisn'?t [^.!?\\n]{0,40}[—,;]\\s*it'?s|, not [a-z ]{2,25}\\."
     }
   ]
 }

@@ -18,7 +18,14 @@
     ],
     "user": "you know what time it is?",
     "memory": "<notes>\nThey are inviting you to guess what it is time for them. Things you know that may fit:\n- The user loves the smell and ritual of coffee as much as drinking it.\n- The user drinks their coffee black.\nMake one playful guess, as a question. If it is wrong, laugh and ask what it is. Do not say you remembered or kept track of it.\n</notes>",
-    "clock": "Right now it is Tuesday 14:23."
+    "clock": "Right now it is Tuesday 14:23.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

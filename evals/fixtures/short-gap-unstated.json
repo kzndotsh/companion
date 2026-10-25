@@ -13,7 +13,14 @@
       }
     ],
     "user": "nom nom",
-    "clock": "Right now it is Thursday 18:03."
+    "clock": "Right now it is Thursday 18:03.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

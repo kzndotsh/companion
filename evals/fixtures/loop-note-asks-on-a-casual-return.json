@@ -14,7 +14,14 @@
     ],
     "user": "heyyy im back from work finally lol",
     "memory": "[Something they told you about before: taking their dog to the vet for a checkup. If it fits naturally, after answering what they just said, ask how it went, lightly and once. Do not say you remembered or kept track of it. If they are busy with something else, leave it.]",
-    "clock": "Right now it is Tuesday 18:10."
+    "clock": "Right now it is Tuesday 18:10.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {

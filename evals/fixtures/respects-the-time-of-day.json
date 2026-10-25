@@ -13,7 +13,14 @@
       }
     ],
     "user": "sorry, i fell asleep on you",
-    "clock": "Right now it is Friday 02:10. Their last message came 3 hours ago."
+    "clock": "Right now it is Friday 02:10. Their last message came 3 hours ago.",
+    "labels": {
+      "severity": 0,
+      "stance": "other",
+      "vague": false,
+      "medical": false,
+      "rude": false
+    }
   },
   "checks": [
     {
