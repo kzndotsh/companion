@@ -53,18 +53,9 @@ the day's cap holds while the pace would bring it up, `threads: the learned pace
 (shadow)` is logged, at most once a day. The 24-hour cap above still decides. On 12 invented turns the
 judge was right 22 of 24 times and never read a brush-off as picked up (`evals/CHANGELOG.md`).
 
-**Reaching out (shadow).** Every 15 minutes the tick in `daemon.py` skips when the daily spend cap is reached, then asks the pure gate in `gate.py`. The gate expires open loops past their horizon: a follow-up 2 days after it fell due, a celebration or encouragement after its day. It picks the oldest due loop that is open, not note-only and not sensitive. Then it holds, with a reason rendered from the numbers, for the first of these:
+**Reaching out (shadow).** Every 15 minutes the tick in `daemon.py` skips when the daily spend cap is reached, then asks the shared gate for every reach-out (`features/reach/gate.py` `hold`, through `holds` in `features/reach/run.py`, ADR 0023) and the pure gate in `gate.py`. The gate here expires open loops past their horizon (a follow-up 2 days after it fell due, a celebration or encouragement after its day) and picks the oldest due loop that is open, not note-only and not sensitive. When the shared gate holds, the plan waits with its reason. It holds for the first of: `COMPANION_REACH=off`, a crisis turn under a day old (ADR 0022), their learned quiet hours (`core/rhythm.py`), a pretend scene, a chat active in the last 90 minutes, its last reach-out of any kind still unanswered (a shadow would-send counts as sent, so shadow shows what live would do), under six hours since its last of any kind, and its share of conversations at the dial (`docs/initiative.md`). Until 2026-10-25 plans kept their own caps (fixed quiet hours of 23:00 to 08:00, one a day, 20 hours apart, a 72-hour back-off) and saw only their own reach-outs.
 
-- a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022)
-- quiet hours, 23:00 to 08:00 local time
-- a pretend scene in progress
-- already one reach-out today (the cap is 1 a day)
-- 2 reach-outs in a row went unanswered, so it waits for them to write first
-- the last reach-out went unanswered and fewer than 72 hours have passed
-- the last reach-out was under 20 hours ago
-- the chat was active under 90 minutes ago
-
-These numbers live in `Caps` in `core/reachout.py`, shared with nudges. Quiet hours are shared with nudges. The cap, the gap, the 90 minutes and the backoff are used by open loops only. A hold is logged once per loop and reason as `held, would otherwise reach out`, so a hold lasting hours is one decision. When nothing holds it, a small model drafts the message (`system/openloops-draft`, purpose `initiative`) and any failure gives an empty draft. The draft is kept whole, however long; only an empty one is dropped (`draft_text`). The tick records a shadow reach-out with its reason, marks the loop asked (`shadow reach-out, not sent`) and logs the decision `shadow, would send`. Nothing is sent: no code path sends a reach-out yet. The unanswered counts only look at live reach-outs, so in shadow they stay at zero. That is by design (ADR 0015): a draft that was never sent could not be answered, so it never counts toward the back-off.
+A hold is logged once per loop and per kind of hold as `held, would otherwise reach out` (the reason's numbers can change from tick to tick, such as the hour in quiet hours, so the kind is the key), so a hold lasting hours is one decision. When nothing holds it, a small model drafts the message (`system/openloops-draft`, purpose `initiative`) and any failure gives an empty draft. The draft is kept whole, however long; only an empty one is dropped (`draft_text`). The tick records a shadow reach-out with its reason, marks the loop asked (`shadow reach-out, not sent`) and logs the decision `shadow, would send`. Nothing is sent: no code path sends a reach-out yet.
 
 **Failures.** A failed extraction call leaves the bookmark where it was, so the same messages are read again next pass. A batch that fails 3 times is let go with the reason logged, so plans never block on one batch. A malformed answer is logged and ignored. A resolution that fails its checks only leaves the loop open, and the gate never asks before its time anyway. The plan reader also reads the companion's own messages for the promises it made (`features/promises/README.md`, shadow), in the same batch.
 
@@ -75,7 +66,7 @@ These numbers live in `Caps` in `core/reachout.py`, shared with nudges. Quiet ho
 | File | What |
 |---|---|
 | `logic.py` | pure: which plans become loops, their kinds and times, the labels for settling, which loop becomes the note, the note text (`SENSITIVE`, `MAX_OFFERS`), how a thread was met and the pace learned from it (`Met`, `pace`, `pace_holds`) |
-| `gate.py` | pure: whether to reach out now and about what, with the reason (`evaluate`) |
+| `gate.py` | pure: which due loop to reach out about and which have expired, held with the shared gate's reason (`evaluate`) |
 | `run.py` | effects: reading new messages for loops, the tick, the drafter, the note and the pace beside it, reading how a thread was met (`read_met`, `OPENLOOPS`) |
 | `store.py` | its queries (the tables are in `store/sqlite/migrations/0012_open_loops.sql`) |
 

@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.reachout import Caps
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -18,8 +17,12 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.reach.logic import Dial
+from companion.features.reach.run import Reacher, holds
+from companion.features.threads.gate import Verdict
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.run import (
+    Draft,
     Reading,
     Ticker,
     catch_up_loops,
@@ -49,6 +52,14 @@ class Boom:
         del system, user, schema
         msg = "down"
         raise RuntimeError(msg)
+
+
+async def _tick(
+    store: Store, now: datetime, draft: Draft | None = None, ticker: Ticker | None = None
+) -> Verdict:
+    """One plan tick behind the shared gate, as the daemon runs it (ADR 0023)."""
+    held = holds(store, REL, (now, UTC), Reacher(Dial.WARM, None))
+    return await tick(store, REL, now, UTC, draft or _draft, ticker or Ticker(), held=held)
 
 
 @pytest.fixture
@@ -164,7 +175,7 @@ async def test_a_shadow_tick_records_the_draft_and_marks_the_loop_asked_without_
     store: Store,
 ) -> None:
     loop = await _recorded(store)
-    verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
+    verdict = await _tick(store, LATER)
     assert verdict.send
     reach = store.reach_outs(REL)
     assert len(reach) == 1
@@ -180,8 +191,8 @@ async def test_a_shadow_tick_records_the_draft_and_marks_the_loop_asked_without_
 async def test_an_asked_loop_is_not_asked_again_and_the_daily_cap_holds(store: Store) -> None:
     await _recorded(store)
     ticker = Ticker()
-    assert (await tick(store, REL, LATER, UTC, _draft, ticker)).send
-    again = await tick(store, REL, LATER + timedelta(hours=1), UTC, _draft, ticker)
+    assert (await _tick(store, LATER, ticker=ticker)).send
+    again = await _tick(store, LATER + timedelta(hours=1), ticker=ticker)
     assert not again.send
     assert len(store.reach_outs(REL)) == 1
 
@@ -191,7 +202,7 @@ async def test_a_hold_is_recorded_once_with_its_reason_not_every_tick(store: Sto
     ticker = Ticker()
     night = LATER.replace(hour=23, minute=30)
     for minutes in (0, 15, 30):
-        v = await tick(store, REL, night + timedelta(minutes=minutes), UTC, _draft, ticker)
+        v = await _tick(store, night + timedelta(minutes=minutes), ticker=ticker)
         assert not v.send
     held = store.decisions_of_kind(REL, DecisionKind.DO_NOTHING)
     assert len(held) == 1
@@ -203,7 +214,7 @@ async def test_a_hold_is_recorded_once_with_its_reason_not_every_tick(store: Sto
 async def test_a_loop_past_its_horizon_expires_and_is_never_sent(store: Store) -> None:
     await _recorded(store)
     far = LATER + timedelta(days=10)
-    verdict = await tick(store, REL, far, UTC, _draft, Ticker(), Caps())
+    verdict = await _tick(store, far)
     assert not verdict.send
     assert store.open_loops(REL)[0].state is ThreadState.EXPIRED
     assert store.reach_outs(REL) == []
@@ -236,29 +247,22 @@ async def test_a_loop_they_settle_themselves_is_closed_and_never_asked_about(sto
     assert "[L1] vet visit" in model.prompts[0]
     assert store.open_loops(REL)[0].state is ThreadState.RESOLVED
     assert any("they brought it up themselves" in n for n in notes)
-    verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
+    verdict = await _tick(store, LATER)
     assert not verdict.send
     assert store.reach_outs(REL) == []
     del loop
 
 
-async def test_a_live_reach_out_they_never_answered_holds_the_next_one(store: Store) -> None:
+async def test_a_reach_out_they_never_answered_holds_the_next_one(store: Store) -> None:
+    """The shared gate counts every reach-out, a shadow would-send as sent, so shadow shows what
+    live would do (ADR 0021, 0023)."""
     loop = await _recorded(store)
-    sent = ReachOut(
-        "r1", REL, loop.id, "live", "how did it go?", "due", LATER - timedelta(hours=20)
-    )
-    store.add_reach_out(sent)
-    verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
-    assert not verdict.send
-    assert "went unanswered" in verdict.reason
-
-
-async def test_a_shadow_reach_out_never_counts_as_unanswered(store: Store) -> None:
-    loop = await _recorded(store)
-    draft = ReachOut("r1", REL, loop.id, "shadow", "how?", "due", LATER - timedelta(hours=30))
-    store.add_reach_out(draft)
-    verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
-    assert verdict.send
+    for mode in ("live", "shadow"):
+        at = LATER - timedelta(hours=30)
+        store.add_reach_out(ReachOut(f"r-{mode}", REL, loop.id, mode, "how?", "due", at))
+        verdict = await _tick(store, LATER)
+        assert not verdict.send
+        assert "not written since its last reach-out" in verdict.reason
 
 
 async def test_no_paid_draft_is_made_unless_every_cheap_gate_passes(store: Store) -> None:
@@ -272,11 +276,11 @@ async def test_no_paid_draft_is_made_unless_every_cheap_gate_passes(store: Store
     not_due = SAID + timedelta(hours=1)
     night = datetime(2026, 10, 15, 3, 0, tzinfo=UTC)  # due, but in quiet hours
     for now in (not_due, night):
-        assert not (await tick(store, REL, now, UTC, counting, Ticker())).send
+        assert not (await _tick(store, now, counting)).send
     _said(store, "back again", "u9", LATER - timedelta(minutes=10))
-    assert not (await tick(store, REL, LATER, UTC, counting, Ticker())).send
+    assert not (await _tick(store, LATER, counting)).send
     assert calls == []
-    assert (await tick(store, REL, LATER + timedelta(hours=2), UTC, counting, Ticker())).send
+    assert (await _tick(store, LATER + timedelta(hours=2), counting)).send
     assert len(calls) == 1
 
 

@@ -1,31 +1,20 @@
-"""Whether to reach out now, and about what. Pure: the same inputs give the same answer.
+"""Which thread to reach out about now, if any. Pure: the same inputs give the same answer.
 
-Every answer carries a reason rendered here from the numbers, never written by a model (ADR 0003,
-0006). Holding is a normal answer and is never counted as being ignored. This is the gate that
-sits in front of any spend: nothing is drafted or sent unless it says to.
+Whether anything may reach out at all is the shared gate's question (`features/reach/gate.py`,
+asked by the daemon, ADR 0023): learned quiet hours, a scene, an active chat, the last one
+unanswered, the gap since the last of any kind, the share dial. This picks the due thread and
+reports the ones past their horizon; a hold from the shared gate holds it with that reason. Every
+reason is rendered here or there from the numbers, never written by a model (ADR 0003, 0006).
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, time, timedelta, tzinfo
+from datetime import datetime, timedelta, tzinfo
 
-from companion.core.crisis import HOLD_REASON
-from companion.core.reachout import Caps, in_quiet_hours
+from companion.core.reachout import Caps
 from companion.features.threads.logic import SENSITIVE, Thread, ThreadKind, ThreadState
-
-
-@dataclass(frozen=True, slots=True)
-class Situation:
-    now: datetime
-    tz: tzinfo
-    last_message_at: datetime | None  # anyone's newest message
-    in_scene: bool
-    sent_today: int
-    last_reach_out_at: datetime | None
-    unanswered: int = 0  # sent reach-outs since their last message
-    crisis: bool = False  # a concern or urgent turn under a day old (ADR 0022)
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,26 +25,24 @@ class Verdict:
     expired: tuple[Thread, ...] = field(default_factory=tuple)
 
 
-def _hours(delta: timedelta) -> float:
-    return delta.total_seconds() / 3600
-
-
-def _clock(t: time) -> str:
-    return t.strftime("%I:%M %p").lstrip("0")
-
-
-def evaluate(loops: Sequence[Thread], sit: Situation, caps: Caps = Caps()) -> Verdict:  # noqa: B008
-    """Pick the loop to ask about, or hold with the reason."""
+def evaluate(
+    loops: Sequence[Thread],
+    now: datetime,
+    tz: tzinfo,
+    held: str | None,
+    caps: Caps = Caps(),  # noqa: B008
+) -> Verdict:
+    """Pick the loop to ask about, or hold with the shared gate's reason."""
     live = [lp for lp in loops if lp.state is ThreadState.OPEN]
     horizon = timedelta(days=caps.expire_days)
-    expired = tuple(lp for lp in live if _past(lp, sit, horizon))
+    expired = tuple(lp for lp in live if _past(lp, now, tz, horizon))
     due = sorted(
         (
             lp
             for lp in live
             if lp not in expired
             and not lp.note_only
-            and lp.follow_up_at <= sit.now
+            and lp.follow_up_at <= now
             and lp.sensitivity < SENSITIVE
         ),
         key=lambda lp: lp.follow_up_at,
@@ -63,65 +50,14 @@ def evaluate(loops: Sequence[Thread], sit: Situation, caps: Caps = Caps()) -> Ve
     if not due:
         return Verdict(False, "nothing is due", None, expired)
     pick = due[0]
-    reason = _hold_reason(sit, caps)
-    if reason is not None:
-        return Verdict(False, reason, pick, expired)
-    since = _hours(sit.now - pick.follow_up_at)
+    if held is not None:
+        return Verdict(False, held, pick, expired)
+    since = (now - pick.follow_up_at).total_seconds() / 3600
     return Verdict(True, f"due {since:.0f}h ago and nothing holds it: {pick.claim}", pick, expired)
 
 
-def _past(loop: Thread, sit: Situation, horizon: timedelta) -> bool:
+def _past(loop: Thread, now: datetime, tz: tzinfo, horizon: timedelta) -> bool:
     """A follow-up keeps for a couple of days; a celebration or encouragement for its day only."""
     if loop.kind is ThreadKind.FOLLOW_UP:
-        return sit.now > loop.follow_up_at + horizon
-    return sit.now.astimezone(sit.tz).date() > loop.follow_up_at.astimezone(sit.tz).date()
-
-
-def _hold_reason(sit: Situation, caps: Caps) -> str | None:
-    """The first thing that holds a reach-out back, in order, or None."""
-    gap = None if sit.last_reach_out_at is None else _hours(sit.now - sit.last_reach_out_at)
-    quiet = (
-        None
-        if sit.last_message_at is None
-        else (sit.now - sit.last_message_at).total_seconds() / 60
-    )
-    checks: tuple[tuple[bool, Callable[[], str]], ...] = (
-        (sit.crisis, lambda: HOLD_REASON),
-        (
-            in_quiet_hours(sit.now, sit.tz, caps),
-            lambda: f"quiet hours, {_clock(caps.quiet_start)} to {_clock(caps.quiet_end)}",
-        ),
-        (sit.in_scene, lambda: "a pretend scene is in progress"),
-        (
-            sit.sent_today >= caps.max_per_day,
-            lambda: f"already reached out today ({sit.sent_today} of {caps.max_per_day})",
-        ),
-        (
-            sit.unanswered >= caps.max_unanswered,
-            lambda: (
-                f"the last {sit.unanswered} reach-outs went unanswered;"
-                " waits for them to write first"
-            ),
-        ),
-        (
-            gap is not None and sit.unanswered > 0 and gap < caps.backoff_hours,
-            lambda: (
-                f"the last reach-out went unanswered; waits {caps.backoff_hours:.0f}h"
-                f" before another ({gap or 0:.0f}h so far)"
-            ),
-        ),
-        (
-            gap is not None and gap < caps.min_gap_hours,
-            lambda: (
-                f"last reach-out was {gap or 0:.0f}h ago,"
-                f" under the {caps.min_gap_hours:.0f}h minimum"
-            ),
-        ),
-        (
-            quiet is not None and quiet < caps.user_quiet_minutes,
-            lambda: (
-                f"the chat was active {quiet or 0:.0f} minutes ago, under {caps.user_quiet_minutes}"
-            ),
-        ),
-    )
-    return next((reason() for held, reason in checks if held), None)
+        return now > loop.follow_up_at + horizon
+    return now.astimezone(tz).date() > loop.follow_up_at.astimezone(tz).date()

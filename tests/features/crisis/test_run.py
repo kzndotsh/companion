@@ -7,14 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.crisis import HOLD_KEY
+from companion.core.crisis import HOLD_KEY, HOLD_REASON
 from companion.core.types import RelationshipId, SessionId, TraceId, TurnId
 from companion.features.nudges.run import _look as nudge_look  # pyright: ignore[reportPrivateUsage]
 from companion.features.reach.logic import Dial
-from companion.features.reach.run import Reacher, situation
-from companion.features.threads.run import (
-    _situation as loop_situation,  # pyright: ignore[reportPrivateUsage]
-)
+from companion.features.reach.run import Reacher, holds, situation
 from companion.loops.record import Recorder
 from companion.store.sqlite.store import Store
 
@@ -23,8 +20,11 @@ NOW = datetime(2026, 10, 20, 15, 0, tzinfo=UTC)
 
 
 def _holds(store: Store, at: datetime) -> tuple[bool, bool, bool]:
-    reach = situation(store, REL, (at, UTC), Reacher(Dial.WARM, None))[0].crisis
-    return reach, loop_situation(store, REL, at, UTC).crisis, nudge_look(store, REL, at).crisis
+    reacher = Reacher(Dial.WARM, None)
+    reach = situation(store, REL, (at, UTC), reacher)[0].crisis
+    held = holds(store, REL, (at, UTC), reacher)
+    plans = held is not None and held.why == HOLD_REASON  # plans ask the shared gate
+    return reach, plans, nudge_look(store, REL, at).crisis
 
 
 @pytest.mark.parametrize(("hours", "held"), [(1, True), (23, True), (25, False)])

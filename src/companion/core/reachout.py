@@ -1,5 +1,5 @@
-"""What every reach-out keeps to, whatever prompted it (a plan of theirs, a time away): the caps,
-the quiet hours, and how short a drafted message must be. Pure."""
+"""What reach-outs share: a hold from the shared gate (`Held`, ADR 0023), the caps and fixed quiet
+hours nudges still keep, how long a plan keeps, and how a draft is tidied. Pure."""
 
 from __future__ import annotations
 
@@ -8,6 +8,15 @@ from datetime import datetime, time, tzinfo
 
 # The key of a nudge it would send (features/nudges), read by any reach-out that counts its own.
 WOULD_NUDGE = "nudge (shadow): would send"
+
+
+@dataclass(frozen=True, slots=True)
+class Held:
+    """The shared gate's hold on any reach-out (ADR 0023): which hold, the same from tick to tick,
+    and the reason with its numbers."""
+
+    what: str
+    why: str
 
 
 @dataclass(frozen=True, slots=True)

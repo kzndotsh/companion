@@ -27,7 +27,7 @@ from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck
 from companion.features.nudges.run import tick_nudge
 from companion.features.reach.logic import Kind, dial
-from companion.features.reach.run import Reacher, tick_reach
+from companion.features.reach.run import Reacher, holds, tick_reach
 from companion.features.reminders.run import deliver_due
 from companion.features.threads.run import Ticker, drafter, tick
 from companion.io.stop import until_stopped
@@ -297,7 +297,9 @@ def _start_initiative(
             if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
                 continue
             try:
-                plan = (await tick(store, rel, utc_now(), local_zone(), draft, ticker)).send
+                when = (utc_now(), local_zone())
+                held = holds(store, rel, when, reacher)
+                plan = (await tick(store, rel, *when, draft, ticker, held=held)).send
                 nudged = await tick_nudge(store, rel, utc_now(), local_zone(), judge) is not None
                 first = Kind.PLAN if plan else Kind.AWAY if nudged else None
                 await tick_reach(store, rel, (utc_now(), local_zone()), reacher, first)

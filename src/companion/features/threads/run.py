@@ -15,15 +15,12 @@ from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
 from companion.core.beliefs.extract import build_user_prompt, index_window
-from companion.core.clock import local_midnight, local_zone
-from companion.core.crisis import reach_held
+from companion.core.clock import local_zone
 from companion.core.extractor import Extractor
-from companion.core.frames import scene_frame
-from companion.core.reachout import Caps, draft_text
+from companion.core.reachout import Caps, Held, draft_text
 from companion.core.spend import purpose
 from companion.core.types import (
     DecisionKind,
-    Frame,
     Json,
     RelationshipId,
     SessionId,
@@ -33,7 +30,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.threads.gate import Situation, Verdict, evaluate
+from companion.features.threads.gate import Verdict, evaluate
 from companion.features.threads.logic import (
     MET_PROMPT,
     MET_SCHEMA,
@@ -197,27 +194,6 @@ def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
     return Recorder(store, rel, SESSION, TurnId(trace), TraceId(trace), now)
 
 
-def _situation(store: Store, rel: RelationshipId, now: datetime, tz: tzinfo) -> Situation:
-    recent = store.history_before(rel, now, 8)
-    sent = store.reach_outs(rel)
-    today = [r for r in sent if r.at >= local_midnight(now)]
-    theirs = [u.at for u in store.history_before(rel, now, 40) if u.speaker is Speaker.USER]
-    last_theirs = max(theirs, default=None)
-    unanswered = sum(
-        1 for r in sent if r.mode == "live" and (last_theirs is None or r.at > last_theirs)
-    )
-    return Situation(
-        now=now,
-        tz=tz,
-        last_message_at=recent[-1].at if recent else None,
-        in_scene=scene_frame(recent, now) is not Frame.REAL,
-        sent_today=len(today),
-        last_reach_out_at=max((r.at for r in sent), default=None),
-        unanswered=unanswered,
-        crisis=reach_held(lambda key, since: store.decided_since(rel, key, since), now),
-    )
-
-
 async def tick(  # noqa: PLR0913, PLR0917
     store: Store,
     rel: RelationshipId,
@@ -225,11 +201,14 @@ async def tick(  # noqa: PLR0913, PLR0917
     tz: tzinfo,
     draft: Draft | None,
     ticker: Ticker,
+    *,
+    held: Held | None,
     caps: Caps = Caps(),  # noqa: B008
 ) -> Verdict:
-    """One look at the open loops. In shadow mode a verdict to send is recorded with a drafted
-    message and the loop is marked asked, but nothing is sent."""
-    verdict = evaluate(store.open_loops(rel), _situation(store, rel, now, tz), caps)
+    """One look at the open loops, with the shared gate's hold (ADR 0023; None when nothing holds a
+    reach-out now). In shadow mode a verdict to send is recorded with a drafted message and the
+    loop is marked asked, but nothing is sent."""
+    verdict = evaluate(store.open_loops(rel), now, tz, held.why if held else None, caps)
     for lp in verdict.expired:
         store.open_loop_event(lp.id, ThreadState.EXPIRED, "past its follow-up horizon", now)
         _record(store, rel, now).decide(
@@ -240,7 +219,7 @@ async def tick(  # noqa: PLR0913, PLR0917
         return verdict
     detail: dict[str, Json] = {"loop_id": verdict.loop.id, "claim": verdict.loop.claim}
     if not verdict.send:
-        key = (verdict.loop.id, verdict.reason)
+        key = (verdict.loop.id, held.what if held else verdict.reason)
         if key not in ticker.seen:
             ticker.seen.add(key)
             reason = f"held, would otherwise reach out about {verdict.loop.claim}: {verdict.reason}"

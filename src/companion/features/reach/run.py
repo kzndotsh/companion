@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, tzinfo
 from companion.core.crisis import reach_held
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
-from companion.core.reachout import WOULD_NUDGE
+from companion.core.reachout import WOULD_NUDGE, Held
 from companion.core.rhythm import WINDOW, kept_hour, learn
 from companion.core.types import (
     BeliefKind,
@@ -169,6 +169,15 @@ def situation(
         thing=pick_thing(_pool(store, rel, now), used, seed),
     )
     return sit, look
+
+
+def holds(
+    store: Store, rel: RelationshipId, when: tuple[datetime, tzinfo], reacher: Reacher
+) -> Held | None:
+    """The shared gate's answer for any reach-out now (ADR 0023), asked by the daemon for a plan of
+    theirs too: what holds it and why, or None."""
+    held = hold(situation(store, rel, when, reacher)[0])
+    return None if held is None else Held(held[0].value, held[1])
 
 
 async def tick_reach(
