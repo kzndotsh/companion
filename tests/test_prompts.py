@@ -34,6 +34,8 @@ PLACEHOLDERS = {
     "notes/reminder-ask": {"what", "reason"},
     "notes/reminder-cancelled": {"what"},
     "system/reminder-send": {"what"},
+    "notes/crisis-concern": {"line"},
+    "messages/crisis-line": {"line"},
 }
 # a prompt that gained its placeholders in a later version: earlier versions have none
 SINCE = {"notes/listening-trivial": 6}

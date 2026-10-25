@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, timedelta
 
+from companion.core.crisis import HOLD_REASON
 from companion.features.nudges.logic import Away, Kind, Look, due, parse, wait
 from tests.conftest import T0
 
@@ -50,3 +51,7 @@ def test_a_goodbye_or_no_time_away_is_a_readable_answer_and_junk_is_not() -> Non
     assert read({"away": "brief", "minutes": 20}) == Answer((Kind.BRIEF, 20))
     assert read({"away": "brief"}) is None
     assert read("junk") is None
+
+
+def test_a_crisis_turn_under_a_day_old_holds_it() -> None:
+    assert due(_look(crisis=True), T0 + timedelta(minutes=70), UTC) == (None, HOLD_REASON)

@@ -7,6 +7,7 @@ import contextlib
 from dataclasses import dataclass
 from typing import Any
 
+from companion.core.crisis import Reading
 from companion.core.frames import Judgement as FrameJudgement
 from companion.core.talker import Reply, Talker
 from companion.core.turn.ack import Reaction
@@ -35,6 +36,7 @@ class Routed:
     brushed: bool
     heard: Heard | None  # the listening judge's read of their message
     in_scene: Frame
+    crisis: Reading | None = None  # the crisis path's reading (ADR 0022), set after the look-ups
 
 
 @dataclass(frozen=True, slots=True)

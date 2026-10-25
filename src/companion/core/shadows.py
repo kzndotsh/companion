@@ -23,6 +23,15 @@ class Shadow:
 
 SHADOWS: tuple[Shadow, ...] = (
     Shadow(
+        "the crisis path: a second look at a message that may be a risk, and what each level"
+        " would do (ADR 0022)",
+        "crisis",
+        "companion crisis, the decision log",
+        date(2026, 11, 1),
+        "the fixture check passes (no genuine risk missed, the jokes not raised) and no false"
+        " alarm in real chat",
+    ),
+    Shadow(
         "reaching out first about a due plan",
         "initiative",
         "companion initiative",

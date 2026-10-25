@@ -7,6 +7,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
 
+from companion.core.crisis import Reading
 from companion.core.frames import (
     Judgement,
     needs_judge,
@@ -25,6 +26,7 @@ from companion.core.types import (
     Json,
 )
 from companion.loops.current import Heard, Turn, decide, mark
+from companion.turn.crisis import method_checked
 from companion.turn.floor import judge_intimate
 from companion.turn.frames import judge_frame
 from companion.turn.quip import judge_quip
@@ -128,10 +130,12 @@ async def checked(  # noqa: PLR0913, PLR0917
     talker: Talker,
     *,
     held: bool,
+    crisis: Reading | None = None,
 ) -> Reply:
-    """The reply after its checks: the habit checks on an ordinary turn, the floor's on a held
-    one."""
+    """The reply after its checks: the habit checks on an ordinary turn, the crisis path's method
+    check on a risk turn (ADR 0022), and the floor's on a held one."""
     reply = await _recheck(c, t, request, reply, heard, in_scene, talker)
+    reply = await method_checked(c, t, lambda: talker.reply(request), reply, crisis)
     return await _hold_check(c, t, request, reply, talker) if held else reply
 
 
@@ -211,6 +215,7 @@ async def talk(c: Conversation, t: Turn, request: TalkerRequest, routed: Routed)
             routed.in_scene,
             routed.talker,
             held=routed.held,
+            crisis=routed.crisis,
         )
     except BaseException:
         await stop(running, framing, feeling)

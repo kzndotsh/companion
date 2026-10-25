@@ -18,6 +18,7 @@ from companion.cli import (
     replay,
     spend,
 )
+from companion.cli import crisis as crisis_cli
 from companion.cli import eval as eval_cli
 from companion.cli import prompts as prompts_cli
 from companion.cli import shadows as shadows_cli
@@ -26,6 +27,7 @@ from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
 from companion.features.callbacks import cli as callbacks
 from companion.features.context import cli as context
+from companion.features.crisis import cli as crisis
 from companion.features.episodes import cli as episodes
 from companion.features.invented import cli as invented
 from companion.features.knowing import cli as knowing
@@ -122,6 +124,13 @@ def _judging_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     iv.add_argument("--cap", type=float, default=0.10, help="stop judging at this much spend")
     iv.add_argument("--dump", type=Path, help="write the candidates with their context, to confirm")
     _db_args(iv)
+    cr = add("crisis", help="how often each crisis level was read lately, or --check the fixtures")
+    cr.add_argument(
+        "--check", action="store_true", help="read every crisis fixture three times (model calls)"
+    )
+    cr.add_argument("--cap", type=float, help="required with --check: stop at this much spend")
+    cr.add_argument("--fixtures", type=Path, default=crisis.FIXTURES, help="the fixture file")
+    _db_args(cr)
     cb = add("callbacks", help="judge recent replies for callbacks, then report")
     cb.add_argument("--days", type=int, default=7)
     cb.add_argument("--cap", type=float, default=0.10, help="stop judging at this much spend")
@@ -237,6 +246,15 @@ def _callbacks(a: argparse.Namespace) -> int:
             commands.run(db, rel, lambda x: callbacks.judge_now(x, int(a.days), float(a.cap)))
         )
     )
+
+
+def _crisis(a: argparse.Namespace) -> int:
+    if not a.check:
+        return _out(crisis.run(*_target(a)))
+    if a.cap is None or a.cap <= 0:
+        sys.stderr.write("pass --cap with --check, for example --cap 0.10; it costs money\n")
+        return 2
+    return _out(asyncio.run(crisis_cli.run(Path(a.fixtures), float(a.cap))))
 
 
 def _rebuild(a: argparse.Namespace) -> int:
@@ -422,6 +440,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "rebuild": _rebuild,
     "callbacks": _callbacks,
     "invented": _invented,
+    "crisis": _crisis,
     "eval": _eval,
     "run": _run,
 }

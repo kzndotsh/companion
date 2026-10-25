@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_midnight, local_zone
+from companion.core.crisis import reach_held
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
 from companion.core.reachout import Caps, short_draft
@@ -203,6 +204,7 @@ def _situation(store: Store, rel: RelationshipId, now: datetime, tz: tzinfo) -> 
         sent_today=len(today),
         last_reach_out_at=max((r.at for r in sent), default=None),
         unanswered=unanswered,
+        crisis=reach_held(lambda key, since: store.decided_since(rel, key, since), now),
     )
 
 

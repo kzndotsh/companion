@@ -72,6 +72,9 @@ These are rules in code, checked before and after the draft, not requests in a p
   were gone, asks why they went quiet or whether they are okay, adds urgency or a cliffhanger, or makes
   them responsible for how it feels is dropped, never rewritten
 - never a paid call before every cheap check has passed, and none once the daily spend cap is reached
+- never within a day of a turn the crisis path read as a concern or a risk and acted on: the plan,
+  nudge and own-reason gates all hold (`core/crisis.py` `reach_held`, ADR 0022). In shadow the crisis
+  path only logs, and nothing holds
 - never counting streaks or optimising how often they write
 
 Plans and nudges keep their own caps as before (`core/reachout.py`): plan reach-outs at most once a day

@@ -6,7 +6,7 @@ they said something is wrong without saying what. Code turns the labels into one
 system block, never the model (ADR 0003, 0006). Trivial things get sympathy only, everyday friction
 may get a fact, a gentle nudge or one question, serious things get the weight named and an offer to
 talk, never advice on what to do or on treatment. Acute things are a separate design and get no
-note here.
+note here; the crisis path reads them (ADR 0022).
 """
 
 from __future__ import annotations
@@ -166,7 +166,7 @@ def render_reason(j: Judgement, note: str | None) -> str:
         f"{', asks it to remember' if j.recall else ''}"
     )
     if j.severity >= SEVERITIES[-1]:
-        return f"no listening note: {labels}; acute needs its own design (no crisis path yet)"
+        return f"no listening note: {labels}; acute is left to the crisis path (ADR 0022)"
     if note is None:
         return f"no listening note: {labels}"
     return f"listening note added: {labels}"

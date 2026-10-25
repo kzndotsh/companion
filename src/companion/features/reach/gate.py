@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
+from companion.core.crisis import HOLD_REASON
 from companion.core.rhythm import NEW_CONVERSATION, WINDOW, Rhythm
 from companion.core.types import Json
 from companion.features.reach.logic import TARGET, Dial, step_down
@@ -26,6 +27,7 @@ ANSWER_SPAN = timedelta(minutes=10)  # their words in this long after the first 
 
 class Hold(StrEnum):
     OFF = "the dial is off"
+    CRISIS = "a crisis turn under a day old"
     QUIET = "quiet hours"
     SCENE = "a scene in progress"
     ACTIVE = "an active chat"
@@ -101,6 +103,7 @@ class Situation:
     unanswered: bool  # they have not written since it
     share: Share
     capped: bool  # the daily spend cap is reached
+    crisis: bool = False  # a concern or urgent turn under a day old (ADR 0022)
 
     @property
     def effective(self) -> Dial:
@@ -125,6 +128,7 @@ def hold(sit: Situation) -> tuple[Hold, str] | None:
     target = TARGET[sit.effective]
     checks: tuple[tuple[bool, Hold, Callable[[], str]], ...] = (
         (sit.dial is Dial.OFF, Hold.OFF, lambda: "COMPANION_REACH is off"),
+        (sit.crisis, Hold.CRISIS, lambda: HOLD_REASON),
         (
             local.hour in sit.rhythm.quiet,
             Hold.QUIET,

@@ -98,7 +98,9 @@ class Moment:
     beliefs: Sequence[Belief]  # the memories that may be stated as true
     on_card: frozenset[BeliefId] = frozenset()  # what the card already shows this turn
     brushed: bool = False  # they pushed the flirting or the scene back (`system/brush-off`)
+    risk: bool = False  # the crisis path acts on a concern or urgent reading (ADR 0022)
 
     @property
     def casual(self) -> bool:
-        return is_casual(self.t, self.in_scene, self.heard)
+        """Never on a turn the crisis path reads as a risk, whatever the listening judge said."""
+        return not self.risk and is_casual(self.t, self.in_scene, self.heard)

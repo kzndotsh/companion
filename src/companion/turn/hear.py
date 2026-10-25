@@ -21,6 +21,7 @@ from companion.core.types import (
     Frame,
     Speaker,
 )
+from companion.features.crisis.logic import cue_words
 from companion.loops.current import Heard, Turn, decide, mark
 from companion.store.sqlite.decisions import REACTED
 from companion.turn.ack import judge
@@ -34,9 +35,13 @@ log = logging.getLogger("companion.turn")
 
 
 async def ack_reaction(c: Conversation, t: Turn) -> Reaction | None:
-    """A reaction if this short message only acknowledges. Logs every judgement it makes."""
+    """A reaction if this short message only acknowledges. Logs every judgement it makes. With the
+    crisis path on, a message with a crisis cue word always gets a reply (ADR 0022)."""
     if c.judge is None or not is_candidate(t.text, t.prior, after_serious=_after_serious(c, t)):
         mark(t, "ack judge skipped: not a candidate for a reaction")
+        return None
+    if c.crisis == "on" and cue_words(t.text):
+        mark(t, "ack judge skipped: a crisis cue word, it gets a reply")
         return None
     outcome = await judge(c.judge, t.prior, t.text)
     if outcome is None:

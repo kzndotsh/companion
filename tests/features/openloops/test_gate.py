@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+from companion.core.crisis import HOLD_REASON
 from companion.core.reachout import Caps, in_quiet_hours
 from companion.core.types import RelationshipId, UtteranceId
 from companion.features.openloops.gate import Situation, evaluate
@@ -148,3 +149,9 @@ def test_a_celebration_keeps_only_for_its_own_day() -> None:
 
 def test_a_note_only_loop_is_never_a_reach_out() -> None:
     assert not evaluate([_loop(note_only=True)], _sit()).send
+
+
+def test_a_crisis_turn_under_a_day_old_holds_it_first() -> None:
+    v = evaluate([_loop()], _sit(crisis=True))
+    assert not v.send
+    assert v.reason == HOLD_REASON

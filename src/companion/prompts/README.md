@@ -29,7 +29,8 @@ There is no single overall system prompt. The talker's request has three parts, 
    (`notes/scene-*`), the length note (`notes/length*`), the listening note (`notes/listening-*`), the
    rude note, the recall finds (`notes/recall`), the mood line (`notes/mood-*`), the floor's hold note on
    a held turn (`notes/floor-hold`), and the ask-name or ask-pronouns note (`notes/ask-name`,
-   `notes/ask-pronouns`).
+   `notes/ask-pronouns`). A few notes go after the history instead, among them the crisis notes
+   (`notes/crisis-concern`, `notes/crisis-light`) when `COMPANION_CRISIS=on` (ADR 0022).
    Notes and memory ride here and never in a user message, because anything in a user message can be read
    as something they said.
    With `COMPANION_CHARACTER` set, block 1 is the persona, then `system/character-frame`, then the
@@ -40,7 +41,7 @@ There is no single overall system prompt. The talker's request has three parts, 
 3. **The messages**: the last 40 messages of the conversation, then their new message exactly as typed.
 
 Everything else is a separate small model call with its own system prompt and a short excerpt of the
-chat, and none of them sees the persona: the ack, frame, reaction, listening and habit judges, the quip
+chat, and none of them sees the persona: the ack, frame, reaction, listening and habit judges, the risk judge, the quip
 check, the intimate check on held turns, the name and pronoun captures, the recall look-up, the extractors for memory,
 the open-loop extractor and the follow-up draft, the reach-out draft, the callback judge, and the view checks. A call the
 judges' model refuses goes to a fallback model, whose answers the floor never relies on. Each logs
@@ -55,6 +56,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 |---|---|---|---|
 | `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v41 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
+| `messages/crisis-line` | message | the fixed message code sends after the reply on an urgent turn, when the sheet has no `## When it is serious` section (ADR 0022) | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, never turned into a pet name, `core/turn/address.py` | v2 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
 | `notes/ask-pronouns` | note | how they want to be referred to is not set: once the name is known, ask their pronouns once, lightly, on a casual turn, at most daily (J48) | v1 |
@@ -89,6 +91,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v2 |
 | `notes/relevant` | note | memories a small model picked as bearing on their message, when the closest is near; never ask what this answers (ADR 0018) | v1 |
 | `notes/recent-times` | note | what the two of them did recently (episode lines), when their words point at a time or they are back after a gap; context, not to recite (J12, J49) | v1 |
+| `notes/crisis-concern` | note | after the history on a concern or urgent turn: warm, in its own voice, ask directly, listen, name the crisis line once, no length cap (ADR 0022, `COMPANION_CRISIS=on`) | v1 |
+| `notes/crisis-light` | note | after the history when a joke touched the subject and the risk reads split: check once, lightly, at most daily (ADR 0022) | v1 |
 | `notes/check-in` | note | they came back after a gap from a heavy talk: ask gently how they are, once, without naming it | v1 |
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |
 | `notes/repair` | note | they say it got them wrong: own it in one line, go on from what they said (J30) | v1 |
@@ -137,6 +141,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/nudge-draft` | system | the one light nudge after they stayed away much longer than they said (shadow) | v1 |
 | `system/reach-draft` | system | one short message first for its own reasons (a thought, a time they keep, missing them), about the one thing code chose; a code check drops a needy draft (ADR 0021, shadow) | v1 |
 | `system/invented-judge` | system | statements in a reply about the user and what supports each, for the made-up facts rate (G42); flags are candidates | v1 |
+| `system/risk` | system | the crisis path's risk judge: kind, literal or not, timing, a plan or means; read three times, code picks the level and fails safe (ADR 0022) | v1 |
 | `system/reminder-read` | system | whether a message asks to be reminded, checked on or to cancel one, and the words of when; code works out the time (J50) | v1 |
 | `system/reminder-send` | system | the instruction sent after the history when a reminder is due: one short message naming it (J50) | v1 |
 | `system/lore-label` | system | the kind of each of the companion's own views: taste (its lore), stance, rule, self or lived (ADR 0020) | v1 |

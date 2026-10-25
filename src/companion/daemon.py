@@ -20,7 +20,7 @@ from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
-from companion.core.turn.ack import ReactAndReply, Reaction
+from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
 from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck
@@ -356,6 +356,8 @@ async def run(data_dir: Path) -> None:
             episodes=s.mode("episodes"),
             marks=s.on("marks"),
             initiative=s.on("initiative"),
+            crisis=s.mode("crisis"),
+            serious_message=character.serious if character is not None else "",
         )
         same = (
             SameCheck(reflector, convo.embedder, convo.embed_model, s.mode("memory check"))
@@ -421,7 +423,7 @@ async def run(data_dir: Path) -> None:
             token, user, client, _hooks(store, rel), pace=s.pace_factor, split=s.on("split")
         )
 
-        async def answer(text: str) -> str | Reaction | ReactAndReply:
+        async def answer(text: str) -> str | Reaction | ReactAndReply | ThenSend:
             reply = await handle(convo, SESSION, text, "telegram")
             schedule_reflect()
             return reply

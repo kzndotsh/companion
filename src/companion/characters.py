@@ -15,6 +15,8 @@ live at `data/characters/<id>.md`, are never committed, and win over a public sh
 `## In roleplay and intimate moments` section, which only the roleplay talker sees, and that section
 may end with a `## Scene reminder`: a few lines sent after the history on roleplay turns, where
 models weight them most (2026-10-20: much more vivid scene replies than the same words at the top).
+A sheet may also hold a `## When it is serious` section, anywhere: the fixed message code sends
+with the crisis line on an urgent turn (ADR 0022), `$line` filled in by code. No talker sees it.
 """
 
 from __future__ import annotations
@@ -42,6 +44,24 @@ _REMINDER_LINE = re.compile(
 )
 
 
+_SERIOUS_LINE = re.compile(
+    r"^[ \t]*(?:#+[ \t]*)?when it is serious:?[ \t]*$", re.IGNORECASE | re.MULTILINE
+)
+_HEADING = re.compile(r"^[ \t]*#+[ \t]*\S", re.MULTILINE)
+
+
+def _cut_serious(text: str) -> tuple[str, str]:
+    """The sheet without its `## When it is serious` section, and the section. The section runs
+    to the next heading or the end."""
+    head = _SERIOUS_LINE.search(text)
+    if head is None:
+        return text, ""
+    rest = text[head.end() :]
+    ends = (m.start() for p in (_HEADING, _ROLEPLAY_LINE, _REMINDER_LINE) if (m := p.search(rest)))
+    end = min(ends, default=len(rest))
+    return text[: head.start()] + rest[end:], rest[:end].strip()
+
+
 class CharacterError(ValueError):
     """A character that cannot be loaded, with the reason in plain words."""
 
@@ -57,6 +77,7 @@ class Character:
     scene_reminder: str = (
         ""  # after a "## Scene reminder" heading: sent after the history in scenes
     )
+    serious: str = ""  # a "## When it is serious" section: code's crisis-line message (ADR 0022)
 
     @property
     def ref(self) -> str:
@@ -65,6 +86,7 @@ class Character:
 
 def parse(text: str, char_id: str, version: str) -> Character:
     """A sheet from its file text. Refuses an empty one."""
+    text, serious = _cut_serious(text.strip())
     text = text.strip()
     heading = _ROLEPLAY_LINE.search(text)
     sheet, scene = (text[: heading.start()], text[heading.end() :]) if heading else (text, "")
@@ -73,7 +95,7 @@ def parse(text: str, char_id: str, version: str) -> Character:
         raise CharacterError(msg)
     tail = _REMINDER_LINE.search(scene)
     scene, reminder = (scene[: tail.start()], scene[tail.end() :]) if tail else (scene, "")
-    return Character(char_id, version, sheet.strip(), scene.strip(), reminder.strip())
+    return Character(char_id, version, sheet.strip(), scene.strip(), reminder.strip(), serious)
 
 
 def load(char_id: str, private_dir: Path = PRIVATE_DIR) -> Character:

@@ -10,6 +10,7 @@ import uuid
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
 
+from companion.core.crisis import reach_held
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
 from companion.core.reachout import WOULD_NUDGE
@@ -154,6 +155,7 @@ def situation(
         unanswered=last_sent is not None and (last_theirs is None or last_theirs < last_sent),
         share=share(events, now),
         capped=over_cap(store, rel, reacher.cap, now) is not None,
+        crisis=reach_held(lambda key, since: store.decided_since(rel, key, since), now),
     )
     look = Look(
         now=now,

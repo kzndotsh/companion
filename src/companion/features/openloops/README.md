@@ -35,6 +35,7 @@ The note is written from the loop's kind (`notes/loop-*`) and carries only the c
 
 **Reaching out (shadow).** Every 15 minutes the tick in `daemon.py` skips when the daily spend cap is reached, then asks the pure gate in `gate.py`. The gate expires open loops past their horizon: a follow-up 2 days after it fell due, a celebration or encouragement after its day. It picks the oldest due loop that is open, not note-only and not sensitive. Then it holds, with a reason rendered from the numbers, for the first of these:
 
+- a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022)
 - quiet hours, 23:00 to 08:00 local time
 - a pretend scene in progress
 - already one reach-out today (the cap is 1 a day)

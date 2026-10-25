@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import FALLBACK, Extraction
-from companion.core.turn.ack import ReactAndReply, Reaction
+from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, Speaker, TurnId
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store
@@ -114,6 +114,7 @@ def _conversation(store: Store, judge: Chaos | None, talker: Talker) -> Conversa
         resample=True,
         relevance="on",
         episodes="on",
+        crisis="on",
     )
 
 
@@ -132,7 +133,7 @@ async def test_whatever_the_judges_do_each_turn_keeps_its_invariants(
         theirs = [u for u in history if u.speaker is Speaker.USER]
         assert [u.text for u in theirs].count(text) == order[: i + 1].count(text), text
         assert len(theirs) == i + 1  # stored exactly once, never twice or lost
-        assert isinstance(out, str | Reaction | ReactAndReply)
+        assert isinstance(out, str | Reaction | ReactAndReply | ThenSend)
         if not isinstance(out, Reaction):
             turn = theirs[-1].turn_id
             replied = any(u.turn_id == turn for u in history if u.speaker is Speaker.COMPANION)

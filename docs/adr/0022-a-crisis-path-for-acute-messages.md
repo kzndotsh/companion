@@ -98,6 +98,18 @@ fixtures. The risk judge is checked by eye and against a second model.
    themselves is kept by the existing memory rules, at sensitivity 3, never raised unprompted.
 5. No trusted contact: it only ever names crisis lines.
 
+**Since:** built in shadow behind `COMPANION_CRISIS` (2026-10-25), not yet measured. The first screen
+is the listening read at severity 2 or 3 or a code check for cue words (`features/crisis/logic.py`
+`cue_words`); the risk judge is `system/risk`, read three times (`features/crisis/run.py`); code
+chooses the level (`combine`, `level_for`): every read failed is concern, and a substance taken or a
+plan in the past only is concern, not urgent. A split joke allows one light check
+(`notes/crisis-light`) at most once a day. The concern note is `notes/crisis-concern`; the urgent
+message is the sheet's `## When it is serious` section (`characters.py`) or `messages/crisis-line`,
+sent once an hour at most (`turn/crisis.py`, `ThenSend` in `core/turn/ack.py`, `io/telegram.py`).
+The scene rule and the method check are in `turn/crisis.py`; the reach-out hold is `core/crisis.py`
+`reach_held`, read by the reach, open-loop and nudge gates. The line is `core/crisis.py` `LINE`.
+Fixtures: `evals/fixtures/crisis/messages.json`, checked with `companion crisis --check --cap`.
+
 ## Rejected
 
 - Keyword alarms alone (a pop-up on any death word): the false alarms flagged here, and the evidence

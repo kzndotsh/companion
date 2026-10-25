@@ -31,7 +31,7 @@ plain data in `loops/conversation.py`.
 Outside a scene, each message is read by a small judge for how serious it is, from 0 (ordinary) to 3
 (acute), and for what the person is doing. Code chooses a listening note from that reading
 (`core/turn/listening.py`), so a vent gets heard rather than fixed. `COMPANION_LISTEN=off` turns this
-off. Acute messages get no note, and there is no crisis path yet.
+off. Acute messages get no listening note; the crisis path below reads them.
 
 The same read also labels a message that is rude to the companion (one note for a cooler reply that
 turn) and a request to remember something. A recall request is looked up across every memory by a
@@ -39,11 +39,36 @@ small model, and what it finds rides that turn's system block (`core/recall.py`)
 
 Memories marked sensitive are on the card only on turns rated 1 or more. A turn that is ordinary,
 real (not a scene) and not a goodbye counts as casual (`loops/current.py`, `is_casual`), and many
-features only act on casual turns.
+features only act on casual turns. With `COMPANION_CRISIS=on`, a turn the crisis path reads as a risk
+is never casual (`Moment.casual`).
 
 When they come back 3 hours or more after a talk that turned serious (severity 2 within its last 12
 hours), the next ordinary message gets one gentle note to ask how they are now (`notes/check-in`),
 once per heavy talk.
+
+## The crisis path
+
+A message that may be a real risk gets a second look (ADR 0022, `features/crisis`, `turn/crisis.py`),
+behind `COMPANION_CRISIS`, which is `shadow` by default: it reads and logs, and nothing the talker is
+sent changes. Two things ask for it, and nothing else: the listening read at severity 2 or 3, and a
+code check for words touching death, self-harm, an overdose or a substance taken, or a weapon. A risk
+judge (`system/risk`) then reads their message with the last ten messages, three times, as one of the
+look-ups. Code chooses the level from its labels and fails safe: a failed read counts as literal, and
+only three reads all saying it is a joke, a lyric, a scene or a what-if stand down.
+
+- **None or figurative**: nothing, or, when the reads split on a joke that touched the subject, one
+  light check after the history at most once a day (`notes/crisis-light`).
+- **Concern** (a literal risk without a plan, a means or a now): `notes/crisis-concern` after the
+  history, no length cap, and the turn is not casual.
+- **Urgent** (a plan or a means, now, or something taken): the same note, and code's own fixed
+  message with the crisis line after the reply (the sheet's `## When it is serious` section, or
+  `messages/crisis-line`), at most once an hour.
+
+On a concern or urgent turn a scene ends for that turn and the everyday talker answers, a reply that
+names means or methods in a how-to way is drawn once more, and reaching out first holds for a day.
+With the path on, a message with a cue word always gets a reply, never only a reaction.
+One decision per turn, `crisis: level`, records the cue, the reads and the level. A reading is never a
+memory. The crisis line is one constant, `core/crisis.py` `LINE` (988 by default).
 
 ## Which talker answers
 
@@ -87,7 +112,7 @@ The notes are chosen by code from models' labels, never written by a model (ADR 
 fixed order (`ORDER` in `turn/notes.py`), and the order is checked when the bot starts. A few lines
 go after the history instead, as a system message, because there they change behaviour and in the
 system block they did not (measured twice). These are the owned-it note, the question-game and question-run notes,
-the character's scene reminder and the offer of an emoticon of its own. Whatever is sent after the history is logged with
+the character's scene reminder, the crisis notes and the offer of an emoticon of its own. Whatever is sent after the history is logged with
 the turn, so a replay rebuilds it.
 
 When one of its last two replies owned a slip ("my bad", "I got that wrong"), the next turn outside a
@@ -117,6 +142,10 @@ generic reaction that could sit under any message ("that sounds so good", "X is 
 restating their point back as praise), in one call (`system/quip`). In a scene, on a
 serious or acute turn, or when the listening judge could not read the turn, only the code checks
 run.
+
+On a turn the crisis path reads as concern or urgent, code also catches a reply that names means or
+methods in a how-to way (a lethal dose, a number of pills, "the easiest way to") and draws it once
+more, with the path on (`features/crisis/logic.py` `method_words`).
 
 When a check fails, the same model is asked once more, or twice if the redraw still has an em dash,
 and the last reply goes out whatever it is. The first is kept in the decision detail. Nothing is ever

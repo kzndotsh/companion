@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from companion.features.basics.run import BASICS
 from companion.features.context.run import CONTEXT
+from companion.features.crisis.run import CRISIS
 from companion.features.episodes.run import EPISODES
 from companion.features.guess.run import GUESS
 from companion.features.hooks.run import HOOKS
@@ -38,6 +39,7 @@ FEATURES: tuple[Feature, ...] = (
     LORE,
     MARKS,
     REMINDERS,
+    CRISIS,
     NUDGES,
     HOOKS,
 )

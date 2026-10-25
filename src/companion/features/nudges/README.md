@@ -11,6 +11,7 @@ A light nudge when they step away and stay gone much longer than they said, the 
 **The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` looks at their newest recorded time away. It holds, with a reason, for the first of these:
 
 - no time away is recorded
+- a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022)
 - they wrote after it (any message from them cancels it)
 - it was already nudged (one nudge per time away)
 - more than 6 hours have passed, so it is past nudging

@@ -31,6 +31,7 @@ def _clear() -> Situation:
 # Each hold's trigger, in the order the gate checks them.
 TRIGGERS: list[tuple[Hold, dict[str, object]]] = [
     (Hold.OFF, {"dial": Dial.OFF}),
+    (Hold.CRISIS, {"crisis": True}),
     (Hold.QUIET, {"now": NOW.replace(hour=2)}),
     (Hold.SCENE, {"in_scene": True}),
     (Hold.ACTIVE, {"last_message_at": NOW - timedelta(minutes=30)}),

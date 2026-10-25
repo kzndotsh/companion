@@ -152,6 +152,7 @@ def assemble(  # noqa: PLR0913
     held: bool = False,
     brushed: bool = False,
     roleplay: bool = False,
+    risk: bool = False,
 ) -> Assembled:
     """The request for this turn: the card, the clock and every note (`turn/notes.py`)."""
     store, now = c.store, t.now
@@ -177,7 +178,9 @@ def assemble(  # noqa: PLR0913
     clock = now_line(now, theirs[-1].at if theirs else None)
     pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
     on_card = frozenset(b.id for b in (*card.usable, *card.held, *card.older))
-    notes = notes_for(Moment(c, t, in_scene, heard, looked, held, assertable, on_card, brushed))
+    notes = notes_for(
+        Moment(c, t, in_scene, heard, looked, held, assertable, on_card, brushed, risk)
+    )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     scene = c.scene_reminder if roleplay else ""
     request = Layout(prefix, t.prior, t.text, clock, pinned, shown, notes, scene).request()

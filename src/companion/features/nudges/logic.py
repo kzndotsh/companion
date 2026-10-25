@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
+from companion.core.crisis import HOLD_REASON
 from companion.core.reachout import Caps, in_quiet_hours
 from companion.core.types import Json
 from companion.prompts import get
@@ -95,6 +96,7 @@ class Look:
     last_theirs: datetime | None
     nudged: frozenset[str]  # turns already nudged
     nudges_today: int
+    crisis: bool = False  # a concern or urgent turn under a day old (ADR 0022)
 
 
 def due(look: Look, now: datetime, tz: tzinfo, caps: Caps = Caps()) -> tuple[Away | None, str]:  # noqa: B008
@@ -103,6 +105,7 @@ def due(look: Look, now: datetime, tz: tzinfo, caps: Caps = Caps()) -> tuple[Awa
     if a is None:
         return None, "no time away"
     holds = (
+        (look.crisis, HOLD_REASON),
         (look.last_theirs is not None and look.last_theirs > a.at, "they came back"),
         (a.turn in look.nudged, "already nudged about it"),
         (now - a.at > GONE, "gone too long; past nudging"),

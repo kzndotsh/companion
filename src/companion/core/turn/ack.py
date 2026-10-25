@@ -43,6 +43,15 @@ class ReactAndReply:
 
 
 @dataclass(frozen=True, slots=True)
+class ThenSend:
+    """A reply, then a fixed message of code's own sent after it: the crisis line on an urgent
+    turn (ADR 0022). The second is never written by a model, and the reply is never edited."""
+
+    reply: str | ReactAndReply
+    then: str
+
+
+@dataclass(frozen=True, slots=True)
 class Judgement:
     kind: str
     confidence: float

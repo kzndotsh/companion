@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 import httpx
 import pytest
 
-from companion.core.turn.ack import ReactAndReply, Reaction
+from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.io.telegram import Hooks, Telegram, TelegramError
 
 ALLOWED = 42
@@ -690,3 +690,52 @@ async def test_a_stop_lets_the_reply_in_progress_go_out_and_takes_nothing_new() 
     tg = Telegram("t", ALLOWED, client, Hooks(), pace=0.0, split=False)
     await asyncio.wait_for(tg.run(talk, {}, stop), timeout=5)
     assert sent == ["still answered"]
+
+
+async def _then(fail_first: bool, monkeypatch: pytest.MonkeyPatch) -> tuple[list[str], list[str]]:
+    import companion.io.telegram as module  # noqa: PLC0415
+
+    async def no_sleep(seconds: float) -> None:
+        del seconds
+
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+    sent: list[str] = []
+    told: list[str] = []
+    calls = 0
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        method = str(req.url).rsplit("/", 1)[-1]
+        if method == "sendMessage":
+            calls += 1
+            if fail_first and calls <= 2:  # the reply and its one retry
+                return httpx.Response(400, json={"ok": False})
+            sent.append(json.loads(req.content)["text"])
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> ThenSend:
+        del text
+        return ThenSend("i'm here", "the fixed line")
+
+    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
+        del reason, delivered
+        told.append(text)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram("T", ALLOWED, client, Hooks(on_undelivered=on_undelivered), pace=0)
+    await tg.handle_update(_update("hi"), talk, {})
+    return sent, told
+
+
+async def test_code_s_own_message_goes_after_the_reply(monkeypatch: pytest.MonkeyPatch) -> None:
+    sent, told = await _then(False, monkeypatch)
+    assert sent == ["i'm here", "the fixed line"]
+    assert told == []
+
+
+async def test_code_s_own_message_still_goes_when_the_reply_could_not(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sent, told = await _then(True, monkeypatch)
+    assert sent == ["the fixed line"]
+    assert told == ["i'm here"]

@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 import httpx
 
-from companion.core.turn.ack import ReactAndReply, Reaction
+from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.io.pace import hold_seconds
 from companion.io.split import split_reply
 from companion.io.stop import cancel_when, next_update
@@ -22,7 +22,7 @@ log = logging.getLogger("companion.telegram")
 TYPING_REFRESH_SECONDS = 4.0  # Telegram drops the typing indicator after about five
 
 
-Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
+Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply | ThenSend]]
 CommandHandler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
 # The reply text, why it did not all arrive, and the parts that did ("" when none did).
@@ -354,7 +354,7 @@ class Telegram:
         self,
         chat_id: int,
         message_id: int,
-        reply: str | Reaction | ReactAndReply,
+        reply: str | Reaction | ReactAndReply | ThenSend,
         wait: tuple[str, float] | None = None,
         delivery: _Delivery | None = None,
     ) -> None:
@@ -370,7 +370,12 @@ class Telegram:
             else:
                 await self._hold(chat_id, "", text, time.monotonic(), reading=False)
 
-        if isinstance(reply, ReactAndReply):
+        if isinstance(reply, ThenSend):
+            try:
+                await self._answer(chat_id, message_id, reply.reply, wait, delivery)
+            finally:
+                await self._send_then(chat_id, reply.then)
+        elif isinstance(reply, ReactAndReply):
             try:
                 await self.react(chat_id, message_id, reply.reaction.emoji)
             except TelegramError:
@@ -387,11 +392,24 @@ class Telegram:
         elif reply:
             await self._send_parts(chat_id, reply, hold if wait is not None else None, delivery)
 
+    async def _send_then(self, chat_id: int, text: str) -> None:
+        """Code's own message after the reply (the crisis line, ADR 0022), sent whatever became of
+        the reply. A failure is logged and reported, never raised."""
+        try:
+            await self.send(chat_id, text)
+        except TelegramError as err:
+            log.warning("could not deliver the message after the reply: %s", err)
+            await self._report_undelivered(text, str(err))
+
     async def _report_undelivered(
-        self, reply: str | Reaction | ReactAndReply, reason: str, sent: Sequence[str] = ()
+        self,
+        reply: str | Reaction | ReactAndReply | ThenSend,
+        reason: str,
+        sent: Sequence[str] = (),
     ) -> None:
         """Tell the conversation a reply, or the rest of it, never arrived, so the model does not
         think it was seen. `sent` is the parts that did; a reply sent whole is not reported."""
+        reply = reply.reply if isinstance(reply, ThenSend) else reply
         text = reply.text if isinstance(reply, ReactAndReply) else reply
         if not isinstance(text, str) or not text or self._hooks.on_undelivered is None:
             return
@@ -404,7 +422,9 @@ class Telegram:
             log.exception("could not record an undelivered reply")
 
 
-def _kind(reply: str | Reaction | ReactAndReply) -> str:
+def _kind(reply: str | Reaction | ReactAndReply | ThenSend) -> str:
+    if isinstance(reply, ThenSend):
+        return f"{_kind(reply.reply)}, then code's own message"
     if isinstance(reply, ReactAndReply):
         return f"reaction {reply.reaction.emoji} then {len(reply.text.split())} words"
     if isinstance(reply, Reaction):

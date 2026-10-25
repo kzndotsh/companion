@@ -123,7 +123,7 @@ async def test_no_judge_at_all_changes_nothing(store: Store) -> None:
 async def test_acute_is_logged_as_having_no_crisis_path(store: Store) -> None:
     await _ask(store, Judge(_labels(3)))
     [turn] = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 5)}
-    assert any("no crisis path" in d.reason for d in store.decisions_for_turn(REL, turn))
+    assert any("left to the crisis path" in d.reason for d in store.decisions_for_turn(REL, turn))
 
 
 async def test_listen_off_never_asks_the_judge_and_adds_no_note(store: Store) -> None:

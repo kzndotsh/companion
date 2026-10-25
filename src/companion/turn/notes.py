@@ -145,13 +145,21 @@ def _notes(in_scene: Frame, size: LengthTarget | None) -> list[str]:
     return [n for n in notes if n is not None]
 
 
-def _length(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> LengthTarget | None:
-    """The one length target for this turn, logged with the reason code wrote for it."""
-    severity = heard[0].severity if heard is not None else None
-    size = length_target(
-        t.text, severity=severity, in_scene=in_scene is not Frame.REAL, seed=str(t.turn)
+def _length(m: Moment) -> LengthTarget | None:
+    """The one length target for this turn, logged with the reason code wrote for it. None on a
+    turn the crisis path reads as a risk (ADR 0022)."""
+    c, t = m.c, m.t
+    severity = m.heard[0].severity if m.heard is not None else None
+    size = (
+        None
+        if m.risk
+        else length_target(
+            t.text, severity=severity, in_scene=m.in_scene is not Frame.REAL, seed=str(t.turn)
+        )
     )
     reason = f"length: under about {size.words} words, {size.why}" if size else "length: no cap"
+    if m.risk:
+        reason = "length: no cap, the crisis path read a risk"
     decide(
         c, t, "length", {"words": size.words if size else None, "severity": severity}, reason=reason
     )
@@ -166,7 +174,7 @@ class Notes:
 
 
 def _base(m: Moment, _: Offered) -> Offer:
-    size = _length(m.c, m.t, m.in_scene, m.heard)
+    size = _length(m)
     return Offer(tuple(_notes(m.in_scene, size)))
 
 
@@ -197,13 +205,13 @@ def _owned(m: Moment, so_far: Offered) -> Offer:
 
 
 # Notes that ask them something themselves: with one of these the turn's question is the point.
-ASKING = ("check-in", "name", "loop", "game")
+ASKING = ("check-in", "name", "loop", "crisis", "game")
 
 
 def _game(m: Moment, _: Offered) -> Offer:
     """When they asked it to keep asking them things, a note after the history to ask the next
-    one: outside a scene and not on a serious turn."""
-    serious = m.heard is not None and m.heard[0].severity >= SERIOUS
+    one: outside a scene, not on a serious turn and not on one the crisis path reads as a risk."""
+    serious = m.risk or (m.heard is not None and m.heard[0].severity >= SERIOUS)
     if m.in_scene is not Frame.REAL or serious:
         return Offer()
     note = game_note(m.t.prior, m.t.text, m.t.now)
@@ -325,6 +333,7 @@ ORDER: tuple[str, ...] = (
     "lore",
     "mark",
     "reminder",
+    "crisis",
     "game",
     "questions",
 )

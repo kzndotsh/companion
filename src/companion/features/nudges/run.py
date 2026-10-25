@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.card import Card
 from companion.core.clock import local_midnight
+from companion.core.crisis import reach_held
 from companion.core.extractor import Extractor
 from companion.core.reachout import WOULD_NUDGE, Caps, short_draft
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
@@ -77,7 +78,8 @@ def _look(store: Store, rel: RelationshipId, now: datetime) -> Look:
         if isinstance(d.detail, dict) and d.detail.get("turn")
     )
     today = sum(1 for d in sent if d.at >= local_midnight(now))
-    return Look(newest(aways(store, rel)), max(theirs, default=None), nudged, today)
+    held = reach_held(lambda key, since: store.decided_since(rel, key, since), now)
+    return Look(newest(aways(store, rel)), max(theirs, default=None), nudged, today, held)
 
 
 async def tick_nudge(  # noqa: PLR0913

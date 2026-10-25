@@ -26,6 +26,11 @@ A long, plain reply is sometimes sent as two or three messages, the way people t
 reply with quoted speech, as in roleplay, is never split. The ledger and the history keep it as one
 reply, so the model never sees the splitting.
 
+On a turn the crisis path reads as urgent with `COMPANION_CRISIS=on`, the turn hands Telegram a
+second, fixed message of code's own after the reply (`ThenSend`, ADR 0022): the crisis line. It goes
+straight after the reply, and it goes even when the reply could not be delivered. It is stored as the
+companion's own message; if it fails to send, it is marked undelivered like a reply.
+
 ## What was never seen
 
 A reply the person never received is marked undelivered and left out of what the model reads. The

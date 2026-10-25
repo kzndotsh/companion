@@ -145,7 +145,7 @@ def test_parse_accepts_labels_and_refuses_anything_off_the_menu() -> None:
 def test_the_logged_reason_names_the_labels_and_the_missing_crisis_path() -> None:
     assert "severity 2, listening" in render_reason(_j(2), "x")
     assert "listening note added" in render_reason(_j(1, vague=True), "x")
-    assert "no crisis path" in render_reason(_j(3), None)
+    assert "left to the crisis path" in render_reason(_j(3), None)
     assert render_reason(_j(1, "inviting"), None) == "no listening note: severity 1, inviting"
 
 

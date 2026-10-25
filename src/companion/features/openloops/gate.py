@@ -11,6 +11,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime, time, timedelta, tzinfo
 
+from companion.core.crisis import HOLD_REASON
 from companion.core.reachout import Caps, in_quiet_hours
 from companion.features.openloops.logic import SENSITIVE, LoopKind, LoopState, OpenLoop
 
@@ -24,6 +25,7 @@ class Situation:
     sent_today: int
     last_reach_out_at: datetime | None
     unanswered: int = 0  # sent reach-outs since their last message
+    crisis: bool = False  # a concern or urgent turn under a day old (ADR 0022)
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +86,7 @@ def _hold_reason(sit: Situation, caps: Caps) -> str | None:
         else (sit.now - sit.last_message_at).total_seconds() / 60
     )
     checks: tuple[tuple[bool, Callable[[], str]], ...] = (
+        (sit.crisis, lambda: HOLD_REASON),
         (
             in_quiet_hours(sit.now, sit.tz, caps),
             lambda: f"quiet hours, {_clock(caps.quiet_start)} to {_clock(caps.quiet_end)}",

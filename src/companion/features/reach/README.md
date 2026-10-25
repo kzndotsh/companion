@@ -21,13 +21,14 @@ The one thing is chosen for every kind and handed to the drafter with it, so a t
 **The gate.** When a kind applies, a pure gate (`gate.py`) holds it for the first of these, in order, with a reason written from the numbers:
 
 1. the dial is `off`
-2. one of their quiet hours (learned)
-3. a pretend scene in progress
-4. the chat was active in the last 90 minutes
-5. its last reach-out is unanswered: they have not written since it, so it waits for them to write first
-6. its last reach-out, or a dropped draft, was under 6 hours ago
-7. the share of conversations it started in the last 14 days is at or above the dial's target
-8. the daily spend cap is reached
+2. a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022)
+3. one of their quiet hours (learned)
+4. a pretend scene in progress
+5. the chat was active in the last 90 minutes
+6. its last reach-out is unanswered: they have not written since it, so it waits for them to write first
+7. its last reach-out, or a dropped draft, was under 6 hours ago
+8. the share of conversations it started in the last 14 days is at or above the dial's target
+9. the daily spend cap is reached
 
 "Its reach-outs" here are all of them: these, the open-loop reach-outs and the nudges, shadow or live.
 

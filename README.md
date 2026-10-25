@@ -45,6 +45,10 @@ Today it is reached through Telegram, its only integration for now.
 **Conversation**
 
 - **Listens.** Each message is read for how serious it is before the reply, and code adds a matching note.
+- **Takes a real risk seriously, and a joke as a joke.** A message that may be a risk to their life is
+  read three times by a risk judge; code picks the level and fails safe. At concern it asks them
+  directly and warmly and names a crisis line once; at urgent code also sends a fixed message with the
+  line after the reply. Shadow by default ([ADR 0022](docs/adr/0022-a-crisis-path-for-acute-messages.md)).
 - **Repairs.** When they say it got them wrong, it owns it in a line instead of improvising, and it
   never asks them to repeat something memory already holds. Once it has owned a slip, a note after the
   history tells it that was enough, so it does not pile on apologies.
@@ -123,6 +127,7 @@ its review it goes live or is removed; `uv run companion shadows` lists them, ov
 | The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` |
 | The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` |
 | Memories about a name they mention, left off the card | always shadow for now | `companion names` |
+| The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log |
 
 ## Quick start
 
@@ -169,7 +174,7 @@ All optional. Set them in `.env`.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `COMPANION_CHARACTER` | none | `mika` lays the sheet `data/characters/mika.md` (private, never committed) over the persona; a public sheet could live in `prompts/characters/mika/`, though none ships yet. A `## In roleplay and intimate moments` section reaches only the roleplay model, and a `## Scene reminder` section is sent after the history on roleplay turns. It still says it is an AI when sincerely asked |
+| `COMPANION_CHARACTER` | none | `mika` lays the sheet `data/characters/mika.md` (private, never committed) over the persona; a public sheet could live in `prompts/characters/mika/`, though none ships yet. A `## In roleplay and intimate moments` section reaches only the roleplay model, and a `## Scene reminder` section is sent after the history on roleplay turns. A `## When it is serious` section is the fixed message code sends with the crisis line on an urgent turn (`$line` filled in by code; ADR 0022), and no model sees it. It still says it is an AI when sincerely asked |
 | `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the roleplay model (ADR 0017), above an age floor in code that no setting changes |
 | `COMPANION_LISTEN` | on | the listening note before each reply; `off` turns it off |
 | `COMPANION_MOOD` | `shadow` | `on` adds the mood line, `shadow` works it out and logs it, `off` does neither |
@@ -191,6 +196,7 @@ All optional. Set them in `.env`.
 | `COMPANION_REACH` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
 | `COMPANION_CONSOLIDATE` | `shadow` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
+| `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads every message for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a day's hold on reaching out first), `off` skips it |
 
 **Running**
 
@@ -234,6 +240,8 @@ uv run companion callbacks      # judge recent replies for callbacks to memories
 uv run companion invented --days 7 --cap 0.2 --dump out.json   # made-up facts about them: candidates, to confirm by a stronger reader
 uv run companion prompts        # every prompt and its current version
 uv run companion shadows        # every feature in shadow, its review date, overdue first
+uv run companion crisis         # crisis levels read lately and lines sent (counts only)
+uv run companion crisis --check --cap 0.10   # the risk judge on the public crisis fixtures (paid)
 ```
 
 Look after memory:

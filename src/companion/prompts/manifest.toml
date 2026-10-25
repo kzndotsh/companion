@@ -1,5 +1,6 @@
 # The current version of every prompt. A change is a new vN.md and a line here.
 "messages/spend-cap" = "v1"
+"messages/crisis-line" = "v1"
 "notes/address" = "v2"
 "notes/ask-name" = "v1"
 "notes/ask-pronouns" = "v1"
@@ -7,6 +8,8 @@
 "notes/loop-celebrate" = "v1"
 "notes/loop-encourage" = "v1"
 "notes/check-in" = "v1"
+"notes/crisis-concern" = "v1"
+"notes/crisis-light" = "v1"
 "notes/clock" = "v1"
 "notes/clock-gap" = "v1"
 "notes/floor-hold" = "v1"
@@ -98,3 +101,4 @@
 "system/explicit-lead" = "v1"
 "system/brush-off" = "v1"
 "system/episode-gist" = "v2"
+"system/risk" = "v1"

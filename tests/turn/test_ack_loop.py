@@ -11,7 +11,7 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.turn.ack import REACT_THRESHOLD, ReactAndReply, Reaction
+from companion.core.turn.ack import REACT_THRESHOLD, ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, RelationshipId, SessionId, TurnId
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store
@@ -71,7 +71,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _two_turns(
     store: Store, judge: Judge | None, first: str = "no rush, tell me later.", second: str = "okie"
-) -> tuple[Talker, str | Reaction | ReactAndReply]:
+) -> tuple[Talker, str | Reaction | ReactAndReply | ThenSend]:
     talker = Talker(first, "a normal reply")
     convo = Conversation(store, talker, PREFIX, REL, judge=judge)
     await handle(convo, SESSION, "too much to explain rn", "test", NOW)

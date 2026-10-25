@@ -14,6 +14,7 @@ from companion.core.history import HISTORY_LIMIT
 from companion.core.turn.ack import (
     ReactAndReply,
     Reaction,
+    ThenSend,
 )
 from companion.core.types import (
     Frame,
@@ -27,6 +28,7 @@ from companion.loops.record import Recorder
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.turn.assemble import assemble
 from companion.turn.beside import shadows
+from companion.turn.crisis import off_scene, reading_of, then_line
 from companion.turn.hear import listen
 from companion.turn.notes import look
 from companion.turn.persist import (
@@ -48,7 +50,7 @@ def _id() -> str:
 
 async def handle(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None = None
-) -> str | Reaction | ReactAndReply:
+) -> str | Reaction | ReactAndReply | ThenSend:
     """One message in, one reply out (or a reaction, or nothing at the cap)."""
     now = now or utc_now()
     capped = _stopped_by_cap(c, session, text, channel, now)
@@ -78,7 +80,7 @@ def _stopped_by_cap(
 
 async def _handle_turn(
     c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
-) -> str | Reaction | ReactAndReply:
+) -> str | Reaction | ReactAndReply | ThenSend:
     store, rel = c.store, c.rel
     now = now or utc_now()
     turn = TurnId(_id())
@@ -91,7 +93,7 @@ async def _handle_turn(
 
 async def _turn(
     c: Conversation, t: Turn, keep: TheirMessage, in_scene: Frame
-) -> str | Reaction | ReactAndReply:
+) -> str | Reaction | ReactAndReply | ThenSend:
     """The stages of one turn, inside the guard that keeps their message."""
     listened = await listen(c, t, in_scene)
     if listened.reaction is not None:
@@ -99,16 +101,20 @@ async def _turn(
     heard = listened.heard
     routed = await route_turn(c, t, in_scene, heard)
     looked = await look(c, t, in_scene, heard, routed.read)
+    reading = reading_of(looked)
+    routed = off_scene(c, t, routed, reading)
     asm = assemble(
         c,
         t,
-        in_scene,
+        routed.in_scene,
         heard,
         looked,
         held=routed.held,
         brushed=routed.brushed,
         roleplay=routed.talker is c.roleplay_talker,
+        risk=reading is not None and reading.acts and reading.risk,
     )
-    shadows(c, t, in_scene, heard, asm.card)
+    shadows(c, t, routed.in_scene, heard, asm.card)
     answered = await talk(c, t, asm.request, routed)
-    return await finish(c, t, keep, asm, answered)
+    out = await finish(c, t, keep, asm, answered)
+    return then_line(keep, reading, out, answered.reply)

@@ -40,3 +40,5 @@ class Conversation:
     initiative: bool = True  # reach-outs and the reads that only feed them (nudges' away read)
     marks: bool = False  # offer one of its own emoticons now and then (`features/marks`)
     episodes: str = "off"  # what they did together lately, when it bears: on, shadow or off (J12)
+    crisis: str = "off"  # the crisis path: on, shadow (reads and logs only) or off (ADR 0022)
+    serious_message: str = ""  # the sheet's `## When it is serious` section, sent by code
