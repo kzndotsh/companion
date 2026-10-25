@@ -14,7 +14,8 @@ Today it is reached through Telegram, its only integration for now.
 
 ## What it does
 
-**Memory**
+<details>
+<summary><b>Memory</b>: remembers with quotes, shows today's things first, looks things up, tidies itself carefully</summary>
 
 - **Remembers with receipts.** Nothing enters memory without a quote, a speaker and a frame, and
   nothing is ever deleted: memories are retired, closed or marked
@@ -44,7 +45,10 @@ Today it is reached through Telegram, its only integration for now.
 - **Asks about conflicts.** A new memory that may replace or contradict an older one is a question for
   the owner, who keeps one or both.
 
-**Conversation**
+</details>
+
+<details>
+<summary><b>Listening and care</b>: reads how serious a message is, tells a real risk from a joke, repairs, checks in</summary>
 
 - **Listens.** Each message is read for how serious it is before the reply, and code adds a matching note.
 - **Takes a real risk seriously, and a joke as a joke.** A message that may be a risk to their life is
@@ -56,6 +60,12 @@ Today it is reached through Telegram, its only integration for now.
   history tells it that was enough, so it does not pile on apologies.
 - **Checks in.** Coming back hours after a talk that turned serious, it gently asks how they are now,
   once.
+
+</details>
+
+<details>
+<summary><b>Plans, reminders and days</b>: follows up on plans, keeps reminders, knows the date and notices the day, paces like typing</summary>
+
 - **Follows up.** Things they say about their near future become open loops. When one falls due, it is
   brought up lightly the next time they write. Reaching out first, about a plan, after they stepped
   away or for its own reasons (a thought, a time they keep, missing them, at a share of conversations
@@ -64,6 +74,21 @@ Today it is reached through Telegram, its only integration for now.
 - **Reminds them.** "Remind me at 8pm to take the dog out" or "check up on me in a few days about the
   interview": a small model reads the words, code works out the time and asks when it is unclear, and
   the reminder comes when due in its own voice. One-off only; a pretend scene holds it until it ends.
+- **Knows the date.** The clock line gives the weekday, the date and the time, so it can place what
+  they name.
+- **Notices the day.** On a casual turn code may add one note after the history: a warm or fun US
+  public or cultural day ("if it fits", never assuming they celebrate it), the lead-up to a big one,
+  or a month, a hundred days, six months or a year since they first talked. Each is offered once, and
+  no model chooses it (`features/calendar`).
+- **Feels typed.** Replies are paced like a person typing, and long plain replies are sometimes sent
+  as two or three messages. A new message that arrives first replaces the reply in progress; a reply
+  cut off part way is remembered as only the part they received.
+
+</details>
+
+<details>
+<summary><b>Its own character</b>: its own tastes, moods and emoticons, plays along, does not interview</summary>
+
 - **Moves on.** When a small topic has run its course, it reacts and moves the chat on instead of
   asking about smaller and smaller details.
 - **Has tastes of its own.** It picks for itself and keeps its view under pushback without a reason
@@ -77,23 +102,17 @@ Today it is reached through Telegram, its only integration for now.
   history says to ask none this time but still leave them something to answer.
 - **Keeps a question game going.** When they ask it to keep asking them things ("ask me anything"), a
   note after the history asks it for the next question, outside scenes and serious turns.
-- **Knows the date.** The clock line gives the weekday, the date and the time, so it can place what
-  they name.
-- **Notices the day.** On a casual turn code may add one note after the history: a warm or fun US
-  public or cultural day ("if it fits", never assuming they celebrate it), the lead-up to a big one,
-  or a month, a hundred days, six months or a year since they first talked. Each is offered once, and
-  no model chooses it (`features/calendar`).
 - **Has emoticons of its own.** On casual turns code offers it one of its own marks and kaomoji; when
   their message has one, the note names that one as theirs, so it stops copying it.
 - **Reacts like a person to small vents.** A short reaction, with varied size examples drawn per turn so
   it does not say the same line every time.
 - **Has a mood that carries.** Cozy, tender or playful, kept by code from what happened, shown only in
   how it replies ([ADR 0016](docs/adr/0016-a-mood-that-carries-owned-by-code-shown-in-behaviour.md)).
-- **Feels typed.** Replies are paced like a person typing, and long plain replies are sometimes sent
-  as two or three messages. A new message that arrives first replaces the reply in progress; a reply
-  cut off part way is remembered as only the part they received.
 
-**Safety and models**
+</details>
+
+<details>
+<summary><b>Safety and models</b>: two talkers above a fixed floor, checks its own replies, never goes silent</summary>
 
 - **Routes roleplay to a second model.** Pretend scenes, and intimate talk if the operator allows it
   (once one of their messages is explicit; flirting stays with the everyday model), go to a less
@@ -115,7 +134,10 @@ Today it is reached through Telegram, its only integration for now.
 - **Stops without losing a message.** On a stop or restart it fetches nothing more and answers what it
   already received, the reply in progress included, for up to 30 seconds.
 
-**Running and learning**
+</details>
+
+<details>
+<summary><b>Running and learning</b>: every decision logged, backups, flags and favourites, evals</summary>
 
 - **Logs every decision with a reason written by code**
   ([ADR 0003](docs/adr/0003-every-choice-is-a-decision-with-a-reason.md),
@@ -130,6 +152,8 @@ Today it is reached through Telegram, its only integration for now.
   (`+raw` skips them), so it is what they would have received. The
   made-up facts rate (`companion invented`) counts replies that state something about them that
   nothing supports.
+
+</details>
 
 ## What runs in shadow
 
