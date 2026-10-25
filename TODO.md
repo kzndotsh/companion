@@ -246,8 +246,11 @@ When the answer comes, the card moves to Todo or Done.
       (the first draw is kept in the decision detail), give the pairs blind to two subagent judges: keep it
       if the redraw usually wins, look at what the judge fires on if it is a toss-up, turn it off if it
       loses. Owner agreed 2026-10-24. **Waits on:** the logs, from about 2026-10-28.
-- [ ] R16 Crisis and distress routing: the model labels a turn from a closed set, code routes it to a
-      fixed in-character protocol and logs it. **On hold** until the protocol text is decided. (A25)
+- [ ] R16 Crisis and distress routing: decided as ADR 0022 (2026-10-25): two-stage detection with a
+      three-read risk judge that tells a joke from a literal risk and fails safe, levels by code, an
+      in-character fixed crisis-line message at the urgent level, 988 by default. **Next:** build in
+      shadow, measure on public fixtures (no genuine risk missed in 30 samples; the jokes not raised),
+      then the owner turns it on. (A25)
 - [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
       days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
       section 5: the model picks a label, code owns the size).

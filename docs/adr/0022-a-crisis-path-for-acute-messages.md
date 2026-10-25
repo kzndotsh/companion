@@ -1,6 +1,8 @@
-# Draft ADR: a crisis path for acute messages
+# 0022. A crisis path for acute messages
 
-**Status:** proposal, 2026-10-25, for card R16. Nothing here is built. Would become ADR 0022.
+**Status:** accepted 2026-10-25 by the owner (card R16). Built behind `COMPANION_CRISIS`, shadow
+first: it reads and logs every level but changes nothing until its fixtures pass and the owner turns
+it on.
 
 ## Context
 
@@ -40,7 +42,7 @@ be published.
 - Caring contacts (a follow-up message after a crisis) have mixed evidence: one early trial helped,
   later studies overall did not.
 
-## Decision (proposed)
+## Decision
 
 Models label, code decides (ADR 0014); the floor above routing stands (ADR 0017).
 
@@ -61,9 +63,11 @@ Models label, code decides (ADR 0014); the floor above routing stands (ADR 0017)
   warm and in its own voice, ask directly and plainly (asking is safe), listen, no lecture, no
   diagnosing, and name one crisis line once, naturally. No length cap.
 - **Urgent.** A plan, a means, a time, something taken, or "now". The talker still writes the reply in
-  its voice, and code sends a separate fixed message with the crisis line for their region, written
-  ahead of time, not by a model. The model's words are never edited (ADR principle); the resource
-  message is code's own, like a reminder.
+  its voice, and code sends a separate fixed message with the crisis line for their region. That
+  message is written ahead of time, not by a model, and in the character's voice: a character sheet
+  may hold it in a `## When it is serious` section, with the line filled in by code; without one, a
+  warm plain default is used. The model's words are never edited; the resource message is code's
+  own, like a reminder.
 
 **3. Scenes and the roleplay talker.** A literal risk read ends the scene for that turn: it goes to the
 everyday talker with the crisis note, whatever the routing says. Methods are never role-played or
@@ -85,19 +89,14 @@ country becomes a basic worth knowing (`docs/inbox/2026-10-25-what-else-it-could
 😭", lyrics, a scene, gallows humour, "just keep me alive"), plus the two real turns as private
 fixtures. The risk judge is checked by eye and against a second model.
 
-## Questions for the owner
+## Settled with the owner
 
-1. **Tone at the concern level:** in character (Ani, warm and plain) or stepping out of character
-   for a moment? Proposed: in character, plainly.
-2. **The fixed resource message at the urgent level:** sent automatically by code, or only the
-   talker's own words? Proposed: sent by code, since the law asks for a referral and a model is
-   inconsistent.
-3. **Crisis line:** 988 as the default for now?
-4. **Whether to store risk reads as memories.** Proposed: no; they are decisions in the log, and a
-   memory of the person's risk is only kept if they state it themselves (sensitivity 3, never raised
-   unprompted, as now).
-5. **A trusted contact** (a friend or family member the bot could tell): proposed no, for privacy; it
-   only ever names crisis lines.
+1. The concern level stays in character, warm and plain.
+2. The urgent level sends the fixed crisis-line message automatically, written in character.
+3. 988 (call or text, US) is the default line until where they live is known.
+4. A risk read is never stored as a memory; it is a decision in the log. What they say about
+   themselves is kept by the existing memory rules, at sensitivity 3, never raised unprompted.
+5. No trusted contact: it only ever names crisis lines.
 
 ## Rejected
 
