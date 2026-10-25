@@ -62,6 +62,26 @@ values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed
   never deletes (ADR 0002): retire, close or mark, never remove.
 - **Measure before switching** a model or a persona. Say what is measured and what is a guess.
 
+## What runs in shadow
+
+A feature in shadow works out and logs what it would do, and changes nothing in the chat. Each has a
+review date, and at its review it goes live or is removed. `uv run companion shadows` is the source
+of truth (from `core/shadows.py`, overdue first); this table is a snapshot of it, so update both
+together.
+
+| Feature | Setting | Read it with | Review by |
+|---|---|---|---|
+| Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-31 |
+| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-31 |
+| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-30 |
+| What it would ask to get to know them | always shadow for now | `companion map` | 2026-10-26 |
+| A light question when their words touch a basic it does not know (age, work, home, place, birthday, school) | always shadow for now | the decision log | 2026-10-26 |
+| The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review` | 2026-10-26 |
+| The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` | 2026-10-26 |
+| The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-27 |
+| Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-27 |
+| The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-01 |
+
 ## Rules we learned the hard way
 
 **Git**
