@@ -50,8 +50,8 @@ runs on its own, so one failing does not skip the rest, and a night missed while
 made up five minutes after it starts. Nothing runs that night once the daily spend cap is reached. The
 steps are:
 
-- the memory check, which reads week-old memories and closes faded passing moments or raises
-  questions (`src/companion/features/consolidate/README.md`); `COMPANION_CONSOLIDATE=off` skips this
+- the memory check, which reads up to 40 week-old memories a night and closes faded passing moments
+  or raises questions (`src/companion/features/consolidate/README.md`); `COMPANION_CONSOLIDATE=off` skips this
   step only
 - grouping memories about one thing into merge questions (`src/companion/features/merging/README.md`)
 - retiring routine moments a week after they were last mentioned

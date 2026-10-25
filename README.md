@@ -383,54 +383,16 @@ Imports point down: `turn/` and `memory/`, then the registry, then `features/`, 
 the shell. import-linter enforces it, alongside strict ruff and basedpyright, a lefthook pre-commit
 and CI.
 
-### How a reply is made
+### How a reply is made, and what runs in the background
 
-There is no single big prompt. One talker model writes the reply, and a set of small judges decide
-what it gets to see.
-
-1. **Read the message.** Small models label it before the reply starts: how serious it is, whether
-   it is real talk, a story, a game or a what-if, whether it only needs a reaction, whether they ask
-   it to remember or say it got them wrong, whether a small topic has run its course, and whether a
-   short question invites a guess. A first intimate message is read once for whether it is explicit.
-   A message read as serious, or with words touching death or self-harm, is read three times by the
-   crisis risk judge (shadow by default), and code picks the level.
-2. **Build the card.** Code turns those labels into short notes and adds the clock (weekday, date and
-   time), how they want to be referred to, the memories in view (today's first), anything looked up,
-   memories that bear on the message, what
-   the two of them did at the time they point at, a check-in after a heavy talk, a due plan of theirs,
-   its own tastes that the message touches, and the mood. A line that must weigh most (the scene
-   reminder, "you already owned that slip", "ask nothing this time", the next question in their
-   game, the day's occasion, the offer of an emoticon of its own, the crisis notes when the path is on)
-   goes after the history instead. The
-   persona is the first system block and the card is the second, with the clock and the notes in
-   `<clock>` and `<notes>` tags. Nothing from the card ever goes in the user's message.
-3. **Write the reply.** The talker sees the persona, the card, the last 40 messages and the new
-   message exactly as typed. Pretend scenes, and intimate talk when allowed, go to the roleplay model,
-   unless the floor keeps them on the everyday one. A stall or an error goes to the fallback model.
-4. **Check and deliver it.** A reply that fails a check is drawn once more. Then it is paced,
-   sometimes split (never roleplay), and sent. On an urgent crisis turn with the path on, code's
-   fixed message with the crisis line follows. Beside it, in shadow, the names, the basics hook and
-   the stepping-away read log what they would have done.
-
-The judges never see the persona, and each logs `name@version` with its decision. The full list of
-prompts and how a request is assembled is in [src/companion/prompts/](src/companion/prompts/README.md).
-
-### What happens in the background
-
-- **After 90 seconds of quiet,** the memory pass reads the new messages and records what the user said,
-  with quotes, and the companion's own views. A new memory that repeats, replaces or contradicts an old
-  one is checked against it. New memories are labelled by part of their life and read for names; its
-  new views are sorted (taste, stance, rule, self, lived). A separate pass, with its own bookmark,
-  records the plans they mention and the promises it made in its replies. Feelings and sensitive
-  memories get their note on what was being talked about, and each new memory its keep label.
-- **Every minute,** reminders that have fallen due are sent.
-- **Every 15 minutes,** the reach-out gate looks at due plans, times away and its own reasons to reach
-  out, at the share `COMPANION_REACH` sets (shadow).
-- **At 04:00,** the memory check reads up to 40 memories (shadow), memories about one thing from the
-  last two days are grouped into merge proposals, one day's routines a week old are closed, and the
-  stretches of chat that ended are written as episodes. A night missed while the bot was down runs
-  five minutes after it starts.
-- **At every start and once a day,** the database and character sheets are backed up.
+There is no single big prompt: one talker model writes the reply, and small judges and code decide
+what it sees. Each message passes through a few stages (read, route, look things up, assemble, talk
+and check, store), described in [docs/turn.md](docs/turn.md), with Telegram delivery in
+[docs/delivery.md](docs/delivery.md). Beside the chat, timers run the memory pass after a quiet spell
+and the night's memory work at 04:00 ([docs/memory.md](docs/memory.md)), the reach-out tick every 15
+minutes and reminders every minute ([docs/initiative.md](docs/initiative.md)), and a backup at every
+start and once a day. Every prompt, and how a request is put together, is in
+[src/companion/prompts/](src/companion/prompts/README.md).
 
 ### Principles
 

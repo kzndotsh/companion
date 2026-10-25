@@ -92,4 +92,5 @@ unanswered rule and the share above.
 
 The promises the companion makes in its own replies are read in the same batch as open loops, in
 shadow (`src/companion/features/promises/README.md`). Reminders they ask for are a separate, live
-feature (`src/companion/features/reminders/README.md`).
+feature (`src/companion/features/reminders/README.md`), checked every minute rather than on the
+15-minute tick, so one lands within a minute of its time.

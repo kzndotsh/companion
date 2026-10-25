@@ -4,6 +4,12 @@ This is the path one message takes from arriving to being answered, and the rule
 reply whatever feature is involved. What each feature adds along the way is in its own README under
 `src/companion/features/`.
 
+In short: there is no single big prompt. One talker model writes the reply, and a set of small judges
+and code decide what it gets to see. The talker reads the persona as the first system block, a card
+(the clock, the memories in view and the notes) as the second, the last 40 messages, and their new
+message exactly as typed; a few notes that must weigh most go after the history instead. The judges
+never see the persona, and each logs its prompt as `name@version` with its decision (ADR 0013).
+
 ## The stages
 
 A turn runs in stages, one module each under `src/companion/turn/`, driven by `handle(convo, ...)` in
