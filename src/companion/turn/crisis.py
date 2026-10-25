@@ -107,7 +107,7 @@ def then_line(
     keep: TheirMessage, reading: Reading | None, out: str | ReactAndReply, reply: Reply
 ) -> str | ReactAndReply | ThenSend:
     """On an urgent turn with the path on, the fixed crisis-line message after the reply: from the
-    character's `## When it is serious` section, else the default. Stored as its own message and
+    character's `## Crisis message` section, else the default. Stored as its own message and
     logged; not sent again inside LINE_EVERY."""
     if reading is None or reading.level is not Level.URGENT or not reading.acts:
         return out

@@ -96,7 +96,7 @@ def test_a_scene_reminder_is_kept_apart_from_both_the_sheet_and_the_scene_sectio
 
 def test_the_serious_section_is_kept_for_code_and_no_talker_sees_it() -> None:
     c = parse(
-        "You are Mika.\n\n## When it is serious\nhey. reach $line, okay? i'm here.\n\n"
+        "You are Mika.\n\n## Crisis message\nhey. reach $line, okay? i'm here.\n\n"
         "## In roleplay and intimate moments\nWrite only your own actions.\n\n"
         "## Scene reminder\nBe specific.",
         "mika",
@@ -113,5 +113,5 @@ def test_the_serious_section_is_kept_for_code_and_no_talker_sees_it() -> None:
 
 
 def test_the_serious_section_can_come_last() -> None:
-    c = parse("You are Mika.\n\nwhen it is serious:\nstay. $line.", "mika", "local")
+    c = parse("You are Mika.\n\ncrisis message:\nstay. $line.", "mika", "local")
     assert (c.sheet, c.serious) == ("You are Mika.", "stay. $line.")

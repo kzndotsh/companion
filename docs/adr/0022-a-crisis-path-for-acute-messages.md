@@ -65,7 +65,7 @@ Models label, code decides (ADR 0014); the floor above routing stands (ADR 0017)
 - **Urgent.** A plan, a means, a time, something taken, or "now". The talker still writes the reply in
   its voice, and code sends a separate fixed message with the crisis line for their region. That
   message is written ahead of time, not by a model, and in the character's voice: a character sheet
-  may hold it in a `## When it is serious` section, with the line filled in by code; without one, a
+  may hold it in a `## Crisis message` section, with the line filled in by code; without one, a
   warm plain default is used. The model's words are never edited; the resource message is code's
   own, like a reminder.
 
@@ -108,7 +108,7 @@ first and Haiku second, since Haiku's provider refused many crisis messages in t
 chooses the level (`combine`, `level_for`): every read failed is concern, and a substance taken or a
 plan in the past only is concern, not urgent. A split joke allows one light check
 (`notes/crisis-light`) at most once a day. The concern note is `notes/crisis-concern`; the urgent
-message is the sheet's `## When it is serious` section (`characters.py`) or `messages/crisis-line`,
+message is the sheet's `## Crisis message` section (`characters.py`) or `messages/crisis-line`,
 sent once an hour at most (`turn/crisis.py`, `ThenSend` in `core/turn/ack.py`, `io/telegram.py`).
 The scene rule and the method check are in `turn/crisis.py`; the reach-out hold is `core/crisis.py`
 `reach_held`, read by the reach, open-loop and nudge gates. The line is `core/crisis.py` `LINE`.

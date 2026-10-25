@@ -15,7 +15,7 @@ live at `data/characters/<id>.md`, are never committed, and win over a public sh
 `## In roleplay and intimate moments` section, which only the roleplay talker sees, and that section
 may end with a `## Scene reminder`: a few lines sent after the history on roleplay turns, where
 models weight them most (2026-10-20: much more vivid scene replies than the same words at the top).
-A sheet may also hold a `## When it is serious` section, anywhere: the fixed message code sends
+A sheet may also hold a `## Crisis message` section, anywhere: the fixed message code sends
 with the crisis line on an urgent turn (ADR 0022), `$line` filled in by code. No talker sees it.
 """
 
@@ -45,13 +45,13 @@ _REMINDER_LINE = re.compile(
 
 
 _SERIOUS_LINE = re.compile(
-    r"^[ \t]*(?:#+[ \t]*)?when it is serious:?[ \t]*$", re.IGNORECASE | re.MULTILINE
+    r"^[ \t]*(?:#+[ \t]*)?crisis message:?[ \t]*$", re.IGNORECASE | re.MULTILINE
 )
 _HEADING = re.compile(r"^[ \t]*#+[ \t]*\S", re.MULTILINE)
 
 
 def _cut_serious(text: str) -> tuple[str, str]:
-    """The sheet without its `## When it is serious` section, and the section. The section runs
+    """The sheet without its `## Crisis message` section, and the section. The section runs
     to the next heading or the end."""
     head = _SERIOUS_LINE.search(text)
     if head is None:
@@ -77,7 +77,7 @@ class Character:
     scene_reminder: str = (
         ""  # after a "## Scene reminder" heading: sent after the history in scenes
     )
-    serious: str = ""  # a "## When it is serious" section: code's crisis-line message (ADR 0022)
+    serious: str = ""  # a "## Crisis message" section: code's crisis-line message (ADR 0022)
 
     @property
     def ref(self) -> str:

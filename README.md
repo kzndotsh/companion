@@ -175,7 +175,7 @@ All optional. Set them in `.env`.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `COMPANION_CHARACTER` | none | `mika` lays the sheet `data/characters/mika.md` (private, never committed) over the persona; a public sheet could live in `prompts/characters/mika/`, though none ships yet. A `## In roleplay and intimate moments` section reaches only the roleplay model, and a `## Scene reminder` section is sent after the history on roleplay turns. A `## When it is serious` section is the fixed message code sends with the crisis line on an urgent turn (`$line` filled in by code; ADR 0022), and no model sees it. It still says it is an AI when sincerely asked |
+| `COMPANION_CHARACTER` | none | `mika` lays the sheet `data/characters/mika.md` (private, never committed) over the persona; a public sheet could live in `prompts/characters/mika/`, though none ships yet. A `## In roleplay and intimate moments` section reaches only the roleplay model, and a `## Scene reminder` section is sent after the history on roleplay turns. A `## Crisis message` section is the fixed message code sends with the crisis line on an urgent turn (`$line` filled in by code; ADR 0022), and no model sees it. It still says it is an AI when sincerely asked |
 | `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the roleplay model (ADR 0017), above an age floor in code that no setting changes |
 | `COMPANION_LISTEN` | on | the listening note before each reply; `off` turns it off |
 | `COMPANION_MOOD` | `shadow` | `on` adds the mood line, `shadow` works it out and logs it, `off` does neither |

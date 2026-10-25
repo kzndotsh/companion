@@ -61,7 +61,7 @@ only three reads all saying it is a joke, a lyric, a scene or a what-if stand do
 - **Concern** (a literal risk without a plan, a means or a now): `notes/crisis-concern` after the
   history, no length cap, and the turn is not casual.
 - **Urgent** (a plan or a means, now, or something taken): the same note, and code's own fixed
-  message with the crisis line after the reply (the sheet's `## When it is serious` section, or
+  message with the crisis line after the reply (the sheet's `## Crisis message` section, or
   `messages/crisis-line`), at most once an hour.
 
 On a concern or urgent turn a scene ends for that turn and the everyday talker answers, a reply that

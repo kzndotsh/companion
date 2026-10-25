@@ -185,7 +185,7 @@ def light_note() -> str:
 
 def line_message(section: str) -> tuple[str, str]:
     """The fixed message sent after the reply on an urgent turn, and where it came from: the
-    character sheet's `## When it is serious` section with `$line` filled in, else the default.
+    character sheet's `## Crisis message` section with `$line` filled in, else the default.
     Never written by a model."""
     if section.strip():
         return Template(section.strip()).safe_substitute(line=LINE), "sheet"

@@ -56,7 +56,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 |---|---|---|---|
 | `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v41 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
-| `messages/crisis-line` | message | the fixed message code sends after the reply on an urgent turn, when the sheet has no `## When it is serious` section (ADR 0022) | v1 |
+| `messages/crisis-line` | message | the fixed message code sends after the reply on an urgent turn, when the sheet has no `## Crisis message` section (ADR 0022) | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, never turned into a pet name, `core/turn/address.py` | v2 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
 | `notes/ask-pronouns` | note | how they want to be referred to is not set: once the name is known, ask their pronouns once, lightly, on a casual turn, at most daily (J48) | v1 |
