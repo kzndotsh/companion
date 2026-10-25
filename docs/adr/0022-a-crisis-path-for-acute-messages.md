@@ -92,7 +92,9 @@ fixtures. The risk judge is checked by eye and against a second model.
 ## Settled with the owner
 
 1. The concern level stays in character, warm and plain.
-2. The urgent level sends the fixed crisis-line message automatically, written in character.
+2. The urgent level sends the fixed crisis-line message automatically. The owner keeps the generic
+   default for now (2026-10-25): the reply before it is in character, and this one is plain and steady;
+   a character sheet may still add its own.
 3. 988 (call or text, US) is the default line until where they live is known.
 4. A risk read is never stored as a memory; it is a decision in the log. What they say about
    themselves is kept by the existing memory rules, at sensitivity 3, never raised unprompted.
