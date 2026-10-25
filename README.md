@@ -351,37 +351,33 @@ range, and two variants are compared for whether the gap is real or within noise
 
 ## How it is built
 
-```
-src/companion/
-  turn/        the reply path, one stage per module: hear, route, notes, assemble, talk, beside,
-               persist; fast.py drives them and mode.py answers /mode
-  memory/      the memory pass after a quiet spell, the nightly work, rebuilds and the views
-  registry.py  the features a turn and a memory pass run
-  features/    one folder per feature (relevance, reminders, open loops, mood, marks, lore, names,
-               calendar, crisis, reach, ...), each with pure logic.py, effects in run.py, its queries in store.py, a cli.py
-               and a README on how it works
-  loops/       what a feature uses: the turn's values and Conversation, Feature, ask (a judge),
-               reads (asking several times), record (decisions), curate, embed
-  core/        pure shared rules: memory and the card, frames, the reply checks, the crisis levels,
-               their rhythm, the shadow list; core/turn/ holds the reply path's own pure rules
-  lib/         small helpers that know nothing about the companion
-  prompts/     every prompt as versioned text, with a manifest and a changelog
-  models/      OpenRouter and Anthropic clients, embeddings, the fallbacks, the credits meter
-  io/          Telegram, pacing like a person typing, splitting, and the graceful stop
-  store/       SQLite, the only place besides lib/sqlite that imports sqlite3
-  cli/         the `companion` command
-  evals/       the eval runner and its statistics
-  daemon.py    starts it all: the clients, the turn, the timers and the slash commands
-  settings.py  every setting, read once from the environment
-  commands.py  opens the store and the models for a one-off command
-  backups.py   snapshots of the database and character sheets
-  characters.py  a character sheet laid over the persona
-```
+**The repo**
 
-Imports point down: `turn/` and `memory/`, then the registry, then `features/`, `loops/`, `core/` and
-`lib/`. A feature's logic is pure, features never import each other, and `core` imports nothing from
-the shell. import-linter enforces it, alongside strict ruff and basedpyright, a lefthook pre-commit
-and CI.
+- `src/companion/`: the bot itself.
+- `tests/`: the automatic tests, run before every commit.
+- `evals/`: test conversations for measuring how replies change, and a log of what was measured.
+- `docs/`: how things work, the decisions made and why (`docs/adr/`), and ideas not yet built (`docs/inbox/`).
+- `data/`: your private data: the database, logs, backups and character sheets. Never committed.
+- `scripts/`: small helpers, like the one behind `just restart`.
+
+**Inside `src/companion/`**
+
+- `turn/`: what happens to one message, from reading it to sending the reply.
+- `memory/`: building and tidying memory between messages and overnight.
+- `features/`: one folder per feature (reminders, the calendar, moods, the crisis path and so on), each
+  with a README saying how it works.
+- `prompts/`: every text the models are given, each version kept.
+- `core/` and `loops/`: the shared rules and building blocks the features use.
+- `models/`: talking to the AI models.
+- `io/`: talking to Telegram, and pacing replies like someone typing.
+- `store/`: the database.
+- `cli/` and `evals/`: the `companion` command and the eval runner.
+- `lib/`: small general helpers.
+- The files at the top start the bot (`daemon.py`), read the settings (`settings.py`), list the
+  features (`registry.py`), take backups (`backups.py`) and load a character sheet (`characters.py`).
+
+The code is kept in layers that only use the layers below them, checked on every commit. The details,
+for anyone changing it, are in [AGENTS.md](AGENTS.md).
 
 ### How a reply is made, and what runs in the background
 
