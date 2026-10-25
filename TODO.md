@@ -289,7 +289,7 @@ the calendar.
 14. **Conflict questions** waiting in `companion memory review`.
 
 ---
-15. **A long reach-out draft is cut, not dropped.** A draft over 18 words is cut to its first sentence when that is a question (`core/reachout.py` `short_draft`, from ADR 0015). That is code trimming a model's words, against "never rewrite what the model said" and ADR 0021's "dropped, not rewritten". Only shadow drafts so far. Drop such a draft instead, or keep the cut?
+15. ~~A long reach-out draft is cut, not dropped.~~ Decided 2026-10-25: long drafts are fine; code keeps a draft whole and never cuts or drops it for length (`core/reachout.py` `draft_text`).
 
 ## Doing
 

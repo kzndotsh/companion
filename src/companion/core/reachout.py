@@ -3,11 +3,9 @@ the quiet hours, and how short a drafted message must be. Pure."""
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass
 from datetime import datetime, time, tzinfo
 
-MAX_DRAFT_WORDS = 18
 # The key of a nudge it would send (features/nudges), read by any reach-out that counts its own.
 WOULD_NUDGE = "nudge (shadow): would send"
 
@@ -31,11 +29,9 @@ def in_quiet_hours(now: datetime, tz: tzinfo, caps: Caps) -> bool:
     return t >= caps.quiet_start or t < caps.quiet_end
 
 
-def short_draft(message: str) -> str:
-    """The draft if it is short, its first sentence if that is a short question, else none."""
-    text = " ".join(message.split())
-    if len(text.split()) <= MAX_DRAFT_WORDS:
-        return text
-    first = re.split(r"(?<=[.!?])\s+", text)[0]
-    short = len(first.split()) <= MAX_DRAFT_WORDS and first.endswith("?")
-    return first if short else ""
+def draft_text(message: str) -> str:
+    """The draft as the model wrote it, spacing tidied; empty when it wrote nothing. A long draft is
+    neither cut nor dropped: the drafting prompts ask for a short message, and code never edits
+    one (the owner's choice, 2026-10-25; before, a draft over 18 words was cut to its first
+    sentence when that was a question, else dropped)."""
+    return " ".join(message.split())

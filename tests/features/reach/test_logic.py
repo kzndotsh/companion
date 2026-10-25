@@ -137,5 +137,7 @@ def test_a_light_draft_is_kept_as_written(draft: str) -> None:
     assert checked(draft) == (draft, None)
 
 
-def test_a_long_draft_is_dropped_not_rewritten() -> None:
-    assert checked("word " * 30) == ("", "empty or over 18 words")
+def test_a_long_draft_goes_whole_and_an_empty_one_is_dropped() -> None:
+    long = "thought of you when i saw a dog in a tiny raincoat today, so done with everything"
+    assert checked(long) == (long, None)
+    assert checked("   ") == ("", "empty")

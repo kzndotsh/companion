@@ -23,8 +23,8 @@ from companion.features.openloops.run import (
     Reading,
     Ticker,
     catch_up_loops,
+    draft_text,
     extract_open_loops,
-    short_draft,
     tick,
 )
 from companion.features.openloops.store import ReachOut
@@ -153,12 +153,11 @@ async def _draft(loop: OpenLoop) -> str:
     return f"how did the {loop.claim} go?"
 
 
-def test_a_long_draft_is_cut_to_its_first_sentence_or_dropped() -> None:
-    assert short_draft("how did the vet go?") == "how did the vet go?"
+def test_a_long_draft_is_kept_whole_and_only_an_empty_one_is_dropped() -> None:
     long_two = "how did the vet go? " + "and also " * 12
-    assert short_draft(long_two) == "how did the vet go?"
-    assert short_draft("you said you were annoyed. " + "and also " * 12) == ""
-    assert short_draft("word " * 30) == ""
+    assert draft_text(long_two) == long_two.strip()  # never cut to its first sentence
+    assert draft_text("  how   did the vet go?\n") == "how did the vet go?"
+    assert draft_text("   ") == ""
 
 
 async def test_a_shadow_tick_records_the_draft_and_marks_the_loop_asked_without_sending(

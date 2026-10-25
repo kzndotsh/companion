@@ -73,7 +73,8 @@ spend cap:
 - never in their quiet hours, never mid-chat (any message in the last 90 minutes), never during a
   pretend scene, and a mood never triggers one (ADR 0016)
 - never a second message while the last one is unanswered: it waits for them to write first
-- never a sensitive memory, and one specific thing per message, 18 words or fewer
+- never a sensitive memory, and one specific thing per message, kept whole however long it runs (the prompt asks for a short one;
+  code never cuts it)
 - never guilt, need or blame: a draft that mentions waiting, being forgotten or ignored, how long they
   were gone, asks why they went quiet or whether they are okay, adds urgency or a cliffhanger, or makes
   them responsible for how it feels is dropped, never rewritten

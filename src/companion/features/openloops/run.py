@@ -19,7 +19,7 @@ from companion.core.clock import local_midnight, local_zone
 from companion.core.crisis import reach_held
 from companion.core.extractor import Extractor
 from companion.core.frames import scene_frame
-from companion.core.reachout import Caps, short_draft
+from companion.core.reachout import Caps, draft_text
 from companion.core.spend import purpose
 from companion.core.types import (
     DecisionKind,
@@ -274,7 +274,7 @@ def drafter(extractor: Extractor) -> Draft:
             log.warning("could not draft the check-in", exc_info=True)
             return ""
         message = result.data.get("message") if isinstance(result.data, dict) else None
-        return short_draft(message) if isinstance(message, str) else ""
+        return draft_text(message) if isinstance(message, str) else ""
 
     return draft
 

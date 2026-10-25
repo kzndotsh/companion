@@ -12,7 +12,7 @@ from companion.core.card import Card
 from companion.core.clock import local_midnight
 from companion.core.crisis import reach_held
 from companion.core.extractor import Extractor
-from companion.core.reachout import WOULD_NUDGE, Caps, short_draft
+from companion.core.reachout import WOULD_NUDGE, Caps, draft_text
 from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.spend import purpose
 from companion.core.types import (
@@ -103,7 +103,7 @@ async def tick_nudge(  # noqa: PLR0913
             with purpose("initiative"):
                 got = await extractor.extract(DRAFT.text, draft_prompt(away, now), DRAFT_SCHEMA)
             message = got.data.get("message") if isinstance(got.data, dict) else None
-            text = short_draft(message) if isinstance(message, str) else ""
+            text = draft_text(message) if isinstance(message, str) else ""
         except Exception:
             log.warning("could not draft the nudge", exc_info=True)
     _record(store, rel, now).decide(

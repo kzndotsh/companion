@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
-from companion.core.reachout import short_draft
+from companion.core.reachout import draft_text
 from companion.core.rhythm import Rhythm
 from companion.core.types import Json
 from companion.prompts import get
@@ -221,9 +221,9 @@ def needy(draft: str) -> str | None:
 
 def checked(message: str) -> tuple[str, str | None]:
     """The draft as it would go, or empty with why it was dropped."""
-    text = short_draft(message)
+    text = draft_text(message)
     if not text:
-        return "", "empty or over 18 words"
+        return "", "empty"
     why = needy(text)
     return ("", why) if why is not None else (text, None)
 

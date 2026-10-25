@@ -58,7 +58,8 @@ and after drafting, not requests in a prompt:
 - Never guilt, need or blame: a code check on the draft rejects lines about waiting, being forgotten,
   being ignored, or how long they have been gone; a draft that fails is dropped, not rewritten.
 - Never urgency, cliffhangers, streaks, or anything that makes them responsible for how it feels.
-- One specific thing per message, short (18 words or fewer), in the character's voice.
+- One specific thing per message, in the character's voice. The prompt asks for a short one; code
+  never cuts or drops a draft for length (the owner's choice, 2026-10-25).
 - Never in their quiet hours (learned, as above), never mid-chat, never during a scene; a mood never
   triggers one (ADR 0016).
 - Light and affectionate, never about the relationship itself: in couples' texting, affectionate
