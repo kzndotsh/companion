@@ -2082,3 +2082,22 @@ memory, the date reader finds one date, their birthday, and no false ones.
 
 Cost: $0.0074. Rerun: `uv run companion eval --variants "v41.md+note=NOTE@tail@openai/gpt-6-luna,v41.md@openai/gpt-6-luna" --fixture occasion-their-birthday-on-the-day --samples 12 --cap 0.05`, NOTE a file holding `notes/occasion-theirs` rendered with "their birthday".
 
+## 2026-10-25: talking as if a meal they were about to have was already eaten
+
+What: a flagged turn where they had said dinner was coming soon, guessed-at food was confirmed and
+the rolls listed, and the reply asked how one of them tasted. Replayed on the live talker (persona v41,
+GPT-6 Luna) with its logged request.
+
+Result: the slip came in about 1 reply in 6 (8, 5 and 12 of 30 by a loose count; 9 of 60 read by eye).
+Telling the talker the time did not help: the clock as sent, with the seconds since their last message,
+and with how long the stretch of chat had run were all within noise. A note after the history saying
+they were about to have dinner and it has not happened unless they say so cut it to 0 of 60 against
+9 of 60 (read by eye; a real difference). The fixture's grader first failed "enjoy your dinner" as a
+slip, which it is not, and was rewritten. The note also turned 8 of 60 replies into a light send-off
+("go enjoy it"), which can wind a chat down early. Not built: a note like this needs code to notice,
+in the turn, that they said they are about to do something.
+
+Cost: about $0.05. Rerun: local fixture `dinner-not-yet-eaten-local`, `--variants
+"v41.md@openai/gpt-6-luna,v41.md+note=NOTE@tail@openai/gpt-6-luna" --samples 60`, NOTE a file with the
+one bracketed line; the clock arms with the scratch script `clock_test.py`.
+
