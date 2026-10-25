@@ -27,6 +27,7 @@ from companion.core.types import (
 )
 from companion.daemon import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -136,7 +137,7 @@ async def test_the_judge_reacts_only_when_closing(case: _Case) -> None:
     prompt = build_prompt(_chat(pairs), text)
     reacted = 0
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         for _ in range(10):
             judged = parse((await extractor.extract(SYSTEM, prompt, SCHEMA)).data)
             reacted += judged is not None and reaction_for(judged) is not None

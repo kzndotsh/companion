@@ -22,6 +22,7 @@ from companion.evals.judge import (
     grade_empathy,
 )
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -100,7 +101,7 @@ async def test_the_judge_passes_substantive_replies_and_fails_restatements() -> 
         pytest.skip("OPENROUTER_API_KEY not set")
     agree = total = 0
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         for said, reply, should_pass in CASES:
             excerpt = [Message("user", said)]
             verdicts = [

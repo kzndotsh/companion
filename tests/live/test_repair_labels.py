@@ -18,6 +18,7 @@ import pytest
 from companion.core.turn.listening import SCHEMA, SYSTEM, Judgement, parse
 from companion.daemon import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -95,7 +96,7 @@ async def test_forgot_got_me_wrong_and_teasing_are_told_apart() -> None:
     wrong: list[str] = []
     right = total = 0
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         for case in CASES:
             for _ in range(RUNS):
                 got = await _label(case, extractor)

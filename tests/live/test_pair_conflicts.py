@@ -27,6 +27,7 @@ from companion.features.consolidate.logic import (
 )
 from companion.lib.vote import READS
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -101,7 +102,7 @@ async def test_a_changed_fact_is_a_conflict_and_two_true_things_are_not(
     if not key:
         pytest.skip("OPENROUTER_API_KEY not set")
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
 
         async def flagged(pair: tuple[str, str]) -> bool:
             return await _flagged(extractor, belief(claim=pair[0]), belief(claim=pair[1]))

@@ -19,6 +19,7 @@ import pytest
 from companion.core.turn.listening import SCHEMA, SYSTEM, Judgement, parse
 from companion.daemon import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -96,7 +97,7 @@ async def test_the_labels_agree_with_a_person_and_never_read_serious_as_trivial(
         pytest.skip("OPENROUTER_API_KEY not set")
     tally = Tally()
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         for case in CASES:
             answers = [await _label(case.text, extractor) for _ in range(RUNS)]
             labels = [g for g in answers if g is not None]

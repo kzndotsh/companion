@@ -15,6 +15,7 @@ import pytest
 from companion.daemon import load_dotenv
 from companion.features.guess.logic import JUDGE, SCHEMA, parse
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -39,7 +40,7 @@ async def test_only_an_invitation_to_guess_is_read_as_one() -> None:
         pytest.skip("OPENROUTER_API_KEY not set")
     wrong: list[str] = []
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         for text, invited in CASES:
             prompt = f"Conversation:\n[COMPANION] hey you\n\nNewest USER message: {text}"
             for _ in range(RUNS):

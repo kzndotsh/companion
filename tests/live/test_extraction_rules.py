@@ -30,6 +30,7 @@ from companion.core.types import (
 )
 from companion.daemon import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -255,7 +256,7 @@ async def test_the_memory_rules_hold_on_the_real_model(case: Case) -> None:
     if not key:
         pytest.skip("OPENROUTER_API_KEY not set")
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         runs = [await _survivors(case, extractor) for _ in range(3)]
     stored = [len(r) > 0 for r in runs]
     print(f"\n{case.name} [{case.note}]: stored in {sum(stored)}/3 runs: {runs}")  # noqa: T201

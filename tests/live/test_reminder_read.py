@@ -28,6 +28,7 @@ from companion.core.types import (
 from companion.daemon import load_dotenv
 from companion.features.reminders.logic import PROMPT, SCHEMA, Ask, parse, read_prompt, resolve
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -120,7 +121,7 @@ async def test_requests_land_at_the_time_meant_and_ordinary_talk_sets_nothing() 
     cases = [(text, prior, ok) for text, ok in CASES] + [("8pm", asked, ("10-19 20:00",))]
     wrong: list[str] = []
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         for text, before, ok in cases:
             result = await extractor.extract(
                 PROMPT.text, read_prompt(before, text, NOW, TZ), SCHEMA

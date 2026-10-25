@@ -29,6 +29,7 @@ from companion.daemon import load_dotenv
 from companion.features.mood.logic import held_because
 from companion.features.topics.logic import JUDGE, SCHEMA, judge_prompt, likely, parse
 from companion.models.openrouter import OpenRouterExtractor
+from tests.live.models import JUDGE_MODEL
 
 pytestmark = pytest.mark.live
 
@@ -99,7 +100,7 @@ async def test_a_spent_topic_is_seen_and_nothing_else_is() -> None:
     wrong: list[str] = []
     right = total = 0
     async with httpx.AsyncClient(timeout=60) as client:
-        extractor = OpenRouterExtractor(key, client, "anthropic/claude-haiku-5.5")
+        extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         for case in CASES:
             prior = [_utt(i, who, text) for i, (who, text) in enumerate(case.chat)]
             prompt = judge_prompt(prior, case.text)
