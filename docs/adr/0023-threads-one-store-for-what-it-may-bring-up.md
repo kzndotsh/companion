@@ -108,5 +108,5 @@ Thread
 
 - The daily budget: one thread a day across all sources (as now per feature), or a little more once
   several sources exist.
-- The order of kinds when two fit the same turn: their own plan due today first, then the
-  interrupted story, then a milestone, a weekly rhythm, a topic gone quiet.
+- ~~The order of kinds.~~ Decided 2026-10-25: when two fit the same turn, the interrupted story
+  wins, then their own plan due today, a milestone, a weekly rhythm, a topic gone quiet.
