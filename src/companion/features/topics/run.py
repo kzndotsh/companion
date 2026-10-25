@@ -9,7 +9,7 @@ from companion.core.clock import local_zone
 from companion.core.extractor import Extractor
 from companion.core.types import Frame, Speaker, Utterance
 from companion.features.topics.logic import EVERY_TURNS as TOPIC_EVERY
-from companion.features.topics.logic import JUDGE, SCHEMA, judge_prompt, parse, topic_note
+from companion.features.topics.logic import JUDGE, SCHEMA, asks, judge_prompt, parse, topic_note
 from companion.features.topics.logic import NOTE as TOPIC_NOTE
 from companion.features.topics.logic import SPENT as TOPIC_SPENT
 from companion.features.topics.logic import likely as topic_likely
@@ -62,7 +62,9 @@ def _move_on(m: Moment, found: object, *, casual: bool, loop_offered: bool) -> O
         return Offer()
     note, move = found
     return Offer(
-        (note,), (lambda: decide(c, t, TOPIC_SPENT, {"move": move.ref, "note": TOPIC_NOTE.ref}),)
+        (note,),
+        (lambda: decide(c, t, TOPIC_SPENT, {"move": move.ref, "note": TOPIC_NOTE.ref}),),
+        asks=asks(move),
     )
 
 

@@ -69,6 +69,12 @@ def move_for(local_hour: int, *, loop_offered: bool) -> Prompt:
     return MOVES["evening"] if local_hour >= EVENING_FROM else MOVES["day"]
 
 
+def asks(move: Prompt) -> bool:
+    """Whether the move asks them something: their day, their evening or a plan of theirs does;
+    late at night it shares something of its own instead."""
+    return move is not MOVES["night"]
+
+
 def topic_note(
     *, spent: bool, casual: bool, moved_recently: bool, local_hour: int, loop_offered: bool
 ) -> tuple[str, Prompt] | None:

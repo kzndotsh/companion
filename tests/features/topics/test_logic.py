@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.features.topics.logic import MOVES, move_for, topic_note
+from companion.features.topics.logic import MOVES, asks, move_for, topic_note
 
 
 def test_the_move_follows_the_clock_and_a_plan_offered_this_turn_comes_first() -> None:
@@ -26,3 +26,10 @@ def test_the_note_only_on_a_casual_spent_turn_not_moved_recently() -> None:
     assert _note(spent=False) is None
     assert _note(casual=False) is None
     assert _note(moved_recently=True) is None
+
+
+def test_a_move_to_their_day_or_evening_asks_and_one_late_at_night_does_not() -> None:
+    assert asks(move_for(10, loop_offered=False))
+    assert asks(move_for(19, loop_offered=False))
+    assert asks(move_for(23, loop_offered=True))
+    assert not asks(move_for(23, loop_offered=False))

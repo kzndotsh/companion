@@ -985,3 +985,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
   ride beside the guess. Both now count as asking, as the check-in, name, plan, crisis, game and
   calendar notes did. A reminder set or cancelled does not ask. Not measured: a change of which notes
   can share a turn, found by reading the code.
+
+## Request assembly: the topic move that asks says so
+- From 2026-10-25 the topic-spent note marks its offer as asking when the move it names asks them something (their day, their evening, a plan of theirs), so the question-run note no longer tells the talker to ask nothing beside it. The late-night move, which shares something of its own, is unmarked. Found by reading the code, the same class as the reminder and guess fix above; not measured.
+

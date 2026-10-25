@@ -16,6 +16,8 @@ The move it names is chosen by code. If a plan of theirs was offered as a note t
 
 The decision is logged once the reply is stored, under the key `topic: run its course, moving on`, with the move and note versions.
 
+A move to their day, their evening or a plan of theirs asks them something, so its offer says `asks` and the question-run note stays out that turn; the late-night move shares something of its own and does not (`asks` in `logic.py`).
+
 ## Files
 
 | File | What |
