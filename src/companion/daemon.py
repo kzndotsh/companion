@@ -373,6 +373,7 @@ async def run(data_dir: Path) -> None:
             calendar=s.on("calendar"),
             initiative=s.on("initiative"),
             crisis=s.mode("crisis"),
+            now=s.mode("now"),
             serious_message=character.serious if character is not None else "",
         )
         same = (

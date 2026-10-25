@@ -2130,3 +2130,22 @@ is the shape worth building; the wording is fixed by this measurement. Not built
 Rerun: local fixture `dinner-not-yet-eaten-local` with `+note=NOTE@tail` and `@card`, the counting
 pattern above, and the scratch script `check_test.py` for the check.
 
+## 2026-10-25: the reader of what is happening with them now, and the note's final wording (ADR 0024)
+
+What: `system/now` v1 on Haiku, which labels each message soon, leaving, back, done or none, and
+`notes/now-soon` v1 rendered as built, on the flagged turn.
+
+Result:
+- Invented messages (`tests/live/test_now_read.py`): 38 of 38 right, two reads each, including a short
+  answer that needs the companion's message before it, a change to the companion and a need.
+- The 37 real messages that matched words like "soon" or "brb", against two Claude labellers: the first
+  wording, given their message alone, agreed on 34 of 37 and never opened an item that was not there;
+  the misses were short answers ("soon lol"). Given the companion's message before theirs it caught
+  those but read talk about changes to the companion and a need as something coming; with those named
+  as none, 37 of 37.
+- The final note on the flagged turn: 1 of 60 replies assumed the meal was eaten and none was a
+  send-off, against 20 of 140 with no note (Fisher, 0.5% chance of noise).
+
+Cost: about $0.03. Rerun: `uv run pytest -m live tests/live/test_now_read.py -s -o addopts=""`; the
+scratch script `now_real.py` on the extracted messages; the fixture with the rendered note `@tail`.
+

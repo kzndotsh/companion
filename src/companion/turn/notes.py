@@ -314,6 +314,7 @@ ORDER: tuple[str, ...] = (
     "repair",
     "owned",
     "recall",
+    "now",
     "relevant",
     "recent",
     "check-in",

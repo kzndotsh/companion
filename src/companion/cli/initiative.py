@@ -10,8 +10,9 @@ from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
 from companion.core.reachout import WOULD_NUDGE
+from companion.core.turn.now import KEY as NOW_KEY
+from companion.core.turn.now import Phase, from_decisions
 from companion.core.types import RelationshipId
-from companion.features.nudges.logic import AWAY
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.logic import dial
 from companion.features.threads.run import HELD
@@ -27,7 +28,8 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
         loops = store.open_loops(rel)
         reach = store.reach_outs(rel)
         held = store.decisions_with_key(rel, HELD)
-        away = store.decisions_with_key(rel, AWAY)
+        said = from_decisions(store.decisions_with_key(rel, NOW_KEY))
+        away = [s for s in said if s.label.phase is Phase.LEAVING]
         nudges = store.decisions_with_key(rel, WOULD_NUDGE)
         own = own_reasons.lines(
             store, rel, (now or utc_now(), local_zone()), dial(Settings.from_env().mode("reach"))

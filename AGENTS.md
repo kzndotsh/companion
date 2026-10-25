@@ -34,7 +34,7 @@ just logs         # follow data/logs/companion.log: every stage, judge, model an
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 just inbox some idea   # jot an idea into docs/inbox/
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar | shadows | crisis
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar | shadows | crisis | now
 uv run companion memory review | group   # questions for the owner, merge proposals
 uv run companion promises | names | lore   # shadow lists and its own tastes
 uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
@@ -83,6 +83,7 @@ together.
 | The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-27 |
 | Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-27 |
 | How often it brings a thread up, learned from how they met the last ones (ADR 0023) | always shadow for now | the decision log | 2026-11-08 |
+| What they said is coming, kept until it happens, and the note that says so (ADR 0024) | `COMPANION_NOW` | `companion now` | 2026-11-08 |
 | The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-01 |
 
 ## Rules we learned the hard way

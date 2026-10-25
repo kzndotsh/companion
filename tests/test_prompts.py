@@ -37,6 +37,7 @@ PLACEHOLDERS = {
     "notes/occasion-soon": {"name", "when"},
     "notes/occasion-us": {"span"},
     "notes/occasion-theirs": {"name"},
+    "notes/now-soon": {"ago", "what"},
     "system/reminder-send": {"what"},
     "notes/crisis-concern": {"line"},
     "messages/crisis-line": {"line"},

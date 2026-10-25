@@ -80,6 +80,11 @@ Today it is reached through Telegram, its only integration for now.
   public or cultural day ("if it fits", never assuming they celebrate it), the lead-up to a big one,
   or a month, a hundred days, six months or a year since they first talked. Each is offered once, and
   no model chooses it (`features/calendar`, [ADR 0014](docs/adr/0014-models-label-and-code-chooses-the-note.md)).
+- **Keeps track of what is coming.** When they say dinner is on its way or they will shower soon, a
+  small model labels the message and code keeps it open until they say it happened, they are back, or
+  it is well past its time; meanwhile one line after the history says it has not happened yet, so the
+  reply does not ask how the food was. Shadow by default (`features/now`,
+  [ADR 0024](docs/adr/0024-what-they-said-is-coming-is-tracked-until-it-happens.md)).
 - **Feels typed.** Replies are paced like a person typing, and long plain replies are sometimes sent
   as two or three messages. A new message that arrives first replaces the reply in progress; a reply
   cut off part way is remembered as only the part they received.
@@ -225,6 +230,7 @@ All optional. Set them in `.env`.
 | `COMPANION_LOOP_NOTES` | `loose` | a hedged plan of theirs ("may watch a movie tonight") becomes a note-only loop, asked once when they next write and never a reach-out (`features/threads`); `off` keeps only firm plans |
 | `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
 | `COMPANION_CALENDAR` | `on` | one note after the history on a casual turn about the day: a US public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years (`features/calendar`); `off` stops it |
+| `COMPANION_NOW` | `shadow` | what they said is coming, kept until it happens (ADR 0024): `on` sends one line after the history while it is open ("about 2 minutes ago they said dinner is coming soon; it has not happened unless they say so"), `shadow` logs the line and sends nothing, `off` stops the note; the reader also runs while reaching out is on, for nudges |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 
 </details>

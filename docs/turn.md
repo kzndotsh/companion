@@ -139,6 +139,12 @@ their last three messages told it to ask them things ("ask me anything"), with n
 `notes/question-game` asks for the next question instead, and the question-run note stays out
 (`core/turn/game.py`).
 
+While something they said is coming is still open (dinner on its way, a shower soon), one line after
+the history says how long ago they said it and that it has not happened unless they say so
+(`features/now`, `COMPANION_NOW`, ADR 0024; shadow by default). A reader beside each turn labels their
+message (soon, leaving, back, done) and code keeps what is open until they say it happened, they are
+back, or it is well past its time; nudges read the same labels.
+
 What it brings up on its own is chosen once a turn across features (`turn/mention.py`, ADR 0023):
 each feature with a `mention` offers its best candidate (a due plan of theirs, a day from the
 calendar), and on a casual turn that is not held and has no earlier note asking them something, the

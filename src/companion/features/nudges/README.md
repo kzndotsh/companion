@@ -6,7 +6,7 @@ A light nudge when they step away and stay gone much longer than they said, the 
 
 ## How it works
 
-**Reading a time away.** Beside any real turn that is not serious (not in a scene, severity below 2, and the listening read ran), a small model reads the message alone (`system/away`, 8 s limit, one try, purpose `nudge`). It answers one of four things: `brief` (leaving now for something short), `back` (leaving now and will return), `goodbye` (leaving for the night or for good), or `none`. It also gives the minutes it expects them to be away, which code clamps to between 10 and 180. A goodbye, `none` or a bad answer records nothing. A goodbye or no time away is a readable answer, not a failure. A call that fails or times out means no nudge for that message. A fallback model's answer counts. Each time away is a `away: they stepped away` decision (a policy decision) holding the kind, the minutes, their words, and the prompt `name@version`.
+**Reading a time away.** A time away is a `leaving` label from the reader of what is happening with them now (`features/now/README.md`, ADR 0024): beside any real turn that is not serious, a small model labels their message (`soon`, `leaving`, `back`, `done`), with the minutes; the newest `leaving` in the last six hours is the time away (`aways` in `logic.py`). Until 2026-10-25 nudges had their own reader (`system/away`, retired), which also told a brief time away from one they said they would come back from; the two were treated alike, so the label is now only `leaving`.
 
 **The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` (`daemon.py`) looks at their newest recorded time away. It is skipped on a tick when a plan check-in would go. It holds, with a reason, for the first of these:
 
@@ -33,7 +33,6 @@ Since 2026-10-25 nudges use the shared gate instead of fixed quiet hours of 23:0
 
 ## Prompts
 
-- `system/away`: whether the message steps away now, and for how long. A failed or unreadable answer means no nudge for that message.
 - `system/nudge-draft`: writes the draft. A failure gives an empty draft.
 
 ## Commands

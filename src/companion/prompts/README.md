@@ -127,6 +127,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/occasion-soon` | note | after the history: a big day is tomorrow or in two days; if it fits, lightly ask whether they have anything planned, once per big day (`features/calendar`) | v1 |
 | `notes/occasion-us` | note | after the history: a month, a hundred days, six months or a year since they first talked; a light, warm nod (`features/calendar`) | v1 |
 | `notes/occasion-theirs` | note | after the history on a casual turn: today is a date of theirs read from memory (a birthday, an anniversary, someone's of theirs); mark it warmly, never say it was remembered or looked up (`features/calendar`, R19) | v1 |
+| `notes/now-soon` | note | after the history while something they said is coming is still open: how long ago they said it, and that it has not happened unless they say so (`features/now`, ADR 0024) | v1 |
 | `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
 | `system/callback-judge` | system | the callback check, `features/callbacks/logic.py`, `companion callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
@@ -153,7 +154,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |
 | `system/basics-hook` | system | which basic fact their own words touch without giving it (age, birthday, work, school, home, place), read three times (J48 hook) | v2 |
 | `system/basics-known` | system | whether a memory states a basic fact outright, before the hook would ask (J48 hook) | v1 |
-| `system/away` | system | whether their message leaves the chat now (brief, back, goodbye) and for about how long, for the nudge (shadow) | v1 |
+| `system/away` | system | retired 2026-10-25 for `system/now`, no longer sent: whether their message leaves the chat now (brief, back, goodbye) and for about how long, for the nudge (shadow) | v1 |
+| `system/now` | system | what their message tells about what is happening with them now (soon, leaving, back, done), with what and the minutes; read beside the turn (`features/now`, ADR 0024) | v1 |
 | `system/nudge-draft` | system | the one light nudge after they stayed away much longer than they said (shadow) | v1 |
 | `system/reach-draft` | system | one short message first for its own reasons (a thought, a time they keep, missing them), about the one thing code chose; a code check drops a needy draft (ADR 0021, shadow) | v1 |
 | `system/invented-judge` | system | statements in a reply about the user and what supports each, for the made-up facts rate (G42); flags are candidates | v1 |

@@ -2,7 +2,8 @@
 
 "gonna shower" and then two hours of quiet is the moment a friend sends "damn, long shower 👀". The
 owner asked for the looser rule (also when they did not say they would be back) to see how it does.
-A small model reads whether a message steps away and for about how long; code decides: one nudge per
+A time away is a `leaving` label from the reader of what is happening with them now (ADR 0024,
+`core/turn/now.py`); code decides: one nudge per
 time away, only after twice the time and at least an hour, never in quiet hours, never after a
 goodbye, gone after six hours, at most two a day, and any message from them cancels it. Drafts are
 logged and nothing is sent.
@@ -13,34 +14,18 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import StrEnum
 
 from companion.core.reachout import Held
+from companion.core.turn.now import Phase, Said
 from companion.core.types import Json
 from companion.prompts import get
 
-PROMPT = get("system/away")
 DRAFT = get("system/nudge-draft")
-AWAY = "away: they stepped away"
 MIN_WAIT = timedelta(hours=1)
 GONE = timedelta(hours=6)
 PER_DAY = 2
-MINUTES = (10, 180)  # a guess outside this is clamped
 
 
-class Kind(StrEnum):
-    BRIEF = "brief"
-    BACK = "back"
-
-
-SCHEMA: dict[str, Json] = {
-    "type": "object",
-    "properties": {
-        "away": {"type": "string", "enum": ["brief", "back", "goodbye", "none"]},
-        "minutes": {"type": "integer"},
-    },
-    "required": ["away", "minutes"],
-}
 DRAFT_SCHEMA: dict[str, Json] = {
     "type": "object",
     "properties": {"message": {"type": "string"}},
@@ -52,35 +37,8 @@ DRAFT_SCHEMA: dict[str, Json] = {
 class Away:
     turn: str
     said: str
-    kind: Kind
     minutes: int
     at: datetime
-
-
-def parse(data: Json) -> tuple[Kind, int] | None:
-    """The kind of stepping away and the minutes, clamped. None for a goodbye, none or bad data."""
-    if not isinstance(data, dict):
-        return None
-    kind, minutes = data.get("away"), data.get("minutes")
-    if kind not in set(Kind) or not isinstance(minutes, int) or isinstance(minutes, bool):
-        return None
-    return Kind(str(kind)), max(MINUTES[0], min(MINUTES[1], minutes))
-
-
-@dataclass(frozen=True, slots=True)
-class Answer:
-    """A readable answer: the time away, or None for a goodbye or not stepping away at all."""
-
-    away: tuple[Kind, int] | None
-
-
-def read(data: Json) -> Answer | None:
-    """The judge's answer; None only when it cannot be read, so "not stepping away" is not a
-    failure in the log."""
-    if isinstance(data, dict) and data.get("away") in ("goodbye", "none"):
-        return Answer(None)
-    found = parse(data)
-    return None if found is None else Answer(found)
 
 
 def wait(a: Away) -> timedelta:
@@ -125,3 +83,10 @@ def draft_prompt(a: Away, now: datetime) -> str:
 
 def newest(aways: Sequence[Away]) -> Away | None:
     return max(aways, key=lambda a: a.at, default=None)
+
+
+def aways(said: Sequence[Said]) -> list[Away]:
+    """The times they said they were leaving now, from the labels of what is happening with them."""
+    return [
+        Away(s.turn, s.text, s.label.minutes, s.at) for s in said if s.label.phase is Phase.LEAVING
+    ]

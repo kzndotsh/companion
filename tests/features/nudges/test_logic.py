@@ -3,10 +3,11 @@ from __future__ import annotations
 from datetime import timedelta
 
 from companion.core.reachout import Held
-from companion.features.nudges.logic import Away, Kind, Look, due, parse, wait
+from companion.core.turn.now import Label, Phase, Said
+from companion.features.nudges.logic import Away, Look, aways, due, wait
 from tests.conftest import T0
 
-SHOWER = Away("t1", "shower time now", Kind.BRIEF, 30, T0)
+SHOWER = Away("t1", "shower time now", 30, T0)
 
 
 def _look(**kw: object) -> Look:
@@ -21,7 +22,7 @@ def _look(**kw: object) -> Look:
 
 def test_a_nudge_waits_twice_the_time_away_and_an_hour_at_least() -> None:
     assert wait(SHOWER) == timedelta(hours=1)
-    assert wait(Away("t", "errand", Kind.BRIEF, 50, T0)) == timedelta(minutes=100)
+    assert wait(Away("t", "errand", 50, T0)) == timedelta(minutes=100)
     assert due(_look(), T0 + timedelta(minutes=50), None)[1] == "not long enough yet"
     assert due(_look(), T0 + timedelta(minutes=70), None)[0] == SHOWER
 
@@ -35,22 +36,10 @@ def test_anything_from_them_or_a_past_nudge_or_the_day_cap_holds_it() -> None:
     assert due(_look(away=None), later, None)[1] == "no time away"
 
 
-def test_only_stepping_away_is_read_and_minutes_are_clamped() -> None:
-    assert parse({"away": "brief", "minutes": 500}) == (Kind.BRIEF, 180)
-    assert parse({"away": "back", "minutes": 2}) == (Kind.BACK, 10)
-    assert parse({"away": "goodbye", "minutes": 30}) is None
-    assert parse({"away": "none", "minutes": 0}) is None
-    assert parse({"away": "brief", "minutes": True}) is None
-
-
-def test_a_goodbye_or_no_time_away_is_a_readable_answer_and_junk_is_not() -> None:
-    from companion.features.nudges.logic import Answer, Kind, read  # noqa: PLC0415
-
-    assert read({"away": "none", "minutes": 0}) == Answer(None)
-    assert read({"away": "goodbye", "minutes": 0}) == Answer(None)
-    assert read({"away": "brief", "minutes": 20}) == Answer((Kind.BRIEF, 20))
-    assert read({"away": "brief"}) is None
-    assert read("junk") is None
+def test_a_time_away_is_a_leaving_label_and_nothing_else() -> None:
+    leaving = Said(Label(Phase.LEAVING, "they will shower", 30), "shower time now", "t1", T0)
+    soon = Said(Label(Phase.SOON, "dinner is coming soon", 30), "dinner soon", "t2", T0)
+    assert aways([leaving, soon]) == [SHOWER]
 
 
 def test_the_shared_gate_holds_it_with_its_reason_once_it_is_due() -> None:

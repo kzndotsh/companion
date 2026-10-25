@@ -36,6 +36,7 @@ from companion.features.lore import cli as lore
 from companion.features.merging import cli as merging
 from companion.features.mood import cli as mood
 from companion.features.names import cli as names
+from companion.features.now import cli as now_cli
 from companion.features.promises import cli as promises
 from companion.features.reminders import cli as reminders
 from companion.features.worth import cli as worth
@@ -93,6 +94,7 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     )
     _db_args(ep)
     _db_args(add("calendar", help="the occasions in the next 30 days and what was offered lately"))
+    _db_args(add("now", help="what they said is coming: the labels, what is open, the notes"))
     rm = add("reminders", help="the reminders they asked for, with what became of each")
     rm.add_argument("--cancel", metavar="ID", help="drop a pending one")
     _db_args(rm)
@@ -355,6 +357,10 @@ def _calendar(a: argparse.Namespace) -> int:
     return _out(calendar.run(*_target(a)))
 
 
+def _now(a: argparse.Namespace) -> int:
+    return _out(now_cli.run(*_target(a)))
+
+
 def _promises(a: argparse.Namespace) -> int:
     return _out(promises.run(*_target(a), wrong=a.wrong, retire=a.retire))
 
@@ -425,6 +431,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "promises": _promises,
     "reminders": _reminders,
     "calendar": _calendar,
+    "now": _now,
     "episodes": _episodes,
     "names": _names,
     "lore": _lore,

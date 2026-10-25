@@ -98,6 +98,13 @@ SHADOWS: tuple[Shadow, ...] = (
         "whether the labels read right by eye and the pace it would have used beats the day's cap",
     ),
     Shadow(
+        "what they said is coming, kept until it happens, and the note that says so (ADR 0024)",
+        "now",
+        "companion now",
+        date(2026, 11, 8),
+        "labels that read right on real messages and notes that would have stopped a time skip",
+    ),
+    Shadow(
         "memories about a name they mention, left off the card",
         None,
         "companion names",

@@ -16,7 +16,7 @@ from companion.features.marks.run import MARKS
 from companion.features.mood.run import MOOD
 from companion.features.moves.run import MOVES
 from companion.features.names.run import NAMES
-from companion.features.nudges.run import NUDGES
+from companion.features.now.run import NOW
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
 from companion.features.threads.run import OPENLOOPS
@@ -41,7 +41,7 @@ FEATURES: tuple[Feature, ...] = (
     MARKS,
     REMINDERS,
     CRISIS,
-    NUDGES,
+    NOW,
     CALENDAR,
     HOOKS,
 )

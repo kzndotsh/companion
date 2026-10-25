@@ -30,7 +30,8 @@ There are five reasons, and when several apply the first in this order is the on
 - **A plan of theirs.** A firm plan, appointment or occasion they mentioned falls due. How plans are
   read, timed and closed is in `src/companion/features/threads/README.md` (ADR 0015).
 - **Stepping away.** They said "brb" or "shower time" and stayed gone much longer than that, so one
-  light nudge. See `src/companion/features/nudges/README.md`.
+  light nudge. The time away is a `leaving` label from the reader of what is happening with them now
+  (`src/companion/features/now/README.md`, ADR 0024). See `src/companion/features/nudges/README.md`.
 - **A time they keep.** They wrote within the same hour on most of the last week, say first thing in
   the morning, so now and then it is the one to say hi at that hour.
 - **A thought.** Something it knows comes to mind: a thread or a like of theirs from memory that is not

@@ -3,55 +3,18 @@ from __future__ import annotations
 from datetime import timedelta
 from pathlib import Path
 
-from companion.core.card import Card
 from companion.core.extractor import Extraction
 from companion.core.reachout import WOULD_NUDGE, Held
 from companion.core.turn.listening import Judgement
-from companion.core.types import Frame, Json, TraceId, TurnId
-from companion.features.nudges.logic import AWAY
-from companion.features.nudges.run import NUDGE_DROPPED, away_in_turn, tick_nudge
-from companion.loops.conversation import Conversation
-from companion.loops.current import Heard, Turn
+from companion.core.turn.now import KEY as NOW_KEY
+from companion.core.types import Json, TraceId, TurnId
+from companion.features.nudges.run import NUDGE_DROPPED, tick_nudge
+from companion.loops.current import Heard
 from companion.loops.record import Recorder
 from companion.store.sqlite.store import Store
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
+from tests.turn.test_mood_loop import NOW, REL, SESSION
 
 CALM: Heard = (Judgement(severity=0, stance="other", vague=False, age_coded=False), "j", "p")
-
-
-class Away:
-    def __init__(self) -> None:
-        self.calls = 0
-
-    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
-        del system, user, schema
-        self.calls += 1
-        return Extraction({"away": "brief", "minutes": 20}, "j", 0.0, 1)
-
-
-async def _read(tmp_path: Path, *, initiative: bool) -> int:
-    judge = Away()
-    c = Conversation(
-        Store(tmp_path / f"{initiative}.sqlite"),
-        Talker(),
-        PREFIX,
-        REL,
-        judge=judge,
-        initiative=initiative,
-    )
-    await away_in_turn(
-        c,
-        Turn(SESSION, TurnId("t"), NOW, [], "brb, shower"),
-        Frame.REAL,
-        CALM,
-        Card((), (), (), (), {}, NOW),
-    )
-    return judge.calls
-
-
-async def test_the_away_read_runs_only_while_reaching_out_is_on(tmp_path: Path) -> None:
-    assert await _read(tmp_path, initiative=True) == 1
-    assert await _read(tmp_path, initiative=False) == 0
 
 
 class Drafts:
@@ -66,8 +29,13 @@ class Drafts:
 
 def _stepped_away(tmp_path: Path) -> Store:
     store = Store(tmp_path / "away.sqlite")
-    detail: dict[str, Json] = {"kind": "brief", "minutes": 20, "said": "brb, shower"}
-    Recorder(store, REL, SESSION, TurnId("t1"), TraceId("t1"), NOW).decide(AWAY, detail)
+    detail: dict[str, Json] = {
+        "phase": "leaving",
+        "what": "they will shower",
+        "minutes": 20,
+        "said": "brb, shower",
+    }
+    Recorder(store, REL, SESSION, TurnId("t1"), TraceId("t1"), NOW).decide(NOW_KEY, detail)
     return store
 
 
