@@ -1,4 +1,5 @@
-"""Open loops and the reach-outs about them. Append-only; a loop's state is its newest event."""
+"""Threads and the reach-outs about them. Append-only; a thread's state is its newest event. The
+tables keep their first name, `open_loops`, from when plans were the only source."""
 
 from __future__ import annotations
 
@@ -7,7 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.types import RelationshipId, UtteranceId
-from companion.features.openloops.logic import LoopKind, LoopState, OpenLoop
+from companion.features.threads.logic import Source, Thread, ThreadKind, ThreadState
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
@@ -22,12 +23,12 @@ class ReachOut:
     at: datetime
 
 
-def add_loop(conn: sqlite3.Connection, loop: OpenLoop) -> None:
+def add_loop(conn: sqlite3.Connection, loop: Thread) -> None:
     with write_tx(conn):
         conn.execute(
             "INSERT INTO open_loops (id, relationship_id, claim, quote, source_utterance_id,"
-            " follow_up_at, sensitivity, created_at, kind, note_only)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " follow_up_at, sensitivity, created_at, kind, note_only, source)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 loop.id,
                 loop.relationship_id,
@@ -39,6 +40,7 @@ def add_loop(conn: sqlite3.Connection, loop: OpenLoop) -> None:
                 iso(loop.created_at),
                 loop.kind,
                 int(loop.note_only),
+                loop.source,
             ),
         )
         conn.execute(
@@ -48,7 +50,7 @@ def add_loop(conn: sqlite3.Connection, loop: OpenLoop) -> None:
 
 
 def add_event(
-    conn: sqlite3.Connection, loop_id: str, state: LoopState, reason: str, at: datetime
+    conn: sqlite3.Connection, loop_id: str, state: ThreadState, reason: str, at: datetime
 ) -> None:
     with write_tx(conn):
         conn.execute(
@@ -70,7 +72,7 @@ def events_with_reason(
     return {str(r["loop_id"]): int(r["n"]) for r in rows}
 
 
-def loops(conn: sqlite3.Connection, rel: RelationshipId) -> list[OpenLoop]:
+def loops(conn: sqlite3.Connection, rel: RelationshipId) -> list[Thread]:
     rows = conn.execute(
         "SELECT l.*, (SELECT state FROM open_loop_events e WHERE e.loop_id = l.id"
         " ORDER BY e.id DESC LIMIT 1) AS state"
@@ -78,7 +80,7 @@ def loops(conn: sqlite3.Connection, rel: RelationshipId) -> list[OpenLoop]:
         (rel,),
     ).fetchall()
     return [
-        OpenLoop(
+        Thread(
             id=str(r["id"]),
             relationship_id=RelationshipId(str(r["relationship_id"])),
             claim=str(r["claim"]),
@@ -87,9 +89,10 @@ def loops(conn: sqlite3.Connection, rel: RelationshipId) -> list[OpenLoop]:
             follow_up_at=parse_iso(str(r["follow_up_at"])),
             sensitivity=int(r["sensitivity"]),
             created_at=parse_iso(str(r["created_at"])),
-            state=LoopState(str(r["state"])),
-            kind=LoopKind(str(r["kind"])),
+            state=ThreadState(str(r["state"])),
+            kind=ThreadKind(str(r["kind"])),
             note_only=bool(r["note_only"]),
+            source=Source(str(r["source"])),
         )
         for r in rows
     ]

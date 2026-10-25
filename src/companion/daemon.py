@@ -26,10 +26,10 @@ from companion.core.types import Favorite, FavoriteId, Flag, FlagId, Relationshi
 from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck
 from companion.features.nudges.run import tick_nudge
-from companion.features.openloops.run import Ticker, drafter, tick
 from companion.features.reach.logic import Kind, dial
 from companion.features.reach.run import Reacher, tick_reach
 from companion.features.reminders.run import deliver_due
+from companion.features.threads.run import Ticker, drafter, tick
 from companion.io.stop import until_stopped
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.lib import logs, retry

@@ -8,10 +8,10 @@ import pytest
 
 from companion.core.extractor import Extraction
 from companion.core.types import Frame, Json, Speaker, Utterance
-from companion.features.openloops.run import Reading, catch_up_loops
 from companion.features.promises.cli import run
 from companion.features.promises.logic import Proposed, to_promise
 from companion.features.promises.run import read_promises
+from companion.features.threads.run import Reading, catch_up_loops
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 

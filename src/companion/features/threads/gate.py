@@ -13,7 +13,7 @@ from datetime import datetime, time, timedelta, tzinfo
 
 from companion.core.crisis import HOLD_REASON
 from companion.core.reachout import Caps, in_quiet_hours
-from companion.features.openloops.logic import SENSITIVE, LoopKind, LoopState, OpenLoop
+from companion.features.threads.logic import SENSITIVE, Thread, ThreadKind, ThreadState
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,8 +32,8 @@ class Situation:
 class Verdict:
     send: bool
     reason: str
-    loop: OpenLoop | None = None
-    expired: tuple[OpenLoop, ...] = field(default_factory=tuple)
+    loop: Thread | None = None
+    expired: tuple[Thread, ...] = field(default_factory=tuple)
 
 
 def _hours(delta: timedelta) -> float:
@@ -44,9 +44,9 @@ def _clock(t: time) -> str:
     return t.strftime("%I:%M %p").lstrip("0")
 
 
-def evaluate(loops: Sequence[OpenLoop], sit: Situation, caps: Caps = Caps()) -> Verdict:  # noqa: B008
+def evaluate(loops: Sequence[Thread], sit: Situation, caps: Caps = Caps()) -> Verdict:  # noqa: B008
     """Pick the loop to ask about, or hold with the reason."""
-    live = [lp for lp in loops if lp.state is LoopState.OPEN]
+    live = [lp for lp in loops if lp.state is ThreadState.OPEN]
     horizon = timedelta(days=caps.expire_days)
     expired = tuple(lp for lp in live if _past(lp, sit, horizon))
     due = sorted(
@@ -70,9 +70,9 @@ def evaluate(loops: Sequence[OpenLoop], sit: Situation, caps: Caps = Caps()) -> 
     return Verdict(True, f"due {since:.0f}h ago and nothing holds it: {pick.claim}", pick, expired)
 
 
-def _past(loop: OpenLoop, sit: Situation, horizon: timedelta) -> bool:
+def _past(loop: Thread, sit: Situation, horizon: timedelta) -> bool:
     """A follow-up keeps for a couple of days; a celebration or encouragement for its day only."""
-    if loop.kind is LoopKind.FOLLOW_UP:
+    if loop.kind is ThreadKind.FOLLOW_UP:
         return sit.now > loop.follow_up_at + horizon
     return sit.now.astimezone(sit.tz).date() > loop.follow_up_at.astimezone(sit.tz).date()
 

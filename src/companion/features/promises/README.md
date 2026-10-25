@@ -6,7 +6,7 @@ Records the promises the companion makes in its own replies, such as a promise t
 
 ## How it works
 
-**Where it runs.** The memory pass hands `read_promises` to the open-loop pass (`Reading` in `features/openloops/run.py`) when the switch is not `off`. The open-loop pass reads its own bookmark in batches of 40 messages with 4 before them as context, up to 3 batches per call. Their messages go to the open-loop reader as before and the companion's messages in the same batch go to the promise reader. Both must succeed for the batch to count as read.
+**Where it runs.** The memory pass hands `read_promises` to the open-loop pass (`Reading` in `features/threads/run.py`) when the switch is not `off`. The open-loop pass reads its own bookmark in batches of 40 messages with 4 before them as context, up to 3 batches per call. Their messages go to the open-loop reader as before and the companion's messages in the same batch go to the promise reader. Both must succeed for the batch to count as read.
 
 **The read.** `system/promise-read` gets the batch with the companion's messages as targets and returns, for each promise, the message label, the exact quote, a one-sentence claim, a kind (`standing`: a rule for every later message, `once`: one thing on a later day) and `avoid`, a word it promised to stop using or an empty string. Most messages contain none. The prompt counts only a promise to change how it talks or acts from now on, made because they asked, corrected it or complained. Limits, banter, company, reassurance, apologies with no rule and anything in a scene are not promises.
 

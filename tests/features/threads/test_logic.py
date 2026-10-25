@@ -14,14 +14,14 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.openloops.logic import (
+from companion.features.threads.logic import (
     NOTE_DELAY,
-    LoopKind,
-    LoopState,
     Making,
-    OpenLoop,
     RawLoop,
     RawResolution,
+    Thread,
+    ThreadKind,
+    ThreadState,
     follow_up_time,
     loop_labels,
     loop_note,
@@ -92,14 +92,14 @@ def _raw(**over: object) -> RawLoop:
     return RawLoop(**base)  # type: ignore[arg-type]
 
 
-def _make(raw: RawLoop, u: Utterance, now: datetime = MON) -> OpenLoop | str:
+def _make(raw: RawLoop, u: Utterance, now: datetime = MON) -> Thread | str:
     made = Making(REL, now, UTC, lambda: "loop-1")
     return to_loop(raw, {"m1": u}, made)
 
 
 def test_a_good_loop_keeps_the_exact_quote_and_gets_its_follow_up_time() -> None:
     loop = _make(_raw(), _utt("ok so i'm Going To The Vet tomorrow, wish me luck"))
-    assert isinstance(loop, OpenLoop)
+    assert isinstance(loop, Thread)
     assert loop.quote == "Going To The Vet tomorrow"
     assert loop.follow_up_at == _at(14)
     assert loop.source_utterance_id == "u1"
@@ -138,7 +138,7 @@ def test_a_follow_up_that_passed_days_ago_is_not_recorded() -> None:
 def test_a_garbled_label_is_rescued_by_the_one_message_that_holds_the_quote() -> None:
     made = Making(REL, MON, UTC, lambda: "x")
     assert isinstance(
-        to_loop(_raw(ref="m9"), {"m1": _utt("going to the vet tomorrow")}, made), OpenLoop
+        to_loop(_raw(ref="m9"), {"m1": _utt("going to the vet tomorrow")}, made), Thread
     )
 
 
@@ -177,10 +177,10 @@ def test_parse_accepts_labelled_items_and_refuses_anything_malformed() -> None:
     assert parse({"loops": [flag]}) is None
 
 
-def _loop_from(u: Utterance) -> OpenLoop:
+def _loop_from(u: Utterance) -> Thread:
     made = Making(REL, MON, UTC, lambda: "loop-1")
     loop = to_loop(_raw(), {"m1": u}, made)
-    assert isinstance(loop, OpenLoop)
+    assert isinstance(loop, Thread)
     return loop
 
 
@@ -213,10 +213,10 @@ def test_open_loops_are_listed_for_the_model_and_resolutions_are_parsed() -> Non
 
 
 def test_a_celebration_lands_on_the_day_and_encouragement_early_that_morning() -> None:
-    assert follow_up_time("december 4th", "days", MON, UTC, LoopKind.CELEBRATE) == datetime(
+    assert follow_up_time("december 4th", "days", MON, UTC, ThreadKind.CELEBRATE) == datetime(
         2026, 12, 4, 10, 0, tzinfo=UTC
     )
-    assert follow_up_time("friday", "days", MON, UTC, LoopKind.ENCOURAGE) == datetime(
+    assert follow_up_time("friday", "days", MON, UTC, ThreadKind.ENCOURAGE) == datetime(
         2026, 10, 16, 8, 30, tzinfo=UTC
     )
     assert follow_up_time("friday", "days", MON, UTC) == _at(17)
@@ -224,11 +224,11 @@ def test_a_celebration_lands_on_the_day_and_encouragement_early_that_morning() -
 
 def test_a_celebration_or_encouragement_without_a_day_after_today_is_not_recorded() -> None:
     for when in ("", "soon", "today"):
-        raw = _raw(when=when, kind=LoopKind.CELEBRATE)
+        raw = _raw(when=when, kind=ThreadKind.CELEBRATE)
         assert "needs a day" in str(_make(raw, _utt("going to the vet tomorrow")))
-    made = _make(_raw(when="friday", kind=LoopKind.ENCOURAGE), _utt("going to the vet tomorrow"))
-    assert isinstance(made, OpenLoop)
-    assert made.kind is LoopKind.ENCOURAGE
+    made = _make(_raw(when="friday", kind=ThreadKind.ENCOURAGE), _utt("going to the vet tomorrow"))
+    assert isinstance(made, Thread)
+    assert made.kind is ThreadKind.ENCOURAGE
 
 
 def test_a_same_day_plan_is_a_note_only_follow_up_a_few_hours_on() -> None:
@@ -236,13 +236,13 @@ def test_a_same_day_plan_is_a_note_only_follow_up_a_few_hours_on() -> None:
         _raw(quote="exam in two hours", claim="their exam", scale="hours", kind="encourage"),
         _utt("exam in two hours"),
     )
-    assert isinstance(loop, OpenLoop)
+    assert isinstance(loop, Thread)
     assert loop.note_only
-    assert loop.kind is LoopKind.FOLLOW_UP
+    assert loop.kind is ThreadKind.FOLLOW_UP
     assert loop.follow_up_at == MON + NOTE_DELAY
 
 
-def _loop(lid: str, kind: LoopKind, due: datetime, **over: object) -> OpenLoop:
+def _loop(lid: str, kind: ThreadKind, due: datetime, **over: object) -> Thread:
     fields: dict[str, object] = {
         "id": lid,
         "relationship_id": REL,
@@ -255,16 +255,16 @@ def _loop(lid: str, kind: LoopKind, due: datetime, **over: object) -> OpenLoop:
         "kind": kind,
     }
     fields.update(over)
-    return OpenLoop(**fields)  # type: ignore[arg-type]
+    return Thread(**fields)  # type: ignore[arg-type]
 
 
 def test_the_note_picks_a_celebration_first_then_the_latest_follow_up() -> None:
     now = _at(20, 15)
     loops = [
-        _loop("old", LoopKind.FOLLOW_UP, _at(18)),
-        _loop("new", LoopKind.FOLLOW_UP, _at(20)),
-        _loop("bday", LoopKind.CELEBRATE, _at(20)),
-        _loop("later", LoopKind.FOLLOW_UP, _at(21)),
+        _loop("old", ThreadKind.FOLLOW_UP, _at(18)),
+        _loop("new", ThreadKind.FOLLOW_UP, _at(20)),
+        _loop("bday", ThreadKind.CELEBRATE, _at(20)),
+        _loop("later", ThreadKind.FOLLOW_UP, _at(21)),
     ]
     assert pick_note(loops, {}, now, UTC).id == "bday"  # type: ignore[union-attr]
     assert pick_note(loops[:2], {}, now, UTC).id == "new"  # type: ignore[union-attr]
@@ -273,26 +273,28 @@ def test_the_note_picks_a_celebration_first_then_the_latest_follow_up() -> None:
 
 def test_the_note_is_offered_twice_then_let_go_and_never_when_sensitive_or_settled() -> None:
     now = _at(20, 15)
-    asked = _loop("a", LoopKind.FOLLOW_UP, _at(20), state=LoopState.ASKED)
+    asked = _loop("a", ThreadKind.FOLLOW_UP, _at(20), state=ThreadState.ASKED)
     assert pick_note([asked], {}, now, UTC) is None  # asked by a reach-out, not a note
     assert pick_note([asked], {"a": 1}, now, UTC) is asked
     assert pick_note([asked], {"a": 2}, now, UTC) is None
-    assert pick_note([_loop("s", LoopKind.FOLLOW_UP, _at(20), sensitivity=2)], {}, now, UTC) is None
-    done = _loop("d", LoopKind.FOLLOW_UP, _at(20), state=LoopState.RESOLVED)
+    assert (
+        pick_note([_loop("s", ThreadKind.FOLLOW_UP, _at(20), sensitivity=2)], {}, now, UTC) is None
+    )
+    done = _loop("d", ThreadKind.FOLLOW_UP, _at(20), state=ThreadState.RESOLVED)
     assert pick_note([done], {}, now, UTC) is None
-    stale = _loop("x", LoopKind.FOLLOW_UP, _at(15))
+    stale = _loop("x", ThreadKind.FOLLOW_UP, _at(15))
     assert pick_note([stale], {}, now, UTC) is None  # past the days a note keeps
-    yesterday = _loop("y", LoopKind.CELEBRATE, _at(19))
+    yesterday = _loop("y", ThreadKind.CELEBRATE, _at(19))
     assert pick_note([yesterday], {}, now, UTC) is None  # a celebration is for its day only
 
 
 def test_the_note_never_says_it_remembered_and_carries_the_claim() -> None:
-    note = loop_note(_loop("a", LoopKind.FOLLOW_UP, _at(20), claim="the vet visit"))
+    note = loop_note(_loop("a", ThreadKind.FOLLOW_UP, _at(20), claim="the vet visit"))
     assert "the vet visit" in note
     assert "If it fits naturally" in note
 
 
-def _loose(raw: RawLoop, u: Utterance) -> OpenLoop | str:
+def _loose(raw: RawLoop, u: Utterance) -> Thread | str:
     return to_loop(raw, {"m1": u}, Making(REL, MON, UTC, lambda: "loop-1", loose=True))
 
 
@@ -300,12 +302,12 @@ def test_a_hedged_plan_is_a_note_only_loop_when_loose_and_rejected_when_strict()
     u = _utt("going to the vet tomorrow")
     maybe = _raw(certainty="maybe")
     loose = _loose(maybe, u)
-    assert isinstance(loose, OpenLoop)
+    assert isinstance(loose, Thread)
     assert loose.note_only  # asked when they write, never a reach-out
     assert _make(maybe, u) == "not a firm plan (maybe), a friend would not ask"
     assert _loose(_raw(certainty="wish"), u) == "not a firm plan (wish), a friend would not ask"
     firm = _loose(_raw(), u)
-    assert isinstance(firm, OpenLoop)
+    assert isinstance(firm, Thread)
     assert not firm.note_only
 
 

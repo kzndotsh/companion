@@ -10,11 +10,11 @@ import pytest
 from companion.core.crisis import HOLD_KEY
 from companion.core.types import RelationshipId, SessionId, TraceId, TurnId
 from companion.features.nudges.run import _look as nudge_look  # pyright: ignore[reportPrivateUsage]
-from companion.features.openloops.run import (
-    _situation as loop_situation,  # pyright: ignore[reportPrivateUsage]
-)
 from companion.features.reach.logic import Dial
 from companion.features.reach.run import Reacher, situation
+from companion.features.threads.run import (
+    _situation as loop_situation,  # pyright: ignore[reportPrivateUsage]
+)
 from companion.loops.record import Recorder
 from companion.store.sqlite.store import Store
 

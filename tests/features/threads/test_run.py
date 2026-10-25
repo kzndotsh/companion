@@ -18,8 +18,8 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.openloops.logic import LoopState, OpenLoop
-from companion.features.openloops.run import (
+from companion.features.threads.logic import Thread, ThreadState
+from companion.features.threads.run import (
     Reading,
     Ticker,
     catch_up_loops,
@@ -27,7 +27,7 @@ from companion.features.openloops.run import (
     extract_open_loops,
     tick,
 )
-from companion.features.openloops.store import ReachOut
+from companion.features.threads.store import ReachOut
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -144,12 +144,12 @@ async def test_a_malformed_answer_or_a_failing_model_records_nothing_and_does_no
     assert store.open_loops(REL) == []
 
 
-async def _recorded(store: Store) -> OpenLoop:
+async def _recorded(store: Store) -> Thread:
     await _extract(store, _said(store), {"loops": [_item()]})
     return store.open_loops(REL)[0]
 
 
-async def _draft(loop: OpenLoop) -> str:
+async def _draft(loop: Thread) -> str:
     return f"how did the {loop.claim} go?"
 
 
@@ -171,7 +171,7 @@ async def test_a_shadow_tick_records_the_draft_and_marks_the_loop_asked_without_
     assert reach[0].mode == "shadow"
     assert reach[0].draft == "how did the vet visit go?"
     assert reach[0].loop_id == loop.id
-    assert store.open_loops(REL)[0].state is LoopState.ASKED
+    assert store.open_loops(REL)[0].state is ThreadState.ASKED
     initiated = store.decisions_of_kind(REL, DecisionKind.INITIATE)
     assert len(initiated) == 1
     assert initiated[0].reason.startswith("shadow, would send: due ")
@@ -197,7 +197,7 @@ async def test_a_hold_is_recorded_once_with_its_reason_not_every_tick(store: Sto
     assert len(held) == 1
     assert "quiet hours" in held[0].reason
     assert store.reach_outs(REL) == []
-    assert store.open_loops(REL)[0].state is LoopState.OPEN  # held, so still waiting
+    assert store.open_loops(REL)[0].state is ThreadState.OPEN  # held, so still waiting
 
 
 async def test_a_loop_past_its_horizon_expires_and_is_never_sent(store: Store) -> None:
@@ -205,7 +205,7 @@ async def test_a_loop_past_its_horizon_expires_and_is_never_sent(store: Store) -
     far = LATER + timedelta(days=10)
     verdict = await tick(store, REL, far, UTC, _draft, Ticker(), Caps())
     assert not verdict.send
-    assert store.open_loops(REL)[0].state is LoopState.EXPIRED
+    assert store.open_loops(REL)[0].state is ThreadState.EXPIRED
     assert store.reach_outs(REL) == []
 
 
@@ -234,7 +234,7 @@ async def test_a_loop_they_settle_themselves_is_closed_and_never_asked_about(sto
     assert counts is not None
     assert counts.resolved == 1
     assert "[L1] vet visit" in model.prompts[0]
-    assert store.open_loops(REL)[0].state is LoopState.RESOLVED
+    assert store.open_loops(REL)[0].state is ThreadState.RESOLVED
     assert any("they brought it up themselves" in n for n in notes)
     verdict = await tick(store, REL, LATER, UTC, _draft, Ticker())
     assert not verdict.send
@@ -264,7 +264,7 @@ async def test_a_shadow_reach_out_never_counts_as_unanswered(store: Store) -> No
 async def test_no_paid_draft_is_made_unless_every_cheap_gate_passes(store: Store) -> None:
     calls: list[str] = []
 
-    async def counting(loop: OpenLoop) -> str:
+    async def counting(loop: Thread) -> str:
         calls.append(loop.id)
         return "how did it go?"
 

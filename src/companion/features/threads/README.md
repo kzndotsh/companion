@@ -1,6 +1,14 @@
-# Open loops (J15, ADR 0015)
+# Threads (ADR 0023; plans: J15, ADR 0015)
 
-Things they said about their own near future that a friend would ask about later, such as a plan, an appointment or something they are waiting on. It brings one up when they next write, and in shadow it works out when it would reach out first.
+A thread is one thing the companion may bring up on its own: what it is, where it came from (`Source`), when
+it fits, how sensitive it is, and a state (open, asked, resolved, expired, dropped) kept as an event log.
+Every source writes threads; the note and the reach-out read them. Today there is one source, plans, so the
+rest of this page is about plans. The interrupted story, weekly rhythms, milestones and pending outcomes, and
+a topic gone quiet join as sources (ADR 0023, card R21). The tables keep their first names (`open_loops`,
+`open_loop_events`, `reach_outs`), and decision keys, prompts and the note's name (`loop`) are unchanged, so
+history reads the same.
+
+**Plans.** Things they said about their own near future that a friend would ask about later, such as a plan, an appointment or something they are waiting on. It brings one up when they next write, and in shadow it works out when it would reach out first.
 
 **Status:** the note when they write is live. Reaching out is shadow (review by 2026-10-31, judged on would-sends that read right to the owner, none in quiet hours or mid-chat). Switch: `COMPANION_INITIATIVE` (`shadow` default, `off`), which stops only the 15-minute tick. Reading plans (in the slow loop's batch, after a memory pass) and the note (before the reply) run whatever it says.
 
@@ -80,4 +88,4 @@ These numbers live in `Caps` in `core/reachout.py`, shared with nudges. Quiet ho
 
 ## Tests
 
-`tests/features/openloops/`
+`tests/features/threads/`

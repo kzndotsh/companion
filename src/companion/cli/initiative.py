@@ -12,9 +12,9 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.reachout import WOULD_NUDGE
 from companion.core.types import DecisionKind, RelationshipId
 from companion.features.nudges.logic import AWAY
-from companion.features.openloops.run import HELD
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.logic import dial
+from companion.features.threads.run import HELD
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 

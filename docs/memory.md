@@ -18,7 +18,7 @@ bookmark, so a pass that crashes or runs twice reads nothing it already finished
 
 The same pass reads the companion's own messages for views it expressed. Those are gated before they
 can reach the card (ADR 0009). The same pass also reads plans for open loops
-(`src/companion/features/openloops/README.md`). After a pass that stored new memories of theirs, each
+(`src/companion/features/threads/README.md`). After a pass that stored new memories of theirs, each
 feature's step runs in the registry's order: labelling the memory map, listing names, writing context
 and judging worth; then the new memories are embedded. After a pass that stored new views of its own,
 the lore step labels them (`src/companion/features/lore/README.md`).

@@ -10,7 +10,7 @@ A friend who likes you writes first now and then: because something made them th
 
 **The kinds, in order.** Every kind is weighed on every tick and logged with why it applies or not; the first that applies is the reason:
 
-1. A plan of theirs: the open-loop tick (`features/openloops/README.md`). If it would send this tick, nothing more is done.
+1. A plan of theirs: the open-loop tick (`features/threads/README.md`). If it would send this tick, nothing more is done.
 2. Stepping away: the nudge tick (`features/nudges/README.md`), the same.
 3. A time they keep: they wrote within the same local hour on at least 5 of the last 7 days, it is that hour now, and it has not said hi at their time in the last 3 days.
 4. A thought: one thing it knows, chosen by code: a memory of theirs that is a thread or a like (sensitivity 0 or 1 only, never 2 or 3, never from a scene), one of its own tastes (ADR 0020), or the gist of an everyday stretch of chat from the last 7 days. The pick is the same for the same day (a hash of the date and the thing's id), so a replay or a test is stable, and a thing is not used twice in 14 days. It applies at a usual hour once the pause is at least half the missing-them pause, at most once a day.

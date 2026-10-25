@@ -17,9 +17,9 @@ from companion.features.mood.run import MOOD
 from companion.features.moves.run import MOVES
 from companion.features.names.run import NAMES
 from companion.features.nudges.run import NUDGES
-from companion.features.openloops.run import OPENLOOPS
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
+from companion.features.threads.run import OPENLOOPS
 from companion.features.topics.run import TOPICS
 from companion.features.worth.run import WORTH
 from companion.loops.features import Feature

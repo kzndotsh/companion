@@ -53,8 +53,8 @@ from companion.core.types import (
 )
 from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck
-from companion.features.openloops.run import Reading, catch_up_loops
 from companion.features.promises.run import read_promises
+from companion.features.threads.run import Reading, catch_up_loops
 from companion.loops.embed import embed_missing
 from companion.loops.record import Recorder
 from companion.memory.views import WANT_KINDS, check_views

@@ -40,7 +40,7 @@ _SAME_DAY = re.compile(
 )
 
 
-class LoopKind(StrEnum):
+class ThreadKind(StrEnum):
     """What the thing is, which decides when and how to reach out."""
 
     FOLLOW_UP = "follow_up"  # asked about the morning after: how did it go
@@ -48,7 +48,13 @@ class LoopKind(StrEnum):
     ENCOURAGE = "encourage"  # a word the morning of: cheering them on
 
 
-class LoopState(StrEnum):
+class Source(StrEnum):
+    """Where a thread came from (ADR 0023). Plans are the first source; more join as built."""
+
+    PLAN = "plan"  # a plan, appointment or occasion of theirs, read from their own words
+
+
+class ThreadState(StrEnum):
     OPEN = "open"
     ASKED = "asked"
     RESOLVED = "resolved"
@@ -57,7 +63,7 @@ class LoopState(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class OpenLoop:
+class Thread:
     id: str
     relationship_id: RelationshipId
     claim: str
@@ -66,9 +72,10 @@ class OpenLoop:
     follow_up_at: datetime
     sensitivity: int
     created_at: datetime
-    state: LoopState = LoopState.OPEN
-    kind: LoopKind = LoopKind.FOLLOW_UP
+    state: ThreadState = ThreadState.OPEN
+    kind: ThreadKind = ThreadKind.FOLLOW_UP
     note_only: bool = False  # same-day: only ever a note when they next write, never a reach-out
+    source: Source = Source.PLAN
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,7 +88,7 @@ class RawLoop:
     sensitivity: int
     certainty: str = "firm"
     about_companion: bool = False
-    kind: str = LoopKind.FOLLOW_UP
+    kind: str = ThreadKind.FOLLOW_UP
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,7 +117,7 @@ SCHEMA: dict[str, Json] = {
                     "sensitivity": {"type": "integer"},
                     "certainty": {"type": "string", "enum": list(CERTAINTIES)},
                     "about_companion": {"type": "boolean"},
-                    "kind": {"type": "string", "enum": [k.value for k in LoopKind]},
+                    "kind": {"type": "string", "enum": [k.value for k in ThreadKind]},
                 },
                 "required": [
                     "ref",
@@ -188,13 +195,13 @@ def parse_resolved(data: Json) -> list[RawResolution]:
     return out
 
 
-def loop_labels(loops: Sequence[OpenLoop]) -> dict[str, OpenLoop]:
+def loop_labels(loops: Sequence[Thread]) -> dict[str, Thread]:
     """Short labels for the loops still waiting, so the model can point at one."""
-    waiting = [lp for lp in loops if lp.state in {LoopState.OPEN, LoopState.ASKED}]
+    waiting = [lp for lp in loops if lp.state in {ThreadState.OPEN, ThreadState.ASKED}]
     return {f"L{i}": lp for i, lp in enumerate(waiting, start=1)}
 
 
-def render_open_loops(labels: Mapping[str, OpenLoop]) -> str:
+def render_open_loops(labels: Mapping[str, Thread]) -> str:
     """The section of the prompt that lists the loops still waiting."""
     if not labels:
         return ""
@@ -203,8 +210,8 @@ def render_open_loops(labels: Mapping[str, OpenLoop]) -> str:
 
 
 def to_resolution(
-    raw: RawResolution, labels: Mapping[str, OpenLoop], index: Mapping[str, Utterance]
-) -> tuple[OpenLoop, str] | str:
+    raw: RawResolution, labels: Mapping[str, Thread], index: Mapping[str, Utterance]
+) -> tuple[Thread, str] | str:
     """The loop to close and the quote that settles it, or the reason it must not be closed."""
     loop = labels.get(raw.loop)
     if loop is None:
@@ -272,17 +279,17 @@ def _event_offset(when: str, said: datetime) -> int | None:
 
 
 def follow_up_time(
-    when: str, scale: str, said_at: datetime, tz: tzinfo, kind: str = LoopKind.FOLLOW_UP
+    when: str, scale: str, said_at: datetime, tz: tzinfo, kind: str = ThreadKind.FOLLOW_UP
 ) -> datetime | None:
     """When to reach out. A follow-up is the morning after the thing happens, or a few days on when
     nothing says when. A celebration is the morning of the day and encouragement early that morning;
     both need a day after today, so None when there is none."""
     said = said_at.astimezone(tz)
     offset = _event_offset(when, said)
-    if kind in {LoopKind.CELEBRATE, LoopKind.ENCOURAGE}:
+    if kind in {ThreadKind.CELEBRATE, ThreadKind.ENCOURAGE}:
         if not offset:
             return None
-        at = CELEBRATE_TIME if kind == LoopKind.CELEBRATE else ENCOURAGE_TIME
+        at = CELEBRATE_TIME if kind == ThreadKind.CELEBRATE else ENCOURAGE_TIME
         return datetime.combine(said.date() + timedelta(days=offset), at, tzinfo=tz)
     if offset is None:
         offset = 0 if scale == "hours" else UNDATED_DAYS - 1
@@ -340,7 +347,7 @@ def _why_not(
             raw.certainty != "firm" and not hedged_ok,
             f"not a firm plan ({raw.certainty}), a friend would not ask",
         ),
-        (raw.kind not in set(LoopKind), f"unknown kind {raw.kind!r}"),
+        (raw.kind not in set(ThreadKind), f"unknown kind {raw.kind!r}"),
         (
             source is not None and when is None,
             "a celebration or encouragement needs a day after today to land on",
@@ -354,7 +361,7 @@ def _why_not(
     return next((message for failed, message in checks if failed), None)
 
 
-def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenLoop | str:
+def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> Thread | str:
     """The loop to record, or the reason it must not be."""
     source = _source(raw, index)
     same_day = raw.scale in SAME_DAY_SCALES
@@ -368,7 +375,7 @@ def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenL
     problem = _why_not(raw, source, when, made)
     if problem is not None or source is None or when is None:
         return problem or "no source"
-    return OpenLoop(
+    return Thread(
         id=made.new_id(),
         relationship_id=made.rel,
         claim=raw.claim,
@@ -377,31 +384,31 @@ def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> OpenL
         follow_up_at=when,
         sensitivity=max(raw.sensitivity, 0),
         created_at=made.now,
-        kind=LoopKind.FOLLOW_UP if same_day else LoopKind(raw.kind),
+        kind=ThreadKind.FOLLOW_UP if same_day else ThreadKind(raw.kind),
         note_only=same_day or hedged,  # asked when they write, never a reach-out
     )
 
 
-_KIND_ORDER = {LoopKind.CELEBRATE: 0, LoopKind.ENCOURAGE: 1, LoopKind.FOLLOW_UP: 2}
+_KIND_ORDER = {ThreadKind.CELEBRATE: 0, ThreadKind.ENCOURAGE: 1, ThreadKind.FOLLOW_UP: 2}
 
 
-def _note_due(loop: OpenLoop, now: datetime, tz: tzinfo) -> bool:
+def _note_due(loop: Thread, now: datetime, tz: tzinfo) -> bool:
     """A follow-up from its time for a few days; a celebration or encouragement on its day only."""
-    if loop.kind is LoopKind.FOLLOW_UP:
+    if loop.kind is ThreadKind.FOLLOW_UP:
         return loop.follow_up_at <= now <= loop.follow_up_at + NOTE_KEEPS
     return loop.follow_up_at.astimezone(tz).date() == now.astimezone(tz).date()
 
 
 def pick_note(
-    loops: Sequence[OpenLoop], offers: Mapping[str, int], now: datetime, tz: tzinfo
-) -> OpenLoop | None:
+    loops: Sequence[Thread], offers: Mapping[str, int], now: datetime, tz: tzinfo
+) -> Thread | None:
     """The one loop to bring up as a note when they write (J15), or None. Open, or already offered
     once as a note and still unsettled; never sensitive; due now. A celebration beats an
     encouragement beats a follow-up, then the most recently due."""
 
-    def offerable(lp: OpenLoop) -> bool:
+    def offerable(lp: Thread) -> bool:
         n = offers.get(lp.id, 0)
-        state_ok = lp.state is LoopState.OPEN or (lp.state is LoopState.ASKED and n > 0)
+        state_ok = lp.state is ThreadState.OPEN or (lp.state is ThreadState.ASKED and n > 0)
         return state_ok and n < MAX_OFFERS and lp.sensitivity < SENSITIVE and _note_due(lp, now, tz)
 
     due = [lp for lp in loops if offerable(lp)]
@@ -410,17 +417,17 @@ def pick_note(
 
 
 _NOTES = {
-    LoopKind.FOLLOW_UP: get("notes/loop-follow-up"),
-    LoopKind.CELEBRATE: get("notes/loop-celebrate"),
-    LoopKind.ENCOURAGE: get("notes/loop-encourage"),
+    ThreadKind.FOLLOW_UP: get("notes/loop-follow-up"),
+    ThreadKind.CELEBRATE: get("notes/loop-celebrate"),
+    ThreadKind.ENCOURAGE: get("notes/loop-encourage"),
 }
 
 
-def loop_note(loop: OpenLoop) -> str:
+def loop_note(loop: Thread) -> str:
     return _NOTES[loop.kind].render(claim=loop.claim)
 
 
-def loop_note_ref(loop: OpenLoop) -> str:
+def loop_note_ref(loop: Thread) -> str:
     return _NOTES[loop.kind].ref
 
 

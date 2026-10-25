@@ -49,15 +49,15 @@ from companion.features.mood import store as mood
 from companion.features.mood.logic import Effect, Said
 from companion.features.names import store as names
 from companion.features.names.logic import Row as NameRow
-from companion.features.openloops import store as open_loops
-from companion.features.openloops.logic import LoopState, OpenLoop
-from companion.features.openloops.store import ReachOut
 from companion.features.promises import store as promises
 from companion.features.promises.logic import Promise
 from companion.features.promises.store import Recorded as RecordedPromise
 from companion.features.reach import store as reach
 from companion.features.reminders import store as reminders
 from companion.features.reminders.store import Reminder
+from companion.features.threads import store as open_loops
+from companion.features.threads.logic import Thread, ThreadState
+from companion.features.threads.store import ReachOut
 from companion.store.sqlite import (
     beliefs,
     decisions,
@@ -218,11 +218,11 @@ class Store:
     def record_spend(self, rel: RelationshipId, event: SpendEvent, at: datetime) -> None:
         settings.record_spend(self._conn, rel, event, at)
 
-    def add_open_loop(self, loop: OpenLoop) -> None:
+    def add_open_loop(self, loop: Thread) -> None:
         open_loops.add_loop(self._conn, loop)
         log.debug("open loop recorded: %s (follow up %s)", loop.claim, loop.follow_up_at)
 
-    def open_loop_event(self, loop_id: str, state: LoopState, reason: str, at: datetime) -> None:
+    def open_loop_event(self, loop_id: str, state: ThreadState, reason: str, at: datetime) -> None:
         open_loops.add_event(self._conn, loop_id, state, reason, at)
 
     def loop_events_with_reason(self, rel: RelationshipId, reason: str) -> dict[str, int]:
@@ -245,7 +245,7 @@ class Store:
     def loop_failed_tries(self, rel: RelationshipId, upto_id: UtteranceId) -> int:
         return open_loops.failed_tries(self._conn, rel, upto_id)
 
-    def open_loops(self, rel: RelationshipId) -> list[OpenLoop]:
+    def open_loops(self, rel: RelationshipId) -> list[Thread]:
         return open_loops.loops(self._conn, rel)
 
     def add_reach_out(self, r: ReachOut) -> None:

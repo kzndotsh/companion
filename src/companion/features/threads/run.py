@@ -33,14 +33,14 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.openloops.gate import Situation, Verdict, evaluate
-from companion.features.openloops.logic import (
+from companion.features.threads.gate import Situation, Verdict, evaluate
+from companion.features.threads.logic import (
     PROMPT,
     SCHEMA,
     SYSTEM,
-    LoopState,
     Making,
-    OpenLoop,
+    Thread,
+    ThreadState,
     loop_labels,
     loop_note,
     loop_note_ref,
@@ -52,7 +52,7 @@ from companion.features.openloops.logic import (
     to_loop,
     to_resolution,
 )
-from companion.features.openloops.store import ReachOut
+from companion.features.threads.store import ReachOut
 from companion.loops.current import decide
 from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.record import Recorder
@@ -64,7 +64,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.initiative")
 SESSION = SessionId("initiative")
-Draft = Callable[[OpenLoop], Awaitable[str]]
+Draft = Callable[[Thread], Awaitable[str]]
 Log = Callable[[str, dict[str, Json]], None]
 
 
@@ -147,7 +147,7 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
 def _close_resolved(  # noqa: PLR0913, PLR0917
     store: Store,
     data: Json,
-    labels: Mapping[str, OpenLoop],
+    labels: Mapping[str, Thread],
     window: Mapping[str, Utterance],
     now: datetime,
     note: Log,
@@ -163,7 +163,7 @@ def _close_resolved(  # noqa: PLR0913, PLR0917
         if loop.id in closed:
             continue
         closed.add(loop.id)
-        store.open_loop_event(loop.id, LoopState.RESOLVED, f"they brought it up: {quote!r}", now)
+        store.open_loop_event(loop.id, ThreadState.RESOLVED, f"they brought it up: {quote!r}", now)
         note(
             f"open loop closed, they brought it up themselves: {loop.claim}",
             {"loop_id": loop.id, "quote": quote, "prompt": PROMPT.ref},
@@ -221,7 +221,7 @@ async def tick(  # noqa: PLR0913, PLR0917
     message and the loop is marked asked, but nothing is sent."""
     verdict = evaluate(store.open_loops(rel), _situation(store, rel, now, tz), caps)
     for lp in verdict.expired:
-        store.open_loop_event(lp.id, LoopState.EXPIRED, "past its follow-up horizon", now)
+        store.open_loop_event(lp.id, ThreadState.EXPIRED, "past its follow-up horizon", now)
         _record(store, rel, now).decide(
             "open loop expired", {"loop_id": lp.id}, reason=f"open loop expired: {lp.claim}"
         )
@@ -241,7 +241,7 @@ async def tick(  # noqa: PLR0913, PLR0917
         return verdict
     text = await draft(verdict.loop) if draft is not None else ""
     store.add_reach_out(ReachOut(_id(), rel, verdict.loop.id, "shadow", text, verdict.reason, now))
-    store.open_loop_event(verdict.loop.id, LoopState.ASKED, "shadow reach-out, not sent", now)
+    store.open_loop_event(verdict.loop.id, ThreadState.ASKED, "shadow reach-out, not sent", now)
     detail["draft"] = text
     _record(store, rel, now).decide(
         "shadow, would send",
@@ -265,7 +265,7 @@ DRAFT_SCHEMA: dict[str, Json] = {
 def drafter(extractor: Extractor) -> Draft:
     """A function that drafts the check-in for a loop. Any failure gives an empty draft."""
 
-    async def draft(loop: OpenLoop) -> str:
+    async def draft(loop: Thread) -> str:
         prompt = f"They said: {loop.quote!r}\nThe thing: {loop.claim}\nKind: {loop.kind}"
         try:
             with purpose("initiative"):
@@ -389,7 +389,7 @@ def loop_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     }
 
     def asked() -> None:
-        c.store.open_loop_event(loop.id, LoopState.ASKED, LOOP_OFFERED, t.now)
+        c.store.open_loop_event(loop.id, ThreadState.ASKED, LOOP_OFFERED, t.now)
         decide(c, t, LOOP_OFFERED, detail)
 
     note = loop_note(loop)

@@ -28,7 +28,7 @@ and the one thing a message is about; a model only writes the words, after every
 There are five reasons, and when several apply the first in this order is the one it acts on:
 
 - **A plan of theirs.** A firm plan, appointment or occasion they mentioned falls due. How plans are
-  read, timed and closed is in `src/companion/features/openloops/README.md` (ADR 0015).
+  read, timed and closed is in `src/companion/features/threads/README.md` (ADR 0015).
 - **Stepping away.** They said "brb" or "shower time" and stayed gone much longer than that, so one
   light nudge. See `src/companion/features/nudges/README.md`.
 - **A time they keep.** They wrote within the same hour on most of the last week, say first thing in

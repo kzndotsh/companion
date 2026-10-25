@@ -6,15 +6,15 @@ from datetime import UTC, datetime, timedelta
 from companion.core.crisis import HOLD_REASON
 from companion.core.reachout import Caps, in_quiet_hours
 from companion.core.types import RelationshipId, UtteranceId
-from companion.features.openloops.gate import Situation, evaluate
-from companion.features.openloops.logic import LoopKind, LoopState, OpenLoop
+from companion.features.threads.gate import Situation, evaluate
+from companion.features.threads.logic import Thread, ThreadKind, ThreadState
 
 REL = RelationshipId("rel")
 NOON = datetime(2026, 10, 14, 12, 0, tzinfo=UTC)
 
 
-def _loop(follow_up: datetime = NOON - timedelta(hours=2), **over: object) -> OpenLoop:
-    base = OpenLoop(
+def _loop(follow_up: datetime = NOON - timedelta(hours=2), **over: object) -> Thread:
+    base = Thread(
         "l1",
         REL,
         "vet visit",
@@ -96,7 +96,12 @@ def test_a_sensitive_loop_is_never_picked_even_if_recorded() -> None:
 
 
 def test_only_open_loops_are_considered() -> None:
-    for state in (LoopState.ASKED, LoopState.RESOLVED, LoopState.EXPIRED, LoopState.DROPPED):
+    for state in (
+        ThreadState.ASKED,
+        ThreadState.RESOLVED,
+        ThreadState.EXPIRED,
+        ThreadState.DROPPED,
+    ):
         assert not evaluate([_loop(state=state)], _sit()).send
 
 
@@ -138,7 +143,7 @@ def test_after_an_unanswered_reach_out_it_waits_longer_and_after_two_it_stops() 
 
 
 def test_a_celebration_keeps_only_for_its_own_day() -> None:
-    party = _loop(NOON - timedelta(hours=2), kind=LoopKind.CELEBRATE)
+    party = _loop(NOON - timedelta(hours=2), kind=ThreadKind.CELEBRATE)
     assert evaluate([party], _sit()).send
     next_day = evaluate([party], _sit(now=NOON + timedelta(days=1)))
     assert not next_day.send
