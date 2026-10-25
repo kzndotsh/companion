@@ -2178,3 +2178,31 @@ ability; what to build is a move chosen by code for the moment, described withou
 varied, and kept off tender moments. Cost: about $0.20 in replies; judging by subagents, $0.
 Rerun: scratch scripts `pairs_recent.py`, `bland_proto.py` and the two judging briefs.
 
+## 2026-10-25: bland replies across talkers and reasoning
+
+What: the same 12 echo turns, sent as recorded, 6 replies each on talkers not tried before, plus
+Luna again as the control; judged blind by two Claude subagents (Sonnet, Haiku) as adds, echo or
+forced, the same brief as the entry above. GLM-5.3, MiniMax M3.1 Flash and Gemini 3.8 Flash refuse
+to run with reasoning off, so they ran at low reasoning; the rest with it off. Then Luna and Haiku 5.5
+at high reasoning, judged in a second pass with plain Luna and GLM-5.3 as anchors (they scored the
+same as in the first pass, 17-18 and 28-29).
+
+Result, adds of 72 (Sonnet / Haiku), forced in brackets:
+- MiniMax M3.1 Flash 28 / 32 (4 / 1); GLM-5.3 29 / 28 (1 / 1); Gemini 3.8 Flash 16 / 25 (2 / 1);
+  GPT-6 Luna 18 / 16 (0 / 0); GPT-6 Luna Pro 16 / 9 (0 / 0); Kimi K3 8 / 14 (5 / 3); Haiku 5.5
+  5 / 17 (5 / 7); Qwen 3.8 Flash 2 / 10 (3 / 0).
+- Luna at high reasoning 18 / 20 (0 / 0): no change from Luna without. Haiku at high 28 / 26 (9 / 5):
+  more adds, the most forced replies of any version, and read by eye still mostly "did you cook it
+  yourself" on the lunch turn.
+- Read by eye, the best talkers are only a little less bland: most of their replies are the same
+  agree-and-ask-for-detail shape. Against them, Luna with a note asking for one thing of its own made
+  61 / 62 adds on the same turns.
+- Real cost on these requests, with caching: Luna about $0.00006 a reply, Luna at high reasoning
+  about $0.0002, Haiku about $0.0003, Kimi K3 about $0.005 (above the estimate), the others a few
+  ten-thousandths. Speed was logged but, at the owner's word, does not count.
+
+Decision: neither another talker nor more reasoning is the lever for blandness; the move chosen for
+the moment is. Luna stays. GLM-5.3 and MiniMax are worth keeping in mind for a full screen if the
+talker is ever revisited. Cost: about $0.65. Rerun: scratch script `model_screen.py` and the judging
+briefs.
+
