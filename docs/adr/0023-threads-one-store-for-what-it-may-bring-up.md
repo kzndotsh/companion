@@ -1,6 +1,6 @@
-# 0023. Threads: one store for what it may bring up, one picker, one budget
+# 0023. Threads: one store for what it may bring up, one picker, a pace it learns
 
-**Status:** proposed 2026-10-25. Not built. Asked for by the owner after the brainstorm in
+**Status:** accepted 2026-10-25 by the owner. Not built. Asked for by the owner after the brainstorm in
 `docs/inbox/2026-10-25-natural-reasons-to-talk.md`, which approved four new hooks: the interrupted
 story, weekly rhythms, a topic gone quiet, and milestones and pending outcomes.
 
@@ -68,9 +68,20 @@ Thread
   something, it picks at most one open thread whose window holds, by a fixed order of kinds, and
   offers its note after the history. The thread is marked offered only once the turn is stored, as
   notes already do.
-- **One budget.** The picker, not each source, owns "how much a day": at most one thread a day as a
-  note, as each feature allows today, counted across sources. The calendar's lead-ups and the
-  check-in join the same count when they move over.
+- **A pace it learns, not a fixed number.** The picker, not each source, owns how often it brings
+  something up, across all sources, and it learns that from how they answer (the owner's choice,
+  2026-10-25: "why set a limit? why not design something that it naturally just works out"):
+  - After a thread is offered, their next message is read for how they met it: *picked up* (they
+    answer about it and carry on), *brushed off* (a short reply, or they change the subject) or
+    *ignored* (nothing about it). A small model labels; code turns the label into the pace and logs
+    both (ADR 0014).
+  - The pace is a wait before the next thread. It starts at about a day, as each feature allows
+    today. Picked up shortens it a step, down to a few hours; brushed off lengthens it a step;
+    ignored lengthens it more. Recent answers weigh most, as with the reach dial (ADR 0021), which
+    steps down the same way when a reach-out goes unanswered.
+  - A safety ceiling of three threads a day stays as a backstop, never a target: early on it knows
+    little about them, and the read of how a thread was met can be wrong.
+  - The calendar's lead-ups and the check-in join the same pace when they move over.
 - **One gate for reaching out.** A thread may be a reason to text first (ADR 0021) only through the
   reach gate: learned quiet hours, the unanswered rule, the share dial and the needy check, for every
   kind. Plan check-ins move onto it, so the drift above ends.
@@ -83,7 +94,8 @@ Thread
 
 1. Generalise open loops into threads with no change in behaviour: same notes, same caps, same
    tests passing, the chaos test passing.
-2. Move the picker's casual test and daily budget into one place, and plan check-ins onto the reach
+2. Move the picker's casual test and the pace into one place (the pace in shadow at first: it logs
+   the wait it would use while the old caps still decide), and plan check-ins onto the reach
    gate (shadow, so nothing sent changes).
 3. Add the interrupted story as the first new source, after counting how often its moment happens
    in the ledger. Shadow first: log the would-offer, judge it by eye.
@@ -96,17 +108,17 @@ Thread
 
 - A new reason to talk is a source of a few dozen lines: a rule that writes threads. It inherits the
   casual test, the budget, the lifecycle, the reach gate and the logging, so it cannot drift.
-- One place decides how often it brings things up, so "too much" or "too little" is one setting to
-  measure, not six.
+- One place decides how often it brings things up, and it tunes itself from their answers, so "too
+  much" or "too little" shows as a pace in the log, not six caps to retune.
 - A migration of a live feature (open loops) comes first, before anything new shows. It must keep
   every past plan readable and the note's behaviour unchanged, checked by the existing tests and a
   replay of past turns.
-- Sources compete for one slot a day. Which kind wins is a fixed order in code, to be tuned from what
+- Sources compete for the next slot. Which kind wins is a fixed order in code, to be tuned from what
   is taken up; a thread offered and not taken up is data, not a failure.
 
-## Open questions for the owner
+## Decided with the owner
 
-- The daily budget: one thread a day across all sources (as now per feature), or a little more once
-  several sources exist.
+- ~~A fixed daily budget.~~ Decided 2026-10-25: no fixed number; a pace learned from how they meet
+  each thread, with a ceiling of three a day as a backstop (above).
 - ~~The order of kinds.~~ Decided 2026-10-25: when two fit the same turn, the interrupted story
   wins, then their own plan due today, a milestone, a weekly rhythm, a topic gone quiet.

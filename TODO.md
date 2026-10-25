@@ -267,8 +267,9 @@ removed. Live notes listed here are read from the log and the owner's marks.
 
 Decided this week and off the list: the crisis design (ADR 0022: in character, a fixed message at the
 urgent level, 988 by default, the generic message kept for now), reaching out for its own reasons (ADR
-0021: dial `warm` by default, learned hours, wait after an unanswered one), and no birthday of its own in
-the calendar.
+0021: dial `warm` by default, learned hours, wait after an unanswered one), no birthday of its own in
+the calendar, and threads (ADR 0023: one store for what it brings up, the interrupted story first, a pace
+learned from how they answer instead of a fixed number).
 
 1. **The mood (ADR 0016):** accept it and make the default on, after the review of 2026-10-26.
 2. **The memory check on (ADR 0019):** `COMPANION_CONSOLIDATE=on`, after the review of 2026-10-26.
@@ -287,9 +288,6 @@ the calendar.
 12. **Provider routing (T8).**
 13. **Flagged turns in history (T9).**
 14. **Conflict questions** waiting in `companion memory review`.
-14a. **Threads (ADR 0023, proposed):** accept one store, picker and daily budget for what it brings up
-   (open loops generalised first; then the interrupted story, weekly rhythms, milestones and pending
-   outcomes, a topic gone quiet), and settle the daily budget and the order of kinds.
 
 ---
 15. ~~A long reach-out draft is cut, not dropped.~~ Decided 2026-10-25: long drafts are fine; code keeps a draft whole and never cuts or drops it for length (`core/reachout.py` `draft_text`).
@@ -462,6 +460,11 @@ When the answer comes, the card moves to Todo or Done.
 
 Ordered. Pull from the top.
 
+- [ ] R20 Threads (ADR 0023, accepted 2026-10-25). One store, one picker and a learned pace for what it
+      brings up on its own. Step 1: generalise open loops into threads with no change in behaviour. Then the
+      shared casual test, the pace in shadow and plan check-ins on the reach gate; then the interrupted story,
+      weekly rhythms, milestones and pending outcomes, and a topic gone quiet, each counted in the ledger and
+      run in shadow first (`docs/inbox/2026-10-25-natural-reasons-to-talk.md`).
 - [ ] R18 Location (owner flag 2026-10-25: it would be useful if it knew where they are). Today the crisis
       line defaults to the US (988, ADR 0022), the calendar's region is "US" in one place (`features/calendar`
       `REGION`), and the clock uses the machine's named zone. One answer, kept from their own words or a
