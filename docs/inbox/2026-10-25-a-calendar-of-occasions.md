@@ -27,11 +27,7 @@ note after the history makes it count.
    takes the ones that come round every year.
 4. **The relationship's dates:** a month since they first talked, a hundred days, a year, worked out
    from the first message in the ledger.
-5. **Its own birthday: the day they first talked** (the owner's idea, 2026-10-25). Worked out from
-   the first message in the ledger, so every relationship has one and nothing is invented. Framed
-   playfully ("technically I was born the day you first texted me"), never as an age: a character
-   sheet may give an age of its own (Ani is 22), and the birthday does not count years from it. It
-   merges with the relationship's yearly date, so that day is one occasion, not two.
+
 
 ## How it reaches the conversation (channels)
 
@@ -94,7 +90,9 @@ religion (blind Claude judges); never on the serious or scene turns; and no repe
    fits"), or only the cultural ones until it knows what they celebrate?
 2. The relationship's dates (a month, a hundred days, a year): welcome, or too much?
 3. Lead-ups ("Halloween is in two days"): yes or no?
-4. Settled: its birthday is the day they first talked.
+4. Settled: no birthday of its own. One tied to the day they first talked was considered and dropped
+   (2026-10-25): next to a character's stated age it would confuse more than it adds. The first day
+   stays available only as the relationship's anniversary (question 2).
 
 ## Sources
 
