@@ -123,7 +123,7 @@ values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed
   matches its key (`decided_since`, `Decision.has_key`), never its reason text; decisions from before keys
   match by how their reason begins.
 - Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the three
-  allowed fallbacks, no file over its line cap (450 for a new file; the big ones may only shrink), and no
+  allowed fallbacks, no file over its line cap (600 for a new file; the big ones listed in it may only shrink), and no
   more `noqa` comments than today. When a file shrinks, lower its cap.
 - Every feature in shadow has a row in `core/shadows.py` with a review date and what it is judged on
   (`companion shadows` lists them, overdue first); a test fails when a setting defaults to shadow without

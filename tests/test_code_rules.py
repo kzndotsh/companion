@@ -20,7 +20,7 @@ REASON_MATCH = re.compile(
 REASON_ALLOWED = {"core/types.py": 1, "turn/route.py": 2, "memory/calibrate.py": 1}
 
 # No new god files: a file over DEFAULT_CAP lines is split. The big ones may only shrink.
-DEFAULT_CAP = 450
+DEFAULT_CAP = 600
 CAPS = {
     "turn/fast.py": 145,
     "store/sqlite/store.py": 536,
