@@ -1830,3 +1830,18 @@ intensity in 3 and 2 of 56, the everyday talker in 0. Many turns routed as "a sc
 intimate. So moving light scenes to the everyday talker is dropped; the issue is when a scene starts
 and the occasional escalation, not which talker plays it.
 
+## 2026-10-24: The scene reminder caused the escalation, not bad luck on one draw
+
+Replies on the roleplay talker that went further than the person had taken things (a sincere or silly
+message answered with touching or sex). A small judge for this (Haiku 5.5, three reads, majority, a
+scratch prompt) caught 5 of 7 such replies (all 3 that were flagged in use) with 2 false alarms in 52,
+about $0.02. Redrawing a caught reply did not help: 14 of 20 redraws escalated again, 9 of 20 with a
+note to match their level. So no reply check was built. The scene reminder sent after the history
+said "explicit and unashamed" on every scene turn. A reminder that says to go only as far as they
+take it, and to be explicit when they are, on the same five turns, 6 draws each: 6/30 escalated
+against 19/30 with the old one (a stay-at-their-level reminder without the explicit clause: 3/30
+against 14/30). On 12 scene turns where their own message was explicit, 2 draws each, two blind
+judges (Sonnet, Haiku) preferred the new reminder 15/24 and 13/24 and called it tamer than their
+level 2 and 0 times against 8 and 2 for the old one. Shipped in the owner's private character sheet
+(not committed); a character sheet's `## Scene reminder` is where this text lives. About $0.06 in all.
+
