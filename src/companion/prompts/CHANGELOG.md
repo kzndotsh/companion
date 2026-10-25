@@ -885,6 +885,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## Request assembly: a reply cut off is read as the part that arrived
 - From 2026-10-22 a reply sent as two or three messages that is cut off after the first went out (a newer message superseded it, or a later part failed to send) is marked undelivered, and what arrived is added beside it at the same time and turn (`Store.mark_partly_delivered`, decision `reply partly delivered`). Before, the whole reply stayed in what the model read, so it could take for seen a part the user never got. Nothing is removed: the whole reply stays in the ledger with its mark.
 
+## Request assembly: the clock line gives the date
+- From 2026-10-25 the clock line says the date as well as the weekday and time ("Right now it is Saturday 25 October 2026, 00:41.") (`core/clock.py` `now_line`; the `notes/clock` text is unchanged). Before, it gave only the weekday and time, so it could not place holidays, the season, "on the 30th" or a date they named. On 15 recent ordinary turns, 2 draws each, replies naming a date, month or year unprompted: 0/30 without and 0/30 with it.
+
 ## Reminders: an unsaid number can be null, and hour 0 means midnight only when said
 - From 2026-10-25 the reminder reader's schema lets `days`, `hour`, `minute` and `in_minutes` be null; before, they were plain integers, and a model whose provider fills every field wrote 0 for "not said" ("this evening" read as hour 0, "in a few days" as 0 days). And a reading with hour 0 is kept only when their words say midnight ("midnight", "12am", "00:00"); otherwise it has no hour and the part of the day they named decides, or it asks (`features/reminders/logic.py` `trusted`). GPT-6 Luna on the reminder suite: 32/41 before, 40/41 after; Haiku 41/41 both. The `system/reminder-read` prompt is unchanged.
 
