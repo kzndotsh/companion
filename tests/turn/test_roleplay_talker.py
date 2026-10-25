@@ -328,7 +328,7 @@ async def test_a_push_back_in_a_scene_is_answered_by_the_everyday_talker_with_a_
 
     everyday, scene = Talker("everyday"), Talker("scene")
     playing = Conversation(store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene)
-    await handle(playing, SESSION, "*waves at you*", "test", NOW)
+    await handle(playing, SESSION, "*waves at you from across the room*", "test", NOW)
     await handle(playing, SESSION, "*sits down next to you*", "test", NOW + timedelta(minutes=1))
     assert len(scene.seen) == 1  # the scene is under way
     pushed = Conversation(

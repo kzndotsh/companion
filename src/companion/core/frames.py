@@ -31,6 +31,10 @@ _CUES = re.compile(
     re.IGNORECASE,
 )
 
+# A whole message that is one short action in asterisks ("*explodes*", "*blushes hard* 😭").
+_REACTION = re.compile(r"\s*\*([^*\n]+)\*[^\w*]{0,8}")
+REACTION_WORDS = 3
+
 PROMPT = get("system/frames")
 SYSTEM = PROMPT.text
 
@@ -54,16 +58,29 @@ def has_cue(text: str) -> bool:
     return _CUES.search(text) is not None
 
 
+def reaction(text: str) -> bool:
+    """Whether the whole message is one short action in asterisks: a reaction, not a scene."""
+    found = _REACTION.fullmatch(text)
+    return found is not None and len(found.group(1).split()) <= REACTION_WORDS
+
+
 def scene_frame(history: Sequence[Utterance], now: datetime) -> Frame:
     """The frame the conversation was in at the user's last message. Out of character ends it, and
     so does a gap of SCENE_GAP or more: coming back hours later is not still the scene (a flag of
-    2026-10-23: a scene held over a two-hour gap)."""
-    for u in reversed(history):
-        if u.speaker is Speaker.USER:
-            if now - u.at >= SCENE_GAP:
-                return Frame.REAL
-            return u.frame if u.frame in NON_REAL else Frame.REAL
-    return Frame.REAL
+    2026-10-23: a scene held over a two-hour gap). A lone reaction ("*explodes*") does not start a
+    scene: it stays pretend for memory, but a scene is under way only once a second message of
+    theirs is pretend too (a flag of 2026-10-24: their next, sincere message went to the roleplay
+    talker)."""
+    theirs = [u for u in history if u.speaker is Speaker.USER]
+    if not theirs or now - theirs[-1].at >= SCENE_GAP or theirs[-1].frame not in NON_REAL:
+        return Frame.REAL
+    last = theirs[-1]
+    started = (
+        len(theirs) > 1 and theirs[-2].frame in NON_REAL and last.at - theirs[-2].at < SCENE_GAP
+    )
+    if reaction(last.text) and not started:
+        return Frame.REAL
+    return last.frame
 
 
 def needs_judge(text: str, history: Sequence[Utterance], now: datetime) -> bool:

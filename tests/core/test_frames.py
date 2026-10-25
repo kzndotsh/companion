@@ -15,6 +15,7 @@ from companion.core.frames import (
     is_assertable,
     needs_judge,
     parse,
+    reaction,
     render_reason,
     resolve,
     scene_frame,
@@ -50,7 +51,11 @@ def test_ordinary_messages_have_no_cue(text: str) -> None:
 def test_a_scene_in_progress_asks_the_judge_even_without_a_cue(
     utterance: Callable[..., Utterance],
 ) -> None:
-    play = [utterance(text="*waves*", speaker=Speaker.USER, frame=Frame.PLAY)]
+    play = [
+        utterance(
+            text="*sits down next to you by the fire*", speaker=Speaker.USER, frame=Frame.PLAY
+        )
+    ]
     soon = play[-1].at + timedelta(minutes=1)
     assert scene_frame(play, soon) is Frame.PLAY
     assert needs_judge("and then what happens", play, soon)
@@ -58,7 +63,11 @@ def test_a_scene_in_progress_asks_the_judge_even_without_a_cue(
 
 
 def test_coming_back_after_a_long_gap_ends_the_scene(utterance: Callable[..., Utterance]) -> None:
-    play = [utterance(text="*waves*", speaker=Speaker.USER, frame=Frame.PLAY)]
+    play = [
+        utterance(
+            text="*sits down next to you by the fire*", speaker=Speaker.USER, frame=Frame.PLAY
+        )
+    ]
     last = play[-1].at
     assert scene_frame(play, last + SCENE_GAP - timedelta(minutes=1)) is Frame.PLAY
     assert scene_frame(play, last + SCENE_GAP) is Frame.REAL
@@ -67,10 +76,36 @@ def test_coming_back_after_a_long_gap_ends_the_scene(utterance: Callable[..., Ut
 
 def test_stepping_out_ends_the_scene(utterance: Callable[..., Utterance]) -> None:
     out = [
-        utterance(text="*waves*", speaker=Speaker.USER, frame=Frame.PLAY),
+        utterance(
+            text="*sits down next to you by the fire*", speaker=Speaker.USER, frame=Frame.PLAY
+        ),
         utterance(text="wait, seriously though", speaker=Speaker.USER, frame=Frame.OOC),
     ]
     assert scene_frame(out, out[-1].at) is Frame.REAL
+
+
+@pytest.mark.parametrize("text", ["*explodes*", "*blushes really hard* 😭", "*dies*"])
+def test_a_lone_reaction_does_not_start_a_scene(
+    utterance: Callable[..., Utterance], text: str
+) -> None:
+    assert reaction(text)
+    alone = [
+        utterance(text="gimme kiss"),
+        utterance(text=text, speaker=Speaker.USER, frame=Frame.PLAY),
+    ]
+    assert scene_frame(alone, alone[-1].at) is Frame.REAL
+    going = [
+        utterance(
+            text="*sits down next to you by the fire*", speaker=Speaker.USER, frame=Frame.PLAY
+        ),
+        utterance(text=text, speaker=Speaker.USER, frame=Frame.PLAY),
+    ]
+    assert scene_frame(going, going[-1].at) is Frame.PLAY  # inside a scene it carries on
+
+
+def test_a_longer_action_is_not_a_reaction() -> None:
+    assert not reaction("*nuzzles into you snuggling you*")
+    assert not reaction("*explodes* ok but seriously what did you think")
 
 
 def test_an_empty_history_is_real(utterance: Callable[..., Utterance]) -> None:

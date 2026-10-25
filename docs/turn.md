@@ -62,7 +62,13 @@ When they push the flirting or a scene back, even jokingly, a small judge says s
 everyday talker with `notes/brush-off`, and the floor still comes first.
 
 A "scene" means a pretend scene in progress, as the frame judge labels it. It ends when they step out
-of it, or when they come back after two hours or more (`core/frames.py`, `SCENE_GAP`).
+of it, or when they come back after two hours or more (`core/frames.py`, `SCENE_GAP`). A lone short
+reaction in asterisks ("\*explodes\*", three words at most) is pretend for memory but does not start a
+scene on its own: a scene is under way once a second message of theirs is pretend too. Inside a scene
+already going, a reaction carries it on.
+
+`/mode` in the chat says which talker wrote the last reply and why, and whether a scene is under way
+now (`turn/mode.py`). Like `/flag` and `/fav`, it never reaches the model.
 
 The roleplay talker also sees the character sheet's `## In roleplay and intimate moments` section,
 which the everyday talker never sees. The sheet's `## Scene reminder` is sent after the history on

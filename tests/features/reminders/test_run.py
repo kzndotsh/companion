@@ -182,7 +182,7 @@ async def test_not_yet_due_waits(store: Store) -> None:
 
 async def test_a_scene_holds_it_until_the_scene_ends_then_it_goes_late(store: Store) -> None:
     _due(store, NOW)
-    _user(store, "*leans closer*", Frame.PLAY, NOW - timedelta(minutes=5))
+    _user(store, "*leans closer and takes your hand*", Frame.PLAY, NOW - timedelta(minutes=5))
     assert await _deliver(store, Writer("x"), NOW + timedelta(minutes=1)) == []
     assert [r.state for r in store.reminders(REL)] == ["pending"]
     _user(store, "ok back to real life", Frame.REAL, NOW + timedelta(hours=3))

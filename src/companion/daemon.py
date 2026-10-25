@@ -40,6 +40,7 @@ from companion.models.fallback import RefusalFallback, TalkerFallback
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from companion.turn.mode import mode_report
 
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
@@ -193,8 +194,8 @@ def _hooks(store: Store, rel: RelationshipId) -> Hooks:
     return Hooks(undelivered, last_handled, mark_handled)
 
 
-def _commands(store: Store, rel: RelationshipId, reflector: Extractor) -> Commands:
-    """The slash commands, `/flag` and `/fav`, which answer with a reaction."""
+def _commands(store: Store, rel: RelationshipId, reflector: Extractor, s: Settings) -> Commands:
+    """The slash commands: `/flag` and `/fav` answer with a reaction, `/mode` with which talker."""
 
     async def flag(arg: str) -> str | Reaction | ReactAndReply:
         turn = store.latest_turn(rel)
@@ -219,7 +220,12 @@ def _commands(store: Store, rel: RelationshipId, reflector: Extractor) -> Comman
         logging.getLogger("companion").info("favorite on turn %s: %s", turn[:8], arg.strip())
         return Reaction(FAVORITE_REACTION)
 
-    return {"flag": flag, "fav": favorite, "favorite": favorite}
+    async def mode(arg: str) -> str | Reaction | ReactAndReply:
+        del arg
+        roleplay = s.roleplay_model or s.everyday_model
+        return mode_report(store, rel, utc_now(), s.everyday_model, roleplay)
+
+    return {"flag": flag, "fav": favorite, "favorite": favorite, "mode": mode}
 
 
 INITIATIVE_TICK_SECONDS = 900
@@ -426,7 +432,7 @@ async def run(data_dir: Path) -> None:
             if task is not None
         ]
         try:
-            await tg.run(answer, _commands(store, rel, reflector))
+            await tg.run(answer, _commands(store, rel, reflector, s))
         finally:
             for task in background:
                 task.cancel()
