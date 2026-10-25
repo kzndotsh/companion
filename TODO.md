@@ -287,6 +287,9 @@ the calendar.
 12. **Provider routing (T8).**
 13. **Flagged turns in history (T9).**
 14. **Conflict questions** waiting in `companion memory review`.
+14a. **Threads (ADR 0023, proposed):** accept one store, picker and daily budget for what it brings up
+   (open loops generalised first; then the interrupted story, weekly rhythms, milestones and pending
+   outcomes, a topic gone quiet), and settle the daily budget and the order of kinds.
 
 ---
 15. ~~A long reach-out draft is cut, not dropped.~~ Decided 2026-10-25: long drafts are fine; code keeps a draft whole and never cuts or drops it for length (`core/reachout.py` `draft_text`).

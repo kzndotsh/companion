@@ -1,5 +1,8 @@
 # Natural reasons to talk: hooks with a real cause behind them
 
+**Status (2026-10-25):** the owner approved the interrupted story, weekly rhythms, a topic gone quiet,
+and milestones and pending outcomes, to be built as sources of one store (ADR 0023, proposed).
+
 Not a task. A brainstorm from 2026-10-25, after the calendar showed that one code-chosen note after
 the history makes a real occasion count (Halloween 0/12 without it, 12/12 with). The aim is the same
 for other moments: give the companion *a reason* to bring something up, never talk for the sake of it.
