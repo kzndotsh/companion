@@ -2101,3 +2101,32 @@ Cost: about $0.05. Rerun: local fixture `dinner-not-yet-eaten-local`, `--variant
 "v41.md@openai/gpt-6-luna,v41.md+note=NOTE@tail@openai/gpt-6-luna" --samples 60`, NOTE a file with the
 one bracketed line; the clock arms with the scratch script `clock_test.py`.
 
+## 2026-10-25: what tells the talker that something they said is coming has not happened yet
+
+What: the same flagged turn (dinner on its way; the reply asked how a roll tasted), replies counted by
+one code pattern across every run (asks how it was, what it was like, or how it tasted; and, apart, a
+send-off such as "enjoy your dinner" or "go eat"). Persona v41 on GPT-6 Luna. Also a check after the
+reply, and the history itself.
+
+Result:
+- No note: 20 of 140 replies assumed it was eaten; no send-offs.
+- A note after the history telling it to talk about dinner as still to come: 0 of 120, but 43 of 120
+  turned into a send-off that winds the chat down. Worse than the slip.
+- A note after the history that only states the fact ("about two minutes ago they said dinner is
+  coming soon; it has not come yet unless they say so"): 8 of 150, a real difference from no note
+  (Fisher, 1.6% chance of noise), and 2 of 150 send-offs (within noise of none).
+- The same fact on the card, in the system block: 10 of 60, no help (as with other notes, the line
+  after the history is the one that counts).
+- A check after the reply (Haiku, told what was pending) caught 23 of 24 slips but also flagged 70 of
+  the other 296 replies, so it would redraw about a quarter of replies to fix a slip seen about weekly.
+- In the real history: about 10 messages in 10 days said they were about to do something (eat, shower,
+  sleep, coffee, laundry), and the flagged turn was the one time a reply assumed it had happened (two
+  Claude labellers and a read by eye).
+- Background: a 2025 study found timestamps in the history help agents' sense of time only a little;
+  the clock-line arms on this turn agreed.
+
+Decision: a fact-only line after the history, chosen by code from what they said they are about to do,
+is the shape worth building; the wording is fixed by this measurement. Not built yet. Cost: about $0.09.
+Rerun: local fixture `dinner-not-yet-eaten-local` with `+note=NOTE@tail` and `@card`, the counting
+pattern above, and the scratch script `check_test.py` for the check.
+
