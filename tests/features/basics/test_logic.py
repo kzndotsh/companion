@@ -7,10 +7,14 @@ import pytest
 from companion.core.types import Belief, Subject
 from companion.features.basics.logic import (
     ASK_NAME,
+    ASK_PRONOUNS,
     ask_name,
+    ask_pronouns,
     asked_for_name,
+    asked_for_pronouns,
     knows_name,
     parse_name,
+    parse_pronouns,
 )
 
 
@@ -84,3 +88,54 @@ def test_a_name_is_kept_only_if_short_and_in_their_own_words(
     data: dict[str, str], said: str, name: str | None
 ) -> None:
     assert parse_name(data, said) == name  # type: ignore[arg-type]
+
+
+def test_it_asks_pronouns_only_when_unset_casual_after_the_name_and_not_asked_today() -> None:
+    ok = {
+        "address_set": False,
+        "name_known": True,
+        "casual": True,
+        "name_asked": False,
+        "asked_recently": False,
+    }
+    assert ask_pronouns(**ok) == ASK_PRONOUNS.text
+    assert ask_pronouns(**(ok | {"address_set": True})) is None
+    assert ask_pronouns(**(ok | {"name_known": False})) is None  # the name comes first
+    assert ask_pronouns(**(ok | {"name_asked": True})) is None  # not the day the name was asked
+    assert ask_pronouns(**(ok | {"casual": False})) is None
+    assert ask_pronouns(**(ok | {"asked_recently": True})) is None
+
+
+@pytest.mark.parametrize(
+    ("reply", "asked"),
+    [
+        ("btw what pronouns do you use?", True),
+        ("is it she or he, or something else?", True),
+        ("how should i refer to you?", True),
+        ("what should i call you?", False),  # that is the name
+        ("pronouns are personal", False),
+    ],
+)
+def test_it_knows_when_it_asked_their_pronouns(reply: str, *, asked: bool) -> None:
+    assert asked_for_pronouns(reply) is asked
+
+
+@pytest.mark.parametrize(
+    ("data", "said", "pronouns"),
+    [
+        ({"pronouns": "she/her"}, "she/her!", "she/her"),
+        ({"pronouns": "she/her"}, "oh it's She / Her", "she/her"),
+        ({"pronouns": "they/them"}, "he/him", None),
+        ({"pronouns": "she/her"}, "she's fine with anything", None),
+        ({"pronouns": ""}, "why do you ask lol", None),
+        (
+            {"pronouns": "any pronouns are fine with me honestly"},
+            "any pronouns are fine with me honestly",
+            None,
+        ),
+    ],
+)
+def test_pronouns_are_kept_only_if_short_and_in_their_own_words(
+    data: dict[str, str], said: str, pronouns: str | None
+) -> None:
+    assert parse_pronouns(data, said) == pronouns  # type: ignore[arg-type]

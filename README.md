@@ -36,8 +36,8 @@ Today it is reached through Telegram, its only integration for now.
   accept, but only where a judge matched the owner's own review. Each new memory is labelled about
   their life, about the bot (dropped) or one day's routine (kept a week). Everything else
   is a question for the owner ([ADR 0019](docs/adr/0019-memory-tidies-itself-only-where-a-judge-matched-the-owner.md)).
-- **Gets to know them.** It asks what to call them, keeps how they want to be referred to pinned in
-  every turn, labels each memory by part of their life, and works out (in shadow) what it knows least
+- **Gets to know them.** It asks what to call them, then their pronouns, keeps how they want to be
+  referred to pinned in every turn, labels each memory by part of their life, and works out (in shadow) what it knows least
   and when their own words open the door to asking a basic it does not know.
 - **Asks about conflicts.** A new memory that may replace or contradict an older one is a question for
   the owner, who keeps one or both.

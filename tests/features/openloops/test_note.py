@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import Frame, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.basics.logic import name_belief
 from companion.features.openloops.logic import LoopState, OpenLoop
@@ -30,6 +31,7 @@ def store(tmp_path: Path) -> Store:
     )
     s.append_utterance(said)
     s.insert_belief(name_belief(said, "Sam", "b1", said.at))
+    s.set_setting(REL, ADDRESS_KEY, "they/them", said.at)  # the basics known: no ask this turn
     s.add_open_loop(
         OpenLoop(
             "vet",

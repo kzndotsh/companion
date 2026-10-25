@@ -1,8 +1,9 @@
-"""The basics a companion should know about them, starting with what to call them (J48).
+"""The basics a companion should know about them: what to call them, then their pronouns (J48).
 
 It asked plenty of questions but only about the thing just said, and in about 700 messages it never
 asked their name. So code checks whether memory holds what they like to be called, and when it does
-not, offers one note on a casual turn, at most once a day, until it does.
+not, offers one note on a casual turn, at most once a day, until it does. Once the name is known,
+the same goes for how they want to be referred to, which is a setting (`core/turn/address.py`).
 """
 
 from __future__ import annotations
@@ -92,3 +93,53 @@ def name_belief(said: Utterance, name: str, belief_id: str, now: datetime) -> Be
         recorded_at=now,
         sensitivity=0,
     )
+
+
+ASK_PRONOUNS = get("notes/ask-pronouns")
+ASKED_PRONOUNS = "basics: offered to ask their pronouns"
+
+
+def ask_pronouns(
+    *, address_set: bool, name_known: bool, casual: bool, name_asked: bool, asked_recently: bool
+) -> str | None:
+    """The pronoun note for this turn, or None. The name comes first: pronouns only once it is
+    known, and not within a day of asking it (`name_asked`), so the two never share a turn."""
+    if address_set or not name_known or not casual or name_asked or asked_recently:
+        return None
+    return ASK_PRONOUNS.text
+
+
+PRONOUN_CAPTURE = get("system/pronoun-capture")
+PRONOUN_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"pronouns": {"type": "string"}},
+    "required": ["pronouns"],
+}
+MAX_PRONOUN_CHARS = 30
+_ASKED_FOR_PRONOUNS = re.compile(
+    r"\bpronouns?\b|\bshe or he\b|\bhe or she\b|\bhe or they\b|\bshe or they\b"
+    r"|\brefer to you\b|\breferred to\b",
+    re.IGNORECASE,
+)
+_WORD = re.compile(r"[^\W_]+(?:'[^\W_]+)?")
+
+
+def asked_for_pronouns(reply: str) -> bool:
+    """Whether the companion's message asked which pronouns they use."""
+    return "?" in reply and _ASKED_FOR_PRONOUNS.search(reply) is not None
+
+
+def parse_pronouns(data: Json, said: str) -> str | None:
+    """The pronouns they gave, only if short and every word of it is in what they wrote, ignoring
+    case and slashes."""
+    if not isinstance(data, dict):
+        return None
+    got = data.get("pronouns")
+    if not isinstance(got, str):
+        return None
+    got = " ".join(got.split()).strip(".,!?\"'")
+    words = _WORD.findall(got.lower())
+    theirs = set(_WORD.findall(said.lower()))
+    if not words or len(got) > MAX_PRONOUN_CHARS or not set(words) <= theirs:
+        return None
+    return got

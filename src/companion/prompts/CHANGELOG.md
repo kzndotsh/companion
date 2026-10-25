@@ -532,6 +532,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/ask-name
 - **notes/ask-name v1** (current). New. Added by code on a casual turn (severity 0, not a scene, not a goodbye) when no belief says what they like to be called, at most once a day, until one does (J48). Reason: in about 700 messages the companion asked their name once, only after they pointed it out.
 
+## notes/ask-pronouns
+- **notes/ask-pronouns v1** (current). New. Added by code on a casual turn when how they want to be referred to is not set, the name is known, and neither the name nor the pronouns were asked in the last day (J48). Reason: how they want to be referred to was only a setting the owner types in (`companion address --set`), so a new user had no way to give it; asking it the way the name is asked lets the answer fill the setting, and the pinned `notes/address` line carries it from the next turn.
+
 ## notes/clock
 - **notes/clock v1** (current). Moved here on 2026-10-18 from `core/clock.py`, text unchanged. Earlier history is in git.
 
@@ -724,6 +727,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/name-capture
 - **system/name-capture v1** (current). New. When the companion's last message asked what to call them, reads their answer and gives the name as written, or nothing; code keeps it only if it is short and appears in their words, and stores it as a belief quoting their answer (J48). Reason: a bare one-word answer to "what name do you like being called?" was not picked up by the memory pass.
 
+## system/pronoun-capture
+- **system/pronoun-capture v1** (current). New. When the companion's last message asked which pronouns they use and nothing is set, reads their answer and gives the pronouns as written, or nothing; code keeps it only if it is at most 30 characters and every word of it is in their message, and then sets how they want to be referred to (J48). Reason: the ask-pronouns note needs its answer kept, and a model never infers it (`core/turn/address.py`): it only copies what they wrote.
+
 ## system/openloops
 - **system/openloops v1** (superseded). From commit 75b7f99 on 2026-10-17: feat(initiative): open loops recorded from their own words and a pure gate that, in shadow mode, drafts and records the check-ins it would send and sends nothing
 - **system/openloops v2** (superseded). Each loop also carries a certainty (firm, maybe, wish) and whether it is about the companion, and code keeps only firm plans not about the companion: in shadow mode all four open loops were "maybe someday" statements or about the bot (adding vision), recorded although v1 said not to list things about the companion. The same call now also reports which open loops their new messages already settle, so code closes them as resolved and the companion never asks how something went after they told it. From the proactive-messaging review of 2026-10-18 (modality separates a plan from a wish).
@@ -766,7 +772,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **2026-10-20.** A character sheet may end its scene section with `## Scene reminder`; on roleplay turns those lines are sent as a system message after the history (`TalkerRequest.tail`), the everyday talker never sees them, and the request hash includes them. The roleplay talker's reply limit rose from 400 to 700 tokens, since longer scene replies were cut off mid-sentence. Reason: the owner found scenes too tame and short; on six real scene turns the same style lines at the top of the system block barely changed the replies, while sent after the history they made replies about three times longer and much more direct (measured in `evals/CHANGELOG.md`). The text of the reminder lives in the private sheet.
 
 ## system/basics-hook
-- **system/basics-hook v1** (current). New (J48 hook; owner flag 2026-10-20: "im getting old" was the moment to ask their age). On a casual turn, read three times beside the reply: which basic fact (age, work, home, place) their own words touch without giving it. A basic counts only when all three reads name it; one read labelled small talk too often ("mmmmmmm" as work, laundry as home). Shadow: nothing reaches the talker.
+- **system/basics-hook v1** (superseded). New (J48 hook; owner flag 2026-10-20: "im getting old" was the moment to ask their age). On a casual turn, read three times beside the reply: which basic fact (age, work, home, place) their own words touch without giving it. A basic counts only when all three reads name it; one read labelled small talk too often ("mmmmmmm" as work, laundry as home). Shadow: nothing reaches the talker.
+- **system/basics-hook v2** (current). Adds two basics, "birthday" ("my birthday's coming up") and "school" ("ugh, class tomorrow"), with one example each. To keep the six apart, a birthday moved out of age and school and studies out of work; everything else is word for word. The memory check's topic for age and work is unchanged; birthday and school have their own. Shadow: nothing reaches the talker. Not yet measured.
 
 ## system/basics-known
 - **system/basics-known v1** (current). New (J48 hook). Before the hook would ask, whether any memory states the basic outright (an age, a birth year or birthday for age). The recall look-up was too loose for this (it counted their name as knowing where they live).

@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
+from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import (
     Depth,
     Domain,
@@ -40,6 +41,7 @@ def store(tmp_path: Path) -> Store:
     s.append_utterance(said)
     named = name_belief(said, "Sam", "b1", said.at)
     s.insert_belief(named)
+    s.set_setting(REL, ADDRESS_KEY, "they/them", said.at)  # the basics known: no ask this turn
     s.add_belief_labels(REL, [Label(named.id, Domain.IDENTITY, Depth.SURFACE)], "m", "p", NOW)
     return s
 

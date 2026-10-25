@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from companion.features.hooks.logic import Basic, agreed, may_ask, read_basic
+from companion.features.hooks.logic import SCHEMA, TOPIC, Basic, agreed, may_ask, read_basic
 from tests.conftest import T0
 
 
@@ -21,3 +21,15 @@ def test_the_gate_allows_one_hook_a_day_and_each_basic_twice() -> None:
     twice = [("age", T0 - timedelta(days=9)), ("age", T0 - timedelta(days=4))]
     assert not may_ask(Basic.AGE, twice, T0)
     assert may_ask(Basic.WORK, twice, T0)
+
+
+def test_birthday_and_school_are_basics_with_their_own_memory_topic() -> None:
+    assert read_basic({"basic": "birthday"}) is Basic.BIRTHDAY
+    assert read_basic({"basic": "school"}) is Basic.SCHOOL
+    props = SCHEMA["properties"]
+    assert isinstance(props, dict)
+    basic = props["basic"]
+    assert isinstance(basic, dict)
+    assert {"birthday", "school"} <= set(basic["enum"])  # type: ignore[arg-type]
+    assert set(TOPIC) == set(Basic)
+    assert TOPIC[Basic.BIRTHDAY] != TOPIC[Basic.AGE]

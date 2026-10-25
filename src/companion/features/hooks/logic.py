@@ -29,6 +29,8 @@ class Basic(StrEnum):
     HOME = "home"
     PLACE = "place"
     AGE = "age"
+    BIRTHDAY = "birthday"
+    SCHOOL = "school"
 
 
 SCHEMA: dict[str, Json] = {
@@ -43,6 +45,8 @@ TOPIC = {
     Basic.WORK: "what they do for work or school, or that they are looking for work",
     Basic.HOME: "who they live with",
     Basic.PLACE: "where they live now",
+    Basic.BIRTHDAY: "when their birthday is",
+    Basic.SCHOOL: "what or where they study, or that they are in school",
 }
 KNEW = "hook (shadow): memory already holds the basic their words touched"
 

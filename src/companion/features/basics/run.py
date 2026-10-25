@@ -1,4 +1,4 @@
-"""Read their answer when the companion asked what to call them (J48)."""
+"""Ask what to call them and then their pronouns, and read their answers (J48)."""
 
 from __future__ import annotations
 
@@ -6,17 +6,24 @@ import uuid
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import Extractor
+from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import Speaker, Utterance
 from companion.features.basics.logic import (
     ASK_EVERY,
     ASKED,
+    ASKED_PRONOUNS,
     NAME_CAPTURE,
     NAME_SCHEMA,
+    PRONOUN_CAPTURE,
+    PRONOUN_SCHEMA,
     ask_name,
+    ask_pronouns,
     asked_for_name,
+    asked_for_pronouns,
     knows_name,
     name_belief,
     parse_name,
+    parse_pronouns,
 )
 from companion.loops.current import Turn, decide
 from companion.loops.features import Feature, Moment, Offer, Offered
@@ -42,18 +49,44 @@ async def judge_name(extractor: Extractor, asked: str, said: str) -> str | None:
     return None if got is None else got.value
 
 
-def name_offer(m: Moment, found: object, so_far: Offered) -> Offer:
-    """Offer to ask what to call them on a casual turn, at most once a day, until memory knows."""
+async def judge_pronouns(extractor: Extractor, asked: str, said: str) -> str | None:
+    """The pronouns they gave in reply, or None."""
+    judge = Judge(
+        "basics",
+        PRONOUN_CAPTURE,
+        PRONOUN_SCHEMA,
+        lambda data: parse_pronouns(data, said),
+        timeout=TIMEOUT_SECONDS,
+        unread="nothing set",
+    )
+    got = await ask(extractor, judge, f"COMPANION: {asked}\nUSER: {said}")
+    return None if got is None else got.value
+
+
+def _address_set(c: Conversation) -> bool:
+    return bool((c.store.setting(c.rel, ADDRESS_KEY) or "").strip())
+
+
+def basics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
+    """On a casual turn, at most once a day each: ask what to call them until memory knows, then
+    which pronouns they use until the setting holds them. Never both on one turn."""
     del found
     if so_far["check-in"].lines:
         return Offer()
     c, t = m.c, m.t
-    note = ask_name(
-        known=knows_name(m.beliefs),
+    known = knows_name(m.beliefs)
+    name_asked = c.store.decided_since(c.rel, ASKED, t.now - ASK_EVERY)
+    note = ask_name(known=known, casual=m.casual, asked_recently=name_asked)
+    if note is not None:
+        return Offer((note,), (lambda: decide(c, t, ASKED),))
+    note = ask_pronouns(
+        address_set=_address_set(c),
+        name_known=known,
         casual=m.casual,
-        asked_recently=c.store.decided_since(c.rel, ASKED, t.now - ASK_EVERY),
+        name_asked=name_asked,
+        asked_recently=c.store.decided_since(c.rel, ASKED_PRONOUNS, t.now - ASK_EVERY),
     )
-    return Offer() if note is None else Offer((note,), (lambda: decide(c, t, ASKED),))
+    return Offer() if note is None else Offer((note,), (lambda: decide(c, t, ASKED_PRONOUNS),))
 
 
 async def capture_name(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
@@ -73,5 +106,25 @@ async def capture_name(c: Conversation, t: Turn, said: Utterance, sent: str | No
     decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
 
 
-# What to call them: asked for on a casual turn until memory knows, and their answer remembered.
-BASICS = Feature("name", note=name_offer, after_turn=capture_name)
+async def capture_pronouns(c: Conversation, t: Turn) -> None:
+    """When its last message asked their pronouns and nothing is set, read their answer and set how
+    they want to be referred to, in their own words. Logged either way."""
+    asked = next((u.text for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), "")
+    if c.judge is None or not asked_for_pronouns(asked) or _address_set(c):
+        return
+    pronouns = await judge_pronouns(c.judge, asked, t.text)
+    reason = "basics: no pronouns in their answer"
+    if pronouns is not None:
+        c.store.set_setting(c.rel, ADDRESS_KEY, pronouns, t.now)
+        reason = f"basics: set how to refer to them ({pronouns})"
+    decide(c, t, "basics: pronoun capture", {"prompt": PRONOUN_CAPTURE.ref}, reason=reason)
+
+
+async def capture(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
+    """Once the turn is stored: the name, then the pronouns, from their answer."""
+    await capture_name(c, t, said, sent)
+    await capture_pronouns(c, t)
+
+
+# What to call them and their pronouns: asked for on a casual turn until known, answers kept.
+BASICS = Feature("name", note=basics_offer, after_turn=capture)

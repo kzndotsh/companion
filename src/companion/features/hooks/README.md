@@ -10,8 +10,8 @@ runs beside the turn, after the reply is out. Nothing reaches the talker.
 ## How it works
 
 On a casual turn only (not serious, not in a scene, not a goodbye), a small model reads their message, with the
-companion's last message before it, and says which basic it touches: `work`, `home` (who they live with),
-`place` (where they live) or `age`, or `none`. `none` also covers a message that already states the fact, a
+companion's last message before it, and says which basic it touches: `work`, `school` (classes, exams,
+studies), `home` (who they live with), `place` (where they live), `age` or `birthday`, or `none`. `none` also covers a message that already states the fact, a
 serious or upset one, and one inside a pretend scene. The question is read 3 times (`READS`) with a 5 s limit
 each. Code acts only if all three agree. A failed, slow or disagreeing read means no pick that turn.
 
@@ -21,7 +21,8 @@ Code then applies the gate, over earlier hook decisions:
 - this basic offered fewer than 2 times (`MAX_OFFERS`). Both outcomes below count as offered.
 
 If the gate passes, a stricter judge (`system/basics-known`, 5 s) reads the beliefs the recall look-up may use
-(stated for real, sensitivity 2 or less) for that topic and returns the ones that state the fact outright. A
+(stated for real, sensitivity 2 or less) for that topic (`TOPIC`, one per basic) and returns the ones that state
+the fact outright. A
 failed or slow read ends the turn with nothing logged.
 
 The result is logged as a policy decision. `hook (shadow): would ask about a basic their words touched` means
@@ -46,6 +47,7 @@ None. Its decisions are in the decision log only.
 
 ## Measured
 
+- Birthday and school (added 2026-10-24, `system/basics-hook` v2): not measured yet.
 - 2026-10-20: replayed over 341 casual messages, one read called small talk a basic too often, three agreeing reads plus the gate and the memory check would have asked in none of six days. The recall look-up was too loose for "is it known" and a strict prompt replaced it (`evals/CHANGELOG.md`).
 
 ## Tests

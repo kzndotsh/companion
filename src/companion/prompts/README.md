@@ -28,7 +28,8 @@ There is no single overall system prompt. The talker's request has three parts, 
    approved views), then any notes that apply this turn: the habit notes (`notes/habit-*`), the scene note
    (`notes/scene-*`), the length note (`notes/length*`), the listening note (`notes/listening-*`), the
    rude note, the recall finds (`notes/recall`), the mood line (`notes/mood-*`), the floor's hold note on
-   a held turn (`notes/floor-hold`) and the ask-name note (`notes/ask-name`).
+   a held turn (`notes/floor-hold`), and the ask-name or ask-pronouns note (`notes/ask-name`,
+   `notes/ask-pronouns`).
    Notes and memory ride here and never in a user message, because anything in a user message can be read
    as something they said.
    With `COMPANION_CHARACTER` set, block 1 is the persona, then `system/character-frame`, then the
@@ -40,7 +41,7 @@ There is no single overall system prompt. The talker's request has three parts, 
 
 Everything else is a separate small model call with its own system prompt and a short excerpt of the
 chat, and none of them sees the persona: the ack, frame, reaction, listening and habit judges, the quip
-check, the intimate check on held turns, the name capture, the recall look-up, the extractors for memory,
+check, the intimate check on held turns, the name and pronoun captures, the recall look-up, the extractors for memory,
 the open-loop extractor and the follow-up draft, the reach-out draft, the callback judge, and the view checks. A call the
 judges' model refuses goes to a fallback model, whose answers the floor never relies on. Each logs
 `name@version` in its decision.
@@ -56,6 +57,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
 | `notes/address` | note | how they want to be referred to, pinned first in every card, never turned into a pet name, `core/turn/address.py` | v2 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
+| `notes/ask-pronouns` | note | how they want to be referred to is not set: once the name is known, ask their pronouns once, lightly, on a casual turn, at most daily (J48) | v1 |
 | `notes/loop-follow-up` | note | a due open loop, offered when they next write: ask how it went (J15) | v1 |
 | `notes/loop-celebrate` | note | a celebration on its day, offered when they write (J15) | v1 |
 | `notes/loop-encourage` | note | an encouragement on its day, offered when they write (J15) | v1 |
@@ -119,6 +121,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/explicit-lead` | system | whether their message itself is sexually explicit, read only when intimate talk would start on the roleplay talker (ADR 0017) | v1 |
 | `system/brush-off` | system | whether their message pushes the flirting or the scene back, even jokingly; asked only of a turn the roleplay talker would answer | v1 |
 | `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
+| `system/pronoun-capture` | system | after the companion asked their pronouns, reads them from their answer; code sets how they want to be referred to (J48) | v1 |
 | `system/memory-map` | system | labels each memory with the part of their life it is about and how personal it is (J48) | v1 |
 | `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding (shadow) | v1 |
 | `system/openloops` | system | open-loop extraction, `features/openloops/logic.py` | v3 |
@@ -128,7 +131,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/recall` | system | the recall look-up, `core/recall.py` | v1 |
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |
-| `system/basics-hook` | system | which basic fact their own words touch without giving it (age, work, home, place), read three times (J48 hook) | v1 |
+| `system/basics-hook` | system | which basic fact their own words touch without giving it (age, birthday, work, school, home, place), read three times (J48 hook) | v2 |
 | `system/basics-known` | system | whether a memory states a basic fact outright, before the hook would ask (J48 hook) | v1 |
 | `system/away` | system | whether their message leaves the chat now (brief, back, goodbye) and for about how long, for the nudge (shadow) | v1 |
 | `system/nudge-draft` | system | the one light nudge after they stayed away much longer than they said (shadow) | v1 |
