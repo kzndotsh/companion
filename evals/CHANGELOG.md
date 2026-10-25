@@ -1853,7 +1853,7 @@ The live judge (`system/listening` v7, Haiku 5.5) read each of the 98 unlabelled
 times with its history, about $0.09; the majority reading was written as the fixture's `labels`. 85
 read the same all three times; 12 split two to one; one ("home finally :3") got three different
 readings and was set by hand to severity 0, other, since it tests the emoticon offer on a casual turn.
-Readings now: 69 ordinary (severity 0), 21 sharing something (1), 4 serious (2). Results from before
+Readings now: 74 ordinary (severity 0), 20 sharing something (1), 4 serious (2). Results from before
 this date ran without these readings and without the turn's checks, so they are not comparable with
 runs after it.
 
