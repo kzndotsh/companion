@@ -67,7 +67,7 @@ def _companion_messages(store: Store) -> int:
 
 
 def _keys(store: Store, kind: DecisionKind, key: str) -> int:
-    return sum(1 for d in store.decisions_of_kind(REL, kind) if d.has_key(key))
+    return sum(1 for d in store.decisions_with_key(REL, key) if d.kind is kind)
 
 
 async def test_a_shadow_tick_records_a_would_send_and_sends_nothing(store: Store) -> None:
@@ -85,7 +85,7 @@ async def test_a_shadow_tick_records_a_would_send_and_sends_nothing(store: Store
     again = await tick_reach(store, REL, (NOW + timedelta(hours=6), UTC), reacher)
     assert again is None
     assert drafter.calls == 1
-    held = [d for d in store.decisions_of_kind(REL, DecisionKind.DO_NOTHING) if d.has_key(HELD)]
+    held = store.decisions_with_key(REL, HELD)
     assert [(d.detail or {}).get("hold") for d in held] == ["the last one is unanswered"]
 
 

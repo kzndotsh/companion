@@ -6,7 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from companion.core.clock import utc_now
-from companion.core.types import DecisionKind, RelationshipId
+from companion.core.types import RelationshipId
 from companion.features.names.logic import SHADOW, index
 from companion.features.names.run import read_names
 from companion.loops.services import Services
@@ -18,7 +18,7 @@ def run(db: Path, relationship: str) -> str:
     rel = RelationshipId(relationship)
     try:
         named = index(store.name_rows(rel), {b.id for b in store.user_beliefs(rel)})
-        logged = [d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.has_key(SHADOW)]
+        logged = store.decisions_with_key(rel, SHADOW)
         left = len(store.user_beliefs(rel)) - len(store.names_read(rel))
     finally:
         store.close()

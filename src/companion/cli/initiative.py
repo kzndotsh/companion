@@ -10,7 +10,7 @@ from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
 from companion.core.reachout import WOULD_NUDGE
-from companion.core.types import DecisionKind, RelationshipId
+from companion.core.types import RelationshipId
 from companion.features.nudges.logic import AWAY
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.logic import dial
@@ -26,12 +26,9 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
     try:
         loops = store.open_loops(rel)
         reach = store.reach_outs(rel)
-        held = store.decisions_of_kind(rel, DecisionKind.DO_NOTHING)
-        held = [d for d in held if d.has_key(HELD)]
-        away = [d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.has_key(AWAY)]
-        nudges = [
-            d for d in store.decisions_of_kind(rel, DecisionKind.INITIATE) if d.has_key(WOULD_NUDGE)
-        ]
+        held = store.decisions_with_key(rel, HELD)
+        away = store.decisions_with_key(rel, AWAY)
+        nudges = store.decisions_with_key(rel, WOULD_NUDGE)
         own = own_reasons.lines(
             store, rel, (now or utc_now(), local_zone()), dial(Settings.from_env().mode("reach"))
         )

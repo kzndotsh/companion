@@ -22,6 +22,7 @@ from companion.features.reach.run import Reacher, holds
 from companion.features.threads.gate import Verdict
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.run import (
+    HELD,
     Draft,
     Reading,
     Ticker,
@@ -183,8 +184,9 @@ async def test_a_shadow_tick_records_the_draft_and_marks_the_loop_asked_without_
     assert reach[0].draft == "how did the vet visit go?"
     assert reach[0].loop_id == loop.id
     assert store.open_loops(REL)[0].state is ThreadState.ASKED
-    initiated = store.decisions_of_kind(REL, DecisionKind.INITIATE)
+    initiated = store.decisions_with_key(REL, "shadow, would send")
     assert len(initiated) == 1
+    assert initiated[0].kind is DecisionKind.INITIATE
     assert initiated[0].reason.startswith("shadow, would send: due ")
 
 
@@ -204,8 +206,9 @@ async def test_a_hold_is_recorded_once_with_its_reason_not_every_tick(store: Sto
     for minutes in (0, 15, 30):
         v = await _tick(store, night + timedelta(minutes=minutes), ticker=ticker)
         assert not v.send
-    held = store.decisions_of_kind(REL, DecisionKind.DO_NOTHING)
+    held = store.decisions_with_key(REL, HELD)
     assert len(held) == 1
+    assert held[0].kind is DecisionKind.DO_NOTHING
     assert "quiet hours" in held[0].reason
     assert store.reach_outs(REL) == []
     assert store.open_loops(REL)[0].state is ThreadState.OPEN  # held, so still waiting

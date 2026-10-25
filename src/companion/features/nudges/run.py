@@ -58,8 +58,8 @@ def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
 
 def aways(store: Store, rel: RelationshipId) -> list[Away]:
     out: list[Away] = []
-    for d in store.decisions_of_kind(rel, DecisionKind.POLICY):
-        if not d.has_key(AWAY) or not isinstance(d.detail, dict):
+    for d in store.decisions_with_key(rel, AWAY):
+        if not isinstance(d.detail, dict):
             continue
         kind, minutes, said = d.detail.get("kind"), d.detail.get("minutes"), d.detail.get("said")
         if kind in set(Kind) and isinstance(minutes, int) and isinstance(said, str):
@@ -69,9 +69,7 @@ def aways(store: Store, rel: RelationshipId) -> list[Away]:
 
 def _look(store: Store, rel: RelationshipId, now: datetime) -> Look:
     theirs = [u.at for u in store.history_before(rel, now, 40) if u.speaker is Speaker.USER]
-    sent = [
-        d for d in store.decisions_of_kind(rel, DecisionKind.INITIATE) if d.has_key(WOULD_NUDGE)
-    ]
+    sent = store.decisions_with_key(rel, WOULD_NUDGE)
     nudged = frozenset(
         str(d.detail.get("turn"))
         for d in sent

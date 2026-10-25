@@ -7,7 +7,7 @@ from collections import Counter
 from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
-from companion.core.types import DecisionKind, Depth, Domain, RelationshipId
+from companion.core.types import Depth, Domain, RelationshipId
 from companion.features.knowing.logic import WOULD_ASK, pick_gap
 from companion.features.knowing.run import label_new
 from companion.loops.services import Services
@@ -22,9 +22,7 @@ def run(db: Path, relationship: str) -> str:
     try:
         beliefs = store.user_beliefs(rel)
         labels = store.belief_labels(rel)
-        picks = [
-            d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.has_key(WOULD_ASK)
-        ]
+        picks = store.decisions_with_key(rel, WOULD_ASK)
     finally:
         store.close()
     cells = Counter((labels[b.id].domain, labels[b.id].depth) for b in beliefs if b.id in labels)

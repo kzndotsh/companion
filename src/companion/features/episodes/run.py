@@ -27,7 +27,7 @@ from datetime import UTC, datetime
 
 from companion.core.extractor import Extractor
 from companion.core.spend import purpose
-from companion.core.types import DecisionKind, RelationshipId, TurnId
+from companion.core.types import RelationshipId, TurnId
 from companion.features.episodes.logic import (
     GAP,
     PROMPT,
@@ -57,8 +57,8 @@ class Written:
 
 def _severities(store: Store, rel: RelationshipId) -> dict[TurnId, int]:
     out: dict[TurnId, int] = {}
-    for d in store.decisions_of_kind(rel, DecisionKind.POLICY):
-        if not d.has_key("listening") or not d.detail:
+    for d in store.decisions_with_key(rel, "listening"):
+        if not d.detail:
             continue
         labels = d.detail.get("labels")
         value = labels.get("severity") if isinstance(labels, dict) else None

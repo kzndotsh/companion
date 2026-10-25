@@ -108,11 +108,7 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
 def _sent(store: Store, rel: RelationshipId, start: datetime) -> tuple[list[datetime], list[Own]]:
     """When it reached out (or would have, in shadow) in any way, and its own rows."""
     own = store.own_reach_outs(rel, start)
-    nudges = [
-        d.at
-        for d in store.decisions_of_kind(rel, DecisionKind.INITIATE)
-        if d.has_key(WOULD_NUDGE) and d.at >= start
-    ]
+    nudges = [d.at for d in store.decisions_with_key(rel, WOULD_NUDGE, start)]
     loops = [r.at for r in store.reach_outs(rel, start)]
     return sorted([*(r.at for r in own if r.mode != "dropped"), *nudges, *loops]), own
 

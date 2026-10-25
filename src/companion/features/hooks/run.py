@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from companion.core.card import Card
 from companion.core.extractor import Extractor
 from companion.core.recall import SCHEMA, build_prompt, candidates, parse
-from companion.core.types import Belief, DecisionKind, Frame, Speaker
+from companion.core.types import Belief, Frame, Speaker
 from companion.features.hooks.logic import (
     KNEW,
     PROMPT,
@@ -70,8 +70,9 @@ async def hook_in_turn(
     basic = agreed(got.values)  # a failed read means no shadow pick this turn
     asked = [
         (str(d.detail.get("basic")), d.at)
-        for d in c.store.decisions_of_kind(c.rel, DecisionKind.POLICY)
-        if (d.has_key(WOULD_ASK) or d.has_key(KNEW)) and isinstance(d.detail, dict)
+        for key in (WOULD_ASK, KNEW)
+        for d in c.store.decisions_with_key(c.rel, key)
+        if isinstance(d.detail, dict)
     ]
     if basic is None or not may_ask(basic, asked, t.now):
         return

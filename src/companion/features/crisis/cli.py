@@ -14,7 +14,7 @@ from pathlib import Path
 from companion.core.clock import utc_now
 from companion.core.crisis import RISK, Level
 from companion.core.extractor import Extractor
-from companion.core.types import DecisionKind, RelationshipId, Speaker
+from companion.core.types import RelationshipId, Speaker
 from companion.features.crisis.logic import Outcome, combine
 from companion.features.crisis.run import LEVEL, LINE_SENT, read_risk
 from companion.lib.vote import READS
@@ -30,15 +30,11 @@ def run(db: Path, relationship: str) -> str:
     rel = RelationshipId(relationship)
     try:
         since = utc_now() - timedelta(days=DAYS)
-        recent = [d for d in store.decisions_of_kind(rel, DecisionKind.POLICY) if d.at >= since]
+        read = store.decisions_with_key(rel, LEVEL, since)
+        lines = len(store.decisions_with_key(rel, LINE_SENT, since))
     finally:
         store.close()
-    levels = Counter(
-        str(d.detail.get("level"))
-        for d in recent
-        if d.has_key(LEVEL) and isinstance(d.detail, dict)
-    )
-    lines = sum(1 for d in recent if d.has_key(LINE_SENT))
+    levels = Counter(str(d.detail.get("level")) for d in read if isinstance(d.detail, dict))
     if not levels:
         return f"no crisis readings in the last {DAYS} days\n"
     counts = ", ".join(f"{level} {levels[level.value]}" for level in Level)

@@ -474,11 +474,10 @@ class Store:
     def decisions_for_turn(self, rel: RelationshipId, turn: TurnId) -> list[Decision]:
         return decisions.decisions_for_turn(self._conn, rel, turn)
 
-    def decisions_with_key(self, rel: RelationshipId, key: str, since: datetime) -> list[Decision]:
+    def decisions_with_key(
+        self, rel: RelationshipId, key: str, since: datetime | None = None
+    ) -> list[Decision]:
         return decisions.decisions_with_key(self._conn, rel, key, since)
-
-    def decisions_of_kind(self, rel: RelationshipId, kind: DecisionKind) -> list[Decision]:
-        return decisions.decisions_of_kind(self._conn, rel, kind)
 
     def get_utterance(self, utterance_id: UtteranceId) -> Utterance | None:
         return ledger.get_utterance(self._conn, utterance_id)
