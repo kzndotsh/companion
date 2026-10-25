@@ -75,7 +75,7 @@ def moves_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """Its own habits: the openings and moves its recent replies repeat, by code, and what the
     last background check found while it is fresh."""
     del found, so_far
-    lines = [habit_note(m.t.prior), note_for(m.c.habits.fresh(FRESH_FOR))]
+    lines = [habit_note(m.t.prior, words=m.casual), note_for(m.c.habits.fresh(FRESH_FOR))]
     return Offer(tuple(line for line in lines if line is not None))
 
 

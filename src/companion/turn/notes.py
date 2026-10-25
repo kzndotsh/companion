@@ -18,6 +18,7 @@ from companion.core.turn.ack import (
     inputs_hash,
 )
 from companion.core.turn.floor import BRUSH_NOTE, HOLD_NOTE
+from companion.core.turn.game import game_note
 from companion.core.turn.length import LengthTarget, length_target
 from companion.core.turn.listening import PROMPT as LISTEN_PROMPT
 from companion.core.turn.listening import listening_note, repair_note, rude_note
@@ -190,14 +191,28 @@ def _owned(m: Moment, so_far: Offered) -> Offer:
 
 
 # Notes that ask them something themselves: with one of these the turn's question is the point.
-ASKING = ("check-in", "name", "loop")
+ASKING = ("check-in", "name", "loop", "game")
+
+
+def _game(m: Moment, _: Offered) -> Offer:
+    """When they asked it to keep asking them things, a note after the history to ask the next
+    one: outside a scene and not on a serious turn."""
+    serious = m.heard is not None and m.heard[0].severity >= SERIOUS
+    if m.in_scene is not Frame.REAL or serious:
+        return Offer()
+    note = game_note(m.t.prior, m.t.text, m.t.now)
+    return Offer(tail=(note,) if note else ())
 
 
 def _questions(m: Moment, so_far: Offered) -> Offer:
     """When its last replies were all questions, a note to ask nothing this time: outside a scene,
     not on a serious turn, and not when another note asks them something. After the history."""
     serious = m.heard is not None and m.heard[0].severity >= SERIOUS
-    if m.in_scene is not Frame.REAL or serious or any(so_far[n].lines for n in ASKING):
+    if (
+        m.in_scene is not Frame.REAL
+        or serious
+        or any(so_far[n].lines or so_far[n].tail for n in ASKING)
+    ):
         return Offer()
     replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]
     note = question_note(replies)
@@ -276,6 +291,7 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "check-in": _check_in,
     "hold": _hold,
     "brush-off": _brush,
+    "game": _game,
     "questions": _questions,
 }
 
@@ -303,6 +319,7 @@ ORDER: tuple[str, ...] = (
     "lore",
     "mark",
     "reminder",
+    "game",
     "questions",
 )
 

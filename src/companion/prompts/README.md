@@ -54,7 +54,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 |---|---|---|---|
 | `system/persona` | system | the talker's system prompt, the persona (its changelog entries carry the measurements) | v41 |
 | `messages/spend-cap` | message | sent to the user once a day when the spend cap is hit | v1 |
-| `notes/address` | note | how they want to be referred to, pinned first in every card, `core/turn/address.py` | v1 |
+| `notes/address` | note | how they want to be referred to, pinned first in every card, never turned into a pet name, `core/turn/address.py` | v2 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
 | `notes/loop-follow-up` | note | a due open loop, offered when they next write: ask how it went (J15) | v1 |
 | `notes/loop-celebrate` | note | a celebration on its day, offered when they write (J15) | v1 |
@@ -66,7 +66,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy, `core/turn/habits.py` | v1 |
 | `notes/habit-moves` | note | the habit finder found a habit | v1 |
 | `notes/habit-opener` | note | an opening word is overused | v1 |
-| `notes/habit-phrases` | note | phrases are repeated | v1 |
+| `notes/habit-phrases` | note | phrases or, on casual turns, single pet words are repeated; use other words | v2 |
 | `notes/length` | note | a short statement, `core/turn/length.py` | v1 |
 | `notes/length-serious` | note | a message judged serious, `core/turn/length.py` | v1 |
 | `notes/listening-everyday` | note | listening note, severity 1 | v3 |
@@ -91,6 +91,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |
 | `notes/repair` | note | they say it got them wrong: own it in one line, go on from what they said (J30) | v1 |
 | `notes/owned-it` | note | after the history: one of its last two replies owned a slip, so no more apologies or self-blame, carry on lightly | v1 |
+| `notes/question-game` | note | after the history: they told it to ask them things, so after answering or reacting, ask the next one | v1 |
 | `notes/question-run` | note | after the history: its last three replies each asked a question, so ask none this time but leave them something to answer | v1 |
 | `notes/guess` | note | they invite a guess: what memory holds that may fit, guess once as a question (J16) | v1 |
 | `notes/topic-spent` | note | a small topic has run its course: react briefly, then move on with `$move` | v1 |

@@ -8,7 +8,7 @@ What its recent replies keep repeating, so the next ones do something different.
 
 Two things feed one note, and both come first in the system block, before the length and scene notes.
 
-Code finds repeats on its own, with no model, in `core/turn/habits.py`. It names an opening word that 3 or more of its last 5 replies share, and runs of 3 to 5 words that appear in several of its last 6 replies (up to 3 phrases, starting and ending on a real word). A message of theirs with an emoji or emoticon gets an echo note, but that note is sent elsewhere.
+Code finds repeats on its own, with no model, in `core/turn/habits.py`. It names an opening word that 3 or more of its last 5 replies share, and runs of 3 to 5 words that appear in several of its last 6 replies (up to 3 phrases, starting and ending on a real word). On a casual turn it also names a single pet word: 4 letters or more, not an everyday word, in 3 of its last 6 replies outside scenes, and in none of their messages in view, so their topic is never counted. A message of theirs with an emoji or emoticon gets an echo note, but that note is sent elsewhere.
 
 The model finds the rest. After a reply is stored, a small judge reads its last 6 replies (the 5 before plus the one just sent) in the background, 6 s limit, so the check never delays a reply. It needs at least 4 replies. It names up to 3 habits (90 characters each), each with how many replies it appears in. A habit seen in fewer than 3 replies is dropped, so weak or invented ones never count. A malformed answer is unreadable and a failure means no note.
 

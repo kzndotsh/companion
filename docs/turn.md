@@ -86,7 +86,7 @@ as bracketed text (`core/prompt/sections.py`).
 The notes are chosen by code from models' labels, never written by a model (ADR 0014). They go in a
 fixed order (`ORDER` in `turn/notes.py`), and the order is checked when the bot starts. A few lines
 go after the history instead, as a system message, because there they change behaviour and in the
-system block they did not (measured twice). These are the owned-it note, the question-run note,
+system block they did not (measured twice). These are the owned-it note, the question-game and question-run notes,
 the character's scene reminder and the offer of an emoticon of its own. Whatever is sent after the history is logged with
 the turn, so a replay rebuilds it.
 
@@ -96,7 +96,10 @@ scene gets `notes/owned-it` after the history: that was enough, no more apologie
 
 When each of its last three replies asked them a question, the next turn outside a scene, not
 serious and with no other note asking them something gets `notes/question-run` after the history:
-ask nothing this time, but leave them something to answer (`core/turn/questions.py`).
+ask nothing this time, but leave them something to answer (`core/turn/questions.py`). When one of
+their last three messages told it to ask them things ("ask me anything"), with no long pause since,
+`notes/question-game` asks for the next question instead, and the question-run note stays out
+(`core/turn/game.py`).
 
 ## Checking the reply
 

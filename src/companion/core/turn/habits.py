@@ -15,7 +15,7 @@ import re
 from collections import Counter
 from collections.abc import Sequence
 
-from companion.core.types import Speaker, Utterance
+from companion.core.types import Frame, Speaker, Utterance
 from companion.prompts import get
 
 WINDOW = 5
@@ -24,6 +24,8 @@ PHRASE_WINDOW = 6
 PHRASE_MIN_REPLIES = {5: 2, 4: 2, 3: 3}  # a longer run repeated twice is already a habit
 PHRASE_LENGTHS = (5, 4, 3)
 MAX_PHRASES = 3
+WORD_MIN_REPLIES = 3  # a single word in this many of its last replies is a pet word
+WORD_MIN_CHARS = 4
 _FIRST_WORD = re.compile(r"\W*(\w+)")
 _WORD = re.compile(r"[a-z0-9']+")
 # Everyday function words. A habit is a run that starts and ends on a real word.
@@ -35,6 +37,16 @@ _FUNCTION_TEXT = (
     "really can could would should will about up out all any some"
 )
 _FUNCTION_WORDS = frozenset(_FUNCTION_TEXT.split())
+# Everyday words any reply may use often; a pet word is a less common one it keeps reaching for.
+_EVERYDAY_TEXT = (
+    "little still down right want don't around back know think good okay yeah maybe more much "
+    "even only again also gonna kind sounds sound make made feel feels sure well something "
+    "thing things time today tonight night day kinda pretty probably actually honestly lol "
+    "haha love nice cute fun better best every ever never always going come came look looks "
+    "said says tell take keep need being doing getting where then over into through after "
+    "before while still that's what's there's can't didn't won't i'd you'd we're they're"
+)
+_EVERYDAY_WORDS = frozenset(_EVERYDAY_TEXT.split())
 EMOTICON = re.compile(
     r"(?<![\w/:])(?:[:;=][-']?[)(DPpOo3*/\\|\]\[]|\^[_.]?\^|[xX][Dd]\b|<3|T_T|uwu|owo|>_<|-_-)"
 )
@@ -82,10 +94,34 @@ def repeated_phrases(prior: Sequence[Utterance]) -> list[str]:
     return [text for _, _, text in found[:MAX_PHRASES]]
 
 
-def habit_note(prior: Sequence[Utterance]) -> str | None:
-    """Everything worth telling the next turn about its own recent habits, or None."""
+def pet_words(prior: Sequence[Utterance]) -> list[str]:
+    """Single words it keeps reaching for: in several of its last few replies and in none of
+    their messages in view, so a topic they brought up is not counted ("tiny" in 7 of 38 replies
+    after one bit, owner's flag of 2026-10-25)."""
+    mine = [u.text for u in prior if u.speaker is Speaker.COMPANION and u.frame is Frame.REAL][
+        -PHRASE_WINDOW:
+    ]
+    theirs = {w for u in prior if u.speaker is Speaker.USER for w in _WORD.findall(u.text.lower())}
+    seen = Counter(w for text in mine for w in set(_WORD.findall(text.lower())))
+    return sorted(
+        w
+        for w, n in seen.items()
+        if n >= WORD_MIN_REPLIES
+        and len(w) >= WORD_MIN_CHARS
+        and w not in _FUNCTION_WORDS
+        and w not in _EVERYDAY_WORDS
+        and w not in theirs
+    )
+
+
+def habit_note(prior: Sequence[Utterance], *, words: bool = False) -> str | None:
+    """Everything worth telling the next turn about its own recent habits, or None. Single pet
+    words are counted only when `words` is set (a casual turn): in intimate talk and scenes the
+    same body words recur by nature."""
     notes = [opener_note(prior)]
-    phrases = repeated_phrases(prior)
+    runs = repeated_phrases(prior)
+    pets = [w for w in pet_words(prior) if not any(w in r for r in runs)] if words else []
+    phrases = [*runs, *pets][:MAX_PHRASES]
     if phrases:
         quoted = ", ".join(f'"{p}"' for p in phrases)
         notes.append(get("notes/habit-phrases").render(phrases=quoted))

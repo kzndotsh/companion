@@ -30,6 +30,9 @@ def test_a_short_statement_gets_a_note_with_a_limit_near_what_they_wrote() -> No
         "   ",
         "what should i make for dinner?",
         "wait, really? okay",
+        "What about you",
+        "ok, ask me something",
+        "and you",
         " ".join(["word"] * (MAX_USER_WORDS + 1)),
     ],
 )

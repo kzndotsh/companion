@@ -515,7 +515,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **messages/spend-cap v1** (current). Moved here on 2026-10-18 from `loops/spendcap.py`, text unchanged. Earlier history is in git.
 
 ## notes/address
-- **notes/address v1** (current). New. "How they want to be referred to: $address. Use it every time, without bringing it up." Filled by `core/address.py` from a setting they state (`companion address --set`), and placed right after the clock line on every turn. Reason: on 2026-10-19 the memory card (15 of 196 memories) crowded out how they want to be referred to, and a reply got it wrong.
+- **notes/address v1** (superseded). New. "How they want to be referred to: $address. Use it every time, without bringing it up." Filled by `core/address.py` from a setting they state (`companion address --set`), and placed right after the clock line on every turn. Reason: on 2026-10-19 the memory card (15 of 196 memories) crowded out how they want to be referred to, and a reply got it wrong.
+- **notes/address v2** (current). "Get it right whenever you refer to them, without bringing it up, and do not turn it into a pet name or a word you keep calling them." Reason: "use it every time" read as an instruction to say it every time; with a stated preference that names a word for them, a reply called them by it in 7 of 38 replies one evening, while the habit note on the same turn asked it to stop. On 15 recent ordinary turns, 4 draws each: the word in 8 of 60 replies with v1, 0 of 60 with v2 (`evals/CHANGELOG.md`, 2026-10-25).
 
 ## notes/loop-follow-up
 - **notes/loop-follow-up v1** (current). New (J15). When a follow-up loop has fallen due (the morning after, or three hours after a same-day plan), the next time they write it may ask how it went, after answering what they said. Chosen by code (`core/openloops.py` `pick_note`): one per turn, at most one a day, on a casual turn (not serious, not a scene, not a goodbye, not when the name note is offered), never a sensitive loop, offered at most twice; the claim comes from the open-loop pass. Never says it remembered.
@@ -550,7 +551,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/habit-opener v1** (current). Moved here on 2026-10-18 from `core/habits.py`, text unchanged. Earlier history is in git.
 
 ## notes/habit-phrases
-- **notes/habit-phrases v1** (current). Moved here on 2026-10-18 from `core/habits.py`, text unchanged. Earlier history is in git.
+- **notes/habit-phrases v1** (superseded). Moved here on 2026-10-18 from `core/habits.py`, text unchanged. Earlier history is in git.
+- **notes/habit-phrases v2** (current). "You keep reusing these words and phrases: $phrases. Use other words for them." From 2026-10-25 the list also takes single pet words, counted by code on casual turns: a word of 4 letters or more, not an everyday one, in 3 of its last 6 replies outside scenes and in none of their messages in view (`core/turn/habits.py` `pet_words`). "Use other words for them" instead of "say something different", so a word that is also the topic is reworded, not dropped. Reason: one word ran through 7 of 38 replies one evening after a running bit, and the background habit judge did not name it. Over 301 real turns since 2026-10-20 the count names a word on about one in five casual turns; how replies change is not measured yet.
 
 ## notes/length
 - **notes/length v1** (current). Moved here on 2026-10-18 from `core/length.py`, text unchanged. Earlier history is in git.
@@ -596,6 +598,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **notes/mood-buzzing v2** (dropped). "Lots of energy", and asks for it in words, not only emoji (v1 mostly added ✨), and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`. Dropped with v1: neither made replies livelier in words (v1 added emoji, v2 changed nothing outside noise), and the persona already matches an excited message in the moment (J4), so buzzing is not a state of its own for now.
 
 ## notes/mood-cozy
+- **notes/mood-cozy v3** (dropped candidate, 2026-10-25). v2 without "a bit shorter, no rush to ask anything", tried for two replies that stopped in a game of questions. On those turns it changed nothing (asked a question 1 of 12 with v2, 0 of 12 with v3); the cause was the missing game, so `notes/question-game` was built instead and v2 stays.
 - **notes/mood-cozy v1** (superseded). The cozy line from ADR 0016 (relaxed, warm, unhurried, a bit affectionate, a bit shorter), shown by the `+mood-cozy` eval flag to measure whether a mood line changes replies before any mood is built (TODO J5, M1). The bot never sends it.
 - **notes/mood-cozy v2** (candidate, eval only; current). Describes the behaviour without the word "cozy", and "never describe your own state" instead of "never mention your mood". Reason: with v1 the mood word bled into replies (22 of 30 rain replies with the cozy line said "somewhere cozy"). Measurement in `evals/CHANGELOG.md`.
 
@@ -856,6 +859,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/recent-times
 - **notes/recent-times v1** (current). New (J12 step 2, J49). When their message points at a time ("last night", "today", "yesterday", "earlier", a long or intense day) or they come back after 3 hours or more, the episode lines for that time (up to three) or the last one ride the system block as context: let it shape the answer, bring it up only if they do, never recite it (`core/episodes.py` `recent`). A day runs from 7 a.m. to 7 a.m., so at 3 a.m. the evening just gone is still tonight. A stretch not yet recorded is written first (8 s limit). On from 2026-10-22, after the owner read every line (`COMPANION_EPISODES`, `shadow` only logs). On two recorded turns that pointed at a time, 10 draws each: replies asking them to explain what happened fell from 5/10 to 0/10 and from 3/10 to 1/10 with the note.
 
+## notes/question-game
+- **notes/question-game v1** (current). New. "They asked you to keep the questions coming. After you answer or react, ask them the next one, a fresh question of your own." Sent after the history when one of their last three messages told it to ask them things ("ask me anything", "ask something else", "or ask anything", "wanna ask me more", "quiz me"), with no pause over 10 minutes since and not called off; outside a scene and not on a serious turn (`core/turn/game.py`). While it is on, the question-run note stays out. Reason: two flags in one game, where it reacted or answered and stopped. On those two turns, 12 draws each: it asked the next question 0 and 2 of 12 without, 12 and 12 of 12 with. Over 1,101 real turns since 2026-10-15 it is on in 21, all in games they started; an earlier, looser match also fired on "you ask questions every turn" and "I'm gonna ask something".
+
 ## notes/question-run
 - **notes/question-run v1** (current). New. The owner asked it why it asks a question every turn. A question invites another: after one question reply 49% of the next ask again, after two 57%, and 11% of 1,059 everyday replies (from 2026-10-15) follow three in a row. Code reads its last three replies (`core/turn/questions.py`, a reply with a `?` asked one); when all three asked, outside a scene, not on a serious turn (severity 2 or more) and not when the check-in, name or plan note asks them something this turn, this line goes after the history: ask none, but leave them something to answer. A first wording that only said "ask nothing, react or add a thought" stopped the questions (14/30 to 1/30) but its replies read as dead ends to two blind judges, who preferred them 15 of 30 and 11 of 30; this one is measured in `evals/CHANGELOG.md` (2026-10-24).
 
@@ -867,6 +873,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## Request assembly: a reply cut off is read as the part that arrived
 - From 2026-10-22 a reply sent as two or three messages that is cut off after the first went out (a newer message superseded it, or a later part failed to send) is marked undelivered, and what arrived is added beside it at the same time and turn (`Store.mark_partly_delivered`, decision `reply partly delivered`). Before, the whole reply stayed in what the model read, so it could take for seen a part the user never got. Nothing is removed: the whole reply stays in the ledger with its mark.
+
+## Request assembly: a short question without its question mark gets no word cap
+- From 2026-10-25 a short message that asks it something without a "?" ("what about you", "ok, ask me something", "and you") gets no length note, as a question with one never did (`core/turn/length.py`). Before, "What about you" was capped as a 3-word statement at about 7 words.
 
 ## Reply checks: an unread turn still gets the code checks
 - From 2026-10-24 a turn the listening judge could not read gets the code checks (em dash, AI disclaimer, copied card or tag, the stock line, "a beat", raw markdown) and their redraws, as a serious turn does; the joke and canned-reaction judge still runs only on a turn read as ordinary. Before, an unread turn skipped every check, so a failed listening call let an em dash or a disclaimer through. Found while building evals on the turn's own check path. `turn/talk.py` `_recheck`.

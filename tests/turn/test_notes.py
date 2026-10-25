@@ -8,6 +8,7 @@ import pytest
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.floor import HOLD_NOTE
+from companion.core.turn.game import NOTE as GAME_NOTE
 from companion.core.turn.ownup import NOTE as OWNED_NOTE
 from companion.core.turn.questions import NOTE as QUESTION_NOTE
 from companion.core.turn.questions import RUN
@@ -139,6 +140,18 @@ async def test_after_a_run_of_questions_the_next_turn_asks_none_unless_it_is_ser
     await handle(convo, SESSION, "a movie", "t", NOW + timedelta(minutes=RUN))
     assert (talker.seen[0].tail == QUESTION_NOTE.text) == noted
     assert QUESTION_NOTE.text not in talker.seen[0].card
+
+
+async def test_in_a_game_of_questions_it_asks_the_next_one_and_no_run_note_stops_it(
+    store: Store,
+) -> None:
+    for i, said in enumerate(["hey", "ask me anything", "the locals, mostly"]):
+        convo = Conversation(store, _Asking(), PREFIX, REL, judge=Judge())
+        await handle(convo, SESSION, said, "t", NOW + timedelta(minutes=i))
+    talker = Talker()
+    convo = Conversation(store, talker, PREFIX, REL, judge=Judge())
+    await handle(convo, SESSION, "what about you", "t", NOW + timedelta(minutes=3))
+    assert talker.seen[0].tail == GAME_NOTE.text  # not the question-run note
 
 
 @pytest.mark.parametrize("mode", ["on", "shadow"])

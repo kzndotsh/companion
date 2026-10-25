@@ -1857,3 +1857,15 @@ Readings now: 74 ordinary (severity 0), 20 sharing something (1), 4 serious (2).
 this date ran without these readings and without the turn's checks, so they are not comparable with
 runs after it.
 
+## 2026-10-25: Three flags in one evening: a game of questions, a pet word, a pronoun note
+
+Replayed on the flagged turns with their logged card and history, gpt-6-luna, owner's character.
+Two replies that stopped in a game of questions they had started: the cozy mood line without "no
+rush to ask anything" and no length cap changed nothing (asked a question 1/12 and 0/12; 3/12 and
+2/12). A note after the history saying they asked it to keep the questions coming: 12/12 on both,
+against 0/12 and 2/12; shipped as `notes/question-game`. A word it reused through an evening: a code
+count of single pet words, tuned on 301 real turns since 2026-10-20 so it names a word on about one
+casual turn in five (at first one in two, mostly scene and topic words); its effect on replies is not
+measured. A pronoun note that said "use it every time": 15 recent ordinary turns, 4 draws each, the
+pet name it planted in 8/60 replies with the old wording, 0/60 with `notes/address` v2. About $0.05.
+

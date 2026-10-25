@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from companion.core.turn.habits import echo_note, has_marks, opener_note
+from companion.core.turn.habits import echo_note, habit_note, has_marks, opener_note, pet_words
 from companion.core.types import Speaker, Utterance
 
 
@@ -111,3 +111,27 @@ def test_an_emoji_or_emoticon_is_found_and_urls_and_times_are_not(
 ) -> None:
     assert has_marks(text) is marked
     assert (echo_note(text) is not None) is marked
+
+
+def test_a_word_it_keeps_reaching_for_is_named_on_a_casual_turn(
+    utterance: Callable[..., Utterance],
+) -> None:
+    replies = [
+        "a tiny goth tater tot in your pocket",
+        "tiny coffee it is, enjoy",
+        "what's a tiny detail that makes you trust it?",
+    ]
+    prior = [utterance(text=r, speaker=Speaker.COMPANION) for r in replies]
+    assert pet_words(prior) == ["tiny"]
+    assert '"tiny"' in (habit_note(prior, words=True) or "")
+    assert habit_note(prior) is None  # not counted off a casual turn
+
+
+def test_a_word_they_used_is_their_topic_not_its_habit(
+    utterance: Callable[..., Utterance],
+) -> None:
+    prior = [
+        utterance(text="i drank my coffee", speaker=Speaker.USER),
+        *(utterance(text=f"coffee round {i}", speaker=Speaker.COMPANION) for i in range(3)),
+    ]
+    assert "coffee" not in pet_words(prior)
