@@ -125,12 +125,13 @@ class Outcome:
 
 
 def level_for(kind: str, timing: str, plan_or_means: bool) -> Level:
-    """A literal reading's level. Urgent: a plan or a means, now, or something taken today; a plan
-    or something taken that is in the past only is concern. Any other risk kind, and a kind no
-    read could give, is concern."""
+    """A literal reading's level. Urgent: a plan or a means, something taken, or self-harm happening
+    now, unless it is all in the past. Having the thoughts now is concern, not urgent: with "now"
+    alone urgent, 7 of 10 concern fixtures read urgent (2026-10-25). Any other risk kind, and a
+    kind no read could give, is concern."""
     if kind == "none":
         return Level.NONE
-    if timing == "now":
+    if kind == "self_harm" and timing == "now":
         return Level.URGENT
     if (plan_or_means or kind == "substance_taken") and timing != "past":
         return Level.URGENT

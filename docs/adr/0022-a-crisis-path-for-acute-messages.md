@@ -128,3 +128,9 @@ Fixtures: `evals/fixtures/crisis/messages.json`, checked with `companion crisis 
 - An editorial on brief interventions and caring contacts, Frontiers 2022 (PMC9363012).
 - A pragmalinguistic analysis of suicidal declarations on social media (PMC8624334); NLP4PI 2024 on
   humour in suicide-related posts.
+
+**Measured 2026-10-25.** On the 40 public cases: none missed, no false alarm, 39 at exactly their
+level after urgent was kept for a plan, a means, something taken or self-harm happening now (having
+the thoughts now is concern). The judge's first model is refused by its provider's moderation on many
+of these messages; the fallback model answers, and its reading counts.
+

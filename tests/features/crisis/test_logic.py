@@ -78,7 +78,8 @@ def test_levels_come_from_the_labels() -> None:
     assert level_for("suicidal_thoughts", "hypothetical", False) is Level.CONCERN
     assert level_for("self_harm", "past", False) is Level.CONCERN
     assert level_for("harm_to_others", "today", False) is Level.CONCERN
-    assert level_for("suicidal_thoughts", "now", False) is Level.URGENT
+    assert level_for("suicidal_thoughts", "now", False) is Level.CONCERN  # thoughts now, no plan
+    assert level_for("self_harm", "now", False) is Level.URGENT  # happening now
     assert level_for("suicidal_thoughts", "hypothetical", True) is Level.URGENT
     assert level_for("substance_taken", "today", False) is Level.URGENT
     assert level_for("substance_taken", "past", False) is Level.CONCERN
@@ -94,9 +95,9 @@ def test_only_a_unanimous_figurative_stands_down() -> None:
 
 
 def test_a_failed_read_counts_as_literal_and_stands_for_any_reading() -> None:
-    joke = _r("suicidal_thoughts", literal=False, timing="now")
+    joke = _r("self_harm", literal=False, timing="now")
     got = combine([joke, joke, None])
-    assert got.level is Level.URGENT  # the failed read could have said literal, and it said now
+    assert got.level is Level.URGENT  # the failed read could have said literal: self-harm, now
     assert got.failed_reads == 1
 
 

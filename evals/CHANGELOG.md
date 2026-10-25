@@ -1894,3 +1894,16 @@ turns where the card changed, one draw each, a blind judge (Sonnet) split 5 to 5
 one "out-of-place callback" was the earlier meal mentioned while talking about food, read by eye as
 fitting. About $0.02.
 
+## 2026-10-25: The crisis risk judge on 40 public cases
+
+`uv run companion crisis --check --cap 0.10`: the `system/risk` judge on the 40 generic fixtures in
+`evals/fixtures/crisis/messages.json` (10 concern, 10 urgent, 14 figurative, 6 none), three reads each,
+about $0.02 a run. Three runs: no genuine risk read below its level, and no joke, lyric, scene or
+hyperbole read as a risk. With the first level rule (timing "now" alone made a reading urgent), 7 of
+the 10 concern cases read urgent, since having the thoughts now was labelled now; with urgent kept
+for a plan, a means, something taken or self-harm happening now, 39 of 40 matched exactly and the one
+left over was an urge to self-harm right now, read urgent (the safe side). Anthropic's moderation
+refused the judge's first model on many of these messages (403, nothing charged), and the fallback
+model (DeepSeek V4.1 Flash) answered each time; the crisis path counts the fallback's reading, so in
+practice the fallback reads these messages.
+
