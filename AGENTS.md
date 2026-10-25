@@ -82,6 +82,7 @@ together.
 | The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` | 2026-10-26 |
 | The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-27 |
 | Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-27 |
+| How often it brings a thread up, learned from how they met the last ones (ADR 0023) | always shadow for now | the decision log | 2026-11-08 |
 | The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-01 |
 
 ## Rules we learned the hard way

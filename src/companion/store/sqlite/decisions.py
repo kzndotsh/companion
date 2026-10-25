@@ -86,6 +86,18 @@ def decisions_for_turn(
     return [_decision(r) for r in rows]
 
 
+def decisions_with_key(
+    conn: sqlite3.Connection, relationship_id: RelationshipId, key: str, since: datetime
+) -> list[Decision]:
+    """The decisions of this key logged at or after a time, oldest first. Keys only: a decision
+    from before keys is not matched here."""
+    rows = conn.execute(
+        "SELECT * FROM decisions WHERE relationship_id = ? AND key = ? AND at >= ? ORDER BY at, id",
+        (relationship_id, key, iso(since)),
+    ).fetchall()
+    return [_decision(r) for r in rows]
+
+
 def decisions_of_kind(
     conn: sqlite3.Connection, relationship_id: RelationshipId, kind: DecisionKind
 ) -> list[Decision]:

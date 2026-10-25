@@ -41,6 +41,18 @@ A kept loop is stored with the exact quote and its source message, and logged as
 
 The note is written from the loop's kind (`notes/loop-*`) and carries only the claim. Once the reply is stored, the loop is marked asked with the reason `open loop: offered as a note when they wrote`, and the same text is the decision key. A loop offered as a note is no longer open, so it is never also a reach-out.
 
+**The learned pace (shadow, ADR 0023).** The owner chose no fixed number of threads a day: how often it
+brings one up is learned from how they meet them. Once a turn is stored, when the companion's last
+message brought up a thread, their message is read once for how it met it (`system/thread-met`):
+picked up, brushed off or ignored, logged as `threads: how they met it` (a failed read is logged as not
+read). The pace is a wait on a ladder of 4, 8, 16, 24, 48 and 96 hours that starts at 24; picked up is a
+step down, brushed off a step up, ignored two, walked over the last 30 days so the newest answers decide
+(`pace` in `logic.py`). It never brings up more than 3 in 24 hours (`PACE_CEILING`, a backstop). For now
+it only logs: each offer carries what the pace said (`pace` in its detail), and when a thread is due and
+the day's cap holds while the pace would bring it up, `threads: the learned pace would bring one up now
+(shadow)` is logged, at most once a day. The 24-hour cap above still decides. On 12 invented turns the
+judge was right 22 of 24 times and never read a brush-off as picked up (`evals/CHANGELOG.md`).
+
 **Reaching out (shadow).** Every 15 minutes the tick in `daemon.py` skips when the daily spend cap is reached, then asks the pure gate in `gate.py`. The gate expires open loops past their horizon: a follow-up 2 days after it fell due, a celebration or encouragement after its day. It picks the oldest due loop that is open, not note-only and not sensitive. Then it holds, with a reason rendered from the numbers, for the first of these:
 
 - a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022)
@@ -62,9 +74,9 @@ These numbers live in `Caps` in `core/reachout.py`, shared with nudges. Quiet ho
 
 | File | What |
 |---|---|
-| `logic.py` | pure: which plans become loops, their kinds and times, the labels for settling, which loop becomes the note, the note text (`SENSITIVE`, `MAX_OFFERS`) |
+| `logic.py` | pure: which plans become loops, their kinds and times, the labels for settling, which loop becomes the note, the note text (`SENSITIVE`, `MAX_OFFERS`), how a thread was met and the pace learned from it (`Met`, `pace`, `pace_holds`) |
 | `gate.py` | pure: whether to reach out now and about what, with the reason (`evaluate`) |
-| `run.py` | effects: reading new messages for loops, the tick, the drafter, the note (`OPENLOOPS`) |
+| `run.py` | effects: reading new messages for loops, the tick, the drafter, the note and the pace beside it, reading how a thread was met (`read_met`, `OPENLOOPS`) |
 | `store.py` | its queries (the tables are in `store/sqlite/migrations/0012_open_loops.sql`) |
 
 ## Prompts
@@ -74,6 +86,7 @@ These numbers live in `Caps` in `core/reachout.py`, shared with nudges. Quiet ho
 - `notes/loop-follow-up`: asks how it went, in the system block when a follow-up is due.
 - `notes/loop-celebrate`: marks their occasion on the day.
 - `notes/loop-encourage`: a word of cheering on the day.
+- `system/thread-met`: how their next message met a thread it brought up. A failed read is logged as not read and leaves the pace as it was.
 
 ## Commands
 

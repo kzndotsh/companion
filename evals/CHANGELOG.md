@@ -1983,3 +1983,17 @@ Christmas got comfort that named the day gently. It also wished "happy Memorial 
 Veterans Day", "happy Columbus Day" and "happy Good Friday", so those, MLK Day, Presidents' Day and
 Juneteenth are left out. About $0.06.
 
+## 2026-10-25: the thread-met judge on invented turns (ADR 0023)
+
+What: `system/thread-met` v1, which reads how their next message met a thread it brought up (picked
+up, brushed off, ignored) for the learned pace, on Haiku (`anthropic/claude-haiku-5.5`), 12 invented
+turns (four of each label), two reads each.
+
+Result: 22 of 24 right. Both misses were one borderline reply (a bare "idk" and then a new subject)
+read as ignored instead of brushed off; either label lengthens the wait, ignored more. Nothing
+brushed off or ignored was read as picked up, which is the mistake that would make it bring things
+up more often than wanted. Small, invented and one model: a check that the judge works, not a
+measure of real turns. The pace stays in shadow until its log is read against real chat.
+
+Cost: under a cent. Rerun: `uv run pytest -m live tests/live/test_thread_met.py -s -o addopts=""`.
+

@@ -17,6 +17,7 @@ from companion.core.types import (
 from companion.features.threads.logic import (
     NOTE_DELAY,
     Making,
+    Met,
     RawLoop,
     RawResolution,
     Thread,
@@ -25,7 +26,10 @@ from companion.features.threads.logic import (
     follow_up_time,
     loop_labels,
     loop_note,
+    pace,
+    pace_holds,
     parse,
+    parse_met,
     parse_resolved,
     pick_note,
     render_open_loops,
@@ -316,3 +320,24 @@ def test_a_sensitive_item_is_rejected_as_sensitive_whatever_else_is_wrong() -> N
     hedged_and_sensitive = _raw(certainty="maybe", sensitivity=2, scale="minutes")
     assert _make(hedged_and_sensitive, u) == "sensitive, never raised on its own"
     assert _loose(hedged_and_sensitive, u) == "sensitive, never raised on its own"
+
+
+def test_the_pace_starts_at_a_day_and_moves_with_how_they_meet_threads() -> None:
+    assert pace([]) == timedelta(hours=24)
+    assert pace([Met.PICKED_UP]) == timedelta(hours=16)
+    assert pace([Met.PICKED_UP] * 9) == timedelta(hours=4)
+    assert pace([Met.BRUSHED_OFF]) == timedelta(hours=48)
+    assert pace([Met.IGNORED]) == timedelta(hours=96)
+    assert pace([Met.IGNORED, Met.PICKED_UP]) == timedelta(hours=48)  # the newest moves it back
+
+
+def test_the_pace_waits_its_time_and_never_passes_the_ceiling() -> None:
+    now = datetime(2026, 10, 25, 12, tzinfo=UTC)
+    wait = timedelta(hours=4)
+    assert pace_holds(wait, [], now) is None
+    assert pace_holds(wait, [now - timedelta(hours=3)], now) is not None
+    assert pace_holds(wait, [now - timedelta(hours=5)], now) is None
+    three = [now - timedelta(hours=h) for h in (5, 10, 15)]
+    assert "ceiling" in (pace_holds(wait, three, now) or "")
+    assert parse_met({"met": "ignored"}) is Met.IGNORED
+    assert parse_met({"met": "maybe"}) is None

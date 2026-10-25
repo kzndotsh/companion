@@ -91,6 +91,13 @@ SHADOWS: tuple[Shadow, ...] = (
         "standing promises worth pinning (J12 step 2, LR5)",
     ),
     Shadow(
+        "how often it brings a thread up, learned from how they met the last ones (ADR 0023)",
+        None,
+        "the decision log (threads: how they met it, the learned pace)",
+        date(2026, 11, 8),
+        "whether the labels read right by eye and the pace it would have used beats the day's cap",
+    ),
+    Shadow(
         "memories about a name they mention, left off the card",
         None,
         "companion names",

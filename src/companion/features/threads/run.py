@@ -35,6 +35,10 @@ from companion.core.types import (
 )
 from companion.features.threads.gate import Situation, Verdict, evaluate
 from companion.features.threads.logic import (
+    MET_PROMPT,
+    MET_SCHEMA,
+    PACE,
+    PACE_LOOKBACK,
     PROMPT,
     SCHEMA,
     SYSTEM,
@@ -44,8 +48,12 @@ from companion.features.threads.logic import (
     loop_labels,
     loop_note,
     loop_note_ref,
+    met_prompt,
     normalise,
+    pace,
+    pace_holds,
     parse,
+    parse_met,
     parse_resolved,
     pick_note,
     render_open_loops,
@@ -53,13 +61,15 @@ from companion.features.threads.logic import (
     to_resolution,
 )
 from companion.features.threads.store import ReachOut
-from companion.loops.current import decide
+from companion.loops.ask import Judge, ask
+from companion.loops.current import Turn, decide
 from companion.loops.features import Feature, Offer, Offered, quiet
 from companion.loops.record import Recorder
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
+    from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
 
 log = logging.getLogger("companion.initiative")
@@ -366,26 +376,57 @@ def _add(a: LoopCounts, b: LoopCounts) -> LoopCounts:
 
 LOOP_OFFERED = "open loop: offered as a note when they wrote"
 LOOP_NOTE_EVERY = timedelta(hours=24)
+MET = "threads: how they met it"
+PACE_SOONER = "threads: the learned pace would bring one up now (shadow)"
+MET_JUDGE = Judge("thread-met", MET_PROMPT, MET_SCHEMA, parse_met, timeout=8.0, unread="no label")
+
+
+def _pace(c: Conversation, now: datetime) -> tuple[dict[str, Json], bool]:
+    """What the learned pace says now (ADR 0023, shadow): its wait, the answers it was learned
+    from, and whether it would bring one up."""
+    mets = [
+        m
+        for d in c.store.decisions_with_key(c.rel, MET, now - PACE_LOOKBACK)
+        if (m := parse_met(d.detail or {})) is not None
+    ]
+    wait = pace(mets)
+    offered = [d.at for d in c.store.decisions_with_key(c.rel, LOOP_OFFERED, now - PACE[-1])]
+    held = pace_holds(wait, offered, now)
+    detail: dict[str, Json] = {
+        "wait_hours": wait.total_seconds() / 3600,
+        "answers": [m.value for m in mets[-5:]],
+        "held": held,
+    }
+    return detail, held is None
 
 
 def loop_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """Bring up one due open loop as a note when they write (J15): on a casual turn with no other
     nudge, at most one a day, each loop at most twice. Once the reply is stored the loop is marked
-    asked, so it is never also a reach-out."""
+    asked, so it is never also a reach-out. Beside it, the pace learned from how they met the
+    last ones is logged in shadow (ADR 0023): with the offer, and once a day when it would have
+    brought one up while the day's cap holds."""
     del found
     c, t = m.c, m.t
-    if not quiet(m, so_far) or c.store.decided_since(c.rel, LOOP_OFFERED, t.now - LOOP_NOTE_EVERY):
+    if not quiet(m, so_far):
         return Offer()
     offers = c.store.loop_events_with_reason(c.rel, LOOP_OFFERED)
     loop = pick_note(c.store.open_loops(c.rel), offers, t.now, local_zone())
     if loop is None:
         return Offer()
+    paced, would = _pace(c, t.now)
+    if c.store.decided_since(c.rel, LOOP_OFFERED, t.now - LOOP_NOTE_EVERY):
+        if not would or c.store.decided_since(c.rel, PACE_SOONER, t.now - LOOP_NOTE_EVERY):
+            return Offer()
+        sooner = paced | {"loop_id": loop.id, "claim": loop.claim}
+        return Offer(after=(lambda: decide(c, t, PACE_SOONER, sooner),))
     detail: dict[str, Json] = {
         "loop_id": loop.id,
         "claim": loop.claim,
         "kind": loop.kind.value,
         "offer": offers.get(loop.id, 0) + 1,
         "note": loop_note_ref(loop),
+        "pace": paced,
     }
 
     def asked() -> None:
@@ -396,5 +437,31 @@ def loop_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer((note,) if note else (), (asked,), asks=True)
 
 
-# Plans of theirs read in the open-loop batch; a due one is brought up as a note when they write.
-OPENLOOPS = Feature("loop", note=loop_offer)
+async def read_met(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
+    """Once the turn is stored: when its last message brought up a thread, read how their message
+    met it, once per thread offered, for the learned pace (ADR 0023)."""
+    del said, sent
+    last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
+    if c.judge is None or last is None:
+        return
+    offered = next(
+        (d for d in c.store.decisions_for_turn(c.rel, last.turn_id) if d.has_key(LOOP_OFFERED)),
+        None,
+    )
+    if offered is None or c.store.decided_since(c.rel, MET, offered.at):
+        return
+    claim = str((offered.detail or {}).get("claim", ""))
+    got = await ask(c.judge, MET_JUDGE, met_prompt(claim, last.text, t.text))
+    met = got.value.value if got is not None else None
+    reason = f"{MET}: {met or 'not read'}, about {claim}"
+    detail: dict[str, Json] = {
+        "loop_id": (offered.detail or {}).get("loop_id"),
+        "met": met,
+        "prompt": MET_PROMPT.ref,
+    }
+    decide(c, t, MET, detail, reason=reason)
+
+
+# Threads (ADR 0023): today plans of theirs, read in the open-loop batch; a due one is brought up as
+# a note when they write, and how they met it teaches the pace (shadow).
+OPENLOOPS = Feature("loop", note=loop_offer, after_turn=read_met)

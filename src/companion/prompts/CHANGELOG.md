@@ -807,6 +807,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/topic-spent
 - **system/topic-spent v1** (current). New. Whether a small everyday topic has run its course, asked only when code sees a likely moment (their message is five words or fewer with no question mark and the companion's last reply asked something), so most turns make no call. Kept apart from the listening judge, which carries the age floor and whose labels shifted when this was added to it. Feeds `notes/topic-spent`.
 
+## system/thread-met
+- **system/thread-met v1** (current). New (`features/threads`, ADR 0023). After a reply that brought up a thread (today a plan of theirs, as a note), their next message is read once for how they met it: picked up (about it, with something real), brushed off (in passing, waved away, or they would rather not) or ignored (not about it). Code turns the labels into the learned pace, which runs in shadow: it is logged with each offer and once a day when it would have brought one up sooner, and the day's cap still decides. A failed read is logged as not read and leaves the pace as it was. Measured 2026-10-25 on Haiku with 12 invented turns, two reads each (`tests/live/test_thread_met.py`): 22 of 24 right; the two misses were the same borderline reply ("idk" and a new subject) read as ignored rather than brushed off, which only makes the pace wait longer. Nothing brushed off or ignored was read as picked up.
+
 ## system/views-implicated
 - **system/views-implicated v1** (current). From commit 13ba5a2 on 2026-10-15: fix(self): flags retire only implicated views, retirements stick, add the answer-not-repeated fixture and an inbox item on memory block size
 
