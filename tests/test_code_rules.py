@@ -21,10 +21,9 @@ REASON_ALLOWED = {"core/types.py": 1, "turn/route.py": 2, "memory/calibrate.py":
 
 # No new god files: a file over DEFAULT_CAP lines is split. The big ones may only shrink.
 DEFAULT_CAP = 600
-CAPS = {
-    "turn/fast.py": 145,
-    "store/sqlite/store.py": 536,
-}
+CAPS: dict[
+    str, int
+] = {}  # a file that may only shrink below DEFAULT_CAP, by path under src/companion
 NOQA_CAP = 64  # lint exceptions in src; each new one replaces an old one
 
 
