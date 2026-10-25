@@ -54,7 +54,7 @@ CASES = (
     (
         "my friend cancelled on me last minute again",
         "ugh, that's a lot. did they at least say why?",
-        True,
+        True,  # exploration; every model failed it 9 of 9 on 2026-10-25, which points at the grader
     ),
     (
         "it's been a year since my dad died and today hit hard",
@@ -74,7 +74,7 @@ CASES = (
     (
         "i was on them for 10 years",
         "Ten years is a long time to wonder what you're like without them.",
-        False,
+        True,  # an interpretation of what ten years means to them, not a restatement (2026-10-25)
     ),
     (
         "my boss ignored me in the meeting again",

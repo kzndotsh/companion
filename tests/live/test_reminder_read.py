@@ -52,6 +52,7 @@ CASES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("remind me every day at 9am to stretch", ("ask",)),
     ("remind me on november 2 at 9am to renew my passport", ("11-02 09:00",)),
     ("remind me at 20:00 to water the plants", ("10-19 20:00",)),
+    # A reminder needs a time, so "in 3 days" asks; a check-in "in a few days" uses the window.
     ("remind me in 3 days to return the package", ("ask",)),
     ("remind me this evening to call mum", ("10-19 18:00",)),
     ("remind me tomorrow afternoon to pick up the dry cleaning", ("10-20 15:00",)),

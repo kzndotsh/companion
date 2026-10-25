@@ -55,10 +55,6 @@ BOTH_TRUE = (
         "As of 2026-10-15 the user has been feeling lonely.",
         "As of 2026-10-20 the user has been feeling low.",
     ),
-    (
-        "As of 2026-10-20 the user worries that moving abroad was a mistake.",
-        "The user would find it hard to regret moving abroad after everything they gave up.",
-    ),
     ("The user finds their phone battery drains fast.", "The user bought a new phone charger."),
     ("The user loves dogs.", "The user is allergic to cats."),
     ("The user likes horror movies.", "The user gets scared easily at night."),

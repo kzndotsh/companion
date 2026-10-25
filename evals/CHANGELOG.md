@@ -1940,3 +1940,23 @@ readers found (two empathy cases, a moving-abroad conflict pair, "in 3 days" aga
 and the single-rater hand labels of the canned-reaction set are worth a second look before those
 numbers are quoted. Rerun: `COMPANION_LIVE_JUDGE_MODEL=<model> uv run pytest tests/live -m live -s -o addopts=""`.
 
+## 2026-10-25: The canned-reaction labels were too loose; relabelled, the judge over-fires
+
+The 200 replies behind the canned-reaction judge (`system/quip` v3, "generic") were labelled half
+canned by the first pass that collected them. Two new blind raters (Claude Sonnet and Opus as
+subagents, the prompt's own definition, "when in doubt, false") marked 27 and 41 canned; they agreed
+with each other on 178 of 200, with the old labels on 119 and 131. Against the 23 both new raters
+called canned: Haiku precision 35%, recall 83%; GPT-6 Luna 63%, 52%; DeepSeek 71%, 52%. Against the
+majority of the three label sets (40 canned): Haiku 55%, 75%; Luna 79%, 38%; DeepSeek 94%, 40%. The
+"88% right when it fires" measured when the label shipped (2026-10-24) was against the loose labels
+and does not hold. Live, the label has redrawn 1 of 58 checked turns since it shipped, so the
+practical effect is small; the redraw review of 2026-10-28 reads those redraws. Not changed yet.
+
+Test expectations corrected after the judge bake-off: the empathy case "Ten years is a long time to
+wonder what you're like without them" is an interpretation and now passes (Haiku's agreement on the
+suite was 27/36 on the rerun, 30/36 before; within noise of three reads); "did they at least say
+why?" stays a pass (all three models fail it, which points at the grader's prompt); the
+moving-abroad pair is removed from the memory-conflict set as two-sided (Haiku now 14/14 caught, 2
+false alarms of 19); the reminder pair "in 3 days" and "in a few days" is consistent (a reminder
+needs a time, a check-in uses the window) and now says so.
+
