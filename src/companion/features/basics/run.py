@@ -78,7 +78,7 @@ def basics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     name_asked = c.store.decided_since(c.rel, ASKED, t.now - ASK_EVERY)
     note = ask_name(known=known, casual=m.casual, asked_recently=name_asked)
     if note is not None:
-        return Offer((note,), (lambda: decide(c, t, ASKED),))
+        return Offer((note,), (lambda: decide(c, t, ASKED),), asks=True)
     note = ask_pronouns(
         address_set=_address_set(c),
         name_known=known,
@@ -86,7 +86,11 @@ def basics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
         name_asked=name_asked,
         asked_recently=c.store.decided_since(c.rel, ASKED_PRONOUNS, t.now - ASK_EVERY),
     )
-    return Offer() if note is None else Offer((note,), (lambda: decide(c, t, ASKED_PRONOUNS),))
+    return (
+        Offer()
+        if note is None
+        else Offer((note,), (lambda: decide(c, t, ASKED_PRONOUNS),), asks=True)
+    )
 
 
 async def capture_name(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:

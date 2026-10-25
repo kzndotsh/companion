@@ -211,7 +211,7 @@ def _game(m: Moment, _: Offered) -> Offer:
     if m.in_scene is not Frame.REAL or serious:
         return Offer()
     note = game_note(m.t.prior, m.t.text, m.t.now)
-    return Offer(tail=(note,) if note else ())
+    return Offer(tail=(note,) if note else (), asks=True)
 
 
 def _questions(m: Moment, so_far: Offered) -> Offer:
@@ -265,7 +265,7 @@ def _check_in(m: Moment, _: Offered) -> Offer:
     )
     if not heavy:
         return Offer()
-    return Offer((CHECK_IN_NOTE.text,), (lambda: decide(c, t, CHECKED_IN),))
+    return Offer((CHECK_IN_NOTE.text,), (lambda: decide(c, t, CHECKED_IN),), asks=True)
 
 
 def _hold(m: Moment, _: Offered) -> Offer:

@@ -20,7 +20,7 @@ Days worth a word: US public and cultural days, the lead-up to a big one, and th
 - a lead-up: `notes/occasion-soon` ("Halloween is in two days. If it fits, you could lightly ask whether they have anything planned...");
 - the relationship's date: `notes/occasion-us` ("It has been a month since the two of you first talked...").
 
-The calendar counts as a note that asks them something (`ASKING` in `loops/features.py`), so the question-run note stays out on that turn. Once the turn is stored the offer is logged as `calendar: offered`, with the occasion's key, name, day, kind, how, when and region. A failed turn offers nothing and uses nothing up.
+The calendar counts as a note that asks them something (its offer says `asks`, read by `asking` in `loops/features.py`), so the question-run note stays out on that turn. Once the turn is stored the offer is logged as `calendar: offered`, with the occasion's key, name, day, kind, how, when and region. A failed turn offers nothing and uses nothing up.
 
 **Never.** It never assumes a celebration, a religion, plans or company; never on a serious turn, in a scene, on a goodbye or on a turn the crisis path reads as a risk; never more than one occasion a turn; never a hard date from memory.
 

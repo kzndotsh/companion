@@ -969,3 +969,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## Request assembly: the calendar's note after the history
 - From 2026-10-25 the calendar (`features/calendar`, `COMPANION_CALENDAR`, on by default) adds at most one of `notes/occasion-day`, `notes/occasion-soon` or `notes/occasion-us` after the history on a casual turn, chosen by code in a fixed order (the relationship's date, then a public or cultural day, then a lead-up). It is logged once the turn is stored as `calendar: offered`, with the occasion, its kind, how and region in the detail; a failed turn offers nothing. The region is the US, set in one place (`features/calendar/logic.py` `REGION`).
+
+## Request assembly: a note that asks says so on its offer
+- From 2026-10-25 a note that asks them something marks its own offer (`Offer(asks=True)`) instead of
+  being named in a hand-kept list (`ASKING`, removed). The list had missed two notes that ask: the
+  reminder's "when?" note (`notes/reminder-ask`) and the guess note (`notes/guess`). So on a turn that
+  carried either, the question-run note could also say to ask nothing, and the calendar's note could
+  ride beside the guess. Both now count as asking, as the check-in, name, plan, crisis, game and
+  calendar notes did. A reminder set or cancelled does not ask. Not measured: a change of which notes
+  can share a turn, found by reading the code.

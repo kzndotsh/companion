@@ -393,7 +393,7 @@ def loop_offer(m: Moment, found: object, so_far: Offered) -> Offer:
         decide(c, t, LOOP_OFFERED, detail)
 
     note = loop_note(loop)
-    return Offer((note,) if note else (), (asked,))
+    return Offer((note,) if note else (), (asked,), asks=True)
 
 
 # Plans of theirs read in the open-loop batch; a due one is brought up as a note when they write.

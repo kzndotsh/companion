@@ -54,7 +54,7 @@ def test_on_a_casual_turn_the_day_goes_after_the_history_and_nowhere_else(store:
     assert not _tail(store, HALLOWEEN, heard=HEAVY).tail
     assert not _tail(store, HALLOWEEN, frame=Frame.PLAY).tail
     assert not _tail(store, HALLOWEEN, on=False).tail
-    asked = QUIET | {"game": Offer(tail=("[ask the next one]",))}
+    asked = QUIET | {"game": Offer(tail=("[ask the next one]",), asks=True)}
     assert not _tail(store, HALLOWEEN, so_far=asked).tail
     assert not _tail(store, HALLOWEEN - timedelta(days=5)).tail  # an ordinary day
 

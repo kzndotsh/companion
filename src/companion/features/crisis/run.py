@@ -125,9 +125,10 @@ def crisis_offer(m: Moment, found: object, so_far: Offered) -> Offer:
         return Offer(
             tail=(concern_note(),),
             after=(lambda: decide(c, t, HOLD_KEY, reason=f"{HOLD_KEY}: {HOLD_REASON}"),),
+            asks=True,
         )
     if found.light:
-        return Offer(tail=(light_note(),), after=(lambda: decide(c, t, LIGHT_KEY),))
+        return Offer(tail=(light_note(),), after=(lambda: decide(c, t, LIGHT_KEY),), asks=True)
     return Offer()
 
 

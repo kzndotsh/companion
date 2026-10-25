@@ -15,8 +15,10 @@ from companion.core.turn.questions import RUN
 from companion.features.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
+from companion.features.reminders.run import ASKED, SET, Read, reminder_offer
 from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
+from companion.loops.features import Offer, asking
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -49,7 +51,15 @@ def test_notes_come_in_the_listed_order_and_writes_wait(store: Store) -> None:
     from companion.core.types import Frame  # noqa: PLC0415
 
     notes = notes_for(
-        Moment(convo, t, Frame.REAL, None, Lookups(found={"reminder": "[set]"}), True, [])
+        Moment(
+            convo,
+            t,
+            Frame.REAL,
+            None,
+            Lookups(found={"reminder": Read("[set]", SET, {})}),
+            True,
+            [],
+        )
     )
     assert notes.lines[-1] == "[set]"
     assert HOLD_NOTE.text in notes.lines
@@ -217,3 +227,16 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
     got = await notes.look(convo, t, Frame.REAL, None, None)
     assert time.monotonic() - began < 2
     assert dict(got.found) == {"lore": ("rainy days",)}  # the failing and the hung are left out
+
+
+def test_a_note_that_asks_says_so_and_a_reminder_set_does_not(store: Store) -> None:
+    convo = Conversation(store, Talker(), PREFIX, REL)
+    t = Turn(SESSION, "t1", NOW, [], "hi")  # type: ignore[arg-type]
+    from companion.core.types import Frame  # noqa: PLC0415
+
+    m = Moment(convo, t, Frame.REAL, None, Lookups(), True, [])
+    when = reminder_offer(m, Read("[ask when]", ASKED, {}, asks=True), {})
+    told = reminder_offer(m, Read("[set]", SET, {}), {})
+    assert asking({"reminder": when})
+    assert not asking({"reminder": told})
+    assert not asking({"game": Offer(asks=True)})  # an empty offer asks nothing

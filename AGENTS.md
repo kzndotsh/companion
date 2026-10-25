@@ -117,8 +117,8 @@ together.
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
   `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. A note
-  that asks them something is named in `ASKING` (`loops/features.py`), so the question-run note stays out
-  that turn. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
+  that asks them something says so on its offer (`Offer(asks=True)`, read by `asking` in
+  `loops/features.py`), so the question-run note and the calendar stay out that turn. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
   failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `turn/beside.py` runs each beside the turn and logs a failure.
 - A turn runs in stages, one module each: `turn/hear.py` (a reaction instead of a reply, the listening
   read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the

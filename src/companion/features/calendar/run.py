@@ -53,7 +53,9 @@ def calendar_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     detail = _detail(o, local)
     reason = f"calendar: offered {o.name} ({o.how.value.replace('_', ' ')}, {detail['when']})"
     return Offer(
-        tail=(note(o, today),), after=(lambda: decide(c, t, OFFERED, detail, reason=reason),)
+        tail=(note(o, today),),
+        after=(lambda: decide(c, t, OFFERED, detail, reason=reason),),
+        asks=True,
     )
 
 

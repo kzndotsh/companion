@@ -84,7 +84,7 @@ def guess_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     del m, so_far
     g = found if isinstance(found, Invited) else None
     note = guess_note(g.about, g.offered) if g is not None else None
-    return Offer((note,) if note else ())
+    return Offer((note,) if note else (), asks=True)
 
 
 GUESS = Feature("guess", look=guess_for_turn, note=guess_offer)

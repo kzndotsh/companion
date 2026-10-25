@@ -34,6 +34,7 @@ class Offer:
     lines: tuple[str, ...] = ()
     after: tuple[Callable[[], None], ...] = ()
     tail: tuple[str, ...] = ()  # lines sent after the history, where they weigh most
+    asks: bool = False  # its lines ask them something, so the question-run note stays out
 
 
 type Look = Callable[[Conversation, Turn, Frame, Heard | None], Awaitable[object]]
@@ -57,13 +58,9 @@ def quiet(m: Moment, so_far: Offered) -> bool:
     return m.casual and not so_far["name"].lines and not so_far["check-in"].lines and not m.held
 
 
-# Notes that ask them something themselves: with one of these the turn's question is the point.
-ASKING = ("check-in", "name", "loop", "crisis", "game", "calendar")
-
-
 def asking(so_far: Offered) -> bool:
-    """Whether a note offered so far asks them something this turn."""
-    return any(o.lines or o.tail for n in ASKING if (o := so_far.get(n)) is not None)
+    """Whether a note offered so far asks them something this turn (its offer says `asks`)."""
+    return any(o.asks and (o.lines or o.tail) for o in so_far.values())
 
 
 class Spent(Protocol):

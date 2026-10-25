@@ -88,6 +88,7 @@ class Read:
     note: str
     reason: str
     detail: dict[str, Json]
+    asks: bool = False  # the note asks them when
 
 
 async def read_slots(
@@ -118,10 +119,10 @@ def act(  # noqa: PLR0913, PLR0917
     if s.ask is not Ask.SET or not s.thing:
         return None
     if s.repeats:
-        return Read(ask_note(s.thing, ONE_OFF), ASKED, {"why": "repeating"})
+        return Read(ask_note(s.thing, ONE_OFF), ASKED, {"why": "repeating"}, asks=True)
     when = resolve(s, now, tz)
     if when.at is None:
-        return Read(ask_note(s.thing, when.unclear), ASKED, {"why": when.unclear})
+        return Read(ask_note(s.thing, when.unclear), ASKED, {"why": when.unclear}, asks=True)
     local = when.at.astimezone(tz)
     r = Reminder(
         uuid.uuid4().hex,
@@ -250,7 +251,7 @@ async def deliver_due(
 
 async def reminder_for_turn(
     c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
-) -> str | None:
+) -> Read | None:
     """When they ask to be reminded or checked on, or answer its asking when (J50): read the words,
     let code set the time, and say in a note what happened."""
     del in_scene, heard
@@ -267,13 +268,15 @@ async def reminder_for_turn(
     if done is None:
         return None
     log_decision(c, t.session, t.turn, done.reason, t.now, done.detail | {"prompt": PROMPT.ref})
-    return done.note
+    return done
 
 
 def reminder_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """The note saying a reminder was set, cancelled, or what to ask."""
     del m, so_far
-    return Offer((found,) if isinstance(found, str) and found else ())
+    if not isinstance(found, Read) or not found.note:
+        return Offer()
+    return Offer((found.note,), asks=found.asks)
 
 
 REMINDERS = Feature("reminder", look=reminder_for_turn, note=reminder_offer)
