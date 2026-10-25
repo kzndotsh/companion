@@ -460,7 +460,7 @@ When the answer comes, the card moves to Todo or Done.
 
 Ordered. Pull from the top.
 
-- [ ] R20 Threads (ADR 0023, accepted 2026-10-25). One store, one picker and a learned pace for what it
+- [ ] R21 Threads (ADR 0023, accepted 2026-10-25). One store, one picker and a learned pace for what it
       brings up on its own. Step 1: generalise open loops into threads with no change in behaviour. Then the
       shared casual test, the pace in shadow and plan check-ins on the reach gate; then the interrupted story,
       weekly rhythms, milestones and pending outcomes, and a topic gone quiet, each counted in the ledger and
