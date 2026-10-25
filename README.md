@@ -203,7 +203,8 @@ setting with its value.
 
 All optional. Set them in `.env`.
 
-**Models**
+<details>
+<summary><b>Models</b> (7): which model talks, judges and embeds</summary>
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -215,7 +216,10 @@ All optional. Set them in `.env`.
 | `COMPANION_JUDGE_MODELS` | `crisis=deepseek/deepseek-v4.1-flash` | a model per judge, as `judge=provider/model` pairs separated by commas: a judge named here reads on that model first and on the judges' model when it refuses (that answer counts as the fallback's). The default puts the crisis risk judge on DeepSeek, since Haiku's provider refuses many crisis messages; `none` sends every judge to the judges' model. A malformed value stops the bot at start |
 | `COMPANION_EMBED_MODEL` | `openai/text-embedding-3-small` | embeddings for the memory look-up and the repeat check |
 
-**Behaviour**
+</details>
+
+<details>
+<summary><b>Behaviour</b> (14): what it does on each turn</summary>
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -234,7 +238,10 @@ All optional. Set them in `.env`.
 | `COMPANION_CALENDAR` | `on` | one note after the history on a casual turn about the day: a US public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years (`features/calendar`); `off` stops it |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 
-**Shadow features**
+</details>
+
+<details>
+<summary><b>Shadow features</b> (5): what logs before it goes live</summary>
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -244,7 +251,10 @@ All optional. Set them in `.env`.
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 | `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads a message that is serious or uses crisis words for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a scene set aside for the turn, a reply that names means drawn once more, a day's hold on reaching out first), `off` skips it |
 
-**Running**
+</details>
+
+<details>
+<summary><b>Running</b> (4): spend cap, backups, database, prompt overrides</summary>
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -252,6 +262,8 @@ All optional. Set them in `.env`.
 | `COMPANION_BACKUP_DIR` | `data/backups` | where snapshots go; point it at another drive or a synced folder, since a copy on the same disk does not survive the disk |
 | `COMPANION_DB` | the one database in `data/` | the SQLite database, for the CLI commands |
 | `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them; set before the process starts |
+
+</details>
 
 ## Commands
 
@@ -271,7 +283,8 @@ In the Telegram chat:
 /mode             which model wrote the last reply and why, and whether a scene is under way
 ```
 
-See what the bot has done:
+<details>
+<summary><b>See what the bot has done</b>: flags, favourites, replays, spend, shadows, crisis, prompts</summary>
 
 ```bash
 uv run companion flags          # replies marked /flag; --to-fav ID moves one to favourites
@@ -290,7 +303,10 @@ uv run companion crisis         # crisis levels read lately and lines sent (coun
 uv run companion crisis --check --cap 0.10   # the risk judge on the public crisis fixtures (paid)
 ```
 
-Look after memory:
+</details>
+
+<details>
+<summary><b>Look after memory</b>: beliefs, reviews, merges, views, lore, names, promises, reminders, calendar, backups</summary>
 
 ```bash
 uv run companion beliefs        # what it holds about the user, with quotes
@@ -316,13 +332,18 @@ uv run companion rebuild        # restate every memory under the current rules
 uv run companion calibrate      # compare the automatic gates with your approvals
 ```
 
-Run an eval:
+</details>
+
+<details>
+<summary><b>Run an eval</b>: list, dry run, a capped run</summary>
 
 ```bash
 uv run companion eval --list
 uv run companion eval --variants v41.md,v41.md+raw --samples 12 --cap 0.2 --dry-run
 uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
+
+</details>
 
 A run shows the OpenRouter balance first and refuses a cap above it. Each result carries its 95%
 range, and two variants are compared for whether the gap is real or within noise. See
