@@ -658,3 +658,35 @@ async def test_a_recovered_poll_says_so_in_the_log(caplog: pytest.LogCaptureFixt
     messages = [r.getMessage() for r in caplog.records]
     assert sum("poll failed" in m for m in messages) == 2
     assert "poll recovered after 2 failed attempt(s)" in messages
+
+
+async def test_a_stop_lets_the_reply_in_progress_go_out_and_takes_nothing_new() -> None:
+    import asyncio  # noqa: PLC0415
+
+    sent: list[str] = []
+    polls = 0
+    stop = asyncio.Event()
+
+    async def handler(req: httpx.Request) -> httpx.Response:
+        nonlocal polls
+        method = str(req.url).rsplit("/", 1)[-1]
+        if method == "getUpdates":
+            polls += 1
+            if polls == 1:
+                return httpx.Response(200, json={"ok": True, "result": [_msg(1, "hey")]})
+            await asyncio.sleep(0.05)
+            return httpx.Response(200, json={"ok": True, "result": []})
+        if method == "sendMessage":
+            sent.append(json.loads(req.content)["text"])
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str:
+        del text
+        stop.set()  # the stop comes while this reply is being written
+        await asyncio.sleep(0.3)
+        return "still answered"
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    tg = Telegram("t", ALLOWED, client, Hooks(), pace=0.0, split=False)
+    await asyncio.wait_for(tg.run(talk, {}, stop), timeout=5)
+    assert sent == ["still answered"]

@@ -29,6 +29,7 @@ from companion.features.openloops.run import Ticker, drafter, tick
 from companion.features.reach.logic import Kind, dial
 from companion.features.reach.run import Reacher, tick_reach
 from companion.features.reminders.run import deliver_due
+from companion.io.stop import until_stopped
 from companion.io.telegram import Commands, Hooks, Telegram
 from companion.lib import logs, retry
 from companion.loops import curate
@@ -438,7 +439,8 @@ async def run(data_dir: Path) -> None:
             if task is not None
         ]
         try:
-            await tg.run(answer, _commands(store, rel, reflector, s))
+            commands = _commands(store, rel, reflector, s)
+            await until_stopped(lambda stop: tg.run(answer, commands, stop))
         finally:
             for task in background:
                 task.cancel()

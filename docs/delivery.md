@@ -5,8 +5,11 @@ How a message comes in over Telegram and how a reply goes out (`src/companion/io
 ## Receiving
 
 Each Telegram update is recorded before its turn runs, so a message is answered at most once, even if
-the bot restarts mid-turn. The poll offset moves past a message as soon as it is queued. A restart can
-therefore lose a message that was queued but not yet answered.
+the bot restarts mid-turn. The poll offset moves past a message as soon as it is queued, so stopping
+is done with care: on SIGTERM or SIGINT the bot fetches nothing more, answers what it has already
+received, the reply in progress included, and only then exits, for up to 30 seconds
+(`io/stop.py`). `just restart` waits for that. A hard kill, or a reply still not out
+after 30 seconds, can still lose a message that was received but not answered.
 
 A plain message that arrives while the previous one is still being answered, either being written or
 held before sending, replaces that answer. The dropped reply is marked undelivered, so the new reply

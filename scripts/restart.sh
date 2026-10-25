@@ -6,8 +6,10 @@ set -euo pipefail
 pattern='(^uv run companion run$|\.venv/bin/companion run$)'
 
 if pgrep -f "$pattern" >/dev/null; then
+  # The bot answers what it has already received before it exits, for up to 30 s.
   pkill -TERM -f "$pattern" || true
-  for _ in $(seq 1 20); do
+  echo "waiting for the running bot to finish any reply in progress..."
+  for _ in $(seq 1 80); do
     pgrep -f "$pattern" >/dev/null || break
     sleep 0.5
   done

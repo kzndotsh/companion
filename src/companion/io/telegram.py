@@ -15,6 +15,7 @@ import httpx
 from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.io.pace import hold_seconds
 from companion.io.split import split_reply
+from companion.io.stop import cancel_when, next_update
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
@@ -122,20 +123,30 @@ class Telegram:
         except TelegramError as err:
             log.warning("typing indicator skipped: %s", err)
 
-    async def run(self, handle: Handler, commands: Commands | None = None) -> None:
+    async def run(
+        self, handle: Handler, commands: Commands | None = None, stop: asyncio.Event | None = None
+    ) -> None:
         """Poll in the background and serve one update at a time. A new plain message that arrives
         while the previous one is still being answered replaces that answer, so a burst of
-        messages gets one reply that has seen all of them."""
+        messages gets one reply that has seen all of them. When `stop` is set it fetches nothing
+        more, answers what it already has, the reply in progress included, and returns: a restart
+        stopped it mid-turn and lost a message that had been received (2026-10-25)."""
         last = self._hooks.last_handled() if self._hooks.last_handled else None
         queue: asyncio.Queue[dict[str, object]] = asyncio.Queue()
         poller = asyncio.create_task(self._poll(queue, last + 1 if last is not None else 0))
+        stopping = stop or asyncio.Event()
+        halt = asyncio.create_task(cancel_when(stopping, poller))
         waiting: list[dict[str, object]] = []
         try:
             while True:
-                update = waiting.pop(0) if waiting else await queue.get()
+                update = waiting.pop(0) if waiting else await next_update(queue, stopping)
+                if update is None:
+                    log.info("stopping: every message received has been answered")
+                    return
                 await self._serve(update, queue, waiting, handle, commands or {})
         finally:
             poller.cancel()
+            halt.cancel()
 
     async def _poll(self, queue: asyncio.Queue[dict[str, object]], offset: int) -> None:
         """Fetch updates for ever and queue them. The offset moves past an update as soon as it is
