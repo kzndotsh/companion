@@ -64,6 +64,10 @@ Today it is reached through Telegram, its only integration for now.
 - **Plays along with a guess.** When a short question invites one ("you know what time it is?"), it
   makes one playful guess from what memory holds, as a question; a hint at what it is time for is
   looked up as one of their habits or routines.
+- **Does not interview.** After three replies in a row that each asked a question, a note after the
+  history says to ask none this time but still leave them something to answer.
+- **Has emoticons of its own.** On casual turns code offers it one of its own marks and kaomoji; when
+  their message has one, the note names that one as theirs, so it stops copying it.
 - **Reacts like a person to small vents.** A short reaction, with varied size examples drawn per turn so
   it does not say the same line every time.
 - **Has a mood that carries.** Cozy, tender or playful, kept by code from what happened, shown only in
@@ -78,10 +82,13 @@ Today it is reached through Telegram, its only integration for now.
   (once one of their messages is explicit; flirting stays with the everyday model), go to a less
   restrictive model, above an age floor in code that no setting changes
   ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
+  A lone short reaction in asterisks ("\*explodes\*") does not start a scene on its own, and the
+  scene reminder keeps it at their level: as far as they take it, explicit only when they are.
 - **Checks its own replies.** A reply with a known habit (an em dash, an AI disclaimer nobody asked for,
   the clock line copied from its own notes, the stock "X, especially when" or "X, even when" line, the stage
   direction "a beat", markdown that shows raw in a chat, and on ordinary turns a joke bolted onto an
-  ordinary message) is drawn once more, twice if an em dash survives, and so is an empty reply.
+  ordinary message or a canned reaction that could sit under any message) is drawn once more, twice
+  if an em dash survives, and so is an empty reply.
   Nothing is ever edited.
 - **Never goes silent.** If the talker errors, or has not answered in ten seconds, a fallback model
   answers too and the first reply wins.
@@ -93,7 +100,8 @@ Today it is reached through Telegram, its only integration for now.
   [0006](docs/adr/0006-decisions-are-logged-by-code.md)).
 - **Backs itself up** at every start and once a day, each copy checked.
 - **Learns from one person's marks.** `/flag` a reply that feels off, `/fav` one that delights. Those
-  marks, and measurements on recorded turns, decide what gets built next.
+  marks, and measurements on recorded turns, decide what gets built next. `/mode` answers which model
+  wrote the last reply and whether a scene is under way. None of the three ever reaches the model.
 - **Measures itself.** An eval runner replays recorded and scripted turns against persona and model
   variants, with a spend cap, the real OpenRouter charge, and a margin of error on every result. The
   made-up facts rate (`companion invented`) counts replies that state something about them that
@@ -101,8 +109,8 @@ Today it is reached through Telegram, its only integration for now.
 
 ## What runs in shadow
 
-Some features are new enough that they only log what they would do. Each is turned on by a setting
-once its log has been read.
+Some features are new enough that they only log what they would do. Each has a review date, and at
+its review it goes live or is removed; `uv run companion shadows` lists them, overdue first.
 
 | Feature | Setting | Read it with |
 |---|---|---|
@@ -160,7 +168,7 @@ All optional. Set them in `.env`.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `COMPANION_CHARACTER` | none | `mika` lays the sheet `data/characters/mika.md` (private) or `prompts/characters/mika/` (public) over the persona. A `## In roleplay and intimate moments` section reaches only the roleplay model. It still says it is an AI when sincerely asked |
+| `COMPANION_CHARACTER` | none | `mika` lays the sheet `data/characters/mika.md` (private, never committed) over the persona; a public sheet could live in `prompts/characters/mika/`, though none ships yet. A `## In roleplay and intimate moments` section reaches only the roleplay model, and a `## Scene reminder` section is sent after the history on roleplay turns. It still says it is an AI when sincerely asked |
 | `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the roleplay model (ADR 0017), above an age floor in code that no setting changes |
 | `COMPANION_LISTEN` | on | the listening note before each reply; `off` turns it off |
 | `COMPANION_MOOD` | `shadow` | `on` adds the mood line, `shadow` works it out and logs it, `off` does neither |
@@ -201,6 +209,14 @@ just logs         # follow data/logs/companion.log
 just commit "feat(x): msg" path...   # commit only the named files
 ```
 
+In the Telegram chat:
+
+```text
+/flag [kind] note mark the last reply; kind is off (default), forgot, too_much or unwanted
+/fav [note]       mark the last reply as one you loved
+/mode             which model wrote the last reply and why, and whether a scene is under way
+```
+
 See what the bot has done:
 
 ```bash
@@ -215,6 +231,7 @@ uv run companion episodes       # the times they spent together, one line each; 
 uv run companion callbacks      # judge recent replies for callbacks to memories
 uv run companion invented --days 7 --cap 0.2 --dump out.json   # made-up facts about them: candidates, to confirm by a stronger reader
 uv run companion prompts        # every prompt and its current version
+uv run companion shadows        # every feature in shadow, its review date, overdue first
 ```
 
 Look after memory:
@@ -223,6 +240,8 @@ Look after memory:
 uv run companion beliefs        # what it holds about the user, with quotes
 uv run companion memory review  # answer the memory check's questions and merge proposals until you quit
 uv run companion memory group   # group memories about one thing across the whole store into merge proposals
+uv run companion opinions       # its own views, tentative or settled
+uv run companion approve <id>   # let one of its own views reach the card
 uv run companion lore           # its own tastes (lore); --label labels new views, --relabel all of them
 uv run companion names          # things named in memory; --read reads new memories for names first
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
@@ -250,21 +269,31 @@ range, and two variants are compared for whether the gap is real or within noise
 
 ```
 src/companion/
-  core/        pure logic: memory, the card, listening, frames, the floor, mood, open loops,
-               relevance, consolidation, its lore, promises, names, the hook, the reply checks,
-               pacing and splitting
+  turn/        the reply path, one stage per module: hear, route, notes, assemble, talk, beside,
+               persist; fast.py drives them and mode.py answers /mode
+  memory/      the memory pass after a quiet spell, the nightly work, rebuilds and the views
+  registry.py  the features a turn and a memory pass run
+  features/    one folder per feature (relevance, reminders, open loops, mood, marks, lore, names,
+               ...), each with pure logic.py, effects in run.py, its queries in store.py, a cli.py
+               and a README on how it works
+  loops/       what a feature uses: the turn's values and Conversation, Feature, ask (a judge),
+               reads (asking several times), record (decisions), curate, embed
+  core/        pure shared rules: memory and the card, frames, the reply checks, pacing and
+               splitting; core/turn/ holds the reply path's own pure rules
+  lib/         small helpers that know nothing about the companion
   prompts/     every prompt as versioned text, with a manifest and a changelog
   models/      OpenRouter and Anthropic clients, embeddings, the fallbacks, the credits meter
-  loops/       the fast loop (one turn) and the slow loop (memory, open loops, the nightly check)
   io/          Telegram
-  store/       SQLite, the only place that imports sqlite3, and the backups
+  store/       SQLite, the only place besides lib/sqlite that imports sqlite3
   cli/         the `companion` command
   evals/       the eval runner and its statistics
-  daemon.py    starts it all, reads the settings
+  daemon.py    starts it all, reads the settings (settings.py)
 ```
 
-`core` imports nothing from the shell. import-linter enforces the layers, alongside strict ruff and
-basedpyright, a lefthook pre-commit and CI.
+Imports point down: `turn/` and `memory/`, then the registry, then `features/`, `loops/`, `core/` and
+`lib/`. A feature's logic is pure, features never import each other, and `core` imports nothing from
+the shell. import-linter enforces it, alongside strict ruff and basedpyright, a lefthook pre-commit
+and CI.
 
 ### How a reply is made
 
@@ -279,7 +308,8 @@ what it gets to see.
    be referred to, the memories in view, anything looked up, memories that bear on the message, what
    the two of them did at the time they point at, a check-in after a heavy talk, a due plan of theirs,
    its own tastes that the message touches, and the mood. A line that must weigh most (the scene
-   reminder, "you already owned that slip") goes after the history instead. The
+   reminder, "you already owned that slip", "ask nothing this time", the offer of an emoticon of its
+   own) goes after the history instead. The
    persona is the first system block and the card is the second, with the clock and the notes in
    `<clock>` and `<notes>` tags. Nothing from the card ever goes in the user's message.
 3. **Write the reply.** The talker sees the persona, the card, the last 40 messages and the new
@@ -331,6 +361,8 @@ from the logs by value.
 | Where | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) | the working rules for anyone, human or agent, changing this repo |
+| [docs/turn.md](docs/turn.md), [delivery.md](docs/delivery.md), [initiative.md](docs/initiative.md), [memory.md](docs/memory.md) | how a reply is made, how Telegram delivery works, plans and reach-outs, and memory over time |
+| `src/companion/features/<name>/README.md` | how each feature works, with its files, prompts, setting and what was measured |
 | [TODO.md](TODO.md) | the work board and the plan: where we are, measured facts, what comes next |
 | [docs/adr/](docs/adr) | decisions and their reasons |
 | [docs/inbox/](docs/inbox) | ideas that are not yet tasks |
