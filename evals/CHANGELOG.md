@@ -1997,3 +1997,22 @@ measure of real turns. The pace stays in shadow until its log is read against re
 
 Cost: under a cent. Rerun: `uv run pytest -m live tests/live/test_thread_met.py -s -o addopts=""`.
 
+## 2026-10-25: how often a chat ends with their story unfinished (ADR 0023, step 3 count)
+
+What: before building the interrupted story as a thread source, every place the real chat went quiet
+for 2 hours or more was pulled from the ledger (21 endings over 10 days, about 2,800 messages), with
+the last 8 messages before the gap and the first 4 after. Two Claude subagents (Haiku and Sonnet)
+labelled each blind: did they leave while something of their own real life was unfinished, and was it
+picked back up? The disputed and the positive ones were read by eye.
+
+Result: the raters agreed on 19 of 21. Read by eye, one ending of 21 was a real unfinished thing of
+theirs that never came back, and it was not a story cut short but an outcome they were waiting on
+("we shall see"). The other flagged endings were a low moment before sleep (sensitive, never raised by
+a thread), a health topic they had just asked it to drop, and a plan the plan note already brought back
+the next day. So in 10 days the interrupted story's moment happened about once, and that once belongs to
+the pending-outcomes source. Ten days and one person: a rate, not a rule.
+
+Decision: the owner's to make (ADR 0023 put the interrupted story first). Cost: $0 (subagents). Rerun:
+the extraction script (a 2-hour gap, 8 messages before and 4 after) kept in the session scratchpad as
+`endings.py`, then two blind raters on its output.
+
