@@ -2052,3 +2052,18 @@ test and were replaced with neutral things. Small and partly invented: a check t
 Cost: under a cent. Rerun: `uv run pytest -m live tests/live/test_loop_repeats.py -s -o addopts=""`,
 and the scratch replay `replay_loop.py`.
 
+## 2026-10-25: weekly rhythms and milestones counted in memory (ADR 0023)
+
+What: before building either source, the 195 current memories about them were searched by code for
+weekday or routine words (a weekday, weekend, every, usually, routine, ritual) and for dates that come
+round (birthday, anniversary, started, since, a month or a year), and the matches read by eye.
+
+Result: no weekly routine at all. The routine words matched daily tastes (a food they usually order, a
+coffee ritual), not anything tied to a day of the week. Dated memories are nearly all one-off events of
+the day they were said; the only date that comes round is a birthday, which the calendar's own-dates
+phase (R19) already plans for, and the one long-running change is sensitive, never raised on its own.
+So after 10 days neither source has anything to bring up. Both wait for more history; the birthday is
+better served by R19.
+
+Cost: $0. Rerun: the same two word searches over current user beliefs, read by eye.
+

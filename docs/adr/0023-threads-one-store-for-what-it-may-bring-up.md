@@ -102,7 +102,10 @@ Thread
 3. Add the interrupted story as the first new source, after counting how often its moment happens
    in the ledger. Shadow first: log the would-offer, judge it by eye.
 4. Weekly rhythms, then milestones and pending outcomes, then a topic gone quiet, each counted
-   first, shadow first, one at a time.
+   first, shadow first, one at a time. Counted 2026-10-25: the interrupted story's moment came about
+   once in 10 days, and it was a pending outcome, which the plan reader already keeps in loose mode;
+   a topic gone quiet needs more than two weeks of history to count, so it goes last (the owner's
+   choice).
 5. Later, and each by its own decision: the calendar's occasions, "a thought", and its own promises as
    sources.
 
