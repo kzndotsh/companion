@@ -171,6 +171,10 @@ together.
 - Do not act on fewer than about 12 samples per cell, and use 30 on a signal that matters. Two
   five-sample gaps in a row were noise. Say when a difference is within noise.
 - A scripted fixture can pass where the real turn fails. Keep the real turn as a local fixture.
+- A flag can be a rare draw. Replay the flagged turn 12 to 30 times and count before building a fix.
+- Never quote a line you want in a prompt or note: the model copies it. Describe the behaviour. A
+  note that only says "don't" seldom works; name the thing and give another way. The record behind
+  these is "What the record shows" in `docs/evals.md`.
 - A judge is a model: check a few of its verdicts by eye. Use a different model from the one under
   test where you can.
 - Scratch scripts for one-off experiments go in the session scratchpad, not the repo. Write the

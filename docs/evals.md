@@ -143,6 +143,69 @@ What has gone wrong, so it is not repeated:
 - **The model under test never grades itself.** GPT-6 Luna graded empathy perfectly, but it is the
   talker, so the runner's grader stays on Haiku.
 
+## What the record shows
+
+Patterns from the eval commits of 2026-10-15 to 2026-10-25, each from more than one result. Read them
+before planning a fix.
+
+**Rewording rarely moves a habit. Structure does.** Eleven persona candidates written to fix a habit
+measured within noise or no better (v29, v32 to v35, v37, v38, v39, v42 to v44), as did notes against
+copying an emoticon, against retelling a small vent (0 of 30 either way), and a plain "they reacted"
+note; 34 of 141 changelog entries read "within noise". The large gains came from changing what the
+model has or where it goes:
+- a look-up: recall 0 to 12 of 12, scene recall 7 to 30 of 30
+- a route: scenes stay with the roleplay talker
+- a schema: reminders read right 32 to 40 of 41 once an unsaid time could be null
+- a judge's definitions: crisis levels 39 of 40 exact
+- the card's order: a meal named that morning 0 to 12 of 12
+- a note chosen by code for one exact moment, sent after the history: rudeness answered coolly 2 to 20
+  of 20, a question run 14 to 0, a question game 0 to 12 of 12, short statements answered short 53 to
+  72 of 72
+
+**Quoted words get copied.** Phrases written into the serious note came back word for word; the mood
+line's word ran through 22 of 30 replies; a quoted line in a character sheet was copied 11 of 12; the
+pronoun note planted a pet name 8 of 60; dropping the persona's emoticon examples cut copying their
+":P" from 29 to 14 of 30. A quoted example of what *not* to do is seldom copied, and removing the
+quoted do-examples cost nothing (v28, 69 fixtures). Describe the behaviour; never quote the line.
+
+**"Don't" alone does little; name it and give another way.** A note against copying their emoticon
+had no effect (75 to 80 of 80 copied). A note that names the mark as theirs and offers one of its own
+cut copying from 14 to 4 of 40. "Ask no question" became "ask none, but leave them something to
+answer".
+
+**A single flag is often a rare draw.** Two flagged replies measured as about a 1-in-30 miss on their
+own turn (a who-it-is answer, a know-the-news answer), and neither needed a new fix.
+Replay a flagged turn 12 to 30 times and count before building anything.
+
+**Measure the need before building.** Counting over the ledger or a quick prototype stopped at least
+five features: searching older messages on a recall cue (mostly off-topic, the answer usually in
+view), fetching memories by a mentioned name (two real misses in six days), a support check on new
+memories, a card half filled by closeness, and afterthought check-ins (almost none in three days).
+
+**More context and more thinking did not help.** A bigger card, 100 messages of history against 40,
+and the memory block itself all measured within noise. Reasoning on Luna doubled latency and added
+48% to the cost for no measured gain, and low reasoning made missed inferences worse.
+
+**Cutting is free, but not a gain in itself.** v21 trimmed the persona by a quarter at equal or
+better scores, and v28 removed examples with no loss. A tighter v44 with the same rules was not better.
+
+**Models are chosen by role.** DeepSeek V4.1 Flash scored lower on everyday turns (73 of 96 against
+Luna's 90; 11 of 30 on claimed perception against 30) and is kept for scenes, where it stays in the
+scene and is faster. Luna graded empathy best but is the talker, so it does not grade.
+
+**The harness drifts from the bot and fails quietly.** A fixture named apart from its id was skipped
+without a word; a failing provider ended a run; the charged figure was read before OpenRouter's meter
+caught up; the layer check's cache reported a broken rule as kept. Worst, the runner built requests
+its own way and grew one switch per note until 2026-10-24, so it missed the turn's newer notes and
+checks. Each became a refusal or a shared code path, not a reminder. Two records were corrected after
+the fact (which prompt a run used, a count of fixture labels): write the exact command and
+configuration into the entry when the run is made.
+
+**Graders can reward the bug.** Fixture judges rewarded the word "heavy" that the serious note had
+handed the model, the empathy grader failed a good question on every model, and the canned-reaction
+labels were half too loose. When a score rises, read whether the replies got better or just matched
+the grader.
+
 ## Reading a result
 
 **Sample sizes.** Three samples a cell is a smoke test. Do not act on fewer than about 12, and use 30
