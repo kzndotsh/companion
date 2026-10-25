@@ -2206,3 +2206,25 @@ the moment is. Luna stays. GLM-5.3 and MiniMax are worth keeping in mind for a f
 talker is ever revisited. Cost: about $0.65. Rerun: scratch script `model_screen.py` and the judging
 briefs.
 
+## 2026-10-25: bland replies, a second talker screen (the roleplay-popular and premium models)
+
+What: the same 12 echo turns, 6 replies each, on talkers chosen from OpenRouter's roleplay usage and
+creative-writing standings: GLM-5.3 Flash (low reasoning, it requires it), Tencent Hy4 preview, Xiaomi
+MiMo V2.6 Pro, Mistral Medium 3.5, Hermes 4 405B, and Claude Sonnet 5.5 as a premium ceiling (stopped
+by the $1.50 cap after 4 turns, 24 replies, low reasoning). Judged blind by two Claude subagents with
+the first screen's Luna and GLM-5.3 replies mixed in as anchors (Luna scored 20 / 20 against 17-18
+before, GLM-5.3 30 / 21 against 28-29).
+
+Result, adds (Sonnet / Haiku), forced in brackets: Sonnet 5.5 12 / 6 of 24 (0 / 0); GLM-5.3 30 / 21
+of 71; Luna 20 / 20 of 72 (0 / 0); GLM-5.3 Flash 23 / 14 (4 / 1); MiMo V2.6 Pro 22 / 11 (7 / 6);
+Hy4 16 / 15 (3 / 0); Hermes 4 405B 10 / 10 (4 / 1); Mistral Medium 3.5 13 / 4 (0 / 0). Read by eye:
+Sonnet 5.5 had the most natural voice and the best questions, but said three times that it cannot see
+things ("I can't see any of them"), an AI disclaimer the persona rules out; MiMo V2.6 Pro returned the
+provider's "request was rejected because it was considered high risk" on all six replies to a harmless
+"#mood" morning turn, which rules it out; Hy4 was warmer and flirtier without adding more.
+
+Decision: no talker beats Luna on blandness by enough to matter; together with the first screen and
+the reasoning arms, the lever is structure, not the model. Cost: $1.26 (Mistral Medium 3.5 and
+Hermes 4 cost about $0.005 to $0.007 a reply, above estimates). Rerun: scratch script
+`model_screen2.py` and the judging brief.
+
