@@ -20,6 +20,9 @@ from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
 TYPING_REFRESH_SECONDS = 4.0  # Telegram drops the typing indicator after about five
+# How long one call may wait in all on Telegram's "too many requests" before giving up. Each wait is
+# the full time Telegram asks for: asking again sooner is refused and can lengthen the block.
+RATE_LIMIT_BUDGET_SECONDS = 60.0
 
 
 Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply | ThenSend]]
@@ -62,6 +65,10 @@ class TelegramError(RuntimeError):
     URL contains the bot token and logs must not."""
 
 
+class RateLimited(TelegramError):
+    """Telegram kept saying "too many requests" past the wait budget."""
+
+
 class Telegram:
     def __init__(  # noqa: PLR0913, PLR0917
         self,
@@ -79,37 +86,43 @@ class Telegram:
         self._client = client
         self._hooks = hooks
 
-    async def _call(self, method: str, **params: object) -> object:
-        for attempt in range(2):
+    async def _call(
+        self, method: str, *, budget: float = RATE_LIMIT_BUDGET_SECONDS, **params: object
+    ) -> object:
+        waited = 0.0
+        while True:
             began = time.perf_counter()
             try:
                 resp = await self._client.post(f"{self._base}/{method}", json=params, timeout=45)
                 resp.raise_for_status()
             except httpx.HTTPStatusError as err:
                 status = err.response.status_code
-                if status == 429 and attempt == 0:
-                    wait = _retry_after(err.response)
+                wait = _retry_after(err.response) if status == 429 else None
+                if wait is not None and waited + wait <= budget:
                     log.warning(
-                        "telegram %s rate limited; waiting %.1fs and retrying", method, wait
+                        "telegram %s rate limited; waiting the %.1fs asked and retrying",
+                        method,
+                        wait,
                     )
                     await asyncio.sleep(wait)
+                    waited += wait
                     continue
                 log.warning("telegram %s status %d: %s", method, status, err.response.text[:300])
                 msg = f"telegram {method} failed with status {status}"
-                raise TelegramError(msg) from None
+                raise (RateLimited if wait is not None else TelegramError)(msg) from None
             except httpx.HTTPError as err:
                 msg = f"telegram {method} failed: {type(err).__name__}"
                 raise TelegramError(msg) from None
             if method != "getUpdates":
                 log.debug("telegram %s ok in %dms", method, (time.perf_counter() - began) * 1000)
             return resp.json()["result"]
-        msg = f"telegram {method} failed"
-        raise TelegramError(msg)
 
     async def send(self, chat_id: int, text: str) -> None:
         for attempt in range(2):
             try:
                 await self._call("sendMessage", chat_id=chat_id, text=text)
+            except RateLimited:
+                raise  # it already waited out its budget; another try would only wait again
             except TelegramError:
                 if attempt == 1:
                     raise
@@ -128,7 +141,7 @@ class Telegram:
     async def _typing(self, chat_id: int) -> None:
         """The typing indicator is a courtesy. Failing to show it must never lose the reply."""
         try:
-            await self._call("sendChatAction", chat_id=chat_id, action="typing")
+            await self._call("sendChatAction", budget=0.0, chat_id=chat_id, action="typing")
         except TelegramError as err:
             log.warning("typing indicator skipped: %s", err)
 
@@ -456,12 +469,12 @@ def _kind(reply: str | Reaction | ReactAndReply | ThenSend) -> str:
 
 
 def _retry_after(resp: httpx.Response) -> float:
-    """How long Telegram asked us to wait, capped so a turn never stalls for long."""
+    """How long Telegram asked us to wait, in full. A missing or unreadable value means a second."""
     try:
         wait = float(resp.json()["parameters"]["retry_after"])
     except (ValueError, KeyError, TypeError):
         wait = 1.0
-    return min(max(wait, 0.0), 5.0)
+    return max(wait, 0.0)
 
 
 def _command(text: str) -> tuple[str, str] | None:

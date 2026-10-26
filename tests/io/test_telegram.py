@@ -185,6 +185,53 @@ async def test_a_rate_limit_is_retried_once_after_the_wait_telegram_asked_for(
     assert len(calls) == 2
 
 
+async def test_a_rate_limit_waits_the_full_time_asked_until_the_budget_runs_out(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import companion.io.telegram as module  # noqa: PLC0415
+
+    waits: list[float] = []
+
+    async def no_sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+    calls: list[int] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        calls.append(1)
+        return httpx.Response(429, json={"ok": False, "parameters": {"retry_after": 8}})
+
+    tg = await _tg(handler)
+    with pytest.raises(TelegramError):
+        await tg.send(1, "hello")
+    assert waits == [8.0] * 7  # 56 s waited; another 8 would pass the 60 s budget
+    assert len(calls) == 8  # no second round from the send's own retry
+
+
+async def test_a_wait_longer_than_the_budget_gives_up_at_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import companion.io.telegram as module  # noqa: PLC0415
+
+    waits: list[float] = []
+
+    async def no_sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        return httpx.Response(429, json={"ok": False, "parameters": {"retry_after": 600}})
+
+    tg = await _tg(handler)
+    with pytest.raises(TelegramError):
+        await tg.send(1, "hello")
+    assert waits == []
+
+
 async def test_errors_never_carry_the_bot_token() -> None:
     def handler(req: httpx.Request) -> httpx.Response:
         del req

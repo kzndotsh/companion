@@ -24,6 +24,10 @@ indicator stays off until the reading pause is over, as someone who has just see
 not be typing yet, and then stays on while the reply is written and held. A reply ready within the
 pause, such as a reaction, never shows typing.
 
+When Telegram answers "too many requests", a call waits the full time it asks for and tries again,
+for up to a minute of waiting in all; asking sooner is refused and can lengthen the block. A reply
+still refused after that is marked undelivered. The typing indicator never waits: it is skipped.
+
 A long, plain reply is sometimes sent as two or three messages, the way people text
 (`COMPANION_SPLIT`, on unless `off`; `io/split.py`). Cuts fall only at sentence boundaries, and a
 reply with quoted speech, as in roleplay, is never split. The ledger and the history keep it as one
