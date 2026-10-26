@@ -2255,3 +2255,16 @@ Decision: not built. The prompt load is part of the cause; subtracting it comes 
 picker. Cost: about $0.05. Rerun: scratch script `prompt_ablation.py`, `minimal-persona.md` and the
 judging briefs.
 
+## 2026-10-25: persona v45, the ordinary-things rule rewritten to allow something of its own (dropped)
+
+What: v41 against v45 (an ordinary thing gets a quick reaction plus something of its own when it comes
+to mind, instead of "a plain reaction or a plain question"; the ban on personifying and gag framings
+kept), on the 12 echo turns, 12 replies a version, two blind Claude judges; and the three cheesy-quip
+fixtures, 12 samples each, on the usual checks.
+
+Result: adds 43 against 48 (Sonnet) and 47 against 45 (Haiku) of 144, no change. Quip fixtures tie:
+dinner 7 / 7, shower 4 / 3, cleanup 10 / 10 of 12. Read by eye, v45's lunch replies are the same praise
+and cooking question as v41's. So the rule was not the cause of the blandness, and the earlier small
+gain from deleting it was within noise. The one prompt result that holds is removing the notes: pooled
+over both judges, 64 against 41 of 144 (Fisher, under 1% chance of noise). Cost about $0.06.
+
