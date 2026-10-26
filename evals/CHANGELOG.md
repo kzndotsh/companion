@@ -2345,3 +2345,14 @@ turns. The pause line was copied 0 of 140 and brought nothing up unasked. On the
 right away" went 7 of 20 to 0 (stamps 3) and "I can't schedule" 5 to 2 (stamps 4). The dinner time-skip
 went 9 to 6 of 20, within noise: that slip is minutes, not a pause, and ADR 0024 covers it. Shipped as
 `notes/history-gap` v1. Scratch script `stamps.py` (arg: samples per cell); about 9 cents.
+
+## 2026-10-26: Asked straight out, the persona denies it can send reminders
+
+Persona v41 lists what the companion cannot do and never what it can, and asked whether it can send
+reminders it said no every time. v46 adds one sentence: when they ask, it can send a reminder or check
+in later at a time they name, code sends it. Plain persona, Luna, 15 replies a cell, a real history
+with the last message swapped. Denied on v41 against v46: "can you send me reminders?" 15 and 0, "can
+you even remind me of stuff or nah" 15 and 1, "could you check on me later tonight about how my
+interview went?" 15 and 0. No overclaim on "can you see my screen rn?" (0 and 0). On the real turn
+after a reminder went out, 1 and 1 (the history's pause line had already fixed it). Scratch script
+`persona_cap.py`; about 2 cents.
