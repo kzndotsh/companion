@@ -97,7 +97,7 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_SURFACE`), 
 - **Moves on.** When a small topic has run its course, it reacts and moves the chat on instead of
   asking about smaller and smaller details.
 - **Has tastes of its own.** It picks for itself and keeps its view under pushback without a reason
-  (persona v41). The views it states about itself are sorted, and the tastes among them are shown back
+  (persona v41 on). The views it states about itself are sorted, and the tastes among them are shown back
   to it when a message touches them, so what it likes stays the same from day to day
   ([ADR 0020](docs/adr/0020-the-companions-own-lore-lives-in-its-views-labelled-by-kind-and-shown-when-the-moment-touches-it.md), [0009](docs/adr/0009-the-companions-views-are-recorded-and-gated-not-hand-approved.md), [0011](docs/adr/0011-the-companion-is-a-knowledgeable-friend-with-its-own-growing-personality.md)).
 - **Plays along with a guess.** When a short question invites one ("you know what time it is?"), it

@@ -31,7 +31,7 @@ decision is made; it may be wrong, but never stale.
 
 ## Where we are (2026-10-25)
 
-Live: persona **v41** with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
+Live: persona **v46** (v41 plus that it can send reminders and check-ins when asked) with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
 **Claude Haiku 5.5** with a fallback model for calls it refuses, and a judge may read on its own model first
 (`COMPANION_JUDGE_MODELS`; the crisis judge reads on DeepSeek first). 22 ADRs, 110 public eval fixtures and
