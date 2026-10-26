@@ -34,6 +34,7 @@ from companion.core.types import (
 )
 from companion.features.reminders.logic import (
     ASKED_WHEN,
+    CONTEXT,
     GRACE,
     ONE_OFF,
     PROMPT,
@@ -252,6 +253,21 @@ async def deliver_due(  # noqa: PLR0913
     return sent
 
 
+def unhandled(c: Conversation, prior: Sequence[Utterance]) -> list[Utterance]:
+    """The conversation the reader sees, without their earlier messages that already set or
+    cancelled a reminder. Shown one, the reader took a comment on that reminder ("see, you can do
+    reminders") as the same request again, 30 times in 30 (2026-10-26)."""
+    return [
+        u
+        for u in prior[-CONTEXT:]
+        if u.speaker is not Speaker.USER
+        or not any(
+            d.has_key(SET) or d.has_key(CANCELLED)
+            for d in c.store.decisions_for_turn(c.rel, u.turn_id)
+        )
+    ]
+
+
 async def reminder_for_turn(
     c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> Read | None:
@@ -266,7 +282,7 @@ async def reminder_for_turn(
         return None
     mark(t, "reminder judge")
     zone = named_zone()
-    slots = await read_slots(c.judge, t.prior, t.text, t.now, zone)
+    slots = await read_slots(c.judge, unhandled(c, t.prior), t.text, t.now, zone)
     done = act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
     if done is None:
         return None

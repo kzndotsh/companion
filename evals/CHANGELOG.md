@@ -2319,3 +2319,15 @@ on its own, because code sends reminders when they are due: 1 of 30 denied, 29 o
 With "never say you cannot send it" added: 0 of 30 and 30 of 30, within noise of the one before;
 shipped as v2. Rerun: the fixture with `--samples 30`, or the scratch script swapping the note line
 in the recorded request. Cost under one cent.
+
+## 2026-10-26: The reminder reader set a reminder again from a comment on it
+
+After the first reminder went out, "see you can do reminders silly!" was read as the earlier
+"remind me in 30 mins" request and set a second reminder. The reader sees the last 4 messages,
+which still held that request. Replayed on the real messages (Haiku, 30 reads): set 30 of 30. 12
+reads per cell, three arms: the reader as it was, a prompt rule that only the newest message can ask,
+and code leaving out their earlier messages. Comment on the real turn: 0, 12 and 12 of 12 read as
+none. A thanks after a reminder, a plain request, "remind me about that tomorrow at 9" after the
+topic, and an answer to its asking when: 12 of 12 right in every arm. Shipped as code that leaves out
+only their messages that already set or cancelled a reminder (12 of 12 none on the real turn), so a
+"that" still finds its topic. Scratch scripts `remind_read2.py` and `remind_read3.py`; about 6 cents.

@@ -75,6 +75,25 @@ async def test_a_clear_request_is_stored_and_the_reply_is_told_the_time(store: S
     assert SET in _reasons(store)
 
 
+async def test_a_request_already_set_is_not_shown_to_the_reader_again(store: Store) -> None:
+    class Seeing(Reminding):
+        def __init__(self) -> None:
+            super().__init__(_slots(hour=8, ampm="pm"))
+            self.prompts: list[str] = []
+
+        async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+            props = schema["properties"]
+            if isinstance(props, dict) and "thing" in props:
+                self.prompts.append(user)
+            return await super().extract(system, user, schema)
+
+    judge = Seeing()
+    await _say(store, judge, "remind me at 8pm to take the dog out")
+    await _say(store, judge, "see, you can do reminders", NOW + timedelta(minutes=2))
+    assert "remind me at 8pm" not in judge.prompts[-1]
+    assert "see, you can do reminders" in judge.prompts[-1]
+
+
 async def test_an_unclear_time_stores_nothing_asks_and_reads_the_answer(store: Store) -> None:
     judge = Reminding(_slots(day="tomorrow", hour=8))
     card = await _say(store, judge, "remind me tomorrow at 8 about the dog")
