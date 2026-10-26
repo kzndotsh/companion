@@ -167,7 +167,7 @@ async def _write(
     theirs = [u for u in prior if u.speaker is Speaker.USER]
     request = TalkerRequest(
         c.prefix,
-        tuple(to_messages(prior)),
+        tuple(to_messages(prior, now)),
         card=tagged(now_line(now, theirs[-1].at if theirs else None), memory=False),
         tail=send_instruction(r.kind, r.thing),
     )

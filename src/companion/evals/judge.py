@@ -61,7 +61,10 @@ class Graded:
 
 
 def build_prompt(excerpt: Sequence[Message], reply: str, criterion: str) -> str:
-    lines = [f"[{'USER' if m.role == 'user' else 'COMPANION'}] {m.content}" for m in excerpt[-4:]]
+    lines = [
+        f"[{'USER' if m.role == 'user' else 'COMPANION'}] {m.content}"
+        for m in [m for m in excerpt if m.role != "system"][-4:]
+    ]
     return "\n".join(
         [
             "Conversation (end):",
@@ -127,7 +130,10 @@ def empathy_verdict(data: Json) -> Verdict:
 
 async def grade_empathy(extractor: Extractor, excerpt: Sequence[Message], reply: str) -> Graded:
     """Score a reply 0 to 2 on reaction, interpretation, exploration and support."""
-    lines = [f"[{'USER' if m.role == 'user' else 'COMPANION'}] {m.content}" for m in excerpt[-4:]]
+    lines = [
+        f"[{'USER' if m.role == 'user' else 'COMPANION'}] {m.content}"
+        for m in [m for m in excerpt if m.role != "system"][-4:]
+    ]
     prompt = "\n".join(["Conversation (end):", *lines, "", f"Reply to grade: {reply}"])
     try:
         result = await extractor.extract(EMPATHY_SYSTEM, prompt, EMPATHY_SCHEMA)

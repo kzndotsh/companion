@@ -154,11 +154,8 @@ async def test_history_continues_across_sessions(store: Store) -> None:
     convo = Conversation(store, talker, PREFIX, REL)
     await handle(convo, SessionId("monday"), "first", "test", NOW)
     await handle(convo, SessionId("tuesday"), "second", "test", NOW + timedelta(days=1))
-    assert [m.content.split("\n\n")[-1] for m in talker.seen[1].messages] == [
-        "first",
-        "a",
-        "second",
-    ]
+    got = [m.content.split("\n\n")[-1] for m in talker.seen[1].messages]
+    assert [m for m in got if not m.startswith("[")] == ["first", "a", "second"]
 
 
 async def test_clock_line_names_the_gap(store: Store) -> None:

@@ -6,7 +6,7 @@ import dataclasses
 import logging
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from companion.core.card import EVENT_SHOWN_DAYS, Card, build_card, render
@@ -117,6 +117,7 @@ class Layout:
     memory: Sequence[str]  # the rendered memory block, or nothing
     notes: Notes
     scene: str = ""  # the character's scene reminder, on a roleplay turn
+    now: datetime | None = None  # when their message came, for a pause before it in the history
 
     def request(self) -> TalkerRequest:
         """The system block in tags, the history and their message, then the scene reminder and
@@ -125,7 +126,7 @@ class Layout:
         card = tagged(
             "\n".join([self.clock, *pinned, *self.memory, *self.notes.lines]), memory=False
         )
-        request = build_request(self.prefix, to_messages(self.prior), self.text, "", card)
+        request = build_request(self.prefix, to_messages(self.prior, self.now), self.text, "", card)
         tail = "\n".join([*([self.scene] if self.scene else []), *self.notes.tail])
         return dataclasses.replace(request, tail=tail) if tail else request
 
@@ -183,7 +184,7 @@ def assemble(  # noqa: PLR0913
     )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     scene = c.scene_reminder if roleplay else ""
-    request = Layout(prefix, t.prior, t.text, clock, pinned, shown, notes, scene).request()
+    request = Layout(prefix, t.prior, t.text, clock, pinned, shown, notes, scene, now).request()
     if request.tail:
         decide(c, t, TAIL, {"text": request.tail})  # what replay needs to rebuild it
     store.save_prefix(prefix)

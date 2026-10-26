@@ -14,7 +14,7 @@ from typing import Literal
 
 from companion.core.prompt.prefix import Prefix
 
-Role = Literal["user", "assistant"]
+Role = Literal["user", "assistant", "system"]  # system: a line of code's own, such as a pause
 
 
 @dataclass(frozen=True, slots=True)

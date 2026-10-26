@@ -542,6 +542,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/clock-gap
 - **notes/clock-gap v1** (current). Moved here on 2026-10-18 from `core/clock.py`, text unchanged. Earlier history is in git.
 
+## notes/history-gap
+- **notes/history-gap v1** (current). New. A system line in the history wherever 20 minutes or more passed between two messages, and before the message being answered when it came that long after the last: how much later (minutes, hours, the next day, days) and the local wall time (`core/history.py`). Measured against no times and a time on every message (`evals/CHANGELOG.md`, 2026-10-26).
+
 ## notes/floor-hold
 - **notes/floor-hold v1** (current). New. Added by code on a turn the floor kept on the everyday talker: stay warm and in character, nothing sexual, shift toward closeness or comfort, and do not explain, refuse or mention a limit, so the switch reads as a pause, not a refusal speech (ADR 0017).
 
@@ -887,6 +890,10 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## notes/owned-it
 - **notes/owned-it v1** (current). New. Owner flag and remark that it is very hard on itself: in a casual talk it owned a slip three replies in a row, and invented slips to own. Code reads its last two replies for an own-up ("my bad", "I got that wrong", "I should've", "sorry, I ..."; sympathy like "I'm sorry it hurts" is not one, `core/ownup.py`); then, outside a scene and unless they say it got them wrong this turn (the repair note's), this line says that was enough: no more apologies or putting itself down, carry on lightly. 24 of 978 past everyday replies own a slip; read by eye, every one owns a slip or doubts itself; none is plain sympathy. Measured on the two turns of that talk, 12 draws each: in the system block the line moved nothing; sent after the history, replies that talked themselves down fell from 7/12 to 1/12 on the turn after the second own-up, and stayed 8/12 vs 9/12 on the turn after the third, so it has to come early.
+
+## Request assembly: a line in the history after a pause
+
+From 2026-10-26 the history carries a system line (`notes/history-gap`) wherever 20 minutes or more passed between two messages, and before the message being answered when it came that long after the last (`core/history.py` `to_messages`, used live, in replay and in the eval runner). The messages themselves are unchanged. A turn recorded before this replays with the lines added, so its request no longer matches the recorded hash. Measured in `evals/CHANGELOG.md` (2026-10-26): a time on every message was copied into replies 52 of 140 times; a line only after a pause 0 of 140, and it stopped the reply calling an on-time reminder early (7 of 20 to 0).
 
 ## Request assembly: notes after the history
 - From 2026-10-22 a note can be sent after the history, as a system message, where it weighs most (`loops/notes.py` `Offer.tail`); the scene reminder already went there. The first is `notes/owned-it`. The text sent there is logged with the turn (`tail: sent after the history`), so replay rebuilds it; scene turns, which did not replay to a match before, now do from this date.

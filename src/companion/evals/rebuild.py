@@ -64,7 +64,7 @@ def rebuilt(
         if history is not None:
             said = base.messages[-1]
             prior = [u for u in store.history_before(rel, at, history + 1) if u.turn_id != turn_id]
-            request = replace(request, messages=(*to_messages(prior[-history:]), said))
+            request = replace(request, messages=(*to_messages(prior[-history:], at), said))
     finally:
         store.close()
     return request

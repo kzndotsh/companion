@@ -2331,3 +2331,17 @@ none. A thanks after a reminder, a plain request, "remind me about that tomorrow
 topic, and an answer to its asking when: 12 of 12 right in every arm. Shipped as code that leaves out
 only their messages that already set or cancelled a reminder (12 of 12 none on the real turn), so a
 "that" still finds its topic. Scratch scripts `remind_read2.py` and `remind_read3.py`; about 6 cents.
+
+## 2026-10-26: Times in the history: a line after a pause, not a time on every message
+
+The history had no times, so a reminder sent 30 minutes after it was asked for read as sent at once,
+and the reply apologised that it "fired right away". Three arms on 7 real turns (the reminder turn,
+the dinner time-skip, two turns after a pause of over an hour, two mid-chat turns, a good morning),
+20 replies each, Luna, plain persona v41: no times; a `[Mon 26 Oct, 1:30 pm]` stamp on every message;
+a system line only where 20 minutes or more passed (`[30 minutes later, Mon 26 Oct, 2:54 pm]`, "the
+next day" across midnight). Every-message stamps were copied into the reply 52 of 140 times (20 of 20
+on one turn, the reply starting with the stamp) and brought time up unasked 31 times on ordinary
+turns. The pause line was copied 0 of 140 and brought nothing up unasked. On the reminder turn "fired
+right away" went 7 of 20 to 0 (stamps 3) and "I can't schedule" 5 to 2 (stamps 4). The dinner time-skip
+went 9 to 6 of 20, within noise: that slip is minutes, not a pause, and ADR 0024 covers it. Shipped as
+`notes/history-gap` v1. Scratch script `stamps.py` (arg: samples per cell); about 9 cents.

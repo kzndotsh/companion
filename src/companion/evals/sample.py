@@ -185,6 +185,7 @@ def script_request(c: Conversation, t: Turn, script: Script, v: Variant) -> Talk
         memory,
         Notes((*notes.lines, *map(_bracketed, v.card_notes)), (), (*notes.tail, *v.tail_notes)),
         v.scene if v.roleplay else "",
+        t.now,
     ).request()
 
 

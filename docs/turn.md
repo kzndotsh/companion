@@ -23,7 +23,10 @@ nothing paid runs, and they are told once that day (`messages/spend-cap`).
    by side, under one 9 s deadline. A look-up that is late or fails simply adds nothing that turn.
 4. **Assemble** (`assemble.py`). It builds the request: the persona, the history, and a system block
    holding the clock (weekday, date and time, and how long since their last message, from
-   `core/clock.py`), the memory card and the notes. `Layout` lays the request out from those parts
+   `core/clock.py`), the memory card and the notes. Wherever 20 minutes or more passed between two
+   messages, or before their message when it came that long after the last, the history carries a
+   system line saying how much later and the local wall time (`core/history.py`, `notes/history-gap`):
+   without it a reminder sent half an hour after it was asked for read as sent at once. `Layout` lays the request out from those parts
    with no store in reach; `companion eval` lays out a scripted fixture with it too, and passes each
    reply through `checked` in `talk.py`, so a sample is what the person would receive.
 5. **Talk** (`talk.py`). The talker writes the reply, with a reaction judge and, when a cue or a scene

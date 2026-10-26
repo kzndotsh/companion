@@ -30,6 +30,7 @@ PLACEHOLDERS = {
     "notes/clock": {"stamp"},
     "notes/address": {"address"},
     "notes/clock-gap": {"gap"},
+    "notes/history-gap": {"when", "stamp"},
     "notes/reminder-set": {"what", "when", "extra"},
     "notes/reminder-ask": {"what", "reason"},
     "notes/reminder-cancelled": {"what"},

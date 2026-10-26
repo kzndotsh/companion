@@ -76,6 +76,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/loop-encourage` | note | an encouragement on its day, offered when they write (J15) | v1 |
 | `notes/clock` | note | the clock line | v1 |
 | `notes/clock-gap` | note | the gap since their last message | v1 |
+| `notes/history-gap` | note | a system line in the history where a pause of 20 minutes or more came between two messages | v1 |
 | `notes/floor-hold` | note | a turn the floor kept on the everyday talker: stay warm, nothing sexual, no explaining (ADR 0017) | v1 |
 | `notes/brush-off` | note | they pushed the flirting or the scene back: drop it, answer what they said, warm and normal | v1 |
 | `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy, `core/turn/habits.py` | v1 |

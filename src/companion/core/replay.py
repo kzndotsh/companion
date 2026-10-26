@@ -53,7 +53,9 @@ def rebuild_request(
     if prefix.sha256 != record.prefix_sha256:
         msg = "prefix does not match the one recorded for this turn"
         raise ReplayError(msg)
-    request = build_request(prefix, to_messages(history), user.text, record.volatile, record.card)
+    request = build_request(
+        prefix, to_messages(history, user.at), user.text, record.volatile, record.card
+    )
     return dataclasses.replace(request, tail=tail) if tail else request
 
 
