@@ -2366,3 +2366,18 @@ check, denied 0. "every day": offered the next one only 15 of 15; the 2 the deni
 truthfully that it only does one-off reminders. Cancel: said it was cancelled 15 of 15. The ask
 note's grammar ("but what time.") reads oddly but did no harm, so v1 stays. Scratch script
 `remind_notes.py`; about a cent.
+
+## 2026-10-26: Repeating reminders and daily greetings, before shipping
+
+Reader `system/reminder-read` v2 on the live suite (`tests/live/test_reminder_read.py`, Haiku),
+with the new repeating and greeting cases ("can you tell me good morning every day?", "say goodnight
+to me every night", "every friday at 7am", "you can stop saying good morning", a repeating
+reminder with no time): all pass. The new migration run on a copy of the real database kept every
+reminder and event row, its append-only triggers and a clean integrity check. The greeting's own
+message: a real history with three earlier good mornings added a day apart, plain persona v46,
+Luna, 15 drafts. Told only to word it differently and touch on something real if there was one,
+15 of 15 were a general wish for their day, all opening the same way. Told to build it around one
+real thing from the last chat or their day ahead, not a general wish, 3 of 15 were, and most named
+something from the last chat (a project, an errand); no question to answer and no guilt in either,
+and none copied an earlier one. The second wording shipped as `system/greeting-send` v1. Scratch
+script `greet.py`; about 2 cents.
