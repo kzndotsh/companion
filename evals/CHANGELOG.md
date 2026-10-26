@@ -2228,3 +2228,30 @@ the reasoning arms, the lever is structure, not the model. Cost: $1.26 (Mistral 
 Hermes 4 cost about $0.005 to $0.007 a reply, above estimates). Rerun: scratch script
 `model_screen2.py` and the judging brief.
 
+## 2026-10-25: are the prompts making replies bland? (persona, its rules, the notes)
+
+What: the same 12 echo turns on Luna, 6 replies a version, judged blind by two Claude subagents
+(Sonnet / Haiku) as adds, echo or forced. Round 1: as sent; the persona minus its rule that an
+ordinary thing (a shower, dinner, laundry) gets a plain reaction or plain question and no joke; a
+stripped persona of about 250 words (who it is, how it texts, honesty about being an AI, care when
+they hurt, play), none of v41's fixes; as sent with no notes in the system block or after the history.
+Round 2: as sent; minus only the length note, only the mood lines, only the habit note; and with no
+notes and no ordinary rule together.
+
+Result, adds of 72 (Sonnet / Haiku), forced in brackets:
+- Round 1: as sent 22 / 19 (3 / 5); no ordinary rule 29 / 22 (2 / 3); stripped persona 23 / 14 (7 / 6,
+  mostly lectures about limits when they said they were loosening its settings); no notes 34 / 30
+  (0 / 2).
+- Round 2: as sent 18 / 25; no length note 19 / 30; no mood lines 22 / 25; no habit note 23 / 27; no
+  notes and no ordinary rule 30 / 32 (4 / 4).
+- These turns carried 3 to 9 note lines each (their pronouns on every turn, one or two mood lines, the
+  length note on 5, habit warnings on 5, its tastes on 2).
+- Read as: no single note causes the blandness; the pile of lines each turn and the ordinary-things
+  rule together cost about a third of the replies that would add something. The stripped persona did
+  not help and lost the rules that keep it from lecturing. Even with everything removed, under half of
+  the replies add something, against 61 / 62 with a note that asks for one thing of its own.
+
+Decision: not built. The prompt load is part of the cause; subtracting it comes before adding a move
+picker. Cost: about $0.05. Rerun: scratch script `prompt_ablation.py`, `minimal-persona.md` and the
+judging briefs.
+
