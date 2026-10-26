@@ -41,6 +41,7 @@ class Switch:
 
 # In the order they appear on the startup line.
 SWITCHES: tuple[Switch, ...] = (
+    Switch("COMPANION_SURFACE", "surface", ("telegram", "discord")),  # which chat it runs on
     Switch("COMPANION_SPLIT", "split", ("on", "off")),
     Switch("COMPANION_LISTEN", "listen", ("on", "off")),
     Switch("COMPANION_INITIATIVE", "initiative", ("shadow", "off")),

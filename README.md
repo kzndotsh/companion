@@ -183,6 +183,16 @@ TELEGRAM_USER_ID=...        # the one Telegram user the bot answers
 OPENROUTER_API_KEY=...      # models are called through OpenRouter
 ```
 
+To talk on Discord instead, add the three lines below (setup: [docs/delivery.md](docs/delivery.md#discord-setup)).
+`TELEGRAM_USER_ID` stays: it names the relationship and its database, so it is the same companion
+and the same memory on either surface.
+
+```bash
+COMPANION_SURFACE=discord
+DISCORD_BOT_TOKEN=...       # from the Discord Developer Portal
+DISCORD_USER_ID=...         # the one Discord user the bot answers
+```
+
 Then start it:
 
 ```bash
@@ -213,7 +223,7 @@ All optional. Set them in `.env`.
 </details>
 
 <details>
-<summary><b>Behaviour</b> (14): what it does on each turn</summary>
+<summary><b>Behaviour</b> (15): what it does on each turn</summary>
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -222,6 +232,7 @@ All optional. Set them in `.env`.
 | `COMPANION_LISTEN` | on | the listening note before each reply; `off` turns it off |
 | `COMPANION_MOOD` | `shadow` | `on` adds the mood line, `shadow` works it out and logs it, `off` does neither |
 | `COMPANION_RESAMPLE` | on | a reply that fails a check is drawn once more; `off` disables it |
+| `COMPANION_SURFACE` | `telegram` | which chat it runs on: `telegram` (needs `TELEGRAM_BOT_TOKEN`) or `discord` (needs `DISCORD_BOT_TOKEN` and `DISCORD_USER_ID`); one at a time, one relationship and one memory either way |
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow` |
 | `COMPANION_SPLIT` | on | long plain replies are sometimes sent as two or three messages; `off` stops it |
 | `COMPANION_RELEVANCE` | `on` | memories that bear on their message, picked when one is near and shown to it (ADR 0018); `shadow` only logs, `off` stops it |

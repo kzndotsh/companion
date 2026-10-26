@@ -15,6 +15,7 @@ def _no_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("COMPANION_TALKER_FALLBACK", raising=False)
     monkeypatch.delenv("COMPANION_CONSOLIDATE", raising=False)
     monkeypatch.delenv("COMPANION_ROLEPLAY_MODEL", raising=False)
+    monkeypatch.delenv("COMPANION_SURFACE", raising=False)
 
 
 def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
@@ -38,7 +39,8 @@ def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
         f" | prompts {prompts.set_hash()}"
         f" | everyday {daemon.openrouter.DEFAULT_MODEL} | roleplay {ROLEPLAY_MODEL}"
         " | judges crisis=deepseek/deepseek-v4.1-flash"
-        " | daily cap $10.00 | pace natural | split on | listen on | initiative shadow"
+        " | daily cap $10.00 | pace natural | surface telegram | split on | listen on"
+        " | initiative shadow"
         " | mood shadow | resample on | intimate stays"
         " | relevance on | talker fallback deepseek/deepseek-v4.1-flash | memory check shadow"
         " | promises shadow | lore on | reminders on | episodes on | marks on | loop notes loose"
@@ -53,6 +55,13 @@ def test_the_pace_setting_is_shown_and_an_unknown_one_means_natural(
     assert " | pace slow" in daemon.startup_line(RelationshipId("t"), "a" * 12)
     monkeypatch.setenv("COMPANION_PACE", "warp")
     assert " | pace natural" in daemon.startup_line(RelationshipId("t"), "a" * 12)
+
+
+def test_the_surface_is_shown(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("COMPANION_SURFACE", "discord")
+    assert " | pace natural | surface discord | split " in daemon.startup_line(
+        RelationshipId("t"), "a" * 12
+    )
 
 
 def test_the_split_setting_is_shown_and_off_turns_it_off(monkeypatch: pytest.MonkeyPatch) -> None:

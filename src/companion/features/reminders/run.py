@@ -183,16 +183,19 @@ async def _write(
     return (text, model) if text else (plain(r.kind, r.thing), "code: the talker said nothing")
 
 
-async def deliver_due(
+async def deliver_due(  # noqa: PLR0913
     c: Conversation,
     send: Callable[[str], Awaitable[None]],
     session: SessionId,
     now: datetime,
     started: datetime,
+    *,
+    channel: str,
 ) -> int:
-    """Send every reminder that is due, once. One that fell due while the bot was not running and is
-    now more than GRACE late is let go; one held by a scene waits for the scene to end. Returns how
-    many went out."""
+    """Send every reminder that is due, once, over `send`, and store it as said on `channel` (the
+    surface it went out on). One that fell due while the bot was not running and is now more than
+    GRACE late is let go; one held by a scene waits for the scene to end. Returns how many went
+    out."""
     due = [r for r in c.store.reminders(c.rel) if r.state == "pending" and r.due_at <= now]
     sent = 0
     for r in due:
@@ -230,7 +233,7 @@ async def deliver_due(
                 Speaker.COMPANION,
                 text,
                 Frame.REAL,
-                "telegram",
+                channel,
                 now,
             )
         )

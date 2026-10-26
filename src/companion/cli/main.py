@@ -203,7 +203,10 @@ def _parser() -> argparse.ArgumentParser:
     ev.add_argument("--dry-run", action="store_true", help="print the plan and estimate only")
     ev.add_argument("--list", action="store_true", help="list fixtures and exit")
     _db_args(ev, relationship=False)
-    run = sub.add_parser("run", help="talk to the companion on Telegram")
+    run = sub.add_parser(
+        "run",
+        help="talk to the companion on Telegram, or on Discord with COMPANION_SURFACE=discord",
+    )
     run.add_argument("--data", type=Path, default=Path("data"))
     return parser
 

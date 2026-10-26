@@ -1,13 +1,15 @@
-"""Wires the pieces together and runs the Telegram surface. Settings come from `settings.py`;
-keys and tokens are read here, where the clients are made."""
+"""Wires the pieces together and runs the chat surface `COMPANION_SURFACE` names, Telegram or
+Discord. Either way it is one relationship and one database. Settings come from `settings.py`; keys
+and tokens are read here, where the clients are made."""
 
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import uuid
-from collections.abc import Mapping
+from collections.abc import AsyncGenerator, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -30,6 +32,7 @@ from companion.features.reach.logic import Kind, dial
 from companion.features.reach.run import Reacher, holds, tick_reach
 from companion.features.reminders.run import deliver_due
 from companion.features.threads.run import Ticker, drafter, tick
+from companion.io import discord
 from companion.io.stop import until_stopped
 from companion.io.surface import Commands, Hooks, Surface, Transport
 from companion.io.telegram import Telegram
@@ -52,6 +55,7 @@ FAVORITE_REACTION = "❤"
 FALLBACK_MODEL = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 UPDATE_KEY = "telegram.last_update_id"
+DISCORD_KEY = "discord.last_message_id"
 REFLECT_IDLE_SECONDS = 90
 REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 REMINDER_TICK_SECONDS = 60
@@ -186,8 +190,9 @@ def _embedder(
     return MeteredEmbedder(embeddings.OpenRouterEmbedder(key, client, s.embed_model), sink)
 
 
-def _hooks(store: Store, rel: RelationshipId) -> Hooks:
-    """What the surface reports back: undelivered replies, and which messages were handled."""
+def _hooks(store: Store, rel: RelationshipId, key: str) -> Hooks:
+    """What the surface reports back: undelivered replies, and which messages were handled, kept
+    under the store setting `key`."""
 
     async def undelivered(text: str, reason: str, delivered: str) -> None:
         now = datetime.now(UTC)
@@ -200,10 +205,10 @@ def _hooks(store: Store, rel: RelationshipId) -> Hooks:
             logging.getLogger("companion").warning("a reply never arrived and is not remembered")
 
     def last_handled() -> str | None:
-        return store.setting(rel, UPDATE_KEY)
+        return store.setting(rel, key)
 
     def mark_handled(cursor: str) -> None:
-        store.set_setting(rel, UPDATE_KEY, cursor, datetime.now(UTC))
+        store.set_setting(rel, key, cursor, datetime.now(UTC))
 
     return Hooks(undelivered, last_handled, mark_handled)
 
@@ -314,7 +319,7 @@ def _start_initiative(
 def _start_reminders(
     convo: Conversation, transport: Transport, s: Settings
 ) -> asyncio.Task[None] | None:
-    """The timer that sends reminders when they fall due (J50)."""
+    """The timer that sends reminders when they fall due (J50), over the running surface."""
     if not s.on("reminders"):
         return None
     started, log = utc_now(), logging.getLogger("companion.reminders")
@@ -323,19 +328,35 @@ def _start_reminders(
         while True:
             await asyncio.sleep(REMINDER_TICK_SECONDS)
             try:
-                await deliver_due(convo, transport.send, SESSION, utc_now(), started)
+                await deliver_due(
+                    convo, transport.send, SESSION, utc_now(), started, channel=s.mode("surface")
+                )
             except Exception:
                 log.exception("reminder tick failed; will try again next time")
 
     return asyncio.create_task(loop())
 
 
+@contextlib.asynccontextmanager
+async def _surface(
+    s: Settings, client: httpx.AsyncClient, store: Store, rel: RelationshipId
+) -> AsyncGenerator[Surface]:
+    """The surface `COMPANION_SURFACE` names, ready to send, with its own resume point."""
+    if s.mode("surface") == "discord":
+        token, user = _need("DISCORD_BOT_TOKEN"), int(_need("DISCORD_USER_ID"))
+        async with discord.connected(token, user) as transport:
+            yield Surface(transport, _hooks(store, rel, DISCORD_KEY), s.pace_factor, s.on("split"))
+        return
+    telegram = Telegram(_need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID")), client)
+    yield Surface(telegram, _hooks(store, rel, UPDATE_KEY), s.pace_factor, s.on("split"))
+
+
 async def run(data_dir: Path) -> None:
     load_dotenv(Path(".env"))
     s = Settings.from_env()
     log_file = logs.configure(data_dir / "logs")
-    token, user = _need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID"))
-    rel = RelationshipId(f"telegram-{user}")
+    # The relationship keeps its Telegram name on either surface: it names the database file.
+    rel = RelationshipId(f"telegram-{int(_need('TELEGRAM_USER_ID'))}")
     db = data_dir / f"{rel}.sqlite"
     backups.back_up_quietly(data_dir, db, "start", utc_now())  # before any migration runs
     store = Store(db)
@@ -344,7 +365,8 @@ async def run(data_dir: Path) -> None:
     roleplay_prefix = build_prefix(
         characters.system_prompt(prompts.get("system/persona").raw, character, roleplay=True)
     )
-    async with httpx.AsyncClient() as client:
+    async with contextlib.AsyncExitStack() as stack:
+        client = await stack.enter_async_context(httpx.AsyncClient())
         talker, scene, judge, reflector = _metered_models(client, store, rel, s)
         convo = Conversation(
             store,
@@ -433,11 +455,10 @@ async def run(data_dir: Path) -> None:
                 task.cancel()
             pending[:] = [asyncio.create_task(reflect_after_idle())]
 
-        tg = Telegram(token, user, client)
-        surface = Surface(tg, _hooks(store, rel), pace=s.pace_factor, split=s.on("split"))
+        surface = await stack.enter_async_context(_surface(s, client, store, rel))
 
         async def answer(text: str) -> str | Reaction | ReactAndReply | ThenSend:
-            reply = await handle(convo, SESSION, text, "telegram")
+            reply = await handle(convo, SESSION, text, s.mode("surface"))
             schedule_reflect()
             return reply
 
@@ -447,7 +468,7 @@ async def run(data_dir: Path) -> None:
             task
             for task in (
                 _start_initiative(store, rel, judge, s),
-                _start_reminders(convo, tg, s),
+                _start_reminders(convo, surface.transport, s),
                 asyncio.create_task(_daily_backups(data_dir, db)),
                 asyncio.create_task(_nightly_memory(store, reflector, rel, s)),
             )

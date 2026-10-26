@@ -4,8 +4,8 @@ Read this first. `CLAUDE.md` is a symlink to this file, so every agent sees the 
 
 ## What this is
 
-A Telegram companion bot that tries to be the most human-like AI companion, plus the memory engine
-under it. One person talks to it, marks a reply `/flag` when it feels off and `/fav` when it
+A Telegram (or Discord, `COMPANION_SURFACE`) companion bot that tries to be the most human-like AI
+companion, plus the memory engine under it. One person talks to it, marks a reply `/flag` when it feels off and `/fav` when it
 delights, and those marks set priorities. It runs from `src/companion`. It is a single-user
 project: the bot runs on the owner's machine, and the repo is pushed to a GitHub remote (`origin`).
 
@@ -15,7 +15,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 |---|---|
 | `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files and setting: read it before changing the feature |
-| `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md`, `docs/memory.md` | how the reply path, Telegram delivery, plans and reach-outs, and memory over time work, for what is not a feature folder |
+| `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md`, `docs/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
@@ -30,7 +30,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 ```bash
 just check        # lint, types, import layers, tests. Run before every commit
 just run          # start the bot (uv run companion run)
-just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram call
+just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram or Discord call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 just inbox some idea   # jot an idea into docs/inbox/
@@ -193,7 +193,8 @@ together.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`lib/logs.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.
-- Never log or print the Telegram token. Telegram errors carry no URL (`TelegramError`).
+- Never log or print a bot token. Telegram errors carry no URL (`TelegramError`), Discord errors only the
+  call and its status (`DiscordError`).
 - Restart with `just restart` in a terminal the owner can see, never as a hidden background job or under a
   timeout (it runs the bot in the foreground). It stops the old process first and waits while it answers
   what it already received (up to 30 s). Two bots on one token fight over updates. After a
