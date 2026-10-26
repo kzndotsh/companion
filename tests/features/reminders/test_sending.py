@@ -88,7 +88,7 @@ async def test_a_greeting_goes_in_its_own_voice_and_the_next_day_is_made(store: 
     talker = Writer("morning you ☀️")
     assert await _tick(store, _at(20, 9, 0), talker) == ["morning you ☀️"]
     assert "good morning" in talker.seen[0].tail
-    assert "worded differently from the ones you sent on earlier days" in talker.seen[0].tail
+    assert "not opened or worded like the ones you sent on earlier days" in talker.seen[0].tail
     assert _states(store) == [("2026-10-20 09:00", "sent"), ("2026-10-21 09:00", "pending")]
 
 
