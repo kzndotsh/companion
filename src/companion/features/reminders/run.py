@@ -67,6 +67,7 @@ from companion.features.reminders.series import (
     how_often,
     repeat_note,
     repeat_of,
+    skip_reason,
     tend,
 )
 from companion.loops.ask import Judge, ask
@@ -78,6 +79,7 @@ from companion.loops.spendcap import over_cap
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
+    from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.reminders")
 TIMEOUT_SECONDS = 8.0
@@ -92,6 +94,7 @@ READER = Judge(
 )
 LATE = timedelta(minutes=5)  # sent later than this after its time, it is marked late
 SET, ASKED, CANCELLED = "reminders: set", ASKED_WHEN, "reminders: cancelled"
+SKIPPED, PAUSED, RESUMED = "reminders: skipped", "reminders: paused", "reminders: resumed"
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,13 +143,13 @@ def schedule(c: Conversation, series: Series, now: datetime, tz: tzinfo) -> Step
     return step if made else replace(step, due=None)
 
 
-def stop(c: Conversation, series: Series, reason: str, now: datetime) -> None:
+def stop(store: Store, series: Series, reason: str, now: datetime) -> None:
     """Stop a series and drop its pending occurrence. Stopped first, so a tick in between makes no
     next one."""
-    c.store.series_event(series.id, Standing.STOPPED, reason, now)
-    for r in c.store.reminders(c.rel):
+    store.series_event(series.id, Standing.STOPPED, reason, now)
+    for r in store.reminders(series.relationship_id):
         if r.series_id == series.id and r.state == "pending":
-            c.store.reminder_event(r.id, "cancelled", reason, now)
+            store.reminder_event(r.id, "cancelled", reason, now)
 
 
 def _cancel(c: Conversation, s: Slots, now: datetime) -> Read | None:
@@ -163,7 +166,7 @@ def _cancel(c: Conversation, s: Slots, now: datetime) -> Read | None:
     for r in dropped:
         c.store.reminder_event(r.id, "cancelled", "they asked to drop it", now)
     for x in stopped:
-        stop(c, x, "they asked to stop it", now)
+        stop(c.store, x, "they asked to stop it", now)
     what = [asked_for(r.kind, r.thing) for r in dropped] + [
         f"{asked_for(x.kind, x.thing)} {how_often(x.repeat)}" for x in stopped
     ]
@@ -289,9 +292,11 @@ async def deliver_due(  # noqa: PLR0913
 ) -> int:
     """Send every reminder that is due, once, over `send`, and store it as said on `channel` (the
     surface it went out on). One that fell due while the bot was not running and is now more than
-    GRACE late is let go; one held by a scene waits for the scene to end. Returns how many went
-    out."""
+    GRACE late is let go; a greeting they already wrote first is skipped; one held by a scene waits
+    for the scene to end. Then every series is brought up to date. Returns how many went out."""
     due = [r for r in c.store.reminders(c.rel) if r.state == "pending" and r.due_at <= now]
+    every, zone = {x.id: x for x in c.store.series(c.rel)}, named_zone()
+    theirs = c.store.their_times(c.rel, now - LOOK_BACK)
     sent = 0
     for r in due:
         turn = TurnId(uuid.uuid4().hex)
@@ -305,6 +310,14 @@ async def deliver_due(  # noqa: PLR0913
                 now,
                 {"reminder": r.id},
             )
+            continue
+        series = every.get(r.series_id or "")
+        why = None if series is None else skip_reason(series, r.due_at, theirs, now, zone)
+        if why is not None:
+            if c.store.claim_reminder(r.id, now):
+                c.store.reminder_event(r.id, "skipped", why, now)
+                detail: dict[str, Json] = {"reminder": r.id, "series": r.series_id, "why": why}
+                log_decision(c, session, turn, SKIPPED, now, detail)
             continue
         prior = c.store.history_before(c.rel, now, HISTORY_LIMIT)
         if scene_frame(prior, now) is not Frame.REAL:
@@ -344,7 +357,17 @@ async def deliver_due(  # noqa: PLR0913
         )
         log.info("reminder %s sent%s: %s", r.id[:8], " late" if late else "", text)
         sent += 1
+    for series in every.values():
+        _tend(c, series, session, now, zone)
     return sent
+
+
+def _tend(c: Conversation, series: Series, session: SessionId, now: datetime, tz: tzinfo) -> None:
+    step = schedule(c, series, now, tz)
+    if step.state is not None:
+        key = PAUSED if step.state is Standing.PAUSED else RESUMED
+        detail: dict[str, Json] = {"series": series.id, "why": step.reason}
+        log_decision(c, session, TurnId(uuid.uuid4().hex), key, now, detail)
 
 
 def unhandled(c: Conversation, prior: Sequence[Utterance]) -> list[Utterance]:

@@ -95,8 +95,10 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     _db_args(ep)
     _db_args(add("calendar", help="the occasions in the next 30 days and what was offered lately"))
     _db_args(add("now", help="what they said is coming: the labels, what is open, the notes"))
-    rm = add("reminders", help="the reminders they asked for, with what became of each")
-    rm.add_argument("--cancel", metavar="ID", help="drop a pending one")
+    rm = add(
+        "reminders", help="the reminders and repeating ones they asked for, and what became of each"
+    )
+    rm.add_argument("--cancel", metavar="ID", help="drop a pending one or stop a repeating one")
     _db_args(rm)
     md = add("mood", help="the mood now, or --replay DAYS of what it would have been")
     md.add_argument("--replay", type=int, metavar="DAYS", help="rebuild it over the last DAYS days")
