@@ -16,7 +16,7 @@ from companion.core.types import (
     Speaker,
 )
 from companion.loops.current import Heard, Turn, decide, mark
-from companion.turn.floor import DECLINES, EXPLICIT, explicit_lead
+from companion.turn.floor import DECLINES, EXPLICIT, MINOR, confirm_minor, explicit_lead
 from companion.turn.floor import declines as judge_declines
 from companion.turn.listen import judge_listening
 from companion.turn.values import Routed
@@ -51,15 +51,17 @@ async def route_turn(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | N
     if intimate and c.route_intimate and not in_play:
         under_way = _intimate_before(c, t) or await _explicit(c, t)
 
+    age_coded = read[0].age_coded if read is not None and not from_fallback(read[1]) else None
+    if age_coded and (in_play or (c.route_intimate and intimate)):
+        age_coded = await _minor(c, t)
+
     def route_for(*, declined: bool = False) -> Route:
         return choose_route(
             in_play=in_play,
             intimate=intimate,
             under_way=under_way,
             allow_intimate=c.route_intimate,
-            judged_age_coded=read[0].age_coded
-            if read is not None and not from_fallback(read[1])
-            else None,
+            judged_age_coded=age_coded,
             declined=declined,
         )
 
@@ -85,6 +87,21 @@ def routed_to_roleplay(d: Decision) -> bool:
     if isinstance(d.detail, dict) and "talker" in d.detail:
         return d.detail["talker"] == RouteTalker.ROLEPLAY.value
     return d.reason.startswith("replied with the roleplay talker")
+
+
+async def _minor(c: Conversation, t: Turn) -> bool:
+    """The listening judge read the turn as age-coded: ask the narrow minor check. Only its yes, or
+    no reading, holds the turn."""
+    if c.judge is None:
+        return True
+    mark(t, "minor check")
+    got = await confirm_minor(c.judge, t.prior, t.text)
+    held = got is None or got.value
+    detail: dict[str, Json] = {"minor": held, "read": got is not None, "prompt": MINOR.prompt.ref}
+    if got is not None:
+        detail["scorer"] = got.model
+    decide(c, t, "minor check", detail)
+    return held
 
 
 async def _declines(c: Conversation, t: Turn) -> bool:

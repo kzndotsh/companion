@@ -136,6 +136,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v8 |
 | `system/frames` | system | the frame judge, `core/frames.py` | v2 |
 | `system/habits` | system | the habit finder, `features/moves/logic.py` | v2 |
+| `system/minor-check` | system | asked again when the listening judge reads a routed turn as age-coded: does the text say or imply someone is under 18; only a yes, or no reading, holds the turn (ADR 0017) | v1 |
 | `system/intimate-check` | system | reads whether a reply on a held turn is intimate (sexual, not affection) (ADR 0017) | v1 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v2 |

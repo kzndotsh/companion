@@ -12,9 +12,12 @@ from companion.core.turn.floor import (
     EXPLICIT_SCHEMA,
     INTIMATE_CHECK,
     INTIMATE_SCHEMA,
+    MINOR_CHECK,
+    MINOR_SCHEMA,
     parse_declines,
     parse_explicit,
     parse_intimate,
+    parse_minor,
 )
 from companion.core.types import Utterance
 from companion.loops.ask import Judge, Read, ask
@@ -28,6 +31,17 @@ INTIMATE = Judge(
     timeout=TIMEOUT_SECONDS,
     unread="treated as intimate",
     trust_fallback=False,  # the floor never relies on the fallback model (ADR 0017)
+    attempts=2,  # one late read threw away a good reply on a scene turn (2026-10-26)
+)
+MINOR = Judge(
+    "floor",
+    MINOR_CHECK,
+    MINOR_SCHEMA,
+    parse_minor,
+    timeout=4.0,
+    unread="treated as a minor: the turn stays held",
+    trust_fallback=False,
+    attempts=2,
 )
 
 
@@ -74,3 +88,11 @@ async def declines(
     """Whether their message pushes the flirting or the scene back, even jokingly
     (`system/brush-off`)."""
     return await ask(extractor, DECLINES, _conversation(prior, said, 6))
+
+
+async def confirm_minor(
+    extractor: Extractor, prior: Sequence[Utterance], said: str
+) -> Read[bool] | None:
+    """Whether the text says or implies someone in the romantic or sexual content is under 18,
+    asked only when the listening judge read the turn as age-coded (`system/minor-check`)."""
+    return await ask(extractor, MINOR, _conversation(prior, said, 10))

@@ -2381,3 +2381,16 @@ real thing from the last chat or their day ahead, not a general wish, 3 of 15 we
 something from the last chat (a project, an errand); no question to answer and no guilt in either,
 and none copied an earlier one. The second wording shipped as `system/greeting-send` v1. Scratch
 script `greet.py`; about 2 cents.
+
+## 2026-10-26: A narrow minor check behind the broad age-coded label
+
+A pretend scene broke on a flagged turn: a short teasing message, after an earlier one in which
+the user called themselves a brat with "little" in front of it, was read `age_coded` by the
+listening judge and held on the everyday talker, and a late check of its good reply sent a redraw
+that refused the scene. Replayed (Haiku, 8 reads): flagged 8 of 8; with "little" or "brat" taken out
+of the history 0 of 8. Adding those words to the listening prompt's list of adult words: still 0 of
+12 right on the real turn. A narrow second check (`system/minor-check`), asked only on an age-coded
+yes, 12 reads a case with any unread answer counted as a minor: the real turn 12 of 12 not a minor;
+two made-up adult turns about small bodies and teasing 11 of 12; an age under 18 stated and a
+school-uniform scene 12 of 12 held (some of those calls the provider refused outright, which counts
+as held). Scratch scripts `agecode*.py`; about 3 cents.

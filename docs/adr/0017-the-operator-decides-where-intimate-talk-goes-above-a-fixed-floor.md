@@ -19,7 +19,9 @@ goes to the roleplay talker should be the operator's choice, with one line no op
   everyday one. No model chooses a talker.
 - **A fixed floor, in code, that no setting changes.** Romance or sex together with anything child-like
   never goes to the roleplay talker. A turn the judge reads as `age_coded`, or could not read at all, stays
-  on the everyday talker. Nothing carries over by timer: what came up a few messages back is still in the
+  on the everyday talker. From 2026-10-26 an `age_coded` yes is asked again by a narrow check
+  (`system/minor-check`: does the text say or imply someone is under 18), and only its yes, or no reading,
+  holds the turn; the broad label alone read adults' teasing as child-like and broke a scene. Nothing carries over by timer: what came up a few messages back is still in the
   judge's view on the next turn. If the judge's own model refuses the call and a fallback model answers,
   that answer counts as unread, so the floor never relies on a less strict model.
 - **A held turn is checked, never written by code.** When the floor keeps a turn on the everyday talker,

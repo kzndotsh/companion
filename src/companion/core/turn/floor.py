@@ -55,6 +55,22 @@ EXPLICIT_SCHEMA: dict[str, Json] = {
 }
 
 
+# The listening judge's age_coded is broad, and read adults' teasing in a pretend scene as
+# child-like 8 times in 8. A yes is asked again, narrowly: does the text
+# say or imply someone is under 18. Only a yes, or no reading, holds the turn (2026-10-26).
+MINOR_CHECK = get("system/minor-check")
+MINOR_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"minor": {"type": "boolean"}},
+    "required": ["minor"],
+}
+
+
+def parse_minor(data: Json) -> bool | None:
+    value = data.get("minor") if isinstance(data, dict) else None
+    return value if isinstance(value, bool) else None
+
+
 BRUSHED = "they pushed the flirting back: the everyday talker answers"
 BRUSH_OFF = get("system/brush-off")
 BRUSH_NOTE = get("notes/brush-off")

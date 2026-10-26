@@ -95,7 +95,11 @@ is), and it carries on while their messages stay intimate. Flirting alone stays 
 talker however long it runs.
 
 A floor sits above all of this, in code and not in any setting. When the listening judge reads the
-turn as age-coded, or could not read it at all, it stays with the everyday talker. A fallback model's
+turn as age-coded, a narrow second check (`system/minor-check`) asks whether the text says or implies
+someone is under 18; its yes, or no reading, keeps the turn with the everyday talker, as does a turn
+the listening judge could not read at all. The listening judge alone read adults' teasing as
+child-like and broke a scene. The check of a held reply gets a second try before a late
+answer counts as intimate. A fallback model's
 reading counts as unread. A turn the floor holds gets a note, and its reply is read by an intimate
 check and redrawn. The last draw sees only their message. If every draw still reads intimate, nothing
 is sent. Code never writes a reply itself.

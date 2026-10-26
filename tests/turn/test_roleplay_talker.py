@@ -52,9 +52,10 @@ class Judge:
         sexual_reply: bool = False,
         explicit: bool = True,
         declines: bool = False,
+        minor: bool | None = None,
     ) -> None:
         self.age_coded, self.intimate, self.sexual_reply = age_coded, intimate, sexual_reply
-        self.explicit, self.declines = explicit, declines
+        self.explicit, self.declines, self.minor = explicit, declines, minor
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         del user
@@ -67,6 +68,8 @@ class Judge:
             return Extraction({"explicit": self.explicit}, "j", 0.0, 1)
         if isinstance(props, dict) and set(props) == {"declines"}:
             return Extraction({"declines": self.declines}, "j", 0.0, 1)
+        if isinstance(props, dict) and set(props) == {"minor"}:
+            return Extraction({"minor": self.minor} if self.minor is not None else None, "j", 0, 1)
         if isinstance(props, dict) and "age_coded" in props and self.age_coded is not None:
             labels: Json = {
                 "severity": 0,
@@ -150,6 +153,43 @@ async def test_a_scene_stays_with_the_everyday_talker_when_the_floor_holds_or_it
     turn = store.latest_turn(REL)
     assert turn is not None
     assert reason in [d.reason for d in store.decisions_for_turn(REL, turn)]
+
+
+@pytest.mark.parametrize(("minor", "routed"), [(False, True), (True, False), (None, False)])
+async def test_an_age_coded_read_holds_a_scene_only_when_the_minor_check_agrees_or_is_unread(
+    store: Store, *, minor: bool | None, routed: bool
+) -> None:
+    scene = Talker("scene")
+    judge = Judge(age_coded=True, minor=minor)
+    await _chat(store, ["let's pretend you're a knight", "*bows*"], scene, judge)
+    assert bool(scene.seen) is routed  # the second message, once the scene is under way
+    turn = store.latest_turn(REL)
+    assert turn is not None
+    assert any(d.has_key("minor check") for d in store.decisions_for_turn(REL, turn))
+
+
+async def test_a_late_check_of_a_held_reply_is_asked_once_more_before_it_is_thrown_away(
+    store: Store,
+) -> None:
+    class Late(Judge):
+        def __init__(self) -> None:
+            super().__init__(intimate=True, age_coded=True, minor=True)
+            self.checks = 0
+
+        async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+            props = schema["properties"]
+            if isinstance(props, dict) and set(props) == {"intimate"}:
+                self.checks += 1
+                if self.checks == 1:
+                    raise TimeoutError
+            return await super().extract(system, user, schema)
+
+    scene, everyday = Talker("scene"), Talker("everyday")
+    convo = Conversation(
+        store, everyday, PREFIX, REL, judge=Late(), roleplay_talker=scene, route_intimate=True
+    )
+    await handle(convo, SESSION, "i want you so bad", "t", NOW)
+    assert len(everyday.seen) == 1  # the first reply was kept, not redrawn
 
 
 @pytest.mark.parametrize(
