@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 import httpx
 
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
-from companion.io.pace import hold_seconds
+from companion.io.pace import hold_seconds, read_seconds
 from companion.io.split import split_reply
 from companion.io.stop import cancel_when, next_update
 from companion.models.wire import integer, obj, seq
@@ -46,6 +46,15 @@ class _Delivery:
     what the user saw."""
 
     sent: list[str] = field(default_factory=list[str])
+
+
+@dataclass(frozen=True, slots=True)
+class _Wait:
+    """Their message, when the turn started, and the one random factor for this reply's timing."""
+
+    text: str
+    started: float
+    jitter: float
 
 
 class TelegramError(RuntimeError):
@@ -263,11 +272,14 @@ class Telegram:
         if command is not None and command[0] not in commands:
             return  # unknown and /start commands never reach the model
         started = time.monotonic()
+        jitter = random.uniform(0.8, 1.25)  # noqa: S311
+        typist: asyncio.Task[None] | None = None
         try:
             if command is not None:
                 reply = await commands[command[0]](command[1])
             else:
-                await self._typing(chat_id)
+                read = read_seconds(text, self._pace, jitter)
+                typist = asyncio.create_task(self._type_after(chat_id, read))
                 reply = await handle(text)
         except asyncio.CancelledError:
             log.info("message %d superseded while the reply was being written", message_id)
@@ -275,7 +287,10 @@ class Telegram:
         except Exception:
             log.exception("turn failed")
             return
-        wait = (text, started) if command is None else None
+        finally:
+            if typist is not None:
+                typist.cancel()
+        wait = _Wait(text, started, jitter) if command is None else None
         delivery = _Delivery()
         try:
             await self._answer(chat_id, message_id, reply, wait, delivery)
@@ -296,21 +311,28 @@ class Telegram:
                 _kind(reply),
             )
 
-    async def _hold(
-        self, chat_id: int, user_text: str, reply: str, started: float, *, reading: bool = True
-    ) -> None:
-        """Wait like someone reading and typing, keeping the typing indicator alive while a text
-        reply is on its way. The wait counts the time already spent since `started`."""
-        remaining = hold_seconds(
-            user_text,
-            reply,
-            self._pace,
-            time.monotonic() - started,
-            random.uniform(0.8, 1.25),  # noqa: S311
-            reading,
-        )
+    async def _type_after(self, chat_id: int, delay: float) -> None:
+        """Show typing once the reading pause is over, and keep it up while the reply is written.
+        A reply written within the pause shows none, as someone still reading would not."""
+        await asyncio.sleep(delay)
+        while True:
+            await self._typing(chat_id)
+            await asyncio.sleep(TYPING_REFRESH_SECONDS)
+
+    async def _hold(self, chat_id: int, reply: str, wait: _Wait, *, reading: bool = True) -> None:
+        """Wait like someone reading and then typing: no indicator for what is left of the reading
+        pause, then the typing indicator kept alive while a text reply is on its way. The wait
+        counts the time already spent since `wait.started`."""
+        elapsed = time.monotonic() - wait.started
+        user_text = wait.text if reading else ""
+        remaining = hold_seconds(user_text, reply, self._pace, elapsed, wait.jitter, reading)
         if remaining > 0:
             log.info("holding %.1fs before sending (%d words)", remaining, len(reply.split()))
+        quiet = max(0.0, read_seconds(user_text, self._pace, wait.jitter) - elapsed)
+        quiet = min(quiet, remaining) if reading else 0.0
+        if quiet > 0:
+            await asyncio.sleep(quiet)
+            remaining -= quiet
         while remaining > 0:
             if reply:
                 await self._typing(chat_id)
@@ -355,20 +377,21 @@ class Telegram:
         chat_id: int,
         message_id: int,
         reply: str | Reaction | ReactAndReply | ThenSend,
-        wait: tuple[str, float] | None = None,
+        wait: _Wait | None = None,
         delivery: _Delivery | None = None,
     ) -> None:
-        """Send the reply. `wait` is the user's text and when the turn started; leave it out for
-        a command's reply, which goes at once."""
+        """Send the reply. `wait` is the user's text, when the turn started and its jitter; leave it
+        out for a command's reply, which goes at once."""
         delivery = delivery or _Delivery()
 
         async def hold(text: str, *, first: bool = True) -> None:
             if wait is None or self._pace <= 0:
                 return
             if first:
-                await self._hold(chat_id, wait[0], text, wait[1])
+                await self._hold(chat_id, text, wait)
             else:
-                await self._hold(chat_id, "", text, time.monotonic(), reading=False)
+                later = _Wait("", time.monotonic(), wait.jitter)
+                await self._hold(chat_id, text, later, reading=False)
 
         if isinstance(reply, ThenSend):
             try:

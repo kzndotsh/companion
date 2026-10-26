@@ -19,7 +19,10 @@ that was already written and then dropped is marked undelivered. Commands never 
 
 Replies are held for a moment so they land like someone typing, not instantly. `COMPANION_PACE`
 chooses how: `off`, `quick`, `natural` (the default) or `slow` (`io/pace.py`). Set `off` when timing
-a run by hand. Commands are never held.
+a run by hand. Commands are never held. The wait is a reading pause and then typing: the typing
+indicator stays off until the reading pause is over, as someone who has just seen the message would
+not be typing yet, and then stays on while the reply is written and held. A reply ready within the
+pause, such as a reaction, never shows typing.
 
 A long, plain reply is sometimes sent as two or three messages, the way people text
 (`COMPANION_SPLIT`, on unless `off`; `io/split.py`). Cuts fall only at sentence boundaries, and a

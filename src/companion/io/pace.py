@@ -2,9 +2,9 @@
 
 The model answers in about a second, which no one reading and typing could do. The wait is a pure
 function of the two texts: a short pause to read what they sent, then time to type the reply, less
-whatever the model already took. It is capped so a turn never feels broken. The pace setting
-scales it: "off" sends at once. The io layer adds the random jitter and does the waiting; nothing
-here reads a clock.
+whatever the model already took. The typing indicator shows only once the reading pause is over.
+It is capped so a turn never feels broken. The pace setting scales it: "off" sends at once. The io
+layer adds the random jitter and does the waiting; nothing here reads a clock.
 """
 
 from __future__ import annotations
@@ -23,15 +23,20 @@ def pace_factor(raw: str) -> float:
     return PACES.get(raw.strip().lower(), PACES[DEFAULT_PACE])
 
 
+def read_seconds(user_text: str, factor: float, jitter: float = 1.0) -> float:
+    """The pause to notice and read their message, before any typing shows."""
+    read = min(READ_BASE_SECONDS + READ_PER_WORD * len(user_text.split()), READ_MAX_SECONDS)
+    return min(read * factor * jitter, MAX_SECONDS)
+
+
 def target_seconds(
     user_text: str, reply_text: str, factor: float, jitter: float = 1.0, reading: bool = True
 ) -> float:
     """The whole time from their message to the reply going out. An empty reply (a reaction)
     only pays the reading pause. A later part of a split reply has nothing new to read."""
-    read = min(READ_BASE_SECONDS + READ_PER_WORD * len(user_text.split()), READ_MAX_SECONDS)
-    read = read if reading else 0.0
-    typing = TYPE_PER_WORD * len(reply_text.split())
-    return min((read + typing) * factor * jitter, MAX_SECONDS)
+    read = read_seconds(user_text, factor, jitter) if reading else 0.0
+    typing = TYPE_PER_WORD * len(reply_text.split()) * factor * jitter
+    return min(read + typing, MAX_SECONDS)
 
 
 def hold_seconds(  # noqa: PLR0913, PLR0917

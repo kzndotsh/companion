@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from dataclasses import dataclass, field
 
@@ -388,13 +389,48 @@ async def test_a_text_reply_waits_while_typing_before_it_is_sent(
     calls, sleeps = await _paced("a reply of about seven words in total", 1.0, monkeypatch)
     assert sum(sleeps) > 0
     assert calls.index("sendMessage") > max(i for i, c in enumerate(calls) if c.startswith("sleep"))
-    assert calls.count("sendChatAction") >= 2  # once at the start, once while waiting
+    assert "sendChatAction" in calls
+
+
+async def test_the_reading_pause_shows_no_typing(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls, _ = await _paced("a reply of about seven words in total", 1.0, monkeypatch)
+    first_sleep = next(i for i, c in enumerate(calls) if c.startswith("sleep"))
+    assert first_sleep < calls.index("sendChatAction")
+
+
+async def _typing_while_writing(writing: float, reply: str | Reaction) -> list[str]:
+    """Real time: a pace whose reading pause is about 0.04 s, and a model that takes `writing`."""
+    calls: list[str] = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        calls.append(str(req.url).rsplit("/", 1)[-1])
+        return httpx.Response(200, json={"ok": True, "result": True})
+
+    async def talk(text: str) -> str | Reaction:
+        del text
+        await asyncio.sleep(writing)
+        calls.append("written")
+        return reply
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    await Telegram("t", ALLOWED, client, pace=0.05).handle_update(_update("hello there"), talk, {})
+    return calls
+
+
+async def test_typing_shows_while_a_slow_reply_is_written_once_the_reading_pause_is_over() -> None:
+    calls = await _typing_while_writing(0.3, "sure")
+    assert calls.index("sendChatAction") < calls.index("written")
+
+
+async def test_a_reaction_ready_within_the_reading_pause_never_shows_typing() -> None:
+    calls = await _typing_while_writing(0.0, Reaction("👍"))
+    assert "sendChatAction" not in calls
 
 
 async def test_pace_off_sends_at_once(monkeypatch: pytest.MonkeyPatch) -> None:
     calls, sleeps = await _paced("a reply", 0.0, monkeypatch)
     assert sleeps == []
-    assert calls == ["sendChatAction", "sendMessage"]
+    assert calls[-1] == "sendMessage"
 
 
 async def test_a_long_wait_keeps_the_typing_indicator_alive(
@@ -403,14 +439,14 @@ async def test_a_long_wait_keeps_the_typing_indicator_alive(
     calls, sleeps = await _paced("word " * 60, 1.6, monkeypatch)
     assert len(sleeps) >= 2
     assert max(sleeps) <= 4.0
-    assert calls.count("sendChatAction") >= len(sleeps)
+    assert calls.count("sendChatAction") >= len(sleeps) - 1  # all but the reading pause
 
 
 async def test_a_reaction_reply_is_not_held_long_and_shows_no_typing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     calls, sleeps = await _paced(Reaction("👍"), 1.0, monkeypatch)
-    assert calls.count("sendChatAction") == 1
+    assert "sendChatAction" not in calls
     assert 0 < sum(sleeps) < 3
     assert calls[-1] == "setMessageReaction"
 
