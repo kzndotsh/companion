@@ -35,6 +35,7 @@ from companion.core.types import (
 )
 from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck
+from companion.features.history.run import pass_step
 from companion.features.nudges.run import tick_nudge
 from companion.features.reach.logic import Kind, dial
 from companion.features.reach.run import Reacher, holds, tick_reach
@@ -419,6 +420,7 @@ async def run(data_dir: Path) -> None:
             initiative=s.on("initiative"),
             crisis=s.mode("crisis"),
             now=s.mode("now"),
+            history=s.mode("history"),
             serious_message=character.serious if character is not None else "",
         )
         same = (
@@ -427,6 +429,7 @@ async def run(data_dir: Path) -> None:
             else None
         )
         embed = (convo.embedder, convo.embed_model) if convo.embedder is not None else None
+        history = pass_step(s.mode("history"), character.sheet if character is not None else "")
         pending: list[asyncio.Task[None]] = []
 
         async def reflect_after_idle() -> None:
@@ -447,6 +450,7 @@ async def run(data_dir: Path) -> None:
                         promises=s.on("promises"),
                         embed=embed,
                         loose_loops=s.on("loop notes"),
+                        history=history,
                     ),
                     REFLECT_RETRY_DELAYS,
                     "reflect",

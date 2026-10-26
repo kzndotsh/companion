@@ -40,6 +40,7 @@ from companion.features.callbacks.logic import Check
 from companion.features.consolidate import store as memory_checks
 from companion.features.context import store as contexts
 from companion.features.episodes import store as episodes
+from companion.features.history.store import Stories
 from companion.features.invented import store as invented
 from companion.features.invented.logic import Statement
 from companion.features.lore.logic import Kind as ViewKind
@@ -432,6 +433,10 @@ class Store:
 
     def their_times(self, rel: RelationshipId, since: datetime) -> list[datetime]:
         return reminders.their_times(self._conn, rel, since)
+
+    def stories(self) -> Stories:
+        """Its own history's stories (ADR 0025)."""
+        return Stories(self._conn)
 
     def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
         promises.add(self._conn, p, model=model, prompt=prompt, at=at)

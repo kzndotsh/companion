@@ -9,6 +9,7 @@ from companion.features.context.run import CONTEXT
 from companion.features.crisis.run import CRISIS
 from companion.features.episodes.run import EPISODES
 from companion.features.guess.run import GUESS
+from companion.features.history.run import HISTORY
 from companion.features.hooks.run import HOOKS
 from companion.features.knowing.run import KNOWING
 from companion.features.lore.run import LORE
@@ -44,4 +45,5 @@ FEATURES: tuple[Feature, ...] = (
     NOW,
     CALENDAR,
     HOOKS,
+    HISTORY,
 )

@@ -242,6 +242,7 @@ All optional. Set them in `.env`.
 | `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
 | `COMPANION_CALENDAR` | `on` | one note after the history on a casual turn about the day: a US public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years (`features/calendar`); `off` stops it |
 | `COMPANION_NOW` | `shadow` | what they said is coming, kept until it happens (ADR 0024): `on` sends one line after the history while it is open ("about 2 minutes ago they said dinner is coming soon; it has not happened unless they say so"), `shadow` logs the line and sends nothing, `off` stops the note; the reader also runs while reaching out is on, for nudges |
+| `COMPANION_HISTORY` | `shadow` | its own history (ADR 0025): after each memory pass, the small details of its own past it made up in chat are captured and checked against the character sheet and the stories already kept; beside an ordinary turn the canon stories nearest their message are logged. Nothing is shown yet, so `on` acts as `shadow` until step 2; `off` reads and logs nothing |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 
 </details>

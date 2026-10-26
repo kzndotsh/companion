@@ -23,6 +23,13 @@ feature's step runs in the registry's order: labelling the memory map, listing n
 and judging worth; then the new memories are embedded. After a pass that stored new views of its own,
 the lore step labels them (`src/companion/features/lore/README.md`).
 
+After every pass, unless `COMPANION_HISTORY` is `off`, the history step reads the companion's own
+messages after its own bookmark for small details of its own past, scenes included (a fact said in
+passing counts, a scene event does not). Each is quoted, kept with its frame in its own append-only
+tables, and checked three times against the character sheet and the stories already canon before it is
+canon (ADR 0025, `src/companion/features/history/README.md`). It never reads or changes what is stored
+about the user, and in step 1 nothing it keeps reaches the talker.
+
 ## How memory reaches the model
 
 On every turn, a memory card is built from the current memories (`core/card.py`) and placed in the

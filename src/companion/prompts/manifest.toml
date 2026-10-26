@@ -90,6 +90,8 @@
 "system/memory-pair" = "v1"
 "system/memory-names" = "v1"
 "system/lore-label" = "v1"
+"system/history-capture" = "v1"
+"system/history-canon" = "v1"
 "system/invented-judge" = "v1"
 "system/basics-hook" = "v2"
 "system/basics-known" = "v1"

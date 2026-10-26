@@ -30,6 +30,7 @@ from companion.features.callbacks import cli as callbacks
 from companion.features.context import cli as context
 from companion.features.crisis import cli as crisis
 from companion.features.episodes import cli as episodes
+from companion.features.history import cli as history
 from companion.features.invented import cli as invented
 from companion.features.knowing import cli as knowing
 from companion.features.lore import cli as lore
@@ -77,6 +78,7 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     lr.add_argument("--label", action="store_true", help="label its new views first (a model call)")
     lr.add_argument("--relabel", action="store_true", help="label every view again (model calls)")
     _db_args(lr)
+    _db_args(add("history", help="the stories of its own past and their canon standing (shadow)"))
     nm = add(
         "names", help="things named in memory and the words for each (fetch on mention, shadow)"
     )
@@ -117,7 +119,7 @@ def _memory_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     mg.add_argument("id_prefix", nargs="+")
     mg.add_argument("--claim", required=True, help="the merged wording")
     _db_args(mg)
-    rt = add("retire", help="close one belief by id prefix, with a reason")
+    rt = add("retire", help="close one belief, or retire a story of its past, by id prefix")
     rt.add_argument("id_prefix")
     rt.add_argument("--reason", required=True)
     _db_args(rt)
@@ -342,6 +344,10 @@ def _lore(a: argparse.Namespace) -> int:
     return _out(first + lore.run(db, rel))
 
 
+def _history(a: argparse.Namespace) -> int:
+    return _out(history.run(*_target(a)))
+
+
 def _names(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     first = asyncio.run(commands.run(db, rel, names.read_now)) if a.read else ""
@@ -440,6 +446,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "episodes": _episodes,
     "names": _names,
     "lore": _lore,
+    "history": _history,
     "map": _map,
     "backup": _backup,
     "address": _address,

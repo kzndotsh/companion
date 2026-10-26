@@ -79,6 +79,7 @@ class ReflectOptions:
     promises: bool = False  # read its own messages for promises it made (J12, shadow)
     embed: tuple[Embedder, str] | None = None  # embed new memories after the pass (model name)
     loose_loops: bool = False  # hedged plans become note-only loops (COMPANION_LOOP_NOTES)
+    history: _Step | None = None  # read its own messages for stories of its past (ADR 0025)
 
 
 @dataclass(frozen=True, slots=True)
@@ -162,9 +163,10 @@ async def reflect_once(  # noqa: PLR0913
     promises: bool = False,
     embed: tuple[Embedder, str] | None = None,
     loose_loops: bool = False,
+    history: _Step | None = None,
 ) -> ReflectResult:
     options = ReflectOptions(
-        now, same=same, promises=promises, embed=embed, loose_loops=loose_loops
+        now, same=same, promises=promises, embed=embed, loose_loops=loose_loops, history=history
     )
     return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), options)
 
@@ -414,6 +416,8 @@ async def reflect_from(
     new_wants = users.accepted_ids & wanted
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
     after = [*(AFTER_THEIRS if users.accepted else ()), *(AFTER_OWN if own.accepted else ())]
+    if options.history is not None:
+        after.append(options.history)
     labelled = sum([(await step(store, extractor, rel, now)).cost_usd for step in after])
     if users.accepted and options.embed is not None:
         labelled += await _embed_new(store, rel, now, options.embed)

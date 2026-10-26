@@ -62,6 +62,7 @@ SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_CRISIS", "crisis", ("shadow", "on", "off")),
     Switch("COMPANION_CALENDAR", "calendar", ("on", "off")),
     Switch("COMPANION_NOW", "now", ("shadow", "on", "off")),
+    Switch("COMPANION_HISTORY", "history", ("shadow", "on", "off")),
 )
 _BY_LABEL = {s.label: s for s in SWITCHES}
 

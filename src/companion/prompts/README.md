@@ -167,6 +167,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/reminder-send` | system | the instruction sent after the history when a reminder is due: one short message naming it (J50) | v1 |
 | `system/greeting-send` | system | the instruction sent after the history when a greeting they asked for is due: one short message, worded unlike the earlier days', no question, no guilt (J50) | v1 |
 | `system/lore-label` | system | the kind of each of the companion's own views: taste (its lore), stance, rule, self or lived (ADR 0020) | v1 |
+| `system/history-capture` | system | the details of its own past in its own messages, each quoted, and whether it is its own past or happens in a scene (ADR 0025, shadow) | v1 |
+| `system/history-canon` | system | one story of its own past against the character sheet and the stories kept: fits, same, contradicts, too big or not a story; read three times (ADR 0025, shadow) | v1 |
 | `system/memory-names` | system | the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |
 | `system/memory-group` | system | which memories are about one thing and would read better as one, read three times (ADR 0019) | v1 |

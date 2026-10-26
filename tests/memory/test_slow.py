@@ -293,3 +293,22 @@ async def test_a_failed_embedding_after_the_pass_keeps_the_memories(store: Store
     result = await reflect_once(store, ex, REL, when, embed=(_DownEmbedder(), "fake-embed"))
     assert result.accepted == 1
     assert not store.belief_embeddings(REL, "fake-embed")
+
+
+async def test_the_history_step_runs_after_each_pass_and_its_cost_counts(store: Store) -> None:
+    ran: list[datetime] = []
+
+    class Read:
+        cost_usd = 0.5
+
+    async def history(s: Store, ex: object, rel: RelationshipId, now: datetime) -> Read:
+        del s, ex, rel
+        ran.append(now)
+        return Read()
+
+    _say(store, 1, Speaker.COMPANION, "hello there")
+    result = await reflect_once(store, FakeExtractor(), REL, T0, history=history)  # type: ignore[arg-type]
+    assert ran == [T0]
+    assert result.cost_usd >= 0.5
+    assert not (await reflect_once(store, FakeExtractor(), REL, T0, history=history)).ran  # type: ignore[arg-type]
+    assert ran == [T0]

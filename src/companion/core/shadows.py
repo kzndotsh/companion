@@ -105,6 +105,15 @@ SHADOWS: tuple[Shadow, ...] = (
         "labels that read right on real messages and notes that would have stopped a time skip",
     ),
     Shadow(
+        "its own history: stories of its past it made up in chat, checked against the sheet and"
+        " kept as canon, and the ones it would show (ADR 0025)",
+        "history",
+        "companion history, the decision log",
+        date(2026, 11, 9),
+        "canon rulings that read right to the owner (nothing big or contradicting kept, the same"
+        " story linked, not kept twice) and would-shows that fit the moment",
+    ),
+    Shadow(
         "memories about a name they mention, left off the card",
         None,
         "companion names",

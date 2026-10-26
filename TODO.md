@@ -327,6 +327,17 @@ learned from how they answer instead of a fixed number).
 Built in shadow or blocked, each waiting on a dated review or the owner's decision (see Decisions needed).
 When the answer comes, the card moves to Todo or Done.
 
+- [ ] LR6 Its own history (ADR 0025): the small details of its own past it makes up in chat, kept as canon
+      so it tells the same past every time. **2026-10-26, step 1 in shadow** (`COMPANION_HISTORY`,
+      `features/history`): after each memory pass its own messages are read for stories of its past (in a
+      scene, only facts said in passing), each quoted with its frame; each new story is read three times
+      against the character sheet and the stories already canon and kept as canon, as a telling of an earlier
+      story, or not canon with the reason (contradicts, too big, not a story). Beside an ordinary turn the
+      nearest canon stories are logged with how often each was told and whether a telling is still in view;
+      nothing is shown. `companion history` lists them, `companion retire ID` retires one. Next: the owner's
+      session measures `system/history-capture` and `system/history-canon` on made-up fixtures; at the
+      review of 2026-11-09, read the rulings by eye and decide step 2, a note that shows a near story and
+      says it was told before.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).

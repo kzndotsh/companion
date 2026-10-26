@@ -36,7 +36,7 @@ just commit "feat(x): msg" path...   # commit only the named files; refuses dirs
 just inbox some idea   # jot an idea into docs/inbox/
 uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar | shadows | crisis | now
 uv run companion memory review | group   # questions for the owner, merge proposals
-uv run companion promises | names | lore   # shadow lists and its own tastes
+uv run companion promises | names | lore | history   # shadow lists, its own tastes and its own past
 uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
 uv run companion invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
@@ -84,6 +84,7 @@ together.
 | Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-30 |
 | How often it brings a thread up, learned from how they met the last ones (ADR 0023) | always shadow for now | the decision log | 2026-11-08 |
 | What they said is coming, kept until it happens, and the note that says so (ADR 0024) | `COMPANION_NOW` | `companion now` | 2026-11-08 |
+| Its own history: stories of its past it made up in chat, checked against the sheet and kept as canon, and the ones it would show (ADR 0025) | `COMPANION_HISTORY` | `companion history`, the decision log | 2026-11-09 |
 | The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-04 |
 
 ## Rules we learned the hard way
