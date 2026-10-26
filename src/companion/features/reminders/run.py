@@ -93,8 +93,12 @@ READER = Judge(
     trust_fallback=False,
 )
 LATE = timedelta(minutes=5)  # sent later than this after its time, it is marked late
+# A send takes under a minute, a minute more if Telegram asks to wait. One still claimed after this
+# was cut off by a crash or a restart mid-send; left claimed it would block its series for good.
+STUCK = timedelta(minutes=10)
 SET, ASKED, CANCELLED = "reminders: set", ASKED_WHEN, "reminders: cancelled"
 SKIPPED, PAUSED, RESUMED = "reminders: skipped", "reminders: paused", "reminders: resumed"
+STUCK_GONE = "reminders: let go, cut off mid-send"
 
 
 @dataclass(frozen=True, slots=True)
@@ -291,10 +295,18 @@ async def deliver_due(  # noqa: PLR0913
     channel: str,
 ) -> int:
     """Send every reminder that is due, once, over `send`, and store it as said on `channel` (the
-    surface it went out on). One that fell due while the bot was not running and is now more than
-    GRACE late is let go; a greeting they already wrote first is skipped; one held by a scene waits
-    for the scene to end. Then every series is brought up to date. Returns how many went out."""
-    due = [r for r in c.store.reminders(c.rel) if r.state == "pending" and r.due_at <= now]
+    surface it went out on). One left claimed by a send that was cut off is let go, never resent.
+    One that fell due while the bot was not running and is now more than GRACE late is let go; a
+    greeting they already wrote first is skipped; one held by a scene waits for the scene to end.
+    Then every series is brought up to date. Returns how many went out."""
+    held = c.store.reminders(c.rel)
+    for r in held:
+        if r.state == "claimed" and r.state_at is not None and now - r.state_at > STUCK:
+            why = "claimed and never finished, cut off mid-send; whether it arrived is unknown"
+            c.store.reminder_event(r.id, "expired", why + ", so it is not sent again", now)
+            detail_stuck: dict[str, Json] = {"reminder": r.id, "series": r.series_id}
+            log_decision(c, session, TurnId(uuid.uuid4().hex), STUCK_GONE, now, detail_stuck)
+    due = [r for r in held if r.state == "pending" and r.due_at <= now]
     every, zone = {x.id: x for x in c.store.series(c.rel)}, named_zone()
     theirs = c.store.their_times(c.rel, now - LOOK_BACK)
     sent = 0

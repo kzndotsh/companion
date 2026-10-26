@@ -12,6 +12,7 @@ from companion.features.reminders.run import (
     PAUSED,
     RESUMED,
     SKIPPED,
+    STUCK_GONE,
     deliver_due,
     schedule,
     stop,
@@ -154,3 +155,16 @@ async def test_a_series_stopped_while_its_greeting_was_sending_makes_no_next_one
     c = Conversation(store, Writer("morning ☀️"), PREFIX, REL)
     await deliver_due(c, send, SESSION, _at(20, 9, 0), SET_AT, channel="telegram")
     assert _states(store) == [("2026-10-20 09:00", "sent")]
+
+
+async def test_one_cut_off_mid_send_is_let_go_not_resent_and_its_series_goes_on(
+    store: Store,
+) -> None:
+    _series(store, Kind.REMINDER, Repeat(None, time(8, 30)))
+    [first] = store.reminders(REL)
+    assert store.claim_reminder(first.id, _at(20, 8, 30))  # a crash right after the claim
+    assert await _tick(store, _at(20, 8, 35)) == []
+    assert _states(store) == [("2026-10-20 08:30", "claimed")]
+    assert await _tick(store, _at(20, 8, 45)) == []
+    assert _states(store) == [("2026-10-20 08:30", "expired"), ("2026-10-21 08:30", "pending")]
+    assert store.decisions_with_key(REL, STUCK_GONE)
