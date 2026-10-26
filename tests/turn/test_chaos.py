@@ -120,6 +120,7 @@ def _conversation(store: Store, judge: Chaos | None, talker: Talker) -> Conversa
         relevance="on",
         episodes="on",
         crisis="on",
+        scene_memory="on",
     )
 
 

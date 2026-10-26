@@ -86,6 +86,7 @@ together.
 | What they said is coming, kept until it happens, and the note that says so (ADR 0024) | `COMPANION_NOW` | `companion now` | 2026-11-08 |
 | Its own history: stories of its past it made up in chat, checked against the sheet and kept as canon, and the ones it would show (ADR 0025) | `COMPANION_HISTORY` | `companion history`, the decision log | 2026-11-09 |
 | The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-04 |
+| A separate memory lane for intimate scenes: memories placed by lane, patterns from scenes, and the scene card it would send (ADR 0026) | `COMPANION_SCENE_MEMORY` | `companion scene`, the decision log | 2026-11-09 |
 
 ## Rules we learned the hard way
 

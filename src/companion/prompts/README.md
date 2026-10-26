@@ -130,6 +130,10 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/occasion-us` | note | after the history: a month, a hundred days, six months or a year since they first talked; a light, warm nod (`features/calendar`) | v1 |
 | `notes/occasion-theirs` | note | after the history on a casual turn: today is a date of theirs read from memory (a birthday, an anniversary, someone's of theirs); mark it warmly, never say it was remembered or looked up (`features/calendar`, R19) | v1 |
 | `notes/now-soon` | note | after the history while something they said is coming is still open: how long ago they said it, and that it has not happened unless they say so (`features/now`, ADR 0024) | v1 |
+| `notes/scene-limits` | note | on a scene turn, in place of the memory card: their hard and soft limits from their own words, pinned first (ADR 0026, `COMPANION_SCENE_MEMORY=on`) | v1 |
+| `notes/scene-known` | note | on a scene turn: the intimate memories and patterns nearest the moment, at most three (ADR 0026) | v1 |
+| `notes/scene-offer` | note | on a scene turn: one item they said they are curious about, which it may invite once if the moment fits (ADR 0026) | v1 |
+| `notes/scene-basics` | note | on a scene turn: what they are called; the only everyday memory a scene keeps (ADR 0026) | v1 |
 | `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
 | `system/callback-judge` | system | the callback check, `features/callbacks/logic.py`, `companion callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
@@ -169,6 +173,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/lore-label` | system | the kind of each of the companion's own views: taste (its lore), stance, rule, self or lived (ADR 0020) | v1 |
 | `system/history-capture` | system | the details of its own past in its own messages, each quoted, and whether it is its own past or happens in a scene (ADR 0025, shadow) | v1 |
 | `system/history-canon` | system | one story of its own past against the character sheet and the stories kept: fits, same, contradicts, too big or not a story; read three times (ADR 0025, shadow) | v1 |
+| `system/scene-lane` | system | each memory about them: everyday or intimate, and an intimate one's stance (into, curious, hard or soft limit, style, aftercare); read three times (ADR 0026, shadow) | v1 |
+| `system/scene-pattern` | system | how they tend to play intimate scenes, from one ended scene, each quoted from their own message; never a limit (ADR 0026, shadow) | v1 |
 | `system/memory-names` | system | the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |
 | `system/memory-group` | system | which memories are about one thing and would read better as one, read three times (ADR 0019) | v1 |

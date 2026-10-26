@@ -48,4 +48,5 @@ class Conversation:
         "off"  # what they said is coming, kept until it happens: on, shadow or off (ADR 0024)
     )
     history: str = "off"  # its own history: shadow logs the stories it would show (ADR 0025)
+    scene_memory: str = "off"  # the intimate scene lane: on, shadow (logged only) or off (ADR 0026)
     serious_message: str = ""  # the sheet's `## Crisis message` section, sent by code

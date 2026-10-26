@@ -40,6 +40,7 @@ from companion.features.nudges.run import tick_nudge
 from companion.features.reach.logic import Kind, dial
 from companion.features.reach.run import Reacher, holds, tick_reach
 from companion.features.reminders.run import deliver_due
+from companion.features.scene_memory.run import pass_step as scene_step
 from companion.features.threads.run import Ticker, drafter, tick
 from companion.io import discord
 from companion.io.stop import until_stopped
@@ -421,6 +422,7 @@ async def run(data_dir: Path) -> None:
             crisis=s.mode("crisis"),
             now=s.mode("now"),
             history=s.mode("history"),
+            scene_memory=s.mode("scene"),
             serious_message=character.serious if character is not None else "",
         )
         same = (
@@ -433,6 +435,7 @@ async def run(data_dir: Path) -> None:
             step
             for step in (
                 pass_step(s.mode("history"), character.sheet if character is not None else ""),
+                scene_step(s.mode("scene")),
             )
             if step is not None
         ]

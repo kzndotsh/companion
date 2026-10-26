@@ -33,6 +33,7 @@ from companion.core.types import (
     Utterance,
 )
 from companion.core.views import ViewState, card_views
+from companion.features.scene_memory.run import SCENE, scene_lane
 from companion.loops.current import Heard, Turn, decide, mark
 from companion.loops.features import Lookups, Moment
 from companion.loops.record import Recorder
@@ -165,16 +166,28 @@ def assemble(  # noqa: PLR0913
     everyday = {
         bid for bid, x in labels.items() if x.domain is Domain.DAILY and x.depth is Depth.SURFACE
     }
-    card = build_card(
-        assertable,
-        store.last_support(c.rel),
-        now,
-        views=views,
-        show_held=sharing,
-        everyday=everyday,
-        contexts=store.belief_contexts(c.rel),
-    )
-    shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
+    support, contexts = store.last_support(c.rel), store.belief_contexts(c.rel)
+
+    def card_of(beliefs: Sequence[Belief], shown_views: Sequence[Belief]) -> Card:
+        return build_card(
+            beliefs,
+            support,
+            now,
+            views=shown_views,
+            show_held=sharing,
+            everyday=everyday,
+            contexts=contexts,
+        )
+
+    card = card_of(assertable, views)
+    lane = scene_lane(c, t, looked.found.get(SCENE.name), roleplay=roleplay, card=card)
+    if lane.text is not None:  # a scene turn: the scene card, and no everyday memories
+        card, shown = card_of([], ()), [lane.text] if lane.text else []
+    else:
+        if lane.hidden & {b.id for b in assertable}:
+            assertable = [b for b in assertable if b.id not in lane.hidden]
+            card = card_of(assertable, views)
+        shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)
     pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
@@ -189,4 +202,4 @@ def assemble(  # noqa: PLR0913
         decide(c, t, TAIL, {"text": request.tail})  # what replay needs to rebuild it
     store.save_prefix(prefix)
     _mark_start(t, in_scene, card, request.card)
-    return Assembled(request, request.card, card, views, view_state, notes.after)
+    return Assembled(request, request.card, card, views, view_state, (*notes.after, *lane.after))

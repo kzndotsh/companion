@@ -11,12 +11,19 @@ from __future__ import annotations
 
 import re
 
+from companion.prompts import get
+
 _BRACKETED = re.compile(r"\[(.*?)\]", re.DOTALL)
 _SECTIONS = (
     ("What you remember", "memory"),
     ("Also known", "held"),
     ("Older, and may be out of date", "older"),
     ("Views of your own", "views"),
+    # The scene card's blocks (ADR 0026), matched by their notes' own opening words.
+    *(
+        (get(f"notes/scene-{part}").text.split("$")[0].lstrip("["), f"scene-{part}")
+        for part in ("limits", "known", "offer", "basics")
+    ),
 )
 
 

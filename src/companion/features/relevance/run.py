@@ -65,8 +65,10 @@ async def look_up(  # noqa: PLR0913
     on_card: set[BeliefId],
     now: datetime,
     gate: float | None = None,
+    hidden: frozenset[BeliefId] = frozenset(),
 ) -> Lookup:
-    """With `gate`, the small model is asked only when the closest memory scores at least that."""
+    """With `gate`, the small model is asked only when the closest memory scores at least that.
+    `hidden` memories are never searched (the intimate lane outside a scene, ADR 0026)."""
     started = time.perf_counter()
     cost = await embed_missing(store, embedder, rel, model, now)
     texts = [said, f"{last_reply}\n{said}"] if last_reply else [said]
@@ -74,7 +76,7 @@ async def look_up(  # noqa: PLR0913
         query = await embedder.embed(texts)
     embed_ms = int((time.perf_counter() - started) * 1000)
     cost += query.cost_usd
-    pool = eligible(store.user_beliefs(rel), sharing=sharing)
+    pool = [b for b in eligible(store.user_beliefs(rel), sharing=sharing) if b.id not in hidden]
     vectors = store.belief_embeddings(rel, model)
     alone = nearest(query.vectors[0], pool, vectors)
     shortlist = nearest(
@@ -141,6 +143,7 @@ async def shadow(  # noqa: PLR0913
     now: datetime,
     gate: float | None = None,
     timeout: float = TIMEOUT_SECONDS,
+    hidden: frozenset[BeliefId] = frozenset(),
 ) -> Lookup | None:
     """The look-up with a time limit; None when it failed or ran out of time."""
     try:
@@ -157,12 +160,18 @@ async def shadow(  # noqa: PLR0913
                 on_card=set(on_card),
                 now=now,
                 gate=gate,
+                hidden=hidden,
             ),
             timeout,
         )
     except Exception as err:
         log.warning("relevance look-up failed or timed out: %r", err)
         return None
+
+
+def _hidden(c: Conversation) -> frozenset[BeliefId]:
+    """The intimate lane, left out of the look-up when the scene memory is on (ADR 0026)."""
+    return c.store.scene_memory().intimate(c.rel) if c.scene_memory == "on" else frozenset()
 
 
 RELEVANT_NOTE = get("notes/relevant")
@@ -197,6 +206,7 @@ async def relevant_for_turn(
         now=t.now,
         gate=RELEVANCE_GATE,
         timeout=LIVE_SECONDS,
+        hidden=_hidden(c),
     )
     if found is None:
         return ()
@@ -243,6 +253,7 @@ async def shadow_for_turn(
         sharing=heard is not None and heard[0].severity >= 1,
         on_card=[b.id for b in (*card.usable, *card.held, *card.older)],
         now=t.now,
+        hidden=_hidden(c),
     )
     if found is not None:
         decide(c, t, RELEVANCE_SHADOW, found.detail)

@@ -56,6 +56,7 @@ from companion.features.promises.store import Recorded as RecordedPromise
 from companion.features.reach import store as reach
 from companion.features.reminders import store as reminders
 from companion.features.reminders.logic import Reminder, Series, Standing
+from companion.features.scene_memory.store import SceneMemory
 from companion.features.threads import store as open_loops
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.store import ReachOut
@@ -437,6 +438,10 @@ class Store:
     def stories(self) -> Stories:
         """Its own history's stories (ADR 0025)."""
         return Stories(self._conn)
+
+    def scene_memory(self) -> SceneMemory:
+        """The intimate scene lane (ADR 0026)."""
+        return SceneMemory(self._conn)
 
     def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
         promises.add(self._conn, p, model=model, prompt=prompt, at=at)

@@ -9,6 +9,7 @@ from companion.core.freshness import status, when_phrase
 from companion.core.types import RelationshipId
 from companion.core.views import ViewMode, gates, is_settled, overstated, parse_mode
 from companion.features.history.cli import retire_story
+from companion.features.scene_memory.cli import retire_pattern
 from companion.loops.curate import approve, close_duplicates, merge, retire
 from companion.memory.calibrate import report, reviewed_views
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
@@ -56,13 +57,15 @@ def merge_some(db: Path, relationship: str, id_prefixes: list[str], claim: str) 
 
 
 def retire_one(db: Path, relationship: str, id_prefix: str, reason: str) -> str:
-    """Retire a belief or view by id prefix, or a story of its own past (ADR 0025) when no
-    current belief has that prefix."""
+    """Retire a belief or view by id prefix, or, when no current belief has that prefix, a story of
+    its own past (ADR 0025) or a pattern from scenes (ADR 0026)."""
     store = Store(db)
     rel = RelationshipId(relationship)
     try:
         if not any(b.id.startswith(id_prefix) for b in store.current_beliefs(rel)):
-            done = retire_story(store, rel, id_prefix, reason)
+            done = retire_story(store, rel, id_prefix, reason) or retire_pattern(
+                store, rel, id_prefix, reason
+            )
             if done is not None:
                 return done + "\n"
         return retire(store, rel, id_prefix, reason) + "\n"

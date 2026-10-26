@@ -20,6 +20,7 @@ from companion.features.names.run import NAMES
 from companion.features.now.run import NOW
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
+from companion.features.scene_memory.run import SCENE
 from companion.features.threads.run import OPENLOOPS
 from companion.features.topics.run import TOPICS
 from companion.features.worth.run import WORTH
@@ -46,4 +47,5 @@ FEATURES: tuple[Feature, ...] = (
     CALENDAR,
     HOOKS,
     HISTORY,
+    SCENE,
 )

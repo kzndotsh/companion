@@ -128,6 +128,14 @@ Everything the model reads besides the chat goes in the system block, never in t
 replies. The clock and the notes are wrapped in `<clock>` and `<notes>` tags. The memory card stays
 as bracketed text (`core/prompt/sections.py`).
 
+On a turn the roleplay talker answers, with `COMPANION_SCENE_MEMORY=on`, the memory block is the scene
+card instead of the memory card: every limit, the intimate entries nearest the moment, at most one
+curious item it may invite (only when this turn's brush-off read said no, and not one they pushed back
+in the last three days), and what they are called; no everyday memory and none of its own views. Its
+blocks stay bracketed like the card's. On every other turn the intimate lane is left off the card. In
+`shadow` both are worked out and logged, and the request is unchanged (`turn/assemble.py`,
+`features/scene_memory`, ADR 0026).
+
 The notes are chosen by code from models' labels, never written by a model (ADR 0014). They go in a
 fixed order (`ORDER` in `turn/notes.py`), and the order is checked when the bot starts. A few lines
 go after the history instead, as a system message, because there they change behaviour and in the
