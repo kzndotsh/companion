@@ -34,24 +34,26 @@ async def until_stopped(serve: Callable[[asyncio.Event], Awaitable[None]]) -> No
         log.warning("stopping: the reply in progress did not finish in time")
 
 
-async def cancel_when(stop: asyncio.Event, poller: asyncio.Task[None]) -> None:
-    """Stop fetching updates as soon as a stop is asked for, so none is taken that won't be
-    answered."""
+async def cancel_when(stop: asyncio.Event, receiver: asyncio.Task[None]) -> None:
+    """Stop receiving as soon as a stop is asked for, so nothing is taken that won't be answered."""
     await stop.wait()
-    poller.cancel()
+    receiver.cancel()
 
 
-async def next_update(
-    queue: asyncio.Queue[dict[str, object]], stop: asyncio.Event
-) -> dict[str, object] | None:
-    """The next update, or None once a stop is asked for and nothing received is left."""
+async def next_message[T](
+    queue: asyncio.Queue[T], stop: asyncio.Event, receiver: asyncio.Task[None]
+) -> T | None:
+    """The next message, or None once a stop is asked for and nothing received is left. A receiver
+    that failed raises its error here, so a surface that cannot connect stops the bot."""
     if stop.is_set():
         return None if queue.empty() else queue.get_nowait()
     getting = asyncio.ensure_future(queue.get())
     stopping = asyncio.ensure_future(stop.wait())
-    await asyncio.wait({getting, stopping}, return_when=asyncio.FIRST_COMPLETED)
+    await asyncio.wait({getting, stopping, receiver}, return_when=asyncio.FIRST_COMPLETED)
     stopping.cancel()
     if getting.done():
         return getting.result()
     getting.cancel()
+    if receiver.done() and not receiver.cancelled():
+        receiver.result()
     return None if queue.empty() else queue.get_nowait()

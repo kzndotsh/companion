@@ -1,66 +1,25 @@
-"""Telegram long polling. Answers one allowed user and ignores everyone else."""
+"""Telegram as a transport for `io/surface.py`: long polling, update ids, the Bot API's calls and
+its "too many requests" waits. Takes text messages from the one allowed user in their private chat
+and ignores everyone else. Errors never carry the URL, which holds the bot token."""
 
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import logging
-import random
 import time
-from collections.abc import Awaitable, Callable, Sequence
-from dataclasses import dataclass, field
 
 import httpx
 
-from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
-from companion.io.pace import hold_seconds, read_seconds
-from companion.io.split import split_reply
-from companion.io.stop import cancel_when, next_update
+from companion.io.surface import DeliveryError, Incoming
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
-TYPING_REFRESH_SECONDS = 4.0  # Telegram drops the typing indicator after about five
 # How long one call may wait in all on Telegram's "too many requests" before giving up. Each wait is
 # the full time Telegram asks for: asking again sooner is refused and can lengthen the block.
 RATE_LIMIT_BUDGET_SECONDS = 60.0
 
 
-Handler = Callable[[str], Awaitable[str | Reaction | ReactAndReply | ThenSend]]
-CommandHandler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
-Commands = dict[str, CommandHandler]
-# The reply text, why it did not all arrive, and the parts that did ("" when none did).
-Undelivered = Callable[[str, str, str], Awaitable[None]]
-LastHandled = Callable[[], int | None]  # the newest update id already handled, if any
-MarkHandled = Callable[[int], None]
-
-
-@dataclass(frozen=True, slots=True)
-class Hooks:
-    """What the daemon lets the Telegram layer tell it, and ask it. All optional."""
-
-    on_undelivered: Undelivered | None = None
-    last_handled: LastHandled | None = None
-    mark_handled: MarkHandled | None = None
-
-
-@dataclass(slots=True)
-class _Delivery:
-    """The messages of one reply that have actually gone out, so a cut-off reply is remembered as
-    what the user saw."""
-
-    sent: list[str] = field(default_factory=list[str])
-
-
-@dataclass(frozen=True, slots=True)
-class _Wait:
-    """Their message, when the turn started, and the one random factor for this reply's timing."""
-
-    text: str
-    started: float
-    jitter: float
-
-
-class TelegramError(RuntimeError):
+class TelegramError(DeliveryError):
     """A Telegram call failed. The message names the method and status, never the URL, because the
     URL contains the bot token and logs must not."""
 
@@ -70,21 +29,10 @@ class RateLimited(TelegramError):
 
 
 class Telegram:
-    def __init__(  # noqa: PLR0913, PLR0917
-        self,
-        token: str,
-        allowed_user: int,
-        client: httpx.AsyncClient,
-        hooks: Hooks = Hooks(),  # noqa: B008
-        pace: float = 0.0,
-        split: bool = False,
-    ) -> None:
-        self._pace = pace
-        self._split = split
+    def __init__(self, token: str, allowed_user: int, client: httpx.AsyncClient) -> None:
         self._base = f"https://api.telegram.org/bot{token}"
         self._allowed = allowed_user
         self._client = client
-        self._hooks = hooks
 
     async def _call(
         self, method: str, *, budget: float = RATE_LIMIT_BUDGET_SECONDS, **params: object
@@ -117,10 +65,10 @@ class Telegram:
                 log.debug("telegram %s ok in %dms", method, (time.perf_counter() - began) * 1000)
             return resp.json()["result"]
 
-    async def send(self, chat_id: int, text: str) -> None:
+    async def send(self, text: str) -> None:
         for attempt in range(2):
             try:
-                await self._call("sendMessage", chat_id=chat_id, text=text)
+                await self._call("sendMessage", chat_id=self._allowed, text=text)
             except RateLimited:
                 raise  # it already waited out its budget; another try would only wait again
             except TelegramError:
@@ -130,49 +78,27 @@ class Telegram:
             else:
                 return
 
-    async def react(self, chat_id: int, message_id: int, emoji: str) -> None:
+    async def react(self, message_id: str, emoji: str) -> None:
         await self._call(
             "setMessageReaction",
-            chat_id=chat_id,
-            message_id=message_id,
+            chat_id=self._allowed,
+            message_id=int(message_id),
             reaction=[{"type": "emoji", "emoji": emoji}],
         )
 
-    async def _typing(self, chat_id: int) -> None:
+    async def typing(self) -> None:
         """The typing indicator is a courtesy. Failing to show it must never lose the reply."""
         try:
-            await self._call("sendChatAction", budget=0.0, chat_id=chat_id, action="typing")
+            await self._call("sendChatAction", budget=0.0, chat_id=self._allowed, action="typing")
         except TelegramError as err:
             log.warning("typing indicator skipped: %s", err)
 
-    async def run(
-        self, handle: Handler, commands: Commands | None = None, stop: asyncio.Event | None = None
-    ) -> None:
-        """Poll in the background and serve one update at a time. A new plain message that arrives
-        while the previous one is still being answered replaces that answer, so a burst of
-        messages gets one reply that has seen all of them. When `stop` is set it fetches nothing
-        more, answers what it already has, the reply in progress included, and returns: a restart
-        stopped it mid-turn and lost a message that had been received (2026-10-25)."""
-        last = self._hooks.last_handled() if self._hooks.last_handled else None
-        queue: asyncio.Queue[dict[str, object]] = asyncio.Queue()
-        poller = asyncio.create_task(self._poll(queue, last + 1 if last is not None else 0))
-        stopping = stop or asyncio.Event()
-        halt = asyncio.create_task(cancel_when(stopping, poller))
-        waiting: list[dict[str, object]] = []
-        try:
-            while True:
-                update = waiting.pop(0) if waiting else await next_update(queue, stopping)
-                if update is None:
-                    log.info("stopping: every message received has been answered")
-                    return
-                await self._serve(update, queue, waiting, handle, commands or {})
-        finally:
-            poller.cancel()
-            halt.cancel()
-
-    async def _poll(self, queue: asyncio.Queue[dict[str, object]], offset: int) -> None:
-        """Fetch updates for ever and queue them. The offset moves past an update as soon as it is
-        queued, so a restart can lose a message that was queued but not yet answered."""
+    async def receive(self, inbox: asyncio.Queue[Incoming], after: str | None) -> None:
+        """Fetch updates for ever and queue the allowed user's messages. The offset moves past an
+        update as soon as it is queued, so a restart can lose a message that was queued but not yet
+        answered. Telegram only forgets an update when a later poll asks past it, so one handled
+        just before a restart comes back; starting past `after` skips it."""
+        offset = int(after) + 1 if after is not None else 0
         failures = 0
         while True:
             try:
@@ -187,285 +113,32 @@ class Telegram:
                 failures = 0
             if seq(updates):
                 log.debug("poll: %d update(s), offset %d", len(seq(updates)), offset)
-            for update in seq(updates):
-                u = obj(update)
-                update_id = integer(u.get("update_id"))
-                if update_id >= offset:
-                    offset = update_id + 1
-                    queue.put_nowait(u)
+            messages, offset = self.read(seq(updates), offset)
+            for msg in messages:
+                inbox.put_nowait(msg)
 
-    def _plain_text(self, update: dict[str, object]) -> str | None:
-        """The text of a message from the allowed user that is not a command, else None."""
-        msg = obj(update.get("message"))
-        text = msg.get("text")
-        if not isinstance(text, str) or integer(obj(msg.get("from")).get("id")) != self._allowed:
-            return None
-        return None if _command(text) is not None else text
-
-    async def _serve(
-        self,
-        update: dict[str, object],
-        queue: asyncio.Queue[dict[str, object]],
-        waiting: list[dict[str, object]],
-        handle: Handler,
-        commands: Commands,
-    ) -> None:
-        """Answer an update. If another plain message arrives before the answer is out and this
-        one was a plain message too, drop the answer and answer the new one, which sees both."""
-        current = update
-        while True:
-            turn = asyncio.create_task(self._handle_one(current, handle, commands))
-            arrival = asyncio.create_task(queue.get())
-            await asyncio.wait({turn, arrival}, return_when=asyncio.FIRST_COMPLETED)
-            if turn.done():
-                if arrival.done():
-                    waiting.append(arrival.result())
-                else:
-                    arrival.cancel()
-                await turn
-                return
-            newer = arrival.result()
-            if self._plain_text(current) is None or self._plain_text(newer) is None:
-                waiting.append(newer)
-                await turn
-                return
-            log.info("a newer message arrived before the answer went out; answering both together")
-            turn.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await turn
-            current = newer
-
-    async def _handle_one(
-        self, update: dict[str, object], handle: Handler, commands: Commands
-    ) -> None:
-        update_id = integer(update.get("update_id"))
-        if self._hooks.mark_handled is not None:
-            self._hooks.mark_handled(update_id)
-        await self.handle_update(update, handle, commands)
-
-    async def process(
-        self, updates: list[object], offset: int, handle: Handler, commands: Commands
-    ) -> int:
-        """Handle each update once, in order, and return the next offset.
-
-        Telegram only forgets an update when a later poll asks past it, so an update handled just
-        before a restart comes back. The id is recorded before the turn runs, and an id at or below
-        the recorded one is skipped: a message is answered at most once, never twice.
-        """
+    def read(self, updates: list[object], offset: int) -> tuple[list[Incoming], int]:
+        """The allowed user's text messages in private chat among `updates`, each once and in
+        order, and the next offset. An update below `offset` was already taken."""
+        out: list[Incoming] = []
         for update in updates:
             u = obj(update)
             update_id = integer(u.get("update_id"))
             if update_id < offset:
                 continue
             offset = update_id + 1
-            if self._hooks.mark_handled is not None:
-                self._hooks.mark_handled(update_id)
-            await self.handle_update(u, handle, commands)
-        return offset
-
-    async def handle_update(
-        self, update: dict[str, object], handle: Handler, commands: Commands
-    ) -> None:
-        msg = obj(update.get("message"))
-        text = msg.get("text")
-        if not isinstance(text, str):
-            return
-        if integer(obj(msg.get("from")).get("id")) != self._allowed:
-            log.warning("ignored a message from a user who is not allowed")
-            return
-        chat_id = integer(obj(msg.get("chat")).get("id"))
-        message_id = integer(msg.get("message_id"))
-        command = _command(text)
-        log.debug(
-            "message %d in: %d chars%s",
-            message_id,
-            len(text),
-            f", command /{command[0]}" if command else "",
-        )
-        if command is not None and command[0] not in commands:
-            return  # unknown and /start commands never reach the model
-        started = time.monotonic()
-        jitter = random.uniform(0.8, 1.25)  # noqa: S311
-        typist: asyncio.Task[None] | None = None
-        try:
-            if command is not None:
-                reply = await commands[command[0]](command[1])
-            else:
-                read = read_seconds(text, self._pace, jitter)
-                typist = asyncio.create_task(self._type_after(chat_id, read))
-                reply = await handle(text)
-        except asyncio.CancelledError:
-            log.info("message %d superseded while the reply was being written", message_id)
-            raise
-        except Exception:
-            log.exception("turn failed")
-            return
-        finally:
-            if typist is not None:
-                typist.cancel()
-        wait = _Wait(text, started, jitter) if command is None else None
-        delivery = _Delivery()
-        try:
-            await self._answer(chat_id, message_id, reply, wait, delivery)
-        except asyncio.CancelledError:
-            log.info(
-                "message %d superseded; %d part(s) had gone out", message_id, len(delivery.sent)
-            )
-            await self._report_undelivered(reply, "superseded by a newer message", delivery.sent)
-            raise
-        except TelegramError as err:
-            log.warning("could not deliver the reply: %s", err)
-            await self._report_undelivered(reply, str(err))
-        else:
-            log.info(
-                "message %d answered %.1fs after it arrived (%s)",
-                message_id,
-                time.monotonic() - started,
-                _kind(reply),
-            )
-
-    async def _type_after(self, chat_id: int, delay: float) -> None:
-        """Show typing once the reading pause is over, and keep it up while the reply is written.
-        A reply written within the pause shows none, as someone still reading would not."""
-        await asyncio.sleep(delay)
-        while True:
-            await self._typing(chat_id)
-            await asyncio.sleep(TYPING_REFRESH_SECONDS)
-
-    async def _hold(self, chat_id: int, reply: str, wait: _Wait, *, reading: bool = True) -> None:
-        """Wait like someone reading and then typing: no indicator for what is left of the reading
-        pause, then the typing indicator kept alive while a text reply is on its way. The wait
-        counts the time already spent since `wait.started`."""
-        elapsed = time.monotonic() - wait.started
-        user_text = wait.text if reading else ""
-        remaining = hold_seconds(user_text, reply, self._pace, elapsed, wait.jitter, reading)
-        if remaining > 0:
-            log.info("holding %.1fs before sending (%d words)", remaining, len(reply.split()))
-        quiet = max(0.0, read_seconds(user_text, self._pace, wait.jitter) - elapsed)
-        quiet = min(quiet, remaining) if reading else 0.0
-        if quiet > 0:
-            await asyncio.sleep(quiet)
-            remaining -= quiet
-        while remaining > 0:
-            if reply:
-                await self._typing(chat_id)
-            step = min(remaining, TYPING_REFRESH_SECONDS)
-            await asyncio.sleep(step)
-            remaining -= step
-
-    async def _send_parts(
-        self,
-        chat_id: int,
-        text: str,
-        hold: Callable[..., Awaitable[None]] | None,
-        delivery: _Delivery,
-    ) -> None:
-        """Send a reply, cut into a few messages when it is long enough, each after its own
-        typing time. A part that fails after an earlier one arrived stops the rest and is logged;
-        the user has already seen the start, so only the parts that arrived are remembered."""
-        parts = split_reply(text, random.random(), random.random()) if self._split else [text]  # noqa: S311
-        if len(parts) > 1:
-            log.info(
-                "splitting into %d messages (%s words)",
-                len(parts),
-                "+".join(str(len(p.split())) for p in parts),
-            )
-        for n, part in enumerate(parts):
-            if hold is not None:
-                await hold(part, first=n == 0)
-            try:
-                await self.send(chat_id, part)
-                delivery.sent.append(part)
-            except TelegramError as err:
-                if n == 0:
-                    raise
-                log.warning(
-                    "part %d of %d failed to send; the rest were not sent", n + 1, len(parts)
-                )
-                await self._report_undelivered(text, str(err), delivery.sent)
-                return
-
-    async def _answer(
-        self,
-        chat_id: int,
-        message_id: int,
-        reply: str | Reaction | ReactAndReply | ThenSend,
-        wait: _Wait | None = None,
-        delivery: _Delivery | None = None,
-    ) -> None:
-        """Send the reply. `wait` is the user's text, when the turn started and its jitter; leave it
-        out for a command's reply, which goes at once."""
-        delivery = delivery or _Delivery()
-
-        async def hold(text: str, *, first: bool = True) -> None:
-            if wait is None or self._pace <= 0:
-                return
-            if first:
-                await self._hold(chat_id, text, wait)
-            else:
-                later = _Wait("", time.monotonic(), wait.jitter)
-                await self._hold(chat_id, text, later, reading=False)
-
-        if isinstance(reply, ThenSend):
-            try:
-                await self._answer(chat_id, message_id, reply.reply, wait, delivery)
-            finally:
-                await self._send_then(chat_id, reply.then)
-        elif isinstance(reply, ReactAndReply):
-            try:
-                await self.react(chat_id, message_id, reply.reaction.emoji)
-            except TelegramError:
-                log.warning("reaction refused; sending the reply without it")
-            if reply.text:
-                await self._send_parts(chat_id, reply.text, hold, delivery)
-        elif isinstance(reply, Reaction):
-            await hold("")
-            try:
-                await self.react(chat_id, message_id, reply.emoji)
-            except TelegramError:
-                log.warning("reaction refused, falling back to text")
-                await self.send(chat_id, "noted")
-        elif reply:
-            await self._send_parts(chat_id, reply, hold if wait is not None else None, delivery)
-
-    async def _send_then(self, chat_id: int, text: str) -> None:
-        """Code's own message after the reply (the crisis line, ADR 0022), sent whatever became of
-        the reply. A failure is logged and reported, never raised."""
-        try:
-            await self.send(chat_id, text)
-        except TelegramError as err:
-            log.warning("could not deliver the message after the reply: %s", err)
-            await self._report_undelivered(text, str(err))
-
-    async def _report_undelivered(
-        self,
-        reply: str | Reaction | ReactAndReply | ThenSend,
-        reason: str,
-        sent: Sequence[str] = (),
-    ) -> None:
-        """Tell the conversation a reply, or the rest of it, never arrived, so the model does not
-        think it was seen. `sent` is the parts that did; a reply sent whole is not reported."""
-        reply = reply.reply if isinstance(reply, ThenSend) else reply
-        text = reply.text if isinstance(reply, ReactAndReply) else reply
-        if not isinstance(text, str) or not text or self._hooks.on_undelivered is None:
-            return
-        delivered = " ".join(p.strip() for p in sent)
-        if sent and delivered == " ".join(text.split()):
-            return  # all of it arrived
-        try:
-            await self._hooks.on_undelivered(text, reason, delivered)
-        except Exception:
-            log.exception("could not record an undelivered reply")
-
-
-def _kind(reply: str | Reaction | ReactAndReply | ThenSend) -> str:
-    if isinstance(reply, ThenSend):
-        return f"{_kind(reply.reply)}, then code's own message"
-    if isinstance(reply, ReactAndReply):
-        return f"reaction {reply.reaction.emoji} then {len(reply.text.split())} words"
-    if isinstance(reply, Reaction):
-        return f"reaction {reply.emoji}"
-    return f"{len(reply.split())} words"
+            msg = obj(u.get("message"))
+            text = msg.get("text")
+            if not isinstance(text, str):
+                continue
+            if integer(obj(msg.get("from")).get("id")) != self._allowed:
+                log.warning("ignored a message from a user who is not allowed")
+                continue
+            if integer(obj(msg.get("chat")).get("id")) != self._allowed:
+                log.warning("ignored a message outside their private chat")
+                continue
+            out.append(Incoming(str(integer(msg.get("message_id"))), text, str(update_id)))
+        return out, offset
 
 
 def _retry_after(resp: httpx.Response) -> float:
@@ -475,11 +148,3 @@ def _retry_after(resp: httpx.Response) -> float:
     except (ValueError, KeyError, TypeError):
         wait = 1.0
     return max(wait, 0.0)
-
-
-def _command(text: str) -> tuple[str, str] | None:
-    """`/flag too long` -> ("flag", "too long"). `/flag@my_bot x` is the same command."""
-    if not text.startswith("/"):
-        return None
-    head, _, arg = text[1:].partition(" ")
-    return head.partition("@")[0].lower(), arg.strip()

@@ -2,161 +2,128 @@ from __future__ import annotations
 
 import asyncio
 import json
-from dataclasses import dataclass, field
 
 import httpx
 import pytest
 
-from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
-from companion.io.telegram import Hooks, Telegram, TelegramError
+from companion.io.surface import Hooks, Incoming, Surface
+from companion.io.telegram import Telegram, TelegramError
 
 ALLOWED = 42
 
 
-def _update(text: str, user: int = ALLOWED) -> dict[str, object]:
+def _update(
+    text: str, user: int = ALLOWED, chat: int = ALLOWED, update_id: int = 1
+) -> dict[str, object]:
     return {
-        "update_id": 1,
-        "message": {"message_id": 99, "text": text, "from": {"id": user}, "chat": {"id": 7}},
+        "update_id": update_id,
+        "message": {"message_id": 99, "text": text, "from": {"id": user}, "chat": {"id": chat}},
     }
 
 
-@dataclass
-class Seen:
-    handled: list[str] = field(default_factory=list)
-    sent: list[str] = field(default_factory=list)
-    reactions: list[dict[str, object]] = field(default_factory=list)
-    methods: list[str] = field(default_factory=list)
-
-
-async def _run(update: dict[str, object], *, reactions_fail: bool = False) -> Seen:
-    seen = Seen()
-
+def _ok(calls: list[tuple[str, dict[str, object]]]) -> httpx.MockTransport:
     def handler(req: httpx.Request) -> httpx.Response:
-        method = str(req.url).rsplit("/", 1)[-1]
-        seen.methods.append(method)
-        body = json.loads(req.content)
-        if method == "sendMessage":
-            seen.sent.append(body["text"])
-        if method == "setMessageReaction":
-            if reactions_fail:
-                return httpx.Response(400, json={"ok": False})
-            seen.reactions.append(body)
+        calls.append((str(req.url).rsplit("/", 1)[-1], json.loads(req.content)))
         return httpx.Response(200, json={"ok": True, "result": True})
 
-    async def talk(text: str) -> str:
-        seen.handled.append(text)
-        return "reply"
-
-    async def flag(arg: str) -> str | Reaction:
-        seen.handled.append(f"FLAG:{arg}")
-        return Reaction("✍")
-
-    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        await Telegram("t", ALLOWED, client).handle_update(update, talk, {"flag": flag})
-    return seen
+    return httpx.MockTransport(handler)
 
 
-async def test_plain_text_goes_to_the_model() -> None:
-    seen = await _run(_update("hello"))
-    assert seen.handled == ["hello"]
-    assert seen.sent == ["reply"]
+def test_the_allowed_user_s_text_in_their_own_chat_comes_in() -> None:
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient())
+    got, offset = tg.read([_update("hello")], 0)
+    assert got == [Incoming("99", "hello", "1")]
+    assert offset == 2
 
 
-async def test_flag_reacts_to_the_message_and_sends_no_text() -> None:
-    seen = await _run(_update("/flag forgot you knew"))
-    assert seen.handled == ["FLAG:forgot you knew"]
-    assert seen.sent == []
-    assert seen.reactions == [
-        {"chat_id": 7, "message_id": 99, "reaction": [{"type": "emoji", "emoji": "✍"}]}
+def test_other_users_group_chats_and_non_text_are_ignored() -> None:
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient())
+    photo = {"update_id": 4, "message": {"message_id": 5, "from": {"id": ALLOWED}}}
+    updates: list[object] = [
+        _update("hello", user=999, update_id=1),
+        _update("hello all", chat=-100, update_id=2),
+        photo,
     ]
+    got, offset = tg.read(updates, 0)
+    assert got == []
+    assert offset == 5  # each is still passed over, never fetched again
 
 
-async def test_a_refused_reaction_falls_back_to_text() -> None:
-    seen = await _run(_update("/flag too_much"), reactions_fail=True)
-    assert seen.handled == ["FLAG:too_much"]
-    assert seen.sent == ["noted"]
+def test_an_update_handled_before_a_restart_is_not_handled_again() -> None:
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient())
+    # after a restart the saved id (41) makes the next offset 42, and Telegram resends 41 anyway
+    got, offset = tg.read([_update("first", update_id=41), _update("second", update_id=42)], 42)
+    assert [m.text for m in got] == ["second"]
+    assert got[0].cursor == "42"
+    assert offset == 43
 
 
-async def test_flag_with_bot_suffix_is_the_same_command() -> None:
-    seen = await _run(_update("/flag@my_bot too_much"))
-    assert seen.handled == ["FLAG:too_much"]
-
-
-async def test_unknown_commands_and_start_are_ignored() -> None:
-    for text in ("/start", "/nonsense"):
-        seen = await _run(_update(text))
-        assert seen.handled == []
-        assert seen.sent == []
-        assert seen.reactions == []
-
-
-async def test_other_users_are_ignored() -> None:
-    seen = await _run(_update("hello", user=999))
-    assert seen.handled == []
-    assert seen.methods == []
-
-
-async def _both(*, reactions_fail: bool = False) -> Seen:
-    seen = Seen()
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        method = str(req.url).rsplit("/", 1)[-1]
-        body = json.loads(req.content)
-        seen.methods.append(method)
-        if method == "sendMessage":
-            seen.sent.append(body["text"])
-        if method == "setMessageReaction":
-            if reactions_fail:
-                return httpx.Response(400, json={"ok": False})
-            seen.reactions.append(body)
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> ReactAndReply:
-        seen.handled.append(text)
-        return ReactAndReply(Reaction("😁"), "ha, fair")
-
-    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        await Telegram("t", ALLOWED, client).handle_update(_update("a joke"), talk, {})
-    return seen
-
-
-async def test_a_reaction_and_a_reply_are_both_sent_reaction_first() -> None:
-    seen = await _both()
-    assert seen.sent == ["ha, fair"]
-    assert seen.reactions == [
-        {"chat_id": 7, "message_id": 99, "reaction": [{"type": "emoji", "emoji": "😁"}]}
+async def test_a_reaction_and_a_message_go_to_their_chat() -> None:
+    calls: list[tuple[str, dict[str, object]]] = []
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient(transport=_ok(calls)))
+    await tg.react("99", "✍")
+    await tg.send("hi")
+    assert calls == [
+        (
+            "setMessageReaction",
+            {"chat_id": ALLOWED, "message_id": 99, "reaction": [{"type": "emoji", "emoji": "✍"}]},
+        ),
+        ("sendMessage", {"chat_id": ALLOWED, "text": "hi"}),
     ]
-    assert seen.methods.index("setMessageReaction") < seen.methods.index("sendMessage")
-
-
-async def test_a_refused_reaction_still_sends_the_reply() -> None:
-    seen = await _both(reactions_fail=True)
-    assert seen.sent == ["ha, fair"]
-
-
-async def _tg(handler: object) -> Telegram:
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))  # type: ignore[arg-type]
-    return Telegram("SECRET:TOKEN", ALLOWED, client)
 
 
 async def test_a_failed_typing_indicator_does_not_lose_the_reply() -> None:
-    seen = Seen()
+    sent: list[str] = []
 
     def handler(req: httpx.Request) -> httpx.Response:
         method = str(req.url).rsplit("/", 1)[-1]
         if method == "sendChatAction":
             return httpx.Response(500, json={"ok": False})
         if method == "sendMessage":
-            seen.sent.append(json.loads(req.content)["text"])
+            sent.append(json.loads(req.content)["text"])
         return httpx.Response(200, json={"ok": True, "result": True})
 
     async def talk(text: str) -> str:
         del text
+        await asyncio.sleep(0.05)  # long enough for the typing indicator to be tried
         return "reply"
 
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    await Surface(tg, pace=0.01).reply_to(Incoming("99", "hi", "1"), talk, {})
+    assert sent == ["reply"]
+
+
+async def test_a_refused_send_reaches_the_surface_as_a_delivery_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def no_sleep(seconds: float) -> None:
+        del seconds
+
+    monkeypatch.setattr("companion.io.telegram.asyncio.sleep", no_sleep)
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        return httpx.Response(400, json={"ok": False})
+
+    told: list[str] = []
+
+    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
+        del delivered
+        told.append(f"{text}: {reason}")
+
+    async def talk(text: str) -> str:
+        del text
+        return "never seen"
+
     tg = await _tg(handler)
-    await tg.handle_update(_update("hi"), talk, {})
-    assert seen.sent == ["reply"]
+    surface = Surface(tg, Hooks(on_undelivered=on_undelivered))
+    await surface.reply_to(Incoming("99", "hi", "1"), talk, {})
+    assert told == ["never seen: telegram sendMessage failed with status 400"]
+
+
+async def _tg(handler: object) -> Telegram:
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))  # type: ignore[arg-type]
+    return Telegram("SECRET:TOKEN", ALLOWED, client)
 
 
 async def test_a_rate_limit_is_retried_once_after_the_wait_telegram_asked_for(
@@ -180,7 +147,7 @@ async def test_a_rate_limit_is_retried_once_after_the_wait_telegram_asked_for(
         return httpx.Response(200, json={"ok": True, "result": "done"})
 
     tg = await _tg(handler)
-    await tg.send(1, "hello")
+    await tg.send("hello")
     assert waits == [2.0]
     assert len(calls) == 2
 
@@ -205,7 +172,7 @@ async def test_a_rate_limit_waits_the_full_time_asked_until_the_budget_runs_out(
 
     tg = await _tg(handler)
     with pytest.raises(TelegramError):
-        await tg.send(1, "hello")
+        await tg.send("hello")
     assert waits == [8.0] * 7  # 56 s waited; another 8 would pass the 60 s budget
     assert len(calls) == 8  # no second round from the send's own retry
 
@@ -228,7 +195,7 @@ async def test_a_wait_longer_than_the_budget_gives_up_at_once(
 
     tg = await _tg(handler)
     with pytest.raises(TelegramError):
-        await tg.send(1, "hello")
+        await tg.send("hello")
     assert waits == []
 
 
@@ -239,468 +206,10 @@ async def test_errors_never_carry_the_bot_token() -> None:
 
     tg = await _tg(handler)
     with pytest.raises(TelegramError) as caught:
-        await tg.send(1, "x")
+        await tg.send("x")
     assert "SECRET" not in str(caught.value)
     assert caught.value.__cause__ is None
     assert caught.value.__suppress_context__
-
-
-async def test_a_failed_send_does_not_stop_the_bot() -> None:
-    def handler(req: httpx.Request) -> httpx.Response:
-        method = str(req.url).rsplit("/", 1)[-1]
-        if method == "sendMessage":
-            return httpx.Response(400, json={"ok": False})
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> str:
-        del text
-        return "reply"
-
-    tg = await _tg(handler)
-    await tg.handle_update(_update("hi"), talk, {})  # must not raise
-
-
-async def test_an_undelivered_reply_is_reported_with_its_text(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    import companion.io.telegram as module  # noqa: PLC0415
-
-    async def no_sleep(seconds: float) -> None:
-        del seconds
-
-    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
-    told: list[tuple[str, str]] = []
-
-    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
-        assert delivered == ""
-        told.append((text, reason))
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        method = str(req.url).rsplit("/", 1)[-1]
-        if method == "sendMessage":
-            return httpx.Response(500, json={"ok": False})
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> str:
-        del text
-        return "you never see this"
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    await Telegram("T", ALLOWED, client, Hooks(on_undelivered=on_undelivered)).handle_update(
-        _update("hi"), talk, {}
-    )
-    assert [t for t, _ in told] == ["you never see this"]
-    assert "SECRET" not in told[0][1]
-
-
-async def test_a_reply_cut_off_after_its_first_part_reports_the_part_that_arrived(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    import companion.io.telegram as module  # noqa: PLC0415
-
-    async def no_sleep(seconds: float) -> None:
-        del seconds
-
-    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
-
-    def two_parts(text: str, *_: float) -> list[str]:
-        del text
-        return ["First bit.", "Second bit."]
-
-    monkeypatch.setattr(module, "split_reply", two_parts)
-    told: list[tuple[str, str]] = []
-    sends = 0
-
-    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
-        del reason
-        told.append((text, delivered))
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        nonlocal sends
-        if str(req.url).endswith("sendMessage"):
-            sends += 1
-            if sends >= 2:  # the second part fails, retry included
-                return httpx.Response(500, json={"ok": False})
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> str:
-        del text
-        return "First bit. Second bit."
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    await Telegram(
-        "T", ALLOWED, client, Hooks(on_undelivered=on_undelivered), pace=0.0, split=True
-    ).handle_update(_update("hi"), talk, {})
-    assert told == [("First bit. Second bit.", "First bit.")]
-
-
-async def test_a_delivered_reply_is_not_reported() -> None:
-    told: list[str] = []
-
-    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
-        told.append(text + reason + delivered)
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        del req
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> str:
-        del text
-        return "fine"
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    await Telegram("T", ALLOWED, client, Hooks(on_undelivered=on_undelivered)).handle_update(
-        _update("hi"), talk, {}
-    )
-    assert told == []
-
-
-async def test_an_update_handled_before_a_restart_is_not_handled_again() -> None:
-    marked: list[int] = []
-    handled: list[str] = []
-
-    async def talk(text: str) -> str:
-        handled.append(text)
-        return "ok"
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        del req
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    tg = Telegram("T", ALLOWED, client, Hooks(mark_handled=marked.append))
-    first = {**_update("first"), "update_id": 41}
-    second = {**_update("second"), "update_id": 42}
-    # after a restart the saved id (41) makes the next offset 42, and Telegram resends 41 anyway
-    offset = await tg.process([first, second], 42, talk, {})
-    assert handled == ["second"]
-    assert marked == [42]
-    assert offset == 43
-
-
-async def test_updates_are_recorded_before_the_turn_runs_and_in_order() -> None:
-    order: list[str] = []
-
-    async def talk(text: str) -> str:
-        order.append(f"turn {text}")
-        return "ok"
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        del req
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    tg = Telegram("T", ALLOWED, client, Hooks(mark_handled=lambda i: order.append(f"mark {i}")))
-    a = {**_update("a"), "update_id": 1}
-    b = {**_update("b"), "update_id": 2}
-    assert await tg.process([a, b], 0, talk, {}) == 3
-    assert order == ["mark 1", "turn a", "mark 2", "turn b"]
-
-
-async def _paced(
-    reply: str | Reaction | ReactAndReply, pace: float, monkeypatch: pytest.MonkeyPatch
-) -> tuple[list[str], list[float]]:
-    """The calls Telegram saw, in order, and every sleep, with the clock and jitter pinned."""
-    calls: list[str] = []
-    sleeps: list[float] = []
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        calls.append(str(req.url).rsplit("/", 1)[-1])
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def fake_sleep(seconds: float) -> None:
-        sleeps.append(seconds)
-        calls.append(f"sleep {seconds:g}")
-
-    async def talk(text: str) -> str | Reaction | ReactAndReply:
-        del text
-        return reply
-
-    monkeypatch.setattr("companion.io.telegram.asyncio.sleep", fake_sleep)
-
-    def steady(low: float, high: float) -> float:
-        del low, high
-        return 1.0
-
-    monkeypatch.setattr("companion.io.telegram.random.uniform", steady)
-    monkeypatch.setattr("companion.io.telegram.time.monotonic", lambda: 100.0)
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    tg = Telegram("t", ALLOWED, client, pace=pace)
-    await tg.handle_update(_update("hello there"), talk, {})
-    return calls, sleeps
-
-
-async def test_a_text_reply_waits_while_typing_before_it_is_sent(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls, sleeps = await _paced("a reply of about seven words in total", 1.0, monkeypatch)
-    assert sum(sleeps) > 0
-    assert calls.index("sendMessage") > max(i for i, c in enumerate(calls) if c.startswith("sleep"))
-    assert "sendChatAction" in calls
-
-
-async def test_the_reading_pause_shows_no_typing(monkeypatch: pytest.MonkeyPatch) -> None:
-    calls, _ = await _paced("a reply of about seven words in total", 1.0, monkeypatch)
-    first_sleep = next(i for i, c in enumerate(calls) if c.startswith("sleep"))
-    assert first_sleep < calls.index("sendChatAction")
-
-
-async def _typing_while_writing(writing: float, reply: str | Reaction) -> list[str]:
-    """Real time: a pace whose reading pause is about 0.04 s, and a model that takes `writing`."""
-    calls: list[str] = []
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        calls.append(str(req.url).rsplit("/", 1)[-1])
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> str | Reaction:
-        del text
-        await asyncio.sleep(writing)
-        calls.append("written")
-        return reply
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    await Telegram("t", ALLOWED, client, pace=0.05).handle_update(_update("hello there"), talk, {})
-    return calls
-
-
-async def test_typing_shows_while_a_slow_reply_is_written_once_the_reading_pause_is_over() -> None:
-    calls = await _typing_while_writing(0.3, "sure")
-    assert calls.index("sendChatAction") < calls.index("written")
-
-
-async def test_a_reaction_ready_within_the_reading_pause_never_shows_typing() -> None:
-    calls = await _typing_while_writing(0.0, Reaction("👍"))
-    assert "sendChatAction" not in calls
-
-
-async def test_pace_off_sends_at_once(monkeypatch: pytest.MonkeyPatch) -> None:
-    calls, sleeps = await _paced("a reply", 0.0, monkeypatch)
-    assert sleeps == []
-    assert calls[-1] == "sendMessage"
-
-
-async def test_a_long_wait_keeps_the_typing_indicator_alive(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls, sleeps = await _paced("word " * 60, 1.6, monkeypatch)
-    assert len(sleeps) >= 2
-    assert max(sleeps) <= 4.0
-    assert calls.count("sendChatAction") >= len(sleeps) - 1  # all but the reading pause
-
-
-async def test_a_reaction_reply_is_not_held_long_and_shows_no_typing(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls, sleeps = await _paced(Reaction("👍"), 1.0, monkeypatch)
-    assert "sendChatAction" not in calls
-    assert 0 < sum(sleeps) < 3
-    assert calls[-1] == "setMessageReaction"
-
-
-async def test_the_reaction_comes_first_and_the_reply_after_its_wait(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls, _ = await _paced(ReactAndReply(Reaction("❤"), "a reply here"), 1.0, monkeypatch)
-    assert calls.index("setMessageReaction") < calls.index("sendMessage")
-    sleep_at = [i for i, c in enumerate(calls) if c.startswith("sleep")]
-    assert calls.index("setMessageReaction") < min(sleep_at) < calls.index("sendMessage")
-
-
-async def test_a_command_reply_is_never_held(monkeypatch: pytest.MonkeyPatch) -> None:
-    sleeps: list[float] = []
-
-    async def fake_sleep(seconds: float) -> None:
-        sleeps.append(seconds)
-
-    async def flag(arg: str) -> str:
-        del arg
-        return "done"
-
-    monkeypatch.setattr("companion.io.telegram.asyncio.sleep", fake_sleep)
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        del req
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    tg = Telegram("t", ALLOWED, client, pace=1.6)
-    await tg.handle_update(_update("/flag"), flag, {"flag": flag})  # type: ignore[arg-type]
-    assert sleeps == []
-
-
-_LONG_REPLY = (
-    "A lot of it is learned association: the smell is tied to waking up, comfort, and that first "
-    "quiet moment of the day. Plus the aroma itself is rich and complex, so your brain gets a "
-    "little reward before you even drink it."
-)
-
-
-async def _split_run(
-    reply: str, *, split: bool, roll: float, fail_second_send: bool = False, pace: float = 0.0
-) -> tuple[list[str], list[str]]:
-    """The messages Telegram was asked to send, and every call in order."""
-    sent: list[str] = []
-    calls: list[str] = []
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        method = str(req.url).rsplit("/", 1)[-1]
-        calls.append(method)
-        if method == "sendMessage":
-            if fail_second_send and sent:
-                return httpx.Response(500, json={"ok": False})
-            sent.append(json.loads(req.content)["text"])
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> str:
-        del text
-        return reply
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    tg = Telegram("t", ALLOWED, client, pace=pace, split=split)
-    import companion.io.telegram as module  # noqa: PLC0415
-
-    original = module.random.random
-    module.random.random = lambda: roll  # type: ignore[assignment]
-    try:
-        await tg.handle_update(_update("hi"), talk, {})
-    finally:
-        module.random.random = original
-    return sent, calls
-
-
-async def test_a_long_reply_is_sent_as_two_messages_with_the_same_words() -> None:
-    sent, _ = await _split_run(_LONG_REPLY, split=True, roll=0.0)
-    assert len(sent) == 2
-    assert " ".join(sent) == _LONG_REPLY
-
-
-async def test_split_off_or_a_high_roll_sends_one_message() -> None:
-    assert (await _split_run(_LONG_REPLY, split=False, roll=0.0))[0] == [_LONG_REPLY]
-    assert (await _split_run(_LONG_REPLY, split=True, roll=0.99))[0] == [_LONG_REPLY]
-
-
-async def test_a_short_reply_is_never_split() -> None:
-    assert (await _split_run("sounds good, talk soon.", split=True, roll=0.0))[0] == [
-        "sounds good, talk soon."
-    ]
-
-
-async def test_a_failed_later_part_is_not_reported_as_an_undelivered_reply() -> None:
-    sent, _ = await _split_run(_LONG_REPLY, split=True, roll=0.0, fail_second_send=True)
-    assert len(sent) == 1  # the first part arrived, the second was refused, nothing crashed
-
-
-async def test_each_part_waits_and_shows_typing_before_it_is_sent(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    calls: list[str] = []
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        calls.append(str(req.url).rsplit("/", 1)[-1])
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def fake_sleep(seconds: float) -> None:
-        del seconds
-        calls.append("sleep")
-
-    async def talk(text: str) -> str:
-        del text
-        return _LONG_REPLY
-
-    monkeypatch.setattr("companion.io.telegram.asyncio.sleep", fake_sleep)
-    monkeypatch.setattr("companion.io.telegram.random.random", lambda: 0.0)
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    await Telegram("t", ALLOWED, client, pace=1.0, split=True).handle_update(
-        _update("hi"), talk, {}
-    )
-    sends = [i for i, c in enumerate(calls) if c == "sendMessage"]
-    assert len(sends) == 2
-    between = calls[sends[0] + 1 : sends[1]]
-    assert "sleep" in between
-    assert "sendChatAction" in between
-
-
-def _msg(update_id: int, text: str) -> dict[str, object]:
-    return {
-        "update_id": update_id,
-        "message": {
-            "message_id": 100 + update_id,
-            "text": text,
-            "from": {"id": ALLOWED},
-            "chat": {"id": 7},
-        },
-    }
-
-
-async def _burst(
-    first_reply: str, *, hold_pace: float, gap: float
-) -> tuple[list[str], list[str], list[str]]:
-    """Run the real polling loop with two messages `gap` seconds apart. Returns what was handled,
-    what was sent, and the replies reported undelivered."""
-    import asyncio  # noqa: PLC0415
-
-    handled: list[str] = []
-    sent: list[str] = []
-    undelivered: list[str] = []
-    batches = [[_msg(1, "first")], [_msg(2, "second")]]
-
-    async def handler(req: httpx.Request) -> httpx.Response:
-        method = str(req.url).rsplit("/", 1)[-1]
-        if method == "getUpdates":
-            if batches:
-                if len(batches) == 1:
-                    await asyncio.sleep(gap)
-                return httpx.Response(200, json={"ok": True, "result": batches.pop(0)})
-            await asyncio.sleep(0.05)
-            return httpx.Response(200, json={"ok": True, "result": []})
-        if method == "sendMessage":
-            sent.append(json.loads(req.content)["text"])
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> str:
-        handled.append(text)
-        if text == "first":
-            if first_reply == "":
-                await asyncio.sleep(30)  # still being written when the next message arrives
-            return first_reply
-        return "reply to both"
-
-    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
-        del reason, delivered
-        undelivered.append(text)
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    tg = Telegram(
-        "t", ALLOWED, client, Hooks(on_undelivered=on_undelivered), pace=hold_pace, split=False
-    )
-    task = asyncio.create_task(tg.run(talk, {}))
-    await asyncio.sleep(gap + 1.2)
-    task.cancel()
-    await asyncio.gather(task, return_exceptions=True)
-    return handled, sent, undelivered
-
-
-async def test_a_message_that_arrives_while_the_reply_is_being_written_replaces_it() -> None:
-    handled, sent, undelivered = await _burst("", hold_pace=0.0, gap=0.2)
-    assert handled == ["first", "second"]
-    assert sent == ["reply to both"]
-    assert undelivered == []  # nothing had been written, so nothing is marked
-
-
-async def test_a_message_that_arrives_while_the_reply_is_held_replaces_it_and_marks_it() -> None:
-    reply = "a reply long enough to be held for a little while before it goes out"
-    handled, sent, undelivered = await _burst(reply, hold_pace=0.3, gap=0.15)
-    assert handled == ["first", "second"]
-    assert sent == ["reply to both"]
-    assert undelivered == [reply]
-
-
-async def test_messages_far_apart_are_each_answered() -> None:
-    handled, sent, undelivered = await _burst("answer one", hold_pace=0.0, gap=0.6)
-    assert handled == ["first", "second"]
-    assert sent == ["answer one", "reply to both"]
-    assert undelivered == []
 
 
 async def test_a_recovered_poll_says_so_in_the_log(caplog: pytest.LogCaptureFixture) -> None:
@@ -719,9 +228,6 @@ async def test_a_recovered_poll_says_so_in_the_log(caplog: pytest.LogCaptureFixt
             return httpx.Response(200, json={"ok": True, "result": []})
         return httpx.Response(200, json={"ok": True, "result": True})
 
-    async def talk(text: str) -> str:
-        return text
-
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     tg = Telegram("t", ALLOWED, client)
     real_sleep = asyncio.sleep
@@ -732,7 +238,7 @@ async def test_a_recovered_poll_says_so_in_the_log(caplog: pytest.LogCaptureFixt
     with caplog.at_level(logging.INFO, logger="companion.telegram"):
         asyncio.sleep = quick_sleep  # type: ignore[assignment]
         try:
-            task = asyncio.create_task(tg.run(talk, {}))
+            task = asyncio.create_task(tg.receive(asyncio.Queue(), None))
             await real_sleep(0.2)
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)
@@ -741,84 +247,3 @@ async def test_a_recovered_poll_says_so_in_the_log(caplog: pytest.LogCaptureFixt
     messages = [r.getMessage() for r in caplog.records]
     assert sum("poll failed" in m for m in messages) == 2
     assert "poll recovered after 2 failed attempt(s)" in messages
-
-
-async def test_a_stop_lets_the_reply_in_progress_go_out_and_takes_nothing_new() -> None:
-    import asyncio  # noqa: PLC0415
-
-    sent: list[str] = []
-    polls = 0
-    stop = asyncio.Event()
-
-    async def handler(req: httpx.Request) -> httpx.Response:
-        nonlocal polls
-        method = str(req.url).rsplit("/", 1)[-1]
-        if method == "getUpdates":
-            polls += 1
-            if polls == 1:
-                return httpx.Response(200, json={"ok": True, "result": [_msg(1, "hey")]})
-            await asyncio.sleep(0.05)
-            return httpx.Response(200, json={"ok": True, "result": []})
-        if method == "sendMessage":
-            sent.append(json.loads(req.content)["text"])
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> str:
-        del text
-        stop.set()  # the stop comes while this reply is being written
-        await asyncio.sleep(0.3)
-        return "still answered"
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    tg = Telegram("t", ALLOWED, client, Hooks(), pace=0.0, split=False)
-    await asyncio.wait_for(tg.run(talk, {}, stop), timeout=5)
-    assert sent == ["still answered"]
-
-
-async def _then(fail_first: bool, monkeypatch: pytest.MonkeyPatch) -> tuple[list[str], list[str]]:
-    import companion.io.telegram as module  # noqa: PLC0415
-
-    async def no_sleep(seconds: float) -> None:
-        del seconds
-
-    monkeypatch.setattr(module.asyncio, "sleep", no_sleep)
-    sent: list[str] = []
-    told: list[str] = []
-    calls = 0
-
-    def handler(req: httpx.Request) -> httpx.Response:
-        nonlocal calls
-        method = str(req.url).rsplit("/", 1)[-1]
-        if method == "sendMessage":
-            calls += 1
-            if fail_first and calls <= 2:  # the reply and its one retry
-                return httpx.Response(400, json={"ok": False})
-            sent.append(json.loads(req.content)["text"])
-        return httpx.Response(200, json={"ok": True, "result": True})
-
-    async def talk(text: str) -> ThenSend:
-        del text
-        return ThenSend("i'm here", "the fixed line")
-
-    async def on_undelivered(text: str, reason: str, delivered: str) -> None:
-        del reason, delivered
-        told.append(text)
-
-    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
-    tg = Telegram("T", ALLOWED, client, Hooks(on_undelivered=on_undelivered), pace=0)
-    await tg.handle_update(_update("hi"), talk, {})
-    return sent, told
-
-
-async def test_code_s_own_message_goes_after_the_reply(monkeypatch: pytest.MonkeyPatch) -> None:
-    sent, told = await _then(False, monkeypatch)
-    assert sent == ["i'm here", "the fixed line"]
-    assert told == []
-
-
-async def test_code_s_own_message_still_goes_when_the_reply_could_not(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    sent, told = await _then(True, monkeypatch)
-    assert sent == ["the fixed line"]
-    assert told == ["i'm here"]

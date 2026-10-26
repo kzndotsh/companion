@@ -31,7 +31,8 @@ from companion.features.reach.run import Reacher, holds, tick_reach
 from companion.features.reminders.run import deliver_due
 from companion.features.threads.run import Ticker, drafter, tick
 from companion.io.stop import until_stopped
-from companion.io.telegram import Commands, Hooks, Telegram
+from companion.io.surface import Commands, Hooks, Surface, Transport
+from companion.io.telegram import Telegram
 from companion.lib import logs, retry
 from companion.loops import curate
 from companion.loops.conversation import Conversation
@@ -186,7 +187,7 @@ def _embedder(
 
 
 def _hooks(store: Store, rel: RelationshipId) -> Hooks:
-    """What the Telegram layer reports back: undelivered replies, and which updates were handled."""
+    """What the surface reports back: undelivered replies, and which messages were handled."""
 
     async def undelivered(text: str, reason: str, delivered: str) -> None:
         now = datetime.now(UTC)
@@ -198,12 +199,11 @@ def _hooks(store: Store, rel: RelationshipId) -> Hooks:
         elif store.mark_undelivered(rel, text, reason, now) is not None:
             logging.getLogger("companion").warning("a reply never arrived and is not remembered")
 
-    def last_handled() -> int | None:
-        saved = store.setting(rel, UPDATE_KEY)
-        return int(saved) if saved is not None else None
+    def last_handled() -> str | None:
+        return store.setting(rel, UPDATE_KEY)
 
-    def mark_handled(update_id: int) -> None:
-        store.set_setting(rel, UPDATE_KEY, str(update_id), datetime.now(UTC))
+    def mark_handled(cursor: str) -> None:
+        store.set_setting(rel, UPDATE_KEY, cursor, datetime.now(UTC))
 
     return Hooks(undelivered, last_handled, mark_handled)
 
@@ -312,21 +312,18 @@ def _start_initiative(
 
 
 def _start_reminders(
-    convo: Conversation, tg: Telegram, user: int, s: Settings
+    convo: Conversation, transport: Transport, s: Settings
 ) -> asyncio.Task[None] | None:
     """The timer that sends reminders when they fall due (J50)."""
     if not s.on("reminders"):
         return None
     started, log = utc_now(), logging.getLogger("companion.reminders")
 
-    async def send(text: str) -> None:
-        await tg.send(user, text)
-
     async def loop() -> None:
         while True:
             await asyncio.sleep(REMINDER_TICK_SECONDS)
             try:
-                await deliver_due(convo, send, SESSION, utc_now(), started)
+                await deliver_due(convo, transport.send, SESSION, utc_now(), started)
             except Exception:
                 log.exception("reminder tick failed; will try again next time")
 
@@ -436,9 +433,8 @@ async def run(data_dir: Path) -> None:
                 task.cancel()
             pending[:] = [asyncio.create_task(reflect_after_idle())]
 
-        tg = Telegram(
-            token, user, client, _hooks(store, rel), pace=s.pace_factor, split=s.on("split")
-        )
+        tg = Telegram(token, user, client)
+        surface = Surface(tg, _hooks(store, rel), pace=s.pace_factor, split=s.on("split"))
 
         async def answer(text: str) -> str | Reaction | ReactAndReply | ThenSend:
             reply = await handle(convo, SESSION, text, "telegram")
@@ -451,7 +447,7 @@ async def run(data_dir: Path) -> None:
             task
             for task in (
                 _start_initiative(store, rel, judge, s),
-                _start_reminders(convo, tg, user, s),
+                _start_reminders(convo, tg, s),
                 asyncio.create_task(_daily_backups(data_dir, db)),
                 asyncio.create_task(_nightly_memory(store, reflector, rel, s)),
             )
@@ -459,7 +455,7 @@ async def run(data_dir: Path) -> None:
         ]
         try:
             commands = _commands(store, rel, reflector, s)
-            await until_stopped(lambda stop: tg.run(answer, commands, stop))
+            await until_stopped(lambda stop: surface.run(answer, commands, stop))
         finally:
             for task in background:
                 task.cancel()

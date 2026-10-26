@@ -1,10 +1,13 @@
 # Sending and receiving
 
-How a message comes in over Telegram and how a reply goes out (`src/companion/io/telegram.py`).
+How a message comes in and how a reply goes out. `src/companion/io/surface.py` holds how a reply
+goes out, once for every surface; `src/companion/io/telegram.py` is the Telegram transport under it:
+polling, update ids and the Bot API's calls.
 
 ## Receiving
 
-Each Telegram update is recorded before its turn runs, so a message is answered at most once, even if
+Only text from the one allowed user, in their private chat with the bot, is taken. Anyone else's
+messages, group chats and anything that is not text are passed over. Each Telegram update is recorded before its turn runs, so a message is answered at most once, even if
 the bot restarts mid-turn. The poll offset moves past a message as soon as it is queued, so stopping
 is done with care: on SIGTERM or SIGINT the bot fetches nothing more, answers what it has already
 received, the reply in progress included, and only then exits, for up to 30 seconds
