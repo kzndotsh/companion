@@ -2356,3 +2356,13 @@ you even remind me of stuff or nah" 15 and 1, "could you check on me later tonig
 interview went?" 15 and 0. No overclaim on "can you see my screen rn?" (0 and 0). On the real turn
 after a reminder went out, 1 and 1 (the history's pause line had already fixed it). Scratch script
 `persona_cap.py`; about 2 cents.
+
+## 2026-10-26: The other reminder notes need no change on persona v46
+
+The ask-when, repeating and cancelled reminder notes, as rendered by code, in a real history with the
+last message swapped, plain persona v46, Luna, 15 replies a case. No time given ("what time" note):
+asked what time 15 of 15, denied 0. "at 8" with am or pm unclear: asked which 12 of 15 by a crude
+check, denied 0. "every day": offered the next one only 15 of 15; the 2 the denial check caught said
+truthfully that it only does one-off reminders. Cancel: said it was cancelled 15 of 15. The ask
+note's grammar ("but what time.") reads oddly but did no harm, so v1 stays. Scratch script
+`remind_notes.py`; about a cent.
