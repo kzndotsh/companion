@@ -67,10 +67,10 @@ class Telegram:
                 log.debug("telegram %s ok in %dms", method, (time.perf_counter() - began) * 1000)
             return resp.json()["result"]
 
-    async def send(self, text: str) -> None:
+    async def send(self, text: str) -> str:
         for attempt in range(2):
             try:
-                await self._call("sendMessage", chat_id=self._allowed, text=text)
+                sent = await self._call("sendMessage", chat_id=self._allowed, text=text)
             except RateLimited:
                 raise  # it already waited out its budget; another try would only wait again
             except TelegramError:
@@ -78,7 +78,9 @@ class Telegram:
                     raise
                 await asyncio.sleep(2.0)
             else:
-                return
+                return str(integer(obj(sent).get("message_id")))
+        msg = "telegram sendMessage failed"
+        raise TelegramError(msg)
 
     async def react(self, message_id: str, emoji: str) -> None:
         await self._call(
@@ -139,7 +141,15 @@ class Telegram:
             if integer(obj(msg.get("chat")).get("id")) != self._allowed:
                 log.warning("ignored a message outside their private chat")
                 continue
-            out.append(Incoming(str(integer(msg.get("message_id"))), text, str(update_id)))
+            replied = obj(msg.get("reply_to_message")).get("message_id")
+            out.append(
+                Incoming(
+                    str(integer(msg.get("message_id"))),
+                    text,
+                    str(update_id),
+                    str(integer(replied)) if replied is not None else None,
+                )
+            )
         return out, offset
 
 

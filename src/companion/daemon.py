@@ -24,7 +24,15 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
-from companion.core.types import Favorite, FavoriteId, Flag, FlagId, RelationshipId, SessionId
+from companion.core.types import (
+    Favorite,
+    FavoriteId,
+    Flag,
+    FlagId,
+    RelationshipId,
+    SessionId,
+    TurnId,
+)
 from companion.core.vectors import Embedder
 from companion.features.consolidate.run import SameCheck
 from companion.features.nudges.run import tick_nudge
@@ -55,6 +63,10 @@ FAVORITE_REACTION = "❤"
 FALLBACK_MODEL = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
 REFLECT_MODEL = "anthropic/claude-haiku-5.5"
 UPDATE_KEY = "telegram.last_update_id"
+UNKNOWN_REPLY = (
+    "can't tell which reply that was (it's from before i kept track), so nothing was marked."
+    " send it again without replying, with a note saying which one"
+)
 DISCORD_KEY = "discord.last_message_id"
 REFLECT_IDLE_SECONDS = 90
 REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
@@ -190,9 +202,9 @@ def _embedder(
     return MeteredEmbedder(embeddings.OpenRouterEmbedder(key, client, s.embed_model), sink)
 
 
-def _hooks(store: Store, rel: RelationshipId, key: str) -> Hooks:
-    """What the surface reports back: undelivered replies, and which messages were handled, kept
-    under the store setting `key`."""
+def surface_hooks(store: Store, rel: RelationshipId, key: str, channel: str) -> Hooks:
+    """What the surface reports back: undelivered replies, which messages were handled, kept under
+    the store setting `key`, and the id of each message that carried a reply, kept with its turn."""
 
     async def undelivered(text: str, reason: str, delivered: str) -> None:
         now = datetime.now(UTC)
@@ -210,16 +222,28 @@ def _hooks(store: Store, rel: RelationshipId, key: str) -> Hooks:
     def mark_handled(cursor: str) -> None:
         store.set_setting(rel, key, cursor, datetime.now(UTC))
 
-    return Hooks(undelivered, last_handled, mark_handled)
+    def sent(message_id: str) -> None:
+        turn = store.latest_turn(rel)  # the reply going out was stored as the latest turn
+        if turn is not None:
+            store.record_sent(rel, channel, message_id, turn, datetime.now(UTC))
+
+    return Hooks(undelivered, last_handled, mark_handled, sent)
 
 
-def _commands(store: Store, rel: RelationshipId, reflector: Extractor, s: Settings) -> Commands:
-    """The slash commands: `/flag` and `/fav` answer with a reaction, `/mode` with which talker."""
+def chat_commands(store: Store, rel: RelationshipId, reflector: Extractor, s: Settings) -> Commands:
+    """The slash commands: `/flag` and `/fav` answer with a reaction, `/mode` with which talker.
+    `/flag` and `/fav` mark the latest reply, or, sent as a reply to one of its messages, that
+    one."""
 
-    async def flag(arg: str) -> str | Reaction | ReactAndReply:
-        turn = store.latest_turn(rel)
+    def marked(replied_to: str | None) -> TurnId | None:
+        if replied_to is None:
+            return store.latest_turn(rel)
+        return store.turn_of_sent(rel, s.mode("surface"), replied_to)
+
+    async def flag(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
+        turn = marked(replied_to)
         if turn is None:
-            return "nothing to flag yet"
+            return UNKNOWN_REPLY if replied_to is not None else "nothing to flag yet"
         kind, note = parse_flag(arg)
         store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
         logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, note)
@@ -229,18 +253,18 @@ def _commands(store: Store, rel: RelationshipId, reflector: Extractor, s: Settin
             logging.getLogger("companion").info("flag retired a view: %s", claim)
         return Reaction(FLAG_REACTION)
 
-    async def favorite(arg: str) -> str | Reaction | ReactAndReply:
-        turn = store.latest_turn(rel)
+    async def favorite(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
+        turn = marked(replied_to)
         if turn is None:
-            return "nothing to favorite yet"
+            return UNKNOWN_REPLY if replied_to is not None else "nothing to favorite yet"
         store.add_favorite(
             Favorite(FavoriteId(uuid.uuid4().hex), rel, turn, arg.strip(), datetime.now(UTC))
         )
         logging.getLogger("companion").info("favorite on turn %s: %s", turn[:8], arg.strip())
         return Reaction(FAVORITE_REACTION)
 
-    async def mode(arg: str) -> str | Reaction | ReactAndReply:
-        del arg
+    async def mode(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
+        del arg, replied_to
         roleplay = s.roleplay_model or s.everyday_model
         return mode_report(store, rel, utc_now(), s.everyday_model, roleplay)
 
@@ -345,10 +369,12 @@ async def _surface(
     if s.mode("surface") == "discord":
         token, user = _need("DISCORD_BOT_TOKEN"), int(_need("DISCORD_USER_ID"))
         async with discord.connected(token, user) as transport:
-            yield Surface(transport, _hooks(store, rel, DISCORD_KEY), s.pace_factor, s.on("split"))
+            hooks = surface_hooks(store, rel, DISCORD_KEY, "discord")
+            yield Surface(transport, hooks, s.pace_factor, s.on("split"))
         return
     telegram = Telegram(_need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID")), client)
-    yield Surface(telegram, _hooks(store, rel, UPDATE_KEY), s.pace_factor, s.on("split"))
+    hooks = surface_hooks(store, rel, UPDATE_KEY, "telegram")
+    yield Surface(telegram, hooks, s.pace_factor, s.on("split"))
 
 
 async def run(data_dir: Path) -> None:
@@ -475,7 +501,7 @@ async def run(data_dir: Path) -> None:
             if task is not None
         ]
         try:
-            commands = _commands(store, rel, reflector, s)
+            commands = chat_commands(store, rel, reflector, s)
             await until_stopped(lambda stop: surface.run(answer, commands, stop))
         finally:
             for task in background:

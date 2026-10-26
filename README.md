@@ -286,6 +286,7 @@ In the Telegram chat:
 ```text
 /flag [kind] note mark the last reply; kind is off (default), forgot, too_much or unwanted
 /fav [note]       mark the last reply as one you loved
+                  send /flag or /fav as a reply to one of its messages to mark that reply instead
 /mode             which model wrote the last reply and why, and whether a scene is under way
 ```
 

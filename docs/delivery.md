@@ -36,6 +36,10 @@ held before sending, replaces that answer, and the new reply sees both of their 
 that was already written and then dropped is marked undelivered. Commands (`/flag`, `/fav`, `/mode`)
 are plain text on both surfaces and never replace anything.
 
+The id of each message that carries part of a reply is kept with its turn (`sent_messages`), so
+`/flag` or `/fav` sent as a reply to one of those messages marks that turn, not the latest. A reply to
+a message it has no record of, such as one sent before ids were kept, marks nothing and says so.
+
 ## Sending
 
 Replies are held for a moment so they land like someone typing, not instantly. `COMPANION_PACE`

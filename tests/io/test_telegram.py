@@ -36,6 +36,25 @@ def test_the_allowed_user_s_text_in_their_own_chat_comes_in() -> None:
     assert offset == 2
 
 
+def test_a_message_sent_as_a_reply_says_which_one() -> None:
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient())
+    update = _update("/flag")
+    message = update["message"]
+    assert isinstance(message, dict)
+    message["reply_to_message"] = {"message_id": 42}
+    got, _ = tg.read([update], 0)
+    assert got == [Incoming("99", "/flag", "1", "42")]
+
+
+async def test_a_send_returns_the_id_of_the_message_sent() -> None:
+    def handler(req: httpx.Request) -> httpx.Response:
+        del req
+        return httpx.Response(200, json={"ok": True, "result": {"message_id": 314}})
+
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    assert await tg.send("hello") == "314"
+
+
 def test_other_users_group_chats_and_non_text_are_ignored() -> None:
     tg = Telegram("t", ALLOWED, httpx.AsyncClient())
     photo = {"update_id": 4, "message": {"message_id": 5, "from": {"id": ALLOWED}}}

@@ -24,7 +24,7 @@ async def _one(
         handled.append(t)
         return reply
 
-    async def flag(arg: str) -> str | Reaction:
+    async def flag(arg: str, replied_to: str | None) -> str | Reaction:
         handled.append(f"FLAG:{arg}")
         return Reaction("✍")
 
@@ -264,7 +264,7 @@ async def test_a_command_reply_is_never_held(monkeypatch: pytest.MonkeyPatch) ->
     async def fake_sleep(seconds: float) -> None:
         sleeps.append(seconds)
 
-    async def flag(arg: str) -> str:
+    async def flag(arg: str, replied_to: str | None = None) -> str:
         del arg
         return "done"
 
@@ -458,3 +458,29 @@ async def test_a_reply_longer_than_the_surface_takes_goes_as_several_messages() 
     assert len(fake.sent) > 1
     assert all(len(p) <= 100 for p in fake.sent)
     assert " ".join(fake.sent).split() == reply.split()
+
+
+async def test_each_message_of_a_turn_s_reply_is_reported_sent_and_a_command_s_answer_is_not(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("companion.io.surface.random.random", lambda: 0.0)
+    fake = Fake()
+    kept: list[str] = []
+    replied: list[str | None] = []
+
+    async def talk(t: str) -> Reply:
+        del t
+        return _LONG_REPLY
+
+    async def mode(arg: str, replied_to: str | None) -> str:
+        del arg
+        replied.append(replied_to)
+        return "everyday talker"
+
+    surface = Surface(fake, Hooks(on_sent=kept.append), split=True)
+    await surface.reply_to(msg("hi"), talk, {})
+    turn_parts = len(fake.sent)
+    await surface.reply_to(Incoming("5", "/mode", "5", "sent-1"), talk, {"mode": mode})
+    assert turn_parts > 1
+    assert kept == [f"sent-{n}" for n in range(1, turn_parts + 1)]
+    assert replied == ["sent-1"]

@@ -185,7 +185,7 @@ async def _write(
 
 async def deliver_due(  # noqa: PLR0913
     c: Conversation,
-    send: Callable[[str], Awaitable[None]],
+    send: Callable[[str], Awaitable[object]],
     session: SessionId,
     now: datetime,
     started: datetime,

@@ -159,6 +159,14 @@ class Store:
     def latest_turn(self, rel: RelationshipId) -> TurnId | None:
         return turns.latest_turn(self._conn, rel)
 
+    def record_sent(
+        self, rel: RelationshipId, channel: str, message_id: str, turn: TurnId, at: datetime
+    ) -> None:
+        turns.record_sent(self._conn, rel, channel, message_id, turn, at)
+
+    def turn_of_sent(self, rel: RelationshipId, channel: str, message_id: str) -> TurnId | None:
+        return turns.turn_of_sent(self._conn, rel, channel, message_id)
+
     def add_flag(self, f: Flag) -> None:
         flags.add_flag(self._conn, f)
 

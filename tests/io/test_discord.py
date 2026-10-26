@@ -21,7 +21,11 @@ PRIVATE = discord.ChannelType.private
 
 def _message(n: int, text: str = "hi", author: int = ALLOWED, kind: object = PRIVATE) -> Any:
     return SimpleNamespace(
-        id=n, content=text, author=SimpleNamespace(id=author), channel=SimpleNamespace(type=kind)
+        id=n,
+        content=text,
+        author=SimpleNamespace(id=author),
+        channel=SimpleNamespace(type=kind),
+        reference=None,
     )
 
 
@@ -38,10 +42,11 @@ class FakeDM:
     sent: list[str] = field(default_factory=list[str])
     reactions: list[tuple[int, str]] = field(default_factory=list[tuple[int, str]])
 
-    async def send(self, text: str) -> None:
+    async def send(self, text: str) -> Any:
         if self.fail is not None:
             raise self.fail
         self.sent.append(text)
+        return SimpleNamespace(id=1000 + len(self.sent))
 
     def get_partial_message(self, message_id: int) -> Any:
         async def add_reaction(emoji: str) -> None:
@@ -277,3 +282,17 @@ async def test_the_start_warnings_about_guilds_and_voice_are_silenced_and_others
             logging.getLogger("discord.state").warning("something else went wrong")
     warnings = [r.getMessage() for r in caplog.records]
     assert warnings == ["something else went wrong"]
+
+
+async def test_a_dm_sent_as_a_reply_says_which_one_and_a_send_returns_its_id() -> None:
+    dc, _ = _discord()
+    inbox: asyncio.Queue[Incoming] = asyncio.Queue()
+    task = asyncio.create_task(dc.receive(inbox, None))
+    await asyncio.sleep(0.01)
+    replying = _message(5, "/flag")
+    replying.reference = SimpleNamespace(message_id=1001)
+    await dc.on_message(replying)
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+    assert inbox.get_nowait() == Incoming("5", "/flag", "5", "1001")
+    assert await dc.send("hi") == "1001"

@@ -41,12 +41,13 @@ class Fake:
             inbox.put_nowait(m)
         await asyncio.Event().wait()
 
-    async def send(self, text: str) -> None:
+    async def send(self, text: str) -> str:
         self.sends += 1
         if self.refuse(self.sends):
             msg = "send refused"
             raise DeliveryError(msg)
         self.calls.append(f"send {text}")
+        return f"sent-{self.sends}"
 
     async def react(self, message_id: str, emoji: str) -> None:
         if self.react_fails:

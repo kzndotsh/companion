@@ -25,12 +25,14 @@ TYPING_REFRESH_SECONDS = 4.0  # both surfaces drop the typing indicator after fi
 
 Reply = str | Reaction | ReactAndReply | ThenSend
 Handler = Callable[[str], Awaitable[Reply]]
-CommandHandler = Callable[[str], Awaitable[str | Reaction | ReactAndReply]]
+# The command's argument, and the id of the message it was sent as a reply to, if any.
+CommandHandler = Callable[[str, str | None], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
 # The reply text, why it did not all arrive, and the parts that did ("" when none did).
 Undelivered = Callable[[str, str, str], Awaitable[None]]
 LastHandled = Callable[[], str | None]  # the cursor of the newest message already handled, if any
 MarkHandled = Callable[[str], None]
+Sent = Callable[[str], None]  # the id of a message that carried part of a turn's reply
 
 
 class DeliveryError(RuntimeError):
@@ -40,11 +42,13 @@ class DeliveryError(RuntimeError):
 @dataclass(frozen=True, slots=True)
 class Incoming:
     """A message from the allowed user. `id` is what a reaction points at; `cursor` is where the
-    transport resumes after a restart (Telegram's update id, Discord's message id)."""
+    transport resumes after a restart (Telegram's update id, Discord's message id); `replied_to`
+    is the id of the message they replied to, if they did."""
 
     id: str
     text: str
     cursor: str
+    replied_to: str | None = None
 
 
 class Transport(Protocol):
@@ -60,8 +64,8 @@ class Transport(Protocol):
         cancelled. Messages from anyone else, or that are not text, never reach the queue."""
         ...
 
-    async def send(self, text: str) -> None:
-        """Send one message. Raises DeliveryError."""
+    async def send(self, text: str) -> str:
+        """Send one message and return its id. Raises DeliveryError."""
         ...
 
     async def react(self, message_id: str, emoji: str) -> None:
@@ -80,6 +84,7 @@ class Hooks:
     on_undelivered: Undelivered | None = None
     last_handled: LastHandled | None = None
     mark_handled: MarkHandled | None = None
+    on_sent: Sent | None = None
 
 
 @dataclass(slots=True)
@@ -88,6 +93,7 @@ class _Delivery:
     what the user saw."""
 
     sent: list[str] = field(default_factory=list[str])
+    of_turn: bool = False  # a turn's reply, whose message ids are kept, not a command's answer
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,7 +200,7 @@ class Surface:
         typist: asyncio.Task[None] | None = None
         try:
             if command is not None:
-                reply: Reply = await commands[command[0]](command[1])
+                reply: Reply = await commands[command[0]](command[1], msg.replied_to)
             else:
                 read = read_seconds(msg.text, self._pace, jitter)
                 typist = asyncio.create_task(self._type_after(read))
@@ -209,7 +215,7 @@ class Surface:
             if typist is not None:
                 typist.cancel()
         wait = _Wait(msg.text, started, jitter) if command is None else None
-        delivery = _Delivery()
+        delivery = _Delivery(of_turn=command is None)
         try:
             await self._answer(msg.id, reply, wait, delivery)
         except asyncio.CancelledError:
@@ -274,8 +280,10 @@ class Surface:
             if hold is not None:
                 await hold(part, first=n == 0)
             try:
-                await self.transport.send(part)
+                sent = await self.transport.send(part)
                 delivery.sent.append(part)
+                if delivery.of_turn and self._hooks.on_sent is not None:
+                    self._hooks.on_sent(sent)
             except DeliveryError as err:
                 if n == 0:
                     raise

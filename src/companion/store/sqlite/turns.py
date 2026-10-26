@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime
 
 from companion.core.prompt.prefix import Prefix
 from companion.core.replay import TurnRecord
@@ -73,5 +74,32 @@ def latest_turn(conn: sqlite3.Connection, relationship_id: RelationshipId) -> Tu
         "SELECT turn_id FROM turn_requests WHERE relationship_id = ? ORDER BY at DESC, rowid DESC"
         " LIMIT 1",
         (relationship_id,),
+    ).fetchone()
+    return TurnId(str(row["turn_id"])) if row is not None else None
+
+
+def record_sent(  # noqa: PLR0913, PLR0917
+    conn: sqlite3.Connection,
+    relationship_id: RelationshipId,
+    channel: str,
+    message_id: str,
+    turn_id: TurnId,
+    at: datetime,
+) -> None:
+    with write_tx(conn):
+        conn.execute(
+            "INSERT OR IGNORE INTO sent_messages"
+            " (relationship_id, channel, message_id, turn_id, at) VALUES (?, ?, ?, ?, ?)",
+            (relationship_id, channel, message_id, turn_id, iso(at)),
+        )
+
+
+def turn_of_sent(
+    conn: sqlite3.Connection, relationship_id: RelationshipId, channel: str, message_id: str
+) -> TurnId | None:
+    row = conn.execute(
+        "SELECT turn_id FROM sent_messages"
+        " WHERE relationship_id = ? AND channel = ? AND message_id = ?",
+        (relationship_id, channel, message_id),
     ).fetchone()
     return TurnId(str(row["turn_id"])) if row is not None else None

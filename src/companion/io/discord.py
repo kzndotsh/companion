@@ -131,7 +131,9 @@ class Discord:
         if self._last is not None and message.id <= self._last:
             return
         self._last = message.id
-        inbox.put_nowait(Incoming(str(message.id), message.content, str(message.id)))
+        ref = message.reference
+        replied = str(ref.message_id) if ref is not None and ref.message_id is not None else None
+        inbox.put_nowait(Incoming(str(message.id), message.content, str(message.id), replied))
 
     async def _channel(self) -> discord.DMChannel:
         if self._dm is None:
@@ -139,9 +141,9 @@ class Discord:
             self._dm = await user.create_dm()
         return self._dm
 
-    async def send(self, text: str) -> None:
+    async def send(self, text: str) -> str:
         try:
-            await (await self._channel()).send(text)
+            return str((await (await self._channel()).send(text)).id)
         except _FAILURES as err:
             raise DiscordError(_failed("send", err)) from None
 
