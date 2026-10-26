@@ -10,7 +10,7 @@ An AI companion that tries to be as human-like as we can make it, and the memory
 
 It talks like a friend who knows you. It remembers what you told it and who said it, notices when something is serious, keeps pace like someone typing, and can tell a story, a game and the real you apart. Everything it does is logged with a reason, so any reply can be replayed and explained.
 
-Today it is reached through Telegram, its only integration for now.
+It is reached through Telegram or Discord, one at a time (`COMPANION_SURFACE`), with the same memory on either.
 
 ## What it does
 
@@ -179,7 +179,7 @@ Create a `.env` in the repo root:
 
 ```bash
 TELEGRAM_BOT_TOKEN=...      # from BotFather
-TELEGRAM_USER_ID=...        # the one Telegram user the bot answers
+TELEGRAM_USER_ID=...        # the one Telegram user the bot answers; also names the database
 OPENROUTER_API_KEY=...      # models are called through OpenRouter
 ```
 
@@ -281,7 +281,7 @@ just logs         # follow data/logs/companion.log
 just commit "feat(x): msg" path...   # commit only the named files
 ```
 
-In the Telegram chat:
+In the chat, on Telegram or in a Discord DM (plain messages, not Discord slash commands):
 
 ```text
 /flag [kind] note mark the last reply; kind is off (default), forgot, too_much or unwanted
@@ -367,7 +367,7 @@ companion/
 │   ├── prompts/          every text the models are given, each version kept
 │   ├── core/  loops/     shared rules and building blocks the features use
 │   ├── models/           talking to the AI models
-│   ├── io/               talking to Telegram, pacing replies like typing
+│   ├── io/               talking to Telegram or Discord, pacing replies like typing
 │   ├── store/            the database
 │   ├── cli/              the `companion` command
 │   ├── evals/            the eval runner
@@ -389,7 +389,7 @@ for anyone changing it, are in [AGENTS.md](AGENTS.md).
 
 There is no single big prompt: one talker model writes the reply, and small judges and code decide
 what it sees. Each message passes through a few stages (read, route, look things up, assemble, talk
-and check, store), described in [docs/turn.md](docs/turn.md), with Telegram delivery in
+and check, store), described in [docs/turn.md](docs/turn.md), with delivery on Telegram and Discord in
 [docs/delivery.md](docs/delivery.md). Beside the chat, timers run the memory pass after a quiet spell
 and the night's memory work at 04:00 ([docs/memory.md](docs/memory.md)), the reach-out tick every 15
 minutes and reminders every minute ([docs/initiative.md](docs/initiative.md)), and a backup at every
@@ -421,7 +421,7 @@ from the logs by value.
 | Where | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) | the working rules for anyone, human or agent, changing this repo |
-| [docs/turn.md](docs/turn.md), [delivery.md](docs/delivery.md), [initiative.md](docs/initiative.md), [memory.md](docs/memory.md) | how a reply is made, how Telegram delivery works, plans and reach-outs, and memory over time |
+| [docs/turn.md](docs/turn.md), [delivery.md](docs/delivery.md), [initiative.md](docs/initiative.md), [memory.md](docs/memory.md) | how a reply is made, how delivery on Telegram and Discord works, plans and reach-outs, and memory over time |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files, prompts, setting and what was measured |
 | [TODO.md](TODO.md) | the work board and the plan: where we are, measured facts, what comes next |
 | [docs/adr/](docs/adr) | decisions and their reasons |

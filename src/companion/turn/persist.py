@@ -123,7 +123,7 @@ def with_reaction(
     c: Conversation, t: Turn, felt: tuple[ReactJudgement, str, str] | None, sent: str
 ) -> str | ReactAndReply:
     reacted = _react_alongside(c, t, felt)
-    mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to Telegram")
+    mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to the chat")
     return ReactAndReply(reacted, sent) if reacted is not None else sent
 
 

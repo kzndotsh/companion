@@ -41,7 +41,7 @@ restart:
 commit message +files:
     scripts/commit.sh "{{message}}" {{files}}
 
-# follow the full debug log (every stage of every turn, judges, model and Telegram calls)
+# follow the full debug log (every stage of every turn, judges, model and Telegram or Discord calls)
 logs:
     tail -n 60 -f data/logs/companion.log
 

@@ -77,7 +77,7 @@ for the sake of it. The rate of echoes should fall from about a third to well un
 
 10. **An echo meter.** After each casual reply, a small judge labels it adds, echo or other, beside the
     turn like the habit check. The rate per day is a number to watch and the trigger for 9.
-11. **Cheaper marks from the owner.** A reaction emoji on a reply in Telegram (a thumbs up, a yawn) as a
+11. **Cheaper marks from the owner.** A reaction emoji on a reply in Telegram or Discord (a thumbs up, a yawn) as a
     one-tap label, much easier than `/fav` (rarely used). Every mark is data for tuning and for later.
 
 ### D. Longer term
@@ -104,4 +104,4 @@ Subtract, then compare two ways of adding, then keep the winner behind a meter.
 
 - How much adding is right? A friend does not contribute every message. A target (say four replies in
   five that are not echoes) would set the trigger.
-- Telegram reactions as marks: wanted?
+- Reactions (Telegram or Discord) as marks: wanted?

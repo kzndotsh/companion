@@ -95,7 +95,7 @@ Built and working:
   days of remembrance and contested days are left out. The judges stay on Haiku after a bake-off.
 - **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
   messages, and a new message that arrives before the last answer is out replaces it. A reply
-  Telegram never delivered is recorded as undelivered and left out of what the model reads; a reply cut
+  the chat never delivered is recorded as undelivered and left out of what the model reads; a reply cut
   off part way is read as the part that arrived. On a stop it fetches nothing more and answers what it has,
   for up to 30 s.
 - **Initiative.** All reaching out first is shadow: it drafts and records, and sends nothing. Three
@@ -220,7 +220,7 @@ removed. Live notes listed here are read from the log and the owner's marks.
 
 - **Location** (R18, owner flag 2026-10-25: it would be useful if it knew where they are). One answer feeds
   the crisis line's region (ADR 0022 defaults to 988), the calendar's region (US by default) and the time
-  zone. Needs the owner's say on how: a location shared once in Telegram, or asked as a basic.
+  zone. Needs the owner's say on how: a location shared once in the chat, or asked as a basic.
 - **The calendar's later phases** (R19): their own dates from memory are done; left are
   "a day" as a reach-out kind in shadow with ADR 0021, region from a shared location (R18), and calendar
   moments (a season, the clocks changing). Lead-ups are done.
@@ -469,7 +469,7 @@ Ordered. Pull from the top.
 - [ ] R18 Location (owner flag 2026-10-25: it would be useful if it knew where they are). Today the crisis
       line defaults to the US (988, ADR 0022), the calendar's region is "US" in one place (`features/calendar`
       `REGION`), and the clock uses the machine's named zone. One answer, kept from their own words or a
-      location shared once in Telegram, could set all three (ADR 0022 already names learning their country as
+      location shared once in the chat, could set all three (ADR 0022 already names learning their country as
       a basic worth knowing). **Needs decision** on how it learns it (decision 8), then a design and a fixture.
 - [ ] R19 The calendar's later phases (plan in `docs/inbox/2026-10-25-a-calendar-of-occasions.md`). Live since
       2026-10-25: US public and cultural days, lead-ups to the big days, the relationship's dates, and their
@@ -663,13 +663,13 @@ A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
       Partial 2026-10-24: on a stop it fetches nothing more and answers what it already received (up to 30 s).
 - [ ] J29 Burst merge: wait about two seconds of quiet before starting a reply, so quick fragments are
       answered as one thought; supersede still handles anything later (Coopanion audit).
-- [ ] J31 Edited messages: when the user edits a Telegram message, the earlier version is replaced in what
+- [ ] J31 Edited messages: when the user edits a message (Telegram and Discord both allow it), the earlier version is replaced in what
       the model reads and beliefs drawn from it are redone, never deleted (Front Porch audit).
 - [ ] J34 Declared identity: the user's name, nicknames and aliases, each with where and when it was said,
       so a nickname is never a new person and it knows what to call them (Miru audit).
 - [ ] J35 Live-send safety, before initiative goes live: recheck quiet hours and mid-chat at the moment of
       sending; an unreadable quiet-hours setting means no reach-out; each reach-out fires exactly once (send
-      state recorded before the Telegram call, unknown after a crash, never blindly resent) (Miru, OpenSoul,
+      state recorded before the send call, unknown after a crash, never blindly resent) (Miru, OpenSoul,
       Phosphene, Psycheros, Resonant audits). Extends A5.
 - [ ] J37 Checked merges: when a background pass proposes merging or retiring beliefs, code applies it only
       after checking the ids it was shown and a measured similarity, never on the model's word (Sapphire).
@@ -730,7 +730,7 @@ Each card says what would bring it back.
       alone fixed the short-gap fixture (9/12 with and without the gap stated).
 - [ ] R12 Body and appearance questions (inbox, parked).
 - [ ] R13 Does the "letting them go" rule earn its place (inbox, parked).
-- [ ] J3 See and fix your memory: a Telegram command that lists what it believes about you and retires a
+- [ ] J3 See and fix your memory: a chat command that lists what it believes about you and retires a
       wrong one (Kindroid's edge in the user research). **Parked by the owner on 2026-10-18** after the
       research (local notes: `docs/research/2026-10-18_user-visible-memory.md`); options were browse, search,
       retire, correct, and how sensitive items show.
@@ -918,7 +918,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       reads) is a question in `companion memory review` (keep 1, keep 2 or both). 14 of 14 invented
       corrections caught, 2 to 3 false alarms in 20 look-alikes. Older memories are compared with each other
       by the grouping of 2026-10-21. Closed 2026-10-23; what is left (a correction below the 0.55 embedding
-      gate is never compared, 3 of the 14) belongs to G11, and asking in Telegram to J3.
+      gate is never compared, 3 of the 14) belongs to G11, and asking in the chat to J3.
 - [x] J16 partial: an invited guess ("you know what time it is?") gets one playful guess from what
       memory holds, as a question; 12/12 against 0/12. The card stays in the backlog for scoring guesses.
 

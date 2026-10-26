@@ -63,8 +63,9 @@ _ESPECIALLY = re.compile(
 _A_BEAT = re.compile(r"\ba beat\b(?!\s+(?:drop|to|of|from|in)\b)", re.IGNORECASE)
 
 
-# Markdown that shows raw in Telegram: **bold**, or a *Title* in italics (owner flag 2026-10-21). An
-# action in asterisks ("*leans in*") starts lower-case and is how a scene or a flirt is written.
+# Markdown that shows raw in Telegram, and as formatting on Discord that texting never has:
+# **bold**, or a *Title* in italics (owner flag 2026-10-21). An action in asterisks ("*leans in*")
+# starts lower-case and is how a scene or a flirt is written.
 _MARKDOWN = re.compile(r"\*\*[^*\n]+\*\*|(?<![\w*])\*(?!I\b)[A-Z][^*\n]{0,60}\*(?![\w*])")
 MARKDOWN = "markdown that shows raw in a chat"
 
