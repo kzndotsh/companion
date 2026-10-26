@@ -2268,3 +2268,16 @@ and cooking question as v41's. So the rule was not the cause of the blandness, a
 gain from deleting it was within noise. The one prompt result that holds is removing the notes: pooled
 over both judges, 64 against 41 of 144 (Fisher, under 1% chance of noise). Cost about $0.06.
 
+## 2026-10-25: the note diet, and the notes effect did not replicate
+
+What: the 12 echo turns on Luna, 12 replies a version (144 each), two blind Claude judges: as sent; a
+note diet (their pronouns moved from a note to a plain fact on the card, at most one mood line,
+everything else unchanged); and no notes at all, again.
+
+Result, adds of 144 (Sonnet / Haiku): as sent 41 / 44; note diet 42 / 33; no notes 51 / 43. No
+difference. The earlier gain from removing all notes (34 / 30 against 22 / 19 of 72) does not hold at
+twice the sample; with v45 also flat, the prompt subtractions tried today (the ordinary-things rule,
+the notes, a stripped persona) do not move blandness beyond noise. This repeats the project's old
+lesson: two smallish gaps in a row can both be noise. The one large, repeated effect is asking for one
+thing of its own (61 / 62 of 72 against 15 / 7), so the lever is on the adding side. Cost about $0.03.
+
