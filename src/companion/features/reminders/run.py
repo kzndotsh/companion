@@ -357,8 +357,9 @@ async def deliver_due(  # noqa: PLR0913
         )
         log.info("reminder %s sent%s: %s", r.id[:8], " late" if late else "", text)
         sent += 1
-    for series in every.values():
-        _tend(c, series, session, now, zone)
+    for series in c.store.series(c.rel):  # read again: a turn may have stopped one while it sent
+        if series.state is not Standing.STOPPED:
+            _tend(c, series, session, now, zone)
     return sent
 
 

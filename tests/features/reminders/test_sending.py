@@ -140,3 +140,17 @@ async def test_a_stopped_series_makes_no_more(store: Store) -> None:
     stop(store, s, "they asked to stop it", SET_AT + timedelta(minutes=5))
     assert await _tick(store, _at(20, 9, 0)) == []
     assert _states(store) == [("2026-10-20 09:00", "cancelled")]
+
+
+async def test_a_series_stopped_while_its_greeting_was_sending_makes_no_next_one(
+    store: Store,
+) -> None:
+    s = _series(store)
+
+    async def send(text: str) -> None:
+        del text
+        stop(store, s, "they asked to stop it", _at(20, 9, 0))
+
+    c = Conversation(store, Writer("morning ☀️"), PREFIX, REL)
+    await deliver_due(c, send, SESSION, _at(20, 9, 0), SET_AT, channel="telegram")
+    assert _states(store) == [("2026-10-20 09:00", "sent")]
