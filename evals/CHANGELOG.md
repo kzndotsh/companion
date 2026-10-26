@@ -2281,3 +2281,29 @@ the notes, a stripped persona) do not move blandness beyond noise. This repeats 
 lesson: two smallish gaps in a row can both be noise. The one large, repeated effect is asking for one
 thing of its own (61 / 62 of 72 against 15 / 7), so the lever is on the adding side. Cost about $0.03.
 
+## 2026-10-25: bland replies, a move picker against best of three
+
+What: the 12 echo turns on Luna, 8 replies a version, two blind Claude judges. A: as sent. B: a move
+picker: Haiku labels the kind of message (share, joke, question, tender, vent, logistics) from their
+message and the companion's before it; code maps the kind to moves (share: its own take, a detail they
+may not know, a new side of it, playing along; joke: playing along, its own take; question: its own
+take, a detail; tender, vent, logistics: none) and rotates one per reply as a line after the history,
+worded with nothing to copy. C: best of three: three replies as sent, and Haiku picks the one a close
+friend would most like (something of its own, never forced, the warmest at a tender moment). The kind
+read called 5 of the 12 turns tender (affection, comfort, sweet talk), so B sent no move there.
+
+Result, adds (Sonnet / Haiku):
+- All 96: A 34 / 20, B 38 / 38, C 44 / 26; forced A 3 / 1, B 6 / 5, C 4 / 3.
+- The 7 turns that were not tender (56 each): A 23 / 9, B 28 / 25, C 26 / 9. Pooled, A 32 against B 53
+  of 112, a real difference (Fisher, under 1%); C 35, no gain.
+- Tender turns: no change in any version; B, which sent nothing there, had no forced replies on them.
+- No template: "I'd pick" 0 of 96 in B; the commonest three-word runs repeat at the same rate in all
+  three versions.
+- B's forced replies were mostly a fact dropped in where it did not fit.
+
+Read as: the move picker works where a move fits and leaves tender moments alone; best of three does
+not, because the picking judge does not choose what the raters call adding. The specific move wordings
+here are weaker than the single "one thing of your own that they did not say" note of the first test
+(61 / 62 of 72 over all 12 turns), so the wording is worth one more round. Cost about $0.09. Rerun:
+scratch script `bakeoff.py` and the judging brief.
+
