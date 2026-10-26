@@ -120,7 +120,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/scene-hypothetical` | note | they are exploring a what-if | v1 |
 | `notes/scene-play` | note | a pretend scene is in progress | v1 |
 | `notes/scene-story` | note | they are telling a story | v1 |
-| `notes/reminder-set` | note | a reminder they asked for is set: confirm it with the time code worked out (J50) | v1 |
+| `notes/reminder-set` | note | a reminder they asked for is set: confirm it with the time code worked out, and that it will message them then itself (J50) | v2 |
 | `notes/reminder-ask` | note | a reminder they asked for has an unclear time: ask about that one thing (J50) | v1 |
 | `notes/reminder-cancelled` | note | a reminder they asked to drop is dropped: say so (J50) | v1 |
 | `notes/occasion-day` | note | after the history on a casual turn: today is a public or cultural day; a light nod if it fits, assuming no celebration, plans or family (`features/calendar`) | v1 |

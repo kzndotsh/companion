@@ -67,7 +67,7 @@ def _reasons(store: Store) -> list[str]:
 async def test_a_clear_request_is_stored_and_the_reply_is_told_the_time(store: Store) -> None:
     judge = Reminding(_slots(hour=8, ampm="pm"))
     card = await _say(store, judge, "remind me at 8pm to take the dog out")
-    assert "It is set for tonight at 8:00 pm" in card
+    assert "this one is set for tonight at 8:00 pm" in card
     [r] = store.reminders(REL)
     assert (r.state, r.kind, r.thing) == ("pending", Kind.REMINDER, "take the dog out")
     assert r.due_at == datetime(2026, 10, 20, 0, 0, tzinfo=UTC)

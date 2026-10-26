@@ -2307,3 +2307,15 @@ here are weaker than the single "one thing of your own that they did not say" no
 (61 / 62 of 72 over all 12 turns), so the wording is worth one more round. Cost about $0.09. Rerun:
 scratch script `bakeoff.py` and the judging brief.
 
+
+## 2026-10-26: The reminder note has to say it can send the reminder
+
+The first real reminder was set by code for 2:54 pm, and the reply said it could not send a
+notification later and told them to set a phone alarm. The note (`notes/reminder-set` v1) said only
+"It is set for ...", and the talker read that as something it could not do. Replayed on that turn
+(local fixture `reminder-set-but-denied-local`, Luna, plain persona v41): v1 denied the reminder in
+24 of 30 replies, twice, and gave the time in 17 of 30. The same note saying it can message them later
+on its own, because code sends reminders when they are due: 1 of 30 denied, 29 of 30 gave the time.
+With "never say you cannot send it" added: 0 of 30 and 30 of 30, within noise of the one before;
+shipped as v2. Rerun: the fixture with `--samples 30`, or the scratch script swapping the note line
+in the recorded request. Cost under one cent.
