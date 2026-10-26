@@ -1,10 +1,12 @@
-"""Reminders and check-ins they ask for (one-off): "remind me at 8pm to take the dog out", "check up
-on me in a few days about the interview".
+"""Reminders, check-ins and greetings they ask for: "remind me at 8pm to take the dog out", "check
+up on me in a few days about the interview", "tell me good morning every day".
 
 A small model reads the request into slots (what, the day words, the time words, whether am or pm
 was said); code turns the slots into a time in their zone with fixed rules, and asks instead of
-guessing when the time is unclear ("at 8" in the morning, "next friday", a time already past). The
-model never sets the clock. No benchmark covers this kind of phrase, so the rules are plain and
+guessing when the time is unclear ("at 8" in the morning, "next friday", a time already past). A
+repeating one is a series: every day or every week on one day, at the time they said or, for a
+greeting with no time, a time learned from when they usually start or end their day. The model
+never sets the clock. No benchmark covers this kind of phrase, so the rules are plain and
 tested here, and the reading is tested on made-up phrases (`tests/live`).
 """
 
@@ -17,7 +19,7 @@ from datetime import date, datetime, time, timedelta, tzinfo
 from enum import StrEnum
 from random import Random
 
-from companion.core.types import Json, Speaker, Utterance
+from companion.core.types import Json, RelationshipId, Speaker, TurnId, Utterance
 from companion.prompts import get
 
 PROMPT = get("system/reminder-read")
@@ -36,6 +38,12 @@ GRACE = timedelta(hours=2)  # a reminder this late still goes out, marked late; 
 class Kind(StrEnum):
     REMINDER = "reminder"
     CHECK_IN = "check_in"
+    GREETING = "greeting"  # a ritual message they ask for: "say goodnight every night"
+
+
+# How often a repeating one goes: every day, every week on a weekday, or something else, which is
+# asked about. Optional in the schema, so an answer without it reads as before.
+EVERY = ("unsaid", "day", *WEEKDAYS, "other")
 
 
 class Ask(StrEnum):
@@ -66,6 +74,7 @@ SCHEMA: dict[str, Json] = {
         "part": {"type": "string", "enum": ["morning", "afternoon", "evening", "night", "unsaid"]},
         "in_minutes": {"type": ["integer", "null"]},
         "repeats": {"type": "boolean"},
+        "every": {"type": "string", "enum": list(EVERY)},
     },
     "required": ["ask", "kind", "thing", "day", "ampm", "part", "repeats"],
 }
@@ -89,6 +98,7 @@ class Slots:
     part: str = "unsaid"
     in_minutes: int | None = None
     repeats: bool = False
+    every: str = "unsaid"
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,6 +131,7 @@ def parse(data: Json) -> Slots | None:
         v = fields.get(k)
         return v if isinstance(v, str) else ""
 
+    every = text("every").lower() or "unsaid"
     return Slots(
         Ask(str(ask)),
         Kind(str(kind)),
@@ -136,6 +147,7 @@ def parse(data: Json) -> Slots | None:
         part=text("part") or "unsaid",
         in_minutes=_int(data.get("in_minutes")),
         repeats=data.get("repeats") is True,
+        every=every if every in EVERY else "other",
     )
 
 
@@ -175,7 +187,7 @@ def _day(s: Slots, today: date) -> date | str:  # noqa: PLR0911
     return "which day they meant"
 
 
-def _clock(s: Slots, now: datetime, day: date) -> time | str | None:  # noqa: PLR0911
+def clock_of(s: Slots, now: datetime, day: date) -> time | str | None:  # noqa: PLR0911
     """The time of day, why it is unclear, or None for a check-in left to the window. A bare hour is
     read as the next one still to come, and asked about only when both the morning and the evening
     one are still ahead today."""
@@ -229,7 +241,7 @@ def resolve(s: Slots, now: datetime, tz: tzinfo, rng: Random | None = None) -> W
         day = _day(s, local.date())
         if isinstance(day, str):
             return When(None, day)
-        clock = _clock(s, local, day)
+        clock = clock_of(s, local, day)
         if isinstance(clock, str):
             return When(None, clock)
         if clock is None:
@@ -278,7 +290,7 @@ SET_NOTE, ASK_NOTE, CANCELLED_NOTE = (
     get("notes/reminder-ask"),
     get("notes/reminder-cancelled"),
 )
-SEND = get("system/reminder-send")
+SEND, GREETING_SEND = get("system/reminder-send"), get("system/greeting-send")
 ONE_OFF = "only one-off reminders can be set for now, so offer to set just the next one"
 
 
@@ -298,39 +310,135 @@ def read_prompt(prior: Sequence[Utterance], said: str, now: datetime, tz: tzinfo
     )
 
 
-_FILLER = {"the", "that", "this", "thing", "one", "reminder", "about", "and", "for", "you", "it's"}
+_FILLER = {
+    "the", "that", "this", "thing", "one", "reminder", "reminders", "about", "and", "for", "you",
+    "it's", "good", "every", "daily", "saying",
+}  # fmt: skip
+
+
+def _words(text: str) -> set[str]:
+    """The words a cancel is matched on: "goodnight" and "good night" both come to "night"."""
+    found = {w.removeprefix("good") or w for w in re.findall(r"[a-z']+", text.lower())}
+    return {w for w in found if len(w) >= 3} - _FILLER
 
 
 def matching(pending: Sequence[tuple[str, str]], thing: str) -> list[str]:
-    """Which pending reminders (id, thing) a cancel names: those sharing a word with what they said
-    (filler words aside), or the only one when nothing is named."""
-    said = {w for w in re.findall(r"[a-z']+", thing.lower()) if len(w) >= 3} - _FILLER
-    hits = [rid for rid, t in pending if said & set(re.findall(r"[a-z']+", t.lower()))]
+    """Which pending reminders or series (id, thing) a cancel names: those sharing a word with what
+    they said (filler words aside), or the only one when nothing is named."""
+    said = _words(thing)
+    hits = [rid for rid, t in pending if said & _words(t)]
     if hits:
         return hits
     return [pending[0][0]] if len(pending) == 1 else []
 
 
-def set_note(thing: str, when: str, *, defaulted: bool) -> str:
+def asked_for(kind: Kind, thing: str) -> str:
+    """What they asked it to do, for a note: "remind them about the dog", "say goodnight to
+    them"."""
+    return f"say {thing} to them" if kind is Kind.GREETING else f"remind them about {thing}"
+
+
+def set_note(kind: Kind, thing: str, when: str, *, defaulted: bool) -> str:
     extra = " Say they can change the time." if defaulted else ""
-    return SET_NOTE.render(what=f"remind them about {thing}", when=when, extra=extra)
+    return SET_NOTE.render(what=asked_for(kind, thing), when=when, extra=extra)
 
 
-def ask_note(thing: str, reason: str) -> str:
-    return ASK_NOTE.render(what=f"remind them about {thing}", reason=reason)
+def ask_note(kind: Kind, thing: str, reason: str) -> str:
+    return ASK_NOTE.render(what=asked_for(kind, thing), reason=reason)
 
 
-def cancelled_note(thing: str) -> str:
-    return CANCELLED_NOTE.render(what=f"remind them about {thing}")
+def cancelled_note(what: str) -> str:
+    """`what` is each dropped one as `asked_for` says it, a series with how often it went."""
+    return CANCELLED_NOTE.render(what=what)
 
 
 def send_instruction(kind: Kind, thing: str) -> str:
+    if kind is Kind.GREETING:
+        return GREETING_SEND.render(what=thing)
     what = (
         f"check in on how {thing} went" if kind is Kind.CHECK_IN else f"remind them about {thing}"
     )
     return SEND.render(what=what)
 
 
+def sent_with(kind: Kind) -> str:
+    """The `name@version` of the prompt a due one of this kind is written with."""
+    return (GREETING_SEND if kind is Kind.GREETING else SEND).ref
+
+
 def plain(kind: Kind, thing: str) -> str:
     """What goes out when the talker cannot write it: their words, marked."""
+    if kind is Kind.GREETING:
+        return thing
     return f"⏰ {thing}" if kind is Kind.REMINDER else f"hey, how did {thing} go?"
+
+
+# Repeating ones. A series is the standing request; each time it falls is an ordinary reminder row
+# with the series' id and its number in it, made once the one before has ended.
+
+
+class Part(StrEnum):
+    """The part of the day a greeting belongs to. A morning or night greeting with no time said
+    goes at a time learned from when they usually start or end their day, and is skipped by its own
+    rule; anything else has a time they said."""
+
+    MORNING = "morning"
+    NIGHT = "night"
+    OTHER = "other"
+
+
+class Standing(StrEnum):
+    """A series' state, its newest event."""
+
+    ACTIVE = "active"
+    PAUSED = "paused"  # greetings nobody answered; it resumes when they write
+    STOPPED = "stopped"
+
+
+@dataclass(frozen=True, slots=True)
+class Repeat:
+    """When a series falls: every day, or every week on `weekday` (Monday 0), at the wall time
+    they said, or with `at` None at a time learned for `part` (morning or night)."""
+
+    weekday: int | None
+    at: time | None
+    part: Part = Part.OTHER
+
+    @property
+    def rule(self) -> str:
+        return "daily" if self.weekday is None else "weekly"
+
+
+@dataclass(frozen=True, slots=True)
+class Reminder:
+    """One reminder: a one-off, or one occurrence of a series (`series_id`, its number `seq`).
+    Its state is its newest event, which happened at `state_at`."""
+
+    id: str
+    relationship_id: RelationshipId
+    kind: Kind
+    thing: str
+    quote: str
+    due_at: datetime
+    local_wall: str
+    zone: str
+    turn_id: TurnId
+    created_at: datetime
+    state: str = "pending"
+    series_id: str | None = None
+    seq: int | None = None
+    state_at: datetime | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Series:
+    id: str
+    relationship_id: RelationshipId
+    kind: Kind
+    thing: str
+    quote: str
+    repeat: Repeat
+    zone: str
+    turn_id: TurnId
+    created_at: datetime
+    state: Standing = Standing.ACTIVE

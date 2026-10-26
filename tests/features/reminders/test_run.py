@@ -9,9 +9,8 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
-from companion.features.reminders.logic import Kind
+from companion.features.reminders.logic import Kind, Reminder
 from companion.features.reminders.run import ASKED, CANCELLED, SET, deliver_due
-from companion.features.reminders.store import Reminder
 from companion.loops.conversation import Conversation
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

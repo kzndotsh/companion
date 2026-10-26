@@ -32,6 +32,7 @@ PLACEHOLDERS = {
     "notes/clock-gap": {"gap"},
     "notes/history-gap": {"when", "stamp"},
     "notes/reminder-set": {"what", "when", "extra"},
+    "notes/reminder-repeat": {"what", "every", "first", "extra"},
     "notes/reminder-ask": {"what", "reason"},
     "notes/reminder-cancelled": {"what"},
     "notes/occasion-day": {"name"},
@@ -40,6 +41,7 @@ PLACEHOLDERS = {
     "notes/occasion-theirs": {"name"},
     "notes/now-soon": {"ago", "what"},
     "system/reminder-send": {"what"},
+    "system/greeting-send": {"what"},
     "notes/crisis-concern": {"line"},
     "messages/crisis-line": {"line"},
 }

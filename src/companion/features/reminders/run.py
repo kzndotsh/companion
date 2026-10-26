@@ -39,10 +39,11 @@ from companion.features.reminders.logic import (
     ONE_OFF,
     PROMPT,
     SCHEMA,
-    SEND,
     Ask,
+    Reminder,
     Slots,
     ask_note,
+    asked_for,
     cancelled_note,
     likely,
     matching,
@@ -51,11 +52,11 @@ from companion.features.reminders.logic import (
     read_prompt,
     resolve,
     send_instruction,
+    sent_with,
     set_note,
     spoken,
     trusted,
 )
-from companion.features.reminders.store import Reminder
 from companion.loops.ask import Judge, ask
 from companion.loops.current import Heard, Turn, mark
 from companion.loops.features import Feature, Offer, Offered
@@ -115,15 +116,17 @@ def act(  # noqa: PLR0913, PLR0917
             return None
         for rid in hit:
             c.store.reminder_event(rid, "cancelled", "they asked to drop it", now)
-        things = [r.thing for r in pending if r.id in hit]
+        things = [asked_for(r.kind, r.thing) for r in pending if r.id in hit]
         return Read(cancelled_note(" and ".join(things)), CANCELLED, {"reminders": list[Json](hit)})
     if s.ask is not Ask.SET or not s.thing:
         return None
     if s.repeats:
-        return Read(ask_note(s.thing, ONE_OFF), ASKED, {"why": "repeating"}, asks=True)
+        return Read(ask_note(s.kind, s.thing, ONE_OFF), ASKED, {"why": "repeating"}, asks=True)
     when = resolve(s, now, tz)
     if when.at is None:
-        return Read(ask_note(s.thing, when.unclear), ASKED, {"why": when.unclear}, asks=True)
+        return Read(
+            ask_note(s.kind, s.thing, when.unclear), ASKED, {"why": when.unclear}, asks=True
+        )
     local = when.at.astimezone(tz)
     r = Reminder(
         uuid.uuid4().hex,
@@ -140,7 +143,7 @@ def act(  # noqa: PLR0913, PLR0917
     c.store.add_reminder(r)
     told = spoken(when.at, now, tz, loose=when.loose)
     return Read(
-        set_note(s.thing, told, defaulted=when.defaulted),
+        set_note(s.kind, s.thing, told, defaulted=when.defaulted),
         SET,
         {"reminder": r.id, "kind": s.kind.value, "due": told, "defaulted": when.defaulted},
     )
@@ -246,7 +249,7 @@ async def deliver_due(  # noqa: PLR0913
             turn,
             f"reminders: sent{' late' if late else ''}",
             now,
-            {"reminder": r.id, "kind": r.kind.value, "by": by, "prompt": SEND.ref},
+            {"reminder": r.id, "kind": r.kind.value, "by": by, "prompt": sent_with(r.kind)},
         )
         log.info("reminder %s sent%s: %s", r.id[:8], " late" if late else "", text)
         sent += 1

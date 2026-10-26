@@ -829,9 +829,15 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/reminder-send
 - **system/reminder-send v1** (current). New (J50). When a reminder is due, the talker is sent its usual request with this after the history (the `tail`), so the reminder comes in its own voice: one short message naming the thing, no guilt, no question to answer.
 
+## system/greeting-send
+- **system/greeting-send v1** (current). New (J50, greetings). A greeting they asked for ("tell me good morning every day") is due: the talker gets its usual request with this after the history, in place of `system/reminder-send`. One short message in its own voice, worded unlike the ones it sent on earlier days (they are in the history), touching the last chat or their day only if there is something real, no question they have to answer, and never that they have not written. Not measured yet.
+
 ## notes/reminder-set
 - **notes/reminder-set v1**. New (J50). The reminder is stored; the reply confirms it with the time as code worked it out ("tomorrow at 9:00 am"), so a misread shows at once. A time code filled in ("in a few days") adds that they can change it. From 2026-10-21, a check-in with no time ("in a few days") is set at a time code picks once between 4 and 8 pm, on five-minute marks, and the note names only the part of the day ("Thursday evening"), so it reads like a friend checking in, not a timer. A time they said stays exact.
 - **notes/reminder-set v2** (current). The note now says it can message them later on its own (code sends reminders when due) and never to say it cannot or to tell them to set it themselves. On the first real reminder (2026-10-26) the reply said it could not send a notification later and told them to set a phone alarm, though the reminder was set; v1 replayed on that turn denied it 24 of 30 times (twice), the capability alone 1 of 30, with the never line 0 of 30 (`evals/CHANGELOG.md`).
+
+## notes/reminder-repeat
+- **notes/reminder-repeat v1** (current). New (J50, repeating ones). A series is set: the note says what they asked for, how often it goes ("every day at 8:00 am", "every Monday at 6:00 pm") and when the first one is, with the capability and the never line of `notes/reminder-set` v2. A greeting with no time said goes at a time learned from their messages, so the note says it goes around when they usually start (or end) their day, the first one by its day and part ("tomorrow morning"), and adds that it names no clock time: an exact time would be made up and would move. A part of the day alone ("every evening") has its fixed hour and adds that they can change it. Not measured yet.
 
 ## notes/reminder-ask
 - **notes/reminder-ask v1** (current). New (J50). The time was unclear (a bare "at 8" with both still ahead today, "next friday", a time already gone, more than sixty days out, a repeating one): nothing is stored, and the reply asks about that one thing.

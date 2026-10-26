@@ -122,6 +122,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/scene-play` | note | a pretend scene is in progress | v1 |
 | `notes/scene-story` | note | they are telling a story | v1 |
 | `notes/reminder-set` | note | a reminder they asked for is set: confirm it with the time code worked out, and that it will message them then itself (J50) | v2 |
+| `notes/reminder-repeat` | note | a repeating reminder, check-in or greeting is set: confirm how often and when the first goes, a learned time only as when they usually start or end their day (J50) | v1 |
 | `notes/reminder-ask` | note | a reminder they asked for has an unclear time: ask about that one thing (J50) | v1 |
 | `notes/reminder-cancelled` | note | a reminder they asked to drop is dropped: say so (J50) | v1 |
 | `notes/occasion-day` | note | after the history on a casual turn: today is a public or cultural day; a light nod if it fits, assuming no celebration, plans or family (`features/calendar`) | v1 |
@@ -163,6 +164,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/risk` | system | the crisis path's risk judge: kind, literal or not, timing, a plan or means; read three times, code picks the level and fails safe (ADR 0022) | v1 |
 | `system/reminder-read` | system | whether a message asks to be reminded, checked on or to cancel one, and the words of when; code works out the time (J50) | v1 |
 | `system/reminder-send` | system | the instruction sent after the history when a reminder is due: one short message naming it (J50) | v1 |
+| `system/greeting-send` | system | the instruction sent after the history when a greeting they asked for is due: one short message, worded unlike the earlier days', no question, no guilt (J50) | v1 |
 | `system/lore-label` | system | the kind of each of the companion's own views: taste (its lore), stance, rule, self or lived (ADR 0020) | v1 |
 | `system/memory-names` | system | the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |

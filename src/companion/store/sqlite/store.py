@@ -54,7 +54,7 @@ from companion.features.promises.logic import Promise
 from companion.features.promises.store import Recorded as RecordedPromise
 from companion.features.reach import store as reach
 from companion.features.reminders import store as reminders
-from companion.features.reminders.store import Reminder
+from companion.features.reminders.logic import Reminder, Series, Standing
 from companion.features.threads import store as open_loops
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.store import ReachOut
@@ -417,6 +417,21 @@ class Store:
 
     def reminders(self, rel: RelationshipId) -> list[Reminder]:
         return reminders.all_(self._conn, rel)
+
+    def add_occurrence(self, r: Reminder) -> bool:
+        return reminders.add_occurrence(self._conn, r)
+
+    def add_series(self, s: Series) -> None:
+        reminders.add_series(self._conn, s)
+
+    def series_event(self, series_id: str, state: Standing, reason: str, at: datetime) -> None:
+        reminders.series_event(self._conn, series_id, state, reason, at)
+
+    def series(self, rel: RelationshipId) -> list[Series]:
+        return reminders.all_series(self._conn, rel)
+
+    def their_times(self, rel: RelationshipId, since: datetime) -> list[datetime]:
+        return reminders.their_times(self._conn, rel, since)
 
     def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
         promises.add(self._conn, p, model=model, prompt=prompt, at=at)

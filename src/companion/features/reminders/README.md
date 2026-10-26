@@ -39,9 +39,10 @@ It asks instead of guessing for a bare "at 8" when both are still ahead, "next f
 
 | File | What |
 |---|---|
-| `logic.py` | pure: reading the parts of when, working out the time, the notes and the send instruction |
+| `logic.py` | pure: the rows (a reminder, a series), reading the parts of when, working out the time, the notes and the send instruction |
+| `series.py` | pure: repeating ones, when the next falls, a learned time, when a greeting is skipped, when a series pauses, the repeat note |
 | `run.py` | effects: the turn's look-up and note, acting on a read, sending when due (`REMINDERS`, `deliver_due`) |
-| `store.py` | its queries (the tables are in `store/sqlite/migrations/0026_reminders.sql`) |
+| `store.py` | its queries (the tables are in `store/sqlite/migrations/0026_reminders.sql` and `0035_series.sql`) |
 | `cli.py` | `companion reminders`, `--cancel ID` |
 
 ## Prompts
@@ -49,6 +50,8 @@ It asks instead of guessing for a bare "at 8" when both are still ahead, "next f
 - `system/reminder-read`: reads a request into slots. A failed or unreadable answer means no reminder that turn.
 - `system/reminder-send`: the tail that tells the talker what to write when a reminder is due. If it fails, their words go out marked.
 - `notes/reminder-set`: says it was set, with the time in words.
+- `notes/reminder-repeat`: says a repeating one was set, how often, and when the first goes.
+- `system/greeting-send`: the tail that tells the talker to send a greeting they asked for.
 - `notes/reminder-ask`: says what to ask about the time.
 - `notes/reminder-cancelled`: says one was cancelled.
 
