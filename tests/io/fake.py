@@ -18,6 +18,7 @@ class Fake:
     """`calls` holds "send <text>", "react <id> <emoji>" and "typing", in order. `script` is what
     `receive` queues: each message after its delay. `refuse` says whether the nth send fails."""
 
+    limit: int = 4096
     script: list[tuple[float, Incoming]] = field(default_factory=list[tuple[float, Incoming]])
     refuse: Callable[[int], bool] = lambda n: False
     react_fails: bool = False

@@ -444,3 +444,17 @@ async def test_code_s_own_message_still_goes_when_the_reply_could_not() -> None:
     sent, told = await _then(True)
     assert sent == ["the fixed line"]
     assert told == ["i'm here"]
+
+
+async def test_a_reply_longer_than_the_surface_takes_goes_as_several_messages() -> None:
+    reply = "Short one. " * 30
+
+    async def talk(text: str) -> str:
+        del text
+        return reply
+
+    fake = Fake(limit=100)
+    await Surface(fake).reply_to(msg("hi"), talk, {})
+    assert len(fake.sent) > 1
+    assert all(len(p) <= 100 for p in fake.sent)
+    assert " ".join(fake.sent).split() == reply.split()

@@ -34,7 +34,9 @@ still refused after that is marked undelivered. The typing indicator never waits
 A long, plain reply is sometimes sent as two or three messages, the way people text
 (`COMPANION_SPLIT`, on unless `off`; `io/split.py`). Cuts fall only at sentence boundaries, and a
 reply with quoted speech, as in roleplay, is never split. The ledger and the history keep it as one
-reply, so the model never sees the splitting.
+reply, so the model never sees the splitting. Whatever the split setting, a message is never longer
+than the surface takes (4096 characters on Telegram, 2000 on Discord): a longer part is cut after the
+last sentence that fits, else at a space, and goes as several messages.
 
 On a turn the crisis path reads as urgent with `COMPANION_CRISIS=on`, the turn hands Telegram a
 second, fixed message of code's own after the reply (`ThenSend`, ADR 0022): the crisis line. It goes

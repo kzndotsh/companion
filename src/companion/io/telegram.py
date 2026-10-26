@@ -29,6 +29,8 @@ class RateLimited(TelegramError):
 
 
 class Telegram:
+    limit = 4096  # the Bot API refuses a longer message
+
     def __init__(self, token: str, allowed_user: int, client: httpx.AsyncClient) -> None:
         self._base = f"https://api.telegram.org/bot{token}"
         self._allowed = allowed_user

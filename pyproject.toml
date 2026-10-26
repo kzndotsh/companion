@@ -5,6 +5,7 @@ requires-python = ">=3.12"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE"]
 dependencies = [
+    "discord-py>=2.7.1",
     "holidays==0.107",
     "httpx>=0.28.1",
 ]
@@ -35,6 +36,7 @@ packages = ["src/companion"]
 testpaths = ["tests"]
 addopts = "-q -m 'not live' --strict-markers --strict-config"
 xfail_strict = true
+filterwarnings = ["ignore:'audioop' is deprecated:DeprecationWarning"]  # discord.py's voice, unused
 asyncio_mode = "auto"
 markers = [
     "live: hits real endpoints; never in CI",

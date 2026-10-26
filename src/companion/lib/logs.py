@@ -1,8 +1,9 @@
 """Where the logs go. The console keeps the short INFO view; a rotating file keeps everything.
 
 The file is for debugging: every stage of a turn, every judge, every model call and every Telegram
-call, at DEBUG. Secrets are scrubbed from both outputs by value, so a token that slips into an
-error message or a URL never reaches a log. What people said is logged in full on purpose; this is
+or Discord call, at DEBUG. Secrets (any variable ending in _TOKEN or _KEY, both bot tokens among
+them) are scrubbed from both outputs by value, so a token that slips into an error message or a URL
+never reaches a log. What people said is logged in full on purpose; this is
 a single-user local project, and the file lives under `data/`, which is not committed.
 """
 
@@ -22,7 +23,7 @@ SECRET_SUFFIXES = ("_KEY", "_TOKEN", "_SECRET", "_PASSWORD")
 FORMAT = "%(asctime)s.%(msecs)03d %(levelname)-7s %(name)s: %(message)s"
 DATE_FORMAT = "%H:%M:%S"
 FILE_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-NOISY = ("httpx", "httpcore", "hpack", "asyncio")
+NOISY = ("httpx", "httpcore", "hpack", "asyncio", "discord")
 
 
 def secrets_in(env: Mapping[str, str]) -> list[str]:
@@ -79,7 +80,8 @@ def configure(log_dir: Path, env: Mapping[str, str] | None = None) -> Path:
         handler._companion = True  # type: ignore[attr-defined]
         root.addHandler(handler)
     root.setLevel(logging.DEBUG)
-    # httpx logs full request URLs at INFO and Telegram puts the bot token in the URL.
+    # httpx logs full request URLs at INFO and Telegram puts the bot token in the URL; discord.py
+    # logs every gateway event and request at DEBUG.
     for name in NOISY:
         logging.getLogger(name).setLevel(logging.WARNING)
     return path

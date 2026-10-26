@@ -21,11 +21,16 @@ def _clean_root() -> object:
 def test_only_credential_looking_variables_are_secrets() -> None:
     env = {
         "TELEGRAM_BOT_TOKEN": "123456:abcdefgh",
+        "DISCORD_BOT_TOKEN": "MTIz.discord.token",
         "OPENROUTER_API_KEY": "sk-or-v1-longvalue",
         "HOME": "/home/someone",
         "SHORT_KEY": "abc",
     }
-    assert set(logs.secrets_in(env)) == {"123456:abcdefgh", "sk-or-v1-longvalue"}
+    assert set(logs.secrets_in(env)) == {
+        "123456:abcdefgh",
+        "MTIz.discord.token",
+        "sk-or-v1-longvalue",
+    }
 
 
 def test_a_secret_never_reaches_the_file_even_in_a_traceback(tmp_path: Path) -> None:
@@ -63,3 +68,4 @@ def test_httpx_stays_quiet_and_calling_twice_does_not_double_the_handlers(
     ours = [h for h in logging.getLogger().handlers if getattr(h, "_companion", False)]
     assert len(ours) == 2
     assert logging.getLogger("httpx").level == logging.WARNING
+    assert logging.getLogger("discord").level == logging.WARNING

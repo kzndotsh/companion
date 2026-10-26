@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from companion.io.split import MIN_PART_WORDS, SPLIT_CHANCE, eligible, sentences, split_reply
+from companion.io.split import (
+    MIN_PART_WORDS,
+    SPLIT_CHANCE,
+    eligible,
+    fit,
+    sentences,
+    split_reply,
+)
 
 TWO = (
     "A lot of it is learned association: the smell is tied to waking up, comfort, and that first "
@@ -73,3 +80,17 @@ def test_pick_varies_where_it_is_cut_when_there_is_a_choice() -> None:
 
 def test_sentences_keeps_the_punctuation() -> None:
     assert sentences("One. Two! Three? Four…") == ["One.", "Two!", "Three?", "Four…"]
+
+
+def test_a_reply_too_long_for_the_surface_is_cut_after_a_sentence() -> None:
+    text = "One short sentence here. " + "word " * 30 + "end."
+    parts = fit(text, 40)
+    assert all(len(p) <= 40 for p in parts)
+    assert parts[0] == "One short sentence here."
+    assert " ".join(parts).split() == text.split()
+
+
+def test_without_a_sentence_end_it_cuts_at_a_space_and_without_one_at_the_limit() -> None:
+    assert fit("aaaa bbbb cccc", 9) == ["aaaa bbbb", "cccc"]
+    assert fit("x" * 25, 10) == ["x" * 10, "x" * 10, "x" * 5]
+    assert fit("fits", 10) == ["fits"]

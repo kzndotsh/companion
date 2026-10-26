@@ -17,7 +17,7 @@ from typing import Protocol
 
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.io.pace import hold_seconds, read_seconds
-from companion.io.split import split_reply
+from companion.io.split import fit, split_reply
 from companion.io.stop import cancel_when, next_message
 
 log = logging.getLogger("companion.surface")
@@ -49,6 +49,11 @@ class Incoming:
 
 class Transport(Protocol):
     """One chat surface, talking to the one allowed user."""
+
+    @property
+    def limit(self) -> int:
+        """The longest message it accepts, in characters."""
+        ...
 
     async def receive(self, inbox: asyncio.Queue[Incoming], after: str | None) -> None:
         """Queue each new message from the allowed user, those after cursor `after` first, until
@@ -258,6 +263,7 @@ class Surface:
         typing time. A part that fails after an earlier one arrived stops the rest and is logged;
         the user has already seen the start, so only the parts that arrived are remembered."""
         parts = split_reply(text, random.random(), random.random()) if self._split else [text]  # noqa: S311
+        parts = [piece for part in parts for piece in fit(part, self.transport.limit)]
         if len(parts) > 1:
             log.info(
                 "splitting into %d messages (%s words)",
