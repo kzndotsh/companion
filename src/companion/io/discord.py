@@ -10,6 +10,7 @@ import asyncio
 import contextlib
 import logging
 from collections.abc import AsyncGenerator
+from typing import NoReturn
 
 import aiohttp
 import discord
@@ -19,8 +20,7 @@ from companion.io.surface import DeliveryError, Incoming
 log = logging.getLogger("companion.discord")
 TYPING_SECONDS = 2.0  # a typing indicator stuck behind a rate limit is skipped, never waited on
 _FAILURES = (
-    discord.HTTPException,
-    discord.ClientException,
+    discord.DiscordException,
     aiohttp.ClientError,
     OSError,
     TimeoutError,
@@ -61,18 +61,14 @@ class Discord:
         try:
             await asyncio.wait({gateway, ready}, return_when=asyncio.FIRST_COMPLETED)
             if not ready.done():
-                gateway.result()
-                msg = "discord gateway closed before it was ready"
-                raise DiscordError(msg)
+                await _gateway_closed(gateway, "before it was ready")
             log.info("discord: connected")
             if self._last is not None:
                 await self._catch_up(inbox, self._last)
             for message in self._early:
                 self._take(message, inbox)
             self._early, self._inbox = None, inbox
-            await gateway
-            msg = "discord gateway closed"
-            raise DiscordError(msg)
+            await _gateway_closed(gateway, "")
         finally:
             self._early, self._inbox = None, None
             ready.cancel()
@@ -89,6 +85,21 @@ class Discord:
             log.warning(
                 "could not fetch the messages missed while down: %s", _failed("history", err)
             )
+
+    async def on_ready(self) -> None:
+        """discord.py calls this on every new gateway session. After the first, the connection
+        dropped and could not resume, so the DMs sent in between were never delivered as events:
+        fetch them like the ones missed while down. A resumed session replays them itself."""
+        if self._inbox is None or self._last is None:
+            return
+        log.info("discord: a new session after a dropped connection; fetching what was missed")
+        await self._catch_up(self._inbox, self._last)
+
+    async def on_resumed(self) -> None:
+        log.info("discord: connection resumed")
+
+    async def on_disconnect(self) -> None:
+        log.info("discord: disconnected; discord.py reconnects")
 
     async def on_message(self, message: discord.Message) -> None:
         """discord.py calls this for every message it sees."""
@@ -144,6 +155,16 @@ class Discord:
             log.warning("typing indicator skipped: %s", _failed("typing", err))
 
 
+async def _gateway_closed(gateway: asyncio.Task[None], when: str) -> NoReturn:
+    """Wait for the gateway to end and raise why, as a `DiscordError` that names no token."""
+    try:
+        await gateway
+    except _FAILURES as err:
+        raise DiscordError(_failed("gateway", err)) from None
+    msg = f"discord gateway closed {when}".strip()
+    raise DiscordError(msg)
+
+
 @contextlib.asynccontextmanager
 async def connected(token: str, allowed_user: int) -> AsyncGenerator[Discord]:
     """A logged-in Discord transport. Sending works from here on; the gateway connects when the
@@ -152,7 +173,13 @@ async def connected(token: str, allowed_user: int) -> AsyncGenerator[Discord]:
     intents.dm_messages = True
     client = discord.Client(intents=intents)
     transport = Discord(client, allowed_user)
-    client.event(transport.on_message)
+    for handler in (
+        transport.on_message,
+        transport.on_ready,
+        transport.on_resumed,
+        transport.on_disconnect,
+    ):
+        client.event(handler)
     async with client:
         try:
             await client.login(token)

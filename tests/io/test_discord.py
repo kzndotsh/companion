@@ -142,6 +142,22 @@ async def test_missed_messages_come_first_and_one_seen_twice_is_queued_once() ->
     assert got == ["missed a", "missed b", "during catch-up", "later"]
 
 
+async def test_a_new_session_after_a_dropped_connection_fetches_what_was_missed() -> None:
+    dm = FakeDM()
+    dc, _ = _discord(dm)
+    inbox: asyncio.Queue[Incoming] = asyncio.Queue()
+    task = asyncio.create_task(dc.receive(inbox, "100"))
+    await asyncio.sleep(0.01)
+    await dc.on_message(_message(101, "before the drop"))
+    dm.old = [_message(101, "before the drop"), _message(102, "during the gap")]
+    await dc.on_ready()
+    await dc.on_message(_message(103, "after"))
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+    got = [inbox.get_nowait().text for _ in range(inbox.qsize())]
+    assert got == ["before the drop", "during the gap", "after"]
+
+
 async def test_a_message_answered_before_a_restart_is_not_answered_again() -> None:
     saved: dict[str, str] = {}
     answered: list[str] = []

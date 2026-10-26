@@ -22,7 +22,9 @@ bot restarts mid-turn. The record is the store setting `telegram.last_update_id`
 `discord.last_message_id` (a message id). On a start, Telegram resumes polling past the recorded
 update. Discord fetches the direct messages that came after the recorded one, oldest first, answers
 them, and then takes new ones as they come; a message that shows up both ways is queued once. On a
-first start, with nothing recorded, nothing old is answered.
+first start, with nothing recorded, nothing old is answered. When Discord's connection drops and
+cannot resume, discord.py starts a new session and the messages sent in the gap never arrive as
+events, so on each new session after the first it fetches them the same way.
 
 On SIGTERM or SIGINT the bot takes nothing more, answers what it has already received, the reply in
 progress included, and only then exits, for up to 30 seconds (`io/stop.py`). `just restart` waits for
