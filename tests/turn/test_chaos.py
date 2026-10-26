@@ -101,6 +101,11 @@ def _floor_withheld(store: Store, turn: TurnId) -> bool:
     return False
 
 
+async def _settled(convo: Conversation) -> None:
+    if convo.habits.pending is not None:
+        await asyncio.gather(convo.habits.pending, return_exceptions=True)
+
+
 def _conversation(store: Store, judge: Chaos | None, talker: Talker) -> Conversation:
     return Conversation(
         store,
@@ -138,6 +143,7 @@ async def test_whatever_the_judges_do_each_turn_keeps_its_invariants(
             turn = theirs[-1].turn_id
             replied = any(u.turn_id == turn for u in history if u.speaker is Speaker.COMPANION)
             assert replied or _floor_withheld(store, turn), text
+    await _settled(convo)
     store.close()
 
 
@@ -152,7 +158,8 @@ async def test_a_judge_that_always_fails_sends_the_talker_what_no_judge_would(
         for i, text in enumerate(MESSAGES):
             await handle(convo, SESSION, text, "test", NOW + timedelta(minutes=3 * i))
         sent[name] = [(_unvaried(r.card), r.tail) for r in talker.seen]
-        store.close()
+        await _settled(convo)
+    store.close()
     assert sent["fails"] == sent["none"]
 
 
@@ -174,4 +181,5 @@ async def test_a_turn_that_fails_after_listening_still_keeps_their_message_once(
     assert [(u.speaker, u.text, u.frame.value) for u in theirs] == [
         (Speaker.USER, "hey there", "real")
     ]
+    await _settled(convo)
     store.close()
