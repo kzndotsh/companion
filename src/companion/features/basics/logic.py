@@ -12,6 +12,7 @@ import re
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 
+from companion.core.turn.address import names_them
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -28,16 +29,11 @@ from companion.prompts import get
 ASK_NAME = get("notes/ask-name")
 ASK_EVERY = timedelta(hours=24)
 ASKED = "basics: offered to ask what to call them"
-_NAMED = re.compile(
-    r"\buser'?s? (?:first |real )?name is\b|\buser (?:is called|goes by|is named)\b"
-    r"|\b(?:wants?|likes?|prefers?) (?:to be|being) called\b",
-    re.IGNORECASE,
-)
 
 
 def knows_name(beliefs: Iterable[Belief]) -> bool:
     """Whether a belief about them says what they are called."""
-    return any(b.subject is Subject.USER and _NAMED.search(b.claim) for b in beliefs)
+    return any(names_them(b) for b in beliefs)
 
 
 def ask_name(*, known: bool, casual: bool, asked_recently: bool) -> str | None:

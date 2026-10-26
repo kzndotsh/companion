@@ -429,7 +429,13 @@ async def run(data_dir: Path) -> None:
             else None
         )
         embed = (convo.embedder, convo.embed_model) if convo.embedder is not None else None
-        history = pass_step(s.mode("history"), character.sheet if character is not None else "")
+        steps = [
+            step
+            for step in (
+                pass_step(s.mode("history"), character.sheet if character is not None else ""),
+            )
+            if step is not None
+        ]
         pending: list[asyncio.Task[None]] = []
 
         async def reflect_after_idle() -> None:
@@ -450,7 +456,7 @@ async def run(data_dir: Path) -> None:
                         promises=s.on("promises"),
                         embed=embed,
                         loose_loops=s.on("loop notes"),
-                        history=history,
+                        steps=steps,
                     ),
                     REFLECT_RETRY_DELAYS,
                     "reflect",

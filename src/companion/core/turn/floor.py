@@ -55,6 +55,9 @@ EXPLICIT_SCHEMA: dict[str, Json] = {
 }
 
 
+MINOR_KEY = "minor check"  # the decision the narrow minor check logs, with `minor` in its detail
+BRUSH_KEY = "brush-off"  # the decision the brush-off read logs, with `declines` in its detail
+
 # The listening judge's age_coded is broad, and read adults' teasing in a pretend scene as
 # child-like 8 times in 8. A yes is asked again, narrowly: does the text
 # say or imply someone is under 18. Only a yes, or no reading, holds the turn (2026-10-26).

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import uuid
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime, tzinfo
 from typing import Protocol
@@ -79,7 +79,8 @@ class ReflectOptions:
     promises: bool = False  # read its own messages for promises it made (J12, shadow)
     embed: tuple[Embedder, str] | None = None  # embed new memories after the pass (model name)
     loose_loops: bool = False  # hedged plans become note-only loops (COMPANION_LOOP_NOTES)
-    history: _Step | None = None  # read its own messages for stories of its past (ADR 0025)
+    # Steps a switch adds to every pass: its own history (ADR 0025), the scene memory (ADR 0026).
+    steps: Sequence[_Step] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,10 +164,10 @@ async def reflect_once(  # noqa: PLR0913
     promises: bool = False,
     embed: tuple[Embedder, str] | None = None,
     loose_loops: bool = False,
-    history: _Step | None = None,
+    steps: Sequence[_Step] = (),
 ) -> ReflectResult:
     options = ReflectOptions(
-        now, same=same, promises=promises, embed=embed, loose_loops=loose_loops, history=history
+        now, same=same, promises=promises, embed=embed, loose_loops=loose_loops, steps=steps
     )
     return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), options)
 
@@ -416,8 +417,7 @@ async def reflect_from(
     new_wants = users.accepted_ids & wanted
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
     after = [*(AFTER_THEIRS if users.accepted else ()), *(AFTER_OWN if own.accepted else ())]
-    if options.history is not None:
-        after.append(options.history)
+    after.extend(options.steps)
     labelled = sum([(await step(store, extractor, rel, now)).cost_usd for step in after])
     if users.accepted and options.embed is not None:
         labelled += await _embed_new(store, rel, now, options.embed)

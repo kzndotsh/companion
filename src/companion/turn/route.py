@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import from_fallback
-from companion.core.turn.floor import BRUSHED, Route
+from companion.core.turn.floor import BRUSH_KEY, BRUSHED, MINOR_KEY, Route
 from companion.core.turn.floor import Talker as RouteTalker
 from companion.core.turn.floor import choose as choose_route
 from companion.core.types import (
@@ -100,7 +100,7 @@ async def _minor(c: Conversation, t: Turn) -> bool:
     detail: dict[str, Json] = {"minor": held, "read": got is not None, "prompt": MINOR.prompt.ref}
     if got is not None:
         detail["scorer"] = got.model
-    decide(c, t, "minor check", detail)
+    decide(c, t, MINOR_KEY, detail)
     return held
 
 
@@ -115,7 +115,7 @@ async def _declines(c: Conversation, t: Turn) -> bool:
     detail: dict[str, Json] = {"declines": found, "prompt": DECLINES.prompt.ref}
     if got is not None:
         detail["scorer"] = got.model
-    decide(c, t, "brush-off", detail)
+    decide(c, t, BRUSH_KEY, detail)
     return found
 
 

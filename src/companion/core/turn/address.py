@@ -8,6 +8,9 @@ never infers it.
 
 from __future__ import annotations
 
+import re
+
+from companion.core.types import Belief, Subject
 from companion.prompts import get
 
 KEY = "address"
@@ -18,3 +21,15 @@ def address_note(value: str | None) -> str | None:
     """The pinned line, or None when nothing is set."""
     text = (value or "").strip()
     return NOTE.render(address=text) if text else None
+
+
+_NAMED = re.compile(
+    r"\buser'?s? (?:first |real )?name is\b|\buser (?:is called|goes by|is named)\b"
+    r"|\b(?:wants?|likes?|prefers?) (?:to be|being) called\b",
+    re.IGNORECASE,
+)
+
+
+def names_them(b: Belief) -> bool:
+    """Whether a belief about them says what they are called: one of the basics a scene keeps."""
+    return b.subject is Subject.USER and _NAMED.search(b.claim) is not None
