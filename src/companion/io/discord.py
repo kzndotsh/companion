@@ -27,6 +27,12 @@ _FAILURES = (
 )
 
 
+def _not_the_guilds_warning(record: logging.LogRecord) -> bool:
+    """discord.py warns at every start that the guilds intent is off. It is off on purpose: this
+    transport only takes direct messages, which need no guild state."""
+    return not record.getMessage().startswith("Guilds intent seems to be disabled")
+
+
 class DiscordError(DeliveryError):
     """A Discord call failed. The message names the call and the status, never the token."""
 
@@ -171,6 +177,10 @@ async def connected(token: str, allowed_user: int) -> AsyncGenerator[Discord]:
     surface starts receiving, and closes when it stops, while replies still in progress go out."""
     intents = discord.Intents.none()
     intents.dm_messages = True
+    discord.VoiceClient.warn_nacl = discord.VoiceClient.warn_dave = False  # it never joins voice
+    state = logging.getLogger("discord.state")
+    if _not_the_guilds_warning not in state.filters:
+        state.addFilter(_not_the_guilds_warning)
     client = discord.Client(intents=intents)
     transport = Discord(client, allowed_user)
     for handler in (

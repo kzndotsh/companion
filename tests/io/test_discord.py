@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from types import SimpleNamespace
@@ -260,3 +261,19 @@ async def test_a_gateway_that_closes_stops_the_surface() -> None:
 
     with pytest.raises(DiscordError, match="gateway closed"):
         await asyncio.wait_for(Surface(dc).run(talk, {}), timeout=1)
+
+
+async def test_the_start_warnings_about_guilds_and_voice_are_silenced_and_others_are_not(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    async def accept(self: discord.Client, token: str) -> None:
+        del self, token
+
+    monkeypatch.setattr(discord.Client, "login", accept)
+    monkeypatch.setattr(discord.VoiceClient, "warn_nacl", True)
+    monkeypatch.setattr(discord.VoiceClient, "warn_dave", True)
+    with caplog.at_level(logging.WARNING, logger="discord"):
+        async with connected("TOKEN", ALLOWED):
+            logging.getLogger("discord.state").warning("something else went wrong")
+    warnings = [r.getMessage() for r in caplog.records]
+    assert warnings == ["something else went wrong"]
