@@ -64,7 +64,8 @@ Built and working:
 - **Since 2026-10-20.** Its own tastes shown back when the moment touches them (ADR 0020, live). In
   shadow: promises it makes read from its replies (J12, `companion promises`), names matched against
   memory (`companion names`), and its views labelled taste, stance, rule, self or lived (`companion lore`).
-- **Since 2026-10-21.** Reminders and check-ins they ask for, one-off, live (J50, `companion reminders`).
+- **Since 2026-10-21.** Reminders and check-ins they ask for, live (J50, `companion reminders`); from
+  2026-10-26 also repeating ones and daily greetings, built and not yet measured.
   Memory review asks every question until quit and proposes merges of memories about one thing; feelings
   and sensitive memories carry a note on what was being talked about (J51); each new memory is labelled
   about their life, about the bot (dropped) or one day's routine (a week).
@@ -195,8 +196,12 @@ Each item ends with the thing that tells us it is done. The cards are below; the
 11. **Memories that bear on the moment** (ADR 0018) and **what they did lately** (J12, J49), live since
     2026-10-22. *Done when:* a week of flags on turns that used one reads right.
 12. **Reminders in real use** (J50), live since 2026-10-21. *Done when:* the first real reminders and
-    check-ins have arrived when meant, read in `companion reminders`, and the owner says whether repeating
-    ones are wanted.
+    check-ins have arrived when meant, read in `companion reminders`. **2026-10-26:** repeating ones
+    (every day, every weekday) and greetings ("tell me good morning every day") are built and tested in
+    code: a time they said is kept, a morning or night greeting with none learns when they start or end
+    their day, a greeting they already wrote first is skipped, three unanswered pause it until they write.
+    Not yet measured: `system/reminder-read` v2 on the live suite (`tests/live/test_reminder_read.py`, now
+    with repeating and greeting cases), and `notes/reminder-repeat` and `system/greeting-send` on replies.
 
 ### Reviews this week
 

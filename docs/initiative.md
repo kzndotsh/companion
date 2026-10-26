@@ -95,6 +95,9 @@ counted as sent, and not drafted again.
 ## Related
 
 The promises the companion makes in its own replies are read in the same batch as open loops, in
-shadow (`src/companion/features/promises/README.md`). Reminders they ask for are a separate, live
-feature (`src/companion/features/reminders/README.md`), checked every minute rather than on the
-15-minute tick, so one lands within a minute of its time.
+shadow (`src/companion/features/promises/README.md`). Reminders, check-ins and greetings they ask for,
+once or repeating ("tell me good morning every day"), are a separate, live feature
+(`src/companion/features/reminders/README.md`), checked every minute rather than on the 15-minute
+tick, so one lands within a minute of its time. They are not reach-outs: they ask for each one, so the
+share, the gates and the needy check here do not apply. A greeting has its own restraint instead: it
+is skipped on a day they already wrote first, and pauses after three go unanswered.
