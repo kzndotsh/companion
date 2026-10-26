@@ -142,7 +142,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/judge-empathy` | system | the eval empathy judge, `evals/judge.py` | v2 |
 | `system/listening` | system | the listening judge, `core/turn/listening.py` | v7 |
 | `system/explicit-lead` | system | whether their message itself is sexually explicit, read only when intimate talk would start on the roleplay talker (ADR 0017) | v1 |
-| `system/brush-off` | system | whether their message pushes the flirting or the scene back, even jokingly; asked only of a turn the roleplay talker would answer | v1 |
+| `system/brush-off` | system | whether their message pushes the flirting or the scene back, even jokingly; asked only of a turn the roleplay talker would answer | v2 |
 | `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
 | `system/pronoun-capture` | system | after the companion asked their pronouns, reads them from their answer; code sets how they want to be referred to (J48) | v1 |
 | `system/memory-map` | system | labels each memory with the part of their life it is about and how personal it is (J48) | v1 |
