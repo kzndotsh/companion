@@ -2,8 +2,9 @@
 
 Run on purpose: `uv run pytest -m live tests/live/test_reminder_read.py -s`. Costs a few cents. The
 requests are invented and describe no one. It is Monday 19 Oct 2026, 13:00 in New York. Each case
-lists the outcomes that are right: a local time, "ask" (code asks instead of guessing), "none" or
-"cancel".
+lists the outcomes that are right: a local time, "ask" (code asks instead of guessing), "none",
+"cancel", or for a repeating one how often and the time ("every day 09:00"), or the part of the day
+whose time is learned ("every day morning").
 """
 
 from __future__ import annotations
@@ -26,7 +27,16 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.daemon import load_dotenv
-from companion.features.reminders.logic import PROMPT, SCHEMA, Ask, parse, read_prompt, resolve
+from companion.features.reminders.logic import (
+    PROMPT,
+    SCHEMA,
+    WEEKDAYS,
+    Ask,
+    parse,
+    read_prompt,
+    resolve,
+)
+from companion.features.reminders.series import repeat_of
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 
@@ -49,7 +59,13 @@ CASES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check up on me in a few days about the interview", ("10-22 window",)),
     ("check in on me tomorrow about how the exam went", ("10-20 window",)),
     ("ping me at 3:30 to leave for pickup", ("10-19 15:30",)),
-    ("remind me every day at 9am to stretch", ("ask",)),
+    ("remind me every day at 9am to stretch", ("every day 09:00",)),
+    ("can you tell me good morning every day?", ("every day morning",)),
+    ("say goodnight to me every night", ("every day night",)),
+    ("remind me every friday at 7am to put the bins out", ("every friday 07:00",)),
+    ("remind me to take my meds every day", ("ask",)),
+    ("text me good morning at 7:30 every day", ("every day 07:30",)),
+    ("you can stop saying good morning", ("cancel",)),
     ("remind me on november 2 at 9am to renew my passport", ("11-02 09:00",)),
     ("remind me at 20:00 to water the plants", ("10-19 20:00",)),
     # A reminder needs a time, so "in 3 days" asks; a check-in "in a few days" uses the window.
@@ -101,7 +117,12 @@ def _outcome(data: object) -> str:
     if s.ask is Ask.CANCEL:
         return "cancel"
     if s.repeats:
-        return "ask"
+        planned = repeat_of(s, NOW, TZ)
+        if isinstance(planned, str):
+            return "ask"
+        r = planned.repeat
+        how = "every day" if r.weekday is None else f"every {WEEKDAYS[r.weekday]}"
+        return f"{how} {r.part.value if r.at is None else f'{r.at:%H:%M}'}"
     when = resolve(s, NOW, TZ)
     if when.at is None:
         return "ask"

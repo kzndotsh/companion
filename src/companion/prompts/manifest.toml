@@ -101,7 +101,7 @@
 "system/self-extract" = "v4"
 "system/views-conflict" = "v1"
 "system/views-implicated" = "v1"
-"system/reminder-read" = "v1"
+"system/reminder-read" = "v2"
 "system/reminder-send" = "v1"
 "system/greeting-send" = "v1"
 "system/memory-group" = "v1"

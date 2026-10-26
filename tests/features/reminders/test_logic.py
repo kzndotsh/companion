@@ -151,6 +151,10 @@ def test_only_messages_with_reminder_words_or_an_answer_to_when_are_read() -> No
     assert likely("can you check up on me in a few days", asked_when=False)
     assert not likely("i'll remember, dont worry", asked_when=False)
     assert likely("evening", asked_when=True)
+    assert likely("can you tell me good morning every day?", asked_when=False)
+    assert likely("say goodnight to me every night", asked_when=False)
+    assert likely("you can stop saying good morning", asked_when=False)
+    assert not likely("good morning!!", asked_when=False)
 
 
 def test_a_cancel_drops_the_one_it_names_or_the_only_one() -> None:

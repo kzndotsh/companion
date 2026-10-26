@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
@@ -36,12 +36,13 @@ from companion.features.reminders.logic import (
     ASKED_WHEN,
     CONTEXT,
     GRACE,
-    ONE_OFF,
     PROMPT,
     SCHEMA,
     Ask,
     Reminder,
+    Series,
     Slots,
+    Standing,
     ask_note,
     asked_for,
     cancelled_note,
@@ -56,6 +57,17 @@ from companion.features.reminders.logic import (
     set_note,
     spoken,
     trusted,
+)
+from companion.features.reminders.series import (
+    LOOK_BACK,
+    Planned,
+    Step,
+    every_words,
+    first_words,
+    how_often,
+    repeat_note,
+    repeat_of,
+    tend,
 )
 from companion.loops.ask import Judge, ask
 from companion.loops.current import Heard, Turn, mark
@@ -100,6 +112,85 @@ async def read_slots(
     return None if got is None else trusted(got.value, said)
 
 
+def schedule(c: Conversation, series: Series, now: datetime, tz: tzinfo) -> Step:
+    """Bring a series up to date: record a pause or a resume, and make its next occurrence when the
+    one before has ended. Safe to run any number of times: the store keeps one of each number."""
+    occurrences = [r for r in c.store.reminders(c.rel) if r.series_id == series.id]
+    step = tend(series, occurrences, c.store.their_times(c.rel, now - LOOK_BACK), now, tz)
+    if step.state is not None:
+        c.store.series_event(series.id, step.state, step.reason, now)
+    if step.due is None:
+        return step
+    made = c.store.add_occurrence(
+        Reminder(
+            uuid.uuid4().hex,
+            c.rel,
+            series.kind,
+            series.thing,
+            series.quote,
+            step.due,
+            step.due.astimezone(tz).strftime("%Y-%m-%d %H:%M"),
+            str(tz),
+            series.turn_id,
+            now,
+            series_id=series.id,
+            seq=step.seq,
+        )
+    )
+    return step if made else replace(step, due=None)
+
+
+def stop(c: Conversation, series: Series, reason: str, now: datetime) -> None:
+    """Stop a series and drop its pending occurrence. Stopped first, so a tick in between makes no
+    next one."""
+    c.store.series_event(series.id, Standing.STOPPED, reason, now)
+    for r in c.store.reminders(c.rel):
+        if r.series_id == series.id and r.state == "pending":
+            c.store.reminder_event(r.id, "cancelled", reason, now)
+
+
+def _cancel(c: Conversation, s: Slots, now: datetime) -> Read | None:
+    """Drop the pending one-offs and stop the series their words name (or the only one)."""
+    pending = [r for r in c.store.reminders(c.rel) if r.state == "pending" and r.series_id is None]
+    live = [x for x in c.store.series(c.rel) if x.state is not Standing.STOPPED]
+    hit = set(
+        matching([(r.id, r.thing) for r in pending] + [(x.id, x.thing) for x in live], s.thing)
+    )
+    if not hit:
+        return None
+    dropped = [r for r in pending if r.id in hit]
+    stopped = [x for x in live if x.id in hit]
+    for r in dropped:
+        c.store.reminder_event(r.id, "cancelled", "they asked to drop it", now)
+    for x in stopped:
+        stop(c, x, "they asked to stop it", now)
+    what = [asked_for(r.kind, r.thing) for r in dropped] + [
+        f"{asked_for(x.kind, x.thing)} {how_often(x.repeat)}" for x in stopped
+    ]
+    detail: dict[str, Json] = {
+        "reminders": [r.id for r in dropped],
+        "series": [x.id for x in stopped],
+    }
+    return Read(cancelled_note(" and ".join(what)), CANCELLED, detail)
+
+
+def _started(c: Conversation, series: Series, planned: Planned, now: datetime, tz: tzinfo) -> Read:
+    c.store.add_series(series)
+    due = schedule(c, series, now, tz).due or now  # a new series always has a first one
+    first = first_words(planned.repeat, due, now, tz)
+    return Read(
+        repeat_note(series.kind, series.thing, planned, first),
+        SET,
+        {
+            "series": series.id,
+            "kind": series.kind.value,
+            "every": every_words(planned.repeat),
+            "first": first,
+            "defaulted": planned.defaulted,
+        },
+    )
+
+
 def act(  # noqa: PLR0913, PLR0917
     c: Conversation,
     s: Slots,
@@ -110,18 +201,18 @@ def act(  # noqa: PLR0913, PLR0917
 ) -> Read | None:
     """Store or cancel what they asked for, and the note that tells the reply what happened."""
     if s.ask is Ask.CANCEL:
-        pending = [r for r in c.store.reminders(c.rel) if r.state == "pending"]
-        hit = matching([(r.id, r.thing) for r in pending], s.thing)
-        if not hit:
-            return None
-        for rid in hit:
-            c.store.reminder_event(rid, "cancelled", "they asked to drop it", now)
-        things = [asked_for(r.kind, r.thing) for r in pending if r.id in hit]
-        return Read(cancelled_note(" and ".join(things)), CANCELLED, {"reminders": list[Json](hit)})
+        return _cancel(c, s, now)
     if s.ask is not Ask.SET or not s.thing:
         return None
     if s.repeats:
-        return Read(ask_note(s.kind, s.thing, ONE_OFF), ASKED, {"why": "repeating"}, asks=True)
+        planned = repeat_of(s, now, tz)
+        if isinstance(planned, str):
+            why: dict[str, Json] = {"why": planned, "repeats": True}
+            return Read(ask_note(s.kind, s.thing, planned), ASKED, why, asks=True)
+        made = Series(
+            uuid.uuid4().hex, c.rel, s.kind, s.thing, said, planned.repeat, str(tz), turn, now
+        )
+        return _started(c, made, planned, now, tz)
     when = resolve(s, now, tz)
     if when.at is None:
         return Read(

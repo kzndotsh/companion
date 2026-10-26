@@ -1,6 +1,6 @@
 # Reminders (J50)
 
-A reminder or check-in they ask for in the chat ("remind me at 8 to take the dog out", "check in on me in a few days"), sent later in the companion's own voice. One-off only. It exists so a plain request lands at the time they meant, with code and not the model owning the clock.
+A reminder, check-in or greeting they ask for in the chat ("remind me at 8 to take the dog out", "check in on me in a few days", "tell me good morning every day"), once or repeating, sent later in the companion's own voice. It exists so a plain request lands at the time they meant, with code and not the model owning the clock.
 
 **Status:** live. Switch: `COMPANION_REMINDERS` (`on` default, `off`). Runs before the reply (a look-up and a note), and on a 60-second timer that sends what is due.
 
@@ -18,7 +18,7 @@ A reminder or check-in they ask for in the chat ("remind me at 8 to take the dog
 - A check-in with no time is set at a time picked once, at random, from five-minute marks between 16:00 and 20:00, at least 30 minutes ahead. If that window has gone and no day was said, it moves to tomorrow's. It is told back only as the part of the day ("Thursday evening").
 - A vague time code filled in ("in a few days", a check-in with no hour) is said back with an offer to change it.
 
-It asks instead of guessing for a bare "at 8" when both are still ahead, "next friday" (this one or the next), a time already gone, a time past 60 days, and a repeating request ("only one-off reminders can be set for now, so offer to set just the next one"). A cancel matches pending reminders that share a word with what they named (words under 3 letters and filler aside), or the only pending one when nothing is named. No match means no note.
+It asks instead of guessing for a bare "at 8" when both are still ahead, "next friday" (this one or the next), a time already gone, a time past 60 days, and, for a repeating request, how often when it is not every day or one day a week, or what time when a reminder or check-in has none (see Repeating ones below). A cancel matches pending one-offs and running series that share a word with what they named (words under 3 letters and filler aside, "goodnight" and "good night" alike), or the only one when nothing is named; a series it names is stopped with its pending one. No match means no note.
 
 **The note.** One note in the system block (after the mark note and before the crisis, game, calendar and question notes) says what happened: set, with the time code worked out, or what to ask, or that one was cancelled. The reply confirms in its own words. The decision is logged as `reminders: set`, `reminders: asked them when` (also the key that marks the next answer as worth reading) or `reminders: cancelled`, with the prompt `name@version`. Every reminder is stored with their quote, the due time in UTC, the local wall time and the zone. Its state is its newest event (`pending`, `claimed`, `sent`, `late`, `expired`, `cancelled`). Nothing is deleted.
 

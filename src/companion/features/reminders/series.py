@@ -39,6 +39,7 @@ WROTE_LATELY = timedelta(hours=2)  # a greeting other than a morning one is skip
 BACK_OFF = 3  # greetings sent since they last wrote, and the series pauses
 ENDED = frozenset({"sent", "late", "expired", "skipped", "cancelled"})
 SENT = frozenset({"sent", "late"})
+LOOK_BACK = timedelta(days=LEARN_DAYS + 1)  # how far back their messages are read
 
 
 @dataclass(frozen=True, slots=True)

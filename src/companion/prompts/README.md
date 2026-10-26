@@ -162,7 +162,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/reach-draft` | system | one short message first for its own reasons (a thought, a time they keep, missing them), about the one thing code chose; a code check drops a needy draft (ADR 0021, shadow) | v1 |
 | `system/invented-judge` | system | statements in a reply about the user and what supports each, for the made-up facts rate (G42); flags are candidates | v1 |
 | `system/risk` | system | the crisis path's risk judge: kind, literal or not, timing, a plan or means; read three times, code picks the level and fails safe (ADR 0022) | v1 |
-| `system/reminder-read` | system | whether a message asks to be reminded, checked on or to cancel one, and the words of when; code works out the time (J50) | v1 |
+| `system/reminder-read` | system | whether a message asks to be reminded, checked on or greeted, once or repeating, or to cancel one, and the words of when and how often; code works out the time (J50) | v2 |
 | `system/reminder-send` | system | the instruction sent after the history when a reminder is due: one short message naming it (J50) | v1 |
 | `system/greeting-send` | system | the instruction sent after the history when a greeting they asked for is due: one short message, worded unlike the earlier days', no question, no guilt (J50) | v1 |
 | `system/lore-label` | system | the kind of each of the companion's own views: taste (its lore), stance, rule, self or lived (ADR 0020) | v1 |

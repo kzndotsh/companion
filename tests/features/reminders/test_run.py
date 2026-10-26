@@ -34,7 +34,7 @@ class Reminding(Judge):
         return await super().extract(system, user, schema)
 
 
-def _slots(**kw: Json) -> dict[str, Json]:
+def ask_slots(**kw: Json) -> dict[str, Json]:
     return {
         "ask": "set",
         "kind": "reminder",
@@ -52,32 +52,32 @@ def store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Store:
     return Store(tmp_path / "rel.sqlite")
 
 
-async def _say(store: Store, judge: Judge, text: str, at: datetime = NOW) -> str:
+async def say(store: Store, judge: Judge, text: str, at: datetime = NOW) -> str:
     talker = Talker()
     await handle(Conversation(store, talker, PREFIX, REL, judge=judge), SESSION, text, "t", at)
     return talker.seen[0].card
 
 
-def _reasons(store: Store) -> list[str]:
+def reasons(store: Store) -> list[str]:
     turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=9), 50)}
     return [d.reason for t in turns for d in store.decisions_for_turn(REL, t)]
 
 
 async def test_a_clear_request_is_stored_and_the_reply_is_told_the_time(store: Store) -> None:
-    judge = Reminding(_slots(hour=8, ampm="pm"))
-    card = await _say(store, judge, "remind me at 8pm to take the dog out")
+    judge = Reminding(ask_slots(hour=8, ampm="pm"))
+    card = await say(store, judge, "remind me at 8pm to take the dog out")
     assert "this one is set for tonight at 8:00 pm" in card
     [r] = store.reminders(REL)
     assert (r.state, r.kind, r.thing) == ("pending", Kind.REMINDER, "take the dog out")
     assert r.due_at == datetime(2026, 10, 20, 0, 0, tzinfo=UTC)
     assert r.quote == "remind me at 8pm to take the dog out"
-    assert SET in _reasons(store)
+    assert SET in reasons(store)
 
 
 async def test_a_request_already_set_is_not_shown_to_the_reader_again(store: Store) -> None:
     class Seeing(Reminding):
         def __init__(self) -> None:
-            super().__init__(_slots(hour=8, ampm="pm"))
+            super().__init__(ask_slots(hour=8, ampm="pm"))
             self.prompts: list[str] = []
 
         async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
@@ -87,41 +87,39 @@ async def test_a_request_already_set_is_not_shown_to_the_reader_again(store: Sto
             return await super().extract(system, user, schema)
 
     judge = Seeing()
-    await _say(store, judge, "remind me at 8pm to take the dog out")
-    await _say(store, judge, "see, you can do reminders", NOW + timedelta(minutes=2))
+    await say(store, judge, "remind me at 8pm to take the dog out")
+    await say(store, judge, "see, you can do reminders", NOW + timedelta(minutes=2))
     assert "remind me at 8pm" not in judge.prompts[-1]
     assert "see, you can do reminders" in judge.prompts[-1]
 
 
 async def test_an_unclear_time_stores_nothing_asks_and_reads_the_answer(store: Store) -> None:
-    judge = Reminding(_slots(day="tomorrow", hour=8))
-    card = await _say(store, judge, "remind me tomorrow at 8 about the dog")
+    judge = Reminding(ask_slots(day="tomorrow", hour=8))
+    card = await say(store, judge, "remind me tomorrow at 8 about the dog")
     assert "whether they meant 8 in the morning or the evening" in card
     assert store.reminders(REL) == []
-    assert ASKED in _reasons(store)
-    judge.slots = _slots(day="tomorrow", hour=8, part="morning")
-    await _say(store, judge, "morning", NOW + timedelta(minutes=1))
+    assert ASKED in reasons(store)
+    judge.slots = ask_slots(day="tomorrow", hour=8, part="morning")
+    await say(store, judge, "morning", NOW + timedelta(minutes=1))
     assert judge.read == 2  # no reminder words, but it had just asked when
     [r] = store.reminders(REL)
     assert r.local_wall == "2026-10-20 08:00"
 
 
-async def test_ordinary_messages_are_not_read_and_a_repeating_one_is_asked(store: Store) -> None:
-    judge = Reminding(_slots(hour=8, ampm="pm", repeats=True))
-    await _say(store, judge, "long day, going to bed soon")
+async def test_ordinary_messages_are_not_read(store: Store) -> None:
+    judge = Reminding(ask_slots(hour=8, ampm="pm"))
+    await say(store, judge, "long day, going to bed soon")
     assert judge.read == 0
-    card = await _say(store, judge, "remind me every night at 8pm to take my meds")
-    assert "only one-off reminders" in card
     assert store.reminders(REL) == []
 
 
 async def test_a_cancel_drops_the_pending_one(store: Store) -> None:
-    await _say(store, Reminding(_slots(hour=8, ampm="pm")), "remind me at 8pm to walk the dog")
-    gone = Reminding(_slots(ask="cancel", thing="the dog"))
-    card = await _say(store, gone, "actually cancel the dog reminder", NOW + timedelta(minutes=2))
+    await say(store, Reminding(ask_slots(hour=8, ampm="pm")), "remind me at 8pm to walk the dog")
+    gone = Reminding(ask_slots(ask="cancel", thing="the dog"))
+    card = await say(store, gone, "actually cancel the dog reminder", NOW + timedelta(minutes=2))
     assert "You dropped the reminder" in card
     assert [r.state for r in store.reminders(REL)] == ["cancelled"]
-    assert CANCELLED in _reasons(store)
+    assert CANCELLED in reasons(store)
 
 
 class Writer(Talker):

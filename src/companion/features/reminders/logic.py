@@ -280,7 +280,9 @@ def spoken(at: datetime, now: datetime, tz: tzinfo, *, loose: bool = False) -> s
 _WORDS = re.compile(
     r"\b(remind|reminder|reminders|check (?:up |back )?(?:on|in with) me|check in on me|ping me"
     r"|nudge me|text me|message me|don'?t let me forget|make sure i|ask me (?:how|about|later)"
-    r"|tell me (?:at|in|when|tomorrow|tonight))\b",
+    r"|tell me (?:at|in|when|tomorrow|tonight)"
+    r"|(?:tell|wish|text|send) me (?:a )?good ?(?:morning|night)|say good ?(?:morning|night)"
+    r"|stop (?:saying|sending|texting))\b",
     re.IGNORECASE,
 )
 ASKED_WHEN = "reminders: asked them when"
@@ -291,7 +293,6 @@ SET_NOTE, ASK_NOTE, CANCELLED_NOTE = (
     get("notes/reminder-cancelled"),
 )
 SEND, GREETING_SEND = get("system/reminder-send"), get("system/greeting-send")
-ONE_OFF = "only one-off reminders can be set for now, so offer to set just the next one"
 
 
 def likely(said: str, *, asked_when: bool) -> bool:
