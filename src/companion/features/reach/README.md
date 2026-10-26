@@ -2,7 +2,7 @@
 
 A friend who likes you writes first now and then: because something made them think of you, because it is the time you usually talk, or because they simply missed you. This lets the companion do that, with code choosing the reason, the moment and the one thing it is about, and a model only writing the words.
 
-**Status:** shadow (review by 2026-10-30, judged on drafts the owner marks as wanted, landing at sensible times in their learned hours, none needy or guilt-laden). Switches: `COMPANION_INITIATIVE` (`shadow` default, `off`) runs or stops the whole 15-minute tick; `COMPANION_REACH` sets the dial (`warm` default; `off`, `rare`, `light`, `normal`, `clingy`). Nothing is ever sent: no code path here sends a message.
+**Status:** shadow (review by 2026-11-02, judged on drafts the owner marks as wanted, landing at sensible times in their learned hours, none needy or guilt-laden). Switches: `COMPANION_INITIATIVE` (`shadow` default, `off`) runs or stops the whole 15-minute tick; `COMPANION_REACH` sets the dial (`warm` default; `off`, `rare`, `light`, `normal`, `clingy`). Nothing is ever sent: no code path here sends a message.
 
 ## How it works
 

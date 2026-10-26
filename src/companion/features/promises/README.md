@@ -2,7 +2,7 @@
 
 Records the promises the companion makes in its own replies, such as a promise to stop using a word. A repair promise lived only in the messages in view, and the companion broke one a few hours after making it.
 
-**Status:** shadow (review by 2026-10-27, judged on whether standing promises are worth pinning, J12 step 2 and LR5). `COMPANION_PROMISES`: `shadow` (default, records and lists), `off` (skips it). Runs after a memory pass, inside the open-loop batch. Nothing reaches the talker.
+**Status:** shadow (review by 2026-10-30, judged on whether standing promises are worth pinning, J12 step 2 and LR5). `COMPANION_PROMISES`: `shadow` (default, records and lists), `off` (skips it). Runs after a memory pass, inside the open-loop batch. Nothing reaches the talker.
 
 ## How it works
 

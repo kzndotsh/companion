@@ -4,7 +4,7 @@ A map of what it knows about them: each memory is placed in a part of their life
 part that is fine to ask about. It exists because it asked plenty of questions, but only about the thing just
 said, so memory held almost nothing about hopes or values.
 
-**Status:** shadow (review by 2026-10-26, judged on a week of picks that read right to the owner). No switch.
+**Status:** shadow (review by 2026-10-29, judged on a week of picks that read right to the owner). No switch.
 It labels after each memory pass and, on a casual turn, logs the pick beside the note step. Nothing reaches the
 talker.
 

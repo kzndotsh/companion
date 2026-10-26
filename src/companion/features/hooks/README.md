@@ -4,7 +4,7 @@ When their own words touch a basic fact about them without giving it ("I'm getti
 would ask about it. Asking about what someone just said reads as care, and a question out of the blue reads as
 an interview.
 
-**Status:** shadow (review by 2026-10-26, judged on would-asks that read right, at most daily). No switch. It
+**Status:** shadow (review by 2026-10-29, judged on would-asks that read right, at most daily). No switch. It
 runs beside the turn, after the reply is out. Nothing reaches the talker.
 
 ## How it works

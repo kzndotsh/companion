@@ -4,7 +4,7 @@ When their message names a pet, a person or a band memory knows, the card may ho
 shows about fifteen of hundreds of memories. This feature finds those misses in shadow, to see whether a
 look-up on mention is worth building.
 
-**Status:** shadow (review by 2026-10-27, judged on how often the card missed a memory about a name they used).
+**Status:** shadow (review by 2026-10-30, judged on how often the card missed a memory about a name they used).
 No switch. It lists names after each memory pass and matches them beside the turn. Nothing reaches the talker.
 
 ## How it works

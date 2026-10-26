@@ -50,7 +50,7 @@ Built and working:
   note by severity, a length note for short statements, a scene note, habit notes. The reaction judge
   and the habit check run beside or after the reply. A scene is answered by a different model.
 - **Since 2026-10-18.** A mood that carries (ADR 0016: cozy, tender, playful, kept by code, shown only
-  in behaviour; proposed, on for the owner, review 2026-10-26). A pinned line for how they want to be
+  in behaviour; proposed, on for the owner, review 2026-10-29). A pinned line for how they want to be
   referred to, asked for on a casual turn until known, and kept from their own answer. Sensitive memories
   only on turns where they are sharing something. One resample when a reply fails a check (an em dash, a
   joke bolted onto an ordinary message, an AI disclaimer nobody asked for). Routing in code (ADR 0017):
@@ -88,7 +88,7 @@ Built and working:
   A hedged plan of theirs becomes a note-only loop (`COMPANION_LOOP_NOTES`, loose). It asks which pronouns
   they use the way it asks a name. A lone short reaction in asterisks no longer starts a scene, and `/mode`
   says which talker answered. A stop answers what was already received before it exits. In shadow: reaching
-  out for its own reasons (ADR 0021, review 2026-10-30) and the crisis path (ADR 0022, review 2026-11-01).
+  out for its own reasons (ADR 0021, review 2026-11-02) and the crisis path (ADR 0022, review 2026-11-04).
 - **Since 2026-10-25.** The clock line gives the date. A calendar of occasions, live (`COMPANION_CALENDAR`,
   `companion calendar`): one note after the history on the first casual turn of the day for a warm US
   public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years;
@@ -165,7 +165,7 @@ Each item ends with the thing that tells us it is done. The cards are below; the
 
 1. **Watch the live setup in real chat.** Flag and favourite as usual. *Done when:* a week of marks
    shows whether the roleplay model helps, where the voice changes at the boundary hurt, and how the
-   listening note and the pacing feel (D1, read at the review of 2026-10-26).
+   listening note and the pacing feel (D1, read at the review of 2026-10-29).
 2. **Hand labels for replies.** The owner marks replies from the review sheet in batches of ten
    (`evals/local/`); items 1 to 10 are in. *Done when:* the judges are calibrated against the marks and
    the trivial-vent question has an answer (T14).
@@ -175,16 +175,16 @@ Each item ends with the thing that tells us it is done. The cards are below; the
 4. **Memory tidies itself** (ADR 0019), in shadow since 2026-10-19. *Done when:* the review of
    2026-10-26 is read and the owner decides on `COMPANION_CONSOLIDATE=on`.
 5. **Its own promises and lore** (J12, ADR 0020): promises and labels in shadow, tastes shown live since
-   2026-10-20. *Done when:* the review of 2026-10-27 is read and the owner decides J12 step 2 and LR5.
+   2026-10-20. *Done when:* the review of 2026-10-30 is read and the owner decides J12 step 2 and LR5.
 6. **Do the redrawn replies beat the canned ones?** (Q3) *Done when:* about 20 logged redraws are judged
-   blind against their first draws at the review of 2026-10-28 and the owner keeps, retunes or turns off
+   blind against their first draws at the review of 2026-10-31 and the owner keeps, retunes or turns off
    the canned-reaction label.
 7. **Reaching out for its own reasons** (ADR 0021, R20), in shadow since 2026-10-24. *Done when:* at the
-   review of 2026-10-30 about five drafts across the kinds read well to the owner and land at sensible
+   review of 2026-11-02 about five drafts across the kinds read well to the owner and land at sensible
    times in their learned hours, none needy, and the owner says whether it goes live (outcome recording,
    A6, first).
 8. **A week of shadow mode** for plan reach-outs and nudges (R1, R1b). *Done when:* the owner has read
-   `companion initiative` at the review of 2026-10-31 and the caps are set. Going live also needs A6, J27
+   `companion initiative` at the review of 2026-11-03 and the caps are set. Going live also needs A6, J27
    and J35.
 9. **The crisis path** (ADR 0022, R16), in shadow since 2026-10-24. *Done when:* at the review of
    2026-11-01 the fixture check passes (no genuine risk missed in 30 samples, the jokes not raised), real
@@ -205,15 +205,16 @@ removed. Live notes listed here are read from the log and the owner's marks.
 
 | Date | What | Read with | Decides |
 |---|---|---|---|
-| 2026-10-26 | the two talkers (D1) | `companion flags`, `companion favorites` | whether the roleplay talker helps and where the boundary hurts |
-| 2026-10-26 | the map and the hook (J48) | `companion map`, the decision log | whether picks and would-asks read right; then the note on a small budget |
-| 2026-10-26 | the nightly memory check and the repeat check (ADR 0019) | `companion memory review` | `COMPANION_CONSOLIDATE=on` |
-| 2026-10-26 | the mood (ADR 0016) and the own-ups (J52) | `companion mood`, a count from the log | ADR 0016 accepted and the default made on; whether to test leaving its apologies out of the history |
-| 2026-10-27 | promises, lore labels, made-up facts, names | `companion promises`, `companion lore`, `companion invented`, `companion names` | J12 step 2 and LR5; whether names graduates |
-| 2026-10-28 | the redrawn replies (Q3) | the recheck decisions, blind judges | keep, retune or turn off the canned-reaction label |
-| 2026-10-30 | its own reach-outs (ADR 0021) | `companion initiative` | going live, and at what dial |
-| 2026-10-31 | plan reach-outs and nudges; the loose plan notes; the question-run note | `companion initiative`, the decision log | going live (after A6, J27, J35); whether loose stays the default; whether the note stays |
-| 2026-11-01 | the crisis path (ADR 0022) | `companion crisis`, `companion crisis --check`, the decision log | `COMPANION_CRISIS=on` |
+| 2026-10-29 | the two talkers (D1) | `companion flags`, `companion favorites` | whether the roleplay talker helps and where the boundary hurts |
+| 2026-10-29 | the map and the hook (J48) | `companion map`, the decision log | whether picks and would-asks read right; then the note on a small budget |
+| 2026-10-29 | the nightly memory check and the repeat check (ADR 0019) | `companion memory review` | `COMPANION_CONSOLIDATE=on` |
+| 2026-10-29 | the mood (ADR 0016) and the own-ups (J52) | `companion mood`, a count from the log | ADR 0016 accepted and the default made on; whether to test leaving its apologies out of the history |
+| 2026-10-29 | the bland-replies wording round, then the move picker in shadow | `docs/inbox/2026-10-25-bland-replies-design-space.md`, `evals/CHANGELOG.md` | build the move picker |
+| 2026-10-30 | promises, lore labels, made-up facts, names | `companion promises`, `companion lore`, `companion invented`, `companion names` | J12 step 2 and LR5; whether names graduates |
+| 2026-10-31 | the redrawn replies (Q3) | the recheck decisions, blind judges | keep, retune or turn off the canned-reaction label |
+| 2026-11-02 | its own reach-outs (ADR 0021) | `companion initiative` | going live, and at what dial |
+| 2026-11-03 | plan reach-outs and nudges; the loose plan notes; the question-run note | `companion initiative`, the decision log | going live (after A6, J27, J35); whether loose stays the default; whether the note stays |
+| 2026-11-04 | the crisis path (ADR 0022) | `companion crisis`, `companion crisis --check`, the decision log | `COMPANION_CRISIS=on` |
 
 ### Next
 
@@ -271,15 +272,15 @@ urgent level, 988 by default, the generic message kept for now), reaching out fo
 the calendar, and threads (ADR 0023: one store for what it brings up, the interrupted story first, a pace
 learned from how they answer instead of a fixed number).
 
-1. **The mood (ADR 0016):** accept it and make the default on, after the review of 2026-10-26.
-2. **The memory check on (ADR 0019):** `COMPANION_CONSOLIDATE=on`, after the review of 2026-10-26.
-3. **Promises (J12 step 2, LR5):** pin standing promises, and which source, after the review of 2026-10-27.
-4. **The canned-reaction judge (Q3):** keep, retune or turn off, after the review of 2026-10-28.
-5. **Going live with its own reach-outs (ADR 0021):** after the review of 2026-10-30, and at which dial
+1. **The mood (ADR 0016):** accept it and make the default on, after the review of 2026-10-29.
+2. **The memory check on (ADR 0019):** `COMPANION_CONSOLIDATE=on`, after the review of 2026-10-29.
+3. **Promises (J12 step 2, LR5):** pin standing promises, and which source, after the review of 2026-10-30.
+4. **The canned-reaction judge (Q3):** keep, retune or turn off, after the review of 2026-10-31.
+5. **Going live with its own reach-outs (ADR 0021):** after the review of 2026-11-02, and at which dial
    (the ADR's rollout says `normal` first; the settled default is `warm`).
-6. **Going live with plan reach-outs and nudges:** after the review of 2026-10-31, with A6, J27 and J35
+6. **Going live with plan reach-outs and nudges:** after the review of 2026-11-03, with A6, J27 and J35
    built first.
-7. **The crisis path on (ADR 0022):** `COMPANION_CRISIS=on`, after the review of 2026-11-01.
+7. **The crisis path on (ADR 0022):** `COMPANION_CRISIS=on`, after the review of 2026-11-04.
 8. **Location (R18):** how it learns where they are, for the crisis line, the calendar and the time zone.
 9. **Pacing (T2):** evidence-based, the user dial ("quick", "natural", "slow burn"), or both? What is
    the default friction? With T17.
@@ -302,14 +303,14 @@ learned from how they answer instead of a fixed number).
       push-back goes to the everyday talker; a scene ends after two hours away; a lone asterisk reaction
       starts no scene; `/mode` says which talker answered. Pretend scenes stay with the roleplay talker (the
       everyday one lost 13 and 11 of 56 to blind judges), and its scene reminder now says to go only as far
-      as they take it (19/30 to 6/30 escalations). Read at the review of 2026-10-26.
+      as they take it (19/30 to 6/30 escalations). Read at the review of 2026-10-29.
 - [ ] J12 Shared milestones: a record of the relationship itself, firsts, promises between them, inside
       jokes, unresolved tension, apart from facts about the user (soul-of-waifu's relationship record).
       **Owner flag 2026-10-22:** a mention of the night before got a reply that knew nothing of it: nothing
       recorded what the two of them did together, when, and how it ended.
       **2026-10-20, promises in shadow:** plan reviewed with Grok (its own promises first, then names, then
       shared moments; no anniversaries, no pull at goodbye or silence); promises read from its own replies and
-      listed (`companion promises`). Next, after the review of 2026-10-27: standing promises and "don't call
+      listed (`companion promises`). Next, after the review of 2026-10-30: standing promises and "don't call
       me" words pinned with a word check and one redraw; one-off promises as open loops.
       **2026-10-22, episodes:** the chat cut into stretches, each with one line on its shape and how it ended
       (`companion episodes`); the lines for the time their words point at, or the last one after a gap, reach
@@ -339,24 +340,24 @@ When the answer comes, the card moves to Todo or Done.
       about 8 plausible open loops in 3 days of chat, mostly low stakes, 3 sensitive to block; a model
       finds a real afterthought in about 1 of 20 replies, so the afterthought stays parked. See
       `evals/CHANGELOG.md`. **2026-10-24, first review:** nothing drafted (no firm plan fell due outside the
-      chat), so the review moved to 2026-10-31; what it can reach out about is widened by ADR 0021 (R20),
+      chat), so the review moved to 2026-11-03; what it can reach out about is widened by ADR 0021 (R20),
       whose gate, unanswered rule and share it now shares. A hedged plan of theirs is a note-only loop, asked
       once when they next write and never a reach-out (`COMPANION_LOOP_NOTES`, loose by default).
-      **Waits on:** the review of 2026-10-31, then A6, J27 and J35 before going live.
+      **Waits on:** the review of 2026-11-03, then A6, J27 and J35 before going live.
 - [ ] R1b Nudges after stepping away (owner's choice: the looser rule B, also without "brb"). Built in
       shadow 2026-10-20: when they say they are leaving now and stay quiet twice as long and an hour, one
       light drafted nudge, logged. Replayed over six days: 18 times away, none nudged, since they always
       wrote again sooner. If it reads needy, tighten to rule A (only after they said they would be back).
       **2026-10-24, first review:** nothing drafted (every time away ended within a minute); moved to
       2026-10-31. `COMPANION_INITIATIVE=off` now also stops the stepping-away read.
-      **Waits on:** the review of 2026-10-31.
+      **Waits on:** the review of 2026-11-03.
 - [ ] R20 Reaching out for its own reasons (ADR 0021, accepted by the owner): a time they keep, a thought
       (one thing from memory, its tastes or a recent stretch of chat, never sensitive), missing them (a pause
       past their learned usual, at a usual hour), behind a pure gate with learned quiet hours, never on top of
       an unanswered one, six hours apart, and a guilt check that drops a needy draft. The dial is the share of
       conversations it starts over 14 days (`COMPANION_REACH`, `warm` by default, five steps), stepping down
       when an answer is late or short. Built in shadow 2026-10-24 (`features/reach`, `core/rhythm.py`), nothing
-      sent. **Waits on:** the review of 2026-10-30 (about five drafts across the kinds read well, at sensible
+      sent. **Waits on:** the review of 2026-11-02 (about five drafts across the kinds read well, at sensible
       times), then outcome recording (A6) and live at a dial the owner picks.
 - [ ] Q3 Do the redrawn replies beat the canned ones? `system/quip` v3 (2026-10-24) redraws a reply it
       reads as a canned generic reaction, and the redraw is sent unread. Once about 20 redraws are logged
@@ -365,7 +366,7 @@ When the answer comes, the card moves to Todo or Done.
       loses. Owner agreed 2026-10-24. **2026-10-25:** the hand labels it shipped on were too loose; two blind
       raters relabelled the 200 replies, and against them Haiku's precision is 35 to 55%, not 88% (Luna and
       DeepSeek are more precise but catch less). Live it redrew 1 of 58 checked turns, so few pairs will be
-      logged by the review. Not changed yet. **Waits on:** the review of 2026-10-28.
+      logged by the review. Not changed yet. **Waits on:** the review of 2026-10-31.
 - [ ] R16 Crisis and distress routing: decided as ADR 0022, accepted by the owner: two-stage detection with a
       three-read risk judge that tells a joke from a literal risk and fails safe, levels by code, an
       in-character note at concern and a fixed crisis-line message at urgent, 988 by default, no risk memories.
@@ -374,7 +375,7 @@ When the answer comes, the card moves to Todo or Done.
       cases exact, none missed, no joke raised, three runs). Haiku's provider refused many crisis reads, so the
       risk judge reads on DeepSeek first by default (`COMPANION_JUDGE_MODELS`; 40 of 40 with no refusals). The
       owner keeps the generic urgent message for now; a sheet may add its own (`## Crisis message`). Region
-      waits on R18. **Waits on:** the review of 2026-11-01 (fixtures pass, no false alarm in real chat), then
+      waits on R18. **Waits on:** the review of 2026-11-04 (fixtures pass, no false alarm in real chat), then
       the owner turns it on. (A25)
 - [ ] J5 A mood that carries: code keeps a mood from a few labels, fading over hours but carrying across
       days, shown to the model as a few words, never numbers. How J1's moods would work (greenfield design
@@ -382,7 +383,7 @@ When the answer comes, the card moves to Todo or Done.
       **Partial 2026-10-19 (ADR 0016):** M1 measured the lines, M2 built the engine (cozy, tender, playful),
       M3 wired it in shadow with `companion mood --replay`. The goodbye guard and persona v36 (stated mood 4/30
       to 0/30) shipped 2026-10-19; the code default is shadow and the owner runs it on (`COMPANION_MOOD=on`).
-      Moved into `features/mood` 2026-10-23. **Waits on:** the review of 2026-10-26, then the owner accepting
+      Moved into `features/mood` 2026-10-23. **Waits on:** the review of 2026-10-29, then the owner accepting
       ADR 0016 (decision 1) and the default made on.
 - [ ] T16 Randomized reply length. Built 2026-10-18 and live: `core/turn/length.py` scales a short statement's
       limit by 0.6 to 1.5, seeded per turn so replay matches (idea from a companion app config that picks a
@@ -398,10 +399,10 @@ When the answer comes, the card moves to Todo or Done.
       run of apologies, no help once three are in the history). **2026-10-23:** a persona paragraph (v42)
       measured within noise on 5 recorded turns and not shipped. Left: the turn after a run of own-ups,
       8 to 11 of 12 under every version; the history full of its own apologies is the likely pull.
-      **Next, at the review of 2026-10-26:** count from the log the replies that owned a slip since the
+      **Next, at the review of 2026-10-29:** count from the log the replies that owned a slip since the
       note went live, and how many came right after another. If runs still happen, test leaving its own
       apologies out of the history it reads (about a cent, with A33); if not, leave it.
-      **Waits on:** the count at the review of 2026-10-26 (above).
+      **Waits on:** the count at the review of 2026-10-29 (above).
 - [ ] J16 Guesses it checks: it forms small predictions about the user, checks them against what they say
       later, and learns which kinds it gets right (kin-mind's self-hypotheses with prediction review).
       **Partial 2026-10-20:** invited guesses are live (a small judge on short questions, the recall look-up
@@ -444,7 +445,7 @@ When the answer comes, the card moves to Todo or Done.
       unset, and a small judge fills that setting from their words (live); birthday and school join the hook's
       basics (shadow). The pronoun note no longer plants a pet name (8/60 to 0/60, `notes/address` v2).
       Further ideas, not tasks: `docs/inbox/2026-10-25-what-else-it-could-learn-about-them.md`.
-      **Waits on:** the review of 2026-10-26: a week of shadow map picks and the hook read by the owner.
+      **Waits on:** the review of 2026-10-29: a week of shadow map picks and the hook read by the owner.
 - [ ] T17 Closeness stage. A stage computed in code from real history (how long they have talked, how much
       they have shared, how often they flirt), not from points a judge hands out for compliments, picks one
       note line from "just met, already kind of likes them" up to "close" (ADR 0014). It paces intimacy by how
@@ -792,7 +793,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       40 exact after, none missed, no false alarm (1a6ca5a). The card stays in Waiting for its review.
 - [x] R20 built in shadow (ADR 0021 accepted, 3ed6ec9): reaching out for its own reasons behind a pure gate,
       `COMPANION_REACH` warm by default, a guilt check on every draft, nothing sent. The plan and nudge
-      reviews moved to 2026-10-31, since neither had drafted anything (9f5980d).
+      reviews moved to 2026-11-03, since neither had drafted anything (9f5980d).
 - [x] What they said in the last 12 hours comes first on the card (up to 8, after boundaries and promises),
       and recall is told today's date: a meal named three hours earlier went from forgotten 12/12 to named
       12/12 (fabe7e4).

@@ -73,18 +73,18 @@ together.
 
 | Feature | Setting | Read it with | Review by |
 |---|---|---|---|
-| Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-31 |
-| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-31 |
-| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-10-30 |
-| What it would ask to get to know them | always shadow for now | `companion map` | 2026-10-26 |
-| A light question when their words touch a basic it does not know (age, work, home, place, birthday, school) | always shadow for now | the decision log | 2026-10-26 |
-| The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review` | 2026-10-26 |
-| The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` | 2026-10-26 |
-| The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-27 |
-| Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-27 |
+| Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
+| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
+| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-02 |
+| What it would ask to get to know them | always shadow for now | `companion map` | 2026-10-29 |
+| A light question when their words touch a basic it does not know (age, work, home, place, birthday, school) | always shadow for now | the decision log | 2026-10-29 |
+| The nightly memory check and the write-time repeat check | `COMPANION_CONSOLIDATE` | `companion memory review` | 2026-10-29 |
+| The mood (shadow by default; can be `on`) | `COMPANION_MOOD` | `companion mood` | 2026-10-29 |
+| The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-30 |
+| Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-30 |
 | How often it brings a thread up, learned from how they met the last ones (ADR 0023) | always shadow for now | the decision log | 2026-11-08 |
 | What they said is coming, kept until it happens, and the note that says so (ADR 0024) | `COMPANION_NOW` | `companion now` | 2026-11-08 |
-| The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-01 |
+| The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-04 |
 
 ## Rules we learned the hard way
 
