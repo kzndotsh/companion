@@ -2452,3 +2452,18 @@ nervous-presentation turn (it picked up what was said; Terra stayed on stock enc
 judges' new-show verdicts flipped between this run and the last on near-identical replies, so a
 single fixture's tally is not trusted. Six short scripted turns are a screen, not a decision: the
 next step is real turns and a longer scene before any switch.
+
+## 2026-10-27: On real turns Luna beats Terra with medium reasoning; no switch
+
+26 recorded everyday turns from `evals/local/` (flagged, playful, short statements, long-chat
+openers, two vulnerable ones; scene turns left out, they go to the roleplay talker), 12 samples
+each, `--variants v46.md@openai/gpt-6-luna,v46.md+medium@openai/gpt-6.1-terra`, $0.32 spent.
+Fixture checks even: Luna 168/312, Terra 172/310. Terra kept short replies short more often; Luna
+bantered back where Terra only agreed, and Terra copied the person's emoticon on every sample of
+the turn flagged for it. Blind pairwise reads with the turn's last six messages as context, four
+batches per judge: Sonnet Luna 169, Terra 143; Haiku Luna 190, Terra 121, tie 1. Where they agreed
+(228 of 312), Luna 138 to Terra 90 (sign test p = 0.002). By eye the verdicts hold: Terra repeated
+the very quip a flagged turn was about on most samples (the cheesy-quip check passed it), offered
+the same unprompted apology for earlier in a long chat, and settled into a stock offer to keep
+them company; it did better where Luna drew an unprompted limit. The scripted screen above did not
+carry over to real turns: trust real turns over scripts for a model switch.
