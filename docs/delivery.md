@@ -37,7 +37,8 @@ that was already written and then dropped is marked undelivered. Commands (`/fla
 never replace anything. Typed as text they work on both surfaces. On Discord they are also the bot's
 own slash commands, and a message's Apps menu has Flag this and Favorite this, which mark that
 message's turn and ask for an optional note (`io/discord.py`). These answer privately,
-only the allowed user can use them, and they are synced to Discord at each start.
+only the allowed user can use them, and they are synced to Discord only when they change: its
+command endpoint is rate limited, with day-long lockouts reported.
 
 The id of each message that carries part of a reply is kept with its turn (`sent_messages`), and so
 is the id of each of their messages, when it is stored (`received_messages`, from 2026-10-27, the

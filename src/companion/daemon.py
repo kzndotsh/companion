@@ -70,6 +70,7 @@ UNKNOWN_REPLY = (
     " send it again without replying, with a note saying which one"
 )
 DISCORD_KEY = "discord.last_message_id"
+COMMANDS_KEY = "discord.commands_synced"  # the fingerprint of the slash commands Discord has
 REFLECT_IDLE_SECONDS = 90
 REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 REMINDER_TICK_SECONDS = 60
@@ -371,7 +372,11 @@ async def _surface(
     the commands are slash commands too."""
     if s.mode("surface") == "discord":
         token, user = _need("DISCORD_BOT_TOKEN"), int(_need("DISCORD_USER_ID"))
-        async with discord.connected(token, user, commands) as transport:
+        synced = discord.Synced(
+            lambda: store.setting(rel, COMMANDS_KEY),
+            lambda value: store.set_setting(rel, COMMANDS_KEY, value, datetime.now(UTC)),
+        )
+        async with discord.connected(token, user, commands, synced) as transport:
             hooks = surface_hooks(store, rel, DISCORD_KEY, "discord")
             yield Surface(transport, hooks, s.pace_factor, s.on("split"))
         return

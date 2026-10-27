@@ -13,8 +13,10 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import hashlib
+import json
 import logging
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass
 from typing import Any, NoReturn
 
@@ -318,24 +320,48 @@ def command_tree(
     return tree
 
 
-async def sync(tree: app_commands.CommandTree) -> None:
-    """Tell Discord the commands. On a failure the old ones stay; text commands still work."""
+@dataclass(frozen=True, slots=True)
+class Synced:
+    """Where the fingerprint of the commands last synced is kept. Discord rate limits its command
+    endpoint without saying how, and day-long lockouts are reported, so it is told only of a
+    change, never at every start."""
+
+    last: Callable[[], str | None]
+    mark: Callable[[str], None]
+
+
+def fingerprint(tree: app_commands.CommandTree, application_id: int | None) -> str:
+    """Everything a sync sends, for this application, as one hash."""
+    sent = [c.to_dict(tree) for c in tree.get_commands()]
+    payload = json.dumps([application_id, sent], sort_keys=True, default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+async def sync(tree: app_commands.CommandTree, synced: Synced | None = None) -> None:
+    """Tell Discord the commands when they changed. On a failure the old ones stay and the text
+    commands still work, and the next start tries again."""
+    now = fingerprint(tree, tree.client.application_id)
+    if synced is not None and synced.last() == now:
+        log.debug("discord: commands unchanged; not synced")
+        return
     try:
-        synced = await tree.sync()
+        sent = await tree.sync()
     except (discord.DiscordException, OSError) as err:
         status = getattr(err, "status", None)
         log.warning("discord: slash commands not synced (%s)", status or type(err).__name__)
         return
-    log.info("discord: %d commands synced", len(synced))
+    if synced is not None:
+        synced.mark(now)
+    log.info("discord: %d commands synced", len(sent))
 
 
 @contextlib.asynccontextmanager
 async def connected(
-    token: str, allowed_user: int, commands: Commands | None = None
+    token: str, allowed_user: int, commands: Commands | None = None, synced: Synced | None = None
 ) -> AsyncGenerator[Discord]:
     """A logged-in Discord transport. Sending works from here on; the gateway connects when the
     surface starts receiving, and closes when it stops, while replies still in progress go out.
-    `commands` become Discord slash commands , synced after login."""
+    `commands` become Discord slash commands, synced after login when they changed."""
     intents = discord.Intents.none()
     intents.dm_messages = True
     discord.VoiceClient.warn_nacl = discord.VoiceClient.warn_dave = False  # it never joins voice
@@ -361,5 +387,5 @@ async def connected(
         except _FAILURES as err:
             raise DiscordError(_failed("login", err)) from None
         if tree is not None:
-            await sync(tree)
+            await sync(tree, synced)
         yield transport

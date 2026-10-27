@@ -20,11 +20,14 @@ from companion.io.discord import (
     NOT_YOURS,
     Discord,
     DiscordError,
+    Synced,
     _Marks,  # pyright: ignore[reportPrivateUsage]
     command_tree,
     connected,
+    fingerprint,
     run_command,
     said,
+    sync,
 )
 from companion.io.surface import Commands, Hooks, Incoming, Surface
 
@@ -425,3 +428,39 @@ async def test_only_the_allowed_user_runs_a_command_and_the_answer_is_private() 
     assert them.deferred
     assert them.said == ["luna"]
     assert seen == [("fav", "a" * 500, "m2")]
+
+
+def _tree() -> app_commands.CommandTree:
+    return command_tree(discord.Client(intents=discord.Intents.none()), ALLOWED, _commands([]))
+
+
+async def test_commands_are_synced_only_when_they_changed_and_a_failure_is_retried() -> None:
+    tree = _tree()
+    kept: list[str | None] = [None]
+    calls: list[int] = []
+
+    async def sync_once() -> list[object]:
+        calls.append(1)
+        if len(calls) == 2:
+            raise _forbidden()
+        return [1, 2, 3, 4, 5]
+
+    tree.sync = sync_once  # type: ignore[method-assign]
+    synced = Synced(lambda: kept[0], lambda value: kept.__setitem__(0, value))
+    await sync(tree, synced)
+    await sync(tree, synced)
+    assert len(calls) == 1
+    assert kept[0] == fingerprint(tree, None)
+    kept[0] = "an older set of commands"
+    await sync(tree, synced)
+    assert len(calls) == 2
+    assert kept[0] == "an older set of commands"
+    await sync(tree, synced)
+    assert len(calls) == 3
+    assert kept[0] == fingerprint(tree, None)
+
+
+def test_the_fingerprint_is_per_application() -> None:
+    tree = _tree()
+    assert fingerprint(tree, 1) == fingerprint(_tree(), 1)
+    assert fingerprint(tree, 1) != fingerprint(tree, 2)
