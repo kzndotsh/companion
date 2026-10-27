@@ -281,6 +281,14 @@ def test_no_offer_unless_it_may_and_never_one_that_was_pushed_back() -> None:
     assert cooled_one.offer.id == "cur2"
 
 
+def test_a_curious_pattern_read_from_how_they_played_is_never_offered() -> None:
+    played = Entry(
+        "pat", "In scenes, the user tends to ask for more", Stance.CURIOUS, ("q",), scenes=3
+    )
+    card = scene_card((played,), {"pat": 0.9}, [], may_offer=True)
+    assert card.offer is None
+
+
 def test_an_item_cools_when_the_next_brush_off_read_after_its_offer_declined() -> None:
     now = T0 + timedelta(days=1)
     at = [T0 + timedelta(minutes=m) for m in range(5)]

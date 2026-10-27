@@ -426,7 +426,11 @@ def scene_card(
     limits = tuple(e for stance in LIMITS for e in entries if e.stance is stance)
     scored = sorted(((e, scores[e.id]) for e in entries if e.id in scores), key=lambda x: -x[1])
     nearest = tuple((e, s) for e, s in scored if e.stance in KNOWN_STANCES)[:NEAREST]
-    curious = [e for e, _ in scored if e.stance is Stance.CURIOUS and e.id not in cooled]
+    # Only what they said they are curious about is ever offered; a curious reading of how they
+    # played is a guess, and on real scenes some read like pushing past a partner's no (2026-10-26).
+    curious = [
+        e for e, _ in scored if e.stance is Stance.CURIOUS and not e.pattern and e.id not in cooled
+    ]
     offer = curious[0] if may_offer and curious else None
     return SceneCard(limits, nearest, offer, tuple(basics))
 
