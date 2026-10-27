@@ -2476,8 +2476,8 @@ Terra 9, Luna 1, no preference 3. They asked for wider topics, so 26 recent ever
 (2026-10-20 to 27, eight days, no scenes) were added to `evals/local/` as `recent-NN-local` and run
 12 times on each model ($0.27). Second quiz, 20 rounds from those: Terra 9, Luna 6, no preference
 5 (one Luna pick was because Terra said it could not verify something, which the owner said broke
-the mood). Together Terra 18, Luna 7 of the 25 with a pick (sign test p = 0.04 over 26 counting
-the round they disliked Terra for mirroring a nickname). The Claude judges preferred Luna on the
+the mood). Together Terra 18, Luna 8, counting the round they disliked Terra for mirroring a
+nickname as Luna's (sign test p = 0.08: suggestive, not settled). The Claude judges preferred Luna on the
 same kind of turns (138 to 90): on what this person likes, the judges point the wrong way, so the
 owner's blind picks outrank them for a talker choice. Terra's misses the owner noticed or that
 showed up repeatedly: mirroring their nickname or emoticon back, hedging about what it can check,
