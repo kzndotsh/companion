@@ -13,6 +13,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 
 | Where | What |
 |---|---|
+| `GLOSSARY.md` | the project's words, one meaning each, with the ones to avoid and the words that mean more than one thing |
 | `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files and setting: read it before changing the feature |
 | `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md`, `docs/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
