@@ -343,6 +343,12 @@ When the answer comes, the card moves to Todo or Done.
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
       **2026-10-24:** ADR 0021 took the user-chosen dial for reaching out (`COMPANION_REACH`, a share of
       conversations it starts); the pace of closeness is still open, with T17.
+- [ ] T23 A one-week live trial of GPT-6.1 Terra with medium reasoning as the everyday talker. **Owner
+      decided 2026-10-27: wait until the shadow reviews are done (the last on 2026-11-09)**, so a change in
+      flags is the model's and not a feature going live. Why: the owner's blind picks favoured it 18 to 8,
+      against the Claude judges (see `evals/CHANGELOG.md`, 2026-10-27). Watch for it mirroring their words or
+      emoticons, hedging about what it can check, and slow replies (p90 3.3 s); about 2.7 times Luna's cost.
+      Read flags and favourites after the week; switching back is one setting.
 - [ ] T8 Decide provider routing for DeepSeek: sort by latency (removes the 5 to 9 second outliers, the
       provider changes per request) or pin a provider list. **Needs decision**.
 - [ ] T9 Decide whether replies from flagged turns stay in the window the model reads. A leaked reply
