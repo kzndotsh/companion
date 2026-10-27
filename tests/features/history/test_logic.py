@@ -74,9 +74,11 @@ def test_a_failed_read_rules_nothing() -> None:
     assert rule([], CLAIMS) is None
 
 
-def test_same_without_a_kept_story_is_unreadable_and_contradicts_may_name_the_sheet() -> None:
+def test_same_without_a_kept_story_is_the_sheet_so_it_fits_and_contradicts_may_name_the_sheet() -> (
+    None
+):
     refs = {"s1": PET}
-    assert parse_canon({"verdict": "same", "story": "s9"}, refs) is None
+    assert parse_canon({"verdict": "same", "story": "s9"}, refs) == CanonRead(Verdict.FITS, None)
     assert parse_canon({"verdict": "same", "story": "[s1]"}, refs) == CanonRead(Verdict.SAME, PET)
     assert parse_canon({"verdict": "contradicts", "story": ""}, refs) == CanonRead(
         Verdict.CONTRADICTS, None

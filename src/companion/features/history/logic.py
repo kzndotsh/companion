@@ -201,7 +201,9 @@ def canon_prompt(sheet: str, canon: Sequence[Story], new: Story) -> tuple[str, d
 
 
 def parse_canon(data: Json, refs: Mapping[str, StoryId]) -> CanonRead | None:
-    """One verdict. None for an answer of the wrong shape, or `same` without a kept story."""
+    """One verdict. None for an answer of the wrong shape. `same` without a kept story is the same
+    as the sheet, which is canon already: it fits. Read as unreadable, it stopped the queue for good
+    on a story the sheet already tells (2026-10-26)."""
     if not isinstance(data, dict):
         return None
     verdict, label = data.get("verdict"), str(data.get("story") or "").strip("[] ")
@@ -210,7 +212,7 @@ def parse_canon(data: Json, refs: Mapping[str, StoryId]) -> CanonRead | None:
     v = Verdict(str(verdict))
     of = refs.get(label) if v in {Verdict.SAME, Verdict.CONTRADICTS} else None
     if v is Verdict.SAME and of is None:
-        return None
+        return CanonRead(Verdict.FITS, None)
     return CanonRead(v, of)
 
 
