@@ -11,7 +11,7 @@ A separate memory lane for intimate scenes. Memories about sex and intimate play
 2. A scene turn keeps the basics (what they are called, and how they want to be referred to, which is pinned on every turn) and no other everyday memory.
 3. It may bring up something they said they are curious about, not only what they are into. Never a limit.
 
-**Placing memories** (`label_lanes` in `run.py`, run by the memory pass when the switch is not `off`). Each pass takes up to 60 memories (`BATCH`) that may be stated as true (`is_assertable`) and have no place yet, and sends them to `system/scene-lane` three times (`read_times`, spend `scene memory`). Each read gives each memory a lane, everyday or intimate, and an intimate one a stance: `into`, `curious`, `hard_limit`, `soft_limit`, `style` or `aftercare`. Code turns the three reads into a place (`agree` in `logic.py`): the lane and stance all three gave, or `excluded` as doubt when they differ or a read left the memory out. A failed or unreadable read places nothing, and the batch waits for the next pass.
+**Placing memories** (`label_lanes` in `run.py`, run by the memory pass when the switch is not `off`). Each pass takes up to 15 memories (`BATCH`; in batches of 60 borderline ones flipped with what sat around them) that may be stated as true (`is_assertable`) and have no place yet, or whose place is a doubt reached under an older version of the prompt (read once more), and sends them to `system/scene-lane` three times (`read_times`, spend `scene memory`). Each read gives each memory a lane, everyday or intimate, and an intimate one a stance: `into`, `curious`, `hard_limit`, `soft_limit`, `style` or `aftercare`. Code turns the three reads into a place (`agree` in `logic.py`): every read must give the same lane, and an intimate one takes the stance most reads gave; a limit needs every read to give that same limit. A split lane, a stance with no majority, or a read that left the memory out is `excluded` as doubt. A limit is then asked again, three times, by `system/scene-limit-check`: do their own words say they do not want it, or want it only under a condition. Any no or failed read keeps it out as doubt, since a limit is pinned to every scene card. A failed or unreadable read places nothing, and the batch waits for the next pass.
 
 **The floor** (`screen` in `logic.py`), over the agreed place, in code, whatever the reads said. An everyday memory stays everyday. An intimate or doubtful one is kept out of scenes:
 
@@ -63,6 +63,7 @@ The tables are in `store/sqlite/migrations/0037_scene_memory.sql`.
 ## Prompts
 
 - `system/scene-lane`: each memory's lane, everyday or intimate, and an intimate one's stance.
+- `system/scene-limit-check`: whether their own words set a limit the lane reads gave; every read must say yes.
 - `system/scene-pattern`: how they tend to play intimate scenes, from one ended scene, quoted from their own messages.
 - `notes/scene-limits`: the scene card's limits, hard and soft.
 - `notes/scene-known`: the entries nearest the moment.

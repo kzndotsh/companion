@@ -2407,3 +2407,18 @@ they mean it is a push back even inside an action, and doubt counts as one, ever
 12 (a joking bonk and behave, slow down, a serious stop, a bare "stop.", "help, i'm uncomfortable",
 that stop inside an action, an out-of-character pause), and two made-up in-role protests 12 and 11 of
 12. Shipped as `system/brush-off` v2. Scratch script `brush.py`; about 4 cents.
+
+## 2026-10-26: Placing memories in the scene lane: smaller batches, majority stance, a narrow limit check
+
+Of 225 real memories, 9 were kept out of the intimate lane because the three `system/scene-lane` v1
+reads disagreed. Read again alone, six times each: four general-romance memories read everyday six of
+six (they had flipped inside a batch of 60); one split only between into and style; two read as
+limits from wording that sets none (a wish the companion cannot meet, "rather than"). Changes: 15
+memories a call, the stance most reads gave (a limit still needs every read), lane prompt v2 (a limit
+is a no in their words), and a doubt from v1 read once more. Reread on a copy: the four stayed
+everyday, the into/style one became into, a play-style one became style, but all three reads now
+agreed on both false limits, and a word check could not tell a wish ("can't") from a no. A narrow
+`system/scene-limit-check`, asked three times of any limit: the wish 8 of 8 not a limit, four
+made-up real limits 8 of 8, and a preference stated with "only if" 8 of 8 a limit, which is fair.
+With all of it, every one of the nine landed right on a fresh copy. Scratch scripts `lane_votes.py`,
+`relane.py`, `limit_try.py`; about 4 cents.

@@ -30,6 +30,7 @@ from companion.features.scene_memory import run
 from companion.features.scene_memory.cli import run as listing
 from companion.features.scene_memory.logic import (
     LANE,
+    LIMIT_CHECK,
     PATTERN,
     Everyday,
     Excluded,
@@ -69,8 +70,10 @@ class Judge:
         plays: tuple[tuple[str, str, str], ...] = (),
         *,
         fail: bool = False,
+        not_limits: frozenset[str] = frozenset(),
     ) -> None:
         self.lanes, self.plays, self.fail = lanes or {}, plays, fail
+        self.not_limits = not_limits  # claims the limit check says set no limit
         self.calls: list[str] = []
         self.reads = 0
 
@@ -87,6 +90,10 @@ class Judge:
                 lane, stance = self.lanes.get(claim, _agreed("everyday", "none"))(n, claim)
                 labels.append({"ref": ref, "lane": lane, "stance": stance})
             return Extraction({"labels": labels}, "fake", 0.001, 1)
+        if system == LIMIT_CHECK.text:
+            self.calls.append("limit")
+            meant = user.split("\n", 1)[0].removeprefix("What it was taken to mean: ")
+            return Extraction({"limit": meant not in self.not_limits}, "fake", 0.001, 1)
         assert system == PATTERN.text
         self.calls.append("scene")
         noted = dict(re.findall(r"^\[(p\d+)\] (.+)$", user, re.MULTILINE))
@@ -160,7 +167,7 @@ def _decide(store: Store, u: Utterance, key: str, detail: dict[str, Json]) -> No
     Recorder(store, REL, u.session_id, u.turn_id, TraceId("x"), u.at).decide(key, detail)
 
 
-async def test_three_agreeing_reads_place_a_memory_and_any_split_keeps_it_out(
+async def test_three_reads_place_a_memory_by_lane_with_the_stance_most_of_them_gave(
     store: Store,
 ) -> None:
     into = _told(store, "likes slow kissing", "i love slow kissing")
@@ -176,14 +183,11 @@ async def test_three_agreeing_reads_place_a_memory_and_any_split_keeps_it_out(
     assert judge.calls == ["lane"] * 3
     assert store.scene_memory().places(REL) == {
         into.id: Intimate(Stance.INTO),
-        split.id: Excluded(Why.DOUBT),
+        split.id: Intimate(Stance.CURIOUS),
         work.id: Everyday(),
     }
     logged = {d.reason for d in store.decisions_with_key(REL, PLACED)}
-    assert logged == {
-        "scene memory: intimate, into",
-        "scene memory: kept out of scenes, the three reads did not agree",
-    }
+    assert logged == {"scene memory: intimate, into", "scene memory: intimate, curious"}
 
 
 async def test_a_failed_read_places_nothing_and_the_batch_waits(store: Store) -> None:
@@ -220,6 +224,17 @@ async def test_a_limit_read_into_an_inferred_memory_is_not_their_words(store: St
         inferred.id: Excluded(Why.NOT_THEIR_WORDS),
     }
     assert [e.id for e in entries(store, REL)] == [stated.id]
+
+
+async def test_a_limit_the_narrow_check_does_not_confirm_is_kept_out_as_doubt(
+    store: Store,
+) -> None:
+    wish = _told(store, "wishes it could hold the companion", "i can't hold you :c")
+    limit = _agreed("intimate", "soft_limit")
+    judge = Judge({wish.claim: limit}, not_limits=frozenset({wish.claim}))
+    await label_lanes(store, judge, REL, LATER)
+    assert store.scene_memory().places(REL) == {wish.id: Excluded(Why.DOUBT)}
+    assert judge.calls.count("limit") == 3
 
 
 SLOW = "In scenes, the user tends to ask for a slow pace."

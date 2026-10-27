@@ -52,13 +52,13 @@ A, B, C = BeliefId("a"), BeliefId("b"), BeliefId("c")
 INTO = Intimate(Stance.INTO)
 
 
-def test_a_memory_is_intimate_only_when_all_three_reads_give_the_same_lane_and_stance() -> None:
+def test_a_memory_is_intimate_when_every_read_gives_that_lane_with_most_on_one_stance() -> None:
     reads = [
         {A: INTO, B: INTO, C: Everyday()},
         {A: INTO, B: Intimate(Stance.STYLE), C: Everyday()},
         {A: INTO, B: INTO, C: Everyday()},
     ]
-    assert agree(reads, [A, B, C]) == {A: INTO, B: Excluded(Why.DOUBT), C: Everyday()}
+    assert agree(reads, [A, B, C]) == {A: INTO, B: INTO, C: Everyday()}
 
 
 def test_a_lane_split_or_a_memory_a_read_left_out_is_doubt() -> None:
@@ -305,3 +305,16 @@ def test_an_item_cools_when_the_next_brush_off_read_after_its_offer_declined() -
         BrushRead(now - timedelta(days=4, minutes=-1), TurnId("x"), declined=True),
     ]
     assert cooled(offers, reads, now) == {"cur1"}
+
+
+def test_reads_that_agree_on_intimate_take_the_stance_most_gave_but_a_limit_needs_all() -> None:
+    b = BeliefId("b")
+    into, style = Intimate(Stance.INTO), Intimate(Stance.STYLE)
+    hard, soft = Intimate(Stance.HARD_LIMIT), Intimate(Stance.SOFT_LIMIT)
+    assert agree([{b: style}, {b: style}, {b: into}], [b])[b] == style
+    assert agree([{b: hard}, {b: hard}, {b: soft}], [b])[b] == Excluded(Why.DOUBT)
+    assert agree([{b: into}, {b: into}, {b: hard}], [b])[b] == Excluded(Why.DOUBT)
+    assert agree([{b: hard}, {b: hard}, {b: hard}], [b])[b] == hard
+    assert agree([{b: into}, {b: Everyday()}, {b: into}], [b])[b] == Excluded(Why.DOUBT)
+    curious = Intimate(Stance.CURIOUS)
+    assert agree([{b: into}, {b: style}, {b: curious}], [b])[b] == Excluded(Why.DOUBT)

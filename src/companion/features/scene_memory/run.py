@@ -39,6 +39,9 @@ from companion.features.scene_memory.logic import (
     COOL,
     LANE,
     LANE_SCHEMA,
+    LIMIT_CHECK,
+    LIMIT_SCHEMA,
+    LIMITS,
     PATTERN,
     PATTERN_SCHEMA,
     WHY_TEXT,
@@ -59,7 +62,9 @@ from companion.features.scene_memory.logic import (
     closed,
     cooled,
     lane_prompt,
+    limit_prompt,
     parse_lanes,
+    parse_limit,
     parse_patterns,
     pattern_entry,
     pattern_prompt,
@@ -132,7 +137,12 @@ async def label_lanes(
     places nothing: the batch waits for the next pass, never placed from fewer reads."""
     sm = store.scene_memory()
     have = sm.places(rel)
-    todo = [b for b in store.user_beliefs(rel) if is_assertable(b) and b.id not in have][:BATCH]
+    again = sm.doubted_before(rel, LANE.ref)  # a doubt under an older prompt is read again once
+    todo = [
+        b
+        for b in store.user_beliefs(rel)
+        if is_assertable(b) and (b.id not in have or b.id in again)
+    ][:BATCH]
     if not todo:
         return Spent()
     text, refs = lane_prompt(todo)
@@ -150,13 +160,35 @@ async def label_lanes(
     agreed = agree([v for v in got.values if v is not None], refs.values())
     held, heavy = sm.facts(rel, [e.utterance_id for b in todo for e in b.evidence])
     places = {b.id: screen(agreed[b.id], b, facts_of(b, held, heavy)) for b in todo}
+    spent = got.cost_usd
+    for b in todo:
+        place = places[b.id]
+        if isinstance(place, Intimate) and place.stance in LIMITS:
+            sure, cost = await _a_limit(extractor, b)
+            spent += cost
+            if not sure:
+                places[b.id] = Excluded(Why.DOUBT)
     sm.place(places, By(got.model, LANE.ref, now))
     record = _pass_recorder(store, rel, now)
     for bid, p in places.items():
         logged = _placed_detail(bid, p)
         if logged is not None:
             record.decide(PLACED, logged[0] | {"prompt": LANE.ref}, reason=logged[1])
-    return Spent(got.cost_usd)
+    return Spent(spent)
+
+
+async def _a_limit(extractor: Extractor, b: Belief) -> tuple[bool, float]:
+    """Whether their own words set the limit the lane reads gave: every read must say so."""
+    got = await read_times(
+        extractor,
+        LIMIT_CHECK.text,
+        limit_prompt(b),
+        LIMIT_SCHEMA,
+        parse_limit,
+        spend="scene memory",
+    )
+    sure = not got.failed and all(v is True for v in got.values)
+    return sure, got.cost_usd
 
 
 def _span(batch: Sequence[Utterance], before: Utterance | None) -> Utterance | None:

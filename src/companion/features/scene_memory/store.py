@@ -83,6 +83,18 @@ class SceneMemory:
         ).fetchall()
         return {BeliefId(str(r["belief_id"])): _place(r) for r in rows}
 
+    def doubted_before(self, rel: RelationshipId, prompt: str) -> frozenset[BeliefId]:
+        """Memories whose newest place is a doubt reached under another version of the prompt."""
+        rows = self.conn.execute(
+            "SELECT l.belief_id, l.why, l.prompt FROM scene_lanes l JOIN beliefs b"
+            " ON b.id = l.belief_id WHERE b.relationship_id = ? ORDER BY l.id",
+            (rel,),
+        ).fetchall()
+        newest = {str(r["belief_id"]): (r["why"], r["prompt"]) for r in rows}
+        return frozenset(
+            BeliefId(b) for b, (why, p) in newest.items() if why == Why.DOUBT.value and p != prompt
+        )
+
     def intimate(self, rel: RelationshipId) -> frozenset[BeliefId]:
         """The memories whose place is the intimate lane: never shown outside a scene when on."""
         return frozenset(b for b, p in self.places(rel).items() if isinstance(p, Intimate))

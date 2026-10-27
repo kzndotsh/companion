@@ -15,6 +15,7 @@ separate scenes. They are never limits.
 from __future__ import annotations
 
 import re
+from collections import Counter
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -36,12 +37,33 @@ from companion.prompts import get
 
 LANE = get("system/scene-lane")
 PATTERN = get("system/scene-pattern")
+# A limit is pinned to every scene card, so a limit the lane reads gave is asked again, narrowly: do
+# their words say no. Three lane reads agreed on a limit read from a wish for what it cannot have.
+LIMIT_CHECK = get("system/scene-limit-check")
+LIMIT_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"limit": {"type": "boolean"}},
+    "required": ["limit"],
+    "additionalProperties": False,
+}
+
+
+def parse_limit(data: Json) -> bool | None:
+    value = data.get("limit") if isinstance(data, dict) else None
+    return value if isinstance(value, bool) else None
+
+
+def limit_prompt(b: Belief) -> str:
+    quotes = "\n".join(f'- "{e.quote}"' for e in b.evidence)
+    return f"What it was taken to mean: {b.claim}\nTheir words:\n{quotes}"
+
+
 LIMITS_NOTE = get("notes/scene-limits")
 KNOWN_NOTE = get("notes/scene-known")
 OFFER_NOTE = get("notes/scene-offer")
 BASICS_NOTE = get("notes/scene-basics")
 
-BATCH = 60  # memories labelled per call
+BATCH = 15  # memories labelled per call: in 60, borderline ones flipped with what sat around them
 NEAREST = 3  # entries nearest the moment on a scene card, besides the limits
 MIN_SCENES = 2  # a pattern is an entry only once seen in this many separate scenes
 COOL = timedelta(days=3)  # a curious item they pushed back is not offered again this soon
@@ -221,15 +243,30 @@ def parse_lanes(data: Json, refs: Mapping[str, BeliefId]) -> dict[BeliefId, Vote
 def agree(
     reads: Sequence[Mapping[BeliefId, Vote]], shown: Iterable[BeliefId]
 ) -> dict[BeliefId, Place]:
-    """One place per memory from the reads: the lane and stance every read gave, else doubt. A read
-    that left a memory out is doubt too."""
+    """One place per memory from the reads. Every read must give the same lane, else doubt; a
+    read that left a memory out is doubt too. In the intimate lane the stance is the one most reads
+    gave, except a limit: one read calling it a limit needs every read to give that same limit.
+    Reads split between into and style threw out memories every read called intimate
+    (2026-10-26)."""
     out: dict[BeliefId, Place] = {}
     for bid in shown:
         votes = [r.get(bid) for r in reads]
-        first = votes[0] if votes else None
-        same = first is not None and all(v == first for v in votes)
-        out[bid] = first if same and first is not None else Excluded(Why.DOUBT)
+        out[bid] = _agreed(votes) if votes else Excluded(Why.DOUBT)
     return out
+
+
+def _agreed(votes: Sequence[Vote | None]) -> Place:
+    if any(v is None for v in votes):
+        return Excluded(Why.DOUBT)
+    if all(isinstance(v, Everyday) for v in votes):
+        return Everyday()
+    stances = [v.stance for v in votes if isinstance(v, Intimate)]
+    if len(stances) != len(votes):
+        return Excluded(Why.DOUBT)
+    if any(s in LIMITS for s in stances):
+        return Intimate(stances[0]) if len(set(stances)) == 1 else Excluded(Why.DOUBT)
+    top, n = Counter(stances).most_common(1)[0]
+    return Intimate(top) if n * 2 > len(stances) else Excluded(Why.DOUBT)
 
 
 @dataclass(frozen=True, slots=True)
