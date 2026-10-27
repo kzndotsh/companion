@@ -5,11 +5,13 @@ import asyncio
 import pytest
 
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
+from companion.core.turn.quoted import Quoted
+from companion.core.types import Speaker
 from companion.io.surface import Hooks, Incoming, Reply, Surface
 from tests.io.fake import Fake, msg
 
 
-async def _talk_reply(text: str) -> str:
+async def _talk_reply(text: str, _quoted: Quoted | None = None) -> str:
     del text
     return "reply"
 
@@ -20,7 +22,7 @@ async def _one(
     fake = Fake(react_fails=react_fails)
     handled: list[str] = []
 
-    async def talk(t: str) -> Reply:
+    async def talk(t: str, _quoted: Quoted | None = None) -> Reply:
         handled.append(t)
         return reply
 
@@ -79,13 +81,26 @@ async def test_a_failed_send_does_not_stop_the_bot() -> None:
     assert fake.sent == []
 
 
+async def test_the_message_they_replied_to_reaches_the_turn() -> None:
+    got: list[Quoted | None] = []
+
+    async def talk(text: str, quoted: Quoted | None = None) -> str:
+        del text
+        got.append(quoted)
+        return "ok"
+
+    quoted = Quoted("your call", Speaker.COMPANION)
+    await Surface(Fake()).reply_to(Incoming("1", "so cute", "1", "9", quoted), talk, {})
+    assert got == [quoted]
+
+
 async def test_an_undelivered_reply_is_reported_with_its_text() -> None:
     told: list[tuple[str, str, str]] = []
 
     async def on_undelivered(text: str, reason: str, delivered: str) -> None:
         told.append((text, reason, delivered))
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         return "you never see this"
 
@@ -108,7 +123,7 @@ async def test_a_reply_cut_off_after_its_first_part_reports_the_part_that_arrive
         del reason
         told.append((text, delivered))
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         return "First bit. Second bit."
 
@@ -133,7 +148,7 @@ async def test_a_delivered_reply_is_not_reported() -> None:
 async def test_messages_are_recorded_before_the_turn_runs_and_in_order() -> None:
     order: list[str] = []
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         order.append(f"turn {text}")
         return "ok"
 
@@ -169,7 +184,7 @@ async def _paced(
         sleeps.append(seconds)
         fake.calls.append(f"sleep {seconds:g}")
 
-    async def talk(text: str) -> Reply:
+    async def talk(text: str, _quoted: Quoted | None = None) -> Reply:
         del text
         return reply
 
@@ -204,7 +219,7 @@ async def _typing_while_writing(writing: float, reply: str | Reaction) -> list[s
     """Real time: a pace whose reading pause is about 0.04 s, and a model that takes `writing`."""
     fake = Fake()
 
-    async def talk(text: str) -> str | Reaction:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str | Reaction:
         del text
         await asyncio.sleep(writing)
         fake.calls.append("written")
@@ -270,7 +285,7 @@ async def test_a_command_reply_is_never_held(monkeypatch: pytest.MonkeyPatch) ->
 
     monkeypatch.setattr("companion.io.surface.asyncio.sleep", fake_sleep)
     fake = Fake()
-    await Surface(fake, pace=1.6).reply_to(msg("/flag"), flag, {"flag": flag})
+    await Surface(fake, pace=1.6).reply_to(msg("/flag"), _talk_reply, {"flag": flag})
     assert sleeps == []
     assert fake.sent == ["done"]
 
@@ -292,7 +307,7 @@ async def _split_run(
 ) -> list[str]:
     """The messages the transport was asked to send and did."""
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         return reply
 
@@ -339,7 +354,7 @@ async def test_each_part_waits_and_shows_typing_before_it_is_sent(
         del seconds
         fake.calls.append("sleep")
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         return _LONG_REPLY
 
@@ -362,7 +377,7 @@ async def _burst(
     undelivered: list[str] = []
     fake = Fake(script=[(0.0, msg("first", 1)), (gap, msg("second", 2))])
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         handled.append(text)
         if text == "first":
             if first_reply == "":
@@ -408,7 +423,7 @@ async def test_a_stop_lets_the_reply_in_progress_go_out_and_takes_nothing_new() 
     stop = asyncio.Event()
     fake = Fake(script=[(0.0, msg("hey", 1)), (0.1, msg("too late", 2))])
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         stop.set()  # the stop comes while this reply is being written
         await asyncio.sleep(0.3)
@@ -421,7 +436,7 @@ async def test_a_stop_lets_the_reply_in_progress_go_out_and_takes_nothing_new() 
 async def _then(refuse_first: bool) -> tuple[list[str], list[str]]:
     told: list[str] = []
 
-    async def talk(text: str) -> ThenSend:
+    async def talk(text: str, _quoted: Quoted | None = None) -> ThenSend:
         del text
         return ThenSend("i'm here", "the fixed line")
 
@@ -449,7 +464,7 @@ async def test_code_s_own_message_still_goes_when_the_reply_could_not() -> None:
 async def test_a_reply_longer_than_the_surface_takes_goes_as_several_messages() -> None:
     reply = "Short one. " * 30
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         return reply
 
@@ -468,7 +483,7 @@ async def test_each_message_of_a_turn_s_reply_is_reported_sent_and_a_command_s_a
     kept: list[str] = []
     replied: list[str | None] = []
 
-    async def talk(t: str) -> Reply:
+    async def talk(t: str, _quoted: Quoted | None = None) -> Reply:
         del t
         return _LONG_REPLY
 

@@ -143,6 +143,13 @@ system block they did not (measured twice). These are the owned-it note, the que
 the character's scene reminder, the crisis notes, the offer of an emoticon of its own and the calendar's note. Whatever is sent after the history is logged with
 the turn, so a replay rebuilds it.
 
+When they use reply on a message, Discord or Telegram sends the message they replied to along with
+theirs, and `notes/replied-to` puts it in the system block quoted with `>`, saying whether it was
+theirs or the companion's (`core/turn/quoted.py`). Without it only their words reached the model, and
+it read every reply as an answer to its latest message. It is added even for its latest message: a
+split reply is several messages, and a reply picks one. The quote is logged as the `replied-to`
+decision.
+
 When one of its last two replies owned a slip ("my bad", "I got that wrong"), the next turn outside a
 scene gets `notes/owned-it` after the history: that was enough, no more apologies or self-blame
 (`core/turn/ownup.py`).

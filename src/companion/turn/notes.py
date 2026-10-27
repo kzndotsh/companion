@@ -26,6 +26,7 @@ from companion.core.turn.listening import render_reason as render_listening
 from companion.core.turn.mentions import CHECKED_IN
 from companion.core.turn.ownup import owned_note
 from companion.core.turn.questions import question_note
+from companion.core.turn.quoted import quoted_note
 from companion.core.types import (
     Frame,
     Json,
@@ -179,6 +180,22 @@ def _base(m: Moment, _: Offered) -> Offer:
     return Offer(tuple(_notes(m.in_scene, size)))
 
 
+def _replied_to(m: Moment, _: Offered) -> Offer:
+    """The message they used reply on, quoted, so it knows which one they answer."""
+    quoted = m.t.quoted
+    note = quoted_note(quoted)
+    if quoted is None or note is None:
+        return Offer()
+    decide(
+        m.c,
+        m.t,
+        "replied-to",
+        {"speaker": quoted.speaker.value, "text": quoted.text},
+        reason=f"replied-to: they replied to a message of the {quoted.speaker.value}'s",
+    )
+    return Offer((note,))
+
+
 def _listening(m: Moment, _: Offered) -> Offer:
     note = _listening_note(m.c, m.t, m.heard)
     return Offer((note,) if note else ())
@@ -290,6 +307,7 @@ def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
 # The notes that are not features' own, by name.
 _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "base": _base,
+    "replied-to": _replied_to,
     "listening": _listening,
     "rude": _rude,
     "repair": _repair,
@@ -309,6 +327,7 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
 ORDER: tuple[str, ...] = (
     "moves",
     "base",
+    "replied-to",
     "listening",
     "rude",
     "repair",

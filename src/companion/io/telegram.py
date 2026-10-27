@@ -10,6 +10,8 @@ import time
 
 import httpx
 
+from companion.core.turn.quoted import Quoted
+from companion.core.types import Speaker
 from companion.io.surface import DeliveryError, Incoming
 from companion.models.wire import integer, obj, seq
 
@@ -148,9 +150,22 @@ class Telegram:
                     text,
                     str(update_id),
                     str(integer(replied)) if replied is not None else None,
+                    _quoted(msg),
                 )
             )
         return out, offset
+
+
+def _quoted(msg: dict[str, object]) -> Quoted | None:
+    """The message they replied to, from the update: the part they quoted if they picked one,
+    else its whole text. A reply to a message with no text is None."""
+    replied = obj(msg.get("reply_to_message"))
+    part = obj(msg.get("quote")).get("text")
+    text = part if isinstance(part, str) and part else replied.get("text")
+    if not isinstance(text, str) or not text:
+        return None
+    mine = obj(replied.get("from")).get("is_bot") is True
+    return Quoted(text, Speaker.COMPANION if mine else Speaker.USER)
 
 
 def _retry_after(resp: httpx.Response) -> float:

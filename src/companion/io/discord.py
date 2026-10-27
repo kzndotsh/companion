@@ -15,6 +15,8 @@ from typing import NoReturn
 import aiohttp
 import discord
 
+from companion.core.turn.quoted import Quoted
+from companion.core.types import Speaker
 from companion.io.surface import DeliveryError, Incoming
 
 log = logging.getLogger("companion.discord")
@@ -133,7 +135,23 @@ class Discord:
         self._last = message.id
         ref = message.reference
         replied = str(ref.message_id) if ref is not None and ref.message_id is not None else None
-        inbox.put_nowait(Incoming(str(message.id), message.content, str(message.id), replied))
+        inbox.put_nowait(
+            Incoming(str(message.id), message.content, str(message.id), replied, self._quoted(ref))
+        )
+
+    def _quoted(self, ref: discord.MessageReference | None) -> Quoted | None:
+        """The message they replied to, as Discord sent it with theirs. A forward, or a message
+        deleted or not sent along, is None."""
+        if ref is None or ref.type is not discord.MessageReferenceType.reply:
+            return None
+        replied = ref.resolved
+        if replied is None or isinstance(replied, discord.DeletedReferencedMessage):
+            return None
+        if not replied.content:
+            return None
+        me = self._client.user
+        mine = me is not None and replied.author.id == me.id
+        return Quoted(replied.content, Speaker.COMPANION if mine else Speaker.USER)
 
     async def _channel(self) -> discord.DMChannel:
         if self._dm is None:

@@ -665,6 +665,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/repair
 - **notes/repair v1** (current). New (J30). When the listening judge reads that they say the companion got them wrong (misread, assumed, wrong words, hurt), one line: own it plainly, go on from what they said, no long apology, no explaining, never ask them to repeat. Not added when the message is a forgot-something recall, which recall's own note covers.
 
+## notes/replied-to
+- **notes/replied-to v1** (current). New. When they use reply on a message on Discord or Telegram, the message they replied to, quoted with `>` and said to be theirs or the companion's, so it knows which message they are answering. Before, only their words reached the model and it read every reply as an answer to its latest message. Added even for its latest message, since a split reply is several messages and a reply picks one. Cut at 500 characters. Not measured: the owner's own `>` quote of a split part was understood in the live chat (2026-10-27), which is what this adds for them.
+
 ## notes/rude
 - **notes/rude v1** (current). Added by code for the one turn when the listening judge labels their message rude to the companion: a few flat words and leave it there, no apology, offer, suggestion or question. Measurement in `evals/CHANGELOG.md`.
 

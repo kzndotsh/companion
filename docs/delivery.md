@@ -40,6 +40,11 @@ The id of each message that carries part of a reply is kept with its turn (`sent
 `/flag` or `/fav` sent as a reply to one of those messages marks that turn, not the latest. A reply to
 a message it has no record of, such as one sent before ids were kept, marks nothing and says so.
 
+A plain message sent as a reply also brings the message it points at: its text and whether the
+companion or they sent it (`Incoming.quoted`). Discord sends it with the message (a forward or a
+deleted message brings nothing); Telegram sends it too, or only the part they picked when they
+quoted part of it. The turn quotes it in a note (`docs/turn.md`).
+
 ## Sending
 
 Replies are held for a moment so they land like someone typing, not instantly. `COMPANION_PACE`

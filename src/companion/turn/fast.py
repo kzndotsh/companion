@@ -16,6 +16,7 @@ from companion.core.turn.ack import (
     Reaction,
     ThenSend,
 )
+from companion.core.turn.quoted import Quoted
 from companion.core.types import (
     Frame,
     SessionId,
@@ -48,15 +49,23 @@ def _id() -> str:
     return uuid.uuid4().hex
 
 
-async def handle(
-    c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None = None
+async def handle(  # noqa: PLR0913
+    c: Conversation,
+    session: SessionId,
+    text: str,
+    channel: str,
+    now: datetime | None = None,
+    *,
+    quoted: Quoted | None = None,
 ) -> str | Reaction | ReactAndReply | ThenSend:
-    """One message in, one reply out (or a reaction, or nothing at the cap)."""
+    """One message in, one reply out (or a reaction, or nothing at the cap). `quoted` is the
+    message they used reply on, if they did."""
     now = now or utc_now()
     capped = _stopped_by_cap(c, session, text, channel, now)
     if capped is not None:
         return capped
-    return await _handle_turn(c, session, text, channel, now)
+    prior = c.store.history_before(c.rel, now, HISTORY_LIMIT)
+    return await _handle_turn(c, Turn(session, TurnId(_id()), now, prior, text, quoted), channel)
 
 
 def _stopped_by_cap(
@@ -79,14 +88,9 @@ def _stopped_by_cap(
 
 
 async def _handle_turn(
-    c: Conversation, session: SessionId, text: str, channel: str, now: datetime | None
+    c: Conversation, t: Turn, channel: str
 ) -> str | Reaction | ReactAndReply | ThenSend:
-    store, rel = c.store, c.rel
-    now = now or utc_now()
-    turn = TurnId(_id())
-    prior = store.history_before(rel, now, HISTORY_LIMIT)
-    t = Turn(session, turn, now, prior, text)
-    in_scene = scene_frame(prior, now)
+    in_scene = scene_frame(t.prior, t.now)
     async with their_message(c, t, channel) as keep:
         return await _turn(c, t, keep, in_scene)
 

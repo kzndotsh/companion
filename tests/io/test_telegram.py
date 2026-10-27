@@ -6,6 +6,8 @@ import json
 import httpx
 import pytest
 
+from companion.core.turn.quoted import Quoted
+from companion.core.types import Speaker
 from companion.io.surface import Hooks, Incoming, Surface
 from companion.io.telegram import Telegram, TelegramError
 
@@ -44,6 +46,23 @@ def test_a_message_sent_as_a_reply_says_which_one() -> None:
     message["reply_to_message"] = {"message_id": 42}
     got, _ = tg.read([update], 0)
     assert got == [Incoming("99", "/flag", "1", "42")]
+
+
+def test_a_reply_carries_the_text_it_points_at_or_the_part_they_quoted() -> None:
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient())
+    whole, part = _update("so cute"), _update("this bit", update_id=2)
+    for update in (whole, part):
+        message = update["message"]
+        assert isinstance(message, dict)
+        message["reply_to_message"] = {"message_id": 42, "text": "a. b.", "from": {"is_bot": True}}
+    part_message = part["message"]
+    assert isinstance(part_message, dict)
+    part_message["quote"] = {"text": "b."}
+    got, _ = tg.read([whole, part], 0)
+    assert [m.quoted for m in got] == [
+        Quoted("a. b.", Speaker.COMPANION),
+        Quoted("b.", Speaker.COMPANION),
+    ]
 
 
 async def test_a_send_returns_the_id_of_the_message_sent() -> None:
@@ -102,7 +121,7 @@ async def test_a_failed_typing_indicator_does_not_lose_the_reply() -> None:
             sent.append(json.loads(req.content)["text"])
         return httpx.Response(200, json={"ok": True, "result": True})
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         await asyncio.sleep(0.05)  # long enough for the typing indicator to be tried
         return "reply"
@@ -130,7 +149,7 @@ async def test_a_refused_send_reaches_the_surface_as_a_delivery_error(
         del delivered
         told.append(f"{text}: {reason}")
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         return "never seen"
 

@@ -10,6 +10,8 @@ from typing import Any
 import discord
 import pytest
 
+from companion.core.turn.quoted import Quoted
+from companion.core.types import Speaker
 from companion.io import discord as module
 from companion.io.discord import Discord, DiscordError, connected
 from companion.io.surface import Hooks, Incoming, Surface
@@ -168,7 +170,7 @@ async def test_a_message_answered_before_a_restart_is_not_answered_again() -> No
     saved: dict[str, str] = {}
     answered: list[str] = []
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         answered.append(text)
         return "ok"
 
@@ -197,7 +199,7 @@ async def test_a_long_reply_goes_out_as_messages_of_at_most_2000_characters() ->
     reply = "This sentence is part of a long reply. " * 64  # about 2500 characters
     assert len(reply) > 2400
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         del text
         return reply
 
@@ -261,7 +263,7 @@ async def test_a_gateway_that_closes_stops_the_surface() -> None:
 
     client.connect = closes  # type: ignore[method-assign]
 
-    async def talk(text: str) -> str:
+    async def talk(text: str, _quoted: Quoted | None = None) -> str:
         return text
 
     with pytest.raises(DiscordError, match="gateway closed"):
@@ -290,9 +292,50 @@ async def test_a_dm_sent_as_a_reply_says_which_one_and_a_send_returns_its_id() -
     task = asyncio.create_task(dc.receive(inbox, None))
     await asyncio.sleep(0.01)
     replying = _message(5, "/flag")
-    replying.reference = SimpleNamespace(message_id=1001)
+    replying.reference = _reply(1001, None)
     await dc.on_message(replying)
     task.cancel()
     await asyncio.gather(task, return_exceptions=True)
     assert inbox.get_nowait() == Incoming("5", "/flag", "5", "1001")
     assert await dc.send("hi") == "1001"
+
+
+def _reply(message_id: int, resolved: object, kind: object = None) -> Any:
+    return SimpleNamespace(
+        message_id=message_id,
+        type=kind or discord.MessageReferenceType.reply,
+        resolved=resolved,
+    )
+
+
+@pytest.mark.parametrize(("author", "speaker"), [(BOT, Speaker.COMPANION), (ALLOWED, Speaker.USER)])
+async def test_a_reply_carries_the_message_it_points_at_and_whose_it_was(
+    author: int, speaker: Speaker
+) -> None:
+    dc, _ = _discord()
+    inbox: asyncio.Queue[Incoming] = asyncio.Queue()
+    task = asyncio.create_task(dc.receive(inbox, None))
+    await asyncio.sleep(0.01)
+    replying = _message(5, "so cute")
+    replying.reference = _reply(3, _message(3, "your call, baby", author=author))
+    await dc.on_message(replying)
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+    got = inbox.get_nowait()
+    assert got.quoted == Quoted("your call, baby", speaker)
+
+
+async def test_a_forward_or_a_deleted_message_carries_nothing_quoted() -> None:
+    dc, _ = _discord()
+    inbox: asyncio.Queue[Incoming] = asyncio.Queue()
+    task = asyncio.create_task(dc.receive(inbox, None))
+    await asyncio.sleep(0.01)
+    forward = _message(5, "look")
+    forward.reference = _reply(3, _message(3, "x"), discord.MessageReferenceType.forward)
+    gone = _message(6, "that one")
+    gone.reference = _reply(4, None)
+    await dc.on_message(forward)
+    await dc.on_message(gone)
+    task.cancel()
+    await asyncio.gather(task, return_exceptions=True)
+    assert [inbox.get_nowait().quoted, inbox.get_nowait().quoted] == [None, None]

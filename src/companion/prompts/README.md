@@ -108,6 +108,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/check-in` | note | they came back after a gap from a heavy talk: ask gently how they are, once, without naming it | v1 |
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |
 | `notes/repair` | note | they say it got them wrong: own it in one line, go on from what they said (J30) | v1 |
+| `notes/replied-to` | note | the message they used reply on, quoted, and whose it was, `core/turn/quoted.py` | v1 |
 | `notes/owned-it` | note | after the history: one of its last two replies owned a slip, so no more apologies or self-blame, carry on lightly | v1 |
 | `notes/question-game` | note | after the history: they told it to ask them things, so after answering or reacting, ask the next one | v1 |
 | `notes/question-run` | note | after the history: its last three replies each asked a question, so ask none this time but leave them something to answer | v1 |

@@ -12,6 +12,8 @@ from companion.core.turn.game import NOTE as GAME_NOTE
 from companion.core.turn.ownup import NOTE as OWNED_NOTE
 from companion.core.turn.questions import NOTE as QUESTION_NOTE
 from companion.core.turn.questions import RUN
+from companion.core.turn.quoted import Quoted
+from companion.core.types import Speaker
 from companion.features.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
@@ -43,6 +45,16 @@ async def test_a_failed_turn_uses_up_no_cap(store: Store) -> None:
     )
     assert "what they like to be called" in talker.seen[0].card
     assert store.decided_since(REL, ASKED_NAME, NOW)
+
+
+async def test_a_reply_to_one_of_its_messages_reaches_the_talker_quoted(store: Store) -> None:
+    talker = Talker()
+    convo = Conversation(store, talker, PREFIX, REL, judge=Judge())
+    await handle(convo, SESSION, "so cute", "t", NOW, quoted=Quoted("your call", Speaker.COMPANION))
+    await handle(convo, SESSION, "and this", "t", NOW + timedelta(minutes=1))
+    assert "> your call" in talker.seen[0].card
+    assert "> your call" not in talker.seen[1].card
+    assert "> your call" not in talker.seen[0].messages[-1].content
 
 
 def test_notes_come_in_the_listed_order_and_writes_wait(store: Store) -> None:

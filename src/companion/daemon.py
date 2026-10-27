@@ -24,6 +24,7 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
+from companion.core.turn.quoted import Quoted
 from companion.core.types import (
     Favorite,
     FavoriteId,
@@ -496,8 +497,10 @@ async def run(data_dir: Path) -> None:
 
         surface = await stack.enter_async_context(_surface(s, client, store, rel))
 
-        async def answer(text: str) -> str | Reaction | ReactAndReply | ThenSend:
-            reply = await handle(convo, SESSION, text, s.mode("surface"))
+        async def answer(
+            text: str, quoted: Quoted | None
+        ) -> str | Reaction | ReactAndReply | ThenSend:
+            reply = await handle(convo, SESSION, text, s.mode("surface"), quoted=quoted)
             schedule_reflect()
             return reply
 

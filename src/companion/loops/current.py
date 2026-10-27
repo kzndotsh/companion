@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.turn.goodbye import leaving
 from companion.core.turn.listening import Judgement as ListenJudgement
+from companion.core.turn.quoted import Quoted
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -35,6 +36,7 @@ class Turn:
     now: datetime
     prior: list[Utterance]
     text: str
+    quoted: Quoted | None = None  # the message they used reply on, if they did
     started: float = field(default_factory=time.perf_counter)
 
 

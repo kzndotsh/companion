@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
+from companion.core.turn.quoted import Quoted
 from companion.io.pace import hold_seconds, read_seconds
 from companion.io.split import fit, split_reply
 from companion.io.stop import cancel_when, next_message
@@ -24,7 +25,8 @@ log = logging.getLogger("companion.surface")
 TYPING_REFRESH_SECONDS = 4.0  # both surfaces drop the typing indicator after five to ten seconds
 
 Reply = str | Reaction | ReactAndReply | ThenSend
-Handler = Callable[[str], Awaitable[Reply]]
+# Their message, and the message they used reply on, if they did.
+Handler = Callable[[str, Quoted | None], Awaitable[Reply]]
 # The command's argument, and the id of the message it was sent as a reply to, if any.
 CommandHandler = Callable[[str, str | None], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
@@ -43,12 +45,13 @@ class DeliveryError(RuntimeError):
 class Incoming:
     """A message from the allowed user. `id` is what a reaction points at; `cursor` is where the
     transport resumes after a restart (Telegram's update id, Discord's message id); `replied_to`
-    is the id of the message they replied to, if they did."""
+    is the id of the message they replied to, if they did, and `quoted` its text and sender."""
 
     id: str
     text: str
     cursor: str
     replied_to: str | None = None
+    quoted: Quoted | None = None
 
 
 class Transport(Protocol):
@@ -204,7 +207,7 @@ class Surface:
             else:
                 read = read_seconds(msg.text, self._pace, jitter)
                 typist = asyncio.create_task(self._type_after(read))
-                reply = await handle(msg.text)
+                reply = await handle(msg.text, msg.quoted)
         except asyncio.CancelledError:
             log.info("message %s superseded while the reply was being written", msg.id)
             raise
