@@ -2437,3 +2437,18 @@ Terra 36, Luna 30, tie 6; Haiku gave Luna 40, Terra 29, tie 3. They agreed on 40
 and on single fixtures they pointed opposite ways (the new-show turn went 10 to 2 each way), so
 the judges carry no signal here. By eye: Terra is plainer and shorter, Luna picks up more of what
 was said and leans on stock lines. No switch.
+
+## 2026-10-27: Terra with medium reasoning reads more alive than Luna on a small set
+
+Same six fixtures, 12 samples each, `--variants v46.md+medium@openai/gpt-6.1-terra`, $0.06 spent,
+compared with the Luna replies of the entry above. Fixture checks: within noise (the two mood
+fixtures 1/12 and 0/12). Per reply $0.00083 (about 2.7 times Luna), 8.8 words, median 1.4 s and
+p90 3.3 s against Luna's 1.7 s p90, redrawn 20 of 72. Blind pairwise reads, as before: Sonnet gave
+Terra 45, Luna 23, tie 4; Haiku gave Terra 41, Luna 28, tie 3. This time they agreed on 57 of 72
+pairs, Terra 37 to Luna 20 (sign test p = 0.03). Most of the gap is the entertain fixture, where
+Terra made up odd little scenarios with its own joke and Luna asked the same would-you-rather each
+time (both judges 11 or 12 of 12 for Terra, and plain by eye). Both judges preferred Luna on the
+nervous-presentation turn (it picked up what was said; Terra stayed on stock encouragement). The
+judges' new-show verdicts flipped between this run and the last on near-identical replies, so a
+single fixture's tally is not trusted. Six short scripted turns are a screen, not a decision: the
+next step is real turns and a longer scene before any switch.
