@@ -365,12 +365,13 @@ def _start_reminders(
 
 @contextlib.asynccontextmanager
 async def _surface(
-    s: Settings, client: httpx.AsyncClient, store: Store, rel: RelationshipId
+    s: Settings, client: httpx.AsyncClient, store: Store, rel: RelationshipId, commands: Commands
 ) -> AsyncGenerator[Surface]:
-    """The surface `COMPANION_SURFACE` names, ready to send, with its own resume point."""
+    """The surface `COMPANION_SURFACE` names, ready to send, with its own resume point. On Discord
+    the commands are slash commands too."""
     if s.mode("surface") == "discord":
         token, user = _need("DISCORD_BOT_TOKEN"), int(_need("DISCORD_USER_ID"))
-        async with discord.connected(token, user) as transport:
+        async with discord.connected(token, user, commands) as transport:
             hooks = surface_hooks(store, rel, DISCORD_KEY, "discord")
             yield Surface(transport, hooks, s.pace_factor, s.on("split"))
         return
@@ -494,7 +495,8 @@ async def run(data_dir: Path) -> None:
                 task.cancel()
             pending[:] = [asyncio.create_task(reflect_after_idle())]
 
-        surface = await stack.enter_async_context(_surface(s, client, store, rel))
+        commands = chat_commands(store, rel, reflector, s)
+        surface = await stack.enter_async_context(_surface(s, client, store, rel, commands))
 
         async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
             reply = await handle(
@@ -516,7 +518,6 @@ async def run(data_dir: Path) -> None:
             if task is not None
         ]
         try:
-            commands = chat_commands(store, rel, reflector, s)
             await until_stopped(lambda stop: surface.run(answer, commands, stop))
         finally:
             for task in background:

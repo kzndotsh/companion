@@ -17,7 +17,8 @@ import discord
 
 from companion.core.turn.quoted import Quoted
 from companion.core.types import Speaker
-from companion.io.surface import DeliveryError, Incoming
+from companion.io.discord_commands import command_tree, sync
+from companion.io.surface import Commands, DeliveryError, Incoming
 
 log = logging.getLogger("companion.discord")
 TYPING_SECONDS = 2.0  # a typing indicator stuck behind a rate limit is skipped, never waited on
@@ -192,9 +193,12 @@ async def _gateway_closed(gateway: asyncio.Task[None], when: str) -> NoReturn:
 
 
 @contextlib.asynccontextmanager
-async def connected(token: str, allowed_user: int) -> AsyncGenerator[Discord]:
+async def connected(
+    token: str, allowed_user: int, commands: Commands | None = None
+) -> AsyncGenerator[Discord]:
     """A logged-in Discord transport. Sending works from here on; the gateway connects when the
-    surface starts receiving, and closes when it stops, while replies still in progress go out."""
+    surface starts receiving, and closes when it stops, while replies still in progress go out.
+    `commands` become Discord slash commands (`io/discord_commands.py`), synced after login."""
     intents = discord.Intents.none()
     intents.dm_messages = True
     discord.VoiceClient.warn_nacl = discord.VoiceClient.warn_dave = False  # it never joins voice
@@ -203,6 +207,7 @@ async def connected(token: str, allowed_user: int) -> AsyncGenerator[Discord]:
         state.addFilter(_not_the_guilds_warning)
     client = discord.Client(intents=intents)
     transport = Discord(client, allowed_user)
+    tree = command_tree(client, allowed_user, commands) if commands else None
     for handler in (
         transport.on_message,
         transport.on_ready,
@@ -218,4 +223,6 @@ async def connected(token: str, allowed_user: int) -> AsyncGenerator[Discord]:
             raise DiscordError(msg) from None
         except _FAILURES as err:
             raise DiscordError(_failed("login", err)) from None
+        if tree is not None:
+            await sync(tree)
         yield transport
