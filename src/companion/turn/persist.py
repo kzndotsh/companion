@@ -67,6 +67,8 @@ def store_user(c: Conversation, t: Turn, channel: str, frame: Frame) -> Utteranc
         t.now,
     )
     c.store.append_utterance(said)
+    if t.message_id is not None:
+        c.store.record_message(c.rel, channel, t.message_id, t.turn, t.now, sent=False)
     return said
 
 

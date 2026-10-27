@@ -31,7 +31,7 @@ def _marks(store: Store) -> Any:
 
 async def test_a_mark_sent_as_a_reply_lands_on_the_turn_of_that_message(tmp_path: Path) -> None:
     store = _store(tmp_path)
-    store.record_sent(REL, "discord", "m1", TurnId("older"), T0)
+    store.record_message(REL, "discord", "m1", TurnId("older"), T0, sent=True)
     await _marks(store)["fav"]("this one", "m1")
     await _marks(store)["fav"]("and now", None)
     assert [(f.turn_id, f.note) for f in store.favorites(REL)] == [
@@ -56,5 +56,14 @@ def test_each_message_of_a_reply_is_kept_with_the_turn_just_stored(tmp_path: Pat
     assert sent is not None
     sent("p1")
     sent("p2")
-    assert store.turn_of_sent(REL, "discord", "p2") == "latest"
-    assert store.turn_of_sent(REL, "telegram", "p2") is None
+    assert store.turn_of_message(REL, "discord", "p2") == "latest"
+    assert store.turn_of_message(REL, "telegram", "p2") is None
+
+
+async def test_a_mark_sent_as_a_reply_to_their_own_message_lands_on_its_turn(
+    tmp_path: Path,
+) -> None:
+    store = _store(tmp_path)
+    store.record_message(REL, "discord", "u1", TurnId("older"), T0, sent=False)
+    await _marks(store)["flag"]("that reply", "u1")
+    assert [f.turn_id for f in store.flags(REL)] == ["older"]

@@ -121,7 +121,8 @@ async def test_a_failed_typing_indicator_does_not_lose_the_reply() -> None:
             sent.append(json.loads(req.content)["text"])
         return httpx.Response(200, json={"ok": True, "result": True})
 
-    async def talk(text: str, _quoted: Quoted | None = None) -> str:
+    async def talk(msg: Incoming) -> str:
+        text = msg.text
         del text
         await asyncio.sleep(0.05)  # long enough for the typing indicator to be tried
         return "reply"
@@ -149,7 +150,8 @@ async def test_a_refused_send_reaches_the_surface_as_a_delivery_error(
         del delivered
         told.append(f"{text}: {reason}")
 
-    async def talk(text: str, _quoted: Quoted | None = None) -> str:
+    async def talk(msg: Incoming) -> str:
+        text = msg.text
         del text
         return "never seen"
 

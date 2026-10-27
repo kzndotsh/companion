@@ -37,6 +37,7 @@ class Turn:
     prior: list[Utterance]
     text: str
     quoted: Quoted | None = None  # the message they used reply on, if they did
+    message_id: str | None = None  # their message's id on the surface, kept with the turn
     started: float = field(default_factory=time.perf_counter)
 
 

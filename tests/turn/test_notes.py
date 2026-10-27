@@ -57,6 +57,24 @@ async def test_a_reply_to_one_of_its_messages_reaches_the_talker_quoted(store: S
     assert "> your call" not in talker.seen[0].messages[-1].content
 
 
+async def test_their_message_id_is_kept_with_its_turn_even_at_the_cap(store: Store) -> None:
+    convo = Conversation(store, Talker(), PREFIX, REL, judge=Judge())
+    await handle(convo, SESSION, "hey", "discord", NOW, message_id="u1")
+    capped = Conversation(store, Talker(), PREFIX, REL, judge=Judge(), daily_cap_usd=0.0)
+    await handle(capped, SESSION, "still there?", "discord", NOW, message_id="u2")
+    first = store.turn_of_message(REL, "discord", "u1")
+    second = store.turn_of_message(REL, "discord", "u2")
+    assert first is not None
+    assert second is not None
+    assert first != second
+    later = NOW + timedelta(minutes=1)
+    said = {
+        u.turn_id: u.text for u in store.history_before(REL, later, 10) if u.speaker is Speaker.USER
+    }
+    assert said[first] == "hey"
+    assert said[second] == "still there?"
+
+
 def test_notes_come_in_the_listed_order_and_writes_wait(store: Store) -> None:
     convo = Conversation(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, "t1", NOW, [], "hi")  # type: ignore[arg-type]

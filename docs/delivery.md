@@ -36,9 +36,11 @@ held before sending, replaces that answer, and the new reply sees both of their 
 that was already written and then dropped is marked undelivered. Commands (`/flag`, `/fav`, `/mode`)
 are plain text on both surfaces and never replace anything.
 
-The id of each message that carries part of a reply is kept with its turn (`sent_messages`), so
-`/flag` or `/fav` sent as a reply to one of those messages marks that turn, not the latest. A reply to
-a message it has no record of, such as one sent before ids were kept, marks nothing and says so.
+The id of each message that carries part of a reply is kept with its turn (`sent_messages`), and so
+is the id of each of their messages, when it is stored (`received_messages`, from 2026-10-27, the
+spend cap's turns included). `/flag` or `/fav` sent as a reply to either marks that turn, not the
+latest. A reply to a message it has no record of, such as one sent before ids were kept, marks
+nothing and says so.
 
 A plain message sent as a reply also brings the message it points at: its text and whether the
 companion or they sent it (`Incoming.quoted`). Discord sends it with the message (a forward or a

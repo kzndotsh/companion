@@ -78,28 +78,37 @@ def latest_turn(conn: sqlite3.Connection, relationship_id: RelationshipId) -> Tu
     return TurnId(str(row["turn_id"])) if row is not None else None
 
 
-def record_sent(  # noqa: PLR0913, PLR0917
+_COLUMNS = " (relationship_id, channel, message_id, turn_id, at) VALUES (?, ?, ?, ?, ?)"
+_KEEP = {
+    True: "INSERT OR IGNORE INTO sent_messages" + _COLUMNS,
+    False: "INSERT OR IGNORE INTO received_messages" + _COLUMNS,
+}
+
+
+def record_message(  # noqa: PLR0913, PLR0917
     conn: sqlite3.Connection,
     relationship_id: RelationshipId,
     channel: str,
     message_id: str,
     turn_id: TurnId,
     at: datetime,
+    *,
+    sent: bool,
 ) -> None:
+    """Keep a message's id on its surface with its turn: one it sent, or one of theirs."""
     with write_tx(conn):
-        conn.execute(
-            "INSERT OR IGNORE INTO sent_messages"
-            " (relationship_id, channel, message_id, turn_id, at) VALUES (?, ?, ?, ?, ?)",
-            (relationship_id, channel, message_id, turn_id, iso(at)),
-        )
+        conn.execute(_KEEP[sent], (relationship_id, channel, message_id, turn_id, iso(at)))
 
 
-def turn_of_sent(
+def turn_of_message(
     conn: sqlite3.Connection, relationship_id: RelationshipId, channel: str, message_id: str
 ) -> TurnId | None:
+    """The turn a message belongs to, whether the companion sent it or they did."""
     row = conn.execute(
         "SELECT turn_id FROM sent_messages"
-        " WHERE relationship_id = ? AND channel = ? AND message_id = ?",
-        (relationship_id, channel, message_id),
+        " WHERE relationship_id = ? AND channel = ? AND message_id = ?"
+        " UNION ALL SELECT turn_id FROM received_messages"
+        " WHERE relationship_id = ? AND channel = ? AND message_id = ? LIMIT 1",
+        (relationship_id, channel, message_id) * 2,
     ).fetchone()
     return TurnId(str(row["turn_id"])) if row is not None else None

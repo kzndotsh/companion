@@ -170,7 +170,8 @@ async def test_a_message_answered_before_a_restart_is_not_answered_again() -> No
     saved: dict[str, str] = {}
     answered: list[str] = []
 
-    async def talk(text: str, _quoted: Quoted | None = None) -> str:
+    async def talk(msg: Incoming) -> str:
+        text = msg.text
         answered.append(text)
         return "ok"
 
@@ -199,7 +200,8 @@ async def test_a_long_reply_goes_out_as_messages_of_at_most_2000_characters() ->
     reply = "This sentence is part of a long reply. " * 64  # about 2500 characters
     assert len(reply) > 2400
 
-    async def talk(text: str, _quoted: Quoted | None = None) -> str:
+    async def talk(msg: Incoming) -> str:
+        text = msg.text
         del text
         return reply
 
@@ -263,7 +265,8 @@ async def test_a_gateway_that_closes_stops_the_surface() -> None:
 
     client.connect = closes  # type: ignore[method-assign]
 
-    async def talk(text: str, _quoted: Quoted | None = None) -> str:
+    async def talk(msg: Incoming) -> str:
+        text = msg.text
         return text
 
     with pytest.raises(DiscordError, match="gateway closed"):

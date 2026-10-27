@@ -25,8 +25,6 @@ log = logging.getLogger("companion.surface")
 TYPING_REFRESH_SECONDS = 4.0  # both surfaces drop the typing indicator after five to ten seconds
 
 Reply = str | Reaction | ReactAndReply | ThenSend
-# Their message, and the message they used reply on, if they did.
-Handler = Callable[[str, Quoted | None], Awaitable[Reply]]
 # The command's argument, and the id of the message it was sent as a reply to, if any.
 CommandHandler = Callable[[str, str | None], Awaitable[str | Reaction | ReactAndReply]]
 Commands = dict[str, CommandHandler]
@@ -52,6 +50,9 @@ class Incoming:
     cursor: str
     replied_to: str | None = None
     quoted: Quoted | None = None
+
+
+Handler = Callable[[Incoming], Awaitable[Reply]]
 
 
 class Transport(Protocol):
@@ -207,7 +208,7 @@ class Surface:
             else:
                 read = read_seconds(msg.text, self._pace, jitter)
                 typist = asyncio.create_task(self._type_after(read))
-                reply = await handle(msg.text, msg.quoted)
+                reply = await handle(msg)
         except asyncio.CancelledError:
             log.info("message %s superseded while the reply was being written", msg.id)
             raise

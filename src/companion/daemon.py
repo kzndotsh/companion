@@ -24,7 +24,6 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
-from companion.core.turn.quoted import Quoted
 from companion.core.types import (
     Favorite,
     FavoriteId,
@@ -45,7 +44,7 @@ from companion.features.scene_memory.run import pass_step as scene_step
 from companion.features.threads.run import Ticker, drafter, tick
 from companion.io import discord
 from companion.io.stop import until_stopped
-from companion.io.surface import Commands, Hooks, Surface, Transport
+from companion.io.surface import Commands, Hooks, Incoming, Surface, Transport
 from companion.io.telegram import Telegram
 from companion.lib import logs, retry
 from companion.loops import curate
@@ -228,20 +227,20 @@ def surface_hooks(store: Store, rel: RelationshipId, key: str, channel: str) -> 
     def sent(message_id: str) -> None:
         turn = store.latest_turn(rel)  # the reply going out was stored as the latest turn
         if turn is not None:
-            store.record_sent(rel, channel, message_id, turn, datetime.now(UTC))
+            store.record_message(rel, channel, message_id, turn, datetime.now(UTC), sent=True)
 
     return Hooks(undelivered, last_handled, mark_handled, sent)
 
 
 def chat_commands(store: Store, rel: RelationshipId, reflector: Extractor, s: Settings) -> Commands:
     """The slash commands: `/flag` and `/fav` answer with a reaction, `/mode` with which talker.
-    `/flag` and `/fav` mark the latest reply, or, sent as a reply to one of its messages, that
-    one."""
+    `/flag` and `/fav` mark the latest reply, or, sent as a reply to one of its messages or of
+    theirs, that turn."""
 
     def marked(replied_to: str | None) -> TurnId | None:
         if replied_to is None:
             return store.latest_turn(rel)
-        return store.turn_of_sent(rel, s.mode("surface"), replied_to)
+        return store.turn_of_message(rel, s.mode("surface"), replied_to)
 
     async def flag(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
         turn = marked(replied_to)
@@ -497,10 +496,10 @@ async def run(data_dir: Path) -> None:
 
         surface = await stack.enter_async_context(_surface(s, client, store, rel))
 
-        async def answer(
-            text: str, quoted: Quoted | None
-        ) -> str | Reaction | ReactAndReply | ThenSend:
-            reply = await handle(convo, SESSION, text, s.mode("surface"), quoted=quoted)
+        async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
+            reply = await handle(
+                convo, SESSION, msg.text, s.mode("surface"), quoted=msg.quoted, message_id=msg.id
+            )
             schedule_reflect()
             return reply
 
