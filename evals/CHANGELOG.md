@@ -2467,3 +2467,19 @@ the very quip a flagged turn was about on most samples (the cheesy-quip check pa
 the same unprompted apology for earlier in a long chat, and settled into a stock offer to keep
 them company; it did better where Luna drew an unprompted limit. The scripted screen above did not
 carry over to real turns: trust real turns over scripts for a model switch.
+
+## 2026-10-27: The owner, blind, prefers Terra with medium reasoning; the Claude judges did not
+
+Two blind quizzes for the owner, one reply from each model per round, order shuffled, model hidden
+until the end. First quiz, 13 picks from the real turns of the entry above (mostly one evening):
+Terra 9, Luna 1, no preference 3. They asked for wider topics, so 26 recent everyday turns
+(2026-10-20 to 27, eight days, no scenes) were added to `evals/local/` as `recent-NN-local` and run
+12 times on each model ($0.27). Second quiz, 20 rounds from those: Terra 9, Luna 6, no preference
+5 (one Luna pick was because Terra said it could not verify something, which the owner said broke
+the mood). Together Terra 18, Luna 7 of the 25 with a pick (sign test p = 0.04 over 26 counting
+the round they disliked Terra for mirroring a nickname). The Claude judges preferred Luna on the
+same kind of turns (138 to 90): on what this person likes, the judges point the wrong way, so the
+owner's blind picks outrank them for a talker choice. Terra's misses the owner noticed or that
+showed up repeatedly: mirroring their nickname or emoticon back, hedging about what it can check,
+and the flagged quip. Rerun: the fixtures above, `--variants
+v46.md@openai/gpt-6-luna,v46.md+medium@openai/gpt-6.1-terra --samples 12`, then a blind quiz.
