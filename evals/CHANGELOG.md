@@ -2422,3 +2422,18 @@ agreed on both false limits, and a word check could not tell a wish ("can't") fr
 made-up real limits 8 of 8, and a preference stated with "only if" 8 of 8 a limit, which is fair.
 With all of it, every one of the nine landed right on a fresh copy. Scratch scripts `lane_votes.py`,
 `relane.py`, `limit_try.py`; about 4 cents.
+
+## 2026-10-27: GPT-6.1 Terra is not distinguishable from GPT-6 Luna as the everyday talker
+
+Persona v46, 12 samples per cell, six everyday fixtures (`control-natural-follow-up`,
+`mood-everyday-dinner`, `mood-everyday-new-show`, `listening-everyday-friend-cancelled`,
+`flirty-invite-stays-warm`, `inventive-when-asked-to-entertain`),
+`--variants v46.md@openai/gpt-6-luna,v46.md@openai/gpt-6.1-terra`, $0.07 spent. Fixture checks:
+every gap within noise. Per reply, Terra cost $0.00063 against $0.00031 (twice, not the list
+price's ten times), ran 8.3 words against 12.2, took about 150 ms longer at the median, and was
+redrawn by a reply check 14 times in 72 against 21. Blind pairwise reads by two Claude subagents
+(which reply reads more like a close friend texting, order shuffled, key withheld): Sonnet gave
+Terra 36, Luna 30, tie 6; Haiku gave Luna 40, Terra 29, tie 3. They agreed on 40 of 72 pairs,
+and on single fixtures they pointed opposite ways (the new-show turn went 10 to 2 each way), so
+the judges carry no signal here. By eye: Terra is plainer and shorter, Luna picks up more of what
+was said and leans on stock lines. No switch.
