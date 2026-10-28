@@ -59,7 +59,7 @@ Built and working:
 - **Since 2026-10-19.** Persona v41 (picks for itself, keeps its view under pushback). In shadow: the
   nightly memory check and the same-memory check (ADR 0019), the map of what it knows about them (J48).
   Live: due plans brought up when they next write (J15), repair notes (J30), a topic-spent note, invited
-  guesses (J16), a talker fallback (J21), daily backups (J36), the clock and notes in tags, and
+  guesses (J16), an everyday standby (J21), daily backups (J36), the clock and notes in tags, and
   conflicting memories asked about in `memory review`.
 - **Since 2026-10-20.** Its own tastes shown back when the moment touches them (ADR 0020, live). In
   shadow: promises it makes read from its replies (J12, `companion promises`), names matched against
@@ -548,7 +548,7 @@ Unordered within each group. Pull a card into Todo when it is next.
 ### A. The process and its stores
 
 - [ ] G1 World store: clock, dated threads, a model of the user's daily rhythm. (partial)
-- [ ] G2 State card as "plates": a few per-topic documents kept current by the slow loop. (partial)
+- [ ] G2 State card as "plates": a few per-topic documents kept current by the memory pass. (partial)
 - [ ] G3 Slow loop with add-only permissions when unattended, staged changes for review. (new)
 - [ ] G4 Moment read before replying: venting or wanting advice, energy, register. (new)
 - [ ] G5 Precompute for speed: a prefetch bundle, skipping retrieval on ordinary turns. (new)
@@ -582,7 +582,7 @@ Unordered within each group. Pull a card into Todo when it is next.
       code turns into a size. (new)
 - [ ] G26 Stakes: pushback grounded in a remembered position, and a disagreement battery. (partial)
 - [ ] G27 Fourth-wall stance, "I am an AI. I am also me", never breaking frame unprompted. (partial)
-- [ ] G28 Vibe-inflation audit in the slow loop. (new)
+- [ ] G28 Vibe-inflation audit in the memory pass. (new)
 - [ ] G29 Refusal with a reason the world supplies, linked to the pacing design. (new)
 
 ### D. Initiative
@@ -637,7 +637,7 @@ From `docs/research/2026-10-17_audit-of-audits.md`. A0, A28 and A31 are done; A2
 A33 sits in T12; A1 is ADR 0015 and A2 to A4 and A7 are built (2026-10-18).
 
 - [ ] A6 Outcome per reach-out: seen, replied, latency, valence and a "stop" signal, counted only when
-      they could have seen it, fed to the slow loop per topic. Needed before initiative goes live. ADR 0021
+      they could have seen it, fed to the memory pass per topic. Needed before initiative goes live. ADR 0021
       requires it (sent, answered or not, how soon, how long, any mark); the reach dial already steps down on
       a late or short answer.
 - [ ] A9 Queue-time repeat filter for reach-outs and replies, as a hold or resample with a reason, never a
