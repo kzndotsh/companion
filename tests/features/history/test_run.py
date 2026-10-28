@@ -20,8 +20,8 @@ from companion.features.history.run import (
     read_history,
     stories_beside,
 )
-from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 from tests.features.marks.test_run import CALM
@@ -188,11 +188,9 @@ class Words:
 
 async def _beside(store: Store, words: Words, mode: str, text: str = "my cat ignores me") -> Talker:
     talker = Talker()
-    convo = Conversation(
-        store, talker, PREFIX, REL, embedder=words, embed_model="fake", history=mode
-    )
+    runtime = Runtime(store, talker, PREFIX, REL, embedder=words, embed_model="fake", history=mode)
     t = Turn(SESSION, TurnId("t-now"), T0.replace(hour=23), [], text)
-    await stories_beside(convo, t, Frame.REAL, CALM, Card((), (), (), (), {}, t.now))
+    await stories_beside(runtime, t, Frame.REAL, CALM, Card((), (), (), (), {}, t.now))
     return talker
 
 

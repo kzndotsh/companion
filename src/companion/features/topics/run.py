@@ -18,8 +18,8 @@ from companion.loops.current import Heard, Turn, decide, is_casual, mark
 from companion.loops.features import Feature, Offer, Offered, has_room
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
+    from companion.loops.runtime import Runtime
 
 TIMEOUT_SECONDS = 3.0
 SPENT = Judge(
@@ -32,7 +32,7 @@ async def judge_spent(extractor: StructuredModel, prior: Sequence[Utterance], sa
     return got is not None and got.value
 
 
-async def spent_for_turn(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> bool:
+async def spent_for_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> bool:
     """Whether a small topic has run its course: asked of its own judge only on a likely moment on
     a casual turn, so the listening judge, which carries the age floor, stays as it was."""
     if c.judge is None or not is_casual(t, in_scene, heard) or not topic_likely(t.prior, t.text):

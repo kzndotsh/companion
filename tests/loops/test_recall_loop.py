@@ -26,7 +26,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -114,8 +114,8 @@ def store(tmp_path: Path) -> Store:
 
 async def _ask(store: Store, judge: Judge) -> Talker:
     talker = Talker()
-    convo = Conversation(store, talker, PREFIX, REL, judge=judge)
-    await handle(convo, SESSION, "come on, you know this one", "test", NOW)
+    runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
+    await handle(runtime, SESSION, "come on, you know this one", "test", NOW)
     return talker
 
 

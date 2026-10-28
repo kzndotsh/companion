@@ -48,7 +48,7 @@ from companion.io.surface import Commands, Hooks, Incoming, Surface, Transport
 from companion.io.telegram import Telegram
 from companion.lib import logs, retry
 from companion.loops import curate
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.loops.spendcap import over_cap
 from companion.memory.nightly import missed, night
 from companion.memory.slow import reflect_once
@@ -350,7 +350,7 @@ def _start_initiative(
 
 
 def _start_reminders(
-    convo: Conversation, transport: Transport, s: Settings
+    runtime: Runtime, transport: Transport, s: Settings
 ) -> asyncio.Task[None] | None:
     """The timer that sends reminders when they fall due (J50), over the running surface."""
     if not s.on("reminders"):
@@ -362,7 +362,7 @@ def _start_reminders(
             await asyncio.sleep(REMINDER_TICK_SECONDS)
             try:
                 await deliver_due(
-                    convo, transport.send, SESSION, utc_now(), started, channel=s.mode("surface")
+                    runtime, transport.send, SESSION, utc_now(), started, channel=s.mode("surface")
                 )
             except Exception:
                 log.exception("reminder tick failed; will try again next time")
@@ -408,7 +408,7 @@ async def run(data_dir: Path) -> None:
     async with contextlib.AsyncExitStack() as stack:
         client = await stack.enter_async_context(httpx.AsyncClient())
         talker, scene, judge, reflector = _metered_models(client, store, rel, s)
-        convo = Conversation(
+        runtime = Runtime(
             store,
             talker,
             prefix,
@@ -438,11 +438,11 @@ async def run(data_dir: Path) -> None:
             serious_message=character.serious if character is not None else "",
         )
         same = (
-            SameCheck(reflector, convo.embedder, convo.embed_model, s.mode("memory check"))
-            if convo.embedder is not None and s.on("memory check")
+            SameCheck(reflector, runtime.embedder, runtime.embed_model, s.mode("memory check"))
+            if runtime.embedder is not None and s.on("memory check")
             else None
         )
-        embed = (convo.embedder, convo.embed_model) if convo.embedder is not None else None
+        embed = (runtime.embedder, runtime.embed_model) if runtime.embedder is not None else None
         steps = [
             step
             for step in (
@@ -511,7 +511,7 @@ async def run(data_dir: Path) -> None:
 
         async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
             reply = await handle(
-                convo, SESSION, msg.text, s.mode("surface"), quoted=msg.quoted, message_id=msg.id
+                runtime, SESSION, msg.text, s.mode("surface"), quoted=msg.quoted, message_id=msg.id
             )
             schedule_reflect()
             return reply
@@ -522,7 +522,7 @@ async def run(data_dir: Path) -> None:
             task
             for task in (
                 _start_initiative(store, rel, judge, s),
-                _start_reminders(convo, surface.transport, s),
+                _start_reminders(runtime, surface.transport, s),
                 asyncio.create_task(_daily_backups(data_dir, db)),
                 asyncio.create_task(_nightly_memory(store, reflector, rel, s)),
             )

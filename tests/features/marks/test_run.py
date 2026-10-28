@@ -6,9 +6,9 @@ from companion.core.turn.listening import ListeningRead
 from companion.core.types import Frame, TurnId
 from companion.features.marks.logic import MARKS
 from companion.features.marks.run import mark_offer
-from companion.loops.conversation import Conversation
 from companion.loops.current import Heard, Turn
 from companion.loops.features import Lookups, Moment
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
@@ -17,9 +17,9 @@ HEAVY: Heard = (ListeningRead(severity=2, stance="sharing", vague=False, age_cod
 
 
 def _offer(tmp_path: Path, text: str, heard: Heard, *, marks: bool = True) -> tuple[str, ...]:
-    convo = Conversation(Store(tmp_path / "r.sqlite"), Talker(), PREFIX, REL, marks=marks)
+    runtime = Runtime(Store(tmp_path / "r.sqlite"), Talker(), PREFIX, REL, marks=marks)
     t = Turn(SESSION, TurnId("t1"), NOW, [], text)
-    return mark_offer(Moment(convo, t, Frame.REAL, heard, Lookups(), False, []), None, {}).tail
+    return mark_offer(Moment(runtime, t, Frame.REAL, heard, Lookups(), False, []), None, {}).tail
 
 
 def test_their_mark_brings_one_of_its_own_after_the_history_never_theirs(tmp_path: Path) -> None:

@@ -24,7 +24,7 @@ from companion.core.types import (
 from companion.loops.record import Recorder
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 
@@ -46,12 +46,12 @@ def mark(t: Turn, what: str) -> None:
     log.debug("turn %s +%dms %s", t.turn[:8], (time.perf_counter() - t.started) * 1000, what)
 
 
-def recorder(c: Conversation, t: Turn) -> Recorder:
+def recorder(c: Runtime, t: Turn) -> Recorder:
     return Recorder(c.store, c.rel, t.session, t.turn, TraceId(t.turn), t.now)
 
 
 def decide(  # noqa: PLR0913
-    c: Conversation,
+    c: Runtime,
     t: Turn,
     key: str,
     detail: dict[str, Json] | None = None,

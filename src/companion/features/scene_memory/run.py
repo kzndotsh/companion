@@ -84,7 +84,7 @@ from companion.store.sqlite.store import Store
 if TYPE_CHECKING:
     from companion.core.card import Card
     from companion.core.vectors import Embedder
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.scene")
 
@@ -333,7 +333,7 @@ class Scored:
 
 
 async def _vectors(
-    c: Conversation, embedder: Embedder, found: Sequence[Entry], said: str, now: datetime
+    c: Runtime, embedder: Embedder, found: Sequence[Entry], said: str, now: datetime
 ) -> tuple[Vector, dict[str, Vector]] | None:
     """The moment's vector and every entry's, embedding the missing ones in the same call."""
     store, model, sm = c.store, c.embed_model, c.store.scene_memory()
@@ -358,7 +358,7 @@ async def _vectors(
 
 
 async def nearest_for_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> Scored | None:
     """On a turn that may be a scene (a pretend scene in progress, or intimate talk the operator
     lets the roleplay talker answer), how near each entry is to the moment: their message with the
@@ -389,7 +389,7 @@ class SceneLane:
     after: tuple[Callable[[], None], ...] = ()  # the offer's log, once the turn is stored
 
 
-def _may_offer(c: Conversation, t: Turn) -> bool:
+def _may_offer(c: Runtime, t: Turn) -> bool:
     """Only when this turn's brush-off read answered, and answered no."""
     return any(
         d.has_key(BRUSH_KEY)
@@ -400,7 +400,7 @@ def _may_offer(c: Conversation, t: Turn) -> bool:
     )
 
 
-def _cooled(c: Conversation, t: Turn) -> frozenset[str]:
+def _cooled(c: Runtime, t: Turn) -> frozenset[str]:
     since = t.now - COOL
     offers = [
         Offered(d.at, d.turn_id, str(d.detail["entry"]))
@@ -427,7 +427,7 @@ def _card_detail(card: SceneCard, text: str, *, sent: bool, scored: bool) -> dic
 
 
 def scene_lane(
-    c: Conversation,
+    c: Runtime,
     t: Turn,
     found: object,
     *,

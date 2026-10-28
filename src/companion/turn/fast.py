@@ -24,9 +24,9 @@ from companion.core.types import (
     TraceId,
     TurnId,
 )
-from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
 from companion.loops.record import Recorder
+from companion.loops.runtime import Runtime
 from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
 from companion.turn.assemble import assemble
 from companion.turn.beside import shadows
@@ -51,7 +51,7 @@ def _id() -> str:
 
 
 async def handle(  # noqa: PLR0913
-    c: Conversation,
+    c: Runtime,
     session: SessionId,
     text: str,
     channel: str,
@@ -71,7 +71,7 @@ async def handle(  # noqa: PLR0913
     return await _handle_turn(c, replace(t, prior=prior), channel)
 
 
-def _stopped_by_cap(c: Conversation, t: Turn, channel: str) -> str | None:
+def _stopped_by_cap(c: Runtime, t: Turn, channel: str) -> str | None:
     """At the daily cap the user's message is kept and nothing paid runs, and they are told once.
 
     None means under the cap and the turn goes ahead. An empty string means send nothing."""
@@ -87,7 +87,7 @@ def _stopped_by_cap(c: Conversation, t: Turn, channel: str) -> str | None:
 
 
 async def _handle_turn(
-    c: Conversation, t: Turn, channel: str
+    c: Runtime, t: Turn, channel: str
 ) -> str | Reaction | ReactAndReply | ThenSend:
     in_scene = scene_frame(t.prior, t.now)
     async with their_message(c, t, channel) as keep:
@@ -95,7 +95,7 @@ async def _handle_turn(
 
 
 async def _turn(
-    c: Conversation, t: Turn, keep: TheirMessage, in_scene: Frame
+    c: Runtime, t: Turn, keep: TheirMessage, in_scene: Frame
 ) -> str | Reaction | ReactAndReply | ThenSend:
     """The stages of one turn, inside the guard that keeps their message."""
     listened = await listen(c, t, in_scene)

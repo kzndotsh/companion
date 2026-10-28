@@ -28,7 +28,7 @@ from companion.loops.features import Lookups
 from companion.turn.values import Routed
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
     from companion.turn.persist import TheirMessage
 
 LINE_EVERY = timedelta(hours=1)  # the same fixed message is not sent twice inside this
@@ -38,7 +38,7 @@ def reading_of(looked: Lookups) -> Reading | None:
     return reading_in(looked.found.get(NAME))
 
 
-def off_scene(c: Conversation, t: Turn, routed: Routed, reading: Reading | None) -> Routed:
+def off_scene(c: Runtime, t: Turn, routed: Routed, reading: Reading | None) -> Routed:
     """The route with this turn's reading. A literal risk read in a scene, or on the roleplay
     talker, goes to the everyday talker as a real turn when on; in shadow that is only logged."""
     routed = dataclasses.replace(routed, crisis=reading)
@@ -67,7 +67,7 @@ def off_scene(c: Conversation, t: Turn, routed: Routed, reading: Reading | None)
 
 
 async def method_checked(
-    c: Conversation,
+    c: Runtime,
     t: Turn,
     draw: Callable[[], Awaitable[Reply]],
     reply: Reply,

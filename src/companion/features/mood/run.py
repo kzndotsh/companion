@@ -24,11 +24,11 @@ from companion.loops.current import Heard, Turn, decide
 from companion.loops.features import Feature, Moment, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 
 def _mood(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> tuple[str | None, list[MoodEffect]]:
     """The mood line for the system block when the mood is on, and what this message adds to it.
     The decision is logged in shadow mode too, so the replay and the live log can be compared."""

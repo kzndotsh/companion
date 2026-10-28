@@ -31,8 +31,8 @@ from companion.loops.reads import read_times
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.lore")
 
@@ -130,7 +130,7 @@ LORE_SHOWN = "lore: its own tastes nearest their message"
 
 
 async def tastes_for_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> tuple[str, ...]:
     """Its tastes nearest their message on an ordinary turn (ADR 0020), as the words it said. In
     shadow they are logged and not shown."""

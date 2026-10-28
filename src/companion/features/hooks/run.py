@@ -28,7 +28,7 @@ from companion.loops.reads import read_times
 from companion.prompts import get
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.hooks")
 KNOWN = get("system/basics-known")
@@ -55,7 +55,7 @@ async def stated(
 
 
 async def hook_in_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
 ) -> None:
     """On a casual turn, ask a small judge which basic their message touches and log whether code
     would ask about it (J48 hook, shadow). Nothing reaches the talker."""

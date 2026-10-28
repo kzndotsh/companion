@@ -33,7 +33,7 @@ from companion.loops.features import Moment, Offer, Offered, asking, has_room
 from companion.registry import FEATURES
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 MET = "threads: how they met it"
 PACE_SOONER = "threads: the learned pace would bring one up now (shadow)"
@@ -53,7 +53,7 @@ def _check_keys() -> None:
 _check_keys()
 
 
-def _offers(c: Conversation, since: datetime) -> list[tuple[datetime, Rank]]:
+def _offers(c: Runtime, since: datetime) -> list[tuple[datetime, Rank]]:
     """What was brought up since a time, with its rank; one from before ranks were logged counts as
     the lowest, so it holds back only a lead-up."""
     out: list[tuple[datetime, Rank]] = []
@@ -64,7 +64,7 @@ def _offers(c: Conversation, since: datetime) -> list[tuple[datetime, Rank]]:
     return out
 
 
-def _pace(c: Conversation, now: datetime, offered: list[datetime]) -> tuple[dict[str, Json], bool]:
+def _pace(c: Runtime, now: datetime, offered: list[datetime]) -> tuple[dict[str, Json], bool]:
     """What the learned pace says now (shadow): its wait, the answers it was learned from, and
     whether it would bring one up. Check-ins count with the rest."""
     mets = [
@@ -110,7 +110,7 @@ def mention_note(m: Moment, so_far: Offered) -> Offer:
     return _offer(c, t, pick, paced)
 
 
-def _offer(c: Conversation, t: Turn, pick: MentionCandidate, paced: dict[str, Json]) -> Offer:
+def _offer(c: Runtime, t: Turn, pick: MentionCandidate, paced: dict[str, Json]) -> Offer:
     detail: dict[str, Json] = {
         **pick.detail,
         "rank": int(pick.rank),
@@ -127,7 +127,7 @@ def _offer(c: Conversation, t: Turn, pick: MentionCandidate, paced: dict[str, Js
     return Offer(() if pick.tail else line, (stored,), tail=line if pick.tail else (), asks=True)
 
 
-async def read_met(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
+async def read_met(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
     """Once the turn is stored: when its last message brought something up (a mention or a
     check-in), read how their message met it, once, for the learned pace."""
     del said, sent

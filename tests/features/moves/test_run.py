@@ -11,8 +11,8 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId, SessionId
-from companion.loops.conversation import Conversation
 from companion.loops.habits import HabitMemory
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -58,11 +58,11 @@ def store(tmp_path: Path) -> Store:
 
 async def _chat(store: Store, judge: Judge | None, n: int) -> Talker:
     talker = Talker()
-    convo = Conversation(store, talker, PREFIX, REL, judge=judge)
+    runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
     for i in range(n):
-        await handle(convo, SESSION, f"message {i}", "test", NOW + timedelta(minutes=2 * i))
-        if convo.habits.pending is not None:
-            await convo.habits.pending
+        await handle(runtime, SESSION, f"message {i}", "test", NOW + timedelta(minutes=2 * i))
+        if runtime.habits.pending is not None:
+            await runtime.habits.pending
     return talker
 
 

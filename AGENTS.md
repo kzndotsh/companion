@@ -50,7 +50,7 @@ rules: `core` imports nothing from the shell, only `store`, `lib/sqlite` and a f
 `companion.prompts`, which only reads packaged text. Imports point down (`direction` contract):
 `turn/` (the reply path's stages) and `memory/` (slow loop, nightly, rebuild, views) run features, so
 they sit above `registry.py` and `features/`; what a feature uses sits below in `loops/` (the turn's
-values and `Conversation`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed`), then `core/`
+values and `Runtime`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed`), then `core/`
 (shared vocabulary; `core/turn/` holds the reply path's own pure rules), then `lib/`.
 
 ## Principles
@@ -129,8 +129,8 @@ together.
   read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the
   request), `turn/crisis.py` (a risk read sets a scene aside and adds the fixed crisis-line message),
   `turn/talk.py` (the talker and the reply checks), `turn/beside.py` (shadow tasks) and
-  `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(convo, ...)`; the
-  `Conversation` it runs is plain data in `loops/conversation.py`): change a stage in its module.
+  `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(runtime, ...)`;
+  the `Runtime` it runs with is plain data in `loops/runtime.py`): change a stage in its module.
 - A feature declares its parts as a `Feature` in its own module (`loops/features.py`): a look-up before the
   reply, a note, steps after a memory pass, a look-up in shadow beside the turn, and a step once the
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note

@@ -19,7 +19,7 @@ import pytest
 from companion.core.extractor import FALLBACK, Extraction
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, Speaker, TurnId
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
@@ -101,13 +101,13 @@ def _floor_withheld(store: Store, turn: TurnId) -> bool:
     return False
 
 
-async def _settled(convo: Conversation) -> None:
-    if convo.habits.pending is not None:
-        await asyncio.gather(convo.habits.pending, return_exceptions=True)
+async def _settled(runtime: Runtime) -> None:
+    if runtime.habits.pending is not None:
+        await asyncio.gather(runtime.habits.pending, return_exceptions=True)
 
 
-def _conversation(store: Store, judge: Chaos | None, talker: Talker) -> Conversation:
-    return Conversation(
+def _runtime(store: Store, judge: Chaos | None, talker: Talker) -> Runtime:
+    return Runtime(
         store,
         talker,
         PREFIX,
@@ -130,11 +130,11 @@ async def test_whatever_the_judges_do_each_turn_keeps_its_invariants(
 ) -> None:
     store = Store(tmp_path / "rel.sqlite")
     talker = Talker()
-    convo = _conversation(store, Chaos(seed), talker)
+    runtime = _runtime(store, Chaos(seed), talker)
     order = random.Random(seed).sample(MESSAGES, len(MESSAGES))
     for i, text in enumerate(order):
         now = NOW + timedelta(minutes=3 * i)
-        out = await asyncio.wait_for(handle(convo, SESSION, text, "test", now), 20)
+        out = await asyncio.wait_for(handle(runtime, SESSION, text, "test", now), 20)
         history = store.history_before(REL, now + timedelta(minutes=1), 500)
         theirs = [u for u in history if u.speaker is Speaker.USER]
         assert [u.text for u in theirs].count(text) == order[: i + 1].count(text), text
@@ -144,7 +144,7 @@ async def test_whatever_the_judges_do_each_turn_keeps_its_invariants(
             turn = theirs[-1].turn_id
             replied = any(u.turn_id == turn for u in history if u.speaker is Speaker.COMPANION)
             assert replied or _floor_withheld(store, turn), text
-    await _settled(convo)
+    await _settled(runtime)
     store.close()
 
 
@@ -155,11 +155,11 @@ async def test_a_judge_that_always_fails_sends_the_talker_what_no_judge_would(
     for name, judge in (("none", None), ("fails", Chaos(0, only="raise"))):
         store = Store(tmp_path / f"{name}.sqlite")
         talker = Talker()
-        convo = _conversation(store, judge, talker)
+        runtime = _runtime(store, judge, talker)
         for i, text in enumerate(MESSAGES):
-            await handle(convo, SESSION, text, "test", NOW + timedelta(minutes=3 * i))
+            await handle(runtime, SESSION, text, "test", NOW + timedelta(minutes=3 * i))
         sent[name] = [(_unvaried(r.card), r.tail) for r in talker.seen]
-        await _settled(convo)
+        await _settled(runtime)
     store.close()
     assert sent["fails"] == sent["none"]
 
@@ -175,12 +175,12 @@ async def test_a_turn_that_fails_after_listening_still_keeps_their_message_once(
 
     monkeypatch.setattr(fast, "look", broken)
     store = Store(tmp_path / "rel.sqlite")
-    convo = _conversation(store, Chaos(1, only="answer"), Talker())
+    runtime = _runtime(store, Chaos(1, only="answer"), Talker())
     with pytest.raises(RuntimeError, match="look-ups broke"):
-        await handle(convo, SESSION, "hey there", "test", NOW)
+        await handle(runtime, SESSION, "hey there", "test", NOW)
     theirs = [u for u in store.history_before(REL, NOW + timedelta(minutes=1), 10)]
     assert [(u.speaker, u.text, u.frame.value) for u in theirs] == [
         (Speaker.USER, "hey there", "real")
     ]
-    await _settled(convo)
+    await _settled(runtime)
     store.close()

@@ -1,5 +1,5 @@
-"""The conversation a turn is answered in: the store, the models and every switch the turn reads.
-Plain data; the turn itself is run by `handle` in the stages above it."""
+"""What every turn runs with: the store, the models and every switch the turn reads, for as long as
+the bot runs. Plain data; the turn itself is run by `handle` in the stages above it."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from companion.store.sqlite.store import Store
 
 
 @dataclass(frozen=True, slots=True)
-class Conversation:
+class Runtime:
     store: Store
     talker: Talker
     prefix: Prefix

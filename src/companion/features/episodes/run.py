@@ -17,8 +17,8 @@ from companion.loops.current import Heard, Turn, decide, mark
 from companion.loops.features import Feature, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
+    from companion.loops.runtime import Runtime
 
 import logging
 import uuid
@@ -122,7 +122,7 @@ EPISODES_SHOWN = "episodes: what the two of them did recently, shown"
 
 
 async def recent_for_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> tuple[Told, ...]:
     """What the two of them did recently, when their words point at a time or they come back after
     a gap (J12, J49). A stretch not yet recorded is written first. Logged; shown only when on."""

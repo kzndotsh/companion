@@ -11,7 +11,7 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.core.types import Json, RelationshipId, SessionId
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -52,9 +52,9 @@ def store(tmp_path: Path) -> Store:
 
 
 async def _say(store: Store, judge: Judge | None, texts: list[str]) -> list[object]:
-    convo = Conversation(store, Talker(), PREFIX, REL, judge=judge)
+    runtime = Runtime(store, Talker(), PREFIX, REL, judge=judge)
     return [
-        await handle(convo, SESSION, text, "test", NOW + timedelta(minutes=i))
+        await handle(runtime, SESSION, text, "test", NOW + timedelta(minutes=i))
         for i, text in enumerate(texts)
     ]
 

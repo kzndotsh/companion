@@ -37,8 +37,8 @@ from companion.loops.features import Feature, Offer, Offered
 from companion.loops.reads import Reads, read_times
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.crisis")
 NAME = "crisis"
@@ -77,7 +77,7 @@ def would_do(reading: Reading) -> list[str]:
     return ["add one light check"] if reading.light else []
 
 
-async def assess(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> Reading | None:
+async def assess(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> Reading | None:
     """The level of this turn, logged once. The risk judge is asked only when the listening judge
     read the message as serious or acute, or a cue word is in it."""
     del in_scene

@@ -19,9 +19,9 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.calendar.logic import DAY_NOTE, OFFERED, THEIRS_NOTE, US_NOTE
-from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
 from companion.loops.features import Lookups, Moment, Offer
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.mention import mention_note
@@ -52,9 +52,9 @@ def _tail(
     so_far: dict[str, Offer] | None = None,
     on: bool = True,
 ) -> Offer:
-    convo = Conversation(store, Talker(), PREFIX, REL, calendar=on)
+    runtime = Runtime(store, Talker(), PREFIX, REL, calendar=on)
     t = Turn(SESSION, TurnId("t1"), now, [], "hey, what's up")
-    m = Moment(convo, t, frame, heard, Lookups(), False, [])  # type: ignore[arg-type]
+    m = Moment(runtime, t, frame, heard, Lookups(), False, [])  # type: ignore[arg-type]
     return mention_note(m, so_far if so_far is not None else QUIET)
 
 
@@ -92,7 +92,7 @@ async def test_offered_once_a_day_and_logged_only_when_the_turn_is_stored(store:
     async def say(text: str, at: datetime, talker: Talker | None = None) -> Talker:
         talker = talker or Talker()
         await handle(
-            Conversation(store, talker, PREFIX, REL, judge=Judge(), calendar=True),
+            Runtime(store, talker, PREFIX, REL, judge=Judge(), calendar=True),
             SESSION,
             text,
             "t",

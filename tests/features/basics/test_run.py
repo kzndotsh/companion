@@ -20,9 +20,9 @@ from companion.core.types import (
 )
 from companion.features.basics.logic import ASK_NAME, ASK_PRONOUNS, ASKED, ASKED_PRONOUNS
 from companion.features.basics.run import basics_offer, capture_pronouns
-from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
 from companion.loops.features import Lookups, Moment, Offer
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
@@ -49,10 +49,10 @@ def store(tmp_path: Path) -> Store:
 def _note(
     store: Store, beliefs: list[Belief], *, severity: int = 0, check_in: bool = False
 ) -> tuple[str, ...]:
-    convo = Conversation(store, Talker(), PREFIX, REL)
+    runtime = Runtime(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, TurnId("t"), NOW, [], "just got home")
     heard = (ListeningRead(severity, "other", vague=False), "j", "")
-    m = Moment(convo, t, Frame.REAL, heard, Lookups(), False, beliefs)
+    m = Moment(runtime, t, Frame.REAL, heard, Lookups(), False, beliefs)
     so_far = {"check-in": Offer(("[check in]",) if check_in else ())}
     offer = basics_offer(m, None, so_far)
     for write in offer.after:
@@ -98,8 +98,8 @@ async def _capture(store: Store, reader: Reader, asked: str, said: str) -> None:
             NOW - timedelta(minutes=1),
         )
     ]
-    convo = Conversation(store, Talker(), PREFIX, REL, judge=reader)
-    await capture_pronouns(convo, Turn(SESSION, TurnId("t1"), NOW, prior, said))
+    runtime = Runtime(store, Talker(), PREFIX, REL, judge=reader)
+    await capture_pronouns(runtime, Turn(SESSION, TurnId("t1"), NOW, prior, said))
 
 
 async def test_capture_sets_how_to_refer_to_them_from_their_own_words(store: Store) -> None:

@@ -29,7 +29,7 @@ from companion.loops.current import Turn, decide
 from companion.loops.features import Feature, Moment, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 from companion.loops.ask import Judge, ask
 
 TIMEOUT_SECONDS = 3.0
@@ -63,7 +63,7 @@ async def judge_pronouns(extractor: StructuredModel, asked: str, said: str) -> s
     return None if got is None else got.value
 
 
-def _address_set(c: Conversation) -> bool:
+def _address_set(c: Runtime) -> bool:
     return bool((c.store.setting(c.rel, ADDRESS_KEY) or "").strip())
 
 
@@ -93,7 +93,7 @@ def basics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     )
 
 
-async def capture_name(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
+async def capture_name(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
     """When its last message asked what to call them, read their answer and remember the name,
     quoting their own words. Logged either way."""
     del sent
@@ -110,7 +110,7 @@ async def capture_name(c: Conversation, t: Turn, said: Utterance, sent: str | No
     decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
 
 
-async def capture_pronouns(c: Conversation, t: Turn) -> None:
+async def capture_pronouns(c: Runtime, t: Turn) -> None:
     """When its last message asked their pronouns and nothing is set, read their answer and set how
     they want to be referred to, in their own words. Logged either way."""
     asked = next((u.text for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), "")
@@ -124,7 +124,7 @@ async def capture_pronouns(c: Conversation, t: Turn) -> None:
     decide(c, t, "basics: pronoun capture", {"prompt": PRONOUN_CAPTURE.ref}, reason=reason)
 
 
-async def capture(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
+async def capture(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
     """Once the turn is stored: the name, then the pronouns, from their answer."""
     await capture_name(c, t, said, sent)
     await capture_pronouns(c, t)

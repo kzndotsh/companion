@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from companion.core.extractor import StructuredModel
     from companion.core.turn.mentions import MentionCandidate
     from companion.core.types import RelationshipId
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
     from companion.store.sqlite.store import Store
 
 
@@ -38,15 +38,13 @@ class Offer:
     asks: bool = False  # its lines ask them something, so the question-run note stays out
 
 
-type Look = Callable[[Conversation, Turn, Frame, Heard | None], Awaitable[object]]
+type Look = Callable[[Runtime, Turn, Frame, Heard | None], Awaitable[object]]
 # Once the turn is stored: their message as kept, and the reply sent (None when it only reacted).
 # A step that should not hold up the reply starts its own task and returns.
-type AfterTurn = Callable[[Conversation, Turn, Utterance, str | None], Awaitable[None]]
+type AfterTurn = Callable[[Runtime, Turn, Utterance, str | None], Awaitable[None]]
 # A look-up in shadow: run beside the turn once the reply is out, with the card it was sent; it logs
 # what it would have done and never changes the reply. A failure is logged by `turn/beside.py`.
-type Shadow = Callable[
-    [Conversation, Turn, Frame, Heard | None, Card], Coroutine[object, object, None]
-]
+type Shadow = Callable[[Runtime, Turn, Frame, Heard | None, Card], Coroutine[object, object, None]]
 Offered = Mapping[str, Offer]  # what the notes before this one offered, by name
 
 # A note gets what its look-up found (None when it found nothing) and what earlier notes offered.
@@ -100,7 +98,7 @@ class Lookups:
 class Moment:
     """What every note reads about the turn being answered."""
 
-    c: Conversation
+    c: Runtime
     t: Turn
     in_scene: Frame
     heard: Heard | None

@@ -28,16 +28,14 @@ from companion.loops.current import Heard, Turn, decide
 from companion.loops.features import Feature, Moment, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 READER = Judge("now", PROMPT, SCHEMA, parse, timeout=8.0, unread="no label for this message")
 SENT = "now: told it what they said is still coming"
 SHADOW = "now: would tell it what they said is still coming (shadow, not sent)"
 
 
-async def read_now(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
-) -> None:
+async def read_now(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
     """Label their message once the reply is out, on any real turn that is not serious: "gotta run"
     and "food's here" are exactly the messages to read. Nothing is logged for `none`. Runs while the
     note or reaching out is on, since nudges read the labels too."""

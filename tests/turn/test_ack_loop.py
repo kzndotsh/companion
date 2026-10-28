@@ -13,7 +13,7 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.ack import REACT_THRESHOLD, ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, RelationshipId, SessionId, TurnId
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn import ack as ack_loop
 from companion.turn.fast import handle
@@ -73,9 +73,9 @@ async def _two_turns(
     store: Store, judge: Judge | None, first: str = "no rush, tell me later.", second: str = "okie"
 ) -> tuple[Talker, str | Reaction | ReactAndReply | ThenSend]:
     talker = Talker(first, "a normal reply")
-    convo = Conversation(store, talker, PREFIX, REL, judge=judge)
-    await handle(convo, SESSION, "too much to explain rn", "test", NOW)
-    out = await handle(convo, SESSION, second, "test", NOW + timedelta(seconds=30))
+    runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
+    await handle(runtime, SESSION, "too much to explain rn", "test", NOW)
+    out = await handle(runtime, SESSION, second, "test", NOW + timedelta(seconds=30))
     return talker, out
 
 

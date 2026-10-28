@@ -28,7 +28,7 @@ from companion.loops.features import Feature
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.names")
 
@@ -78,7 +78,7 @@ async def read_names(
 
 
 async def named_in_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
 ) -> None:
     """When their message names something memory knows, log the memories about it that the card
     left out (shadow, code only). Nothing reaches the talker."""

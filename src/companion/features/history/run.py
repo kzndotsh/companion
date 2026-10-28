@@ -53,7 +53,7 @@ from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
     from companion.core.card import Card
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.history")
 
@@ -246,7 +246,7 @@ async def nearest_stories(
 
 
 async def stories_beside(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
 ) -> None:
     """Log the canon stories it would show on an ordinary turn, and whether each was told already
     and is still in the messages the talker reads. Shows nothing (step 1)."""

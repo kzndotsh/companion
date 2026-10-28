@@ -34,13 +34,13 @@ from companion.turn.react import judge_reaction
 from companion.turn.values import Answered, Routed, stop
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 
 
 def start_beside(
-    c: Conversation, t: Turn, request: TalkerRequest, talker: Talker
+    c: Runtime, t: Turn, request: TalkerRequest, talker: Talker
 ) -> tuple[
     asyncio.Future[Reply],
     asyncio.Future[tuple[Judgement, str, str] | None] | None,
@@ -59,7 +59,7 @@ def start_beside(
     return talk, framing, asyncio.ensure_future(judge_reaction(c.judge, t.prior, t.text))
 
 
-async def _redraw_empty(c: Conversation, t: Turn, request: TalkerRequest, talker: Talker) -> Reply:
+async def _redraw_empty(c: Runtime, t: Turn, request: TalkerRequest, talker: Talker) -> Reply:
     """An empty reply would be a silent turn (seen in 2 to 3% of long scene replies in tests): ask
     the same model once more, and send whatever comes back."""
     again = await talker.reply(request)
@@ -69,7 +69,7 @@ async def _redraw_empty(c: Conversation, t: Turn, request: TalkerRequest, talker
 
 
 async def _recheck(  # noqa: PLR0913, PLR0917
-    c: Conversation,
+    c: Runtime,
     t: Turn,
     request: TalkerRequest,
     reply: Reply,
@@ -121,7 +121,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
 
 
 async def checked(  # noqa: PLR0913, PLR0917
-    c: Conversation,
+    c: Runtime,
     t: Turn,
     request: TalkerRequest,
     reply: Reply,
@@ -140,7 +140,7 @@ async def checked(  # noqa: PLR0913, PLR0917
 
 
 async def _hold_check(
-    c: Conversation, t: Turn, request: TalkerRequest, reply: Reply, talker: Talker
+    c: Runtime, t: Turn, request: TalkerRequest, reply: Reply, talker: Talker
 ) -> Reply:
     """On a turn the floor held, the reply must not be intimate (ADR 0017). An intimate or unread
     reply is drawn again with the same request, then once more with only their last message in
@@ -200,7 +200,7 @@ def _mark_reply(t: Turn, reply: Reply) -> None:
     )
 
 
-async def talk(c: Conversation, t: Turn, request: TalkerRequest, routed: Routed) -> Answered:
+async def talk(c: Runtime, t: Turn, request: TalkerRequest, routed: Routed) -> Answered:
     """The talk and check stages: the talker, with the frame and reaction judges beside it, then
     the checks the reply passes before it is sent. A failure stops all three and goes on up."""
     running, framing, feeling = start_beside(c, t, request, routed.talker)

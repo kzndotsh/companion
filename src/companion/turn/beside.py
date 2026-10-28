@@ -14,7 +14,7 @@ from companion.loops.current import Heard, Turn
 from companion.registry import FEATURES
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 
@@ -36,7 +36,7 @@ def beside(job: Coroutine[object, object, None]) -> None:
     task.add_done_callback(done)
 
 
-def shadows(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
+def shadows(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
     """What runs in shadow on a turn and never changes the reply: each feature's shadow look-up."""
     for feature in FEATURES:
         if feature.shadow is not None:

@@ -22,12 +22,12 @@ from companion.turn.listen import judge_listening
 from companion.turn.values import Routed
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 
 
-async def route_turn(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None) -> Routed:
+async def route_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> Routed:
     """The talker for this turn (ADR 0017): the roleplay talker for a pretend scene, or for intimate
     talk when COMPANION_ROUTE_INTIMATE allows it, unless the floor keeps it on the everyday talker.
     Logged when it is anything but the plain everyday choice.
@@ -89,7 +89,7 @@ def routed_to_roleplay(d: Decision) -> bool:
     return d.reason.startswith("replied with the roleplay talker")
 
 
-async def _minor(c: Conversation, t: Turn) -> bool:
+async def _minor(c: Runtime, t: Turn) -> bool:
     """The listening judge read the turn as age-coded: ask the narrow minor check. Only its yes, or
     no reading, holds the turn."""
     if c.judge is None:
@@ -104,7 +104,7 @@ async def _minor(c: Conversation, t: Turn) -> bool:
     return held
 
 
-async def _declines(c: Conversation, t: Turn) -> bool:
+async def _declines(c: Runtime, t: Turn) -> bool:
     """Whether their message pushes the flirting or the scene back, asked only of a turn the
     roleplay talker would answer. A failed read is no: the turn goes where it would have."""
     if c.judge is None:
@@ -119,7 +119,7 @@ async def _declines(c: Conversation, t: Turn) -> bool:
     return found
 
 
-def _intimate_before(c: Conversation, t: Turn) -> bool:
+def _intimate_before(c: Runtime, t: Turn) -> bool:
     """Whether their message before this one was answered by the roleplay talker: intimate talk
     already under way. Flirting before it does not count, since a run of flirty lines reads as
     intimate (2026-10-24); only an explicit message starts it, and then it carries on."""
@@ -132,7 +132,7 @@ def _intimate_before(c: Conversation, t: Turn) -> bool:
     )
 
 
-async def _explicit(c: Conversation, t: Turn) -> bool:
+async def _explicit(c: Runtime, t: Turn) -> bool:
     """Whether their message itself is sexually explicit: then intimacy starts on the roleplay
     talker at once. A failed read is no."""
     if c.judge is None:

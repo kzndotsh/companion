@@ -12,10 +12,10 @@ from companion.core.types import Frame, Speaker, TraceId, TurnId, Utterance, Utt
 from companion.features.calendar.logic import OFFERED
 from companion.features.threads.logic import Thread, ThreadKind
 from companion.features.threads.run import LOOP_OFFERED
-from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
 from companion.loops.features import Lookups, Moment, Offer
 from companion.loops.record import Recorder
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.mention import MET, mention_note, read_met
 from tests.features.calendar.test_run import CALM, HALLOWEEN, NOTE, QUIET, remember
@@ -37,9 +37,9 @@ def store(tmp_path: Path) -> Store:
 
 def _turn(store: Store, minutes: int) -> tuple[str, ...]:
     """One casual turn's mention, its writes run as if the turn were stored."""
-    convo = Conversation(store, Talker(), PREFIX, REL, calendar=True)
+    runtime = Runtime(store, Talker(), PREFIX, REL, calendar=True)
     t = Turn(SESSION, TurnId(f"t{minutes}"), HALLOWEEN + timedelta(minutes=minutes), [], "hey")
-    offer: Offer = mention_note(Moment(convo, t, Frame.REAL, CALM, Lookups(), False, []), QUIET)
+    offer: Offer = mention_note(Moment(runtime, t, Frame.REAL, CALM, Lookups(), False, []), QUIET)
     for write in offer.after:
         write()
     return offer.lines + offer.tail
@@ -97,9 +97,9 @@ async def test_how_they_met_a_day_is_read_like_a_plan(store: Store) -> None:
         HALLOWEEN,
     )
     store.append_utterance(reply)
-    convo = Conversation(store, Talker(), PREFIX, REL, judge=Meets())
+    runtime = Runtime(store, Talker(), PREFIX, REL, judge=Meets())
     then = HALLOWEEN + timedelta(minutes=2)
     t = Turn(SESSION, TurnId("t1"), then, [reply], "yes!! a costume party")
-    await read_met(convo, t, reply, None)
+    await read_met(runtime, t, reply, None)
     met = store.decisions_with_key(REL, MET)
     assert [(d.detail or {}).get("about") for d in met] == ["Halloween"]

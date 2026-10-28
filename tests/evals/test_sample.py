@@ -20,8 +20,8 @@ from companion.evals.fixtures import Fixture, MaxWords, Script
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.sample import draw
 from companion.features.basics.logic import ASKED as ASKED_NAME
-from companion.loops.conversation import Conversation
 from companion.loops.record import Recorder
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.turn.test_chaos import Chaos
@@ -100,9 +100,7 @@ async def _live(tmp_path: Path, f: Fixture, judge: Chaos | TurnJudge) -> TalkerR
         ASKED_NAME, at=NOW - timedelta(hours=1)
     )
     talker = Talker()
-    await handle(
-        Conversation(store, talker, PREFIX, REL, judge=judge), SESSION, f.script.user, "t", NOW
-    )
+    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), SESSION, f.script.user, "t", NOW)
     store.close()
     return talker.seen[0]
 

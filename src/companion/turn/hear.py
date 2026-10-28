@@ -29,12 +29,12 @@ from companion.turn.listen import judge_listening
 from companion.turn.values import Listened, stop
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 
 
-async def ack_reaction(c: Conversation, t: Turn) -> Reaction | None:
+async def ack_reaction(c: Runtime, t: Turn) -> Reaction | None:
     """A reaction if this short message only acknowledges. Logs every judgement it makes. With the
     crisis path on, a message with a crisis cue word always gets a reply (ADR 0022)."""
     if c.judge is None or not is_candidate(t.text, t.prior, after_serious=_after_serious(c, t)):
@@ -69,7 +69,7 @@ async def ack_reaction(c: Conversation, t: Turn) -> Reaction | None:
     return reaction
 
 
-def _after_serious(c: Conversation, t: Turn) -> bool:
+def _after_serious(c: Runtime, t: Turn) -> bool:
     """Whether the listening judge found their previous message serious (severity 2 or more)."""
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     if not theirs:
@@ -82,14 +82,14 @@ def _after_serious(c: Conversation, t: Turn) -> bool:
     return False
 
 
-async def hear_them(c: Conversation, t: Turn, in_scene: Frame) -> Heard | None:
+async def hear_them(c: Runtime, t: Turn, in_scene: Frame) -> Heard | None:
     """How serious the message is and what they are doing. Not asked in a scene."""
     if c.judge is None or not c.listen or in_scene is not Frame.REAL:
         return None
     return await judge_listening(c.judge, t.prior, t.text)
 
 
-async def listen(c: Conversation, t: Turn, in_scene: Frame) -> Listened:
+async def listen(c: Runtime, t: Turn, in_scene: Frame) -> Listened:
     """The listen stage: whether a reaction answers instead of a reply, and if not, what the
     listening judge heard. The two run side by side; a failure stops both and goes on up."""
     listening = asyncio.ensure_future(hear_them(c, t, in_scene))

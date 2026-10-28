@@ -19,7 +19,7 @@ from companion.core.types import (
 )
 from companion.features.basics.logic import name_belief
 from companion.features.knowing.logic import WOULD_ASK
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -49,7 +49,7 @@ def store(tmp_path: Path) -> Store:
 async def _say(store: Store, judge: Judge, text: str = "lol ok", at: datetime = NOW) -> Talker:
     talker = Talker()
     await handle(
-        Conversation(store, talker, PREFIX, REL, judge=judge, mood="off"), SESSION, text, "test", at
+        Runtime(store, talker, PREFIX, REL, judge=judge, mood="off"), SESSION, text, "test", at
     )
     return talker
 

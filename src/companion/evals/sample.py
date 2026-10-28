@@ -42,10 +42,10 @@ from companion.evals.fixtures import Fixture, Script
 from companion.evals.rebuild import swap_memory
 from companion.features.basics.logic import ASKED as ASKED_NAME
 from companion.features.lore.run import LORE
-from companion.loops.conversation import Conversation
 from companion.loops.current import Heard, Turn
 from companion.loops.features import Lookups, Moment
 from companion.loops.record import Recorder
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.assemble import Layout
 from companion.turn.notes import Notes, notes_for
@@ -126,7 +126,7 @@ def recorded_request(base: TalkerRequest, v: Variant) -> TalkerRequest:
     return TalkerRequest(v.prefix, tuple(messages), noted(card, v.card_notes), tail)
 
 
-def _script_turn(c: Conversation, script: Script, v: Variant) -> Turn:
+def _script_turn(c: Runtime, script: Script, v: Variant) -> Turn:
     """Their message as a turn over the script's history, stored as their messages and its replies
     a minute apart and read back as the turn reads it. It already asked what to call them today,
     so that note stays out, as it would in an established relationship."""
@@ -169,7 +169,7 @@ def reading(
     return Frame.REAL, (ListeningRead(severity, stance, vague, medical, rude), READ_BY, "")
 
 
-def script_request(c: Conversation, t: Turn, script: Script, v: Variant) -> TalkerRequest:
+def script_request(c: Runtime, t: Turn, script: Script, v: Variant) -> TalkerRequest:
     """The request the turn would send for this script: its notes for the moment, the fixture's
     memory block and clock line, then the variant's notes."""
     in_scene, heard = reading(v, script.labels)
@@ -190,13 +190,13 @@ def script_request(c: Conversation, t: Turn, script: Script, v: Variant) -> Talk
 
 
 @contextmanager
-def _scratch(talker: Talker, prefix: Prefix, *, roleplay: bool) -> Generator[Conversation]:
+def _scratch(talker: Talker, prefix: Prefix, *, roleplay: bool) -> Generator[Runtime]:
     """A conversation over an empty store in a temporary directory, with the switches the live bot
     defaults to; gone after the sample."""
     with tempfile.TemporaryDirectory() as tmp:
         store = Store(Path(tmp) / "eval.sqlite")
         try:
-            yield Conversation(
+            yield Runtime(
                 store,
                 talker,
                 prefix,

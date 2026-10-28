@@ -24,7 +24,7 @@ from companion.loops.current import Turn, decide
 from companion.loops.features import Feature, Moment, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 TIMEOUT_SECONDS = 6.0
 HABITS = Judge("habits", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="no note")
@@ -39,7 +39,7 @@ async def find_habits(
     return None if got is None else (got.value, got.model, prompt)
 
 
-async def check_habits(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
+async def check_habits(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
     """After the reply is out, read the last few replies in the background for habits."""
     del said
     if c.judge is None or not sent:

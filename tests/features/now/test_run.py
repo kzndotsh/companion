@@ -11,10 +11,10 @@ from companion.core.turn.listening import ListeningRead
 from companion.core.turn.now import KEY
 from companion.core.types import Frame, Json, TraceId, TurnId
 from companion.features.now.run import SENT, SHADOW, now_note, read_now
-from companion.loops.conversation import Conversation
 from companion.loops.current import Heard, Turn
 from companion.loops.features import Lookups, Moment
 from companion.loops.record import Recorder
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
@@ -49,9 +49,9 @@ def _said(store: Store, phase: str, minutes_ago: int, what: str = "dinner is com
 
 
 def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str, ...], list[str]]:
-    convo = Conversation(store, Talker(), PREFIX, REL, now=mode)
+    runtime = Runtime(store, Talker(), PREFIX, REL, now=mode)
     t = Turn(SESSION, TurnId("t"), NOW, [], "lol out of all the things")
-    offer = now_note(Moment(convo, t, frame, CALM, Lookups(), False, []), None, {})
+    offer = now_note(Moment(runtime, t, frame, CALM, Lookups(), False, []), None, {})
     for write in offer.after:
         write()
     logged = [d.reason for k in (SENT, SHADOW) for d in store.decisions_with_key(REL, k)]
@@ -59,9 +59,9 @@ def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str
 
 
 async def _read(store: Store, judge: Reads, heard: Heard | None, **kw: object) -> None:
-    convo = Conversation(store, Talker(), PREFIX, REL, judge=judge, **kw)  # type: ignore[arg-type]
+    runtime = Runtime(store, Talker(), PREFIX, REL, judge=judge, **kw)  # type: ignore[arg-type]
     t = Turn(SESSION, TurnId("t"), NOW, [], "getting dinner soon")
-    await read_now(convo, t, Frame.REAL, heard, Card((), (), (), (), {}, NOW))
+    await read_now(runtime, t, Frame.REAL, heard, Card((), (), (), (), {}, NOW))
 
 
 def test_what_they_said_is_coming_reaches_the_reply_while_it_is_open(store: Store) -> None:

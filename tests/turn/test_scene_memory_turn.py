@@ -37,10 +37,10 @@ from companion.features.scene_memory.logic import (
 )
 from companion.features.scene_memory.run import CARD, LEFT_OFF, OFFERED, Scored, entries
 from companion.features.scene_memory.store import By
-from companion.loops.conversation import Conversation
 from companion.loops.current import Turn
 from companion.loops.features import Lookups
 from companion.loops.record import Recorder
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.assemble import Assembled, assemble
 from companion.turn.fast import handle
@@ -108,8 +108,8 @@ def store(tmp_path: Path) -> Store:
 TURN = TurnId("t-now")
 
 
-def _convo(store: Store, mode: str) -> Conversation:
-    return Conversation(store, Talker(), PREFIX, REL, roleplay_talker=Talker(), scene_memory=mode)
+def _runtime(store: Store, mode: str) -> Runtime:
+    return Runtime(store, Talker(), PREFIX, REL, roleplay_talker=Talker(), scene_memory=mode)
 
 
 def _brush(store: Store, *, declines: bool | None, turn: TurnId = TURN, at: datetime = NOW) -> None:
@@ -129,7 +129,7 @@ def _turn(store: Store, mode: str, *, roleplay: bool, looked: Lookups | None = N
     t = Turn(SESSION, TURN, NOW, [], "*leans in*")
     in_scene = Frame.PLAY if roleplay else Frame.REAL
     return assemble(
-        _convo(store, mode), t, in_scene, None, looked or _scores(store), roleplay=roleplay
+        _runtime(store, mode), t, in_scene, None, looked or _scores(store), roleplay=roleplay
     )
 
 
@@ -229,7 +229,7 @@ def test_with_no_look_up_a_scene_keeps_its_limits_and_basics(store: Store) -> No
 
 async def test_on_the_relevance_look_up_never_searches_the_intimate_lane(store: Store) -> None:
     talker = Talker()
-    convo = Conversation(
+    runtime = Runtime(
         store,
         talker,
         PREFIX,
@@ -240,7 +240,7 @@ async def test_on_the_relevance_look_up_never_searches_the_intimate_lane(store: 
         relevance="on",
         scene_memory="on",
     )
-    await handle(convo, SESSION, "what a day", "test", NOW)
+    await handle(runtime, SESSION, "what a day", "test", NOW)
     [live] = [d.detail for d in store.decisions_with_key(REL, LIVE)]
     assert live is not None
     assert live["searched"] == 2  # the name and the work, none of the four intimate memories

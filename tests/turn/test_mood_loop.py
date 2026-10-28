@@ -27,7 +27,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.mood.logic import Source, State, effect
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -91,7 +91,7 @@ async def _say(
 ) -> Talker:
     talker = Talker()
     await handle(
-        Conversation(store, talker, PREFIX, REL, judge=judge, mood=mode), SESSION, text, "test", at
+        Runtime(store, talker, PREFIX, REL, judge=judge, mood=mode), SESSION, text, "test", at
     )
     return talker
 
@@ -132,9 +132,9 @@ async def test_a_serious_turn_shows_no_mood_and_the_next_one_is_tender(store: St
 
 
 async def test_a_turn_that_fails_adds_nothing_to_the_mood(store: Store) -> None:
-    convo = Conversation(store, Talker(fail=True), PREFIX, REL, judge=Judge(), mood="on")
+    runtime = Runtime(store, Talker(fail=True), PREFIX, REL, judge=Judge(), mood="on")
     with pytest.raises(RuntimeError):
-        await handle(convo, SESSION, "haha yesss!! 😂", "test", NOW)
+        await handle(runtime, SESSION, "haha yesss!! 😂", "test", NOW)
     assert store.mood_effects_since(REL, NOW - timedelta(days=1)) == []
 
 

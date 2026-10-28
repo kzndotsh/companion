@@ -27,8 +27,8 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import card_views, is_settled
-from companion.loops.conversation import Conversation
 from companion.loops.curate import retire_implicated_views
+from companion.loops.runtime import Runtime
 from companion.memory.rebuild import rebuild
 from companion.memory.slow import reflect_once
 from companion.memory.views import check_views, views_implicated
@@ -261,7 +261,7 @@ async def test_only_approved_views_reach_the_model_and_the_placement_is_logged(
     store.close_belief(closed.id, T0 + timedelta(days=1))
     talker = _Talker()
     await handle(
-        Conversation(store, talker, PREFIX, REL),
+        Runtime(store, talker, PREFIX, REL),
         SessionId("s"),
         "hi",
         "test",
@@ -405,7 +405,7 @@ async def _carried_turn(store: Store) -> TurnId:
     await check_views(store, Routed(checks=[_verdict(False)]), REL)
     talker = _Talker()
     await handle(
-        Conversation(store, talker, PREFIX, REL),
+        Runtime(store, talker, PREFIX, REL),
         SessionId("s"),
         "hi",
         "test",
@@ -471,7 +471,7 @@ async def test_a_label_the_model_invents_is_ignored(store: Store) -> None:
 
 async def test_a_turn_that_carried_no_views_never_asks_the_model(store: Store) -> None:
     talker = _Talker()
-    await handle(Conversation(store, talker, PREFIX, REL), SessionId("s"), "hi", "test", T0)
+    await handle(Runtime(store, talker, PREFIX, REL), SessionId("s"), "hi", "test", T0)
     turn = store.latest_turn(REL)
     assert turn is not None
     ex = Routed()

@@ -77,8 +77,8 @@ from companion.loops.record import Recorder
 from companion.loops.spendcap import over_cap
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
+    from companion.loops.runtime import Runtime
     from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.reminders")
@@ -119,7 +119,7 @@ async def read_slots(
     return None if got is None else trusted(got.value, said)
 
 
-def schedule(c: Conversation, series: Series, now: datetime, tz: tzinfo) -> Step:
+def schedule(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> Step:
     """Bring a series up to date: record a pause or a resume, and make its next occurrence when the
     one before has ended. Safe to run any number of times: the store keeps one of each number."""
     occurrences = [r for r in c.store.reminders(c.rel) if r.series_id == series.id]
@@ -156,7 +156,7 @@ def stop(store: Store, series: Series, reason: str, now: datetime) -> None:
             store.reminder_event(r.id, "cancelled", reason, now)
 
 
-def _cancel(c: Conversation, s: Slots, now: datetime) -> Read | None:
+def _cancel(c: Runtime, s: Slots, now: datetime) -> Read | None:
     """Drop the pending one-offs and stop the series their words name (or the only one)."""
     pending = [r for r in c.store.reminders(c.rel) if r.state == "pending" and r.series_id is None]
     live = [x for x in c.store.series(c.rel) if x.state is not Standing.STOPPED]
@@ -181,7 +181,7 @@ def _cancel(c: Conversation, s: Slots, now: datetime) -> Read | None:
     return Read(cancelled_note(" and ".join(what)), CANCELLED, detail)
 
 
-def _started(c: Conversation, series: Series, planned: Planned, now: datetime, tz: tzinfo) -> Read:
+def _started(c: Runtime, series: Series, planned: Planned, now: datetime, tz: tzinfo) -> Read:
     c.store.add_series(series)
     due = schedule(c, series, now, tz).due or now  # a new series always has a first one
     first = first_words(planned.repeat, due, now, tz)
@@ -199,7 +199,7 @@ def _started(c: Conversation, series: Series, planned: Planned, now: datetime, t
 
 
 def act(  # noqa: PLR0913, PLR0917
-    c: Conversation,
+    c: Runtime,
     s: Slots,
     said: str,
     turn: TurnId,
@@ -248,7 +248,7 @@ def act(  # noqa: PLR0913, PLR0917
 
 
 def log_decision(  # noqa: PLR0913, PLR0917
-    c: Conversation,
+    c: Runtime,
     session: SessionId,
     turn: TurnId,
     reason: str,
@@ -259,7 +259,7 @@ def log_decision(  # noqa: PLR0913, PLR0917
 
 
 async def _write(
-    c: Conversation, r: Reminder, prior: Sequence[Utterance], now: datetime
+    c: Runtime, r: Reminder, prior: Sequence[Utterance], now: datetime
 ) -> tuple[str, str]:
     """The message and who wrote it: the talker in its own voice, drawn once more when a code check
     fails; their words, marked, when the talker cannot be asked or says nothing."""
@@ -286,7 +286,7 @@ async def _write(
 
 
 async def deliver_due(  # noqa: PLR0913
-    c: Conversation,
+    c: Runtime,
     send: Callable[[str], Awaitable[object]],
     session: SessionId,
     now: datetime,
@@ -375,7 +375,7 @@ async def deliver_due(  # noqa: PLR0913
     return sent
 
 
-def _tend(c: Conversation, series: Series, session: SessionId, now: datetime, tz: tzinfo) -> None:
+def _tend(c: Runtime, series: Series, session: SessionId, now: datetime, tz: tzinfo) -> None:
     step = schedule(c, series, now, tz)
     if step.state is not None:
         key = PAUSED if step.state is Standing.PAUSED else RESUMED
@@ -383,7 +383,7 @@ def _tend(c: Conversation, series: Series, session: SessionId, now: datetime, tz
         log_decision(c, session, TurnId(uuid.uuid4().hex), key, now, detail)
 
 
-def unhandled(c: Conversation, prior: Sequence[Utterance]) -> list[Utterance]:
+def unhandled(c: Runtime, prior: Sequence[Utterance]) -> list[Utterance]:
     """The conversation the reader sees, without their earlier messages that already set or
     cancelled a reminder. Shown one, the reader took a comment on that reminder ("see, you can do
     reminders") as the same request again, 30 times in 30 (2026-10-26)."""
@@ -399,7 +399,7 @@ def unhandled(c: Conversation, prior: Sequence[Utterance]) -> list[Utterance]:
 
 
 async def reminder_for_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> Read | None:
     """When they ask to be reminded or checked on, or answer its asking when (J50): read the words,
     let code set the time, and say in a note what happened."""

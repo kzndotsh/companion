@@ -30,8 +30,8 @@ from companion.prompts import get
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.relevance")
 TIMEOUT_SECONDS = 10.0
@@ -169,7 +169,7 @@ async def shadow(  # noqa: PLR0913
         return None
 
 
-def _hidden(c: Conversation) -> frozenset[BeliefId]:
+def _hidden(c: Runtime) -> frozenset[BeliefId]:
     """The intimate lane, left out of the look-up when the scene memory is on (ADR 0026)."""
     return c.store.scene_memory().intimate(c.rel) if c.scene_memory == "on" else frozenset()
 
@@ -179,7 +179,7 @@ LIVE_SECONDS = 3.0  # a slow look-up only means no memories are offered this tur
 
 
 async def relevant_for_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> tuple[tuple[BeliefId, str], ...]:
     """With the look-up on (ADR 0018): the memories a small model picks as bearing on their message,
     asked only when the closest memory is near (GATE), outside a scene. Logged either way. With no
@@ -229,7 +229,7 @@ def relevant_offer(m: Moment, found: object, so_far: Offered) -> Offer:
 
 
 async def shadow_for_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
 ) -> None:
     """With the look-up in shadow: what it would have kept in mind on an ordinary message, logged
     beside the turn; it never holds up or changes the reply."""

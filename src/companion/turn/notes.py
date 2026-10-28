@@ -39,7 +39,7 @@ from companion.registry import FEATURES
 from companion.turn.mention import mention_note
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 from companion.loops.current import Heard, Turn, decide, mark
 
 log = logging.getLogger("companion.turn")
@@ -51,7 +51,7 @@ LOOK_SECONDS = 9.0  # every look-up together; past it the reply goes without the
 
 
 async def look(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None, read: Heard | None
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, read: Heard | None
 ) -> Lookups:
     """Every look-up the reply waits for, run side by side under one deadline (LOOK_SECONDS). Each
     has its own limit too; one still running at the deadline, or one that raised, gives nothing
@@ -79,7 +79,7 @@ async def look(
     )
 
 
-def _listening_note(c: Conversation, t: Turn, heard: Heard | None) -> str | None:
+def _listening_note(c: Runtime, t: Turn, heard: Heard | None) -> str | None:
     """The line for the system block, with the decision logged from the labels."""
     if heard is None:
         return None
@@ -107,7 +107,7 @@ def _listening_note(c: Conversation, t: Turn, heard: Heard | None) -> str | None
     return note
 
 
-async def _recall(c: Conversation, t: Turn, heard: Heard | None) -> Recalled | None:
+async def _recall(c: Runtime, t: Turn, heard: Heard | None) -> Recalled | None:
     """When they asked it to remember something, look it up across all of memory and log it."""
     if c.judge is None or heard is None or not heard[0].recall or not heard[0].topic:
         return None

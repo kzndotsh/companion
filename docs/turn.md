@@ -12,7 +12,7 @@ never see the persona, and each logs its prompt as `name@version` with its decis
 
 ## The stages
 
-A turn runs in stages, one module each under `src/companion/turn/`, driven by `handle(convo, ...)` in
+A turn runs in stages, one module each under `src/companion/turn/`, driven by `handle(runtime, ...)` in
 `fast.py`. Before any of them, at the daily spend cap (`COMPANION_DAILY_CAP_USD`) their message is kept,
 nothing paid runs, and they are told once that day (`messages/spend-cap`).
 
@@ -38,8 +38,8 @@ nothing paid runs, and they are told once that day (`messages/spend-cap`).
 On an urgent crisis turn with the path on, a fixed message follows the reply (the crisis path,
 below).
 
-The values each stage hands the next live in `turn/values.py`. The conversation the turn runs in is
-plain data in `loops/conversation.py`.
+The values each stage hands the next live in `turn/values.py`. The `Runtime` the turn runs with (store, models, switches) is
+plain data in `loops/runtime.py`.
 
 ## Reading the message
 

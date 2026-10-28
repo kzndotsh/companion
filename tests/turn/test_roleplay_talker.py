@@ -20,7 +20,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.basics.logic import name_belief
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -95,11 +95,9 @@ async def _chat(
     store: Store, texts: list[str], scene: Talker | None, judge: Judge | None = None
 ) -> Talker:
     everyday = Talker("everyday")
-    convo = Conversation(
-        store, everyday, PREFIX, REL, judge=judge or Judge(), roleplay_talker=scene
-    )
+    runtime = Runtime(store, everyday, PREFIX, REL, judge=judge or Judge(), roleplay_talker=scene)
     for i, text in enumerate(texts):
-        await handle(convo, SESSION, text, "t", NOW + timedelta(minutes=i))
+        await handle(runtime, SESSION, text, "t", NOW + timedelta(minutes=i))
     return everyday
 
 
@@ -185,10 +183,10 @@ async def test_a_late_check_of_a_held_reply_is_asked_once_more_before_it_is_thro
             return await super().extract(system, user, schema)
 
     scene, everyday = Talker("scene"), Talker("everyday")
-    convo = Conversation(
+    runtime = Runtime(
         store, everyday, PREFIX, REL, judge=Late(), roleplay_talker=scene, route_intimate=True
     )
-    await handle(convo, SESSION, "i want you so bad", "t", NOW)
+    await handle(runtime, SESSION, "i want you so bad", "t", NOW)
     assert len(everyday.seen) == 1  # the first reply was kept, not redrawn
 
 
@@ -200,7 +198,7 @@ async def test_intimate_talk_goes_to_the_roleplay_talker_only_when_allowed_and_a
     store: Store, *, allowed: bool, age_coded: bool, routed: bool
 ) -> None:
     scene, everyday = Talker("scene"), Talker("everyday")
-    convo = Conversation(
+    runtime = Runtime(
         store,
         everyday,
         PREFIX,
@@ -209,7 +207,7 @@ async def test_intimate_talk_goes_to_the_roleplay_talker_only_when_allowed_and_a
         roleplay_talker=scene,
         route_intimate=allowed,
     )
-    await handle(convo, SESSION, "i want you so bad", "t", NOW)
+    await handle(runtime, SESSION, "i want you so bad", "t", NOW)
     assert (len(scene.seen), len(everyday.seen)) == ((1, 0) if routed else (0, 1))
 
 
@@ -218,7 +216,7 @@ async def test_a_held_turn_gets_the_note_and_an_intimate_reply_three_times_sends
     store: Store, *, sexual: bool, sent: str | None
 ) -> None:
     scene, everyday = Talker("scene"), Talker("everyday")
-    convo = Conversation(
+    runtime = Runtime(
         store,
         everyday,
         PREFIX,
@@ -227,7 +225,7 @@ async def test_a_held_turn_gets_the_note_and_an_intimate_reply_three_times_sends
         roleplay_talker=scene,
         route_intimate=True,
     )
-    out = await handle(convo, SESSION, "i want you so bad", "t", NOW)
+    out = await handle(runtime, SESSION, "i want you so bad", "t", NOW)
     assert scene.seen == []
     assert "keep this reply free of anything sexual" in everyday.seen[0].card
     if sent is None:
@@ -249,11 +247,11 @@ async def test_a_scene_reply_with_an_em_dash_is_drawn_once_more(store: Store) ->
             return Reply(text=text, model="scene", latency_ms=1)
 
     scene, everyday = Dashing(), Talker("everyday")
-    convo = Conversation(
+    runtime = Runtime(
         store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene, resample=True
     )
-    await handle(convo, SESSION, "let's pretend you're a knight", "t", NOW)
-    out = await handle(convo, SESSION, "*bows*", "t", NOW + timedelta(minutes=1))
+    await handle(runtime, SESSION, "let's pretend you're a knight", "t", NOW)
+    out = await handle(runtime, SESSION, "*bows*", "t", NOW + timedelta(minutes=1))
     assert out == "I lean in, closer"
     assert len(scene.seen) == 2
 
@@ -339,7 +337,7 @@ async def test_flirting_stays_with_the_everyday_talker_until_a_message_is_explic
     store: Store,
 ) -> None:
     everyday, scene = Talker("everyday"), Talker("scene")
-    convo = Conversation(
+    runtime = Runtime(
         store,
         everyday,
         PREFIX,
@@ -348,16 +346,16 @@ async def test_flirting_stays_with_the_everyday_talker_until_a_message_is_explic
         roleplay_talker=scene,
         route_intimate=True,
     )
-    await handle(convo, SESSION, "you look cute today", "test", NOW)
+    await handle(runtime, SESSION, "you look cute today", "test", NOW)
     assert (len(everyday.seen), len(scene.seen)) == (1, 0)
     assert "keep this reply free" not in everyday.seen[0].card  # not held: no floor note
-    await handle(convo, SESSION, "come closer then", "test", NOW + timedelta(minutes=1))
+    await handle(runtime, SESSION, "come closer then", "test", NOW + timedelta(minutes=1))
     assert (len(everyday.seen), len(scene.seen)) == (2, 0)  # a run of flirting is not under way
-    convo.judge.explicit = True  # type: ignore[union-attr]
-    await handle(convo, SESSION, "take it off", "test", NOW + timedelta(minutes=2))
+    runtime.judge.explicit = True  # type: ignore[union-attr]
+    await handle(runtime, SESSION, "take it off", "test", NOW + timedelta(minutes=2))
     assert (len(everyday.seen), len(scene.seen)) == (2, 1)
-    convo.judge.explicit = False  # type: ignore[union-attr]
-    await handle(convo, SESSION, "mm yes", "test", NOW + timedelta(minutes=3))
+    runtime.judge.explicit = False  # type: ignore[union-attr]
+    await handle(runtime, SESSION, "mm yes", "test", NOW + timedelta(minutes=3))
     assert (len(everyday.seen), len(scene.seen)) == (2, 2)  # under way: it carries on
 
 
@@ -367,11 +365,11 @@ async def test_a_push_back_in_a_scene_is_answered_by_the_everyday_talker_with_a_
     from companion.core.turn.floor import BRUSH_NOTE  # noqa: PLC0415
 
     everyday, scene = Talker("everyday"), Talker("scene")
-    playing = Conversation(store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene)
+    playing = Runtime(store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene)
     await handle(playing, SESSION, "*waves at you from across the room*", "test", NOW)
     await handle(playing, SESSION, "*sits down next to you*", "test", NOW + timedelta(minutes=1))
     assert len(scene.seen) == 1  # the scene is under way
-    pushed = Conversation(
+    pushed = Runtime(
         store, everyday, PREFIX, REL, judge=Judge(declines=True), roleplay_talker=scene
     )
     await handle(pushed, SESSION, "*bonk* behave, i'm starving", "test", NOW + timedelta(minutes=2))

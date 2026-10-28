@@ -27,7 +27,7 @@ from companion.core.types import (
 )
 from companion.features.crisis.logic import concern_note, light_note
 from companion.features.crisis.run import LEVEL, LIGHT_KEY, LINE_SENT, METHOD, SCENE
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -108,7 +108,7 @@ def store(tmp_path: Path) -> Store:
     return Store(tmp_path / "rel.sqlite")
 
 
-def _convo(
+def _runtime(
     store: Store,
     judge: Judge,
     mode: str,
@@ -116,8 +116,8 @@ def _convo(
     *,
     roleplay_talker: Talker | None = None,
     serious_message: str = "",
-) -> Conversation:
-    return Conversation(
+) -> Runtime:
+    return Runtime(
         store,
         talker,
         PREFIX,
@@ -152,7 +152,7 @@ async def test_in_shadow_it_reads_and_logs_but_nothing_changes(store: Store) -> 
     talker = Talker()
     judge = Judge([URGENT])
     out = await handle(
-        _convo(store, judge, "shadow", talker), SESSION, "i took too many pills", "t", NOW
+        _runtime(store, judge, "shadow", talker), SESSION, "i took too many pills", "t", NOW
     )
     assert judge.risk_calls == 3
     detail = _level(store)
@@ -168,14 +168,14 @@ async def test_in_shadow_it_reads_and_logs_but_nothing_changes(store: Store) -> 
 
 async def test_with_no_cue_the_risk_judge_is_not_asked(store: Store) -> None:
     judge = Judge([URGENT], severity=1)
-    await handle(_convo(store, judge, "on", Talker()), SESSION, "work was annoying", "t", NOW)
+    await handle(_runtime(store, judge, "on", Talker()), SESSION, "work was annoying", "t", NOW)
     assert judge.risk_calls == 0
     assert _level(store)["level"] == "none"
 
 
 async def test_a_serious_listening_read_asks_the_risk_judge(store: Store) -> None:
     judge = Judge([CONCERN], severity=2)
-    await handle(_convo(store, judge, "on", Talker()), SESSION, "everything is a lot", "t", NOW)
+    await handle(_runtime(store, judge, "on", Talker()), SESSION, "everything is a lot", "t", NOW)
     assert judge.risk_calls == 3
     assert _level(store)["level"] == "concern"
 
@@ -183,7 +183,7 @@ async def test_a_serious_listening_read_asks_the_risk_judge(store: Store) -> Non
 async def test_on_a_concern_turn_the_note_goes_after_the_history_with_no_cap(store: Store) -> None:
     talker = Talker()
     out = await handle(
-        _convo(store, Judge([CONCERN]), "on", talker), SESSION, "i want to die honestly", "t", NOW
+        _runtime(store, Judge([CONCERN]), "on", talker), SESSION, "i want to die honestly", "t", NOW
     )
     request = talker.seen[0]
     assert concern_note() in request.tail
@@ -197,8 +197,8 @@ async def test_on_a_concern_turn_the_note_goes_after_the_history_with_no_cap(sto
 
 async def test_on_an_urgent_turn_the_fixed_line_is_sent_once_after_the_reply(store: Store) -> None:
     talker = Talker(replies=["i'm here. are you safe?"])
-    convo = _convo(store, Judge([URGENT]), "on", talker)
-    out = await handle(convo, SESSION, "i took way too many pills", "t", NOW)
+    runtime = _runtime(store, Judge([URGENT]), "on", talker)
+    out = await handle(runtime, SESSION, "i took way too many pills", "t", NOW)
     assert isinstance(out, ThenSend)
     assert out.reply == "i'm here. are you safe?"
     assert out.then == DEFAULT_LINE
@@ -209,26 +209,26 @@ async def test_on_an_urgent_turn_the_fixed_line_is_sent_once_after_the_reply(sto
         (Speaker.COMPANION, DEFAULT_LINE),
     ]
     assert LINE_SENT in _keys(store)
-    again = await handle(convo, SESSION, "i took more pills", "t", NOW + timedelta(minutes=5))
+    again = await handle(runtime, SESSION, "i took more pills", "t", NOW + timedelta(minutes=5))
     assert isinstance(again, str)  # not sent twice within the hour
 
 
 async def test_the_fixed_line_comes_from_the_sheet_section_when_there_is_one(store: Store) -> None:
-    convo = _convo(
+    runtime = _runtime(
         store,
         Judge([URGENT]),
         "on",
         Talker(),
         serious_message="hey. stay with me and reach $line right now, okay?",
     )
-    out = await handle(convo, SESSION, "i took too much of my meds", "t", NOW)
+    out = await handle(runtime, SESSION, "i took too much of my meds", "t", NOW)
     assert isinstance(out, ThenSend)
     assert out.then == f"hey. stay with me and reach {LINE} right now, okay?"
 
 
 async def test_a_unanimous_figurative_read_stands_down(store: Store) -> None:
     talker = Talker()
-    out = await handle(_convo(store, Judge([JOKE]), "on", talker), SESSION, "kms lol", "t", NOW)
+    out = await handle(_runtime(store, Judge([JOKE]), "on", talker), SESSION, "kms lol", "t", NOW)
     assert _level(store)["level"] == "figurative"
     assert isinstance(out, str)
     assert talker.seen[0].tail == "" or "crisis" not in talker.seen[0].tail
@@ -239,18 +239,18 @@ async def test_a_unanimous_figurative_read_stands_down(store: Store) -> None:
 async def test_a_failed_read_fails_safe(store: Store) -> None:
     talker = Talker()
     judge = Judge([JOKE, JOKE, None])
-    await handle(_convo(store, judge, "on", talker), SESSION, "kms", "t", NOW)
+    await handle(_runtime(store, judge, "on", talker), SESSION, "kms", "t", NOW)
     assert _level(store)["level"] == "concern"
     assert concern_note() in talker.seen[0].tail
 
 
 async def test_a_split_joke_gets_one_light_check_a_day(store: Store) -> None:
     talker = Talker()
-    convo = _convo(store, Judge([JOKE, JOKE, PLAIN]), "on", talker)
-    await handle(convo, SESSION, "i'm dead", "t", NOW)
+    runtime = _runtime(store, Judge([JOKE, JOKE, PLAIN]), "on", talker)
+    await handle(runtime, SESSION, "i'm dead", "t", NOW)
     assert light_note() in talker.seen[0].tail
     assert LIGHT_KEY in _keys(store)
-    await handle(convo, SESSION, "dead again lol", "t", NOW + timedelta(hours=2))
+    await handle(runtime, SESSION, "dead again lol", "t", NOW + timedelta(hours=2))
     assert light_note() not in talker.seen[1].tail
 
 
@@ -278,8 +278,8 @@ async def test_a_literal_risk_in_a_scene_goes_to_the_everyday_talker_when_on(
 ) -> None:
     _seed_scene(store)
     everyday, scene = Talker(), Talker("scene")
-    convo = _convo(store, Judge([CONCERN]), mode, everyday, roleplay_talker=scene)
-    await handle(convo, SESSION, "honestly i want to die, not the character, me", "t", NOW)
+    runtime = _runtime(store, Judge([CONCERN]), mode, everyday, roleplay_talker=scene)
+    await handle(runtime, SESSION, "honestly i want to die, not the character, me", "t", NOW)
     if mode == "on":
         assert (len(everyday.seen), len(scene.seen)) == (1, 0)
         assert concern_note() in everyday.seen[0].tail
@@ -292,7 +292,7 @@ async def test_a_literal_risk_in_a_scene_goes_to_the_everyday_talker_when_on(
 async def test_a_reply_naming_a_method_is_drawn_again_when_on(store: Store, mode: str) -> None:
     talker = Talker(replies=["a lethal dose is not something to test", "are you safe right now?"])
     out = await handle(
-        _convo(store, Judge([CONCERN]), mode, talker),
+        _runtime(store, Judge([CONCERN]), mode, talker),
         SESSION,
         "how many pills would it take",
         "t",
@@ -309,7 +309,9 @@ async def test_a_reply_naming_a_method_is_drawn_again_when_on(store: Store, mode
 
 async def test_off_reads_nothing(store: Store) -> None:
     judge = Judge([URGENT])
-    await handle(_convo(store, judge, "off", Talker()), SESSION, "i took too many pills", "t", NOW)
+    await handle(
+        _runtime(store, judge, "off", Talker()), SESSION, "i took too many pills", "t", NOW
+    )
     assert judge.risk_calls == 0
     assert LEVEL not in _keys(store)
 
@@ -332,8 +334,8 @@ async def test_with_the_path_on_a_short_cue_message_is_never_answered_by_a_react
         )
     )
     talker = Talker()
-    convo = _convo(store, Judge([URGENT], ack=True), mode, talker)
-    out = await handle(convo, SESSION, "took all my pills", "t", NOW)
+    runtime = _runtime(store, Judge([URGENT], ack=True), mode, talker)
+    out = await handle(runtime, SESSION, "took all my pills", "t", NOW)
     if mode == "on":
         assert isinstance(out, ThenSend)
         assert len(talker.seen) == 1

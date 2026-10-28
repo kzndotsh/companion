@@ -26,8 +26,8 @@ from companion.loops.features import Feature, Offer, Offered
 from companion.loops.recall import look_up
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
     from companion.loops.features import Moment
+    from companion.loops.runtime import Runtime
 
 TIMEOUT_SECONDS = 3.0
 INVITE = Judge(
@@ -54,7 +54,7 @@ async def invited_guess(
 
 
 async def guess_for_turn(
-    c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> Invited | None:
     """When their short question invites a guess about them (J16), what memory holds that may fit.
     Casual turns only, and never when they asked it to remember something (recall answers that);

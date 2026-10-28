@@ -11,7 +11,7 @@ from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.reminders.logic import Kind, Reminder
 from companion.features.reminders.run import ASKED, CANCELLED, SET, deliver_due
-from companion.loops.conversation import Conversation
+from companion.loops.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
@@ -54,7 +54,7 @@ def store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Store:
 
 async def say(store: Store, judge: Judge, text: str, at: datetime = NOW) -> str:
     talker = Talker()
-    await handle(Conversation(store, talker, PREFIX, REL, judge=judge), SESSION, text, "t", at)
+    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), SESSION, text, "t", at)
     return talker.seen[0].card
 
 
@@ -173,7 +173,7 @@ async def _deliver(
     async def send(text: str) -> None:
         out.append(text)
 
-    c = Conversation(store, talker, PREFIX, REL)
+    c = Runtime(store, talker, PREFIX, REL)
     await deliver_due(c, send, SESSION, now, started, channel="discord")
     return out
 
@@ -233,7 +233,7 @@ async def test_a_failed_send_leaves_it_pending_for_the_next_tick(store: Store) -
         raise RuntimeError(msg)
 
     await deliver_due(
-        Conversation(store, Writer("x"), PREFIX, REL),
+        Runtime(store, Writer("x"), PREFIX, REL),
         broken,
         SESSION,
         NOW,

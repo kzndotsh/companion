@@ -40,7 +40,7 @@ from companion.loops.record import Recorder
 from companion.turn.notes import Notes, notes_for
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 
@@ -145,7 +145,7 @@ class Assembled:
 
 
 def assemble(  # noqa: PLR0913
-    c: Conversation,
+    c: Runtime,
     t: Turn,
     in_scene: Frame,
     heard: Heard | None,

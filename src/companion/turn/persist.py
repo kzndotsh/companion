@@ -49,12 +49,12 @@ from companion.turn.mention import read_met
 from companion.turn.values import Answered
 
 if TYPE_CHECKING:
-    from companion.loops.conversation import Conversation
+    from companion.loops.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 
 
-def store_user(c: Conversation, t: Turn, channel: str, frame: Frame) -> Utterance:
+def store_user(c: Runtime, t: Turn, channel: str, frame: Frame) -> Utterance:
     said = Utterance(
         UtteranceId(uuid.uuid4().hex),
         c.rel,
@@ -76,7 +76,7 @@ class TheirMessage:
     """Their message for this turn, stored exactly once: with the frame the turn resolved, or, if
     the turn fails before that, as real when the guard closes."""
 
-    def __init__(self, c: Conversation, t: Turn, channel: str) -> None:
+    def __init__(self, c: Runtime, t: Turn, channel: str) -> None:
         self.c, self.t, self.channel = c, t, channel
         self.said: Utterance | None = None
 
@@ -87,7 +87,7 @@ class TheirMessage:
 
 
 @contextlib.asynccontextmanager
-async def their_message(c: Conversation, t: Turn, channel: str) -> AsyncGenerator[TheirMessage]:
+async def their_message(c: Runtime, t: Turn, channel: str) -> AsyncGenerator[TheirMessage]:
     """The one place their message is stored. A turn that fails at any stage still keeps it, as
     real, and the failure goes on up; before, an error in the look-ups or the card lost it."""
     keep = TheirMessage(c, t, channel)
@@ -99,7 +99,7 @@ async def their_message(c: Conversation, t: Turn, channel: str) -> AsyncGenerato
 
 
 def _react_alongside(
-    c: Conversation, t: Turn, felt: tuple[ToneRead, str, str] | None
+    c: Runtime, t: Turn, felt: tuple[ToneRead, str, str] | None
 ) -> Reaction | None:
     """A reaction to send with the reply, if the message calls for one. Logs the judgement."""
     if felt is None:
@@ -122,14 +122,14 @@ def _react_alongside(
 
 
 def with_reaction(
-    c: Conversation, t: Turn, felt: tuple[ToneRead, str, str] | None, sent: str
+    c: Runtime, t: Turn, felt: tuple[ToneRead, str, str] | None, sent: str
 ) -> str | ReactAndReply:
     reacted = _react_alongside(c, t, felt)
     mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to the chat")
     return ReactAndReply(reacted, sent) if reacted is not None else sent
 
 
-async def after_turn(c: Conversation, t: Turn, said: Utterance, sent: str | None) -> None:
+async def after_turn(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
     """Each feature's step once the turn is stored, in the registry's order."""
     for feature in FEATURES:
         if feature.after_turn is not None:
@@ -138,7 +138,7 @@ async def after_turn(c: Conversation, t: Turn, said: Utterance, sent: str | None
 
 
 def log_frame(
-    c: Conversation, t: Turn, outcome: tuple[Judgement, str, str] | None, stored: Frame
+    c: Runtime, t: Turn, outcome: tuple[Judgement, str, str] | None, stored: Frame
 ) -> None:
     """Record every frame judgement and what was stored, with the reason built by code."""
     judged = outcome[0] if outcome else None
@@ -155,7 +155,7 @@ def log_frame(
     decide(c, t, "frame", detail, reason=frame_reason(judged, stored))
 
 
-def persist_reply(c: Conversation, t: Turn, reply: Reply, user_frame: Frame, channel: str) -> str:
+def persist_reply(c: Runtime, t: Turn, reply: Reply, user_frame: Frame, channel: str) -> str:
     """Store the companion's reply and the decision that sent it. Returns what to send."""
     replied_at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1))
     ids = (c.rel, t.session, t.turn)
@@ -190,7 +190,7 @@ def persist_reply(c: Conversation, t: Turn, reply: Reply, user_frame: Frame, cha
 
 
 async def reaction_only(
-    c: Conversation, t: Turn, keep: TheirMessage, in_scene: Frame, reaction: Reaction
+    c: Runtime, t: Turn, keep: TheirMessage, in_scene: Frame, reaction: Reaction
 ) -> Reaction:
     """A turn answered by a reaction alone: their message is kept, and nothing else is stored."""
     said = keep.store(in_scene)
@@ -201,7 +201,7 @@ async def reaction_only(
 
 
 async def finish(
-    c: Conversation, t: Turn, keep: TheirMessage, asm: Assembled, answered: Answered
+    c: Runtime, t: Turn, keep: TheirMessage, asm: Assembled, answered: Answered
 ) -> str | ReactAndReply:
     """The persist stage: their message kept with the frame the judge resolved, the request
     recorded for replay, the card logged, the reply stored, the notes' writes made, and what to

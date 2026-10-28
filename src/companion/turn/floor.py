@@ -70,7 +70,7 @@ DECLINES = Judge(
 )
 
 
-def _conversation(prior: Sequence[Utterance], said: str, last: int) -> str:
+def _runtime(prior: Sequence[Utterance], said: str, last: int) -> str:
     lines = [f"{u.speaker.value.upper()}: {u.text}" for u in prior[-last:]]
     return "\n".join(["Conversation:", *lines, "", f"Newest USER message: {said}"])
 
@@ -79,7 +79,7 @@ async def explicit_lead(
     extractor: StructuredModel, prior: Sequence[Utterance], said: str
 ) -> Read[bool] | None:
     """Whether their message itself is sexually explicit (`system/explicit-lead`)."""
-    return await ask(extractor, EXPLICIT, _conversation(prior, said, 4))
+    return await ask(extractor, EXPLICIT, _runtime(prior, said, 4))
 
 
 async def declines(
@@ -87,7 +87,7 @@ async def declines(
 ) -> Read[bool] | None:
     """Whether their message pushes the flirting or the scene back, even jokingly
     (`system/brush-off`)."""
-    return await ask(extractor, DECLINES, _conversation(prior, said, 6))
+    return await ask(extractor, DECLINES, _runtime(prior, said, 6))
 
 
 async def confirm_minor(
@@ -95,4 +95,4 @@ async def confirm_minor(
 ) -> Read[bool] | None:
     """Whether the text says or implies someone in the romantic or sexual content is under 18,
     asked only when the listening judge read the turn as age-coded (`system/minor-check`)."""
-    return await ask(extractor, MINOR, _conversation(prior, said, 10))
+    return await ask(extractor, MINOR, _runtime(prior, said, 10))
