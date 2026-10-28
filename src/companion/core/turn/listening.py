@@ -59,7 +59,7 @@ SCHEMA: dict[str, Json] = {
 
 
 @dataclass(frozen=True, slots=True)
-class Judgement:
+class ListeningRead:
     severity: int
     stance: str
     vague: bool
@@ -72,7 +72,7 @@ class Judgement:
     repair: bool = False  # they say it got them wrong: misread, assumed, wrong words, hurt (J30)
 
 
-def parse(data: Json) -> Judgement | None:
+def parse(data: Json) -> ListeningRead | None:
     if not isinstance(data, dict):
         return None
     severity, stance, vague = data.get("severity"), data.get("stance"), data.get("vague")
@@ -87,7 +87,7 @@ def parse(data: Json) -> Judgement | None:
         return None
     wanted = " ".join(topic.split())[:MAX_TOPIC_CHARS] if recall else ""
     intimate, age_coded = data.get("intimate"), data.get("age_coded")
-    return Judgement(
+    return ListeningRead(
         int(severity),
         str(stance),
         bool(vague),
@@ -120,13 +120,13 @@ _RUDE = get("notes/rude")
 _REPAIR = get("notes/repair")
 
 
-def rude_note(j: Judgement) -> str | None:
+def rude_note(j: ListeningRead) -> str | None:
     """The note for a message that snapped at the companion. The reflex to apologise and help is
     what a character sheet could not hold back (measured 2026-10-18), so code says it per turn."""
     return _RUDE.text if j.rude else None
 
 
-def repair_note(j: Judgement) -> str | None:
+def repair_note(j: ListeningRead) -> str | None:
     """The note for a message that says it got them wrong (J30). A forgot-something message is
     recall's, which looks the thing up, so this one is left out when recall is set."""
     return _REPAIR.text if j.repair and not j.recall else None
@@ -143,7 +143,9 @@ def trivial_examples(seed: str) -> str:
     return ", ".join(f'"{x}"' for x in picked)
 
 
-def listening_note(j: Judgement, prior_replies: Sequence[str] = (), seed: str = "") -> str | None:
+def listening_note(
+    j: ListeningRead, prior_replies: Sequence[str] = (), seed: str = ""
+) -> str | None:
     """The line for the system block, or None when no special care applies. `seed` (the turn id)
     picks the size examples for a minor vent."""
     if j.stance != "listening" or j.severity >= SEVERITIES[-1]:
@@ -157,7 +159,7 @@ def listening_note(j: Judgement, prior_replies: Sequence[str] = (), seed: str = 
     return _note(_SERIOUS, *extras)
 
 
-def render_reason(j: Judgement, note: str | None) -> str:
+def render_reason(j: ListeningRead, note: str | None) -> str:
     """The logged reason, built from the labels."""
     labels = (
         f"severity {j.severity}, {j.stance}{', vague' if j.vague else ''}"

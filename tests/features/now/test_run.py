@@ -7,7 +7,7 @@ import pytest
 
 from companion.core.card import Card
 from companion.core.extractor import Extraction
-from companion.core.turn.listening import Judgement
+from companion.core.turn.listening import ListeningRead
 from companion.core.turn.now import KEY
 from companion.core.types import Frame, Json, TraceId, TurnId
 from companion.features.now.run import SENT, SHADOW, now_note, read_now
@@ -18,8 +18,8 @@ from companion.loops.record import Recorder
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
-CALM: Heard = (Judgement(severity=0, stance="other", vague=False, age_coded=False), "j", "p")
-HEAVY: Heard = (Judgement(severity=2, stance="other", vague=False, age_coded=False), "j", "p")
+CALM: Heard = (ListeningRead(severity=0, stance="other", vague=False, age_coded=False), "j", "p")
+HEAVY: Heard = (ListeningRead(severity=2, stance="other", vague=False, age_coded=False), "j", "p")
 LINE = (
     "[About 2 minutes ago they said dinner is coming soon."
     " It has not happened yet unless they say so.]"

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.crisis import LINE, Level
+from companion.core.crisis import LINE, CrisisLevel
 from companion.core.types import Json
 from companion.features.crisis.logic import (
     Risk,
@@ -74,54 +74,56 @@ def test_a_risk_read_parses_only_with_every_label() -> None:
 
 
 def test_levels_come_from_the_labels() -> None:
-    assert level_for("none", "now", True) is Level.NONE
-    assert level_for("suicidal_thoughts", "hypothetical", False) is Level.CONCERN
-    assert level_for("self_harm", "past", False) is Level.CONCERN
-    assert level_for("harm_to_others", "today", False) is Level.CONCERN
-    assert level_for("suicidal_thoughts", "now", False) is Level.CONCERN  # thoughts now, no plan
-    assert level_for("self_harm", "now", False) is Level.URGENT  # happening now
-    assert level_for("suicidal_thoughts", "hypothetical", True) is Level.URGENT
-    assert level_for("substance_taken", "today", False) is Level.URGENT
-    assert level_for("substance_taken", "past", False) is Level.CONCERN
-    assert level_for("suicidal_thoughts", "past", True) is Level.CONCERN
+    assert level_for("none", "now", True) is CrisisLevel.NONE
+    assert level_for("suicidal_thoughts", "hypothetical", False) is CrisisLevel.CONCERN
+    assert level_for("self_harm", "past", False) is CrisisLevel.CONCERN
+    assert level_for("harm_to_others", "today", False) is CrisisLevel.CONCERN
+    # thoughts now, no plan
+    assert level_for("suicidal_thoughts", "now", False) is CrisisLevel.CONCERN
+    assert level_for("self_harm", "now", False) is CrisisLevel.URGENT  # happening now
+    assert level_for("suicidal_thoughts", "hypothetical", True) is CrisisLevel.URGENT
+    assert level_for("substance_taken", "today", False) is CrisisLevel.URGENT
+    assert level_for("substance_taken", "past", False) is CrisisLevel.CONCERN
+    assert level_for("suicidal_thoughts", "past", True) is CrisisLevel.CONCERN
 
 
 def test_only_a_unanimous_figurative_stands_down() -> None:
     joke = _r("suicidal_thoughts", literal=False)
-    assert combine([joke, joke, joke]).level is Level.FIGURATIVE
+    assert combine([joke, joke, joke]).level is CrisisLevel.FIGURATIVE
     split = combine([joke, joke, _r("suicidal_thoughts")])
-    assert split.level is Level.CONCERN
+    assert split.level is CrisisLevel.CONCERN
     assert split.literal_reads == 1
 
 
 def test_a_failed_read_counts_as_literal_and_stands_for_any_reading() -> None:
     joke = _r("self_harm", literal=False, timing="now")
     got = combine([joke, joke, None])
-    assert got.level is Level.URGENT  # the failed read could have said literal: self-harm, now
+    # the failed read could have said literal: self-harm, now
+    assert got.level is CrisisLevel.URGENT
     assert got.failed_reads == 1
 
 
 def test_every_read_failing_is_concern() -> None:
     got = combine([None, None, None])
-    assert got.level is Level.CONCERN
+    assert got.level is CrisisLevel.CONCERN
     assert got.kind == "unread"
 
 
 def test_the_most_serious_kind_any_literal_read_gave_wins() -> None:
     reads = [_r("self_harm"), _r("substance_taken", timing="today"), _r("none")]
     got = combine(reads)
-    assert (got.kind, got.level) == ("substance_taken", Level.URGENT)
+    assert (got.kind, got.level) == ("substance_taken", CrisisLevel.URGENT)
     figurative_plan = _r("suicidal_thoughts", literal=False, plan=True)
     only_literal = combine([_r("self_harm"), figurative_plan, figurative_plan])
-    assert (only_literal.level, only_literal.plan_or_means) == (Level.CONCERN, False)
+    assert (only_literal.level, only_literal.plan_or_means) == (CrisisLevel.CONCERN, False)
 
 
 def test_a_literal_message_with_no_risk_is_none_and_a_split_joke_allows_a_light_check() -> None:
     plain = combine([_r(), _r(), _r()])
-    assert (plain.level, plain.light) == (Level.NONE, False)
+    assert (plain.level, plain.light) == (CrisisLevel.NONE, False)
     joke = _r("suicidal_thoughts", literal=False)
     split = combine([joke, joke, _r()])
-    assert (split.level, split.light) == (Level.NONE, True)
+    assert (split.level, split.light) == (CrisisLevel.NONE, True)
 
 
 def test_the_concern_note_names_the_line() -> None:

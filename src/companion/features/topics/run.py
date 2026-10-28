@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from companion.core.clock import local_zone
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.types import Frame, Speaker, Utterance
 from companion.features.topics.logic import EVERY_TURNS as TOPIC_EVERY
 from companion.features.topics.logic import JUDGE, SCHEMA, asks, judge_prompt, parse, topic_note
@@ -15,7 +15,7 @@ from companion.features.topics.logic import SPENT as TOPIC_SPENT
 from companion.features.topics.logic import likely as topic_likely
 from companion.loops.ask import Judge, ask
 from companion.loops.current import Heard, Turn, decide, is_casual, mark
-from companion.loops.features import Feature, Offer, Offered, quiet
+from companion.loops.features import Feature, Offer, Offered, has_room
 
 if TYPE_CHECKING:
     from companion.loops.conversation import Conversation
@@ -27,7 +27,7 @@ SPENT = Judge(
 )
 
 
-async def judge_spent(extractor: Extractor, prior: Sequence[Utterance], said: str) -> bool:
+async def judge_spent(extractor: StructuredModel, prior: Sequence[Utterance], said: str) -> bool:
     got = await ask(extractor, SPENT, judge_prompt(prior, said))
     return got is not None and got.value
 
@@ -71,7 +71,9 @@ def _move_on(m: Moment, found: object, *, casual: bool, loop_offered: bool) -> O
 def topic_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """On a quiet turn, knowing whether a plan of theirs was just brought up: the picker sends a
     plan in the system block and a day after the history (`turn/mention.py`)."""
-    return _move_on(m, found, casual=quiet(m, so_far), loop_offered=bool(so_far["mention"].lines))
+    return _move_on(
+        m, found, casual=has_room(m, so_far), loop_offered=bool(so_far["mention"].lines)
+    )
 
 
 TOPICS = Feature("topic", look=spent_for_turn, note=topic_offer)

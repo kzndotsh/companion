@@ -12,7 +12,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from companion.core.extractor import Extractor, judging
+from companion.core.extractor import StructuredModel, judging
 from companion.core.spend import purpose
 from companion.core.types import Json
 from companion.lib.vote import READS
@@ -33,7 +33,7 @@ class Reads[T]:
 
 
 async def read_times[T](  # noqa: PLR0913
-    extractor: Extractor,
+    extractor: StructuredModel,
     system: str,
     user: str,
     schema: dict[str, Json],

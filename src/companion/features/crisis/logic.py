@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from string import Template
 
-from companion.core.crisis import LINE, Level
+from companion.core.crisis import LINE, CrisisLevel
 from companion.core.types import Json, Speaker, Utterance
 from companion.prompts import get
 
@@ -115,7 +115,7 @@ def risk_prompt(before: Sequence[tuple[Speaker, str]], said: str) -> str:
 class Outcome:
     """The level code chose from the reads, and the labels it chose it on."""
 
-    level: Level
+    level: CrisisLevel
     kind: str = "none"
     timing: str = "hypothetical"
     plan_or_means: bool = False
@@ -124,18 +124,18 @@ class Outcome:
     failed_reads: int = 0
 
 
-def level_for(kind: str, timing: str, plan_or_means: bool) -> Level:
+def level_for(kind: str, timing: str, plan_or_means: bool) -> CrisisLevel:
     """A literal reading's level. Urgent: a plan or a means, something taken, or self-harm happening
     now, unless it is all in the past. Having the thoughts now is concern, not urgent: with "now"
     alone urgent, 7 of 10 concern fixtures read urgent (2026-10-25). Any other risk kind, and a
     kind no read could give, is concern."""
     if kind == "none":
-        return Level.NONE
+        return CrisisLevel.NONE
     if kind == "self_harm" and timing == "now":
-        return Level.URGENT
+        return CrisisLevel.URGENT
     if (plan_or_means or kind == "substance_taken") and timing != "past":
-        return Level.URGENT
-    return Level.CONCERN
+        return CrisisLevel.URGENT
+    return CrisisLevel.CONCERN
 
 
 def combine(reads: Sequence[Risk | None]) -> Outcome:
@@ -146,22 +146,22 @@ def combine(reads: Sequence[Risk | None]) -> Outcome:
     readable = [r for r in reads if r is not None]
     failed = len(reads) - len(readable)
     if not readable:
-        return Outcome(Level.CONCERN, UNREAD, failed_reads=failed)
+        return Outcome(CrisisLevel.CONCERN, UNREAD, failed_reads=failed)
     literal = [r for r in readable if r.literal]
     if not failed and not literal:
-        return Outcome(Level.FIGURATIVE, literal_reads=0)
+        return Outcome(CrisisLevel.FIGURATIVE, literal_reads=0)
     pool = readable if failed else literal
     kind = max((r.kind for r in pool), key=KINDS.index)
     timing = max((r.timing for r in pool), key=TIMINGS.index)
     plan = any(r.plan_or_means for r in pool)
     level = level_for(kind, timing, plan)
-    light = level is Level.NONE and any(r.kind != "none" for r in readable)
+    light = level is CrisisLevel.NONE and any(r.kind != "none" for r in readable)
     return Outcome(level, kind, timing, plan, light, len(literal), failed)
 
 
 def render_reason(outcome: Outcome, mode: str, would: Sequence[str]) -> str:
     """The logged reason, built from the labels."""
-    if outcome.level is Level.NONE and not outcome.literal_reads and not outcome.failed_reads:
+    if outcome.level is CrisisLevel.NONE and not outcome.literal_reads and not outcome.failed_reads:
         head = "crisis: none"
     else:
         head = (

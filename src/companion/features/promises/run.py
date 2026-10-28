@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping
 from datetime import datetime, tzinfo
 
 from companion.core.beliefs.extract import build_user_prompt
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Json, Utterance, UtteranceId
 from companion.features.promises.logic import PROMPT, SCHEMA, SYSTEM, parse, to_promise
@@ -22,7 +22,7 @@ Log = Callable[[str, dict[str, Json]], None]
 
 async def read_promises(  # noqa: PLR0913, PLR0917
     store: Store,
-    extractor: Extractor,
+    extractor: StructuredModel,
     window: Mapping[str, Utterance],
     targets: set[UtteranceId],
     when: tuple[datetime, tzinfo],

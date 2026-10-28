@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Belief, RelationshipId
 from companion.features.merging.logic import (
@@ -37,7 +37,9 @@ class Proposed:
     cost_usd: float = 0.0
 
 
-async def _group_reads(judge: Extractor, beliefs: Sequence[Belief]) -> tuple[list[Group], float]:
+async def _group_reads(
+    judge: StructuredModel, beliefs: Sequence[Belief]
+) -> tuple[list[Group], float]:
     got = await read_times(
         judge,
         GROUP.text,
@@ -49,7 +51,7 @@ async def _group_reads(judge: Extractor, beliefs: Sequence[Belief]) -> tuple[lis
     return agreed(got.values), got.cost_usd
 
 
-async def _wording(judge: Extractor, members: Sequence[Belief]) -> tuple[str | None, float]:
+async def _wording(judge: StructuredModel, members: Sequence[Belief]) -> tuple[str | None, float]:
     try:
         with purpose("consolidate"):
             got = await judge.extract(WRITE.text, listing(members), WRITE_SCHEMA)
@@ -59,7 +61,9 @@ async def _wording(judge: Extractor, members: Sequence[Belief]) -> tuple[str | N
     return read_claim(got.data), got.cost_usd
 
 
-async def repick(store: Store, judge: Extractor, rel: RelationshipId, now: datetime) -> Proposed:
+async def repick(
+    store: Store, judge: StructuredModel, rel: RelationshipId, now: datetime
+) -> Proposed:
     """Propose again, alone, the members the owner said belong together."""
     current = {b.id: b for b in store.user_beliefs(rel)}
     proposals = store.merge_proposals(rel)
@@ -82,7 +86,11 @@ async def repick(store: Store, judge: Extractor, rel: RelationshipId, now: datet
 
 
 async def propose(
-    store: Store, judge: Extractor, rel: RelationshipId, beliefs: Sequence[Belief], now: datetime
+    store: Store,
+    judge: StructuredModel,
+    rel: RelationshipId,
+    beliefs: Sequence[Belief],
+    now: datetime,
 ) -> Proposed:
     """Group these memories and store a proposal for each new group with its merged wording."""
     if len(beliefs) < 2:
@@ -113,7 +121,7 @@ def _by_day(beliefs: Sequence[Belief], tz: tzinfo) -> dict[str, list[Belief]]:
 
 
 async def recent(
-    store: Store, judge: Extractor, rel: RelationshipId, now: datetime, tz: tzinfo
+    store: Store, judge: StructuredModel, rel: RelationshipId, now: datetime, tz: tzinfo
 ) -> Proposed:
     """Group the memories of each of the last RECENT_DAYS days, for the nightly run."""
     since = now - timedelta(days=RECENT_DAYS)
@@ -126,7 +134,7 @@ async def recent(
 
 
 async def everything(
-    store: Store, judge: Extractor, rel: RelationshipId, now: datetime, tz: tzinfo
+    store: Store, judge: StructuredModel, rel: RelationshipId, now: datetime, tz: tzinfo
 ) -> Proposed:
     """Every day's memories, then the whole store at once for repeats across days."""
     current = store.user_beliefs(rel)

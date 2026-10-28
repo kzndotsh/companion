@@ -11,7 +11,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
 
 from companion.core.crisis import reach_held
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
 from companion.core.reachout import WOULD_NUDGE, Held, checked
 from companion.core.rhythm import WINDOW, kept_hour, learn
@@ -69,7 +69,7 @@ class Reacher:
     lasts hours is one decision and not one per tick."""
 
     dial: Dial
-    judge: Extractor | None
+    judge: StructuredModel | None
     cap: float | None = None  # the daily spend cap in dollars, None for none
     last_hold: tuple[str, str] | None = None
     paced: str | None = None

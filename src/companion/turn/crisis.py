@@ -10,7 +10,7 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from companion.core.crisis import Level, Reading
+from companion.core.crisis import CrisisLevel, Reading
 from companion.core.talker import Reply
 from companion.core.turn.ack import ReactAndReply, ThenSend
 from companion.core.types import Frame, Speaker, Utterance, UtteranceId
@@ -109,7 +109,7 @@ def then_line(
     """On an urgent turn with the path on, the fixed crisis-line message after the reply: from the
     character's `## Crisis message` section, else the default. Stored as its own message and
     logged; not sent again inside LINE_EVERY."""
-    if reading is None or reading.level is not Level.URGENT or not reading.acts:
+    if reading is None or reading.level is not CrisisLevel.URGENT or not reading.acts:
         return out
     c, t = keep.c, keep.t
     if c.store.decided_since(c.rel, LINE_SENT, t.now - LINE_EVERY):

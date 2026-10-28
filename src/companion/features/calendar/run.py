@@ -7,7 +7,7 @@ from __future__ import annotations
 from datetime import datetime, time
 
 from companion.core.clock import named_zone
-from companion.core.turn.mentions import Candidate, Rank
+from companion.core.turn.mentions import MentionCandidate, Rank
 from companion.core.types import Frame, Json, RelationshipId
 from companion.features.calendar.logic import (
     LOOKBACK,
@@ -53,7 +53,7 @@ def rank(o: Occasion) -> Rank:
     return Rank.LEAD_UP if o.how is How.LEAD_UP else _RANK.get(o.kind, Rank.DAY)
 
 
-def calendar_candidate(m: Moment, found: object) -> Candidate | None:
+def calendar_candidate(m: Moment, found: object) -> MentionCandidate | None:
     """The occasion today holds (their own dates from memory first), never one offered in the
     last few days; nothing when switched off. The picker decides whether it is brought up."""
     del found
@@ -72,7 +72,7 @@ def calendar_candidate(m: Moment, found: object) -> Candidate | None:
         return None
     detail = _detail(o, local)
     reason = f"calendar: offered {o.name} ({o.how.value.replace('_', ' ')}, {detail['when']})"
-    return Candidate(rank(o), note(o, today), True, OFFERED, o.name, detail, reason)
+    return MentionCandidate(rank(o), note(o, today), True, OFFERED, o.name, detail, reason)
 
 
 # Holidays, cultural days, their own dates and the relationship's (`COMPANION_CALENDAR`, on unless

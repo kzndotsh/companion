@@ -26,7 +26,7 @@ class Rank(IntEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class Candidate:
+class MentionCandidate:
     """One thing a source would bring up this turn. Its line is the note sent as is, in the system
     block or after the history; `key` and `detail` are the decision logged once the turn is
     stored, and `write` any write of the source's own then (a plan marked asked)."""
@@ -47,7 +47,7 @@ WINDOW = timedelta(hours=24)
 CHECKED_IN = "check-in: asked how they are after a heavy last talk"
 
 
-def choose(found: Sequence[Candidate], recent: Sequence[Rank]) -> Candidate | None:
+def choose(found: Sequence[MentionCandidate], recent: Sequence[Rank]) -> MentionCandidate | None:
     """The one to bring up: the best rank not held back by something of the same or a better rank
     brought up in the last day, so one a day across sources, but a birthday never waits behind a
     morning's follow-up. Equal ranks keep their sources' order."""

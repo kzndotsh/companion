@@ -8,7 +8,7 @@ import pytest
 
 from companion.core.extractor import Extraction
 from companion.core.turn.address import KEY as ADDRESS_KEY
-from companion.core.turn.listening import Judgement
+from companion.core.turn.listening import ListeningRead
 from companion.core.types import (
     Belief,
     Frame,
@@ -51,7 +51,7 @@ def _note(
 ) -> tuple[str, ...]:
     convo = Conversation(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, TurnId("t"), NOW, [], "just got home")
-    heard = (Judgement(severity, "other", vague=False), "j", "")
+    heard = (ListeningRead(severity, "other", vague=False), "j", "")
     m = Moment(convo, t, Frame.REAL, heard, Lookups(), False, beliefs)
     so_far = {"check-in": Offer(("[check in]",) if check_in else ())}
     offer = basics_offer(m, None, so_far)

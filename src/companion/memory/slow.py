@@ -21,7 +21,7 @@ from companion.core.beliefs.extract import (
 from companion.core.beliefs.extract import (
     SCHEMA,
     SYSTEM,
-    Candidate,
+    MemoryCandidate,
     Rejection,
     Skip,
     build_user_prompt,
@@ -37,7 +37,7 @@ from companion.core.beliefs.self_extract import SCHEMA as SELF_SCHEMA
 from companion.core.beliefs.self_extract import SYSTEM as SELF_SYSTEM
 from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.clock import local_zone, utc_now
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.reflect import ReflectRun
 from companion.core.types import (
     Belief,
@@ -142,7 +142,7 @@ class _Spent(Protocol):
     def cost_usd(self) -> float: ...
 
 
-_Step = Callable[[Store, Extractor, RelationshipId, datetime], Awaitable[_Spent]]
+_Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[_Spent]]
 
 
 # What runs once a pass has stored new memories of theirs, and new views of its own: each feature's
@@ -156,7 +156,7 @@ AFTER_OWN: tuple[_Step, ...] = tuple(f.after_own for f in FEATURES if f.after_ow
 
 async def reflect_once(  # noqa: PLR0913
     store: Store,
-    extractor: Extractor,
+    extractor: StructuredModel,
     rel: RelationshipId,
     now: datetime | None = None,
     same: SameCheck | None = None,
@@ -178,9 +178,9 @@ class _Spec:
 
     system: str
     schema: dict[str, Json]
-    parse: Callable[[Json], tuple[list[Candidate], list[Rejection]]]
+    parse: Callable[[Json], tuple[list[MemoryCandidate], list[Rejection]]]
     make: Callable[
-        [Candidate, Mapping[str, Utterance], RelationshipId, datetime, Callable[[], str]],
+        [MemoryCandidate, Mapping[str, Utterance], RelationshipId, datetime, Callable[[], str]],
         Belief | Rejection,
     ]
     speaker: Speaker
@@ -226,7 +226,7 @@ class _Ctx:
     """What both passes share: where to read, who to ask, and how to log."""
 
     store: Store
-    extractor: Extractor
+    extractor: StructuredModel
     run: _Pass
     window: Mapping[str, Utterance]
     tz: tzinfo
@@ -348,7 +348,7 @@ async def _extract_pass(
 
 async def reflect_from(
     store: Store,
-    extractor: Extractor,
+    extractor: StructuredModel,
     rel: RelationshipId,
     start: tuple[datetime, UtteranceId] | None,
     options: ReflectOptions = ReflectOptions(),  # noqa: B008

@@ -25,7 +25,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId, TurnId
 from companion.features.episodes.logic import (
@@ -68,7 +68,7 @@ def _severities(store: Store, rel: RelationshipId) -> dict[TurnId, int]:
 
 
 async def write_closed(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
+    store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
 ) -> Written:
     """A record for every stretch that has ended (no message for GAP) and has none yet."""
     said = store.history_before(rel, FAR, WHOLE)

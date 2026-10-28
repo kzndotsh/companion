@@ -18,14 +18,14 @@ from enum import StrEnum
 LINE = "988 (call or text, in the US)"
 
 
-class Level(StrEnum):
+class CrisisLevel(StrEnum):
     NONE = "none"  # no cue, no risk read, or a literal message with no risk in it
     FIGURATIVE = "figurative"  # every read said a joke, hyperbole, a lyric, a quote or a scene
     CONCERN = "concern"  # a literal risk with no plan or means, not now, nothing taken
     URGENT = "urgent"  # a plan or a means, now, or something taken
 
 
-RISK = frozenset({Level.CONCERN, Level.URGENT})
+RISK = frozenset({CrisisLevel.CONCERN, CrisisLevel.URGENT})
 
 
 @dataclass(frozen=True, slots=True)
@@ -33,7 +33,7 @@ class Reading:
     """What the crisis path made of this turn, and whether it acts on it (`on`) or only logs
     (`shadow`)."""
 
-    level: Level
+    level: CrisisLevel
     mode: str
     light: bool = False  # a joke touched the subject and a read was unsure: one light check
 

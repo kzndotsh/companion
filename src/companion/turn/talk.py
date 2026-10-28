@@ -20,7 +20,7 @@ from companion.core.recheck import eligible as recheck_eligible
 from companion.core.talker import Reply, Talker
 from companion.core.turn.floor import INTIMATE_CHECK
 from companion.core.turn.quip import PROMPT as QUIP_PROMPT
-from companion.core.turn.react import Judgement as ReactJudgement
+from companion.core.turn.react import ToneRead
 from companion.core.types import (
     Frame,
     Json,
@@ -44,7 +44,7 @@ def start_beside(
 ) -> tuple[
     asyncio.Future[Reply],
     asyncio.Future[tuple[Judgement, str, str] | None] | None,
-    asyncio.Future[tuple[ReactJudgement, str, str] | None] | None,
+    asyncio.Future[tuple[ToneRead, str, str] | None] | None,
 ]:
     """Start the reply, and beside it the frame judge and the reaction judge, so neither adds a
     wait. A confident acknowledgement cancels all of them."""

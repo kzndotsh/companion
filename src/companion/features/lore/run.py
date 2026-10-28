@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Frame, RelationshipId
 from companion.core.vectors import Embedder, nearest
@@ -46,7 +46,7 @@ class KindsRead:
 
 async def label_views(  # noqa: PLR0913
     store: Store,
-    extractor: Extractor,
+    extractor: StructuredModel,
     rel: RelationshipId,
     now: datetime,
     *,

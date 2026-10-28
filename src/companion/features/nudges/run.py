@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.clock import local_midnight
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.reachout import WOULD_NUDGE, Held, checked
 from companion.core.spend import purpose
 from companion.core.turn.now import KEY as NOW_KEY
@@ -66,7 +66,7 @@ async def tick_nudge(
     store: Store,
     rel: RelationshipId,
     now: datetime,
-    extractor: Extractor | None,
+    extractor: StructuredModel | None,
     *,
     held: Held | None,
 ) -> str | None:

@@ -19,7 +19,7 @@ class Extraction:
     latency_ms: int
 
 
-class Extractor(Protocol):
+class StructuredModel(Protocol):
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction: ...
 
 

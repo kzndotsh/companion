@@ -16,7 +16,7 @@ from datetime import datetime
 from companion.core.beliefs.extract import (
     MIN_CONFIDENCE,
     SINGLE_EVIDENCE_CONFIDENCE_CAP,
-    Candidate,
+    MemoryCandidate,
     Rejection,
     _list,  # pyright: ignore[reportPrivateUsage]
     _obj,  # pyright: ignore[reportPrivateUsage]
@@ -89,7 +89,7 @@ SCHEMA: dict[str, Json] = {
 }
 
 
-def parse_views(data: Json) -> tuple[list[Candidate], list[Rejection]]:
+def parse_views(data: Json) -> tuple[list[MemoryCandidate], list[Rejection]]:
     """Parse with the fixed fields filled in, so the model cannot choose subject or provenance."""
     top = _obj(data)
     items = _list(top.get("beliefs")) if top is not None else None
@@ -112,7 +112,7 @@ def parse_views(data: Json) -> tuple[list[Candidate], list[Rejection]]:
     return parse({"beliefs": fixed})
 
 
-def _view_problem(c: Candidate, source: Utterance | None) -> str | None:
+def _view_problem(c: MemoryCandidate, source: Utterance | None) -> str | None:
     """Why this candidate must not become a view, or None if it passes the cheap checks."""
     if source is None:
         return "cited message not found and no single message holds the quote"
@@ -146,7 +146,7 @@ def _view_problem(c: Candidate, source: Utterance | None) -> str | None:
 
 
 def to_view(
-    c: Candidate,
+    c: MemoryCandidate,
     index: Mapping[str, Utterance],
     relationship_id: RelationshipId,
     now: datetime,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.turn.quip import PROMPT, SCHEMA, Verdict, build_prompt, parse
 from companion.loops.ask import Judge, ask
 
@@ -13,7 +13,7 @@ QUIP = Judge("quip", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="the
 
 
 async def judge_quip(
-    extractor: Extractor, their_text: str, reply: str
+    extractor: StructuredModel, their_text: str, reply: str
 ) -> tuple[Verdict, str, str, float] | None:
     """Whether it added a joke or a generic reaction, the model id, the prompt and the cost, or
     None if it could not be read in time."""

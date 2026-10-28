@@ -18,7 +18,7 @@ import httpx
 from companion import backups, characters, prompts
 from companion.characters import Character
 from companion.core.clock import local_zone, utc_now
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
@@ -94,7 +94,9 @@ def _need(name: str) -> str:
     return value
 
 
-def extractor(client: httpx.AsyncClient, routes: Mapping[str, str] | None = None) -> Extractor:
+def extractor(
+    client: httpx.AsyncClient, routes: Mapping[str, str] | None = None
+) -> StructuredModel:
     """The judges' and the memory pass's model, with a second model for calls the first refuses.
     With `routes` (judge name to model, `COMPANION_JUDGE_MODELS`), a judge named there reads on its
     own model first and on the shared first model when that one refuses (`ByJudge`)."""
@@ -103,7 +105,7 @@ def extractor(client: httpx.AsyncClient, routes: Mapping[str, str] | None = None
         key, client, os.environ.get("COMPANION_REFLECT_MODEL", REFLECT_MODEL)
     )
     second = os.environ.get("COMPANION_FALLBACK_MODEL", FALLBACK_MODEL)
-    shared: Extractor = (
+    shared: StructuredModel = (
         first
         if second.lower() == "none"
         else RefusalFallback(first, openrouter.OpenRouterExtractor(key, client, second))
@@ -168,7 +170,7 @@ def _with_fallback(client: httpx.AsyncClient, talker: Talker, fallback: str | No
 
 def _metered_models(
     client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Settings
-) -> tuple[Talker, Talker | None, Extractor, Extractor]:
+) -> tuple[Talker, Talker | None, StructuredModel, StructuredModel]:
     """The talkers and extractors, each reporting what its calls cost to the spend ledger. Each
     talker has a fallback: the everyday one the fallback model, the roleplay one the everyday
     model."""
@@ -233,7 +235,9 @@ def surface_hooks(store: Store, rel: RelationshipId, key: str, channel: str) -> 
     return Hooks(undelivered, last_handled, mark_handled, sent)
 
 
-def chat_commands(store: Store, rel: RelationshipId, reflector: Extractor, s: Settings) -> Commands:
+def chat_commands(
+    store: Store, rel: RelationshipId, reflector: StructuredModel, s: Settings
+) -> Commands:
     """The slash commands: `/flag` and `/fav` answer with a reaction, `/mode` with which talker.
     `/flag` and `/fav` mark the latest reply, or, sent as a reply to one of its messages or of
     theirs, that turn."""
@@ -281,7 +285,9 @@ NIGHTLY_HOUR = 4  # local time, when they are least likely to be chatting
 CATCH_UP = timedelta(minutes=5)  # after a start, a missed night runs this much later
 
 
-async def _nightly_memory(store: Store, judge: Extractor, rel: RelationshipId, s: Settings) -> None:
+async def _nightly_memory(
+    store: Store, judge: StructuredModel, rel: RelationshipId, s: Settings
+) -> None:
     """The night's memory work once a night (ADR 0019, `memory/nightly.py`), each step on its own. A
     night missed while the bot was down is made up CATCH_UP after it starts. The memory check's
     switch turns off that step only, never the night."""
@@ -313,7 +319,7 @@ async def _daily_backups(data_dir: Path, db: Path) -> None:
 
 
 def _start_initiative(
-    store: Store, rel: RelationshipId, judge: Extractor, s: Settings
+    store: Store, rel: RelationshipId, judge: StructuredModel, s: Settings
 ) -> asyncio.Task[None] | None:
     """The timer that looks at open loops, times away and its own reasons to reach out (ADR 0021).
     In shadow mode it records and sends nothing."""

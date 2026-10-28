@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from companion.core.turn.mentions import Candidate, Rank, choose
+from companion.core.turn.mentions import MentionCandidate, Rank, choose
 
 
-def _c(rank: Rank, about: str = "x") -> Candidate:
-    return Candidate(rank, f"[{about}]", False, "k", about)
+def _c(rank: Rank, about: str = "x") -> MentionCandidate:
+    return MentionCandidate(rank, f"[{about}]", False, "k", about)
 
 
 def test_the_best_rank_wins_and_equal_ranks_keep_their_order() -> None:

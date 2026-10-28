@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import cast
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.prompt.request import Message
 from companion.core.types import Json
 from companion.evals.checks import Verdict
@@ -90,7 +90,7 @@ def parse(data: Json) -> tuple[Verdict, float] | None:
 
 
 async def grade(
-    extractor: Extractor, excerpt: Sequence[Message], reply: str, criterion: str
+    extractor: StructuredModel, excerpt: Sequence[Message], reply: str, criterion: str
 ) -> Graded:
     """An unparseable or failed judgement is unclear, never a pass or a fail."""
     try:
@@ -128,7 +128,9 @@ def empathy_verdict(data: Json) -> Verdict:
     return "pass" if scores["reaction"] >= 1 and substance else "fail"
 
 
-async def grade_empathy(extractor: Extractor, excerpt: Sequence[Message], reply: str) -> Graded:
+async def grade_empathy(
+    extractor: StructuredModel, excerpt: Sequence[Message], reply: str
+) -> Graded:
     """Score a reply 0 to 2 on reaction, interpretation, exploration and support."""
     lines = [
         f"[{'USER' if m.role == 'user' else 'COMPANION'}] {m.content}"

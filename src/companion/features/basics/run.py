@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import Speaker, Utterance
 from companion.features.basics.logic import (
@@ -35,7 +35,7 @@ from companion.loops.ask import Judge, ask
 TIMEOUT_SECONDS = 3.0
 
 
-async def judge_name(extractor: Extractor, asked: str, said: str) -> str | None:
+async def judge_name(extractor: StructuredModel, asked: str, said: str) -> str | None:
     """The name they gave in reply, or None."""
     judge = Judge(
         "basics",
@@ -49,7 +49,7 @@ async def judge_name(extractor: Extractor, asked: str, said: str) -> str | None:
     return None if got is None else got.value
 
 
-async def judge_pronouns(extractor: Extractor, asked: str, said: str) -> str | None:
+async def judge_pronouns(extractor: StructuredModel, asked: str, said: str) -> str | None:
     """The pronouns they gave in reply, or None."""
     judge = Judge(
         "basics",

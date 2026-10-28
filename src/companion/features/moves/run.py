@@ -6,7 +6,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.turn.ack import inputs_hash
 from companion.core.turn.habits import habit_note
 from companion.core.types import Json, Utterance
@@ -31,7 +31,7 @@ HABITS = Judge("habits", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread=
 
 
 async def find_habits(
-    extractor: Extractor, replies: Sequence[str]
+    extractor: StructuredModel, replies: Sequence[str]
 ) -> tuple[list[str], str, str] | None:
     """The habits, the model id and the prompt, or None if they could not be found in time."""
     prompt = build_prompt(replies)

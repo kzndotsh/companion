@@ -14,7 +14,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from companion.core.extractor import Extractor, from_fallback, judging
+from companion.core.extractor import StructuredModel, from_fallback, judging
 from companion.core.spend import purpose
 from companion.core.types import Json
 from companion.lib.prompts import Prompt
@@ -42,7 +42,7 @@ class Read[T]:
     ref: str  # the prompt's name@version, for the decision it feeds
 
 
-async def ask[T](extractor: Extractor, judge: Judge[T], user: str) -> Read[T] | None:
+async def ask[T](extractor: StructuredModel, judge: Judge[T], user: str) -> Read[T] | None:
     """Ask the judge once. None when the call failed, ran past its time, came from the fallback
     model where that is not trusted, or could not be parsed, each logged with what it means."""
     got = None

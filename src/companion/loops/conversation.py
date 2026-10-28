@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.prompt.prefix import Prefix
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
@@ -20,7 +20,7 @@ class Conversation:
     talker: Talker
     prefix: Prefix
     rel: RelationshipId
-    judge: Extractor | None = None
+    judge: StructuredModel | None = None
     habits: HabitMemory = field(default_factory=HabitMemory)
     roleplay_talker: Talker | None = None  # replies while a pretend scene is in progress
     daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this

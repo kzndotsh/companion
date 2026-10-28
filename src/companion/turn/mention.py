@@ -16,7 +16,7 @@ from companion.core.turn.mentions import (
     PACE,
     PACE_LOOKBACK,
     WINDOW,
-    Candidate,
+    MentionCandidate,
     Rank,
     choose,
     met_prompt,
@@ -29,7 +29,7 @@ from companion.features.calendar.logic import OFFERED as CALENDAR_OFFERED
 from companion.features.threads.run import LOOP_OFFERED
 from companion.loops.ask import Judge, ask
 from companion.loops.current import Turn, decide
-from companion.loops.features import Moment, Offer, Offered, asking, quiet
+from companion.loops.features import Moment, Offer, Offered, asking, has_room
 from companion.registry import FEATURES
 
 if TYPE_CHECKING:
@@ -88,7 +88,7 @@ def mention_note(m: Moment, so_far: Offered) -> Offer:
     would bring up, unless something as good or better was brought up in the last day. Logged once
     the turn is stored, with what the learned pace would have done (shadow); when the day's count
     holds a mention the pace would have allowed, that is logged once a day."""
-    if not quiet(m, so_far) or asking(so_far):
+    if not has_room(m, so_far) or asking(so_far):
         return Offer()
     found = [
         cand
@@ -110,7 +110,7 @@ def mention_note(m: Moment, so_far: Offered) -> Offer:
     return _offer(c, t, pick, paced)
 
 
-def _offer(c: Conversation, t: Turn, pick: Candidate, paced: dict[str, Json]) -> Offer:
+def _offer(c: Conversation, t: Turn, pick: MentionCandidate, paced: dict[str, Json]) -> Offer:
     detail: dict[str, Json] = {
         **pick.detail,
         "rank": int(pick.rank),

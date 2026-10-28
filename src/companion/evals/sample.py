@@ -21,12 +21,12 @@ from datetime import timedelta
 from pathlib import Path
 
 from companion.core.clock import utc_now
-from companion.core.extractor import Extraction, Extractor
+from companion.core.extractor import Extraction, StructuredModel
 from companion.core.history import HISTORY_LIMIT
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.talker import Reply, Talker
-from companion.core.turn.listening import Judgement as ListenJudgement
+from companion.core.turn.listening import ListeningRead
 from companion.core.types import (
     Frame,
     Json,
@@ -166,7 +166,7 @@ def reading(
     if labels is None:
         return Frame.REAL, None
     severity, stance, vague, medical, rude = labels
-    return Frame.REAL, (ListenJudgement(severity, stance, vague, medical, rude), READ_BY, "")
+    return Frame.REAL, (ListeningRead(severity, stance, vague, medical, rude), READ_BY, "")
 
 
 def script_request(c: Conversation, t: Turn, script: Script, v: Variant) -> TalkerRequest:
@@ -224,7 +224,7 @@ def _redraws(store: Store, turn: TurnId) -> tuple[str, ...]:
 
 
 async def draw(
-    f: Fixture, v: Variant, recorded: TalkerRequest | None, talker: Talker, judge: Extractor
+    f: Fixture, v: Variant, recorded: TalkerRequest | None, talker: Talker, judge: StructuredModel
 ) -> Drawn:
     """One sample: the request, the model's reply, and unless the variant is raw, that reply after
     the turn's checks with the reply checks' own judge."""

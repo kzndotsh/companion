@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.turn.ack import build_prompt
-from companion.core.turn.listening import PROMPT, SCHEMA, Judgement, parse
+from companion.core.turn.listening import PROMPT, SCHEMA, ListeningRead, parse
 from companion.core.types import Utterance
 from companion.loops.ask import Judge, ask
 
@@ -23,8 +23,8 @@ LISTEN = Judge(
 
 
 async def judge_listening(
-    extractor: Extractor, history: Sequence[Utterance], text: str
-) -> tuple[Judgement, str, str] | None:
+    extractor: StructuredModel, history: Sequence[Utterance], text: str
+) -> tuple[ListeningRead, str, str] | None:
     """The labels, the model id and the prompt, or None if two tries could not make them in time."""
     prompt = build_prompt(history, text)
     got = await ask(extractor, LISTEN, prompt)

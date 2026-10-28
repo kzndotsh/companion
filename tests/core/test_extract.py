@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 import pytest
 
 from companion.core.beliefs.extract import (
-    Candidate,
+    MemoryCandidate,
     Rejection,
     normalise,
     parse,
@@ -28,7 +28,7 @@ NOW = datetime(2026, 10, 15, 18, 0, tzinfo=UTC)
 TEXT = "i have asthma and a bad knee and i've been job hunting for months"
 
 
-def _candidate(**over: object) -> Candidate:
+def _candidate(**over: object) -> MemoryCandidate:
     base: dict[str, object] = {
         "ref": "m1",
         "quote": "i have asthma and a bad knee",
@@ -40,10 +40,10 @@ def _candidate(**over: object) -> Candidate:
         "sensitivity": 2,
     }
     base.update(over)
-    return Candidate(**base)  # type: ignore[arg-type]
+    return MemoryCandidate(**base)  # type: ignore[arg-type]
 
 
-def _make(c: Candidate, u: Utterance) -> Belief | Rejection:
+def _make(c: MemoryCandidate, u: Utterance) -> Belief | Rejection:
     return to_belief(c, {"m1": u}, REL, NOW, lambda: "b1")
 
 

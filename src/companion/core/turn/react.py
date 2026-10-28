@@ -39,19 +39,19 @@ SCHEMA: dict[str, Json] = {
 
 
 @dataclass(frozen=True, slots=True)
-class Judgement:
+class ToneRead:
     tone: str
     confidence: float
     emoji: str
 
 
 @dataclass(frozen=True, slots=True)
-class Decision:
+class ReactionPick:
     reaction: Reaction | None
     reason: str
 
 
-def parse(data: Json) -> Judgement | None:
+def parse(data: Json) -> ToneRead | None:
     if not isinstance(data, dict):
         return None
     tone, conf, emoji = data.get("tone"), data.get("confidence"), data.get("emoji")
@@ -59,27 +59,29 @@ def parse(data: Json) -> Judgement | None:
         return None
     if not isinstance(conf, int | float):
         return None
-    return Judgement(str(tone), min(max(float(conf), 0.0), 1.0), str(emoji))
+    return ToneRead(str(tone), min(max(float(conf), 0.0), 1.0), str(emoji))
 
 
-def decide(j: Judgement, since_last: int | None) -> Decision:
+def decide(j: ToneRead, since_last: int | None) -> ReactionPick:
     """React alongside the reply only when the tone is clear, sure, and not soon after the last."""
     if j.tone == "plain":
-        return Decision(None, f"no reaction: judged plain at {j.confidence:.2f}")
+        return ReactionPick(None, f"no reaction: judged plain at {j.confidence:.2f}")
     if j.tone == "sad":
-        return Decision(None, f"no reaction: judged sad at {j.confidence:.2f}, too heavy for one")
+        return ReactionPick(
+            None, f"no reaction: judged sad at {j.confidence:.2f}, too heavy for one"
+        )
     if j.confidence < MIN_CONFIDENCE:
-        return Decision(
+        return ReactionPick(
             None,
             f"no reaction: judged {j.tone} at {j.confidence:.2f} (needs {MIN_CONFIDENCE:.2f})",
         )
     if since_last is not None and since_last < MIN_GAP:
-        return Decision(
+        return ReactionPick(
             None,
             f"no reaction: judged {j.tone} at {j.confidence:.2f}, but the last reaction was "
             f"{since_last} messages ago (needs {MIN_GAP})",
         )
-    return Decision(
+    return ReactionPick(
         Reaction(j.emoji),
         f"reacted {j.emoji} alongside the reply: judged {j.tone} at {j.confidence:.2f}",
     )

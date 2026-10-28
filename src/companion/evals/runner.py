@@ -12,7 +12,7 @@ import asyncio
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
-from companion.core.extractor import Extraction, Extractor
+from companion.core.extractor import Extraction, StructuredModel
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply, Talker
 from companion.core.types import Json
@@ -77,7 +77,7 @@ class Plan:
 @dataclass(frozen=True, slots=True)
 class Models:
     talker_for: Callable[[str | None, str | None], Talker]
-    judge: Extractor
+    judge: StructuredModel
 
 
 class _Metered:
@@ -103,7 +103,7 @@ class _Metered:
 class _MeteredJudge:
     """The reply checks' judge, with what it cost added up."""
 
-    def __init__(self, judge: Extractor) -> None:
+    def __init__(self, judge: StructuredModel) -> None:
         self.judge, self.spent = judge, 0.0
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:

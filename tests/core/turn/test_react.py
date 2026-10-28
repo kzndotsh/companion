@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.turn.react import MIN_CONFIDENCE, MIN_GAP, Judgement, decide, parse
+from companion.core.turn.react import MIN_CONFIDENCE, MIN_GAP, ToneRead, decide, parse
 
 
-def _j(tone: str = "funny", confidence: float = 0.9, emoji: str = "😁") -> Judgement:
-    return Judgement(tone, confidence, emoji)
+def _j(tone: str = "funny", confidence: float = 0.9, emoji: str = "😁") -> ToneRead:
+    return ToneRead(tone, confidence, emoji)
 
 
 def test_a_clear_confident_tone_with_no_recent_reaction_reacts() -> None:
@@ -38,7 +38,7 @@ def test_a_reaction_is_not_repeated_too_soon(since: int, reacts: bool) -> None:
 
 def test_parse_accepts_a_well_formed_answer_and_clamps_confidence() -> None:
     got = parse({"tone": "sweet", "confidence": 1.7, "emoji": "❤"})
-    assert got == Judgement("sweet", 1.0, "❤")
+    assert got == ToneRead("sweet", 1.0, "❤")
 
 
 @pytest.mark.parametrize(

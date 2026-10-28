@@ -17,10 +17,10 @@ from typing import TYPE_CHECKING
 
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.reachout import Held, checked, draft_text
 from companion.core.spend import purpose
-from companion.core.turn.mentions import Candidate, Rank
+from companion.core.turn.mentions import MentionCandidate, Rank
 from companion.core.types import (
     DecisionKind,
     Json,
@@ -83,7 +83,7 @@ def _id() -> str:
 
 async def extract_open_loops(  # noqa: PLR0913, PLR0917
     store: Store,
-    extractor: Extractor,
+    extractor: StructuredModel,
     rel: RelationshipId,
     window: Mapping[str, Utterance],
     targets: set[UtteranceId],
@@ -262,7 +262,7 @@ DRAFT_SCHEMA: dict[str, Json] = {
 }
 
 
-def drafter(extractor: Extractor) -> Draft:
+def drafter(extractor: StructuredModel) -> Draft:
     """A function that drafts the check-in for a loop. Any failure gives an empty draft."""
 
     async def draft(loop: Thread) -> str:
@@ -285,7 +285,14 @@ MAX_TRIES = 3  # a batch that keeps failing is let go, so plans can never block 
 # A reader of its own messages in the same batch: the cost, or None when its call failed so the
 # batch is read again. The slow loop passes the promise reader (J12) when it is on.
 type OwnReader = Callable[
-    [Store, Extractor, Mapping[str, Utterance], set[UtteranceId], tuple[datetime, tzinfo], Log],
+    [
+        Store,
+        StructuredModel,
+        Mapping[str, Utterance],
+        set[UtteranceId],
+        tuple[datetime, tzinfo],
+        Log,
+    ],
     Awaitable[float | None],
 ]
 
@@ -304,7 +311,7 @@ class Reading:
 
 async def catch_up_loops(  # noqa: PLR0913, PLR0917
     store: Store,
-    extractor: Extractor,
+    extractor: StructuredModel,
     rel: RelationshipId,
     when: tuple[datetime, tzinfo],
     note: Log,
@@ -372,7 +379,7 @@ _RANK = {
 }
 
 
-def loop_candidate(m: Moment, found: object) -> Candidate | None:
+def loop_candidate(m: Moment, found: object) -> MentionCandidate | None:
     """The due open loop it would bring up as a note when they write (J15), each at most twice;
     the picker decides whether it does. Once the reply is stored the loop is marked asked, so it is
     never also a reach-out."""
@@ -393,7 +400,9 @@ def loop_candidate(m: Moment, found: object) -> Candidate | None:
     asked = functools.partial(
         c.store.open_loop_event, loop.id, ThreadState.ASKED, LOOP_OFFERED, t.now
     )
-    return Candidate(_RANK[loop.kind], note, False, LOOP_OFFERED, loop.claim, detail, write=asked)
+    return MentionCandidate(
+        _RANK[loop.kind], note, False, LOOP_OFFERED, loop.claim, detail, write=asked
+    )
 
 
 # Threads (ADR 0023): today plans of theirs, read in the open-loop batch; a due one is a candidate

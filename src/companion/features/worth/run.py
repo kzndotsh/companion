@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.quoted import AFTER, BEFORE, build_prompt
 from companion.core.types import Belief, RelationshipId
 from companion.features.worth.logic import (
@@ -39,14 +39,14 @@ class Labelled:
     cost_usd: float = 0.0
 
 
-async def _reads(extractor: Extractor, prompt: str) -> tuple[tuple[str | None, ...], float]:
+async def _reads(extractor: StructuredModel, prompt: str) -> tuple[tuple[str | None, ...], float]:
     got = await read_times(extractor, PROMPT.text, prompt, SCHEMA, read, spend="worth")
     return got.values, got.cost_usd
 
 
 async def label(  # noqa: PLR0913
     store: Store,
-    extractor: Extractor,
+    extractor: StructuredModel,
     rel: RelationshipId,
     now: datetime,
     *,
@@ -97,7 +97,7 @@ def expire_routine(store: Store, rel: RelationshipId, now: datetime) -> int:
 
 
 async def sort_new(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
+    store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
 ) -> Labelled:
     """About their life, about the bot, or routine; acted on for memories from the last day."""
     return await label(store, extractor, rel, now, act_since=now - timedelta(days=1))

@@ -7,7 +7,7 @@ from datetime import datetime
 
 from companion.core.card import memories_from_card
 from companion.core.clock import utc_now
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId, TurnId
 from companion.features.invented.logic import PROMPT, SCHEMA, SYSTEM, build_prompt, parse
@@ -17,7 +17,7 @@ log = logging.getLogger("companion.invented")
 
 
 async def check_new(
-    store: Store, extractor: Extractor, rel: RelationshipId, since: datetime, cap_usd: float
+    store: Store, extractor: StructuredModel, rel: RelationshipId, since: datetime, cap_usd: float
 ) -> tuple[int, float]:
     """Judge the turns not judged yet, oldest first, until the cap. Returns (judged, spent)."""
     judged, spent = 0, 0.0

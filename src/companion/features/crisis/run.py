@@ -14,8 +14,8 @@ from collections.abc import Sequence
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from companion.core.crisis import HOLD_KEY, HOLD_REASON, Level, Reading
-from companion.core.extractor import Extractor
+from companion.core.crisis import HOLD_KEY, HOLD_REASON, CrisisLevel, Reading
+from companion.core.extractor import StructuredModel
 from companion.core.types import Frame, Json, Speaker
 from companion.features.crisis.logic import (
     PROMPT,
@@ -53,7 +53,7 @@ LIGHT_EVERY = timedelta(days=1)
 
 
 async def read_risk(
-    extractor: Extractor, before: Sequence[tuple[Speaker, str]], said: str
+    extractor: StructuredModel, before: Sequence[tuple[Speaker, str]], said: str
 ) -> Reads[Risk]:
     """The risk judge's three reads of their message; a failed or unreadable read is None."""
     return await read_times(
@@ -71,7 +71,7 @@ def would_do(reading: Reading) -> list[str]:
     """What the path does at this level when on, in words for the log."""
     if reading.risk:
         done = ["add the concern note after the history with no length cap"]
-        if reading.level is Level.URGENT:
+        if reading.level is CrisisLevel.URGENT:
             done.append("send the crisis line after the reply")
         return [*done, "check the reply for method details", "hold reaching out first for a day"]
     return ["add one light check"] if reading.light else []
@@ -89,7 +89,7 @@ async def assess(c: Conversation, t: Turn, in_scene: Frame, heard: Heard | None)
         "mode": c.crisis,
         "cue": {"severity": severity, "words": list[Json](words)},
     }
-    outcome = Outcome(Level.NONE)
+    outcome = Outcome(CrisisLevel.NONE)
     if cued(severity, words):
         mark(t, "risk judge")
         got = await read_risk(c.judge, said_before(t.prior), t.text)

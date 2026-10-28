@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId
 from companion.store.sqlite.store import Store
 
@@ -14,5 +14,5 @@ from companion.store.sqlite.store import Store
 @dataclass(frozen=True, slots=True)
 class Services:
     store: Store
-    judge: Extractor
+    judge: StructuredModel
     rel: RelationshipId

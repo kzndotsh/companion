@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 
 from companion.core.card import faded
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Belief, Depth, Domain, RelationshipId
 from companion.core.vectors import Embedder, nearest
@@ -45,7 +45,9 @@ class Night:
     cost_usd: float = 0.0
 
 
-async def _reads(judge: Extractor, b: Belief, today: str) -> tuple[tuple[str | None, ...], float]:
+async def _reads(
+    judge: StructuredModel, b: Belief, today: str
+) -> tuple[tuple[str | None, ...], float]:
     got = await read_times(
         judge, CHECK.text, check_prompt(b, today), CHECK_SCHEMA, read_label, spend="consolidate"
     )
@@ -54,7 +56,7 @@ async def _reads(judge: Extractor, b: Belief, today: str) -> tuple[tuple[str | N
 
 async def nightly(  # noqa: PLR0913
     store: Store,
-    judge: Extractor,
+    judge: StructuredModel,
     rel: RelationshipId,
     now: datetime,
     tz: tzinfo,
@@ -112,7 +114,7 @@ class SameCheck:
     """At write time: is a new memory the same as an existing one? Three pair reads on the nearest
     memory by embedding; in shadow it only logs, `on` stores the new one as evidence instead."""
 
-    judge: Extractor
+    judge: StructuredModel
     embedder: Embedder
     model: str
     mode: str

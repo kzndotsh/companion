@@ -28,7 +28,7 @@ from companion.core.turn.ack import (
     inputs_hash,
 )
 from companion.core.turn.react import PROMPT as REACT_PROMPT
-from companion.core.turn.react import Judgement as ReactJudgement
+from companion.core.turn.react import ToneRead
 from companion.core.turn.react import decide as decide_reaction
 from companion.core.types import (
     DecisionKind,
@@ -99,7 +99,7 @@ async def their_message(c: Conversation, t: Turn, channel: str) -> AsyncGenerato
 
 
 def _react_alongside(
-    c: Conversation, t: Turn, felt: tuple[ReactJudgement, str, str] | None
+    c: Conversation, t: Turn, felt: tuple[ToneRead, str, str] | None
 ) -> Reaction | None:
     """A reaction to send with the reply, if the message calls for one. Logs the judgement."""
     if felt is None:
@@ -122,7 +122,7 @@ def _react_alongside(
 
 
 def with_reaction(
-    c: Conversation, t: Turn, felt: tuple[ReactJudgement, str, str] | None, sent: str
+    c: Conversation, t: Turn, felt: tuple[ToneRead, str, str] | None, sent: str
 ) -> str | ReactAndReply:
     reacted = _react_alongside(c, t, felt)
     mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to the chat")

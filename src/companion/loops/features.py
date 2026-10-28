@@ -20,8 +20,8 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from companion.core.card import Card
-    from companion.core.extractor import Extractor
-    from companion.core.turn.mentions import Candidate
+    from companion.core.extractor import StructuredModel
+    from companion.core.turn.mentions import MentionCandidate
     from companion.core.types import RelationshipId
     from companion.loops.conversation import Conversation
     from companion.store.sqlite.store import Store
@@ -53,10 +53,10 @@ Offered = Mapping[str, Offer]  # what the notes before this one offered, by name
 type Note = Callable[[Moment, object, Offered], Offer]
 # What a feature would bring up on its own this turn, its best only, chosen across features by one
 # picker (`turn/mention.py`); it gets what its look-up found. No gating, no cap, no write.
-type Mention = Callable[[Moment, object], Candidate | None]
+type Mention = Callable[[Moment, object], MentionCandidate | None]
 
 
-def quiet(m: Moment, so_far: Offered) -> bool:
+def has_room(m: Moment, so_far: Offered) -> bool:
     """A casual turn with no name asked, no check-in and nothing held: room for a plan or a
     move on."""
     return m.casual and not so_far["name"].lines and not so_far["check-in"].lines and not m.held
@@ -73,7 +73,7 @@ class Spent(Protocol):
 
 
 # A step after a memory pass: it reads the store, may ask a model, and says what it cost.
-type Step = Callable[[Store, Extractor, RelationshipId, datetime], Awaitable[Spent]]
+type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[Spent]]
 
 
 @dataclass(frozen=True, slots=True)

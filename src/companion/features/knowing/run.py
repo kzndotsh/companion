@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Json, RelationshipId
 from companion.features.knowing.logic import (
@@ -38,7 +38,12 @@ class Labelled:
 
 
 async def label_new(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime, *, batches: int = 1
+    store: Store,
+    extractor: StructuredModel,
+    rel: RelationshipId,
+    now: datetime,
+    *,
+    batches: int = 1,
 ) -> Labelled:
     """Label up to `batches` batches of current memories that have none. A failed call labels
     nothing and is tried again next pass."""

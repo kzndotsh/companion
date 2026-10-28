@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from companion.core.card import Card
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Speaker
 from companion.core.vectors import Embedder, nearest
@@ -55,7 +55,7 @@ def _row(b: Belief, on_card: set[BeliefId], score: float | None = None) -> dict[
 async def look_up(  # noqa: PLR0913
     store: Store,
     embedder: Embedder,
-    judge: Extractor,
+    judge: StructuredModel,
     rel: RelationshipId,
     *,
     model: str,
@@ -132,7 +132,7 @@ async def look_up(  # noqa: PLR0913
 async def shadow(  # noqa: PLR0913
     store: Store,
     embedder: Embedder,
-    judge: Extractor,
+    judge: StructuredModel,
     rel: RelationshipId,
     *,
     model: str,

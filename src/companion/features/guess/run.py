@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.types import Belief, Frame, Utterance
 from companion.features.guess.logic import INVITED as GUESS_INVITED
 from companion.features.guess.logic import (
@@ -42,7 +42,7 @@ class Invited:
 
 
 async def invited_guess(
-    extractor: Extractor, prior: Sequence[Utterance], said: str, beliefs: Sequence[Belief]
+    extractor: StructuredModel, prior: Sequence[Utterance], said: str, beliefs: Sequence[Belief]
 ) -> Invited | None:
     got = await ask(extractor, INVITE, judge_prompt(prior, said))
     if got is None:

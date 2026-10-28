@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
 from companion.core.spend import purpose
 from companion.core.turn.address import names_them
@@ -131,7 +131,7 @@ def _placed_detail(bid: BeliefId, p: Place) -> tuple[dict[str, Json], str] | Non
 
 
 async def label_lanes(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
+    store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
 ) -> Spent:
     """Place one batch of memories that have no lane yet, each read three times. A failed read
     places nothing: the batch waits for the next pass, never placed from fewer reads."""
@@ -177,7 +177,7 @@ async def label_lanes(
     return Spent(spent)
 
 
-async def _a_limit(extractor: Extractor, b: Belief) -> tuple[bool, float]:
+async def _a_limit(extractor: StructuredModel, b: Belief) -> tuple[bool, float]:
     """Whether their own words set the limit the lane reads gave: every read must say so."""
     got = await read_times(
         extractor,
@@ -200,7 +200,7 @@ def _span(batch: Sequence[Utterance], before: Utterance | None) -> Utterance | N
 
 
 async def read_scenes(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
+    store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
 ) -> Spent:
     """Note how they play from the scenes that ended past the bookmark, oldest first, up to SCENES a
     pass. The bookmark moves to just before the first scene left for later."""
@@ -230,7 +230,7 @@ async def read_scenes(
 
 
 async def _read_scene(
-    store: Store, extractor: Extractor, rel: RelationshipId, scene: Scene, now: datetime
+    store: Store, extractor: StructuredModel, rel: RelationshipId, scene: Scene, now: datetime
 ) -> float | None:
     """Read one ended scene for patterns: their cost, or None when the read failed. A scene with a
     turn the minor check held is never read."""
@@ -284,7 +284,7 @@ async def _read_scene(
     return got.cost_usd
 
 
-type Step = Callable[[Store, Extractor, RelationshipId, datetime], Awaitable[Spent]]
+type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[Spent]]
 
 
 def pass_step(mode: str) -> Step | None:
@@ -292,7 +292,9 @@ def pass_step(mode: str) -> Step | None:
     if mode == "off":
         return None
 
-    async def step(store: Store, extractor: Extractor, rel: RelationshipId, now: datetime) -> Spent:
+    async def step(
+        store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
+    ) -> Spent:
         placed = await label_lanes(store, extractor, rel, now)
         read = await read_scenes(store, extractor, rel, now)
         return Spent(placed.cost_usd + read.cost_usd)

@@ -8,7 +8,7 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta, tzinfo
 
 from companion.core.clock import utc_now
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId
 from companion.features.consolidate.run import nightly
 from companion.features.episodes.run import write_closed
@@ -28,7 +28,7 @@ def missed(store: Store, rel: RelationshipId, now: datetime) -> bool:
 
 
 async def night(
-    store: Store, judge: Extractor, rel: RelationshipId, zone: tzinfo, *, mode: str
+    store: Store, judge: StructuredModel, rel: RelationshipId, zone: tzinfo, *, mode: str
 ) -> list[str]:
     """Run every step once, each on its own; the names of those that failed. The run is recorded
     when at least one step worked, so one step that keeps failing is tried again the next night,

@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.history import HISTORY_LIMIT
 from companion.core.spend import purpose
 from companion.core.types import (
@@ -83,7 +83,7 @@ def _recorder(store: Store, u: Utterance, now: datetime) -> Recorder:
 
 
 async def _capture(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
+    store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
 ) -> tuple[int, float] | None:
     """Read one batch of messages past the bookmark: the stories kept and the cost, or None when
     nothing is left or the read failed (the bookmark stays, so it is read again)."""
@@ -138,7 +138,7 @@ async def _capture(
 
 
 async def _check(
-    store: Store, extractor: Extractor, waiting: Story, sheet: str, now: datetime
+    store: Store, extractor: StructuredModel, waiting: Story, sheet: str, now: datetime
 ) -> tuple[bool, float]:
     """Read one waiting story against the sheet and the canon three times and record its standing.
     False when a read failed: nothing is recorded and it waits for the next pass."""
@@ -178,7 +178,7 @@ async def _check(
 
 
 async def read_history(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime, *, sheet: str
+    store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime, *, sheet: str
 ) -> HistoryRead:
     """Capture new stories from its own messages, then check the waiting ones, oldest first, so a
     later story is read against the earlier ones' canon."""
@@ -202,7 +202,7 @@ async def read_history(
     return HistoryRead(captured, ruled, cost)
 
 
-type Step = Callable[[Store, Extractor, RelationshipId, datetime], Awaitable[HistoryRead]]
+type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[HistoryRead]]
 
 
 def pass_step(mode: str, sheet: str) -> Step | None:
@@ -211,7 +211,7 @@ def pass_step(mode: str, sheet: str) -> Step | None:
         return None
 
     async def step(
-        store: Store, extractor: Extractor, rel: RelationshipId, now: datetime
+        store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
     ) -> HistoryRead:
         return await read_history(store, extractor, rel, now, sheet=sheet)
 

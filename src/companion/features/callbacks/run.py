@@ -8,7 +8,7 @@ from datetime import datetime
 
 from companion.core.card import memories_from_card
 from companion.core.clock import utc_now
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId
 from companion.features.callbacks.logic import (
     PROMPT,
@@ -25,7 +25,7 @@ TIMEOUT_SECONDS = 30.0  # a command, not a turn: no reply waits on it
 
 
 async def check_new(
-    store: Store, extractor: Extractor, rel: RelationshipId, since: datetime, cap_usd: float
+    store: Store, extractor: StructuredModel, rel: RelationshipId, since: datetime, cap_usd: float
 ) -> tuple[int, float]:
     """Judge the turns not judged yet, oldest first, until the cap. Returns (judged, spent)."""
     judged, spent = 0, 0.0

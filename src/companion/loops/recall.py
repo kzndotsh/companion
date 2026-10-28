@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.clock import local_zone
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.freshness import when_phrase
 from companion.core.recall import PROMPT, SCHEMA, build_prompt, candidates, parse
 from companion.core.types import Belief, BeliefId
@@ -28,7 +28,7 @@ class Recalled:
 
 
 async def look_up(
-    extractor: Extractor,
+    extractor: StructuredModel,
     beliefs: Sequence[Belief],
     topic: str,
     *,

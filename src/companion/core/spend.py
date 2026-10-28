@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 
-from companion.core.extractor import Extraction, Extractor
+from companion.core.extractor import Extraction, StructuredModel
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply, Talker
 from companion.core.types import Json
@@ -56,7 +56,7 @@ class MeteredTalker:
 
 
 class MeteredExtractor:
-    def __init__(self, inner: Extractor, sink: Sink, default_purpose: str = "judge") -> None:
+    def __init__(self, inner: StructuredModel, sink: Sink, default_purpose: str = "judge") -> None:
         self._inner = inner
         self._sink = sink
         self._default = default_purpose

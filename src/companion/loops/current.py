@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.turn.goodbye import leaving
-from companion.core.turn.listening import Judgement as ListenJudgement
+from companion.core.turn.listening import ListeningRead
 from companion.core.turn.quoted import Quoted
 from companion.core.types import (
     DecisionKind,
@@ -74,4 +74,4 @@ def is_casual(t: Turn, in_scene: Frame, heard: Heard | None) -> bool:
     )
 
 
-Heard = tuple[ListenJudgement, str, str]
+Heard = tuple[ListeningRead, str, str]

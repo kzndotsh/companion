@@ -8,7 +8,7 @@ from datetime import datetime
 from companion.core.beliefs import views_implicated as impl
 from companion.core.beliefs.views_conflict import SCHEMA, SYSTEM, build_prompt, parse
 from companion.core.clock import utc_now
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
 from companion.core.types import Belief, BeliefKind, DecisionKind, Json, RelationshipId, TurnId
 from companion.core.views import AUTO_KINDS, is_settled
@@ -26,7 +26,7 @@ class ViewCheckResult:
 
 async def check_views(
     store: Store,
-    extractor: Extractor,
+    extractor: StructuredModel,
     rel: RelationshipId,
     now: datetime | None = None,
     *,
@@ -77,7 +77,7 @@ async def check_views(
 
 
 async def views_implicated(
-    store: Store, extractor: Extractor, rel: RelationshipId, turn: TurnId, note: str
+    store: Store, extractor: StructuredModel, rel: RelationshipId, turn: TurnId, note: str
 ) -> list[Belief]:
     """The views a flagged turn carried that the flag actually implicates. Often none."""
     carried_ids = {

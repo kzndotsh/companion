@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
 from companion.core.clock import named_zone, now_line
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.request import TalkerRequest
@@ -113,7 +113,7 @@ class Read:
 
 
 async def read_slots(
-    judge: Extractor, prior: Sequence[Utterance], said: str, now: datetime, tz: tzinfo
+    judge: StructuredModel, prior: Sequence[Utterance], said: str, now: datetime, tz: tzinfo
 ) -> Slots | None:
     got = await ask(judge, READER, read_prompt(prior, said, now, tz))
     return None if got is None else trusted(got.value, said)

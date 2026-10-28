@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.turn.floor import (
     BRUSH_OFF,
     BRUSH_SCHEMA,
@@ -45,7 +45,7 @@ MINOR = Judge(
 )
 
 
-async def judge_intimate(extractor: Extractor, reply: str) -> bool | None:
+async def judge_intimate(extractor: StructuredModel, reply: str) -> bool | None:
     """Whether the reply is sexual, or None when it could not be read in time."""
     got = await ask(extractor, INTIMATE, f"COMPANION: {reply}")
     return None if got is None else got.value
@@ -76,14 +76,14 @@ def _conversation(prior: Sequence[Utterance], said: str, last: int) -> str:
 
 
 async def explicit_lead(
-    extractor: Extractor, prior: Sequence[Utterance], said: str
+    extractor: StructuredModel, prior: Sequence[Utterance], said: str
 ) -> Read[bool] | None:
     """Whether their message itself is sexually explicit (`system/explicit-lead`)."""
     return await ask(extractor, EXPLICIT, _conversation(prior, said, 4))
 
 
 async def declines(
-    extractor: Extractor, prior: Sequence[Utterance], said: str
+    extractor: StructuredModel, prior: Sequence[Utterance], said: str
 ) -> Read[bool] | None:
     """Whether their message pushes the flirting or the scene back, even jokingly
     (`system/brush-off`)."""
@@ -91,7 +91,7 @@ async def declines(
 
 
 async def confirm_minor(
-    extractor: Extractor, prior: Sequence[Utterance], said: str
+    extractor: StructuredModel, prior: Sequence[Utterance], said: str
 ) -> Read[bool] | None:
     """Whether the text says or implies someone in the romantic or sexual content is under 18,
     asked only when the listening judge read the turn as age-coded (`system/minor-check`)."""

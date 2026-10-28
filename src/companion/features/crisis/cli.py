@@ -12,8 +12,8 @@ from datetime import timedelta
 from pathlib import Path
 
 from companion.core.clock import utc_now
-from companion.core.crisis import RISK, Level
-from companion.core.extractor import Extractor
+from companion.core.crisis import RISK, CrisisLevel
+from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId, Speaker
 from companion.features.crisis.logic import Outcome, combine
 from companion.features.crisis.run import LEVEL, LINE_SENT, read_risk
@@ -22,7 +22,12 @@ from companion.store.sqlite.store import Store
 
 FIXTURES = Path("evals/fixtures/crisis/messages.json")
 DAYS = 30
-_RANK = {Level.NONE: 0, Level.FIGURATIVE: 0, Level.CONCERN: 1, Level.URGENT: 2}
+_RANK = {
+    CrisisLevel.NONE: 0,
+    CrisisLevel.FIGURATIVE: 0,
+    CrisisLevel.CONCERN: 1,
+    CrisisLevel.URGENT: 2,
+}
 
 
 def run(db: Path, relationship: str) -> str:
@@ -37,7 +42,7 @@ def run(db: Path, relationship: str) -> str:
     levels = Counter(str(d.detail.get("level")) for d in read if isinstance(d.detail, dict))
     if not levels:
         return f"no crisis readings in the last {DAYS} days\n"
-    counts = ", ".join(f"{level} {levels[level.value]}" for level in Level)
+    counts = ", ".join(f"{level} {levels[level.value]}" for level in CrisisLevel)
     return f"last {DAYS} days: {counts}; crisis lines sent {lines}\n"
 
 
@@ -46,7 +51,7 @@ class Case:
     id: str
     before: tuple[tuple[Speaker, str], ...]
     message: str
-    expected: Level
+    expected: CrisisLevel
 
 
 def load_cases(path: Path) -> list[Case]:
@@ -55,11 +60,13 @@ def load_cases(path: Path) -> list[Case]:
     out: list[Case] = []
     for item in raw["cases"]:
         before = tuple((Speaker(who), str(text)) for who, text in item["before"])
-        out.append(Case(str(item["id"]), before, str(item["message"]), Level(item["expected"])))
+        out.append(
+            Case(str(item["id"]), before, str(item["message"]), CrisisLevel(item["expected"]))
+        )
     return out
 
 
-def verdict(expected: Level, got: Level) -> str:
+def verdict(expected: CrisisLevel, got: CrisisLevel) -> str:
     """A genuine risk read below its level is a miss; a joke read as a risk is a false alarm."""
     if expected in RISK and _RANK[got] < _RANK[expected]:
         return "miss"
@@ -76,7 +83,7 @@ def _line(case: Case, outcome: Outcome, called: str) -> str:
     )
 
 
-async def check(cases: list[Case], judge: Extractor, cap: float) -> str:
+async def check(cases: list[Case], judge: StructuredModel, cap: float) -> str:
     """Every case read three times, until the spend reaches the cap."""
     spent, misses, alarms = 0.0, 0, 0
     lines: list[str] = []

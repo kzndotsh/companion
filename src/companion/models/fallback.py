@@ -22,7 +22,7 @@ from collections.abc import Mapping
 
 import httpx
 
-from companion.core.extractor import FALLBACK, Extraction, Extractor, current_judge
+from companion.core.extractor import FALLBACK, Extraction, StructuredModel, current_judge
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply, Talker
 from companion.core.types import Json
@@ -32,7 +32,7 @@ log = logging.getLogger("companion.fallback")
 
 
 class RefusalFallback:
-    def __init__(self, first: Extractor, second: Extractor) -> None:
+    def __init__(self, first: StructuredModel, second: StructuredModel) -> None:
         self._first, self._second = first, second
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
@@ -53,7 +53,7 @@ class ByJudge:
     (2026-10-25: the crisis risk judge reads on DeepSeek, since Haiku's provider refused many crisis
     messages)."""
 
-    def __init__(self, shared: Extractor, routes: Mapping[str, Extractor]) -> None:
+    def __init__(self, shared: StructuredModel, routes: Mapping[str, StructuredModel]) -> None:
         self._shared, self._routes = shared, routes
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:

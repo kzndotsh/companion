@@ -11,7 +11,7 @@ from companion.core.crisis import Reading
 from companion.core.frames import Judgement as FrameJudgement
 from companion.core.talker import Reply, Talker
 from companion.core.turn.ack import Reaction
-from companion.core.turn.react import Judgement as ReactJudgement
+from companion.core.turn.react import ToneRead
 from companion.core.types import Frame
 from companion.loops.current import Heard
 
@@ -45,7 +45,7 @@ class Answered:
 
     reply: Reply
     framed: tuple[FrameJudgement, str, str] | None
-    felt: tuple[ReactJudgement, str, str] | None
+    felt: tuple[ToneRead, str, str] | None
     in_scene: Frame
 
 

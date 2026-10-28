@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.turn.ack import build_prompt
-from companion.core.turn.react import PROMPT, SCHEMA, Judgement, parse
+from companion.core.turn.react import PROMPT, SCHEMA, ToneRead, parse
 from companion.core.types import Utterance
 from companion.loops.ask import Judge, ask
 
@@ -15,8 +15,8 @@ REACT = Judge("reaction", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread
 
 
 async def judge_reaction(
-    extractor: Extractor, history: Sequence[Utterance], text: str
-) -> tuple[Judgement, str, str] | None:
+    extractor: StructuredModel, history: Sequence[Utterance], text: str
+) -> tuple[ToneRead, str, str] | None:
     """The judgement, the model id and the prompt, or None if it could not be made in time."""
     prompt = build_prompt(history, text)
     got = await ask(extractor, REACT, prompt)

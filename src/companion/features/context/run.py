@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.quoted import AFTER, BEFORE, build_prompt, wants_context
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId
@@ -27,7 +27,7 @@ class Written:
 
 
 async def write_missing(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime, *, limit: int = 20
+    store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime, *, limit: int = 20
 ) -> Written:
     have = store.belief_contexts(rel)
     todo = [b for b in store.user_beliefs(rel) if wants_context(b) and b.id not in have][:limit]

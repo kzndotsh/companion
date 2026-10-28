@@ -97,7 +97,7 @@ SCHEMA: dict[str, Json] = {
 
 
 @dataclass(frozen=True, slots=True)
-class Candidate:
+class MemoryCandidate:
     ref: str
     quote: str
     claim: str
@@ -165,13 +165,13 @@ def _list(value: Json) -> list[Json] | None:
     return cast("list[Json]", value) if isinstance(value, list) else None
 
 
-def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
+def parse(data: Json) -> tuple[list[MemoryCandidate], list[Rejection]]:
     """Malformed items become rejections. A malformed whole yields one rejection and no items."""
     top = _obj(data)
     items = _list(top.get("beliefs")) if top is not None else None
     if items is None:
         return [], [Rejection("response did not match the schema", data)]
-    ok: list[Candidate] = []
+    ok: list[MemoryCandidate] = []
     bad: list[Rejection] = []
     for item in items:
         fields = _obj(item)
@@ -180,7 +180,7 @@ def parse(data: Json) -> tuple[list[Candidate], list[Rejection]]:
                 msg = "item is not an object"
                 raise ValueError(msg)  # noqa: TRY301 - one rejection path for every bad field
             ok.append(
-                Candidate(
+                MemoryCandidate(
                     ref=str(fields.get("ref")).strip(),
                     quote=str(fields.get("quote")),
                     claim=str(fields.get("claim")).strip(),
@@ -214,7 +214,7 @@ def normalise(claim: str) -> str:
 
 
 def _resolve(
-    c: Candidate, index: Mapping[str, Utterance], speaker: Speaker = Speaker.USER
+    c: MemoryCandidate, index: Mapping[str, Utterance], speaker: Speaker = Speaker.USER
 ) -> Utterance | None:
     """The cited message, or failing that the one message by `speaker` that contains the quote.
 
@@ -236,7 +236,7 @@ def _holds(u: Utterance, quote: str) -> bool:
     return True
 
 
-def _screen(c: Candidate, source: Utterance | None) -> str | None:
+def _screen(c: MemoryCandidate, source: Utterance | None) -> str | None:
     """Why this candidate must not become a belief, or None if it passes the cheap checks."""
     if source is None:
         return "cited message not found and no single message holds the quote"
@@ -261,7 +261,7 @@ def _screen(c: Candidate, source: Utterance | None) -> str | None:
 
 
 def to_belief(
-    c: Candidate,
+    c: MemoryCandidate,
     index: Mapping[str, Utterance],
     relationship_id: RelationshipId,
     now: datetime,
@@ -326,7 +326,7 @@ def _confirmation_problem(
 
 
 def to_confirmation(
-    c: Candidate,
+    c: MemoryCandidate,
     index: Mapping[str, Utterance],
     known: Mapping[str, Belief],
     speaker: Speaker = Speaker.USER,

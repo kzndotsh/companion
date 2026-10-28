@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from companion.core.card import Card
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.recall import SCHEMA, build_prompt, candidates, parse
 from companion.core.types import Belief, Frame, Speaker
 from companion.features.hooks.logic import (
@@ -36,7 +36,7 @@ TIMEOUT_SECONDS = 5.0
 
 
 async def stated(
-    extractor: Extractor, beliefs: Sequence[Belief], topic: str
+    extractor: StructuredModel, beliefs: Sequence[Belief], topic: str
 ) -> list[Belief] | None:
     """The memories that state the fact outright, or None when the call failed or was slow."""
     labelled = candidates(beliefs)

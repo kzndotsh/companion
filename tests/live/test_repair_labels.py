@@ -15,7 +15,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.turn.listening import SCHEMA, SYSTEM, Judgement, parse
+from companion.core.turn.listening import SCHEMA, SYSTEM, ListeningRead, parse
 from companion.daemon import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
@@ -81,7 +81,7 @@ CASES = (
 )
 
 
-async def _label(case: Case, extractor: OpenRouterExtractor) -> Judgement | None:
+async def _label(case: Case, extractor: OpenRouterExtractor) -> ListeningRead | None:
     prompt = (
         f"Conversation:\n[USER] hey\n[COMPANION] {case.before}\n\nNewest USER message: {case.text}"
     )

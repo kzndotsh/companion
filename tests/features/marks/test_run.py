@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from companion.core.turn.listening import Judgement
+from companion.core.turn.listening import ListeningRead
 from companion.core.types import Frame, TurnId
 from companion.features.marks.logic import MARKS
 from companion.features.marks.run import mark_offer
@@ -12,8 +12,8 @@ from companion.loops.features import Lookups, Moment
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
-CALM: Heard = (Judgement(severity=0, stance="other", vague=False, age_coded=False), "j", "p")
-HEAVY: Heard = (Judgement(severity=2, stance="sharing", vague=False, age_coded=False), "j", "p")
+CALM: Heard = (ListeningRead(severity=0, stance="other", vague=False, age_coded=False), "j", "p")
+HEAVY: Heard = (ListeningRead(severity=2, stance="sharing", vague=False, age_coded=False), "j", "p")
 
 
 def _offer(tmp_path: Path, text: str, heard: Heard, *, marks: bool = True) -> tuple[str, ...]:

@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.card import HOLD_AT, Card
-from companion.core.extractor import Extractor
+from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
 from companion.core.spend import purpose
 from companion.core.types import Frame, RelationshipId
@@ -42,7 +42,12 @@ class NamesRead:
 
 
 async def read_names(
-    store: Store, extractor: Extractor, rel: RelationshipId, now: datetime, *, batches: int = 1
+    store: Store,
+    extractor: StructuredModel,
+    rel: RelationshipId,
+    now: datetime,
+    *,
+    batches: int = 1,
 ) -> NamesRead:
     done = found = 0
     cost = 0.0
