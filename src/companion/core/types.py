@@ -80,7 +80,7 @@ class Utterance:
     speaker: Speaker
     text: str
     frame: Frame
-    channel: str
+    platform: str
     at: datetime
 
     def __post_init__(self) -> None:

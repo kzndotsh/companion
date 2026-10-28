@@ -26,7 +26,7 @@ def _utterance(row: sqlite3.Row) -> Utterance:
         speaker=Speaker(str(row["speaker"])),
         text=str(row["text"]),
         frame=Frame(str(row["frame"])),
-        channel=str(row["channel"]),
+        platform=str(row["channel"]),
         at=parse_iso(str(row["at"])),
     )
 
@@ -74,7 +74,7 @@ def append_utterance(conn: sqlite3.Connection, u: Utterance) -> None:
                 u.speaker,
                 u.text,
                 u.frame,
-                u.channel,
+                u.platform,
                 iso(u.at),
             ),
         )

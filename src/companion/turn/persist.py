@@ -54,7 +54,7 @@ if TYPE_CHECKING:
 log = logging.getLogger("companion.turn")
 
 
-def store_user(c: Runtime, t: Turn, channel: str, frame: Frame) -> Utterance:
+def store_user(c: Runtime, t: Turn, platform: str, frame: Frame) -> Utterance:
     said = Utterance(
         UtteranceId(uuid.uuid4().hex),
         c.rel,
@@ -63,12 +63,12 @@ def store_user(c: Runtime, t: Turn, channel: str, frame: Frame) -> Utterance:
         Speaker.USER,
         t.text,
         frame,
-        channel,
+        platform,
         t.now,
     )
     c.store.append_utterance(said)
     if t.message_id is not None:
-        c.store.record_message(c.rel, channel, t.message_id, t.turn, t.now, sent=False)
+        c.store.record_message(c.rel, platform, t.message_id, t.turn, t.now, sent=False)
     return said
 
 
@@ -76,21 +76,21 @@ class TheirMessage:
     """Their message for this turn, stored exactly once: with the frame the turn resolved, or, if
     the turn fails before that, as real when the guard closes."""
 
-    def __init__(self, c: Runtime, t: Turn, channel: str) -> None:
-        self.c, self.t, self.channel = c, t, channel
+    def __init__(self, c: Runtime, t: Turn, platform: str) -> None:
+        self.c, self.t, self.platform = c, t, platform
         self.said: Utterance | None = None
 
     def store(self, frame: Frame) -> Utterance:
         if self.said is None:
-            self.said = store_user(self.c, self.t, self.channel, frame)
+            self.said = store_user(self.c, self.t, self.platform, frame)
         return self.said
 
 
 @contextlib.asynccontextmanager
-async def their_message(c: Runtime, t: Turn, channel: str) -> AsyncGenerator[TheirMessage]:
+async def their_message(c: Runtime, t: Turn, platform: str) -> AsyncGenerator[TheirMessage]:
     """The one place their message is stored. A turn that fails at any stage still keeps it, as
     real, and the failure goes on up; before, an error in the look-ups or the card lost it."""
-    keep = TheirMessage(c, t, channel)
+    keep = TheirMessage(c, t, platform)
     try:
         yield keep
     except BaseException:
@@ -155,7 +155,7 @@ def log_frame(
     decide(c, t, "frame", detail, reason=frame_reason(judged, stored))
 
 
-def persist_reply(c: Runtime, t: Turn, reply: Reply, user_frame: Frame, channel: str) -> str:
+def persist_reply(c: Runtime, t: Turn, reply: Reply, user_frame: Frame, platform: str) -> str:
     """Store the companion's reply and the decision that sent it. Returns what to send."""
     replied_at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1))
     ids = (c.rel, t.session, t.turn)
@@ -169,7 +169,7 @@ def persist_reply(c: Runtime, t: Turn, reply: Reply, user_frame: Frame, channel:
             Speaker.COMPANION,
             reply.text,
             companion_frame(user_frame),
-            channel,
+            platform,
             replied_at,
         )
     )
@@ -238,7 +238,7 @@ async def finish(
         t.text,
         reply.text or "(no reply)",
     )
-    sent = persist_reply(c, t, reply, user_frame, keep.channel)
+    sent = persist_reply(c, t, reply, user_frame, keep.platform)
     for write in asm.after:  # what the notes used up, now that the turn is stored
         write()
     await after_turn(c, t, said, sent)

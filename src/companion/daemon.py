@@ -1,4 +1,4 @@
-"""Wires the pieces together and runs the chat surface `COMPANION_PLATFORM` names, Telegram or
+"""Wires the pieces together and runs on the platform `COMPANION_PLATFORM` names, Telegram or
 Discord. Either way it is one relationship and one database. Settings come from `settings.py`; keys
 and tokens are read here, where the clients are made."""
 
@@ -43,8 +43,8 @@ from companion.features.reminders.run import deliver_due
 from companion.features.scene_memory.run import pass_step as scene_step
 from companion.features.threads.run import Ticker, drafter, tick
 from companion.io import discord
+from companion.io.delivery import Commands, Delivery, Hooks, Incoming, Transport
 from companion.io.stop import until_stopped
-from companion.io.surface import Commands, Hooks, Incoming, Surface, Transport
 from companion.io.telegram import Telegram
 from companion.kit import curate
 from companion.kit.runtime import Runtime
@@ -207,8 +207,8 @@ def _embedder(
     return MeteredEmbedder(embeddings.OpenRouterEmbedder(key, client, s.embed_model), sink)
 
 
-def surface_hooks(store: Store, rel: RelationshipId, key: str, channel: str) -> Hooks:
-    """What the surface reports back: undelivered replies, which messages were handled, kept under
+def delivery_hooks(store: Store, rel: RelationshipId, key: str, platform: str) -> Hooks:
+    """What delivery reports back: undelivered replies, which messages were handled, kept under
     the store setting `key`, and the id of each message that carried a reply, kept with its turn."""
 
     async def undelivered(text: str, reason: str, delivered: str) -> None:
@@ -230,7 +230,7 @@ def surface_hooks(store: Store, rel: RelationshipId, key: str, channel: str) -> 
     def sent(message_id: str) -> None:
         turn = store.latest_turn(rel)  # the reply going out was stored as the latest turn
         if turn is not None:
-            store.record_message(rel, channel, message_id, turn, datetime.now(UTC), sent=True)
+            store.record_message(rel, platform, message_id, turn, datetime.now(UTC), sent=True)
 
     return Hooks(undelivered, last_handled, mark_handled, sent)
 
@@ -352,7 +352,7 @@ def _start_initiative(
 def _start_reminders(
     runtime: Runtime, transport: Transport, s: Settings
 ) -> asyncio.Task[None] | None:
-    """The timer that sends reminders when they fall due (J50), over the running surface."""
+    """The timer that sends reminders when they fall due (J50), over the running platform."""
     if not s.on("reminders"):
         return None
     started, log = utc_now(), logging.getLogger("companion.reminders")
@@ -367,7 +367,7 @@ def _start_reminders(
                     SESSION,
                     utc_now(),
                     started,
-                    channel=s.position("platform"),
+                    platform=s.position("platform"),
                 )
             except Exception:
                 log.exception("reminder tick failed; will try again next time")
@@ -376,11 +376,11 @@ def _start_reminders(
 
 
 @contextlib.asynccontextmanager
-async def _surface(
+async def _delivery(
     s: Settings, client: httpx.AsyncClient, store: Store, rel: RelationshipId, commands: Commands
-) -> AsyncGenerator[Surface]:
-    """The surface `COMPANION_PLATFORM` names, ready to send, with its own resume point. On Discord
-    the commands are slash commands too."""
+) -> AsyncGenerator[Delivery]:
+    """Delivery on the platform `COMPANION_PLATFORM` names, ready to send, with its own resume
+    point. On Discord the commands are slash commands too."""
     if s.position("platform") == "discord":
         token, user = _need("DISCORD_BOT_TOKEN"), int(_need("DISCORD_USER_ID"))
         synced = discord.Synced(
@@ -388,19 +388,19 @@ async def _surface(
             lambda value: store.set_setting(rel, COMMANDS_KEY, value, datetime.now(UTC)),
         )
         async with discord.connected(token, user, commands, synced) as transport:
-            hooks = surface_hooks(store, rel, DISCORD_KEY, "discord")
-            yield Surface(transport, hooks, s.pace_factor, s.on("split"))
+            hooks = delivery_hooks(store, rel, DISCORD_KEY, "discord")
+            yield Delivery(transport, hooks, s.pace_factor, s.on("split"))
         return
     telegram = Telegram(_need("TELEGRAM_BOT_TOKEN"), int(_need("TELEGRAM_USER_ID")), client)
-    hooks = surface_hooks(store, rel, UPDATE_KEY, "telegram")
-    yield Surface(telegram, hooks, s.pace_factor, s.on("split"))
+    hooks = delivery_hooks(store, rel, UPDATE_KEY, "telegram")
+    yield Delivery(telegram, hooks, s.pace_factor, s.on("split"))
 
 
 async def run(data_dir: Path) -> None:
     load_dotenv(Path(".env"))
     s = Settings.from_env()
     log_file = logs.configure(data_dir / "logs")
-    # The relationship keeps its Telegram name on either surface: it names the database file.
+    # The relationship keeps its Telegram name on either platform: it names the database file.
     rel = RelationshipId(f"telegram-{int(_need('TELEGRAM_USER_ID'))}")
     db = data_dir / f"{rel}.sqlite"
     backups.back_up_quietly(data_dir, db, "start", utc_now())  # before any migration runs
@@ -516,7 +516,7 @@ async def run(data_dir: Path) -> None:
             pending[:] = [asyncio.create_task(pass_after_idle())]
 
         commands = chat_commands(store, rel, judges, s)
-        surface = await stack.enter_async_context(_surface(s, client, store, rel, commands))
+        delivery = await stack.enter_async_context(_delivery(s, client, store, rel, commands))
 
         async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
             reply = await handle(
@@ -536,14 +536,14 @@ async def run(data_dir: Path) -> None:
             task
             for task in (
                 _start_initiative(store, rel, judge, s),
-                _start_reminders(runtime, surface.transport, s),
+                _start_reminders(runtime, delivery.transport, s),
                 asyncio.create_task(_daily_backups(data_dir, db)),
                 asyncio.create_task(_nightly_memory(store, judges, rel, s)),
             )
             if task is not None
         ]
         try:
-            await until_stopped(lambda stop: surface.run(answer, commands, stop))
+            await until_stopped(lambda stop: delivery.run(answer, commands, stop))
         finally:
             for task in background:
                 task.cancel()

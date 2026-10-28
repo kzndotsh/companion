@@ -88,20 +88,20 @@ _KEEP = {
 def record_message(  # noqa: PLR0913, PLR0917
     conn: sqlite3.Connection,
     relationship_id: RelationshipId,
-    channel: str,
+    platform: str,
     message_id: str,
     turn_id: TurnId,
     at: datetime,
     *,
     sent: bool,
 ) -> None:
-    """Keep a message's id on its surface with its turn: one it sent, or one of theirs."""
+    """Keep a message's id on its platform with its turn: one it sent, or one of theirs."""
     with write_tx(conn):
-        conn.execute(_KEEP[sent], (relationship_id, channel, message_id, turn_id, iso(at)))
+        conn.execute(_KEEP[sent], (relationship_id, platform, message_id, turn_id, iso(at)))
 
 
 def turn_of_message(
-    conn: sqlite3.Connection, relationship_id: RelationshipId, channel: str, message_id: str
+    conn: sqlite3.Connection, relationship_id: RelationshipId, platform: str, message_id: str
 ) -> TurnId | None:
     """The turn a message belongs to, whether the companion sent it or they did."""
     row = conn.execute(
@@ -109,6 +109,6 @@ def turn_of_message(
         " WHERE relationship_id = ? AND channel = ? AND message_id = ?"
         " UNION ALL SELECT turn_id FROM received_messages"
         " WHERE relationship_id = ? AND channel = ? AND message_id = ? LIMIT 1",
-        (relationship_id, channel, message_id) * 2,
+        (relationship_id, platform, message_id) * 2,
     ).fetchone()
     return TurnId(str(row["turn_id"])) if row is not None else None

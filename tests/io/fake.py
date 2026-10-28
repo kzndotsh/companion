@@ -1,4 +1,4 @@
-"""A transport that records what the surface asked of it, for the surface's tests."""
+"""A transport that records what delivery asked of it, for delivery's tests."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
-from companion.io.surface import DeliveryError, Incoming
+from companion.io.delivery import DeliveryError, Incoming
 
 
 def msg(text: str, n: int = 99) -> Incoming:

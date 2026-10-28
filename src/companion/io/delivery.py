@@ -1,4 +1,4 @@
-"""Answering one person over a chat surface, whichever it is. Telegram (`io/telegram.py`) and
+"""Answering one person on a chat platform, whichever it is. Telegram (`io/telegram.py`) and
 Discord (`io/discord.py`) are transports: each brings in the allowed user's messages and carries out
 a send, a reaction or a typing indicator. Everything about how a reply goes out is here, once: one
 message answered at a time, a newer plain message replacing an answer in progress, the reading pause
@@ -21,7 +21,7 @@ from companion.io.pace import hold_seconds, read_seconds
 from companion.io.split import fit, split_reply
 from companion.io.stop import cancel_when, next_message
 
-log = logging.getLogger("companion.surface")
+log = logging.getLogger("companion.delivery")
 TYPING_REFRESH_SECONDS = 4.0  # both surfaces drop the typing indicator after five to ten seconds
 
 Reply = str | Reaction | ReactAndReply | ThenSend
@@ -56,7 +56,7 @@ Handler = Callable[[Incoming], Awaitable[Reply]]
 
 
 class Transport(Protocol):
-    """One chat surface, talking to the one allowed user."""
+    """One platform's transport, talking to the one allowed user."""
 
     @property
     def limit(self) -> int:
@@ -83,7 +83,7 @@ class Transport(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class Hooks:
-    """What the daemon lets the surface tell it, and ask it. All optional."""
+    """What the daemon lets delivery tell it, and ask it. All optional."""
 
     on_undelivered: Undelivered | None = None
     last_handled: LastHandled | None = None
@@ -109,7 +109,7 @@ class _Wait:
     jitter: float
 
 
-class Surface:
+class Delivery:
     def __init__(
         self,
         transport: Transport,

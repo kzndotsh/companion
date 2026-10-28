@@ -292,10 +292,10 @@ async def deliver_due(  # noqa: PLR0913
     now: datetime,
     started: datetime,
     *,
-    channel: str,
+    platform: str,
 ) -> int:
-    """Send every reminder that is due, once, over `send`, and store it as said on `channel` (the
-    surface it went out on). One left claimed by a send that was cut off is let go, never resent.
+    """Send every reminder that is due, once, over `send`, and store it as said on `platform` (the
+    platform it went out on). One left claimed by a send that was cut off is let go, never resent.
     One that fell due while the bot was not running and is now more than GRACE late is let go; a
     greeting they already wrote first is skipped; one held by a scene waits for the scene to end.
     Then every series is brought up to date. Returns how many went out."""
@@ -353,7 +353,7 @@ async def deliver_due(  # noqa: PLR0913
                 Speaker.COMPANION,
                 text,
                 Frame.REAL,
-                channel,
+                platform,
                 now,
             )
         )

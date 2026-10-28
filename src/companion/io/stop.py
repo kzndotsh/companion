@@ -44,7 +44,7 @@ async def next_message[T](
     queue: asyncio.Queue[T], stop: asyncio.Event, receiver: asyncio.Task[None]
 ) -> T | None:
     """The next message, or None once a stop is asked for and nothing received is left. A receiver
-    that failed raises its error here, so a surface that cannot connect stops the bot."""
+    that failed raises its error here, so a platform that cannot connect stops the bot."""
     if stop.is_set():
         return None if queue.empty() else queue.get_nowait()
     getting = asyncio.ensure_future(queue.get())

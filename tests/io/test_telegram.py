@@ -8,7 +8,7 @@ import pytest
 
 from companion.core.turn.quoted import Quoted
 from companion.core.types import Speaker
-from companion.io.surface import Hooks, Incoming, Surface
+from companion.io.delivery import Delivery, Hooks, Incoming
 from companion.io.telegram import Telegram, TelegramError
 
 ALLOWED = 42
@@ -128,7 +128,7 @@ async def test_a_failed_typing_indicator_does_not_lose_the_reply() -> None:
         return "reply"
 
     tg = Telegram("t", ALLOWED, httpx.AsyncClient(transport=httpx.MockTransport(handler)))
-    await Surface(tg, pace=0.01).reply_to(Incoming("99", "hi", "1"), talk, {})
+    await Delivery(tg, pace=0.01).reply_to(Incoming("99", "hi", "1"), talk, {})
     assert sent == ["reply"]
 
 
@@ -156,8 +156,8 @@ async def test_a_refused_send_reaches_the_surface_as_a_delivery_error(
         return "never seen"
 
     tg = await _tg(handler)
-    surface = Surface(tg, Hooks(on_undelivered=on_undelivered))
-    await surface.reply_to(Incoming("99", "hi", "1"), talk, {})
+    delivery = Delivery(tg, Hooks(on_undelivered=on_undelivered))
+    await delivery.reply_to(Incoming("99", "hi", "1"), talk, {})
     assert told == ["never seen: telegram sendMessage failed with status 400"]
 
 

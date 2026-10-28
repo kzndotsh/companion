@@ -15,6 +15,7 @@ from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.core.turn.quoted import Quoted
 from companion.core.types import Speaker
 from companion.io import discord as module
+from companion.io.delivery import Commands, Delivery, Hooks, Incoming
 from companion.io.discord import (
     FAILED,
     NOT_YOURS,
@@ -29,7 +30,6 @@ from companion.io.discord import (
     said,
     sync,
 )
-from companion.io.surface import Commands, Hooks, Incoming, Surface
 
 ALLOWED = 42
 BOT = 7
@@ -196,7 +196,7 @@ async def test_a_message_answered_before_a_restart_is_not_answered_again() -> No
             last_handled=lambda: saved.get("last"),
             mark_handled=lambda cursor: saved.__setitem__("last", cursor),
         )
-        task = asyncio.create_task(Surface(dc, hooks).run(talk, {}))
+        task = asyncio.create_task(Delivery(dc, hooks).run(talk, {}))
         await asyncio.sleep(0.05)
         if not answered:
             await dc.on_message(_message(200, "first"))
@@ -221,7 +221,7 @@ async def test_a_long_reply_goes_out_as_messages_of_at_most_2000_characters() ->
         return reply
 
     dc, dm = _discord()
-    await Surface(dc).reply_to(Incoming("5", "hi", "5"), talk, {})
+    await Delivery(dc).reply_to(Incoming("5", "hi", "5"), talk, {})
     assert len(dm.sent) == 2
     assert all(len(p) <= 2000 for p in dm.sent)
     assert " ".join(dm.sent).split() == reply.split()
@@ -285,7 +285,7 @@ async def test_a_gateway_that_closes_stops_the_surface() -> None:
         return text
 
     with pytest.raises(DiscordError, match="gateway closed"):
-        await asyncio.wait_for(Surface(dc).run(talk, {}), timeout=1)
+        await asyncio.wait_for(Delivery(dc).run(talk, {}), timeout=1)
 
 
 async def test_the_start_warnings_about_guilds_and_voice_are_silenced_and_others_are_not(

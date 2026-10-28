@@ -19,7 +19,7 @@ The character the bot plays, with its own voice, tastes, memory and moods, talki
 _Avoid_: assistant
 
 **Relationship**:
-One owner and their companion: one history, one memory and one database, whichever surface is used.
+One owner and their companion: one history, one memory and one database, whichever platform is used.
 
 ## The companion's voice
 
@@ -42,11 +42,15 @@ The default talker, for ordinary chat.
 The second, less restricted talker, for a scene in progress and, when the operator allows, intimate talk.
 _Avoid_: scene talker
 
-**Talker fallback**:
-A second model that also answers when the talker errors or is slow; the first answer goes out.
+**Standby**:
+The second model every model role has, and what calls it in. A talker's standby answers when the talker errors or has not replied in 10 seconds, and the first answer goes out (the roleplay talker's standby is the everyday model). The judges' standby answers only when the judges' model refuses; where safety is concerned, its answer counts as no answer.
+_Avoid_: fallback, hedge
 
 **Judges' model**:
-The one small model every judge and the memory pass use, unless a judge is named to read on its own model first.
+The one small model every judge and the memory pass use, unless a judge route names its own model first.
+
+**Judge route**:
+A judge named to read on its own model first, with the judges' model as its standby.
 
 **Reasoning off**:
 The talker is always called with its reasoning switched off, because reasoning made the first word come far too late.
@@ -98,10 +102,10 @@ On a stop, taking nothing new and answering what already came in.
 The Apps-menu action on one of the companion's messages on Discord that flags that exact reply, with an optional note. Favorite this is its pair.
 
 **Message id**:
-A message's id on its surface, kept with its turn for both the companion's messages and theirs, so a reply, a mark or a reaction pointing at a message finds its turn.
+A message's id on its platform, kept with its turn for both the companion's messages and theirs, so a reply, a mark or a reaction pointing at a message finds its turn.
 
 **Cursor**:
-Where a surface resumes after a restart, so a message missed while down is answered once.
+Where a platform resumes after a restart, so a message missed while down is answered once.
 
 ## What the talker is sent
 
@@ -156,9 +160,6 @@ _Avoid_: reading, verdict
 **Three reads**:
 The same question asked three times; it counts only when the reads agree, and a failed read never agrees.
 _Avoid_: vote
-
-**Fallback model**:
-The model asked when the first refuses. Where safety is concerned, its answer counts as no answer.
 
 **Extractor**:
 A model step that proposes memories, views, plans or stories from messages, for code to accept or refuse.
@@ -580,16 +581,23 @@ A short ritual message they asked for, such as good morning, sent at a time lear
 
 ## Running and steering
 
-**Surface**:
+**Platform**:
 The chat service the companion runs on: Telegram or Discord, one at a time.
-_Avoid_: channel, platform
+_Avoid_: surface, channel
 
 **Transport**:
-The part that carries messages in and out for one surface.
+The part that carries messages in and out for one platform.
+
+**Delivery**:
+Everything about how a reply goes out, the same on every platform: pacing, typing, splitting, retries and what was undelivered.
 
 **Setting**:
-One switch for how the companion runs, read once at start.
+One switch for how the companion runs, read once at start. A renamed one still set under its old name stops the bot.
 _Avoid_: env var, flag
+
+**Position**:
+A setting's value: on, off or shadow, or the value it names.
+_Avoid_: mode (that is the /mode command)
 
 **Shadow**:
 A feature that works out and logs what it would do, and changes nothing in the chat.
@@ -739,7 +747,7 @@ These words are used in more than one sense across the repo. Say which one you m
 - **Promise**: a memory kind, or the companion's own promise.
 - **Check-in**: the gentle note after a heavy talk, or a kind of reminder they asked for.
 - **Loop**: an old name for a thread, or for the memory pass ("slow loop") and the reply path ("fast loop"), or a timer tick.
-- **Mode**: the /mode command, the views setting, or a setting's value.
+- **Mode**: the /mode command, or the views setting (Views mode). A setting's value is its position.
 - **Note**: a line for the talker, or the free text on a flag.
 - **Pace**: the typing pause before a reply, or the learned wait between threads.
 - **Cap**: the daily spend cap, an eval's spend cap, or a limit on how many of something a day.

@@ -185,7 +185,7 @@ OPENROUTER_API_KEY=...      # models are called through OpenRouter
 
 To talk on Discord instead, add the three lines below (setup: [docs/delivery.md](docs/delivery.md#discord-setup)).
 `TELEGRAM_USER_ID` stays: it names the relationship and its database, so it is the same companion
-and the same memory on either surface.
+and the same memory on either platform.
 
 ```bash
 COMPANION_PLATFORM=discord

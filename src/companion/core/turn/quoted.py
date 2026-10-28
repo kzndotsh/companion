@@ -1,7 +1,7 @@
 """The message they used reply on, and the note that tells the talker which one it was.
 
 A reply on Discord or Telegram points at an earlier message, but only their own words reach the
-model, so it read every reply as an answer to its latest message. The surface reads the message
+model, so it read every reply as an answer to its latest message. The transport reads the message
 they replied to and the turn adds it to the system block, even when it is the latest one: a split
 reply is several messages, and a reply picks one of them."""
 

@@ -1,4 +1,4 @@
-"""Discord as a transport for `io/surface.py`. discord.py owns the gateway, its heartbeats and
+"""Discord as a transport for `io/delivery.py`. discord.py owns the gateway, its heartbeats and
 reconnects, and the REST rate limits. Only direct messages from the one allowed user come in; guild
 messages, anyone else's and the bot's own are ignored. It asks for the DM messages intent alone:
 Discord sends the text of a DM to the bot without the privileged message content intent. Errors
@@ -27,7 +27,7 @@ from discord import app_commands
 from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.core.turn.quoted import Quoted
 from companion.core.types import Speaker
-from companion.io.surface import Commands, DeliveryError, Incoming
+from companion.io.delivery import Commands, DeliveryError, Incoming
 
 log = logging.getLogger("companion.discord")
 TYPING_SECONDS = 2.0  # a typing indicator stuck behind a rate limit is skipped, never waited on
@@ -360,7 +360,7 @@ async def connected(
     token: str, allowed_user: int, commands: Commands | None = None, synced: Synced | None = None
 ) -> AsyncGenerator[Discord]:
     """A logged-in Discord transport. Sending works from here on; the gateway connects when the
-    surface starts receiving, and closes when it stops, while replies still in progress go out.
+    delivery starts receiving, and closes when it stops, while replies still in progress go out.
     `commands` become Discord slash commands, synced after login when they changed."""
     intents = discord.Intents.none()
     intents.dm_messages = True

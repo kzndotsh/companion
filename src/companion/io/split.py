@@ -4,7 +4,7 @@ The model writes one reply and the ledger keeps it as one reply, so what it read
 never its own splitting habit. Only the delivery is cut, at sentence boundaries, so no sentence is
 broken and no word changes. Whether to split and where are decided from two random numbers the io
 layer supplies, which keeps this function pure and the test exact. A fixed rule would be as
-mechanical as no rule, so only some eligible replies are split. A surface that caps a message's
+mechanical as no rule, so only some eligible replies are split. A platform that caps a message's
 length gets each part cut to fit (`fit`), at a sentence end where one falls close enough.
 """
 
@@ -88,7 +88,7 @@ def split_reply(text: str, roll: float, pick: float) -> list[str]:
 
 
 def fit(text: str, limit: int) -> list[str]:
-    """`text` as messages of at most `limit` characters, for a surface that refuses longer ones.
+    """`text` as messages of at most `limit` characters, for a platform that refuses longer ones.
     Each cut falls after the last sentence that fits, else at the last space, else at the limit."""
     out: list[str] = []
     rest = text.strip()

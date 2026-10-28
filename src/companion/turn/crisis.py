@@ -125,7 +125,7 @@ def then_line(
         Speaker.COMPANION,
         text,
         Frame.REAL,
-        keep.channel,
+        keep.platform,
         at,
     )
     c.store.append_utterance(said)

@@ -1,4 +1,4 @@
-"""Telegram as a transport for `io/surface.py`: long polling, update ids, the Bot API's calls and
+"""Telegram as a transport for `io/delivery.py`: long polling, update ids, the Bot API's calls and
 its "too many requests" waits. Takes text messages from the one allowed user in their private chat
 and ignores everyone else. Errors never carry the URL, which holds the bot token."""
 
@@ -12,7 +12,7 @@ import httpx
 
 from companion.core.turn.quoted import Quoted
 from companion.core.types import Speaker
-from companion.io.surface import DeliveryError, Incoming
+from companion.io.delivery import DeliveryError, Incoming
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")

@@ -76,7 +76,7 @@ async def _tick(store: Store, now: datetime, talker: Writer | None = None) -> li
         out.append(text)
 
     c = Runtime(store, talker or Writer("morning you ☀️"), PREFIX, REL)
-    await deliver_due(c, send, SESSION, now, SET_AT, channel="telegram")
+    await deliver_due(c, send, SESSION, now, SET_AT, platform="telegram")
     return out
 
 
@@ -153,7 +153,7 @@ async def test_a_series_stopped_while_its_greeting_was_sending_makes_no_next_one
         stop(store, s, "they asked to stop it", _at(20, 9, 0))
 
     c = Runtime(store, Writer("morning ☀️"), PREFIX, REL)
-    await deliver_due(c, send, SESSION, _at(20, 9, 0), SET_AT, channel="telegram")
+    await deliver_due(c, send, SESSION, _at(20, 9, 0), SET_AT, platform="telegram")
     assert _states(store) == [("2026-10-20 09:00", "sent")]
 
 

@@ -8,7 +8,7 @@ from typing import Any
 from companion.core.prompt.prefix import build_prefix
 from companion.core.replay import TurnRecord
 from companion.core.types import SessionId, TurnId
-from companion.daemon import UNKNOWN_REPLY, chat_commands, surface_hooks
+from companion.daemon import UNKNOWN_REPLY, chat_commands, delivery_hooks
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
@@ -52,7 +52,7 @@ async def test_a_reply_to_a_message_it_never_kept_marks_nothing_and_says_so(
 
 def test_each_message_of_a_reply_is_kept_with_the_turn_just_stored(tmp_path: Path) -> None:
     store = _store(tmp_path)
-    sent = surface_hooks(store, REL, "k", "discord").on_sent
+    sent = delivery_hooks(store, REL, "k", "discord").on_sent
     assert sent is not None
     sent("p1")
     sent("p2")

@@ -7,7 +7,7 @@ import pytest
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.core.turn.quoted import Quoted
 from companion.core.types import Speaker
-from companion.io.surface import Hooks, Incoming, Reply, Surface
+from companion.io.delivery import Delivery, Hooks, Incoming, Reply
 from tests.io.fake import Fake, msg
 
 
@@ -32,7 +32,7 @@ async def _one(
         handled.append(f"FLAG:{arg}")
         return Reaction("✍")
 
-    await Surface(fake).reply_to(msg(text), talk, {"flag": flag})
+    await Delivery(fake).reply_to(msg(text), talk, {"flag": flag})
     return fake, handled
 
 
@@ -79,7 +79,7 @@ async def test_a_refused_reaction_still_sends_the_reply() -> None:
 
 async def test_a_failed_send_does_not_stop_the_bot() -> None:
     fake = Fake(refuse=lambda n: True)
-    await Surface(fake).reply_to(msg("hi"), _talk_reply, {})  # must not raise
+    await Delivery(fake).reply_to(msg("hi"), _talk_reply, {})  # must not raise
     assert fake.sent == []
 
 
@@ -91,7 +91,7 @@ async def test_the_message_they_replied_to_reaches_the_turn() -> None:
         return "ok"
 
     quoted = Quoted("your call", Speaker.COMPANION)
-    await Surface(Fake()).reply_to(Incoming("1", "so cute", "1", "9", quoted), talk, {})
+    await Delivery(Fake()).reply_to(Incoming("1", "so cute", "1", "9", quoted), talk, {})
     assert got == [quoted]
 
 
@@ -107,7 +107,7 @@ async def test_an_undelivered_reply_is_reported_with_its_text() -> None:
         return "you never see this"
 
     fake = Fake(refuse=lambda n: True)
-    await Surface(fake, Hooks(on_undelivered=on_undelivered)).reply_to(msg("hi"), talk, {})
+    await Delivery(fake, Hooks(on_undelivered=on_undelivered)).reply_to(msg("hi"), talk, {})
     assert told == [("you never see this", "send refused", "")]
 
 
@@ -118,7 +118,7 @@ async def test_a_reply_cut_off_after_its_first_part_reports_the_part_that_arrive
         del text
         return ["First bit.", "Second bit."]
 
-    monkeypatch.setattr("companion.io.surface.split_reply", two_parts)
+    monkeypatch.setattr("companion.io.delivery.split_reply", two_parts)
     told: list[tuple[str, str]] = []
 
     async def on_undelivered(text: str, reason: str, delivered: str) -> None:
@@ -131,8 +131,8 @@ async def test_a_reply_cut_off_after_its_first_part_reports_the_part_that_arrive
         return "First bit. Second bit."
 
     fake = Fake(refuse=lambda n: n >= 2)
-    surface = Surface(fake, Hooks(on_undelivered=on_undelivered), split=True)
-    await surface.reply_to(msg("hi"), talk, {})
+    delivery = Delivery(fake, Hooks(on_undelivered=on_undelivered), split=True)
+    await delivery.reply_to(msg("hi"), talk, {})
     assert fake.sent == ["First bit."]
     assert told == [("First bit. Second bit.", "First bit.")]
 
@@ -144,7 +144,7 @@ async def test_a_delivered_reply_is_not_reported() -> None:
         told.append(text + reason + delivered)
 
     fake = Fake()
-    await Surface(fake, Hooks(on_undelivered=on_undelivered)).reply_to(msg("hi"), _talk_reply, {})
+    await Delivery(fake, Hooks(on_undelivered=on_undelivered)).reply_to(msg("hi"), _talk_reply, {})
     assert told == []
 
 
@@ -157,8 +157,8 @@ async def test_messages_are_recorded_before_the_turn_runs_and_in_order() -> None
         return "ok"
 
     fake = Fake(script=[(0.0, Incoming("1", "a", "11")), (0.3, Incoming("2", "b", "12"))])
-    surface = Surface(fake, Hooks(last_handled=lambda: "10", mark_handled=order.append))
-    task = asyncio.create_task(surface.run(talk, {}))
+    delivery = Delivery(fake, Hooks(last_handled=lambda: "10", mark_handled=order.append))
+    task = asyncio.create_task(delivery.run(talk, {}))
     await asyncio.sleep(0.5)
     task.cancel()
     await asyncio.gather(task, return_exceptions=True)
@@ -174,7 +174,7 @@ async def test_a_transport_that_fails_stops_the_run_with_its_error() -> None:
             raise RuntimeError(msg)
 
     with pytest.raises(RuntimeError, match="login refused"):
-        await asyncio.wait_for(Surface(Broken()).run(_talk_reply, {}), timeout=2)
+        await asyncio.wait_for(Delivery(Broken()).run(_talk_reply, {}), timeout=2)
 
 
 async def _paced(
@@ -193,15 +193,15 @@ async def _paced(
         del text
         return reply
 
-    monkeypatch.setattr("companion.io.surface.asyncio.sleep", fake_sleep)
+    monkeypatch.setattr("companion.io.delivery.asyncio.sleep", fake_sleep)
 
     def steady(low: float, high: float) -> float:
         del low, high
         return 1.0
 
-    monkeypatch.setattr("companion.io.surface.random.uniform", steady)
-    monkeypatch.setattr("companion.io.surface.time.monotonic", lambda: 100.0)
-    await Surface(fake, pace=pace).reply_to(msg("hello there"), talk, {})
+    monkeypatch.setattr("companion.io.delivery.random.uniform", steady)
+    monkeypatch.setattr("companion.io.delivery.time.monotonic", lambda: 100.0)
+    await Delivery(fake, pace=pace).reply_to(msg("hello there"), talk, {})
     return [c.split(" ", 1)[0] if not c.startswith("sleep") else c for c in fake.calls], sleeps
 
 
@@ -231,7 +231,7 @@ async def _typing_while_writing(writing: float, reply: str | Reaction) -> list[s
         fake.calls.append("written")
         return reply
 
-    await Surface(fake, pace=0.05).reply_to(msg("hello there"), talk, {})
+    await Delivery(fake, pace=0.05).reply_to(msg("hello there"), talk, {})
     return fake.calls
 
 
@@ -289,9 +289,9 @@ async def test_a_command_reply_is_never_held(monkeypatch: pytest.MonkeyPatch) ->
         del arg
         return "done"
 
-    monkeypatch.setattr("companion.io.surface.asyncio.sleep", fake_sleep)
+    monkeypatch.setattr("companion.io.delivery.asyncio.sleep", fake_sleep)
     fake = Fake()
-    await Surface(fake, pace=1.6).reply_to(msg("/flag"), _talk_reply, {"flag": flag})
+    await Delivery(fake, pace=1.6).reply_to(msg("/flag"), _talk_reply, {"flag": flag})
     assert sleeps == []
     assert fake.sent == ["done"]
 
@@ -318,9 +318,9 @@ async def _split_run(
         del text
         return reply
 
-    monkeypatch.setattr("companion.io.surface.random.random", lambda: roll)
+    monkeypatch.setattr("companion.io.delivery.random.random", lambda: roll)
     fake = Fake(refuse=lambda n: refuse_second and n >= 2)
-    await Surface(fake, split=split).reply_to(msg("hi"), talk, {})
+    await Delivery(fake, split=split).reply_to(msg("hi"), talk, {})
     return fake.sent
 
 
@@ -366,9 +366,9 @@ async def test_each_part_waits_and_shows_typing_before_it_is_sent(
         del text
         return _LONG_REPLY
 
-    monkeypatch.setattr("companion.io.surface.asyncio.sleep", fake_sleep)
-    monkeypatch.setattr("companion.io.surface.random.random", lambda: 0.0)
-    await Surface(fake, pace=1.0, split=True).reply_to(msg("hi"), talk, {})
+    monkeypatch.setattr("companion.io.delivery.asyncio.sleep", fake_sleep)
+    monkeypatch.setattr("companion.io.delivery.random.random", lambda: 0.0)
+    await Delivery(fake, pace=1.0, split=True).reply_to(msg("hi"), talk, {})
     sends = [i for i, c in enumerate(fake.calls) if c.startswith("send")]
     assert len(sends) == 2
     between = fake.calls[sends[0] + 1 : sends[1]]
@@ -398,8 +398,8 @@ async def _burst(
         del reason, delivered
         undelivered.append(text)
 
-    surface = Surface(fake, Hooks(on_undelivered=on_undelivered), pace=hold_pace)
-    task = asyncio.create_task(surface.run(talk, {}))
+    delivery = Delivery(fake, Hooks(on_undelivered=on_undelivered), pace=hold_pace)
+    task = asyncio.create_task(delivery.run(talk, {}))
     await asyncio.sleep(gap + 1.2)
     task.cancel()
     await asyncio.gather(task, return_exceptions=True)
@@ -439,7 +439,7 @@ async def test_a_stop_lets_the_reply_in_progress_go_out_and_takes_nothing_new() 
         await asyncio.sleep(0.3)
         return "still answered"
 
-    await asyncio.wait_for(Surface(fake).run(talk, {}, stop), timeout=5)
+    await asyncio.wait_for(Delivery(fake).run(talk, {}, stop), timeout=5)
     assert fake.sent == ["still answered"]
 
 
@@ -456,7 +456,7 @@ async def _then(refuse_first: bool) -> tuple[list[str], list[str]]:
         told.append(text)
 
     fake = Fake(refuse=lambda n: refuse_first and n == 1)
-    await Surface(fake, Hooks(on_undelivered=on_undelivered)).reply_to(msg("hi"), talk, {})
+    await Delivery(fake, Hooks(on_undelivered=on_undelivered)).reply_to(msg("hi"), talk, {})
     return fake.sent, told
 
 
@@ -481,7 +481,7 @@ async def test_a_reply_longer_than_the_surface_takes_goes_as_several_messages() 
         return reply
 
     fake = Fake(limit=100)
-    await Surface(fake).reply_to(msg("hi"), talk, {})
+    await Delivery(fake).reply_to(msg("hi"), talk, {})
     assert len(fake.sent) > 1
     assert all(len(p) <= 100 for p in fake.sent)
     assert " ".join(fake.sent).split() == reply.split()
@@ -490,7 +490,7 @@ async def test_a_reply_longer_than_the_surface_takes_goes_as_several_messages() 
 async def test_each_message_of_a_turn_s_reply_is_reported_sent_and_a_command_s_answer_is_not(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr("companion.io.surface.random.random", lambda: 0.0)
+    monkeypatch.setattr("companion.io.delivery.random.random", lambda: 0.0)
     fake = Fake()
     kept: list[str] = []
     replied: list[str | None] = []
@@ -505,10 +505,10 @@ async def test_each_message_of_a_turn_s_reply_is_reported_sent_and_a_command_s_a
         replied.append(replied_to)
         return "everyday talker"
 
-    surface = Surface(fake, Hooks(on_sent=kept.append), split=True)
-    await surface.reply_to(msg("hi"), talk, {})
+    delivery = Delivery(fake, Hooks(on_sent=kept.append), split=True)
+    await delivery.reply_to(msg("hi"), talk, {})
     turn_parts = len(fake.sent)
-    await surface.reply_to(Incoming("5", "/mode", "5", "sent-1"), talk, {"mode": mode})
+    await delivery.reply_to(Incoming("5", "/mode", "5", "sent-1"), talk, {"mode": mode})
     assert turn_parts > 1
     assert kept == [f"sent-{n}" for n in range(1, turn_parts + 1)]
     assert replied == ["sent-1"]

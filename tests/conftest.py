@@ -57,7 +57,7 @@ def utterance() -> Callable[..., Utterance]:
             speaker=speaker,
             text=text,
             frame=frame,
-            channel="test",
+            platform="test",
             at=T0 + timedelta(minutes=counter),
         )
 

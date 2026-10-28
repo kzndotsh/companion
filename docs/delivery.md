@@ -3,10 +3,10 @@
 How a message comes in and how a reply goes out, on Telegram or on Discord. `COMPANION_PLATFORM`
 picks one at start: `telegram` (the default) or `discord`. Only one runs at a time. Either way it is
 the same companion with the same memory: one relationship, one database, and each message is stored
-with the surface it came over (`telegram` or `discord`).
+with the platform it came over (`telegram` or `discord`).
 
-`src/companion/io/surface.py` holds everything about how a reply goes out, once for both surfaces.
-Under it, a small `Transport` does the surface's own part: bring in the allowed user's messages, send
+`src/companion/io/delivery.py` holds everything about how a reply goes out, once for both platforms.
+Under it, a small `Transport` does the platform's own part: bring in the allowed user's messages, send
 one message, react to one, show typing. `io/telegram.py` is Telegram's (long polling, update ids,
 the Bot API's calls); `io/discord.py` is Discord's (discord.py, which owns the gateway, heartbeats,
 reconnects and Discord's rate limits).
@@ -34,7 +34,7 @@ received but not answered on Telegram, where the poll offset has already moved p
 A plain message that arrives while the previous one is still being answered, either being written or
 held before sending, replaces that answer, and the new reply sees both of their messages. A reply
 that was already written and then dropped is marked undelivered. Commands (`/flag`, `/fav`, `/mode`)
-never replace anything. Typed as text they work on both surfaces. On Discord they are also the bot's
+never replace anything. Typed as text they work on both platforms. On Discord they are also the bot's
 own slash commands, and a message's Apps menu has Flag this and Favorite this, which mark that
 message's turn and ask for an optional note (`io/discord.py`). These answer privately,
 only the allowed user can use them, and they are synced to Discord only when they change: its
@@ -69,15 +69,15 @@ A long, plain reply is sometimes sent as two or three messages, the way people t
 (`COMPANION_SPLIT`, on unless `off`; `io/split.py`). Cuts fall only at sentence boundaries, and a
 reply with quoted speech, as in roleplay, is never split. The ledger and the history keep it as one
 reply, so the model never sees the splitting. Whatever the split setting, a message is never longer
-than the surface takes (4096 characters on Telegram, 2000 on Discord): a longer part is cut after the
+than the platform takes (4096 characters on Telegram, 2000 on Discord): a longer part is cut after the
 last sentence that fits, else at a space, and goes as several messages.
 
-On a turn the crisis path reads as urgent with `COMPANION_CRISIS=on`, the turn hands the surface a
+On a turn the crisis path reads as urgent with `COMPANION_CRISIS=on`, the turn hands delivery a
 second, fixed message of code's own after the reply (`ThenSend`, ADR 0022): the crisis line. It goes
 straight after the reply, and it goes even when the reply could not be delivered. It is stored as the
 companion's own message; if it fails to send, it is marked undelivered like a reply.
 
-Reminders go out over the running surface and are stored with its name.
+Reminders go out over the running platform and are stored with its name.
 
 ## What was never seen
 
@@ -100,6 +100,6 @@ stored beside it. The model then reads only what was actually seen.
 4. In `.env`, set `COMPANION_PLATFORM=discord`, `DISCORD_BOT_TOKEN` to the token and
    `DISCORD_USER_ID` to your id. Keep `TELEGRAM_USER_ID`: it names the relationship and its
    database, so the companion remembers the same things. Then `just restart` and check that the
-   "up as" line says `surface discord`.
+   "up as" line says `platform discord`.
 
 The token is scrubbed from every log like the other secrets, and no error the bot raises carries it.

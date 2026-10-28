@@ -164,17 +164,17 @@ class Store:
     def record_message(  # noqa: PLR0913
         self,
         rel: RelationshipId,
-        channel: str,
+        platform: str,
         message_id: str,
         turn: TurnId,
         at: datetime,
         *,
         sent: bool,
     ) -> None:
-        turns.record_message(self._conn, rel, channel, message_id, turn, at, sent=sent)
+        turns.record_message(self._conn, rel, platform, message_id, turn, at, sent=sent)
 
-    def turn_of_message(self, rel: RelationshipId, channel: str, message_id: str) -> TurnId | None:
-        return turns.turn_of_message(self._conn, rel, channel, message_id)
+    def turn_of_message(self, rel: RelationshipId, platform: str, message_id: str) -> TurnId | None:
+        return turns.turn_of_message(self._conn, rel, platform, message_id)
 
     def add_flag(self, f: Flag) -> None:
         flags.add_flag(self._conn, f)

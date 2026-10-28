@@ -174,7 +174,7 @@ async def _deliver(
         out.append(text)
 
     c = Runtime(store, talker, PREFIX, REL)
-    await deliver_due(c, send, SESSION, now, started, channel="discord")
+    await deliver_due(c, send, SESSION, now, started, platform="discord")
     return out
 
 
@@ -188,7 +188,7 @@ async def test_a_due_reminder_is_written_in_its_voice_sent_once_and_stored(store
     assert [r.state for r in store.reminders(REL)] == ["sent"]
     said = store.history_before(REL, NOW + timedelta(hours=1), 10)
     assert [(u.speaker, u.text) for u in said] == [(Speaker.COMPANION, "hey, the dog needs out 🐕")]
-    assert [u.channel for u in said] == ["discord"]  # the surface it went out on
+    assert [u.platform for u in said] == ["discord"]  # the platform it went out on
     assert await _deliver(store, Writer("again"), NOW + timedelta(minutes=2)) == []
 
 
@@ -238,7 +238,7 @@ async def test_a_failed_send_leaves_it_pending_for_the_next_tick(store: Store) -
         SESSION,
         NOW,
         NOW - timedelta(days=1),
-        channel="telegram",
+        platform="telegram",
     )
     assert [r.state for r in store.reminders(REL)] == ["pending"]
     assert store.history_before(REL, NOW + timedelta(hours=1), 10) == []
