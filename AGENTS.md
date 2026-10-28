@@ -147,7 +147,7 @@ together.
   a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests mirror the folder
   (`tests/features/<name>/`).
 - Ask a judge through `kit/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
-  failed read means, whether a fallback model's answer counts, tries) and call `ask`, which returns a `Read`
+  failed read means, whether a fallback model's answer counts, tries, and optionally a hedge: a second try started while a slow one still runs, first answer wins) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.
 - Ask a small model the same question several times with `kit/reads.py` `read_times` (each failed or
   unreadable read is None) and count agreement with `lib/vote.py` (`READS`, `unanimous`); a

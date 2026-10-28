@@ -89,3 +89,48 @@ async def test_a_failed_call_is_tried_again_up_to_its_attempts() -> None:
     got = await ask(Flaky({"declines": True}), twice, "x")
     assert got is not None
     assert got.value is True
+
+
+class _SlowThenFast(Fake):
+    """The first call takes `first` seconds, every later one answers at once."""
+
+    def __init__(self, first: float) -> None:
+        super().__init__({"declines": True})
+        self.first = first
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        self.delay = self.first if not self.seen else 0
+        return await super().extract(system, user, schema)
+
+
+async def test_a_hedged_judge_asks_again_while_the_slow_try_still_runs() -> None:
+    hedged = Judge("t", PROMPT, SCHEMA, _parse, timeout=1.0, unread="x", attempts=2, hedge=0.05)
+    fake = _SlowThenFast(first=0.8)
+    started = asyncio.get_running_loop().time()
+    got = await ask(fake, hedged, "x")
+    took = asyncio.get_running_loop().time() - started
+    assert got is not None
+    assert got.value is True
+    assert len(fake.seen) == 2
+    assert took < 0.5  # the second try answered; the first was not waited out
+
+
+async def test_a_hedged_judge_that_answers_in_time_is_asked_once() -> None:
+    hedged = Judge("t", PROMPT, SCHEMA, _parse, timeout=1.0, unread="x", attempts=2, hedge=0.2)
+    fake = Fake({"declines": True}, delay=0.01)
+    assert await ask(fake, hedged, "x") is not None
+    assert len(fake.seen) == 1
+
+
+async def test_a_hedged_judge_takes_the_first_try_if_it_lands_first() -> None:
+    class Model(Fake):
+        async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+            delay, model = (0.1, "first") if not self.seen else (0.5, "second")
+            self.seen.append((system, user))
+            await asyncio.sleep(delay)
+            return Extraction(self.data, model, 0.001, 5)
+
+    hedged = Judge("t", PROMPT, SCHEMA, _parse, timeout=1.0, unread="x", attempts=2, hedge=0.05)
+    got = await ask(Model({"declines": True}), hedged, "x")
+    assert got is not None
+    assert got.model == "first"

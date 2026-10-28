@@ -46,7 +46,9 @@ plain data in `kit/runtime.py`.
 Outside a scene, each message is read by a small judge for how serious it is, from 0 (ordinary) to 3
 (acute), and for what the person is doing. Code chooses a listening note from that reading
 (`core/turn/listening.py`), so a vent gets heard rather than fixed. `COMPANION_LISTEN=off` turns this
-off. Acute messages get no listening note; the crisis path below reads them.
+off. Acute messages get no listening note; the crisis path below reads them. Every later stage waits
+on this read, so it is hedged (`turn/listen.py`): a try that has not answered in 1.8 s gets a second
+one beside it, the first answer wins, and each try has 3 s.
 
 The same read also labels a message that is rude to the companion (one note for a cooler reply that
 turn) and a request to remember something. A recall request is looked up across every memory by a

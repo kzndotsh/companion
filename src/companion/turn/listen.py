@@ -10,7 +10,11 @@ from companion.core.turn.listening import PROMPT, SCHEMA, ListeningRead, parse
 from companion.core.types import Utterance
 from companion.kit.ask import Judge, ask
 
-TIMEOUT_SECONDS = 2.5
+TIMEOUT_SECONDS = 3.0
+# Its answers took 1.5 s at the median and 2.0 s at the 90th percentile, and about one try in
+# eleven ran past 2.5 s and was thrown away (logs to 2026-10-28). A second try now starts at 1.8 s
+# while the slow one keeps running, and the first answer wins.
+HEDGE_SECONDS = 1.8
 LISTEN = Judge(
     "listen",
     PROMPT,
@@ -19,6 +23,7 @@ LISTEN = Judge(
     timeout=TIMEOUT_SECONDS,
     unread="no note, no recall and no routing this turn",
     attempts=2,  # a missed reading costs a recall, a note and a route, so one retry is worth it
+    hedge=HEDGE_SECONDS,
 )
 
 
