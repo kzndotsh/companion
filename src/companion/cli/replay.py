@@ -1,4 +1,4 @@
-"""`companion replay <turn_id>`: rebuild what the fast loop saw, and say whether it matches."""
+"""`companion replay <turn_id>`: rebuild what the reply path saw, and say whether it matches."""
 
 from __future__ import annotations
 

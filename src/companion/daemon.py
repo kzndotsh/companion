@@ -50,8 +50,8 @@ from companion.kit import curate
 from companion.kit.runtime import Runtime
 from companion.kit.spendcap import over_cap
 from companion.lib import logs, retry
+from companion.memory.memory_pass import memory_pass
 from companion.memory.nightly import missed, night
-from companion.memory.slow import reflect_once
 from companion.memory.views import views_implicated
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import ByJudge, RefusalFallback, TalkerFallback
@@ -71,8 +71,8 @@ UNKNOWN_REPLY = (
 )
 DISCORD_KEY = "discord.last_message_id"
 COMMANDS_KEY = "discord.commands_synced"  # the fingerprint of the slash commands Discord has
-REFLECT_IDLE_SECONDS = 90
-REFLECT_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
+PASS_IDLE_SECONDS = 90
+PASS_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 REMINDER_TICK_SECONDS = 60
 SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
 
@@ -236,7 +236,7 @@ def surface_hooks(store: Store, rel: RelationshipId, key: str, channel: str) -> 
 
 
 def chat_commands(
-    store: Store, rel: RelationshipId, reflector: StructuredModel, s: Settings
+    store: Store, rel: RelationshipId, judges: StructuredModel, s: Settings
 ) -> Commands:
     """The slash commands: `/flag` and `/fav` answer with a reaction, `/mode` with which talker.
     `/flag` and `/fav` mark the latest reply, or, sent as a reply to one of its messages or of
@@ -254,7 +254,7 @@ def chat_commands(
         kind, note = parse_flag(arg)
         store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
         logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, note)
-        implicated = await views_implicated(store, reflector, rel, turn, note)
+        implicated = await views_implicated(store, judges, rel, turn, note)
         logging.getLogger("companion").debug("flag implicates %d view(s)", len(implicated))
         for claim in curate.retire_implicated_views(store, implicated):
             logging.getLogger("companion").info("flag retired a view: %s", claim)
@@ -407,7 +407,7 @@ async def run(data_dir: Path) -> None:
     )
     async with contextlib.AsyncExitStack() as stack:
         client = await stack.enter_async_context(httpx.AsyncClient())
-        talker, scene, judge, reflector = _metered_models(client, store, rel, s)
+        talker, scene, judge, judges = _metered_models(client, store, rel, s)
         runtime = Runtime(
             store,
             talker,
@@ -438,7 +438,7 @@ async def run(data_dir: Path) -> None:
             serious_message=character.serious if character is not None else "",
         )
         same = (
-            SameCheck(reflector, runtime.embedder, runtime.embed_model, s.mode("memory check"))
+            SameCheck(judges, runtime.embedder, runtime.embed_model, s.mode("memory check"))
             if runtime.embedder is not None and s.on("memory check")
             else None
         )
@@ -453,19 +453,21 @@ async def run(data_dir: Path) -> None:
         ]
         pending: list[asyncio.Task[None]] = []
 
-        async def reflect_after_idle() -> None:
-            await asyncio.sleep(REFLECT_IDLE_SECONDS)
-            logging.getLogger("companion.slow").debug(
-                "idle for %ds; reading what has not been read", REFLECT_IDLE_SECONDS
+        async def pass_after_idle() -> None:
+            await asyncio.sleep(PASS_IDLE_SECONDS)
+            logging.getLogger("companion.memory").debug(
+                "idle for %ds; reading what has not been read", PASS_IDLE_SECONDS
             )
             if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
-                logging.getLogger("companion.slow").warning("daily spend cap reached; no reflect")
+                logging.getLogger("companion.memory").warning(
+                    "daily spend cap reached; no memory pass"
+                )
                 return
             try:
                 result = await retry.retry_on_network_error(
-                    lambda: reflect_once(
+                    lambda: memory_pass(
                         store,
-                        reflector,
+                        judges,
                         rel,
                         same=same,
                         promises=s.on("promises"),
@@ -473,21 +475,23 @@ async def run(data_dir: Path) -> None:
                         loose_loops=s.on("loop notes"),
                         steps=steps,
                     ),
-                    REFLECT_RETRY_DELAYS,
-                    "reflect",
+                    PASS_RETRY_DELAYS,
+                    "memory pass",
                 )
             except httpx.TransportError as err:
-                logging.getLogger("companion.slow").warning(
-                    "reflect could not reach the model (%s); it will run after the next message",
+                logging.getLogger("companion.memory").warning(
+                    "memory pass could not reach the model (%s); it runs after their next message",
                     type(err).__name__,
                 )
                 return
             except Exception:
-                logging.getLogger("companion.slow").exception("reflect failed, will retry")
+                logging.getLogger("companion.memory").exception(
+                    "the memory pass failed, will retry"
+                )
                 return
             if result.ran:
-                logging.getLogger("companion.slow").info(
-                    "reflect: +%d beliefs, %d confirmed, %d rejected, %d duplicates;"
+                logging.getLogger("companion.memory").info(
+                    "memory pass: +%d beliefs, %d confirmed, %d rejected, %d duplicates;"
                     " views +%d, %d confirmed, %d rejected, %d checked (%d conflict); $%.5f",
                     result.accepted,
                     result.confirmed,
@@ -504,9 +508,9 @@ async def run(data_dir: Path) -> None:
         def schedule_reflect() -> None:
             for task in pending:
                 task.cancel()
-            pending[:] = [asyncio.create_task(reflect_after_idle())]
+            pending[:] = [asyncio.create_task(pass_after_idle())]
 
-        commands = chat_commands(store, rel, reflector, s)
+        commands = chat_commands(store, rel, judges, s)
         surface = await stack.enter_async_context(_surface(s, client, store, rel, commands))
 
         async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
@@ -524,7 +528,7 @@ async def run(data_dir: Path) -> None:
                 _start_initiative(store, rel, judge, s),
                 _start_reminders(runtime, surface.transport, s),
                 asyncio.create_task(_daily_backups(data_dir, db)),
-                asyncio.create_task(_nightly_memory(store, reflector, rel, s)),
+                asyncio.create_task(_nightly_memory(store, judges, rel, s)),
             )
             if task is not None
         ]

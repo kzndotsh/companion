@@ -9,8 +9,8 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 
+from companion.core.memory_pass import PassRun
 from companion.core.prompt.prefix import Prefix
-from companion.core.reflect import ReflectRun
 from companion.core.replay import TurnRecord
 from companion.core.spend import SpendEvent
 from companion.core.types import (
@@ -68,7 +68,7 @@ from companion.store.sqlite import (
     flags,
     labels,
     ledger,
-    reflect,
+    memory_pass,
     settings,
     turns,
     view_kinds,
@@ -226,11 +226,11 @@ class Store:
     ) -> dict[BeliefId, int]:
         return beliefs.evidence_days(self._conn, rel, include_closed=include_closed)
 
-    def record_reflect(self, r: ReflectRun) -> None:
-        reflect.record_run(self._conn, r)
+    def record_pass(self, r: PassRun) -> None:
+        memory_pass.record_run(self._conn, r)
 
-    def reflect_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
-        return reflect.cursor(self._conn, rel)
+    def pass_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
+        return memory_pass.cursor(self._conn, rel)
 
     def record_spend(self, rel: RelationshipId, event: SpendEvent, at: datetime) -> None:
         settings.record_spend(self._conn, rel, event, at)

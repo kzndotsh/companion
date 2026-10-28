@@ -335,7 +335,7 @@ uv run companion retire <id> --reason "..."      # close one memory
 uv run companion merge <id> <id> --claim "..."   # merge memories that say one thing, keeping every quote
 uv run companion address        # how they want to be referred to; --set TEXT changes it
 uv run companion backup         # snapshot now; --list, or --restore FILE with the bot stopped
-uv run companion reflect        # run the memory pass now instead of waiting for a quiet moment; --from-start rereads it all
+uv run companion memory-pass    # run the memory pass now instead of waiting for a quiet moment; --from-start rereads it all
 uv run companion dedupe         # close memories that rest on the same words
 uv run companion rebuild        # restate every memory under the current rules
 uv run companion calibrate      # compare the automatic gates with your approvals

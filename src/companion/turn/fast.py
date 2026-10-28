@@ -1,4 +1,4 @@
-"""The fast loop: one user message in, one reply out, everything logged with a reason."""
+"""The reply path: one user message in, one reply out, everything logged with a reason."""
 
 from __future__ import annotations
 

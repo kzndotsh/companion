@@ -10,11 +10,11 @@ history reads the same.
 
 **Plans.** Things they said about their own near future that a friend would ask about later, such as a plan, an appointment or something they are waiting on. It brings one up when they next write, and in shadow it works out when it would reach out first.
 
-**Status:** the note when they write is live. Reaching out is shadow (review by 2026-11-03, judged on would-sends that read right to the owner, none in quiet hours or mid-chat). Switch: `COMPANION_INITIATIVE` (`shadow` default, `off`), which stops only the 15-minute tick. Reading plans (in the slow loop's batch, after a memory pass) and the note (before the reply) run whatever it says.
+**Status:** the note when they write is live. Reaching out is shadow (review by 2026-11-03, judged on would-sends that read right to the owner, none in quiet hours or mid-chat). Switch: `COMPANION_INITIATIVE` (`shadow` default, `off`), which stops only the 15-minute tick. Reading plans (in the memory pass's batch, after a memory pass) and the note (before the reply) run whatever it says.
 
 ## How it works
 
-**Reading plans.** The open-loop pass runs inside the slow loop's batch, after the beliefs, with one small-model call per batch (`system/openloops`, purpose `loops`). It has its own bookmark (`open_loop_runs`), so it never depends on the belief pass. It reads up to 40 messages per batch, with 4 messages of earlier context, and up to 3 batches per pass. The model only labels: the quote, a short claim, when it happens as they said it, a scale (`minutes`, `hours`, `days`, `unknown`), a sensitivity from 0 to 3, a certainty (`firm`, `maybe`, `wish`), whether it is about the companion, and a kind. Code decides what to keep. A candidate is dropped, with the reason logged, when (checked in this order, so a sensitive one is always logged as sensitive):
+**Reading plans.** The open-loop pass runs inside the memory pass's batch, after the beliefs, with one small-model call per batch (`system/openloops`, purpose `loops`). It has its own bookmark (`open_loop_runs`), so it never depends on the belief pass. It reads up to 40 messages per batch, with 4 messages of earlier context, and up to 3 batches per pass. The model only labels: the quote, a short claim, when it happens as they said it, a scale (`minutes`, `hours`, `days`, `unknown`), a sensitivity from 0 to 3, a certainty (`firm`, `maybe`, `wish`), whether it is about the companion, and a kind. Code decides what to keep. A candidate is dropped, with the reason logged, when (checked in this order, so a sensitive one is always logged as sensitive):
 
 - sensitivity is 2 or more, so a sensitive plan is never raised on its own
 - the cited message is not found, or no single message of theirs holds the quote

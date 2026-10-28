@@ -1,4 +1,4 @@
-"""A record of one slow-loop pass."""
+"""A record of one memory pass."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from companion.core.types import RelationshipId, UtteranceId
 
 
 @dataclass(frozen=True, slots=True)
-class ReflectRun:
+class PassRun:
     id: str
     relationship_id: RelationshipId
     upto_at: datetime

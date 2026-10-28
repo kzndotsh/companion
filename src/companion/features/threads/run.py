@@ -1,7 +1,7 @@
 """Reading what they said for loops worth asking about, and the one tick that decides to ask.
 
-Extraction runs inside the slow loop's batch, after the beliefs, and costs one small call. The tick
-runs on a timer, reads the store, asks the pure gate in `gate.py`, and in shadow mode
+Extraction runs inside the memory pass's batch, after the beliefs, and costs one small call. The
+tick runs on a timer, reads the store, asks the pure gate in `gate.py`, and in shadow mode
 only records what it would have sent. Nothing here sends a message.
 """
 
@@ -283,7 +283,7 @@ MAX_TRIES = 3  # a batch that keeps failing is let go, so plans can never block 
 
 
 # A reader of its own messages in the same batch: the cost, or None when its call failed so the
-# batch is read again. The slow loop passes the promise reader (J12) when it is on.
+# batch is read again. The memory pass passes the promise reader (J12) when it is on.
 type OwnReader = Callable[
     [
         Store,

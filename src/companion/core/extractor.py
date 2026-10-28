@@ -1,4 +1,4 @@
-"""What any structured-output model must do. The slow loop depends only on this."""
+"""What any structured-output model must do. The memory pass depends only on this."""
 
 from __future__ import annotations
 

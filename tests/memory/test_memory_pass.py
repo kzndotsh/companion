@@ -19,7 +19,7 @@ from companion.core.types import (
 )
 from companion.core.vectors import Embedded, unit
 from companion.features.consolidate.run import SameCheck
-from companion.memory.slow import reflect_once
+from companion.memory.memory_pass import memory_pass
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -85,7 +85,7 @@ async def test_verified_beliefs_are_stored_with_their_evidence(store: Store) -> 
     ex = FakeExtractor(
         {"beliefs": [_belief("m1", "asthma and a bad knee", "Has asthma and a bad knee")]}
     )
-    result = await reflect_once(store, ex, REL, T0 + timedelta(hours=1))
+    result = await memory_pass(store, ex, REL, T0 + timedelta(hours=1))
     assert (result.accepted, result.rejected) == (1, 0)
     [b] = store.current_beliefs(REL)
     assert b.evidence[0].quote == "asthma and a bad knee"
@@ -95,7 +95,7 @@ async def test_verified_beliefs_are_stored_with_their_evidence(store: Store) -> 
 async def test_a_fabricated_quote_is_rejected_and_logged(store: Store) -> None:
     _say(store, 1, Speaker.USER, "i have asthma and a bad knee")
     ex = FakeExtractor({"beliefs": [_belief("m1", "i have bipolar", "Has bipolar")]})
-    result = await reflect_once(store, ex, REL, T0 + timedelta(hours=1))
+    result = await memory_pass(store, ex, REL, T0 + timedelta(hours=1))
     assert (result.accepted, result.rejected) == (0, 1)
     assert store.current_beliefs(REL) == []
 
@@ -103,17 +103,17 @@ async def test_a_fabricated_quote_is_rejected_and_logged(store: Store) -> None:
 async def test_the_log_is_the_cursor_so_a_second_pass_reads_nothing(store: Store) -> None:
     _say(store, 1, Speaker.USER, "i have asthma and a bad knee")
     ex = FakeExtractor({"beliefs": []})
-    assert (await reflect_once(store, ex, REL)).ran
-    assert not (await reflect_once(store, ex, REL)).ran
+    assert (await memory_pass(store, ex, REL)).ran
+    assert not (await memory_pass(store, ex, REL)).ran
     assert ex.calls == 2  # the beliefs pass and the open-loops pass, once
 
 
 async def test_only_new_utterances_are_read_on_the_next_pass(store: Store) -> None:
     _say(store, 1, Speaker.USER, "i have asthma and a bad knee")
     ex = FakeExtractor({"beliefs": []}, {"beliefs": []})
-    await reflect_once(store, ex, REL)
+    await memory_pass(store, ex, REL)
     _say(store, 2, Speaker.USER, "i like climbing")
-    result = await reflect_once(store, ex, REL)
+    result = await memory_pass(store, ex, REL)
     assert result.ran
     assert ex.calls == 4  # two reads, each a beliefs pass and an open-loops pass
 
@@ -124,13 +124,13 @@ async def test_a_repeated_claim_is_not_stored_twice(store: Store) -> None:
         "beliefs": [_belief("m1", "i have asthma and a bad knee", "Has asthma and a bad knee")]
     }
     ex = FakeExtractor(one)
-    await reflect_once(store, ex, REL)
+    await memory_pass(store, ex, REL)
     _say(store, 2, Speaker.USER, "like i said, i have asthma and a bad knee")
     again: Json = {
         "beliefs": [_belief("m2", "i have asthma and a bad knee", "has asthma and a bad knee.")]
     }
     ex2 = FakeExtractor(again)
-    result = await reflect_once(store, ex2, REL)
+    result = await memory_pass(store, ex2, REL)
     assert (result.accepted, result.duplicates) == (0, 1)
     assert len(store.current_beliefs(REL)) == 1
 
@@ -138,7 +138,7 @@ async def test_a_repeated_claim_is_not_stored_twice(store: Store) -> None:
 async def test_a_batch_with_only_companion_words_gets_only_the_self_pass(store: Store) -> None:
     _say(store, 1, Speaker.COMPANION, "hello there")
     ex = FakeExtractor()
-    result = await reflect_once(store, ex, REL)
+    result = await memory_pass(store, ex, REL)
     assert result.ran
     assert ex.calls == 1  # the user pass is skipped, the self pass runs
 
@@ -146,18 +146,18 @@ async def test_a_batch_with_only_companion_words_gets_only_the_self_pass(store: 
 async def test_a_failed_model_call_does_not_advance_the_cursor(store: Store) -> None:
     _say(store, 1, Speaker.USER, "i have asthma and a bad knee")
     with pytest.raises(RuntimeError):
-        await reflect_once(store, BoomExtractor(), REL)
+        await memory_pass(store, BoomExtractor(), REL)
     ex = FakeExtractor({"beliefs": []})
-    assert (await reflect_once(store, ex, REL)).ran
+    assert (await memory_pass(store, ex, REL)).ran
     assert ex.calls == 2
 
 
 async def test_a_malformed_response_is_logged_and_still_advances(store: Store) -> None:
     _say(store, 1, Speaker.USER, "i have asthma and a bad knee")
     ex = FakeExtractor({"nonsense": True})
-    result = await reflect_once(store, ex, REL)
+    result = await memory_pass(store, ex, REL)
     assert result.rejected == 1
-    assert not (await reflect_once(store, ex, REL)).ran
+    assert not (await memory_pass(store, ex, REL)).ran
 
 
 async def test_a_paraphrase_resting_on_the_same_words_is_a_duplicate(store: Store) -> None:
@@ -170,7 +170,7 @@ async def test_a_paraphrase_resting_on_the_same_words_is_a_duplicate(store: Stor
             ]
         }
     )
-    result = await reflect_once(store, ex, REL)
+    result = await memory_pass(store, ex, REL)
     assert (result.accepted, result.duplicates) == (1, 1)
 
 
@@ -193,13 +193,13 @@ async def test_a_restatement_refreshes_the_belief_with_new_evidence(store: Store
     first = _Spy(
         {"beliefs": [_belief("m1", "so lonely lately", "Feels lonely lately.", kind="state")]}
     )
-    await reflect_once(store, first, REL, T0 + timedelta(hours=1))
+    await memory_pass(store, first, REL, T0 + timedelta(hours=1))
     [b] = store.current_beliefs(REL)
     before = store.last_support(REL)[b.id]
 
     later = _say(store, 2, Speaker.USER, "honestly still lonely")
     spy = _Spy({"beliefs": [_restatement("m2", "still lonely", "k1")]})
-    result = await reflect_once(store, spy, REL, T0 + timedelta(days=9))
+    result = await memory_pass(store, spy, REL, T0 + timedelta(days=9))
 
     assert "[k1] Feels lonely lately." in spy.prompts[0]
     assert (result.accepted, result.confirmed, result.rejected) == (0, 1, 0)
@@ -211,14 +211,14 @@ async def test_a_restatement_refreshes_the_belief_with_new_evidence(store: Store
 async def test_a_confirmation_pointing_nowhere_is_rejected_and_logged(store: Store) -> None:
     _say(store, 1, Speaker.USER, "i feel so lonely lately")
     ex = FakeExtractor({"beliefs": [_restatement("m1", "so lonely", "k5")]})
-    result = await reflect_once(store, ex, REL)
+    result = await memory_pass(store, ex, REL)
     assert (result.confirmed, result.rejected) == (0, 1)
     assert store.current_beliefs(REL) == []
 
 
 async def test_a_fabricated_restatement_quote_never_attaches(store: Store) -> None:
     _say(store, 1, Speaker.USER, "i feel so lonely lately")
-    await reflect_once(
+    await memory_pass(
         store,
         FakeExtractor(
             {"beliefs": [_belief("m1", "so lonely", "Feels lonely lately.", kind="state")]}
@@ -226,7 +226,7 @@ async def test_a_fabricated_restatement_quote_never_attaches(store: Store) -> No
         REL,
     )
     _say(store, 2, Speaker.USER, "okay going to sleep now")
-    result = await reflect_once(
+    result = await memory_pass(
         store, FakeExtractor({"beliefs": [_restatement("m2", "still lonely", "k1")]}), REL
     )
     assert (result.confirmed, result.rejected) == (0, 1)
@@ -250,7 +250,7 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
     store: Store, mode: str, stored: int
 ) -> None:
     _say(store, 1, Speaker.USER, "i drink green tea")
-    await reflect_once(
+    await memory_pass(
         store,
         FakeExtractor({"beliefs": [_belief("m1", "green tea", "Drinks green tea")]}),
         REL,
@@ -259,7 +259,7 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
     _say(store, 2, Speaker.USER, "green tea always, no honey")
     same = SameCheck(_PairJudge(), _Embedder(), "fake-embed", mode)
     ex = FakeExtractor({"beliefs": [_belief("m2", "green tea always", "Always drinks green tea")]})
-    result = await reflect_once(store, ex, REL, T0 + timedelta(hours=2), same=same)
+    result = await memory_pass(store, ex, REL, T0 + timedelta(hours=2), same=same)
     assert len(store.current_beliefs(REL)) == stored
     if mode == "on":
         assert result.confirmed == 1
@@ -274,7 +274,7 @@ async def test_new_memories_are_embedded_after_the_pass_with_the_memory_check_of
     ex = FakeExtractor(
         {"beliefs": [_belief("m1", "asthma and a bad knee", "Has asthma and a bad knee")]}
     )
-    await reflect_once(store, ex, REL, T0 + timedelta(hours=1), embed=(_Embedder(), "fake-embed"))
+    await memory_pass(store, ex, REL, T0 + timedelta(hours=1), embed=(_Embedder(), "fake-embed"))
     [b] = store.current_beliefs(REL)
     assert b.id in store.belief_embeddings(REL, "fake-embed")
 
@@ -290,7 +290,7 @@ async def test_a_failed_embedding_after_the_pass_keeps_the_memories(store: Store
         {"beliefs": [_belief("m1", "asthma and a bad knee", "Has asthma and a bad knee")]}
     )
     when = T0 + timedelta(hours=1)
-    result = await reflect_once(store, ex, REL, when, embed=(_DownEmbedder(), "fake-embed"))
+    result = await memory_pass(store, ex, REL, when, embed=(_DownEmbedder(), "fake-embed"))
     assert result.accepted == 1
     assert not store.belief_embeddings(REL, "fake-embed")
 
@@ -307,8 +307,8 @@ async def test_a_switch_step_runs_after_each_pass_and_its_cost_counts(store: Sto
         return Read()
 
     _say(store, 1, Speaker.COMPANION, "hello there")
-    result = await reflect_once(store, FakeExtractor(), REL, T0, steps=[history])  # type: ignore[list-item]
+    result = await memory_pass(store, FakeExtractor(), REL, T0, steps=[history])  # type: ignore[list-item]
     assert ran == [T0]
     assert result.cost_usd >= 0.5
-    assert not (await reflect_once(store, FakeExtractor(), REL, T0, steps=[history])).ran  # type: ignore[list-item]
+    assert not (await memory_pass(store, FakeExtractor(), REL, T0, steps=[history])).ran  # type: ignore[list-item]
     assert ran == [T0]

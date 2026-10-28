@@ -6,7 +6,7 @@ names, worth) is in its README under `src/companion/features/`.
 
 ## How a memory is made
 
-Memory is written by the memory pass, also called the slow loop (`src/companion/memory/slow.py`),
+Memory is written by the memory pass (`src/companion/memory/memory_pass.py`),
 never during a reply. It runs once the chat has been quiet for 90 seconds. It reads the messages not
 yet read, in batches of 40 with the 4 before each for context, and asks a small model for candidate
 memories.

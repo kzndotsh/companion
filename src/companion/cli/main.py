@@ -151,7 +151,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="companion")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    rp = sub.add_parser("replay", help="rebuild what the fast loop saw for one turn")
+    rp = sub.add_parser("replay", help="rebuild what the reply path saw for one turn")
     rp.add_argument("turn_id")
     rp.add_argument(
         "--show-prompt",
@@ -187,7 +187,7 @@ def _parser() -> argparse.ArgumentParser:
 
     _db_args(sub.add_parser("rebuild", help="restate every belief under the current rules"))
     _judging_commands(sub.add_parser)
-    rf = sub.add_parser("reflect", help="run one slow-loop pass now")
+    rf = sub.add_parser("memory-pass", help="run one memory pass now")
     rf.add_argument("--from-start", action="store_true", help="re-read the whole conversation")
     _db_args(rf)
 
@@ -228,9 +228,9 @@ def _replay(a: argparse.Namespace) -> int:
     return code
 
 
-def _reflect(a: argparse.Namespace) -> int:
+def _memory_pass(a: argparse.Namespace) -> int:
     db, rel = _target(a)
-    return _out(asyncio.run(commands.reflect_now(db, rel, from_start=bool(a.from_start))))
+    return _out(asyncio.run(commands.memory_pass_now(db, rel, from_start=bool(a.from_start))))
 
 
 def _run(a: argparse.Namespace) -> int:
@@ -469,7 +469,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "retire": _retire,
     "merge": _merge,
     "memory": _memory,
-    "reflect": _reflect,
+    "memory-pass": _memory_pass,
     "rebuild": _rebuild,
     "callbacks": _callbacks,
     "invented": _invented,

@@ -1,6 +1,6 @@
 """Running a one-off command outside the bot: `run` opens the store and the judges' model and hands
-them to a job (each feature's own is in its `cli.py`); reflecting and rebuilding memory live here.
-What a command spends counts toward the day's spend."""
+them to a job (each feature's own is in its `cli.py`); running the memory pass and rebuilding memory
+live here. What a command spends counts toward the day's spend."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from companion.core.spend import MeteredExtractor, SpendEvent
 from companion.core.types import RelationshipId
 from companion.daemon import extractor, load_dotenv
 from companion.kit.services import Services
+from companion.memory.memory_pass import memory_pass_from
 from companion.memory.rebuild import rebuild
-from companion.memory.slow import reflect_from
 from companion.store.sqlite.store import Store
 
 
@@ -44,17 +44,17 @@ async def run(db: Path, relationship: str, job: Callable[[Services], Awaitable[s
         return await job(x)
 
 
-async def reflect_now(db: Path, relationship: str, *, from_start: bool = False) -> str:
-    """Drain the slow loop's backlog, one batch at a time. For `companion reflect`.
+async def memory_pass_now(db: Path, relationship: str, *, from_start: bool = False) -> str:
+    """Drain the memory pass's backlog, one batch at a time. For `companion memory-pass`.
 
     `from_start` re-reads everything, for after the extraction prompt improves. Claims already
     recorded are skipped as duplicates, so it only adds what was missed.
     """
     lines: list[str] = []
     async with _services(db, relationship) as x:
-        start = None if from_start else x.store.reflect_cursor(x.rel)
+        start = None if from_start else x.store.pass_cursor(x.rel)
         while True:
-            result = await reflect_from(x.store, x.judge, x.rel, start)
+            result = await memory_pass_from(x.store, x.judge, x.rel, start)
             if not result.ran:
                 break
             start = result.upto

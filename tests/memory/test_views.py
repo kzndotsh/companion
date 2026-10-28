@@ -29,8 +29,8 @@ from companion.core.types import (
 from companion.core.views import card_views, is_settled
 from companion.kit.curate import retire_implicated_views
 from companion.kit.runtime import Runtime
+from companion.memory.memory_pass import memory_pass
 from companion.memory.rebuild import rebuild
-from companion.memory.slow import reflect_once
 from companion.memory.views import check_views, views_implicated
 from companion.store.sqlite import replay as store_replay
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
@@ -114,7 +114,7 @@ async def test_a_view_is_recorded_from_the_companions_own_words(store: Store) ->
     _say(store, 1, Speaker.USER, "lazy is a character flaw tho")
     _say(store, 2, Speaker.COMPANION, VIEW_TEXT)
     ex = Routed(views=[_view("m2", "lazy is a flaw")])
-    result = await reflect_once(store, ex, REL)
+    result = await memory_pass(store, ex, REL)
     assert (result.views_accepted, result.views_rejected) == (1, 0)
     [v] = store.self_beliefs(REL)
     assert (v.subject, v.speaker, v.provenance) == (
@@ -130,23 +130,23 @@ async def test_a_view_cannot_be_quoted_from_the_users_message(store: Store) -> N
     _say(store, 1, Speaker.USER, "lazy is a character flaw tho")
     _say(store, 2, Speaker.COMPANION, VIEW_TEXT)
     ex = Routed(views=[_view("m1", "lazy is a character flaw")])
-    result = await reflect_once(store, ex, REL)
+    result = await memory_pass(store, ex, REL)
     assert (result.views_accepted, result.views_rejected) == (0, 1)
     assert store.self_beliefs(REL) == []
 
 
 async def test_the_user_pass_never_sees_the_companions_views(store: Store) -> None:
     _say(store, 1, Speaker.COMPANION, VIEW_TEXT)
-    await reflect_once(store, Routed(views=[_view("m1", "lazy is a flaw")]), REL)
+    await memory_pass(store, Routed(views=[_view("m1", "lazy is a flaw")]), REL)
     _say(store, 2, Speaker.USER, "i like climbing")
     spy = Routed()
-    await reflect_once(store, spy, REL)
+    await memory_pass(store, spy, REL)
     assert "laziness" not in spy.prompts["user"][0]
 
 
 async def test_a_view_is_tentative_until_restated_on_another_day(store: Store) -> None:
     _say(store, 1, Speaker.COMPANION, VIEW_TEXT)
-    await reflect_once(store, Routed(views=[_view("m1", "lazy is a flaw")]), REL)
+    await memory_pass(store, Routed(views=[_view("m1", "lazy is a flaw")]), REL)
     [v] = store.self_beliefs(REL)
     assert not is_settled(v, store.evidence_days(REL))
 
@@ -164,7 +164,7 @@ async def test_a_view_is_tentative_until_restated_on_another_day(store: Store) -
             }
         ]
     }
-    result = await reflect_once(store, Routed(views=[restated]), REL)
+    result = await memory_pass(store, Routed(views=[restated]), REL)
     assert result.views_confirmed == 1
     assert len(store.self_beliefs(REL)) == 1
     assert is_settled(store.self_beliefs(REL)[0], store.evidence_days(REL))
@@ -191,7 +191,7 @@ async def test_a_rebuild_restates_the_user_beliefs_and_leaves_the_views_alone(
             }
         ]
     }
-    await reflect_once(store, Routed([user_item], [_view("m2", "lazy is a flaw")]), REL)
+    await memory_pass(store, Routed([user_item], [_view("m2", "lazy is a flaw")]), REL)
     view_id = store.self_beliefs(REL)[0].id
     await rebuild(store, Routed([user_item], []), REL)
     assert [b.id for b in store.self_beliefs(REL)] == [view_id]
@@ -343,7 +343,7 @@ async def test_a_view_that_conflicts_with_what_the_user_asked_for_stays_out(stor
             }
         ]
     }
-    await reflect_once(store, Routed(users=[wants]), REL)
+    await memory_pass(store, Routed(users=[wants]), REL)
     _two_day_view(store)
     ex = Routed(checks=[_verdict(True, "k1")])
     result = await check_views(store, ex, REL)
@@ -375,7 +375,7 @@ async def test_a_new_user_preference_triggers_a_recheck_of_already_clear_views(
         ]
     }
     ex = Routed(users=[new_pref], checks=[_verdict(True, "k1")])
-    result = await reflect_once(store, ex, REL)
+    result = await memory_pass(store, ex, REL)
     assert result.views_checked == 1
     assert result.views_conflicts == 1
     assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()
@@ -552,16 +552,16 @@ async def test_a_retired_view_is_not_recorded_again_when_the_ledger_is_re_read(
     store: Store,
 ) -> None:
     from companion.kit.curate import retire  # noqa: PLC0415
-    from companion.memory.slow import reflect_from  # noqa: PLC0415
+    from companion.memory.memory_pass import memory_pass_from  # noqa: PLC0415
 
     _say(store, 1, Speaker.COMPANION, VIEW_TEXT)
-    await reflect_once(store, Routed(views=[_view("m1", "lazy is a flaw")]), REL)
+    await memory_pass(store, Routed(views=[_view("m1", "lazy is a flaw")]), REL)
     [v] = store.self_beliefs(REL)
     retire(store, REL, v.id[:8], "not a view i want it to hold")
     assert [b.id for b in store.rejected_views(REL)] == [v.id]
 
     spy = Routed(views=[_view("m1", "lazy is a flaw")])
-    result = await reflect_from(store, spy, REL, None)
+    result = await memory_pass_from(store, spy, REL, None)
     assert result.views_accepted == 0
     assert store.self_beliefs(REL) == []
     assert "Rejected by the user" in spy.prompts["self"][0]

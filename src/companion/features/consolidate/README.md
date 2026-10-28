@@ -15,7 +15,7 @@ Two checks, both read three times by a small model (`READS = 3`, `kit/reads.py` 
 - In `on` mode the memory is retired through `kit/curate.py` `retire` with the reason "a passing moment, faded from the card (ADR 0019)". In shadow `log_would_close` records the decision "would close belief (shadow)" and closes nothing. The closing is a retirement, never a delete (ADR 0002).
 - One line is logged per night: how many were read, closed or would be closed, how many questions, and the cost.
 
-**The write-time pair check** (`SameCheck` in `run.py`, called from `_stored_as_evidence` in `memory/slow.py` for each new memory of theirs, never for the companion's own views).
+**The write-time pair check** (`SameCheck` in `run.py`, called from `_stored_as_evidence` in `memory/memory_pass.py` for each new memory of theirs, never for the companion's own views).
 - It embeds any memory that has no vector, embeds the new claim, and takes the single nearest existing memory. If the cosine score is under 0.55 (`GATE`) it stops and asks nothing.
 - Otherwise `system/memory-pair` reads the pair (earlier, later) three times for one of `same`, `merge`, `distinct`, `replaces`, `contradicts`. The reads are stored in `memory_checks` with the other memory's id. If any read failed, nothing is recorded and the memory is stored as usual.
 - Read `same` three times, the memory is not stored as new. In `on` mode its quote is added as evidence on the older memory and the decision "confirmed: the same as an existing memory, stored as evidence on it" is logged. In shadow the decision "would store as evidence on an existing memory (shadow)" is logged and the memory is stored as usual.

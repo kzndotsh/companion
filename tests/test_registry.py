@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.memory import slow
+from companion.memory import memory_pass
 from companion.registry import FEATURES
 from companion.turn.notes import SOURCES
 
@@ -10,8 +10,8 @@ def test_every_feature_part_is_run_where_it_belongs() -> None:
     for f in FEATURES:
         assert (f.note is not None) == (f.name in names), f.name
         if f.after_theirs is not None:
-            assert f.after_theirs in slow.AFTER_THEIRS, f.name
+            assert f.after_theirs in memory_pass.AFTER_THEIRS, f.name
         if f.after_own is not None:
-            assert f.after_own in slow.AFTER_OWN, f.name
+            assert f.after_own in memory_pass.AFTER_OWN, f.name
     assert len({f.name for f in FEATURES}) == len(FEATURES)
     assert not {f.name for f in FEATURES} & (set(names) - {f.name for f in FEATURES if f.note})

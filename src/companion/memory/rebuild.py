@@ -8,7 +8,7 @@ from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId
 from companion.kit.curate import close
-from companion.memory.slow import ReflectOptions, reflect_from
+from companion.memory.memory_pass import PassOptions, memory_pass_from
 from companion.store.sqlite.store import Store
 
 
@@ -21,11 +21,11 @@ async def rebuild(
     them in force. They stay on disk, closed, with the reason logged.
     """
     old = store.user_beliefs(rel)
-    options = ReflectOptions(ignore=frozenset(b.id for b in old), tz=tz)
+    options = PassOptions(ignore=frozenset(b.id for b in old), tz=tz)
     start = None
     added = 0
     while True:
-        result = await reflect_from(store, extractor, rel, start, options)
+        result = await memory_pass_from(store, extractor, rel, start, options)
         if not result.ran:
             break
         added += result.accepted

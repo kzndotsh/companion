@@ -65,4 +65,4 @@ Nothing yet. The owner's session measures both prompts on made-up fixtures befor
 
 ## Tests
 
-`tests/features/history/`, and the memory pass running the step in `tests/memory/test_slow.py`.
+`tests/features/history/`, and the memory pass running the step in `tests/memory/test_memory_pass.py`.

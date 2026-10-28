@@ -738,7 +738,7 @@ These words are used in more than one sense across the repo. Say which one you m
 - **Thread**: a memory kind, or something the companion may bring up.
 - **Promise**: a memory kind, or the companion's own promise.
 - **Check-in**: the gentle note after a heavy talk, or a kind of reminder they asked for.
-- **Loop**: an old name for a thread, the memory pass ("slow loop"), the reply path ("fast loop"), or a timer tick.
+- **Loop**: an old name for a thread, or for the memory pass ("slow loop") and the reply path ("fast loop"), or a timer tick.
 - **Mode**: the /mode command, the views setting, or a setting's value.
 - **Note**: a line for the talker, or the free text on a flag.
 - **Pace**: the typing pause before a reply, or the learned wait between threads.

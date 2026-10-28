@@ -5,12 +5,12 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime
 
-from companion.core.reflect import ReflectRun
+from companion.core.memory_pass import PassRun
 from companion.core.types import RelationshipId, UtteranceId
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
-def record_run(conn: sqlite3.Connection, r: ReflectRun) -> None:
+def record_run(conn: sqlite3.Connection, r: PassRun) -> None:
     with write_tx(conn):
         conn.execute(
             "INSERT INTO reflect_runs (id, relationship_id, upto_at, upto_id, n_utterances,"

@@ -1,4 +1,4 @@
-"""Rebuild exactly what the fast loop saw for one turn.
+"""Rebuild exactly what the reply path saw for one turn.
 
 The ledger is append-only, so the history before a turn never changes after the fact. A turn
 record stores the prefix hash, the volatile context, the memory card and the request hash;

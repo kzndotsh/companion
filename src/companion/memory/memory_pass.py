@@ -1,4 +1,4 @@
-"""The slow loop: read new conversation, record what it revealed, never touch the reply path.
+"""The memory pass: read new conversation, record what it revealed, never touch the reply path.
 
 One pass reads the utterances after the cursor, asks a cheap model for candidate beliefs, and
 keeps only those that pass the quote gate. Every acceptance and rejection is a logged decision.
@@ -38,7 +38,7 @@ from companion.core.beliefs.self_extract import SYSTEM as SELF_SYSTEM
 from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
-from companion.core.reflect import ReflectRun
+from companion.core.memory_pass import PassRun
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -61,7 +61,7 @@ from companion.memory.views import WANT_KINDS, check_views
 from companion.registry import FEATURES
 from companion.store.sqlite.store import Store
 
-log = logging.getLogger("companion.slow")
+log = logging.getLogger("companion.memory")
 BATCH = 40
 CONTEXT = 4
 
@@ -71,7 +71,7 @@ def _id() -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class ReflectOptions:
+class PassOptions:
     now: datetime | None = None
     ignore: frozenset[BeliefId] = frozenset()
     tz: tzinfo | None = None
@@ -84,7 +84,7 @@ class ReflectOptions:
 
 
 @dataclass(frozen=True, slots=True)
-class ReflectResult:
+class PassResult:
     ran: bool
     accepted: int = 0
     rejected: int = 0
@@ -119,8 +119,8 @@ class _Pass:
         ).decide(reason, detail)
 
     def finish(self, last: Utterance, n_utterances: int, **counts: int) -> None:
-        self.store.record_reflect(
-            ReflectRun(
+        self.store.record_pass(
+            PassRun(
                 id=self.run_id,
                 relationship_id=self.rel,
                 upto_at=last.at,
@@ -154,7 +154,7 @@ AFTER_THEIRS: tuple[_Step, ...] = tuple(
 AFTER_OWN: tuple[_Step, ...] = tuple(f.after_own for f in FEATURES if f.after_own is not None)
 
 
-async def reflect_once(  # noqa: PLR0913
+async def memory_pass(  # noqa: PLR0913
     store: Store,
     extractor: StructuredModel,
     rel: RelationshipId,
@@ -165,11 +165,11 @@ async def reflect_once(  # noqa: PLR0913
     embed: tuple[Embedder, str] | None = None,
     loose_loops: bool = False,
     steps: Sequence[_Step] = (),
-) -> ReflectResult:
-    options = ReflectOptions(
+) -> PassResult:
+    options = PassOptions(
         now, same=same, promises=promises, embed=embed, loose_loops=loose_loops, steps=steps
     )
-    return await reflect_from(store, extractor, rel, store.reflect_cursor(rel), options)
+    return await memory_pass_from(store, extractor, rel, store.pass_cursor(rel), options)
 
 
 @dataclass(frozen=True, slots=True)
@@ -346,13 +346,13 @@ async def _extract_pass(
     )
 
 
-async def reflect_from(
+async def memory_pass_from(
     store: Store,
     extractor: StructuredModel,
     rel: RelationshipId,
     start: tuple[datetime, UtteranceId] | None,
-    options: ReflectOptions = ReflectOptions(),  # noqa: B008
-) -> ReflectResult:
+    options: PassOptions = PassOptions(),  # noqa: B008
+) -> PassResult:
     """One batch after `start`. Pass None to read from the beginning, for a re-read.
 
     Two passes over the same batch: beliefs about the user from the user's words, and views the
@@ -362,11 +362,11 @@ async def reflect_from(
     now = options.now or utc_now()
     batch = store.utterances_after(rel, start, BATCH)
     if not batch:
-        return ReflectResult(ran=False)
+        return PassResult(ran=False)
     upto = (batch[-1].at, batch[-1].id)
     last = batch[-1]
     log.debug(
-        "reflect: reading %d messages after %s", len(batch), start[0] if start else "the start"
+        "memory pass: reading %d messages after %s", len(batch), start[0] if start else "the start"
     )
     user_targets = [u for u in batch if u.speaker is Speaker.USER]
     own_targets = [u for u in batch if u.speaker is Speaker.COMPANION]
@@ -374,7 +374,7 @@ async def reflect_from(
     run = _Pass(store, rel, _id(), now, anchor.session_id, anchor.turn_id)
     if not user_targets and not own_targets:
         run.finish(last, len(batch))
-        return ReflectResult(ran=True, upto=upto)
+        return PassResult(ran=True, upto=upto)
     window = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
     local = options.tz or local_zone()
     ctx = _Ctx(store, extractor, run, window, local, options.same)
@@ -421,7 +421,7 @@ async def reflect_from(
     labelled = sum([(await step(store, extractor, rel, now)).cost_usd for step in after])
     if users.accepted and options.embed is not None:
         labelled += await _embed_new(store, rel, now, options.embed)
-    return ReflectResult(
+    return PassResult(
         True,
         users.accepted,
         users.rejected,

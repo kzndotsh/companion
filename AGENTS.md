@@ -48,7 +48,7 @@ Strict ruff and basedpyright, a lefthook pre-commit, and import-linter run on ev
 rules: `core` imports nothing from the shell, only `store`, `lib/sqlite` and a feature's `store.py` import
 `sqlite3`, and `lib` imports nothing from the companion. `core` may import
 `companion.prompts`, which only reads packaged text. Imports point down (`direction` contract):
-`turn/` (the reply path's stages) and `memory/` (slow loop, nightly, rebuild, views) run features, so
+`turn/` (the reply path's stages) and `memory/` (the memory pass, nightly, rebuild, views) run features, so
 they sit above `registry.py` and `features/`; what a feature uses sits below in `kit/` (the turn's
 values and `Runtime`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed`), then `core/`
 (shared vocabulary; `core/turn/` holds the reply path's own pure rules), then `lib/`.
