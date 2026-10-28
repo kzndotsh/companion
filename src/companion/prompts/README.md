@@ -54,7 +54,7 @@ chat, and none of them sees the persona: the ack, frame, reaction, listening and
 check, the intimate check on held turns, the name and pronoun captures, the recall look-up, the extractors for memory,
 the open-loop extractor and the follow-up draft, the reach-out draft, the callback judge, and the view checks. A call the
 judges' model refuses goes to a fallback model, whose answers the floor never relies on. A judge named
-in `COMPANION_JUDGE_MODELS` reads on that model first and the shared judge model second (by default
+in `COMPANION_JUDGE_ROUTES` reads on that model first and the shared judge model second (by default
 the risk judge, on DeepSeek V4.1 Flash; `models/fallback.py` `ByJudge`). Each logs
 `name@version` in its decision.
 

@@ -343,7 +343,7 @@ class Making:
     now: datetime
     tz: tzinfo
     new_id: Callable[[], str]
-    loose: bool = False  # a hedged plan ("maybe") becomes a note-only loop (COMPANION_LOOP_NOTES)
+    loose: bool = False  # a hedged plan ("maybe") becomes a note-only loop (COMPANION_HEDGED_PLANS)
 
 
 def _why_not(

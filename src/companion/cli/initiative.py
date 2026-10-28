@@ -32,7 +32,10 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
         away = [s for s in said if s.label.phase is Phase.LEAVING]
         nudges = store.decisions_with_key(rel, WOULD_NUDGE)
         own = own_reasons.lines(
-            store, rel, (now or utc_now(), local_zone()), dial(Settings.from_env().mode("reach"))
+            store,
+            rel,
+            (now or utc_now(), local_zone()),
+            dial(Settings.from_env().position("reach")),
         )
     finally:
         store.close()

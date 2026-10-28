@@ -47,7 +47,7 @@ class RefusalFallback:
 
 
 class ByJudge:
-    """A model per judge (`COMPANION_JUDGE_MODELS`): a call made while a judge named in `routes` is
+    """A model per judge (`COMPANION_JUDGE_ROUTES`): a call made while a judge named in `routes` is
     asked (`ask`, `read_times`) goes to that judge's extractor, every other call to `shared`. The
     daemon builds each route as its own model first and the shared first model on a refusal
     (2026-10-25: the crisis risk judge reads on DeepSeek, since Haiku's provider refused many crisis

@@ -115,7 +115,7 @@ with `uv run pytest -m live tests/live/test_ack_judge.py -s`. They are skipped i
 `evals/fixtures/crisis/messages.json` holds 40 generic messages, each with a few messages before it
 and the level it should read (concern, urgent, figurative or none). `uv run companion crisis --check
 --cap 0.10` reads each three times with the risk judge (`system/risk`) on the models the bot reads it
-with (`COMPANION_JUDGE_MODELS`, DeepSeek V4.1 Flash first by default), shows the OpenRouter balance
+with (`COMPANION_JUDGE_ROUTES`, DeepSeek V4.1 Flash first by default), shows the OpenRouter balance
 first, refuses when the balance is below the cap, and stops at the cap. It reports the misses (a
 genuine risk read below its level) and the false alarms (a joke, lyric, scene or hyperbole read as a
 risk), and lists every case read at another level. The runner lives in `cli/crisis.py` and

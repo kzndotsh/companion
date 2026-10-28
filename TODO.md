@@ -34,7 +34,7 @@ decision is made; it may be wrong, but never stale.
 Live: persona **v46** (v41 plus that it can send reminders and check-ins when asked) with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
 **Claude Haiku 5.5** with a fallback model for calls it refuses, and a judge may read on its own model first
-(`COMPANION_JUDGE_MODELS`; the crisis judge reads on DeepSeek first). 22 ADRs, 110 public eval fixtures and
+(`COMPANION_JUDGE_ROUTES`; the crisis judge reads on DeepSeek first). 22 ADRs, 110 public eval fixtures and
 40 public crisis cases plus the private recorded ones, and about 1,460 tests with strict lint, types,
 import layers and code rules.
 
@@ -86,7 +86,7 @@ Built and working:
   replies in a row a note asks for none (`notes/question-run`); in a game of questions they started, a note
   asks for the next one (`notes/question-game`). Their emoticon is named as theirs before its own is
   offered. A canned generic reaction is redrawn once (`system/quip` v3; its precision is in question, Q3).
-  A hedged plan of theirs becomes a note-only loop (`COMPANION_LOOP_NOTES`, loose). It asks which pronouns
+  A hedged plan of theirs becomes a note-only loop (`COMPANION_HEDGED_PLANS`, loose). It asks which pronouns
   they use the way it asks a name. A lone short reaction in asterisks no longer starts a scene, and `/mode`
   says which talker answered. A stop answers what was already received before it exits. In shadow: reaching
   out for its own reasons (ADR 0021, review 2026-11-02) and the crisis path (ADR 0022, review 2026-11-04).
@@ -364,7 +364,7 @@ When the answer comes, the card moves to Todo or Done.
       `evals/CHANGELOG.md`. **2026-10-24, first review:** nothing drafted (no firm plan fell due outside the
       chat), so the review moved to 2026-11-03; what it can reach out about is widened by ADR 0021 (R20),
       whose gate, unanswered rule and share it now shares. A hedged plan of theirs is a note-only loop, asked
-      once when they next write and never a reach-out (`COMPANION_LOOP_NOTES`, loose by default).
+      once when they next write and never a reach-out (`COMPANION_HEDGED_PLANS`, loose by default).
       **Waits on:** the review of 2026-11-03, then A6, J27 and J35 before going live.
 - [ ] R1b Nudges after stepping away (owner's choice: the looser rule B, also without "brb"). Built in
       shadow 2026-10-20: when they say they are leaving now and stay quiet twice as long and an hour, one
@@ -395,7 +395,7 @@ When the answer comes, the card moves to Todo or Done.
       **Built in shadow 2026-10-24** (`COMPANION_CRISIS=shadow`, `companion crisis`): logs each level and what
       it would do, changes nothing. Having the thoughts now reads as concern, not urgent (39 of 40 public
       cases exact, none missed, no joke raised, three runs). Haiku's provider refused many crisis reads, so the
-      risk judge reads on DeepSeek first by default (`COMPANION_JUDGE_MODELS`; 40 of 40 with no refusals). The
+      risk judge reads on DeepSeek first by default (`COMPANION_JUDGE_ROUTES`; 40 of 40 with no refusals). The
       owner keeps the generic urgent message for now; a sheet may add its own (`## Crisis message`). Region
       waits on R18. **Waits on:** the review of 2026-11-04 (fixtures pass, no false alarm in real chat), then
       the owner turns it on. (A25)
@@ -800,7 +800,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       the canned-reaction set ($0.31). Haiku kept; the real gaps were memory rules (Luna, DeepSeek), Haiku's
       crisis refusals and canned-reaction recall. The reminder reader's schema let a model fill unsaid
       fields with 0 ("this evening" read as midnight): 32 to 40 of 41 after the fix (2691f18).
-- [x] A judge can read on its own model first (`COMPANION_JUDGE_MODELS`); the crisis judge reads on DeepSeek
+- [x] A judge can read on its own model first (`COMPANION_JUDGE_ROUTES`); the crisis judge reads on DeepSeek
       first by default, 40 of 40 cases right with no refusals (c32f571).
 - [x] The canned-reaction labels relabelled by two blind raters: the judge's precision is 35 to 55%, not 88%;
       two doubtful live-test expectations fixed (8d83059). The judge is not changed yet (Q3).
@@ -828,7 +828,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 - [x] A canned generic reaction is redrawn once (`system/quip` v3, 2297076); its precision was later found
       lower than measured (2026-10-25, Q3).
 - [x] A hedged plan of theirs becomes a note-only loop, asked once when they next write, never a reach-out
-      (`COMPANION_LOOP_NOTES`, loose by default, 7b06d22).
+      (`COMPANION_HEDGED_PLANS`, loose by default, 7b06d22).
 - [x] It asks which pronouns they use the way it asks a name, and birthday and school join the hook's basics
       in shadow (74445fa).
 - [x] Scenes: a lone short reaction in asterisks starts no scene and `/mode` says which talker answered

@@ -26,7 +26,7 @@ def _store(tmp_path: Path) -> Store:
 
 
 def _marks(store: Store) -> Any:
-    return chat_commands(store, REL, None, Settings.from_env({"COMPANION_SURFACE": "discord"}))  # type: ignore[arg-type]
+    return chat_commands(store, REL, None, Settings.from_env({"COMPANION_PLATFORM": "discord"}))  # type: ignore[arg-type]
 
 
 async def test_a_mark_sent_as_a_reply_lands_on_the_turn_of_that_message(tmp_path: Path) -> None:

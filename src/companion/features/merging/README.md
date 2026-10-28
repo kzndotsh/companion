@@ -18,7 +18,7 @@ Finds memories about one thing (one moment split into pieces, one interest resta
 - Pick records which members belong together, by number. The next nightly or `group` run calls `repick`, which writes the wording for just those members and proposes them again alone (if every member is still current and that set was not asked before).
 - A note keeps the proposal open for another time. Keep apart closes it. A proposal whose memories have since closed is marked gone.
 
-Spend is tagged `consolidate`, which is also the name `COMPANION_JUDGE_MODELS` uses to route the three grouping reads (the wording call uses the shared judge model). The grouping judge can propose looser groups, such as two related likes, and those are the owner's to keep apart.
+Spend is tagged `consolidate`, which is also the name `COMPANION_JUDGE_ROUTES` uses to route the three grouping reads (the wording call uses the shared judge model). The grouping judge can propose looser groups, such as two related likes, and those are the owner's to keep apart.
 
 ## Files
 

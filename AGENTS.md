@@ -4,7 +4,7 @@ Read this first. `CLAUDE.md` is a symlink to this file, so every agent sees the 
 
 ## What this is
 
-A Telegram (or Discord, `COMPANION_SURFACE`) companion bot that tries to be the most human-like AI
+A Telegram (or Discord, `COMPANION_PLATFORM`) companion bot that tries to be the most human-like AI
 companion, plus the memory engine under it. One person talks to it, marks a reply `/flag` when it feels off and `/fav` when it
 delights, and those marks set priorities. It runs from `src/companion`. It is a single-user
 project: the bot runs on the owner's machine, and the repo is pushed to a GitHub remote (`origin`).
@@ -152,7 +152,7 @@ together.
 - Ask a small model the same question several times with `kit/reads.py` `read_times` (each failed or
   unreadable read is None) and count agreement with `lib/vote.py` (`READS`, `unanimous`); a
   feature states what a failed read means for it (no agreement, or try the batch again later).
-- Judges share one model (Haiku, DeepSeek on a refusal) unless `COMPANION_JUDGE_MODELS` names the judge
+- Judges share one model (Haiku, DeepSeek on a refusal) unless `COMPANION_JUDGE_ROUTES` names the judge
   (by its `Judge` name or `read_times` `spend`); then it reads on that model first and Haiku second
   (`models/fallback.py` `ByJudge`; by default the crisis judge reads on DeepSeek). Route a judge there, never by choosing a model in a feature.
 - Record a decision through `kit/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,

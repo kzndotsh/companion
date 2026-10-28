@@ -44,7 +44,7 @@ async def read_times[T](  # noqa: PLR0913
     timeout: float | None = None,
 ) -> Reads[T]:
     """The same question asked `times` times at once; with a timeout, a read slower than that many
-    seconds is a None read. `spend` also names the judge for `COMPANION_JUDGE_MODELS`."""
+    seconds is a None read. `spend` also names the judge for `COMPANION_JUDGE_ROUTES`."""
 
     async def one() -> tuple[T | None, float, str]:
         try:

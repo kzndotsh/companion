@@ -23,7 +23,7 @@ Code then applies the gate, over earlier hook decisions:
 If the gate passes, a stricter judge (`system/basics-known`, 5 s) reads the beliefs the recall look-up may use
 (stated for real, sensitivity 2 or less) for that topic (`TOPIC`, one per basic) and returns the ones that state
 the fact outright. A
-failed or slow read ends the turn with nothing logged. Both judges are named `hook` for `COMPANION_JUDGE_MODELS`.
+failed or slow read ends the turn with nothing logged. Both judges are named `hook` for `COMPANION_JUDGE_ROUTES`.
 
 The result is logged as a policy decision. `hook (shadow): would ask about a basic their words touched` means
 memory held nothing. `hook (shadow): memory already holds the basic their words touched` means it did. The

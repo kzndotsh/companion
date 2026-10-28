@@ -132,7 +132,7 @@ async def test_repeats_become_one_thread_and_different_plans_stay_apart(tmp_path
                     targets,
                     when,
                     lambda r, d: None,
-                    loose=True,  # as the bot runs (COMPANION_LOOP_NOTES=loose)
+                    loose=True,  # as the bot runs (COMPANION_HEDGED_PLANS=loose)
                 )
                 made = len(store.open_loops(REL)) - before
                 total += 1

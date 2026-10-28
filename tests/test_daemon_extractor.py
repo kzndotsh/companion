@@ -40,13 +40,13 @@ def _openrouter(asked: list[str], refuse: frozenset[str]) -> httpx.AsyncClient:
 @pytest.fixture(autouse=True)
 def _env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
-    monkeypatch.delenv("COMPANION_REFLECT_MODEL", raising=False)
-    monkeypatch.delenv("COMPANION_FALLBACK_MODEL", raising=False)
+    monkeypatch.delenv("COMPANION_JUDGE_MODEL", raising=False)
+    monkeypatch.delenv("COMPANION_JUDGE_STANDBY", raising=False)
 
 
 async def test_by_default_the_risk_judge_reads_on_deepseek_and_haiku_answers_a_refusal() -> None:
     asked: list[str] = []
-    routes = Settings.from_env({}).judge_models
+    routes = Settings.from_env({}).judge_routes
     async with _openrouter(asked, frozenset()) as client:
         got = await read_risk(daemon.extractor(client, routes), [(Speaker.USER, "hi")], "ugh")
     assert asked == [DEEPSEEK] * 3
@@ -55,16 +55,16 @@ async def test_by_default_the_risk_judge_reads_on_deepseek_and_haiku_answers_a_r
     asked.clear()
     async with _openrouter(asked, frozenset({DEEPSEEK})) as client:
         got = await read_risk(daemon.extractor(client, routes), [], "ugh")
-    assert asked.count(daemon.REFLECT_MODEL) == 3
-    assert got.model == daemon.REFLECT_MODEL + FALLBACK
+    assert asked.count(daemon.JUDGE_MODEL) == 3
+    assert got.model == daemon.JUDGE_MODEL + FALLBACK
 
 
 async def test_other_judges_stay_on_haiku_with_deepseek_behind_it() -> None:
     asked: list[str] = []
-    routes = Settings.from_env({}).judge_models
-    async with _openrouter(asked, frozenset({daemon.REFLECT_MODEL})) as client:
+    routes = Settings.from_env({}).judge_routes
+    async with _openrouter(asked, frozenset({daemon.JUDGE_MODEL})) as client:
         got = await read_times(
             daemon.extractor(client, routes), "s", "u", {}, lambda d: d, spend="worth", times=1
         )
-    assert asked == [daemon.REFLECT_MODEL, daemon.FALLBACK_MODEL]
-    assert got.model == daemon.FALLBACK_MODEL + FALLBACK
+    assert asked == [daemon.JUDGE_MODEL, daemon.JUDGE_STANDBY]
+    assert got.model == daemon.JUDGE_STANDBY + FALLBACK

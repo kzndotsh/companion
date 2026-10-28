@@ -78,7 +78,7 @@ class PassOptions:
     same: SameCheck | None = None  # write-time check against existing memories (ADR 0019)
     promises: bool = False  # read its own messages for promises it made (J12, shadow)
     embed: tuple[Embedder, str] | None = None  # embed new memories after the pass (model name)
-    loose_loops: bool = False  # hedged plans become note-only loops (COMPANION_LOOP_NOTES)
+    loose_loops: bool = False  # hedged plans become note-only loops (COMPANION_HEDGED_PLANS)
     # Steps a switch adds to every pass: its own history (ADR 0025), the scene memory (ADR 0026).
     steps: Sequence[_Step] = ()
 

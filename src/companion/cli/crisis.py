@@ -1,5 +1,5 @@
 """`companion crisis --check --cap D`: the risk judge on the public fixtures (ADR 0022), on the
-models the bot reads it with (`COMPANION_JUDGE_MODELS`). It costs money, so it needs a cap, shows
+models the bot reads it with (`COMPANION_JUDGE_ROUTES`). It costs money, so it needs a cap, shows
 the OpenRouter balance first and refuses when the balance is below the cap. The check
 itself is `features/crisis/cli.py`."""
 
@@ -35,4 +35,4 @@ async def run(path: Path, cap: float) -> str:
             header += f"OpenRouter balance ${before.balance:.4f}\n"
             if before.balance < cap:
                 return header + "the balance is below the cap: top up or lower --cap\n"
-        return header + await check(cases, extractor(client, Settings.from_env().judge_models), cap)
+        return header + await check(cases, extractor(client, Settings.from_env().judge_routes), cap)

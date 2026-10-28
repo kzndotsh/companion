@@ -211,7 +211,7 @@ def _parser() -> argparse.ArgumentParser:
     _db_args(ev, relationship=False)
     run = sub.add_parser(
         "run",
-        help="talk to the companion on Telegram, or on Discord with COMPANION_SURFACE=discord",
+        help="talk to the companion on Telegram, or on Discord with COMPANION_PLATFORM=discord",
     )
     run.add_argument("--data", type=Path, default=Path("data"))
     return parser

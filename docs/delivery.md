@@ -1,6 +1,6 @@
 # Sending and receiving
 
-How a message comes in and how a reply goes out, on Telegram or on Discord. `COMPANION_SURFACE`
+How a message comes in and how a reply goes out, on Telegram or on Discord. `COMPANION_PLATFORM`
 picks one at start: `telegram` (the default) or `discord`. Only one runs at a time. Either way it is
 the same companion with the same memory: one relationship, one database, and each message is stored
 with the surface it came over (`telegram` or `discord`).
@@ -97,7 +97,7 @@ stored beside it. The model then reads only what was actually seen.
    Then open a direct message with it.
 3. Find your own user id: in Discord's settings turn on **Advanced > Developer Mode**, then
    right-click your name and choose **Copy User ID**.
-4. In `.env`, set `COMPANION_SURFACE=discord`, `DISCORD_BOT_TOKEN` to the token and
+4. In `.env`, set `COMPANION_PLATFORM=discord`, `DISCORD_BOT_TOKEN` to the token and
    `DISCORD_USER_ID` to your id. Keep `TELEGRAM_USER_ID`: it names the relationship and its
    database, so the companion remembers the same things. Then `just restart` and check that the
    "up as" line says `surface discord`.

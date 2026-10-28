@@ -10,7 +10,7 @@ An AI companion that tries to be as human-like as we can make it, and the memory
 
 It talks like a friend who knows you. It remembers what you told it and who said it, notices when something is serious, keeps pace like someone typing, and can tell a story, a game and the real you apart. Everything it does is logged with a reason, so any reply can be replayed and explained.
 
-It is reached through Telegram or Discord, one at a time (`COMPANION_SURFACE`), with the same memory on either.
+It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`), with the same memory on either.
 
 ## What it does
 
@@ -134,7 +134,7 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_SURFACE`), 
 - **Never goes silent.** If the talker errors, or has not answered in ten seconds, a fallback model
   answers too and the first reply wins.
 - **Judges per model.** The judges share one small model, with a second for calls it refuses; a judge
-  can be given its own model (`COMPANION_JUDGE_MODELS`), and the crisis risk judge reads on DeepSeek
+  can be given its own model (`COMPANION_JUDGE_ROUTES`), and the crisis risk judge reads on DeepSeek
   first, since the shared model's provider refused many crisis messages.
 - **Stops without losing a message.** On a stop or restart it fetches nothing more and answers what it
   already received, the reply in progress included, for up to 30 seconds.
@@ -188,7 +188,7 @@ To talk on Discord instead, add the three lines below (setup: [docs/delivery.md]
 and the same memory on either surface.
 
 ```bash
-COMPANION_SURFACE=discord
+COMPANION_PLATFORM=discord
 DISCORD_BOT_TOKEN=...       # from the Discord Developer Portal
 DISCORD_USER_ID=...         # the one Discord user the bot answers
 ```
@@ -205,19 +205,20 @@ setting with its value.
 
 ### Settings
 
-All optional. Set them in `.env`.
+All optional. Set them in `.env`. A setting that was renamed and is still set under its old name
+stops the bot at start with its new name (`RENAMED` in `settings.py`).
 
 <details>
 <summary><b>Models</b> (7): which model talks, judges and embeds</summary>
 
 | Variable | Default | What it does |
 |---|---|---|
-| `COMPANION_MODEL` | `openai/gpt-6-luna` | the everyday talker |
+| `COMPANION_EVERYDAY_MODEL` | `openai/gpt-6-luna` | the everyday talker |
 | `COMPANION_ROLEPLAY_MODEL` | `deepseek/deepseek-v4.1-flash` | pretend scenes, and intimate talk when allowed; `none` uses the everyday model |
-| `COMPANION_TALKER_FALLBACK` | the roleplay model | answers when the everyday talker errors or has not replied in 10 s (first answer wins); the roleplay talker falls back to the everyday model; `none` turns it off |
-| `COMPANION_REFLECT_MODEL` | `anthropic/claude-haiku-5.5` | the judges and the memory pass, except a judge named in `COMPANION_JUDGE_MODELS` |
-| `COMPANION_FALLBACK_MODEL` | `deepseek/deepseek-v4.1-flash` | asked only when the judges' model refuses a call; the floor never relies on its answers; `none` disables it |
-| `COMPANION_JUDGE_MODELS` | `crisis=deepseek/deepseek-v4.1-flash` | a model per judge, as `judge=provider/model` pairs separated by commas: a judge named here reads on that model first and on the judges' model when it refuses (that answer counts as the fallback's). The default puts the crisis risk judge on DeepSeek, since Haiku's provider refuses many crisis messages; `none` sends every judge to the judges' model. A malformed value stops the bot at start |
+| `COMPANION_EVERYDAY_STANDBY` | the roleplay model | answers when the everyday talker errors or has not replied in 10 s (first answer wins); the roleplay talker's standby is the everyday model; `none` turns it off |
+| `COMPANION_JUDGE_MODEL` | `anthropic/claude-haiku-5.5` | the judges and the memory pass, except a judge named in `COMPANION_JUDGE_ROUTES` |
+| `COMPANION_JUDGE_STANDBY` | `deepseek/deepseek-v4.1-flash` | asked only when the judges' model refuses a call; the floor never relies on its answers; `none` disables it |
+| `COMPANION_JUDGE_ROUTES` | `crisis=deepseek/deepseek-v4.1-flash` | a model per judge, as `judge=provider/model` pairs separated by commas: a judge named here reads on that model first and on the judges' model when it refuses (that answer counts as the fallback's). The default puts the crisis risk judge on DeepSeek, since Haiku's provider refuses many crisis messages; `none` sends every judge to the judges' model. A malformed value stops the bot at start |
 | `COMPANION_EMBED_MODEL` | `openai/text-embedding-3-small` | embeddings for the memory look-up and the repeat check |
 
 </details>
@@ -232,13 +233,13 @@ All optional. Set them in `.env`.
 | `COMPANION_LISTEN` | on | the listening note before each reply; `off` turns it off |
 | `COMPANION_MOOD` | `shadow` | `on` adds the mood line, `shadow` works it out and logs it, `off` does neither |
 | `COMPANION_RESAMPLE` | on | a reply that fails a check is drawn once more; `off` disables it |
-| `COMPANION_SURFACE` | `telegram` | which chat it runs on: `telegram` (needs `TELEGRAM_BOT_TOKEN`) or `discord` (needs `DISCORD_BOT_TOKEN` and `DISCORD_USER_ID`); one at a time, one relationship and one memory either way |
+| `COMPANION_PLATFORM` | `telegram` | which chat it runs on: `telegram` (needs `TELEGRAM_BOT_TOKEN`) or `discord` (needs `DISCORD_BOT_TOKEN` and `DISCORD_USER_ID`); one at a time, one relationship and one memory either way |
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow` |
 | `COMPANION_SPLIT` | on | long plain replies are sometimes sent as two or three messages; `off` stops it |
 | `COMPANION_RELEVANCE` | `on` | memories that bear on their message, picked when one is near and shown to it (ADR 0018); `shadow` only logs, `off` stops it |
 | `COMPANION_EPISODES` | `on` | what the two of them did recently, shown when they point at a time or come back after a gap (J12); `shadow` only logs, `off` stops it |
 | `COMPANION_MARKS` | `on` | one of its own emoticons offered after the history on casual turns: always when their message has one, else about one in four; never theirs or a recent one (`features/marks`); `off` stops it |
-| `COMPANION_LOOP_NOTES` | `loose` | a hedged plan of theirs ("may watch a movie tonight") becomes a note-only loop, asked once when they next write and never a reach-out (`features/threads`); `off` keeps only firm plans |
+| `COMPANION_HEDGED_PLANS` | `loose` | a hedged plan of theirs ("may watch a movie tonight") becomes a note-only loop, asked once when they next write and never a reach-out (`features/threads`); `off` keeps only firm plans |
 | `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
 | `COMPANION_CALENDAR` | `on` | one note after the history on a casual turn about the day: a US public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years (`features/calendar`); `off` stops it |
 | `COMPANION_NOW` | `shadow` | what they said is coming, kept until it happens (ADR 0024): `on` sends one line after the history while it is open ("about 2 minutes ago they said dinner is coming soon; it has not happened unless they say so"), `shadow` logs the line and sends nothing, `off` stops the note; the reader also runs while reaching out is on, for nudges |

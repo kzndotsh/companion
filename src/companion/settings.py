@@ -20,10 +20,21 @@ ROLEPLAY_MODEL = "deepseek/deepseek-v4.1-flash"
 DEFAULT_DAILY_CAP_USD = 10.0
 # The crisis risk judge reads on DeepSeek first: Haiku's provider refused many crisis messages
 # (judge bake-off, evals/CHANGELOG.md, 2026-10-25). Haiku answers when DeepSeek refuses.
-JUDGE_MODELS = "crisis=deepseek/deepseek-v4.1-flash"
+JUDGE_ROUTES = "crisis=deepseek/deepseek-v4.1-flash"
 
 OFF = frozenset({"off", "0", "no", "false"})
 ON = frozenset({"on", "1", "yes", "true"})
+# Settings that were renamed (vocabulary audit, kzndotsh/companion#1). An old name still set stops
+# the bot with the new one, so a stale .env line is never silently read as the default.
+RENAMED = {
+    "COMPANION_SURFACE": "COMPANION_PLATFORM",
+    "COMPANION_MODEL": "COMPANION_EVERYDAY_MODEL",
+    "COMPANION_TALKER_FALLBACK": "COMPANION_EVERYDAY_STANDBY",
+    "COMPANION_REFLECT_MODEL": "COMPANION_JUDGE_MODEL",
+    "COMPANION_FALLBACK_MODEL": "COMPANION_JUDGE_STANDBY",
+    "COMPANION_JUDGE_MODELS": "COMPANION_JUDGE_ROUTES",
+    "COMPANION_LOOP_NOTES": "COMPANION_HEDGED_PLANS",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,7 +52,7 @@ class Switch:
 
 # In the order they appear on the startup line.
 SWITCHES: tuple[Switch, ...] = (
-    Switch("COMPANION_SURFACE", "surface", ("telegram", "discord")),  # which chat it runs on
+    Switch("COMPANION_PLATFORM", "platform", ("telegram", "discord")),  # which chat it runs on
     Switch("COMPANION_SPLIT", "split", ("on", "off")),
     Switch("COMPANION_LISTEN", "listen", ("on", "off")),
     Switch("COMPANION_INITIATIVE", "initiative", ("shadow", "off")),
@@ -57,7 +68,7 @@ SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_REMINDERS", "reminders", ("on", "off")),
     Switch("COMPANION_EPISODES", "episodes", ("on", "shadow", "off")),
     Switch("COMPANION_MARKS", "marks", ("on", "off")),
-    Switch("COMPANION_LOOP_NOTES", "loop notes", ("loose", "off"), {"off": "strict"}),
+    Switch("COMPANION_HEDGED_PLANS", "hedged plans", ("loose", "off"), {"off": "strict"}),
     Switch("COMPANION_REACH", "reach", ("warm", "off", "rare", "light", "normal", "clingy")),
     Switch("COMPANION_CRISIS", "crisis", ("shadow", "on", "off")),
     Switch("COMPANION_CALENDAR", "calendar", ("on", "off")),
@@ -80,8 +91,8 @@ def _daily_cap(raw: str) -> float | None:
     return value if value > 0 else None
 
 
-def _judge_models(raw: str) -> Mapping[str, str]:
-    """COMPANION_JUDGE_MODELS, `judge=provider/model` pairs separated by commas; "none" or "off"
+def _judge_routes(raw: str) -> Mapping[str, str]:
+    """COMPANION_JUDGE_ROUTES, `judge=provider/model` pairs separated by commas; "none" or "off"
     sends every judge to the shared model. Anything else stops the bot with what is wrong."""
     if raw.strip().lower() in ("none", "off", ""):
         return {}
@@ -91,7 +102,7 @@ def _judge_models(raw: str) -> Mapping[str, str]:
         provider, slash, rest = model.partition("/")
         if not (sep and name and provider and slash and rest) or name in out or " " in model:
             msg = (
-                f"COMPANION_JUDGE_MODELS: {pair.strip()!r} is not judge=provider/model"
+                f"COMPANION_JUDGE_ROUTES: {pair.strip()!r} is not judge=provider/model"
                 " (or the judge is named twice)"
             )
             raise SystemExit(msg)
@@ -107,39 +118,42 @@ class Settings:
     openrouter: bool  # whether an OpenRouter key is set
     everyday_model: str
     roleplay_model: str | None  # None: the everyday model plays scenes too
-    talker_fallback: str | None  # answers when the everyday talker fails or stalls (J21)
+    everyday_standby: str | None  # answers when the everyday talker fails or stalls (J21)
     embed_model: str
-    judge_models: Mapping[str, str]  # judge name to the model it reads on first
+    judge_routes: Mapping[str, str]  # judge name to the model it reads on first
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> Settings:
         env = os.environ if environ is None else environ
+        stale = [f"{old} is now {new}" for old, new in RENAMED.items() if old in env]
+        if stale:
+            raise SystemExit("renamed settings, change them in .env: " + "; ".join(stale))
         has_key = bool(env.get("OPENROUTER_API_KEY"))
         roleplay = env.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
-        fallback = env.get("COMPANION_TALKER_FALLBACK", "").strip()
+        standby = env.get("COMPANION_EVERYDAY_STANDBY", "").strip()
         pace = env.get("COMPANION_PACE", "").strip().lower()
         return cls(
             switches={s.label: s.read(env) for s in SWITCHES},
             daily_cap=_daily_cap(env.get("COMPANION_DAILY_CAP_USD", "")),
             pace=pace if pace in PACES else DEFAULT_PACE,
             openrouter=has_key,
-            everyday_model=env.get("COMPANION_MODEL")
+            everyday_model=env.get("COMPANION_EVERYDAY_MODEL")
             or (openrouter.DEFAULT_MODEL if has_key else anthropic.DEFAULT_MODEL),
             roleplay_model=None if roleplay.lower() == "none" or not has_key else roleplay,
-            talker_fallback=None
-            if not has_key or fallback.lower() == "none"
-            else fallback or roleplay,
+            everyday_standby=None
+            if not has_key or standby.lower() == "none"
+            else standby or roleplay,
             embed_model=env.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
-            judge_models=_judge_models(env.get("COMPANION_JUDGE_MODELS", JUDGE_MODELS)),
+            judge_routes=_judge_routes(env.get("COMPANION_JUDGE_ROUTES", JUDGE_ROUTES)),
         )
 
-    def mode(self, label: str) -> str:
-        """A switch's value: on, off or shadow."""
+    def position(self, label: str) -> str:
+        """A switch's position: on, off or shadow, or the value it names."""
         return self.switches[_BY_LABEL[label].label]
 
     def on(self, label: str) -> bool:
         """Whether a switch is anything but off."""
-        return self.mode(label) != "off"
+        return self.position(label) != "off"
 
     @property
     def cap_text(self) -> str:
@@ -154,8 +168,8 @@ class Settings:
         out = [
             f"roleplay {self.roleplay_model or 'the same model'}",
             *(
-                [f"judges {','.join(f'{k}={v}' for k, v in self.judge_models.items())}"]
-                if self.judge_models
+                [f"judges {','.join(f'{k}={v}' for k, v in self.judge_routes.items())}"]
+                if self.judge_routes
                 else []
             ),
             f"daily cap {self.cap_text}",
@@ -165,5 +179,5 @@ class Settings:
             value = self.switches[s.label]
             out.append(f"{s.label} {(s.shown or {}).get(value, value)}")
             if s.label == "relevance":
-                out.append(f"talker fallback {self.talker_fallback or 'off'}")
+                out.append(f"everyday standby {self.everyday_standby or 'off'}")
         return out

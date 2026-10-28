@@ -1,4 +1,4 @@
-"""Wires the pieces together and runs the chat surface `COMPANION_SURFACE` names, Telegram or
+"""Wires the pieces together and runs the chat surface `COMPANION_PLATFORM` names, Telegram or
 Discord. Either way it is one relationship and one database. Settings come from `settings.py`; keys
 and tokens are read here, where the clients are made."""
 
@@ -62,8 +62,8 @@ from companion.turn.mode import mode_report
 
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
-FALLBACK_MODEL = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
-REFLECT_MODEL = "anthropic/claude-haiku-5.5"
+JUDGE_STANDBY = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
+JUDGE_MODEL = "anthropic/claude-haiku-5.5"
 UPDATE_KEY = "telegram.last_update_id"
 UNKNOWN_REPLY = (
     "can't tell which reply that was (it's from before i kept track), so nothing was marked."
@@ -98,13 +98,13 @@ def extractor(
     client: httpx.AsyncClient, routes: Mapping[str, str] | None = None
 ) -> StructuredModel:
     """The judges' and the memory pass's model, with a second model for calls the first refuses.
-    With `routes` (judge name to model, `COMPANION_JUDGE_MODELS`), a judge named there reads on its
+    With `routes` (judge name to model, `COMPANION_JUDGE_ROUTES`), a judge named there reads on its
     own model first and on the shared first model when that one refuses (`ByJudge`)."""
     key = _need("OPENROUTER_API_KEY")
     first = openrouter.OpenRouterExtractor(
-        key, client, os.environ.get("COMPANION_REFLECT_MODEL", REFLECT_MODEL)
+        key, client, os.environ.get("COMPANION_JUDGE_MODEL", JUDGE_MODEL)
     )
-    second = os.environ.get("COMPANION_FALLBACK_MODEL", FALLBACK_MODEL)
+    second = os.environ.get("COMPANION_JUDGE_STANDBY", JUDGE_STANDBY)
     shared: StructuredModel = (
         first
         if second.lower() == "none"
@@ -179,7 +179,7 @@ def _metered_models(
         store.record_spend(rel, event, datetime.now(UTC))
 
     scene = _roleplay_talker(client, s)
-    fallback = s.talker_fallback
+    fallback = s.everyday_standby
     talker = _with_fallback(client, _talker(client, s), fallback)
     roleplay = (
         _with_fallback(client, scene, s.everyday_model if fallback else None) if scene else None
@@ -187,7 +187,7 @@ def _metered_models(
     return (
         MeteredTalker(talker, sink, "talker"),
         MeteredTalker(roleplay, sink, "roleplay talker") if roleplay is not None else None,
-        MeteredExtractor(extractor(client, s.judge_models), sink, "judge"),
+        MeteredExtractor(extractor(client, s.judge_routes), sink, "judge"),
         MeteredExtractor(extractor(client), sink, "memory"),
     )
 
@@ -245,7 +245,7 @@ def chat_commands(
     def marked(replied_to: str | None) -> TurnId | None:
         if replied_to is None:
             return store.latest_turn(rel)
-        return store.turn_of_message(rel, s.mode("surface"), replied_to)
+        return store.turn_of_message(rel, s.position("platform"), replied_to)
 
     async def flag(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
         turn = marked(replied_to)
@@ -295,7 +295,7 @@ async def _nightly_memory(
     async def run() -> None:
         if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
             return
-        failed = await night(store, judge, rel, local_zone(), mode=s.mode("memory check"))
+        failed = await night(store, judge, rel, local_zone(), mode=s.position("memory check"))
         if failed:
             logging.getLogger("companion.nightly").warning("nightly: %s failed", ", ".join(failed))
 
@@ -326,7 +326,7 @@ def _start_initiative(
     if not s.on("initiative"):
         return None
     ticker, draft = Ticker(), drafter(judge)
-    reacher = Reacher(dial(s.mode("reach")), judge, s.daily_cap)
+    reacher = Reacher(dial(s.position("reach")), judge, s.daily_cap)
     log = logging.getLogger("companion.initiative")
 
     async def loop() -> None:
@@ -362,7 +362,12 @@ def _start_reminders(
             await asyncio.sleep(REMINDER_TICK_SECONDS)
             try:
                 await deliver_due(
-                    runtime, transport.send, SESSION, utc_now(), started, channel=s.mode("surface")
+                    runtime,
+                    transport.send,
+                    SESSION,
+                    utc_now(),
+                    started,
+                    channel=s.position("platform"),
                 )
             except Exception:
                 log.exception("reminder tick failed; will try again next time")
@@ -374,9 +379,9 @@ def _start_reminders(
 async def _surface(
     s: Settings, client: httpx.AsyncClient, store: Store, rel: RelationshipId, commands: Commands
 ) -> AsyncGenerator[Surface]:
-    """The surface `COMPANION_SURFACE` names, ready to send, with its own resume point. On Discord
+    """The surface `COMPANION_PLATFORM` names, ready to send, with its own resume point. On Discord
     the commands are slash commands too."""
-    if s.mode("surface") == "discord":
+    if s.position("platform") == "discord":
         token, user = _need("DISCORD_BOT_TOKEN"), int(_need("DISCORD_USER_ID"))
         synced = discord.Synced(
             lambda: store.setting(rel, COMMANDS_KEY),
@@ -417,28 +422,28 @@ async def run(data_dir: Path) -> None:
             roleplay_talker=scene,
             daily_cap_usd=s.daily_cap,
             listen=s.on("listen"),
-            mood=s.mode("mood"),
+            mood=s.position("mood"),
             resample=s.on("resample"),
             route_intimate=s.on("intimate"),
             roleplay_prefix=roleplay_prefix,
             scene_reminder=character.scene_reminder if character is not None else "",
             embedder=_embedder(client, store, rel, s),
             embed_model=s.embed_model,
-            lore=s.mode("lore"),
-            relevance=s.mode("relevance"),
+            lore=s.position("lore"),
+            relevance=s.position("relevance"),
             reminders=s.on("reminders"),
-            episodes=s.mode("episodes"),
+            episodes=s.position("episodes"),
             marks=s.on("marks"),
             calendar=s.on("calendar"),
             initiative=s.on("initiative"),
-            crisis=s.mode("crisis"),
-            now=s.mode("now"),
-            history=s.mode("history"),
-            scene_memory=s.mode("scene"),
+            crisis=s.position("crisis"),
+            now=s.position("now"),
+            history=s.position("history"),
+            scene_memory=s.position("scene"),
             serious_message=character.serious if character is not None else "",
         )
         same = (
-            SameCheck(judges, runtime.embedder, runtime.embed_model, s.mode("memory check"))
+            SameCheck(judges, runtime.embedder, runtime.embed_model, s.position("memory check"))
             if runtime.embedder is not None and s.on("memory check")
             else None
         )
@@ -446,8 +451,8 @@ async def run(data_dir: Path) -> None:
         steps = [
             step
             for step in (
-                pass_step(s.mode("history"), character.sheet if character is not None else ""),
-                scene_step(s.mode("scene")),
+                pass_step(s.position("history"), character.sheet if character is not None else ""),
+                scene_step(s.position("scene")),
             )
             if step is not None
         ]
@@ -515,7 +520,12 @@ async def run(data_dir: Path) -> None:
 
         async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
             reply = await handle(
-                runtime, SESSION, msg.text, s.mode("surface"), quoted=msg.quoted, message_id=msg.id
+                runtime,
+                SESSION,
+                msg.text,
+                s.position("platform"),
+                quoted=msg.quoted,
+                message_id=msg.id,
             )
             schedule_reflect()
             return reply

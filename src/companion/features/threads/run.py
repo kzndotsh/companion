@@ -306,7 +306,7 @@ class Reading:
     context: int
     batches: int = 3
     promises: OwnReader | None = None  # also reads its own messages, for promises (J12, shadow)
-    loose: bool = False  # hedged plans become note-only loops (COMPANION_LOOP_NOTES=loose)
+    loose: bool = False  # hedged plans become note-only loops (COMPANION_HEDGED_PLANS=loose)
 
 
 async def catch_up_loops(  # noqa: PLR0913, PLR0917
