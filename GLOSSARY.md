@@ -308,7 +308,7 @@ Their saying something memory already holds; the new quote is added to the old m
 _Avoid_: duplicate
 
 **Memory kind**:
-What sort of claim a memory is: trait, state, event, preference, thread, boundary, tell, promise (one the companion made) or inner (feelings, health, struggles, desires). It sets how long the memory stays fresh.
+What sort of claim a memory is: trait, state, event, preference, thread, boundary, tell or promise (one the companion made). It sets how long the memory stays fresh.
 
 **Freshness**:
 Whether a memory is fresh, aging or stale, from the age of its newest quote.
