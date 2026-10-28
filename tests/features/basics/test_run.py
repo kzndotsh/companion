@@ -20,9 +20,9 @@ from companion.core.types import (
 )
 from companion.features.basics.logic import ASK_NAME, ASK_PRONOUNS, ASKED, ASKED_PRONOUNS
 from companion.features.basics.run import basics_offer, capture_pronouns
-from companion.loops.current import Turn
-from companion.loops.features import Lookups, Moment, Offer
-from companion.loops.runtime import Runtime
+from companion.kit.current import Turn
+from companion.kit.features import Lookups, Moment, Offer
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 

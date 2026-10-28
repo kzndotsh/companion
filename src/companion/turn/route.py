@@ -15,14 +15,14 @@ from companion.core.types import (
     Json,
     Speaker,
 )
-from companion.loops.current import Heard, Turn, decide, mark
+from companion.kit.current import Heard, Turn, decide, mark
 from companion.turn.floor import DECLINES, EXPLICIT, MINOR, confirm_minor, explicit_lead
 from companion.turn.floor import declines as judge_declines
 from companion.turn.listen import judge_listening
 from companion.turn.values import Routed
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 

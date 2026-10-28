@@ -49,7 +49,7 @@ rules: `core` imports nothing from the shell, only `store`, `lib/sqlite` and a f
 `sqlite3`, and `lib` imports nothing from the companion. `core` may import
 `companion.prompts`, which only reads packaged text. Imports point down (`direction` contract):
 `turn/` (the reply path's stages) and `memory/` (slow loop, nightly, rebuild, views) run features, so
-they sit above `registry.py` and `features/`; what a feature uses sits below in `loops/` (the turn's
+they sit above `registry.py` and `features/`; what a feature uses sits below in `kit/` (the turn's
 values and `Runtime`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed`), then `core/`
 (shared vocabulary; `core/turn/` holds the reply path's own pure rules), then `lib/`.
 
@@ -123,15 +123,15 @@ together.
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
   `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. A note
   that asks them something says so on its offer (`Offer(asks=True)`, read by `asking` in
-  `loops/features.py`), so the question-run note and the calendar stay out that turn. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
+  `kit/features.py`), so the question-run note and the calendar stay out that turn. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
   failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `turn/beside.py` runs each beside the turn and logs a failure.
 - A turn runs in stages, one module each: `turn/hear.py` (a reaction instead of a reply, the listening
   read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the
   request), `turn/crisis.py` (a risk read sets a scene aside and adds the fixed crisis-line message),
   `turn/talk.py` (the talker and the reply checks), `turn/beside.py` (shadow tasks) and
   `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(runtime, ...)`;
-  the `Runtime` it runs with is plain data in `loops/runtime.py`): change a stage in its module.
-- A feature declares its parts as a `Feature` in its own module (`loops/features.py`): a look-up before the
+  the `Runtime` it runs with is plain data in `kit/runtime.py`): change a stage in its module.
+- A feature declares its parts as a `Feature` in its own module (`kit/features.py`): a look-up before the
   reply, a note, steps after a memory pass, a look-up in shadow beside the turn, and a step once the
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
   also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
@@ -146,17 +146,17 @@ together.
   works). import-linter keeps a feature's logic pure, keeps features from importing each other, and lets only
   a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests mirror the folder
   (`tests/features/<name>/`).
-- Ask a judge through `loops/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
+- Ask a judge through `kit/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.
-- Ask a small model the same question several times with `loops/reads.py` `read_times` (each failed or
+- Ask a small model the same question several times with `kit/reads.py` `read_times` (each failed or
   unreadable read is None) and count agreement with `lib/vote.py` (`READS`, `unanimous`); a
   feature states what a failed read means for it (no agreement, or try the batch again later).
 - Judges share one model (Haiku, DeepSeek on a refusal) unless `COMPANION_JUDGE_MODELS` names the judge
   (by its `Judge` name or `read_times` `spend`); then it reads on that model first and Haiku second
   (`models/fallback.py` `ByJudge`; by default the crisis judge reads on DeepSeek). Route a judge there, never by choosing a model in a feature.
-- Record a decision through `loops/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
-  `decide(c, t, ...)` from `loops/current.py`), never by building `Decision(...)` by hand. Code that looks a past decision up
+- Record a decision through `kit/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
+  `decide(c, t, ...)` from `kit/current.py`), never by building `Decision(...)` by hand. Code that looks a past decision up
   matches its key (`decided_since`, `Decision.has_key`), never its reason text; decisions from before keys
   match by how their reason begins.
 - Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the three
@@ -170,7 +170,7 @@ together.
   model or return junk at random (seeded): their message is stored once, a turn ends in a reply, a reaction
   or the floor's logged withholding, and a judge that always fails sends the talker what no judge would.
   Any change to the turn must keep it passing.
-- Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, `named_zone`). A test enforces it in `core/` and `loops/`
+- Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, `named_zone`). A test enforces it in `core/` and `kit/`
   (`tests/core/test_clock_guard.py`).
 
 **Evals**

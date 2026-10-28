@@ -32,15 +32,15 @@ from companion.core.types import (
     Json,
     Speaker,
 )
-from companion.loops.features import Feature, Lookups, Moment, Offer, Offered, asking
-from companion.loops.recall import Recalled, look_up
+from companion.kit.features import Feature, Lookups, Moment, Offer, Offered, asking
+from companion.kit.recall import Recalled, look_up
 from companion.prompts import get
 from companion.registry import FEATURES
 from companion.turn.mention import mention_note
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
-from companion.loops.current import Heard, Turn, decide, mark
+    from companion.kit.runtime import Runtime
+from companion.kit.current import Heard, Turn, decide, mark
 
 log = logging.getLogger("companion.turn")
 CHECK_IN_NOTE = get("notes/check-in")

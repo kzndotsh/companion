@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from companion.core.clock import local_zone, utc_now
 from companion.features.merging import run as merging
-from companion.loops.services import Services
+from companion.kit.services import Services
 
 
 async def group_now(x: Services) -> str:

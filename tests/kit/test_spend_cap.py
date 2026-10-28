@@ -10,8 +10,8 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.spend import SpendEvent
 from companion.core.talker import Reply
 from companion.core.types import RelationshipId, SessionId, Speaker
-from companion.loops.runtime import Runtime
-from companion.loops.spendcap import NOTICE, over_cap
+from companion.kit.runtime import Runtime
+from companion.kit.spendcap import NOTICE, over_cap
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

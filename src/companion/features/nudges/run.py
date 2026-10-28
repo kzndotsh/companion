@@ -32,7 +32,7 @@ from companion.features.nudges.logic import (
     due,
     newest,
 )
-from companion.loops.record import Recorder
+from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:

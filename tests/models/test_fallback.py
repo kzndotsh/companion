@@ -10,8 +10,8 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json
-from companion.loops.ask import Judge, ask
-from companion.loops.reads import read_times
+from companion.kit.ask import Judge, ask
+from companion.kit.reads import read_times
 from companion.models.fallback import ByJudge, RefusalFallback, TalkerFallback
 from companion.prompts import get
 

@@ -24,10 +24,10 @@ from companion.core.types import (
     TraceId,
     TurnId,
 )
-from companion.loops.current import Turn
-from companion.loops.record import Recorder
-from companion.loops.runtime import Runtime
-from companion.loops.spendcap import NOTICE, first_notice_today, over_cap
+from companion.kit.current import Turn
+from companion.kit.record import Recorder
+from companion.kit.runtime import Runtime
+from companion.kit.spendcap import NOTICE, first_notice_today, over_cap
 from companion.turn.assemble import assemble
 from companion.turn.beside import shadows
 from companion.turn.crisis import off_scene, reading_of, then_line

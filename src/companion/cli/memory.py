@@ -17,7 +17,7 @@ from companion.features.merging.store import Proposal
 from companion.features.worth.logic import ASK_ABOUT_THE_BOT, ASK_ROUTINE
 from companion.features.worth.logic import ASKED as WORTH_ASKED
 from companion.features.worth.logic import Label as Worth
-from companion.loops.curate import merge, retire
+from companion.kit.curate import merge, retire
 from companion.store.sqlite.store import Store
 
 ASKED = (Label.OUT_OF_DATE, Label.OVERSTATED, Label.PASSING)

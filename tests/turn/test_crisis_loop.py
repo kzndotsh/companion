@@ -27,7 +27,7 @@ from companion.core.types import (
 )
 from companion.features.crisis.logic import concern_note, light_note
 from companion.features.crisis.run import LEVEL, LIGHT_KEY, LINE_SENT, METHOD, SCENE
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

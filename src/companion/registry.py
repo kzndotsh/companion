@@ -1,4 +1,4 @@
-"""Every feature the turn and the memory pass run by declaration (`loops/features.py`), in order:
+"""Every feature the turn and the memory pass run by declaration (`kit/features.py`), in order:
 their notes go in this order, and so do their steps after a memory pass."""
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ from companion.features.scene_memory.run import SCENE
 from companion.features.threads.run import OPENLOOPS
 from companion.features.topics.run import TOPICS
 from companion.features.worth.run import WORTH
-from companion.loops.features import Feature
+from companion.kit.features import Feature
 
 FEATURES: tuple[Feature, ...] = (
     KNOWING,

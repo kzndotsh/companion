@@ -25,12 +25,12 @@ from companion.features.basics.logic import (
     parse_name,
     parse_pronouns,
 )
-from companion.loops.current import Turn, decide
-from companion.loops.features import Feature, Moment, Offer, Offered
+from companion.kit.current import Turn, decide
+from companion.kit.features import Feature, Moment, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
-from companion.loops.ask import Judge, ask
+    from companion.kit.runtime import Runtime
+from companion.kit.ask import Judge, ask
 
 TIMEOUT_SECONDS = 3.0
 

@@ -8,7 +8,7 @@ from companion.core.extractor import StructuredModel
 from companion.core.turn.ack import build_prompt
 from companion.core.turn.listening import PROMPT, SCHEMA, ListeningRead, parse
 from companion.core.types import Utterance
-from companion.loops.ask import Judge, ask
+from companion.kit.ask import Judge, ask
 
 TIMEOUT_SECONDS = 2.5
 LISTEN = Judge(

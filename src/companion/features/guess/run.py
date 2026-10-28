@@ -20,14 +20,14 @@ from companion.features.guess.logic import (
 from companion.features.guess.logic import NOTE as GUESS_NOTE
 from companion.features.guess.logic import likely as guess_likely
 from companion.features.guess.logic import note as guess_note
-from companion.loops.ask import Judge, ask
-from companion.loops.current import Heard, Turn, decide, is_casual, mark
-from companion.loops.features import Feature, Offer, Offered
-from companion.loops.recall import look_up
+from companion.kit.ask import Judge, ask
+from companion.kit.current import Heard, Turn, decide, is_casual, mark
+from companion.kit.features import Feature, Offer, Offered
+from companion.kit.recall import look_up
 
 if TYPE_CHECKING:
-    from companion.loops.features import Moment
-    from companion.loops.runtime import Runtime
+    from companion.kit.features import Moment
+    from companion.kit.runtime import Runtime
 
 TIMEOUT_SECONDS = 3.0
 INVITE = Judge(

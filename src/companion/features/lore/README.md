@@ -13,7 +13,7 @@ Keeps what the companion likes the same from day to day. It sorts the views it s
 - `self`: what it is or can do.
 - `lived`: a claim that something happened to it in the world, or about a body or senses.
 
-Each batch is read three times (`READS`, `loops/reads.py` `read_times`). A view is a `taste` only when every read says taste (`agreed`). Otherwise it takes the commonest other kind, or `stance` when no read gave one. If any read failed or was unreadable, nothing is stored for that batch and it waits for the next pass, never labelled from fewer reads. Labels are append-only: `--relabel` labels every current view again and the newest label wins. Spend is tagged `lore`.
+Each batch is read three times (`READS`, `kit/reads.py` `read_times`). A view is a `taste` only when every read says taste (`agreed`). Otherwise it takes the commonest other kind, or `stance` when no read gave one. If any read failed or was unreadable, nothing is stored for that batch and it waits for the next pass, never labelled from fewer reads. Labels are append-only: `--relabel` labels every current view again and the newest label wins. Spend is tagged `lore`.
 
 **What lore is.** Only a `taste` is lore (`lore` in `logic.py`). A `lived` claim is never lore and never counted (A22).
 

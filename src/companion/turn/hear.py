@@ -22,14 +22,14 @@ from companion.core.types import (
     Speaker,
 )
 from companion.features.crisis.logic import cue_words
-from companion.loops.current import Heard, Turn, decide, mark
+from companion.kit.current import Heard, Turn, decide, mark
 from companion.store.sqlite.decisions import REACTED
 from companion.turn.ack import judge
 from companion.turn.listen import judge_listening
 from companion.turn.values import Listened, stop
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 

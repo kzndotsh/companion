@@ -34,13 +34,13 @@ from companion.core.types import (
 )
 from companion.core.views import ViewState, card_views
 from companion.features.scene_memory.run import SCENE, scene_lane
-from companion.loops.current import Heard, Turn, decide, mark
-from companion.loops.features import Lookups, Moment
-from companion.loops.record import Recorder
+from companion.kit.current import Heard, Turn, decide, mark
+from companion.kit.features import Lookups, Moment
+from companion.kit.record import Recorder
 from companion.turn.notes import Notes, notes_for
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 

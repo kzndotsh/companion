@@ -47,7 +47,7 @@ from companion.features.scene_memory.run import (
     pass_step,
     read_scenes,
 )
-from companion.loops.record import Recorder
+from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 

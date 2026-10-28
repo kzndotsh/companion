@@ -13,12 +13,12 @@ from companion.features.episodes.logic import NOTE as EPISODES_NOTE
 from companion.features.episodes.logic import Told, period
 from companion.features.episodes.logic import note as episodes_note
 from companion.features.episodes.logic import recent as recent_times
-from companion.loops.current import Heard, Turn, decide, mark
-from companion.loops.features import Feature, Offer, Offered
+from companion.kit.current import Heard, Turn, decide, mark
+from companion.kit.features import Feature, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.features import Moment
-    from companion.loops.runtime import Runtime
+    from companion.kit.features import Moment
+    from companion.kit.runtime import Runtime
 
 import logging
 import uuid

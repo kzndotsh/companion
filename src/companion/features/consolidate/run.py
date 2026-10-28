@@ -26,9 +26,9 @@ from companion.features.consolidate.logic import (
     same_as,
     verdict,
 )
-from companion.loops.curate import log_would_close, retire
-from companion.loops.embed import embed_missing
-from companion.loops.reads import read_times
+from companion.kit.curate import log_would_close, retire
+from companion.kit.embed import embed_missing
+from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.consolidate")

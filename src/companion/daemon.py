@@ -46,10 +46,10 @@ from companion.io import discord
 from companion.io.stop import until_stopped
 from companion.io.surface import Commands, Hooks, Incoming, Surface, Transport
 from companion.io.telegram import Telegram
+from companion.kit import curate
+from companion.kit.runtime import Runtime
+from companion.kit.spendcap import over_cap
 from companion.lib import logs, retry
-from companion.loops import curate
-from companion.loops.runtime import Runtime
-from companion.loops.spendcap import over_cap
 from companion.memory.nightly import missed, night
 from companion.memory.slow import reflect_once
 from companion.memory.views import views_implicated

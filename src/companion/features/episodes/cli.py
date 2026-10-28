@@ -8,7 +8,7 @@ from pathlib import Path
 from companion.core.clock import local_zone, utc_now
 from companion.core.types import RelationshipId
 from companion.features.episodes.run import write_closed
-from companion.loops.services import Services
+from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
 

@@ -11,7 +11,7 @@ from companion.core.crisis import HOLD_KEY, HOLD_REASON
 from companion.core.types import RelationshipId, SessionId, TraceId, TurnId
 from companion.features.reach.logic import Dial
 from companion.features.reach.run import Reacher, holds
-from companion.loops.record import Recorder
+from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")

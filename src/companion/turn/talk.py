@@ -25,7 +25,7 @@ from companion.core.types import (
     Frame,
     Json,
 )
-from companion.loops.current import Heard, Turn, decide, mark
+from companion.kit.current import Heard, Turn, decide, mark
 from companion.turn.crisis import method_checked
 from companion.turn.floor import judge_intimate
 from companion.turn.frames import judge_frame
@@ -34,7 +34,7 @@ from companion.turn.react import judge_reaction
 from companion.turn.values import Answered, Routed, stop
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 

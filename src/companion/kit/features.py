@@ -13,8 +13,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
 from companion.core.types import Belief, BeliefId, Frame, Utterance
-from companion.loops.current import Heard, Turn, is_casual
-from companion.loops.recall import Recalled
+from companion.kit.current import Heard, Turn, is_casual
+from companion.kit.recall import Recalled
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from companion.core.extractor import StructuredModel
     from companion.core.turn.mentions import MentionCandidate
     from companion.core.types import RelationshipId
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
     from companion.store.sqlite.store import Store
 
 

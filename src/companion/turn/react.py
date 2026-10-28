@@ -8,7 +8,7 @@ from companion.core.extractor import StructuredModel
 from companion.core.turn.ack import build_prompt
 from companion.core.turn.react import PROMPT, SCHEMA, ToneRead, parse
 from companion.core.types import Utterance
-from companion.loops.ask import Judge, ask
+from companion.kit.ask import Judge, ask
 
 TIMEOUT_SECONDS = 2.5
 REACT = Judge("reaction", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="no reaction")

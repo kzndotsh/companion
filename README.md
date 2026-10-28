@@ -367,7 +367,7 @@ companion/
 │   ├── memory/           building and tidying memory, between messages and overnight
 │   ├── features/         one folder per feature, each with a README on how it works
 │   ├── prompts/          every text the models are given, each version kept
-│   ├── core/  loops/     shared rules and building blocks the features use
+│   ├── core/  kit/       shared rules and building blocks the features use
 │   ├── models/           talking to the AI models
 │   ├── io/               talking to Telegram or Discord, pacing replies like typing
 │   ├── store/            the database

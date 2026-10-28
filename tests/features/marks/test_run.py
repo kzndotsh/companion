@@ -6,9 +6,9 @@ from companion.core.turn.listening import ListeningRead
 from companion.core.types import Frame, TurnId
 from companion.features.marks.logic import MARKS
 from companion.features.marks.run import mark_offer
-from companion.loops.current import Heard, Turn
-from companion.loops.features import Lookups, Moment
-from companion.loops.runtime import Runtime
+from companion.kit.current import Heard, Turn
+from companion.kit.features import Lookups, Moment
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 

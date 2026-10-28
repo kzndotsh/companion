@@ -12,10 +12,10 @@ from companion.core.types import Frame, Speaker, TraceId, TurnId, Utterance, Utt
 from companion.features.calendar.logic import OFFERED
 from companion.features.threads.logic import Thread, ThreadKind
 from companion.features.threads.run import LOOP_OFFERED
-from companion.loops.current import Turn
-from companion.loops.features import Lookups, Moment, Offer
-from companion.loops.record import Recorder
-from companion.loops.runtime import Runtime
+from companion.kit.current import Turn
+from companion.kit.features import Lookups, Moment, Offer
+from companion.kit.record import Recorder
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.mention import MET, mention_note, read_met
 from tests.features.calendar.test_run import CALM, HALLOWEEN, NOTE, QUIET, remember

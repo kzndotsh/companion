@@ -75,16 +75,16 @@ from companion.features.scene_memory.logic import (
     screen,
 )
 from companion.features.scene_memory.store import By
-from companion.loops.current import Heard, Turn, decide
-from companion.loops.features import Feature
-from companion.loops.reads import read_times
-from companion.loops.record import Recorder
+from companion.kit.current import Heard, Turn, decide
+from companion.kit.features import Feature
+from companion.kit.reads import read_times
+from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
     from companion.core.card import Card
     from companion.core.vectors import Embedder
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.scene")
 

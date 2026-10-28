@@ -23,7 +23,7 @@ from companion.features.calendar.logic import (
     their_dates,
     when,
 )
-from companion.loops.features import Feature, Moment
+from companion.kit.features import Feature, Moment
 from companion.store.sqlite.store import Store
 
 

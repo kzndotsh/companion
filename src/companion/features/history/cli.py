@@ -11,7 +11,7 @@ from companion.core.clock import utc_now
 from companion.core.types import RelationshipId, TraceId
 from companion.features.history.logic import Recorded, Ruling, Standing
 from companion.features.history.store import By
-from companion.loops.record import Recorder
+from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
 RETIRED = "history: the owner retired a story"

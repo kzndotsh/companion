@@ -10,7 +10,7 @@ from companion.core.prompt.prefix import Prefix
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
 from companion.core.vectors import Embedder
-from companion.loops.habits import HabitMemory
+from companion.kit.habits import HabitMemory
 from companion.store.sqlite.store import Store
 
 

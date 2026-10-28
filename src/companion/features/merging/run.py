@@ -24,7 +24,7 @@ from companion.features.merging.logic import (
     read_claim,
     read_groups,
 )
-from companion.loops.reads import read_times
+from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.merging")

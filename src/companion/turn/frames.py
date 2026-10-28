@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from companion.core.extractor import StructuredModel
 from companion.core.frames import PROMPT, SCHEMA, Judgement, build_prompt, parse
 from companion.core.types import Utterance
-from companion.loops.ask import Judge, ask
+from companion.kit.ask import Judge, ask
 
 TIMEOUT_SECONDS = 2.5
 FRAME = Judge("frame", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="storing as real")

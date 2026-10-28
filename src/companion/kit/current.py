@@ -21,10 +21,10 @@ from companion.core.types import (
     TurnId,
     Utterance,
 )
-from companion.loops.record import Recorder
+from companion.kit.record import Recorder
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 
@@ -60,7 +60,7 @@ def decide(  # noqa: PLR0913
     kind: DecisionKind = DecisionKind.POLICY,
     at: datetime | None = None,
 ) -> None:
-    """Record one of this turn's decisions (`loops/record.py`)."""
+    """Record one of this turn's decisions (`kit/record.py`)."""
     recorder(c, t).decide(key, detail, reason=reason, kind=kind, at=at)
 
 

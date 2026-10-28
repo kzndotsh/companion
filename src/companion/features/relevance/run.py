@@ -22,16 +22,16 @@ from companion.features.relevance.logic import GATE as RELEVANCE_GATE
 from companion.features.relevance.logic import LIVE as RELEVANCE_LIVE
 from companion.features.relevance.logic import PROMPT, SCHEMA, SHOWN, build_prompt, eligible, parse
 from companion.features.relevance.logic import SHADOW as RELEVANCE_SHADOW
-from companion.loops.ask import Judge, ask
-from companion.loops.current import Heard, Turn, decide, mark
-from companion.loops.embed import embed_missing
-from companion.loops.features import Feature, Offer, Offered
+from companion.kit.ask import Judge, ask
+from companion.kit.current import Heard, Turn, decide, mark
+from companion.kit.embed import embed_missing
+from companion.kit.features import Feature, Offer, Offered
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.features import Moment
-    from companion.loops.runtime import Runtime
+    from companion.kit.features import Moment
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.relevance")
 TIMEOUT_SECONDS = 10.0

@@ -852,7 +852,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-10-23**
 - [x] Turn stages and feature folders: the reply path as one module per stage with a thin driver, each feature
-      in its own folder with its `Feature` declaration, one judge runner (`loops/ask.py`), `lib/` for what knows
+      in its own folder with its `Feature` declaration, one judge runner (`kit/ask.py`), `lib/` for what knows
       nothing of the companion, and a layers contract keeping imports pointing down. A chaos test runs whole
       turns against failing judges (0038bfe); code rules are tests and shadow features have a register with
       review dates (73eec0d). Look-ups run side by side under one 9 s deadline (8427a28); nightly steps run

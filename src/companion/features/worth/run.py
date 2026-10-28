@@ -19,9 +19,9 @@ from companion.features.worth.logic import (
     to_ask,
     verdict,
 )
-from companion.loops.curate import retire
-from companion.loops.features import Feature
-from companion.loops.reads import read_times
+from companion.kit.curate import retire
+from companion.kit.features import Feature
+from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.worth")

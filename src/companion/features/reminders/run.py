@@ -70,15 +70,15 @@ from companion.features.reminders.series import (
     skip_reason,
     tend,
 )
-from companion.loops.ask import Judge, ask
-from companion.loops.current import Heard, Turn, mark
-from companion.loops.features import Feature, Offer, Offered
-from companion.loops.record import Recorder
-from companion.loops.spendcap import over_cap
+from companion.kit.ask import Judge, ask
+from companion.kit.current import Heard, Turn, mark
+from companion.kit.features import Feature, Offer, Offered
+from companion.kit.record import Recorder
+from companion.kit.spendcap import over_cap
 
 if TYPE_CHECKING:
-    from companion.loops.features import Moment
-    from companion.loops.runtime import Runtime
+    from companion.kit.features import Moment
+    from companion.kit.runtime import Runtime
     from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.reminders")

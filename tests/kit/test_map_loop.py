@@ -19,7 +19,7 @@ from companion.core.types import (
 )
 from companion.features.basics.logic import name_belief
 from companion.features.knowing.logic import WOULD_ASK
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 

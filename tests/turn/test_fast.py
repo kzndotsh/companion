@@ -26,7 +26,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.models.anthropic import AnthropicTalker
 from companion.models.openrouter import OpenRouterTalker
 from companion.store.sqlite import replay as store_replay

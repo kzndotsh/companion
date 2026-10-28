@@ -13,13 +13,13 @@ from companion.features.topics.logic import JUDGE, SCHEMA, asks, judge_prompt, p
 from companion.features.topics.logic import NOTE as TOPIC_NOTE
 from companion.features.topics.logic import SPENT as TOPIC_SPENT
 from companion.features.topics.logic import likely as topic_likely
-from companion.loops.ask import Judge, ask
-from companion.loops.current import Heard, Turn, decide, is_casual, mark
-from companion.loops.features import Feature, Offer, Offered, has_room
+from companion.kit.ask import Judge, ask
+from companion.kit.current import Heard, Turn, decide, is_casual, mark
+from companion.kit.features import Feature, Offer, Offered, has_room
 
 if TYPE_CHECKING:
-    from companion.loops.features import Moment
-    from companion.loops.runtime import Runtime
+    from companion.kit.features import Moment
+    from companion.kit.runtime import Runtime
 
 TIMEOUT_SECONDS = 3.0
 SPENT = Judge(

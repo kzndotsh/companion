@@ -6,7 +6,7 @@ Finds which of its memories bear on what they just said, so the reply can use wh
 
 ## How it works
 
-Each memory's claim is embedded once (`COMPANION_EMBED_MODEL`, default `openai/text-embedding-3-small`) and stored, keyed by memory and model. Missing vectors are filled at the start of a look-up (`loops/embed.py`).
+Each memory's claim is embedded once (`COMPANION_EMBED_MODEL`, default `openai/text-embedding-3-small`) and stored, keyed by memory and model. Missing vectors are filled at the start of a look-up (`kit/embed.py`).
 
 On a turn, their message is embedded alone and together with the companion's last reply. The 15 nearest memories to the second query are the shortlist. The pool is limited by code to the card's rules: real-frame memories (stated, inferred or third-party), never crisis-level (sensitivity above 2), and held (sensitive) memories only on a turn where they share something.
 

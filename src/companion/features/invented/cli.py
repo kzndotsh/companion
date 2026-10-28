@@ -9,7 +9,7 @@ from pathlib import Path
 from companion.core.clock import utc_now
 from companion.features.invented.logic import report as invented_report
 from companion.features.invented.run import check_new as check_invented
-from companion.loops.services import Services
+from companion.kit.services import Services
 
 
 async def judge_now(x: Services, days: int, cap_usd: float, dump: Path | None = None) -> str:

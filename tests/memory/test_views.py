@@ -27,8 +27,8 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import card_views, is_settled
-from companion.loops.curate import retire_implicated_views
-from companion.loops.runtime import Runtime
+from companion.kit.curate import retire_implicated_views
+from companion.kit.runtime import Runtime
 from companion.memory.rebuild import rebuild
 from companion.memory.slow import reflect_once
 from companion.memory.views import check_views, views_implicated
@@ -509,7 +509,7 @@ async def test_calibration_compares_the_gates_with_the_users_decisions(store: St
         REL,
     )
     store.approve_view(BeliefId("good"), T0)
-    from companion.loops.curate import retire  # noqa: PLC0415
+    from companion.kit.curate import retire  # noqa: PLC0415
 
     retire(store, REL, "bad", "not something i want it to hold")
     rows = reviewed_views(store, REL)
@@ -528,7 +528,7 @@ async def test_calibration_compares_the_gates_with_the_users_decisions(store: St
 async def test_a_user_reason_containing_the_word_duplicate_still_counts_as_a_decision(
     store: Store,
 ) -> None:
-    from companion.loops.curate import retire  # noqa: PLC0415
+    from companion.kit.curate import retire  # noqa: PLC0415
     from companion.memory.calibrate import reviewed_views  # noqa: PLC0415
 
     _two_day_view(store, "v")
@@ -537,7 +537,7 @@ async def test_a_user_reason_containing_the_word_duplicate_still_counts_as_a_dec
 
 
 async def test_a_mechanical_dedupe_closure_is_not_a_user_decision(store: Store) -> None:
-    from companion.loops.curate import close_duplicates  # noqa: PLC0415
+    from companion.kit.curate import close_duplicates  # noqa: PLC0415
     from companion.memory.calibrate import reviewed_views  # noqa: PLC0415
 
     _two_day_view(store, "keep")
@@ -551,7 +551,7 @@ async def test_a_mechanical_dedupe_closure_is_not_a_user_decision(store: Store) 
 async def test_a_retired_view_is_not_recorded_again_when_the_ledger_is_re_read(
     store: Store,
 ) -> None:
-    from companion.loops.curate import retire  # noqa: PLC0415
+    from companion.kit.curate import retire  # noqa: PLC0415
     from companion.memory.slow import reflect_from  # noqa: PLC0415
 
     _say(store, 1, Speaker.COMPANION, VIEW_TEXT)
@@ -569,7 +569,7 @@ async def test_a_retired_view_is_not_recorded_again_when_the_ledger_is_re_read(
 
 
 async def test_a_mechanical_dedupe_closure_is_not_a_rejection(store: Store) -> None:
-    from companion.loops.curate import close_duplicates  # noqa: PLC0415
+    from companion.kit.curate import close_duplicates  # noqa: PLC0415
 
     _two_day_view(store, "keep")
     store.insert_belief(

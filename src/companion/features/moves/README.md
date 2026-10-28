@@ -12,7 +12,7 @@ Code finds repeats on its own, with no model, in `core/turn/habits.py`. It names
 
 The model finds the rest. After a reply is stored, a small judge reads its last 6 replies (the 5 before plus the one just sent) in the background, 6 s limit, so the check never delays a reply. It needs at least 4 replies. It names up to 3 habits (90 characters each), each with how many replies it appears in. A habit seen in fewer than 3 replies is dropped, so weak or invented ones never count. A malformed answer is unreadable and a failure means no note.
 
-What the check found is held on the conversation (`loops/habits.py` `HabitMemory`) for the next 2 turns, then dropped. Only one check runs at a time. A fast chat may not have the answer yet, and that turn goes without it. The note (`notes/habit-moves`) lists the fresh habits.
+What the check found is held on the conversation (`kit/habits.py` `HabitMemory`) for the next 2 turns, then dropped. Only one check runs at a time. A fast chat may not have the answer yet, and that turn goes without it. The note (`notes/habit-moves`) lists the fresh habits.
 
 Each check is logged as `habit check` with the scorer model, the prompt version, a hash of the inputs and the habits found.
 

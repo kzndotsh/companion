@@ -54,13 +54,13 @@ from companion.features.threads.logic import (
     to_resolution,
 )
 from companion.features.threads.store import ReachOut
-from companion.loops.features import Feature
-from companion.loops.record import Recorder
+from companion.kit.features import Feature
+from companion.kit.record import Recorder
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.features import Moment
+    from companion.kit.features import Moment
 
 log = logging.getLogger("companion.initiative")
 SESSION = SessionId("initiative")

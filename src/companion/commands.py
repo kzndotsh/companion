@@ -14,7 +14,7 @@ import httpx
 from companion.core.spend import MeteredExtractor, SpendEvent
 from companion.core.types import RelationshipId
 from companion.daemon import extractor, load_dotenv
-from companion.loops.services import Services
+from companion.kit.services import Services
 from companion.memory.rebuild import rebuild
 from companion.memory.slow import reflect_from
 from companion.store.sqlite.store import Store

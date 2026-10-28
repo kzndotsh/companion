@@ -23,12 +23,12 @@ from companion.core.turn.now import (
     soon_note,
 )
 from companion.core.types import Frame, Json
-from companion.loops.ask import Judge, ask
-from companion.loops.current import Heard, Turn, decide
-from companion.loops.features import Feature, Moment, Offer, Offered
+from companion.kit.ask import Judge, ask
+from companion.kit.current import Heard, Turn, decide
+from companion.kit.features import Feature, Moment, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 READER = Judge("now", PROMPT, SCHEMA, parse, timeout=8.0, unread="no label for this message")
 SENT = "now: told it what they said is still coming"

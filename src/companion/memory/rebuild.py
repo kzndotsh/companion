@@ -7,7 +7,7 @@ from datetime import tzinfo
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId
-from companion.loops.curate import close
+from companion.kit.curate import close
 from companion.memory.slow import ReflectOptions, reflect_from
 from companion.store.sqlite.store import Store
 

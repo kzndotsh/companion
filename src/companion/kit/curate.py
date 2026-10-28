@@ -16,7 +16,7 @@ from companion.core.types import (
     TraceId,
 )
 from companion.core.views import overstated
-from companion.loops.record import Recorder
+from companion.kit.record import Recorder
 from companion.store.sqlite.decisions import CLOSED
 from companion.store.sqlite.store import Store
 

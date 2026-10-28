@@ -12,7 +12,7 @@ A turn is a candidate only when all of these hold. The listening read is present
 
 For a candidate, its own judge (`system/guess-invite`, 3 s limit) says whether they invite a guess and what about (clipped to 80 characters). The judge sees the last 6 messages. A failed or unreadable answer means no note, and a fallback model's answer is not trusted. The judge is named `guess` for `COMPANION_JUDGE_MODELS`. A hint at what it is time for is looked up as a habit or routine of theirs, never as the clock.
 
-On an invitation, the recall look-up (`loops/recall.py` `look_up`) picks what may fit from their memories. Only memories with sensitivity below 2 are offered, so a guess never draws on anything sensitive. At most 3 picks are kept. The note (`notes/guess`) asks for a single playful guess as a question. With no pick there is no note.
+On an invitation, the recall look-up (`kit/recall.py` `look_up`) picks what may fit from their memories. Only memories with sensitivity below 2 are offered, so a guess never draws on anything sensitive. At most 3 picks are kept. The note (`notes/guess`) asks for a single playful guess as a question. With no pick there is no note.
 
 Each invitation is logged under the decision key `guess: they invited a guess`, with what it was about, the offered claims and the note version, so guesses can later be scored by kind. In the note order it sits after the topic note and before lore.
 

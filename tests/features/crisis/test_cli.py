@@ -12,7 +12,7 @@ from companion.core.extractor import Extraction
 from companion.core.types import Json, RelationshipId, SessionId, TraceId, TurnId
 from companion.features.crisis.cli import FIXTURES, Case, check, load_cases, run, verdict
 from companion.features.crisis.run import LEVEL, LINE_SENT
-from companion.loops.record import Recorder
+from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
 

@@ -7,8 +7,8 @@ from __future__ import annotations
 
 from companion.core.types import Speaker
 from companion.features.marks.logic import OFFERED, note, offered, pick
-from companion.loops.current import decide
-from companion.loops.features import Feature, Moment, Offer, Offered
+from companion.kit.current import decide
+from companion.kit.features import Feature, Moment, Offer, Offered
 
 
 def mark_offer(m: Moment, found: object, so_far: Offered) -> Offer:

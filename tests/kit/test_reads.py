@@ -4,8 +4,8 @@ import asyncio
 
 from companion.core.extractor import Extraction
 from companion.core.types import Json
+from companion.kit.reads import read_times
 from companion.lib.vote import unanimous
-from companion.loops.reads import read_times
 
 
 class Flaky:

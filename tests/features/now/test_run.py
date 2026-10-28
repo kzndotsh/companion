@@ -11,10 +11,10 @@ from companion.core.turn.listening import ListeningRead
 from companion.core.turn.now import KEY
 from companion.core.types import Frame, Json, TraceId, TurnId
 from companion.features.now.run import SENT, SHADOW, now_note, read_now
-from companion.loops.current import Heard, Turn
-from companion.loops.features import Lookups, Moment
-from companion.loops.record import Recorder
-from companion.loops.runtime import Runtime
+from companion.kit.current import Heard, Turn
+from companion.kit.features import Lookups, Moment
+from companion.kit.record import Recorder
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 

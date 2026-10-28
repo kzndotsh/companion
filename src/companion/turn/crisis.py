@@ -23,12 +23,12 @@ from companion.features.crisis.run import (
     SCENE,
     reading_in,
 )
-from companion.loops.current import Turn, decide, mark
-from companion.loops.features import Lookups
+from companion.kit.current import Turn, decide, mark
+from companion.kit.features import Lookups
 from companion.turn.values import Routed
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
     from companion.turn.persist import TheirMessage
 
 LINE_EVERY = timedelta(hours=1)  # the same fixed message is not sent twice inside this

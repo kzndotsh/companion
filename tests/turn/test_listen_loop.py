@@ -11,7 +11,7 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.ack import Reaction
 from companion.core.types import Json, RelationshipId, SessionId
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 

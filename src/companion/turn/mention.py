@@ -27,13 +27,13 @@ from companion.core.turn.mentions import (
 from companion.core.types import Json, Speaker, Utterance
 from companion.features.calendar.logic import OFFERED as CALENDAR_OFFERED
 from companion.features.threads.run import LOOP_OFFERED
-from companion.loops.ask import Judge, ask
-from companion.loops.current import Turn, decide
-from companion.loops.features import Moment, Offer, Offered, asking, has_room
+from companion.kit.ask import Judge, ask
+from companion.kit.current import Turn, decide
+from companion.kit.features import Moment, Offer, Offered, asking, has_room
 from companion.registry import FEATURES
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 MET = "threads: how they met it"
 PACE_SOONER = "threads: the learned pace would bring one up now (shadow)"

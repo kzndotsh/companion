@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from companion.core.clock import utc_now
 from companion.features.worth.run import label
-from companion.loops.services import Services
+from companion.kit.services import Services
 
 
 async def label_now(x: Services) -> str:

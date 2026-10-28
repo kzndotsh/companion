@@ -19,12 +19,12 @@ from companion.features.moves.logic import (
     parse,
     replies_to_read,
 )
-from companion.loops.ask import Judge, ask
-from companion.loops.current import Turn, decide
-from companion.loops.features import Feature, Moment, Offer, Offered
+from companion.kit.ask import Judge, ask
+from companion.kit.current import Turn, decide
+from companion.kit.features import Feature, Moment, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 TIMEOUT_SECONDS = 6.0
 HABITS = Judge("habits", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="no note")

@@ -17,7 +17,7 @@ from companion.features.callbacks.logic import (
     label,
     parse,
 )
-from companion.loops.ask import Judge, ask
+from companion.kit.ask import Judge, ask
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.callbacks")

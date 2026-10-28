@@ -21,14 +21,14 @@ from companion.features.hooks.logic import (
     read_basic,
 )
 from companion.features.hooks.logic import SCHEMA as HOOK_SCHEMA
-from companion.loops.ask import Judge, ask
-from companion.loops.current import Heard, Turn, decide, is_casual
-from companion.loops.features import Feature
-from companion.loops.reads import read_times
+from companion.kit.ask import Judge, ask
+from companion.kit.current import Heard, Turn, decide, is_casual
+from companion.kit.features import Feature
+from companion.kit.reads import read_times
 from companion.prompts import get
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.hooks")
 KNOWN = get("system/basics-known")

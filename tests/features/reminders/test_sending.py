@@ -17,7 +17,7 @@ from companion.features.reminders.run import (
     schedule,
     stop,
 )
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.features.reminders.test_run import Writer
 from tests.turn.test_mood_loop import PREFIX, REL, SESSION

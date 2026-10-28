@@ -39,7 +39,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import why
-from companion.loops.current import Turn, decide, mark, recorder
+from companion.kit.current import Turn, decide, mark, recorder
 from companion.registry import FEATURES
 from companion.store.sqlite.decisions import REACTED
 from companion.turn.assemble import Assembled, CardLog
@@ -49,7 +49,7 @@ from companion.turn.mention import read_met
 from companion.turn.values import Answered
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 

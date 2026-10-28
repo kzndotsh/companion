@@ -20,8 +20,8 @@ from companion.features.history.run import (
     read_history,
     stories_beside,
 )
-from companion.loops.current import Turn
-from companion.loops.runtime import Runtime
+from companion.kit.current import Turn
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 from tests.features.marks.test_run import CALM

@@ -22,7 +22,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.curate import close_duplicates, merge, retire
+from companion.kit.curate import close_duplicates, merge, retire
 from companion.memory.rebuild import rebuild
 from companion.store.sqlite.store import Store
 

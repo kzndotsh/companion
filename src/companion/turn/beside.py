@@ -10,11 +10,11 @@ from typing import TYPE_CHECKING
 
 from companion.core.card import Card
 from companion.core.types import Frame
-from companion.loops.current import Heard, Turn
+from companion.kit.current import Heard, Turn
 from companion.registry import FEATURES
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
 

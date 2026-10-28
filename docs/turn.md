@@ -39,7 +39,7 @@ On an urgent crisis turn with the path on, a fixed message follows the reply (th
 below).
 
 The values each stage hands the next live in `turn/values.py`. The `Runtime` the turn runs with (store, models, switches) is
-plain data in `loops/runtime.py`.
+plain data in `kit/runtime.py`.
 
 ## Reading the message
 
@@ -53,7 +53,7 @@ turn) and a request to remember something. A recall request is looked up across 
 small model, and what it finds rides that turn's system block (`core/recall.py`).
 
 Memories marked sensitive are on the card only on turns rated 1 or more. A turn that is ordinary,
-real (not a scene) and not a goodbye counts as casual (`loops/current.py`, `is_casual`), and many
+real (not a scene) and not a goodbye counts as casual (`kit/current.py`, `is_casual`), and many
 features only act on casual turns. With `COMPANION_CRISIS=on`, a turn the crisis path reads as a risk
 is never casual (`Moment.casual`).
 

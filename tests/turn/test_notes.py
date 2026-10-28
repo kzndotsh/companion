@@ -18,9 +18,9 @@ from companion.features.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
 from companion.features.reminders.run import ASKED, SET, Read, reminder_offer
-from companion.loops.current import Turn
-from companion.loops.features import Offer, asking
-from companion.loops.runtime import Runtime
+from companion.kit.current import Turn
+from companion.kit.features import Offer, asking
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -235,7 +235,7 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
     async def tastes(*_: object) -> tuple[str, ...]:
         return ("rainy days",)
 
-    from companion.loops.features import Feature  # noqa: PLC0415
+    from companion.kit.features import Feature  # noqa: PLC0415
 
     monkeypatch.setattr(notes, "LOOK_SECONDS", 0.2)
     monkeypatch.setattr(

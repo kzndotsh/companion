@@ -78,7 +78,7 @@ forbidden_modules = [
     "companion.store",
     "companion.cli",
     "companion.models",
-    "companion.loops",
+    "companion.kit",
     "companion.turn",
     "companion.memory",
     "companion.registry",
@@ -100,7 +100,7 @@ forbidden_modules = [
     "companion.store",
     "companion.cli",
     "companion.models",
-    "companion.loops",
+    "companion.kit",
     "companion.turn",
     "companion.memory",
     "companion.registry",
@@ -128,7 +128,7 @@ ignore_imports = [
 
 [[tool.importlinter.contracts]]
 id = "direction"
-name = "imports point down: turn and memory, the registry, features, loops, core, lib"
+name = "imports point down: turn and memory, the registry, features, kit, core, lib"
 type = "layers"
 # The turn's stages and the memory side run features, so they sit above them; what a feature uses
 # (the turn's values, Feature, the judge runner, curate) sits below. The store facade knows every
@@ -137,7 +137,7 @@ layers = [
     "companion.turn | companion.memory",
     "companion.registry",
     "companion.features",
-    "companion.loops",
+    "companion.kit",
     "companion.core",
     "companion.lib",
 ]
@@ -153,7 +153,7 @@ type = "forbidden"
 source_modules = ["companion.lib"]
 forbidden_modules = [
     "companion.core",
-    "companion.loops",
+    "companion.kit",
     "companion.turn",
     "companion.memory",
     "companion.registry",
@@ -178,7 +178,7 @@ source_modules = [
     "companion.core",
     "companion.cli",
     "companion.models",
-    "companion.loops",
+    "companion.kit",
     "companion.turn",
     "companion.memory",
     "companion.registry",

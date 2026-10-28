@@ -11,7 +11,7 @@ from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.basics.logic import name_belief
 from companion.features.topics.logic import SPENT
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker

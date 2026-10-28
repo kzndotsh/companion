@@ -13,7 +13,7 @@ from companion.core.talker import Reply, Talker
 from companion.core.turn.ack import Reaction
 from companion.core.turn.react import ToneRead
 from companion.core.types import Frame
-from companion.loops.current import Heard
+from companion.kit.current import Heard
 
 
 @dataclass(frozen=True, slots=True)

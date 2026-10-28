@@ -27,7 +27,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.mood.logic import Source, State, effect
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 

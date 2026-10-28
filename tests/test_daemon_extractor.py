@@ -12,7 +12,7 @@ from companion import daemon
 from companion.core.extractor import FALLBACK
 from companion.core.types import Speaker
 from companion.features.crisis.run import read_risk
-from companion.loops.reads import read_times
+from companion.kit.reads import read_times
 from companion.settings import Settings
 
 DEEPSEEK = "deepseek/deepseek-v4.1-flash"

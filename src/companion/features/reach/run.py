@@ -49,9 +49,9 @@ from companion.features.reach.logic import (
     read_draft,
 )
 from companion.features.reach.store import Own
-from companion.loops.ask import Judge, ask
-from companion.loops.record import Recorder
-from companion.loops.spendcap import over_cap
+from companion.kit.ask import Judge, ask
+from companion.kit.record import Recorder
+from companion.kit.spendcap import over_cap
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.initiative")

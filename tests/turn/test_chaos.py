@@ -19,7 +19,7 @@ import pytest
 from companion.core.extractor import FALLBACK, Extraction
 from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, Speaker, TurnId
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker

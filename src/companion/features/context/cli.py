@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from companion.core.clock import utc_now
 from companion.features.context.run import write_missing
-from companion.loops.services import Services
+from companion.kit.services import Services
 
 
 async def write_now(x: Services) -> str:

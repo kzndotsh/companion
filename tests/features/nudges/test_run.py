@@ -9,8 +9,8 @@ from companion.core.turn.listening import ListeningRead
 from companion.core.turn.now import KEY as NOW_KEY
 from companion.core.types import Json, TraceId, TurnId
 from companion.features.nudges.run import NUDGE_DROPPED, tick_nudge
-from companion.loops.current import Heard
-from companion.loops.record import Recorder
+from companion.kit.current import Heard
+from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, REL, SESSION
 

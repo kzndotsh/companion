@@ -23,12 +23,12 @@ from companion.features.names.logic import (
     parse,
     prompt,
 )
-from companion.loops.current import Heard, Turn, decide
-from companion.loops.features import Feature
+from companion.kit.current import Heard, Turn, decide
+from companion.kit.features import Feature
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.names")
 

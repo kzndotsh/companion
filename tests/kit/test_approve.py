@@ -20,7 +20,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.curate import approve
+from companion.kit.curate import approve
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")

@@ -9,7 +9,7 @@ from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
 from companion.features.names.logic import SHADOW, index
 from companion.features.names.run import read_names
-from companion.loops.services import Services
+from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
 

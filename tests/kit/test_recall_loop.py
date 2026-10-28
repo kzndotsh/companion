@@ -26,7 +26,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.loops.runtime import Runtime
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 

@@ -25,14 +25,14 @@ from companion.features.lore.logic import (
     parse,
     prompt,
 )
-from companion.loops.current import Heard, Turn, decide, is_casual
-from companion.loops.features import Feature, Offer, Offered
-from companion.loops.reads import read_times
+from companion.kit.current import Heard, Turn, decide, is_casual
+from companion.kit.features import Feature, Offer, Offered
+from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.loops.features import Moment
-    from companion.loops.runtime import Runtime
+    from companion.kit.features import Moment
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.lore")
 

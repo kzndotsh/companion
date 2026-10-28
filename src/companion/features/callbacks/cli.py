@@ -7,7 +7,7 @@ from datetime import timedelta
 from companion.core.clock import utc_now
 from companion.features.callbacks.logic import report
 from companion.features.callbacks.run import check_new
-from companion.loops.services import Services
+from companion.kit.services import Services
 
 
 async def judge_now(x: Services, days: int, cap_usd: float) -> str:

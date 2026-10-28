@@ -45,15 +45,15 @@ from companion.features.history.logic import (
     to_story,
 )
 from companion.features.history.store import By
-from companion.loops.current import Heard, Turn, decide, is_casual
-from companion.loops.features import Feature
-from companion.loops.reads import read_times
-from companion.loops.record import Recorder
+from companion.kit.current import Heard, Turn, decide, is_casual
+from companion.kit.features import Feature
+from companion.kit.reads import read_times
+from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
     from companion.core.card import Card
-    from companion.loops.runtime import Runtime
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.history")
 

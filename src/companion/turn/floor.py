@@ -20,7 +20,7 @@ from companion.core.turn.floor import (
     parse_minor,
 )
 from companion.core.types import Utterance
-from companion.loops.ask import Judge, Read, ask
+from companion.kit.ask import Judge, Read, ask
 
 TIMEOUT_SECONDS = 3.0
 INTIMATE = Judge(

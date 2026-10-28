@@ -37,10 +37,10 @@ from companion.features.scene_memory.logic import (
 )
 from companion.features.scene_memory.run import CARD, LEFT_OFF, OFFERED, Scored, entries
 from companion.features.scene_memory.store import By
-from companion.loops.current import Turn
-from companion.loops.features import Lookups
-from companion.loops.record import Recorder
-from companion.loops.runtime import Runtime
+from companion.kit.current import Turn
+from companion.kit.features import Lookups
+from companion.kit.record import Recorder
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.assemble import Assembled, assemble
 from companion.turn.fast import handle

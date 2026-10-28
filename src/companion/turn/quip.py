@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from companion.core.extractor import StructuredModel
 from companion.core.turn.quip import PROMPT, SCHEMA, Verdict, build_prompt, parse
-from companion.loops.ask import Judge, ask
+from companion.kit.ask import Judge, ask
 
 TIMEOUT_SECONDS = 2.5
 

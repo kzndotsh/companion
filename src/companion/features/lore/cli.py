@@ -11,7 +11,7 @@ from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
 from companion.features.lore.logic import lore
 from companion.features.lore.run import label_views
-from companion.loops.services import Services
+from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
 

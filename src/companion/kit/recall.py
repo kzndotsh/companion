@@ -13,7 +13,7 @@ from companion.core.extractor import StructuredModel
 from companion.core.freshness import when_phrase
 from companion.core.recall import PROMPT, SCHEMA, build_prompt, candidates, parse
 from companion.core.types import Belief, BeliefId
-from companion.loops.ask import Judge, ask
+from companion.kit.ask import Judge, ask
 
 log = logging.getLogger("companion.recall")
 TIMEOUT_SECONDS = 3.0

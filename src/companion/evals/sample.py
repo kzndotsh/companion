@@ -42,10 +42,10 @@ from companion.evals.fixtures import Fixture, Script
 from companion.evals.rebuild import swap_memory
 from companion.features.basics.logic import ASKED as ASKED_NAME
 from companion.features.lore.run import LORE
-from companion.loops.current import Heard, Turn
-from companion.loops.features import Lookups, Moment
-from companion.loops.record import Recorder
-from companion.loops.runtime import Runtime
+from companion.kit.current import Heard, Turn
+from companion.kit.features import Lookups, Moment
+from companion.kit.record import Recorder
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.assemble import Layout
 from companion.turn.notes import Notes, notes_for
