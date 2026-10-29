@@ -2495,3 +2495,20 @@ provider's moderation refusing the input (403, "sexual/minors"), about 1 in 12 o
 and on adult text too, never the model reading it wrong. The v1 school-uniform-after-class case
 stays held on v2 (11/12): read as a pupil after class, not as a costume. v2 shipped for its
 wording; the readings did not move. Rerun: the scratch script reads a prompt path and the cases.
+
+## 2026-10-29: Recall reads the conversation and may reach the most sensitive memories
+
+A vague ask to remember ("the serious stuff we talked about early") was flagged: the listening judge
+guessed the topic wrongly and the look-up, searching the guess alone and never shown the most
+sensitive memories, found unrelated ones. On the flagged turn, 12 reads a setup on Haiku, a hit
+being a pick among the memories the ask meant: the old setup 0 of 12; the most sensitive memories
+added 0 of 12; their own last messages added, the guess still the topic, 1 to 2 of 12; their words in
+place of the guess 12 of 12, but that broke an older ask that only makes sense next to the
+companion's question ("you know this already" after a question about coffee); the last six messages
+from both sides, each marked whose, with the guess as the topic, 34 of 34 over three runs (2 reads
+timed out at 3 s), and 12 of 12 on the coffee ask. On an ask about a meal it now picks the meals of
+the day before instead of general food tastes. The prompt's wording mattered: the same setup with a
+softer line about the topic found it 0 of 10 and 4 of 12. Cost about $0.15 in all. Rerun: scratch
+scripts that call `kit/recall.py` `look_up` on a copy of the database for the flagged turns, 12 reads
+a cell (not kept; the real turns are private).
+

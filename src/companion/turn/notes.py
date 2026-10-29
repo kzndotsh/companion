@@ -13,7 +13,7 @@ from companion.core.frames import (
     scene_note,
 )
 from companion.core.recall import PROMPT as RECALL_PROMPT
-from companion.core.recall import recall_note
+from companion.core.recall import RECENT, recall_note
 from companion.core.turn.ack import (
     inputs_hash,
 )
@@ -33,7 +33,7 @@ from companion.core.types import (
     Speaker,
 )
 from companion.kit.features import Feature, Lookups, Moment, Offer, Offered, asking
-from companion.kit.recall import Recalled, look_up
+from companion.kit.recall import Context, Recalled, look_up
 from companion.prompts import get
 from companion.registry import FEATURES
 from companion.turn.mention import mention_note
@@ -112,12 +112,12 @@ async def _recall(c: Runtime, t: Turn, heard: Heard | None) -> Recalled | None:
     if c.judge is None or heard is None or not heard[0].recall or not heard[0].topic:
         return None
     mark(t, f"recall look-up: {heard[0].topic!r}")
+    said = [f"{'they' if u.speaker is Speaker.USER else 'you'}: {u.text}" for u in t.prior]
     recalled = await look_up(
         c.judge,
         c.store.user_beliefs(c.rel),
         heard[0].topic,
-        said=c.store.last_support(c.rel),
-        now=t.now,
+        Context(c.store.last_support(c.rel), t.now, [*said[-(RECENT - 1) :], f"they: {t.text}"]),
     )
     found = recalled.picked if recalled is not None else ()
     reason = f"recall: they asked about {heard[0].topic!r}; " + (

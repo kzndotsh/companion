@@ -79,9 +79,10 @@ class Judge:
 
     def __init__(self, picks: list[str], *, recall: bool = True, fail: bool = False) -> None:
         self.picks, self.recall, self.fail = picks, recall, fail
+        self.asked: list[str] = []
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
-        del system, user
+        del system
         props = schema["properties"]
         assert isinstance(props, dict)
         if "severity" in props:
@@ -95,6 +96,7 @@ class Judge:
                 "topic": "favorite food" if self.recall else "",
             }
         elif "labels" in props:
+            self.asked.append(user)
             if self.fail:
                 msg = "provider down"
                 raise RuntimeError(msg)
@@ -151,6 +153,19 @@ async def test_the_look_up_is_logged_with_the_topic_and_what_it_found(store: Sto
     assert [d.reason for d in found] == ["recall: they asked about 'favorite food'; 1 found"]
     assert found[0].detail is not None
     assert found[0].detail["picked"] == ["b1"]
+
+
+async def test_when_asked_the_look_up_reads_the_conversation_and_reaches_sensitive_memories(
+    store: Store,
+) -> None:
+    store.insert_belief(_belief("b2", "The user carries a heavy secret.", "burger", sens=3))
+    judge = Judge(["r2"])
+    talker = await _ask(store, judge)
+    [asked] = judge.asked
+    assert "- they: i always want a burger lol" in asked
+    assert asked.rstrip().endswith("[r2] The user carries a heavy secret. (said 2 days ago)")
+    assert "- they: come on, you know this one" in asked
+    assert "- The user carries a heavy secret." in talker.seen[0].card
 
 
 def test_only_stated_beliefs_below_crisis_level_are_candidates_and_picks_are_capped() -> None:

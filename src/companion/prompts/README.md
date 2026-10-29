@@ -157,7 +157,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/openloops-draft` | system | the follow-up draft, `features/threads/run.py` | v2 |
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, or leans on a canned generic reaction, `core/turn/quip.py` | v3 |
 | `system/react` | system | the reaction judge, `core/turn/react.py` | v1 |
-| `system/recall` | system | the recall look-up, `core/recall.py` | v1 |
+| `system/recall` | system | the recall look-up, `core/recall.py` | v2 |
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |
 | `system/thread-met` | system | how their next message met a thread it brought up (picked up, brushed off, ignored), for the learned pace, `features/threads/run.py` (ADR 0023) | v1 |
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |

@@ -51,8 +51,10 @@ on this read, so it is hedged (`turn/listen.py`): a try that has not answered in
 one beside it, the first answer wins, and each try has 3 s.
 
 The same read also labels a message that is rude to the companion (one note for a cooler reply that
-turn) and a request to remember something. A recall request is looked up across every memory by a
-small model, and what it finds rides that turn's system block (`core/recall.py`).
+turn) and a request to remember something. A recall request is looked up across every memory they
+stated, the most sensitive included since they asked, by a small model that reads the read's guess at
+the topic and the last six messages of the conversation, both sides; what it finds rides that turn's
+system block (`core/recall.py`).
 
 Memories marked sensitive are on the card only on turns rated 1 or more. A turn that is ordinary,
 real (not a scene) and not a goodbye counts as casual (`kit/current.py`, `is_casual`), and many
