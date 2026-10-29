@@ -477,7 +477,7 @@ async def run(data_dir: Path) -> None:
                         same=same,
                         promises=s.on("promises"),
                         embed=embed,
-                        loose_loops=s.on("loop notes"),
+                        loose_loops=s.on("hedged plans"),
                         steps=steps,
                     ),
                     PASS_RETRY_DELAYS,

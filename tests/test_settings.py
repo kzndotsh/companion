@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import re
+from pathlib import Path
+
 import pytest
 
 from companion.settings import RENAMED, ROLEPLAY_MODEL, SWITCHES, Settings
@@ -72,3 +75,17 @@ def test_a_renamed_setting_still_set_stops_the_bot_with_its_new_name(old: str, n
 def test_every_switch_has_its_own_label() -> None:
     labels = [s.label for s in SWITCHES]
     assert len(labels) == len(set(labels))
+
+
+def test_every_switch_the_code_asks_for_exists() -> None:
+    """A label is a string, so a renamed switch only fails when the line runs (the memory pass asked
+    for one by its old name and failed every time)."""
+    labels = {s.label for s in SWITCHES}
+    src = Path(__file__).parents[1] / "src" / "companion"
+    asked = {
+        (f.name, m)
+        for f in src.rglob("*.py")
+        for m in re.findall(r"\.(?:on|position)\(\"([^\"]+)\"\)", f.read_text())
+    }
+    assert asked
+    assert {(name, m) for name, m in asked if m not in labels} == set()
