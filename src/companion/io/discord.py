@@ -31,6 +31,11 @@ from companion.io.delivery import Commands, DeliveryError, Incoming
 
 log = logging.getLogger("companion.discord")
 TYPING_SECONDS = 2.0  # a typing indicator stuck behind a rate limit is skipped, never waited on
+# discord.py sets no time limit on a call, so a send over a dropped connection waited 80 s, until
+# their next message replaced the reply (2026-10-29). A send that hangs is tried once more; if the
+# first had in fact gone through, the message shows twice, which is rarer than a dropped connection.
+SEND_SECONDS = 15.0
+SEND_TRIES = 2
 NOTE_CHARS = 500  # a note on a mark is a line or two
 NOT_YOURS = "these commands are only for the person this bot talks to"
 FAILED = "that didn't work, try again in a bit"
@@ -173,10 +178,17 @@ class Discord:
         return self._dm
 
     async def send(self, text: str) -> str:
-        try:
-            return str((await (await self._channel()).send(text)).id)
-        except _FAILURES as err:
-            raise DiscordError(_failed("send", err)) from None
+        for attempt in range(1, SEND_TRIES + 1):
+            try:
+                async with asyncio.timeout(SEND_SECONDS):
+                    return str((await (await self._channel()).send(text)).id)
+            except TimeoutError:
+                if attempt == SEND_TRIES:
+                    raise DiscordError(_failed("send", TimeoutError())) from None
+                log.warning("discord send got no answer in %.0fs; trying once more", SEND_SECONDS)
+            except _FAILURES as err:
+                raise DiscordError(_failed("send", err)) from None
+        raise AssertionError  # unreachable: the last try returns or raises
 
     async def react(self, message_id: str, emoji: str) -> None:
         try:

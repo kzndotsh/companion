@@ -256,6 +256,32 @@ async def test_a_typing_indicator_held_up_is_skipped(monkeypatch: pytest.MonkeyP
     await asyncio.wait_for(dc.typing(), timeout=1)
 
 
+async def test_a_send_that_hangs_is_tried_once_more_then_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(module, "SEND_SECONDS", 0.01)
+    dc, dm = _discord()
+    calls: list[str] = []
+    real = dm.send
+
+    async def hangs_once(text: str) -> Any:
+        calls.append(text)
+        if len(calls) == 1:
+            await asyncio.sleep(5)
+        return await real(text)
+
+    dm.send = hangs_once  # type: ignore[method-assign]
+    assert await dc.send("hi") == "1001"
+    assert (calls, dm.sent) == (["hi", "hi"], ["hi"])
+
+    async def always_hangs(text: str) -> Any:
+        await asyncio.sleep(5)
+
+    dm.send = always_hangs  # type: ignore[method-assign]
+    with pytest.raises(DiscordError, match="send failed: TimeoutError"):
+        await asyncio.wait_for(dc.send("x"), timeout=1)
+
+
 async def test_a_refused_token_stops_with_an_error_that_does_not_carry_it(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

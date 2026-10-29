@@ -63,6 +63,9 @@ seconds. A reply ready within the pause, such as a reaction, never shows typing.
 When Telegram answers "too many requests", a call waits the full time it asks for and tries again,
 for up to a minute of waiting in all; asking sooner is refused and can lengthen the block. A reply
 still refused after that is marked undelivered. On Discord, discord.py waits out rate limits itself.
+discord.py sets no time limit of its own, so a Discord send that gets no answer in 15 seconds, as on a
+dropped connection, is tried once more and then marked undelivered. If the first try had gone
+through after all, the message shows twice.
 On both, the typing indicator never waits: it is skipped.
 
 A long, plain reply is sometimes sent as two or three messages, the way people text
