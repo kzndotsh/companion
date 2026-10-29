@@ -15,9 +15,10 @@ reason to write first is planned (phase 3 of the calendar plan) and not built.
 
 Everything else is reaching out: a tick every 15 minutes decides whether to send a message first,
 and skips that look entirely once the daily spend cap is reached.
-This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`). `off` stops the whole tick and
-also the read of whether they stepped away, which only feeds nudges; the note in the chat is not
-affected. The two never double up: a plan brought up in the chat is marked asked, so it is never also
+This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`). `off` stops the whole tick. The
+read of whether they stepped away belongs to `now` (`COMPANION_NOW`) and keeps running while that is
+not `off`, since its labels feed its own note too; with both off it stops. The note in the chat is not
+affected by initiative. The two never double up: a plan brought up in the chat is marked asked, so it is never also
 a reach-out.
 
 ## Why it would write first

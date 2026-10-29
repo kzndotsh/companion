@@ -1,5 +1,6 @@
 """Every feature the turn and the memory pass run by declaration (`kit/features.py`), in order:
-their notes go in this order, and so do their steps after a memory pass."""
+their steps after a memory pass and once a turn is stored run in this order. Their notes go in the
+order `ORDER` in `turn/notes.py` names."""
 
 from __future__ import annotations
 

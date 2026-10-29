@@ -2,7 +2,7 @@
 
 Days worth a word: their own yearly dates from memory, US public and cultural days, the lead-up to a big one or one of theirs, and the relationship's own dates, offered as one note after the history. It exists because the date in the clock line alone made it name Halloween in 0 of 12 replies, and a short note after the history in 12 of 12 (`docs/inbox/2026-10-25-a-calendar-of-occasions.md`).
 
-**Status:** live. Switch: `COMPANION_CALENDAR` (`on` default, `off`). Runs before the reply, as a note sent after the history on a casual turn. No model call is made.
+**Status:** live. Switch: `COMPANION_CALENDAR` (`on` default, `off`). Runs before the reply as a candidate for the mention picker (`turn/mention.py`), which may bring it up as one line after the history on a casual turn. No model call is made.
 
 ## How it works
 

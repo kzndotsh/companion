@@ -14,7 +14,7 @@ For a candidate, its own judge (`system/guess-invite`, 3 s limit) says whether t
 
 On an invitation, the recall look-up (`kit/recall.py` `look_up`) picks what may fit from their memories. Only memories with sensitivity below 2 are offered, so a guess never draws on anything sensitive. At most 3 picks are kept. The note (`notes/guess`) asks for a single playful guess as a question. With no pick there is no note.
 
-Each invitation is logged under the decision key `guess: they invited a guess`, with what it was about, the offered claims and the note version, so guesses can later be scored by kind. In the note order it sits after the topic note and before lore.
+Each invitation is logged under the decision key `guess: they invited a guess`, with what it was about, the offered claims and the note version, so guesses can later be scored by kind. In the note order (`ORDER` in `turn/notes.py`) it sits after the memory map's note and before the reminder note.
 
 ## Files
 
