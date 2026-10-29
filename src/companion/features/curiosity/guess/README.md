@@ -40,4 +40,4 @@ None.
 
 ## Tests
 
-`tests/features/guess/`
+`tests/features/curiosity/guess/`

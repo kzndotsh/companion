@@ -70,4 +70,4 @@ The owner's setting is already set, so for the owner nothing changes: no pronoun
 
 ## Tests
 
-`tests/features/basics/`
+`tests/features/curiosity/basics/`

@@ -1,4 +1,4 @@
-# Hooks (J48)
+# Hook (J48)
 
 When their own words touch a basic fact about them without giving it ("I'm getting old"), it logs whether it
 would ask about it. Asking about what someone just said reads as care, and a question out of the blue reads as
@@ -52,4 +52,4 @@ None. Its decisions are in the decision log only.
 
 ## Tests
 
-`tests/features/hooks/`
+`tests/features/curiosity/hook/`

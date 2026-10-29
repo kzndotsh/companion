@@ -140,7 +140,7 @@ together.
   registered, in the order the after-steps run.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it
-  works). A group of close features (`upkeep/`) holds one such folder per part and a README naming them;
+  works). A group of close features (`upkeep/`, `curiosity/`) holds one such folder per part and a README naming them;
   its parts may import each other. import-linter keeps a feature's logic pure, keeps features from importing
   each other, and lets only a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests
   mirror the folder (`tests/features/<name>/`).

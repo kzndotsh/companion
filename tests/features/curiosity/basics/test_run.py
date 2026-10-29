@@ -18,8 +18,8 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.basics.logic import ASK_NAME, ASK_PRONOUNS, ASKED, ASKED_PRONOUNS
-from companion.features.basics.run import basics_offer, capture_pronouns
+from companion.features.curiosity.basics.logic import ASK_NAME, ASK_PRONOUNS, ASKED, ASKED_PRONOUNS
+from companion.features.curiosity.basics.run import basics_offer, capture_pronouns
 from companion.kit.current import Turn
 from companion.kit.features import Lookups, Moment, Offer
 from companion.kit.runtime import Runtime

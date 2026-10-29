@@ -14,7 +14,7 @@ from companion.core.turn.questions import NOTE as QUESTION_NOTE
 from companion.core.turn.questions import RUN
 from companion.core.turn.quoted import Quoted
 from companion.core.types import Speaker
-from companion.features.basics.logic import ASKED as ASKED_NAME
+from companion.features.curiosity.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
 from companion.features.reminders.run import ASKED, SET, Read, reminder_offer

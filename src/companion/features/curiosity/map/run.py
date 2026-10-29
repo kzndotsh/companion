@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Json, RelationshipId
-from companion.features.knowing.logic import (
+from companion.features.curiosity.map.logic import (
     ASKED,
     LABEL_BATCH,
     LABEL_PROMPT,

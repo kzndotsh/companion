@@ -13,7 +13,7 @@ import httpx
 import pytest
 
 from companion.daemon import load_dotenv
-from companion.features.guess.logic import JUDGE, SCHEMA, parse
+from companion.features.curiosity.guess.logic import JUDGE, SCHEMA, parse
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 

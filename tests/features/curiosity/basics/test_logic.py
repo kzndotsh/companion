@@ -5,7 +5,7 @@ from collections.abc import Callable
 import pytest
 
 from companion.core.types import Belief, Subject
-from companion.features.basics.logic import (
+from companion.features.curiosity.basics.logic import (
     ASK_NAME,
     ASK_PRONOUNS,
     ask_name,

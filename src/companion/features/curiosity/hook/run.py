@@ -11,7 +11,7 @@ from companion.core.card import Card
 from companion.core.extractor import StructuredModel
 from companion.core.recall import SCHEMA, build_prompt, candidates, parse
 from companion.core.types import Belief, Frame, Speaker
-from companion.features.hooks.logic import (
+from companion.features.curiosity.hook.logic import (
     KNEW,
     PROMPT,
     TOPIC,
@@ -20,7 +20,7 @@ from companion.features.hooks.logic import (
     may_ask,
     read_basic,
 )
-from companion.features.hooks.logic import SCHEMA as HOOK_SCHEMA
+from companion.features.curiosity.hook.logic import SCHEMA as HOOK_SCHEMA
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, is_casual
 from companion.kit.features import Feature

@@ -8,8 +8,8 @@ from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
 from companion.core.types import Belief, Frame, Utterance
-from companion.features.guess.logic import INVITED as GUESS_INVITED
-from companion.features.guess.logic import (
+from companion.features.curiosity.guess.logic import INVITED as GUESS_INVITED
+from companion.features.curiosity.guess.logic import (
     JUDGE,
     MAX_OFFERED,
     SCHEMA,
@@ -17,9 +17,9 @@ from companion.features.guess.logic import (
     offerable,
     parse,
 )
-from companion.features.guess.logic import NOTE as GUESS_NOTE
-from companion.features.guess.logic import likely as guess_likely
-from companion.features.guess.logic import note as guess_note
+from companion.features.curiosity.guess.logic import NOTE as GUESS_NOTE
+from companion.features.curiosity.guess.logic import likely as guess_likely
+from companion.features.curiosity.guess.logic import note as guess_note
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, is_casual, mark
 from companion.kit.features import Feature, Offer, Offered

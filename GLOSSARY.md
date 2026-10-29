@@ -386,7 +386,13 @@ One part of their life on the memory map: identity, people, daily, interests, hi
 How personal a memory is: surface, personal or core.
 
 **Gap**:
-The part of their life memory knows least about, which the companion might ask about.
+The part of their life memory knows least about, which the companion asks about now and then.
+
+**Curiosity**:
+Learning about them on purpose: asking the basics, the map's question about a gap, the hook, and guesses when invited.
+
+**Hook**:
+A light question when their words touch a basic the companion does not know.
 
 **Basics**:
 The few facts worth knowing early: what to call them, pronouns, age, birthday, work, school, home, place.

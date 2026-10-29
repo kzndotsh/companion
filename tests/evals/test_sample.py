@@ -19,7 +19,7 @@ from companion.core.types import Frame, Json, Speaker, TraceId, TurnId, Utteranc
 from companion.evals.fixtures import Fixture, MaxWords, Script
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.sample import draw
-from companion.features.basics.logic import ASKED as ASKED_NAME
+from companion.features.curiosity.basics.logic import ASKED as ASKED_NAME
 from companion.kit.record import Recorder
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store

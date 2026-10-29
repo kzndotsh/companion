@@ -28,10 +28,10 @@ from companion.evals.fixtures import load_fixtures
 from companion.features.calendar import cli as calendar
 from companion.features.callbacks import cli as callbacks
 from companion.features.crisis import cli as crisis
+from companion.features.curiosity.map import cli as knowing
 from companion.features.episodes import cli as episodes
 from companion.features.history import cli as history
 from companion.features.invented import cli as invented
-from companion.features.knowing import cli as knowing
 from companion.features.lore import cli as lore
 from companion.features.mood import cli as mood
 from companion.features.names import cli as names

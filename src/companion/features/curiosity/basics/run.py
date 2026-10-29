@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from companion.core.extractor import StructuredModel
 from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import Speaker, Utterance
-from companion.features.basics.logic import (
+from companion.features.curiosity.basics.logic import (
     ASK_EVERY,
     ASKED,
     ASKED_PRONOUNS,

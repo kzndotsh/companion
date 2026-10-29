@@ -19,7 +19,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.basics.logic import name_belief
+from companion.features.curiosity.basics.logic import name_belief
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

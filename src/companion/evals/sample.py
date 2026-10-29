@@ -40,7 +40,7 @@ from companion.core.types import (
 )
 from companion.evals.fixtures import Fixture, Script
 from companion.evals.rebuild import swap_memory
-from companion.features.basics.logic import ASKED as ASKED_NAME
+from companion.features.curiosity.basics.logic import ASKED as ASKED_NAME
 from companion.features.lore.run import LORE
 from companion.kit.current import Heard, Turn
 from companion.kit.features import Lookups, Moment

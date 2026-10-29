@@ -2,7 +2,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from companion.features.hooks.logic import SCHEMA, TOPIC, Basic, agreed, may_ask, read_basic
+from companion.features.curiosity.hook.logic import (
+    SCHEMA,
+    TOPIC,
+    Basic,
+    agreed,
+    may_ask,
+    read_basic,
+)
 from tests.conftest import T0
 
 

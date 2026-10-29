@@ -3,14 +3,14 @@ their notes go in this order, and so do their steps after a memory pass."""
 
 from __future__ import annotations
 
-from companion.features.basics.run import BASICS
 from companion.features.calendar.run import CALENDAR
 from companion.features.crisis.run import CRISIS
+from companion.features.curiosity.basics.run import BASICS
+from companion.features.curiosity.guess.run import GUESS
+from companion.features.curiosity.hook.run import HOOKS
+from companion.features.curiosity.map.run import KNOWING
 from companion.features.episodes.run import EPISODES
-from companion.features.guess.run import GUESS
 from companion.features.history.run import HISTORY
-from companion.features.hooks.run import HOOKS
-from companion.features.knowing.run import KNOWING
 from companion.features.lore.run import LORE
 from companion.features.marks.run import MARKS
 from companion.features.mood.run import MOOD

@@ -1,4 +1,4 @@
-# Knowing (J48)
+# Map (J48)
 
 A map of what it knows about them: each memory is placed in a part of their life, and code picks the thinnest
 part that is fine to ask about. It exists because it asked plenty of questions, but only about the thing just
@@ -25,8 +25,8 @@ what it would bring up on its own waits that turn. Once the turn is stored it is
 about a gap`, with the reason, the domain, the depth and the counts. Nothing is picked when nothing is labelled
 yet. Picks from the shadow week (19 to 27 Oct) stay in the log as `map: would ask about a gap (shadow)`.
 
-The note is the only output. How they want to be referred to and the name question are in `features/basics/`,
-and the basic-fact question is in `features/hooks/`.
+The note is the only output. How they want to be referred to and the name question are in `basics/`,
+and the basic-fact question is in `hook/`.
 
 ## Files
 
@@ -51,4 +51,4 @@ and the basic-fact question is in `features/hooks/`.
 
 ## Tests
 
-`tests/features/knowing/`
+`tests/features/curiosity/map/`

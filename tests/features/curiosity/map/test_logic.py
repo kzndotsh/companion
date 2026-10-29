@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from companion.core.types import Belief, BeliefId, Depth, Domain, Json, Label
-from companion.features.knowing.logic import label_prompt, parse_labels, pick_gap
+from companion.features.curiosity.map.logic import label_prompt, parse_labels, pick_gap
 
 
 def _labels(pairs: list[tuple[str, Domain]]) -> dict[BeliefId, Label]:

@@ -8,8 +8,8 @@ from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
 from companion.core.types import Depth, Domain, RelationshipId
-from companion.features.knowing.logic import ASKED, WOULD_ASK, pick_gap
-from companion.features.knowing.run import label_new
+from companion.features.curiosity.map.logic import ASKED, WOULD_ASK, pick_gap
+from companion.features.curiosity.map.run import label_new
 from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
