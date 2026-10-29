@@ -34,7 +34,6 @@ from companion.core.types import (
     TurnId,
 )
 from companion.core.vectors import Embedder
-from companion.features.consolidate.run import SameCheck
 from companion.features.history.run import pass_step
 from companion.features.nudges.run import tick_nudge
 from companion.features.reach.logic import Kind, dial
@@ -42,6 +41,7 @@ from companion.features.reach.run import Reacher, holds, tick_reach
 from companion.features.reminders.run import deliver_due
 from companion.features.scene_memory.run import pass_step as scene_step
 from companion.features.threads.run import Ticker, drafter, tick
+from companion.features.upkeep.reread.run import SameCheck
 from companion.io import discord
 from companion.io.delivery import Commands, Delivery, Hooks, Incoming, Transport
 from companion.io.stop import until_stopped
@@ -289,13 +289,13 @@ async def _nightly_memory(
     store: Store, judge: StructuredModel, rel: RelationshipId, s: Settings
 ) -> None:
     """The night's memory work once a night (ADR 0019, `memory/nightly.py`), each step on its own. A
-    night missed while the bot was down is made up CATCH_UP after it starts. The memory check's
+    night missed while the bot was down is made up CATCH_UP after it starts. The re-read's
     switch turns off that step only, never the night."""
 
     async def run() -> None:
         if over_cap(store, rel, s.daily_cap, datetime.now(UTC)) is not None:
             return
-        failed = await night(store, judge, rel, local_zone(), mode=s.position("memory check"))
+        failed = await night(store, judge, rel, local_zone(), mode=s.position("re-read"))
         if failed:
             logging.getLogger("companion.nightly").warning("nightly: %s failed", ", ".join(failed))
 
@@ -443,8 +443,8 @@ async def run(data_dir: Path) -> None:
             serious_message=character.serious if character is not None else "",
         )
         same = (
-            SameCheck(judges, runtime.embedder, runtime.embed_model, s.position("memory check"))
-            if runtime.embedder is not None and s.on("memory check")
+            SameCheck(judges, runtime.embedder, runtime.embed_model, s.position("re-read"))
+            if runtime.embedder is not None and s.on("re-read")
             else None
         )
         embed = (runtime.embedder, runtime.embed_model) if runtime.embedder is not None else None

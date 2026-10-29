@@ -346,12 +346,13 @@ A reply that brings back a remembered detail on its own and lands well.
 The background step after a conversation goes quiet that reads new messages and proposes memories.
 _Avoid_: slow loop, reflect
 
-**Nightly**:
-The night's memory work: the memory check, merge grouping, and retiring routine moments.
+**Upkeep**:
+Everything done to a memory after it is written: at write the sort, the repeat check and the memory context; each night the re-read, merge grouping and retiring routine moments.
+_Avoid_: nightly (as a name), consolidation
 
-**Memory check**:
-The nightly re-reading of settled memories that closes faded ones and queues questions for the owner.
-_Avoid_: consolidation (also names the write-time repeat check)
+**Re-read**:
+The nightly re-reading of settled memories that closes faded passing moments and queues questions for the owner.
+_Avoid_: memory check, consolidation
 
 **Repeat check**:
 The check when a memory is written that turns a repeat of an old memory into another quote for it.
@@ -360,7 +361,7 @@ The check when a memory is written that turns a repeat of an old memory into ano
 A suggested single memory for several about one thing, waiting for the owner.
 
 **Memory review**:
-The owner answering the questions the memory checks and merge proposals raised.
+The owner answering the questions the re-read, the repeat check and merge proposals raised.
 
 **Conflict question**:
 A question to the owner when a new memory may replace or contradict an older one.
@@ -405,8 +406,9 @@ Talk that starts after two hours or more of quiet.
 **Memory context**:
 A short line on what was being talked about when a memory was said, shown beside it.
 
-**Worth**:
+**Sort**:
 Whether a new memory is about their life, about the companion, or one day's routine.
+_Avoid_: worth
 
 ## The companion's own self
 

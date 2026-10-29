@@ -10,10 +10,10 @@ from datetime import datetime, timedelta, tzinfo
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId
-from companion.features.consolidate.run import nightly
 from companion.features.episodes.run import write_closed
-from companion.features.merging import run as merging
-from companion.features.worth.run import expire_routine
+from companion.features.upkeep.merging import run as merging
+from companion.features.upkeep.reread.run import nightly
+from companion.features.upkeep.sort.run import expire_routine
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.nightly")
@@ -47,9 +47,9 @@ async def night(
     async def episodes() -> None:
         await write_closed(store, judge, rel, utc_now())
 
-    # The memory check is the only step behind its switch; the rest of the night's work always runs.
+    # The re-read is the only step behind its switch; the rest of the night's work always runs.
     steps: tuple[tuple[str, Callable[[], Awaitable[None]]], ...] = (
-        *((("memory check", check),) if mode != "off" else ()),
+        *((("re-read", check),) if mode != "off" else ()),
         ("grouping", group),
         ("routine expiry", routine),
         ("episodes", episodes),

@@ -10,13 +10,13 @@ from pathlib import Path
 
 from companion.core.clock import utc_now
 from companion.core.types import Belief, BeliefId, RelationshipId
-from companion.features.consolidate.logic import HELD, Label, Relation
-from companion.features.consolidate.store import MemoryCheck
-from companion.features.merging.logic import NOTE, PICK, merged_kind
-from companion.features.merging.store import Proposal
-from companion.features.worth.logic import ASK_ABOUT_THE_BOT, ASK_ROUTINE
-from companion.features.worth.logic import ASKED as WORTH_ASKED
-from companion.features.worth.logic import Label as Worth
+from companion.features.upkeep.merging.logic import NOTE, PICK, merged_kind
+from companion.features.upkeep.merging.store import Proposal
+from companion.features.upkeep.reread.logic import HELD, Label, Relation
+from companion.features.upkeep.reread.store import MemoryCheck
+from companion.features.upkeep.sort.logic import ASK_ABOUT_THE_BOT, ASK_ROUTINE
+from companion.features.upkeep.sort.logic import ASKED as WORTH_ASKED
+from companion.features.upkeep.sort.logic import Label as Worth
 from companion.kit.curate import merge, retire
 from companion.store.sqlite.store import Store
 

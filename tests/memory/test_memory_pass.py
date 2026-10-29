@@ -18,7 +18,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.vectors import Embedded, unit
-from companion.features.consolidate.run import SameCheck
+from companion.features.upkeep.reread.run import SameCheck
 from companion.memory.memory_pass import memory_pass
 from companion.store.sqlite.store import Store
 

@@ -12,7 +12,18 @@ FEATURES = Path("src/companion/features")
 SECTIONS = ("## How it works", "## Files", "## Prompts", "## Commands", "## Measured", "## Tests")
 _VERSIONED = re.compile(r"`(?:system|notes|messages)/[a-z0-9-]+(?:`\s*\(v\d+\)|@v\d+`)")
 _PROMPT = re.compile(r"""get\(\s*f?["']((?:system|notes|messages)/[a-z0-9-]+)["']""")
-NAMES = sorted(p.parent.name for p in FEATURES.glob("*/__init__.py"))
+# A feature folder holds code; a folder of several parts (upkeep) holds one folder per part, each
+# read like a feature, and a README that names its parts.
+NAMES = sorted(
+    str(p.parent.relative_to(FEATURES))
+    for p in FEATURES.glob("**/__init__.py")
+    if p.parent != FEATURES and any(f.name != "__init__.py" for f in p.parent.glob("*.py"))
+)
+GROUPS = sorted(
+    str(p.parent.relative_to(FEATURES))
+    for p in FEATURES.glob("*/__init__.py")
+    if str(p.parent.relative_to(FEATURES)) not in NAMES
+)
 
 
 def _readme(name: str) -> str:
@@ -52,3 +63,11 @@ def test_the_readme_names_every_file_and_prompt_the_feature_has(name: str) -> No
 def test_the_readme_names_prompts_without_their_version(name: str) -> None:
     """The manifest holds the current versions (`companion prompts`); a version here goes stale."""
     assert not _VERSIONED.findall(_readme(name)), f"{name}: a prompt is named with its version"
+
+
+@pytest.mark.parametrize("group", GROUPS)
+def test_a_group_readme_names_each_of_its_parts(group: str) -> None:
+    text = _readme(group)
+    parts = sorted(p.parent.name for p in (FEATURES / group).glob("*/__init__.py"))
+    assert parts, f"{group}: has parts"
+    assert not [p for p in parts if f"`{p}/`" not in text], f"{group}: parts not in its README"

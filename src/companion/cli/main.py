@@ -27,21 +27,21 @@ from companion.core.views import ViewMode
 from companion.evals.fixtures import load_fixtures
 from companion.features.calendar import cli as calendar
 from companion.features.callbacks import cli as callbacks
-from companion.features.context import cli as context
 from companion.features.crisis import cli as crisis
 from companion.features.episodes import cli as episodes
 from companion.features.history import cli as history
 from companion.features.invented import cli as invented
 from companion.features.knowing import cli as knowing
 from companion.features.lore import cli as lore
-from companion.features.merging import cli as merging
 from companion.features.mood import cli as mood
 from companion.features.names import cli as names
 from companion.features.now import cli as now_cli
 from companion.features.promises import cli as promises
 from companion.features.reminders import cli as reminders
 from companion.features.scene_memory import cli as scene
-from companion.features.worth import cli as worth
+from companion.features.upkeep.context import cli as context
+from companion.features.upkeep.merging import cli as merging
+from companion.features.upkeep.sort import cli as worth
 
 
 def _db_args(p: argparse.ArgumentParser, *, relationship: bool = True) -> None:

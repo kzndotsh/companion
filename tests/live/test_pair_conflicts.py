@@ -18,7 +18,7 @@ import pytest
 
 from companion.core.types import Belief
 from companion.daemon import load_dotenv
-from companion.features.consolidate.logic import (
+from companion.features.upkeep.reread.logic import (
     PAIR,
     PAIR_SCHEMA,
     Relation,

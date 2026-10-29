@@ -71,12 +71,12 @@ runs on its own, so one failing does not skip the rest, and a night missed while
 made up five minutes after it starts. Nothing runs that night once the daily spend cap is reached. The
 steps are:
 
-- the memory check, which reads up to 40 week-old memories a night and closes faded passing moments
-  or raises questions (`src/companion/features/consolidate/README.md`); `COMPANION_CONSOLIDATE=off` skips this
+- the re-read (upkeep), which reads up to 40 week-old memories a night and closes faded passing moments
+  or raises questions (`src/companion/features/upkeep/reread/README.md`); `COMPANION_REREAD=off` skips this
   step only
-- grouping memories about one thing into merge questions (`src/companion/features/merging/README.md`)
+- grouping memories about one thing into merge questions (`src/companion/features/upkeep/merging/README.md`)
 - retiring routine moments a week after they were last mentioned
-  (`src/companion/features/worth/README.md`)
+  (`src/companion/features/upkeep/sort/README.md`)
 - writing a line for each finished stretch of chat (`src/companion/features/episodes/README.md`)
 
 Memory changes itself only where a judge has matched the owner's own review (ADR 0019). Everything

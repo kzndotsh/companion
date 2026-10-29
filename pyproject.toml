@@ -93,7 +93,9 @@ name = "a feature's logic imports nothing from the shell or any feature's effect
 type = "forbidden"
 source_modules = [
     "companion.features.*.logic",
+    "companion.features.*.*.logic",
     "companion.features.*.gate",
+    "companion.features.*.*.gate",
     "companion.features.reminders.series",
 ]
 forbidden_modules = [
@@ -108,8 +110,11 @@ forbidden_modules = [
     "companion.daemon",
     "companion.evals",
     "companion.features.*.run",
+    "companion.features.*.*.run",
     "companion.features.*.store",
+    "companion.features.*.*.store",
     "companion.features.*.cli",
+    "companion.features.*.*.cli",
 ]
 
 [[tool.importlinter.contracts]]
@@ -122,6 +127,7 @@ modules = ["companion.features.*"]
 # every feature. A feature reaching a hub does not make it depend on the others.
 ignore_imports = [
     "companion.store.sqlite.** -> companion.features.*.store",
+    "companion.store.sqlite.** -> companion.features.*.*.store",
     "companion.store.sqlite.** -> companion.features.*.logic",
     "companion.registry -> companion.features.**",
 ]
@@ -143,6 +149,7 @@ layers = [
 ]
 ignore_imports = [
     "companion.store.sqlite.** -> companion.features.*.store",
+    "companion.store.sqlite.** -> companion.features.*.*.store",
     "companion.store.sqlite.** -> companion.features.*.logic",
 ]
 
@@ -186,10 +193,14 @@ source_modules = [
     "companion.daemon",
     "companion.evals",
     "companion.features.*.logic",
+    "companion.features.*.*.logic",
     "companion.features.*.gate",
+    "companion.features.*.*.gate",
     "companion.features.reminders.series",
     "companion.features.*.run",
+    "companion.features.*.*.run",
     "companion.features.*.cli",
+    "companion.features.*.*.cli",
     "companion.lib.vote",
     "companion.lib.retry",
     "companion.lib.stats",

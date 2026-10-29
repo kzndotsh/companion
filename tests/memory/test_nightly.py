@@ -35,7 +35,7 @@ async def test_one_failing_step_does_not_skip_the_others_and_the_run_is_kept(
     monkeypatch.setattr(nightly_module, "write_closed", episodes)
     assert missed(store, REL, T0)
     failed = await night(store, None, REL, UTC, mode="shadow")  # type: ignore[arg-type]
-    assert failed == ["memory check"]
+    assert failed == ["re-read"]
     assert ran == ["grouping", "routine", "episodes"]
     assert store.setting(REL, LAST_RUN) is not None
 

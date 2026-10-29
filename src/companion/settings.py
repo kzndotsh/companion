@@ -34,6 +34,7 @@ RENAMED = {
     "COMPANION_FALLBACK_MODEL": "COMPANION_JUDGE_STANDBY",
     "COMPANION_JUDGE_MODELS": "COMPANION_JUDGE_ROUTES",
     "COMPANION_LOOP_NOTES": "COMPANION_HEDGED_PLANS",
+    "COMPANION_CONSOLIDATE": "COMPANION_REREAD",
 }
 
 
@@ -62,7 +63,7 @@ SWITCHES: tuple[Switch, ...] = (
         "COMPANION_ROUTE_INTIMATE", "intimate", ("off", "on"), {"on": "may route", "off": "stays"}
     ),
     Switch("COMPANION_RELEVANCE", "relevance", ("on", "shadow", "off")),
-    Switch("COMPANION_CONSOLIDATE", "memory check", ("on", "shadow", "off")),
+    Switch("COMPANION_REREAD", "re-read", ("on", "shadow", "off")),
     Switch("COMPANION_PROMISES", "promises", ("shadow", "off")),
     Switch("COMPANION_LORE", "lore", ("on", "shadow", "off")),
     Switch("COMPANION_REMINDERS", "reminders", ("on", "off")),

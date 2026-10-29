@@ -164,7 +164,7 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
 
 We often try new behaviour in shadow first: it works out and logs what it would do, but changes
 nothing in the chat until a review shows it reads right. Right now that includes reaching out first,
-the crisis path, the nightly memory check, the mood and the getting-to-know-you questions. The full
+the crisis path, the nightly re-read, the mood and the getting-to-know-you questions. The full
 list, with each one's setting and review date, is in [AGENTS.md](AGENTS.md#what-runs-in-shadow).
 
 ## Quick start
@@ -256,7 +256,7 @@ stops the bot at start with its new name (`RENAMED` in `settings.py`).
 |---|---|---|
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
 | `COMPANION_REACH` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
-| `COMPANION_CONSOLIDATE` | `on` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
+| `COMPANION_REREAD` | `on` | the re-read and the repeat check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 | `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads a message that is serious or uses crisis words for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a scene set aside for the turn, a reply that names means drawn once more, a day's hold on reaching out first), `off` skips it |
 
@@ -320,7 +320,7 @@ uv run companion crisis --check --cap 0.10   # the risk judge on the public cris
 
 ```bash
 uv run companion beliefs        # what it holds about the user, with quotes
-uv run companion memory review  # answer the memory check's questions and merge proposals until you quit
+uv run companion memory review  # answer the re-read's questions and merge proposals until you quit
 uv run companion memory group   # group memories about one thing across the whole store into merge proposals
 uv run companion memory context # write the missing notes on what a feeling or sensitive memory was about
 uv run companion memory label   # keep-label memories kept before the rule; each change becomes a question

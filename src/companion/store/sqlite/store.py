@@ -37,15 +37,12 @@ from companion.core.views import ViewState, parse_mode
 from companion.features.calendar import store as calendar
 from companion.features.callbacks import store as callbacks
 from companion.features.callbacks.logic import Check
-from companion.features.consolidate import store as memory_checks
-from companion.features.context import store as contexts
 from companion.features.episodes import store as episodes
 from companion.features.history.store import Stories
 from companion.features.invented import store as invented
 from companion.features.invented.logic import Statement
 from companion.features.lore.logic import Kind as ViewKind
 from companion.features.lore.logic import Labelled as ViewLabel
-from companion.features.merging import store as merges
 from companion.features.mood import store as mood
 from companion.features.mood.logic import Effect, Said
 from companion.features.names import store as names
@@ -60,6 +57,9 @@ from companion.features.scene_memory.store import SceneMemory
 from companion.features.threads import store as open_loops
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.store import ReachOut
+from companion.features.upkeep.context import store as contexts
+from companion.features.upkeep.merging import store as merges
+from companion.features.upkeep.reread import store as memory_checks
 from companion.store.sqlite import (
     beliefs,
     decisions,

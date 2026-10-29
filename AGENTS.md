@@ -140,9 +140,10 @@ together.
   registered, in the order the after-steps run.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it
-  works). import-linter keeps a feature's logic pure, keeps features from importing each other, and lets only
-  a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests mirror the folder
-  (`tests/features/<name>/`).
+  works). A group of close features (`upkeep/`) holds one such folder per part and a README naming them;
+  its parts may import each other. import-linter keeps a feature's logic pure, keeps features from importing
+  each other, and lets only a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests
+  mirror the folder (`tests/features/<name>/`).
 - Ask a judge through `kit/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries, and optionally a hedge: a second try started while a slow one still runs, first answer wins) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.

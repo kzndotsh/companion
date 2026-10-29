@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from companion.features.basics.run import BASICS
 from companion.features.calendar.run import CALENDAR
-from companion.features.context.run import CONTEXT
 from companion.features.crisis.run import CRISIS
 from companion.features.episodes.run import EPISODES
 from companion.features.guess.run import GUESS
@@ -23,7 +22,8 @@ from companion.features.reminders.run import REMINDERS
 from companion.features.scene_memory.run import SCENE
 from companion.features.threads.run import OPENLOOPS
 from companion.features.topics.run import TOPICS
-from companion.features.worth.run import WORTH
+from companion.features.upkeep.context.run import CONTEXT
+from companion.features.upkeep.sort.run import WORTH
 from companion.kit.features import Feature
 
 FEATURES: tuple[Feature, ...] = (
