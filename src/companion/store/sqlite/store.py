@@ -317,9 +317,9 @@ class Store:
         )
 
     def checked_memories(
-        self, rel: RelationshipId, prompt: str = "system/memory-check"
+        self, rel: RelationshipId, names: Sequence[str], version: str | None = None
     ) -> set[BeliefId]:
-        return memory_checks.checked(self._conn, rel, prompt)
+        return memory_checks.checked(self._conn, rel, names, version)
 
     def unanswered_checks(
         self, rel: RelationshipId, verdicts: Sequence[str]

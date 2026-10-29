@@ -10,6 +10,12 @@ from companion.core.types import RelationshipId, TurnId
 from companion.features.mood.logic import PARAMS_VERSION, Effect, Said, Source, State
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
+# The keys of the decisions that carry what the judges read: the listening read's severity, and the
+# tone read logged with a reaction or with none.
+LISTENED = "listening"
+REACTED = "reacted "
+NO_REACTION = "react: none"
+
 
 def add(conn: sqlite3.Connection, rel: RelationshipId, effects: Sequence[Effect]) -> None:
     with write_tx(conn):
@@ -56,18 +62,23 @@ def since(conn: sqlite3.Connection, rel: RelationshipId, start: datetime) -> lis
 
 
 def said_since(conn: sqlite3.Connection, rel: RelationshipId, start: datetime) -> list[Said]:
-    """Their messages since a time, oldest first, with the severity and tone the judges logged."""
+    """Their messages since a time, oldest first, with the severity and tone the judges logged. The
+    judges' decisions are found by key, so renaming a judge's prompt loses nothing; a decision from
+    before keys (2026-10-21) is found by its prompt's old name."""
     rows = conn.execute(
         "SELECT u.turn_id, u.at, u.text,"
         " (SELECT json_extract(d.detail, '$.labels.severity') FROM decisions d"
         "  WHERE d.relationship_id = u.relationship_id AND d.turn_id = u.turn_id"
-        "  AND json_extract(d.detail, '$.prompt') LIKE 'system/listening@%' LIMIT 1) AS severity,"
+        "  AND (d.key = ? OR (d.key IS NULL"
+        "   AND json_extract(d.detail, '$.prompt') LIKE 'system/listening@%'))"
+        "  LIMIT 1) AS severity,"
         " (SELECT json_extract(d.detail, '$.scores.tone') FROM decisions d"
         "  WHERE d.relationship_id = u.relationship_id AND d.turn_id = u.turn_id"
-        "  AND json_extract(d.detail, '$.prompt') LIKE 'system/react@%' LIMIT 1) AS tone"
+        "  AND (d.key IN (?, ?) OR (d.key IS NULL"
+        "   AND json_extract(d.detail, '$.prompt') LIKE 'system/react@%')) LIMIT 1) AS tone"
         " FROM utterances u WHERE u.relationship_id = ? AND u.speaker = 'user' AND u.at >= ?"
         " ORDER BY u.at",
-        (rel, iso(start)),
+        (LISTENED, REACTED, NO_REACTION, rel, iso(start)),
     ).fetchall()
     return [
         Said(

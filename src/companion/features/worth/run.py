@@ -14,6 +14,7 @@ from companion.features.worth.logic import (
     PROMPT,
     ROUTINE_DAYS,
     SCHEMA,
+    WORTH_NAMES,
     Label,
     read,
     to_ask,
@@ -55,7 +56,7 @@ async def label(  # noqa: PLR0913
 ) -> Labelled:
     """Label the memories not yet labelled. One recorded since `act_since` (a new memory) is acted
     on: an agreed remark about the bot is retired at once. One kept before becomes a question."""
-    done = store.checked_memories(rel, prompt="system/memory-worth")
+    done = store.checked_memories(rel, WORTH_NAMES)
     todo: list[Belief] = [b for b in store.user_beliefs(rel) if b.id not in done][:limit]
     if not todo:
         return Labelled()

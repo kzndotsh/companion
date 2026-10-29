@@ -20,6 +20,8 @@ from companion.lib.vote import unanimous
 from companion.prompts import get
 
 PROMPT = get("system/memory-worth")
+# Every name the sort's prompt has had, so a rename keeps what it already read.
+WORTH_NAMES = ("system/memory-worth",)
 ROUTINE_DAYS = timedelta(days=7)
 
 

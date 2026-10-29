@@ -19,6 +19,8 @@ from companion.prompts import get
 
 HELD = 2  # sensitive memories are only ever the owner's call
 CHECK = get("system/memory-check")
+# Every name the check's prompt has had, so a rename keeps what it already read.
+CHECK_NAMES = ("system/memory-check",)
 PAIR = get("system/memory-pair")
 
 

@@ -45,17 +45,25 @@ def add(  # noqa: PLR0913
 
 
 def checked(
-    conn: sqlite3.Connection, rel: RelationshipId, prompt: str = "system/memory-check"
+    conn: sqlite3.Connection,
+    rel: RelationshipId,
+    names: Sequence[str],
+    version: str | None = None,
 ) -> set[BeliefId]:
-    """The memories read by this prompt: by any version for a bare name, or only by that version for
-    `name@version`, so a new version reads them again."""
-    pattern = prompt if "@" in prompt else f"{prompt}@%"
+    """The memories read alone by a prompt, under any of the names it has had, so a renamed prompt
+    keeps its history: by any version, or only by `version` (`v3`), so a new version reads them
+    again."""
     rows = conn.execute(
-        "SELECT DISTINCT belief_id FROM memory_checks"
-        " WHERE relationship_id = ? AND other_id IS NULL AND prompt LIKE ?",
-        (rel, pattern),
+        "SELECT DISTINCT belief_id, prompt FROM memory_checks"
+        " WHERE relationship_id = ? AND other_id IS NULL",
+        (rel,),
     ).fetchall()
-    return {BeliefId(str(r["belief_id"])) for r in rows}
+    out: set[BeliefId] = set()
+    for r in rows:
+        name, _, ver = str(r["prompt"]).partition("@")
+        if name in names and version in (None, ver):
+            out.add(BeliefId(str(r["belief_id"])))
+    return out
 
 
 def unanswered(

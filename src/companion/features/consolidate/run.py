@@ -15,6 +15,7 @@ from companion.core.types import Belief, Depth, Domain, RelationshipId
 from companion.core.vectors import Embedder, nearest
 from companion.features.consolidate.logic import (
     CHECK,
+    CHECK_NAMES,
     CHECK_SCHEMA,
     PAIR,
     PAIR_SCHEMA,
@@ -63,7 +64,8 @@ async def nightly(  # noqa: PLR0913
     *,
     mode: str,
 ) -> Night:
-    checked = store.checked_memories(rel, CHECK.ref)  # a new version reads every memory again
+    # A new version reads every memory again.
+    checked = store.checked_memories(rel, CHECK_NAMES, CHECK.version)
     support = store.last_support(rel)
     labels = store.belief_labels(rel)
     everyday = {
