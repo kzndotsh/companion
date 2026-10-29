@@ -37,6 +37,7 @@ TYPING_SECONDS = 2.0  # a typing indicator stuck behind a rate limit is skipped,
 SEND_SECONDS = 15.0
 SEND_TRIES = 2
 NOTE_CHARS = 500  # a note on a mark is a line or two
+MARK_SEARCH = 20  # messages looked back through for the bot's latest, which a slash mark reacts to
 NOT_YOURS = "these commands are only for the person this bot talks to"
 FAILED = "that didn't work, try again in a bit"
 _FAILURES = (
@@ -225,13 +226,36 @@ def said(answer: str | Reaction | ReactAndReply) -> str:
     return answer or "done"
 
 
-async def run_command(commands: Commands, name: str, note: str, message_id: str | None) -> str:
+async def run_command(
+    commands: Commands, name: str, note: str, message_id: str | None
+) -> str | Reaction | ReactAndReply:
     """Run one command by name. A failure is logged and answered, never raised to discord.py."""
     try:
-        return said(await commands[name](note, message_id))
+        return await commands[name](note, message_id)
     except Exception:
         log.exception("command /%s failed", name)
         return FAILED
+
+
+async def _react(interaction: discord.Interaction, message_id: str | None, emoji: str) -> bool:
+    """Put a mark's emoji on the message it marks: the one picked from its menu, or else the bot's
+    latest message in the chat. False when that could not be done."""
+    channel, me = interaction.channel, interaction.client.user
+    if not isinstance(channel, discord.DMChannel | discord.PartialMessageable):
+        return False
+    try:
+        if message_id is None and me is not None:
+            async for m in channel.history(limit=MARK_SEARCH):
+                if m.author.id == me.id:
+                    message_id = str(m.id)
+                    break
+        if message_id is None:
+            return False
+        await channel.get_partial_message(int(message_id)).add_reaction(emoji)
+    except (*_FAILURES, ValueError) as err:
+        log.warning("mark reaction skipped: %s", _failed("reaction", err))
+        return False
+    return True
 
 
 @dataclass(frozen=True, slots=True)
@@ -248,8 +272,13 @@ class _Marks:
             await interaction.response.send_message(NOT_YOURS, ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True, thinking=True)  # /flag may ask a judge
-        reply = await run_command(self.commands, name, note[:NOTE_CHARS], message_id)
-        await interaction.followup.send(reply, ephemeral=True)
+        answer = await run_command(self.commands, name, note[:NOTE_CHARS], message_id)
+        if isinstance(answer, Reaction) and await _react(interaction, message_id, answer.emoji):
+            # The mark shows as its emoji on the message; the private "thinking" line goes.
+            with contextlib.suppress(*_FAILURES):
+                await interaction.delete_original_response()
+            return
+        await interaction.followup.send(said(answer), ephemeral=True)
 
 
 @dataclass(frozen=True, slots=True)

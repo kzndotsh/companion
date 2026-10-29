@@ -36,8 +36,10 @@ held before sending, replaces that answer, and the new reply sees both of their 
 that was already written and then dropped is marked undelivered. Commands (`/flag`, `/fav`, `/mode`)
 never replace anything. Typed as text they work on both platforms. On Discord they are also the bot's
 own slash commands, and a message's Apps menu has Flag this and Favorite this, which mark that
-message's turn and ask for an optional note (`io/discord.py`). These answer privately,
-only the allowed user can use them, and they are synced to Discord only when they change: its
+message's turn and ask for an optional note (`io/discord.py`). A flag or favorite made there
+answers with its emoji on the message it marks (the one picked from the menu, or the bot's latest
+message), with no text; when that reaction cannot be added, and for `/mode` and anything else, the
+answer is a private text only they see. Only the allowed user can use them, and they are synced to Discord only when they change: its
 command endpoint is rate limited, with day-long lockouts reported.
 
 The id of each message that carries part of a reply is kept with its turn (`sent_messages`), and so

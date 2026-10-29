@@ -417,7 +417,7 @@ def test_an_answer_reads_as_text() -> None:
 
 async def test_a_command_runs_by_name_and_a_failure_is_answered() -> None:
     seen: list[tuple[str, str, str | None]] = []
-    assert await run_command(_commands(seen), "flag", "too long", "m1") == "👎"
+    assert await run_command(_commands(seen), "flag", "too long", "m1") == Reaction("👎")
     assert seen == [("flag", "too long", "m1")]
 
     async def broken(arg: str, replied_to: str | None) -> str:
@@ -426,13 +426,39 @@ async def test_a_command_runs_by_name_and_a_failure_is_answered() -> None:
     assert await run_command({"flag": broken}, "flag", "x", None) == FAILED
 
 
+class _Chat(discord.PartialMessageable):
+    """The DM a mark is made in: its recent messages, newest first, and the reactions on them."""
+
+    def __init__(self, recent: list[tuple[int, int]], *, fail: bool = False) -> None:
+        self.recent, self.fail = recent, fail
+        self.reacted: list[tuple[int, str]] = []
+
+    async def history(self, *, limit: int | None = 100, **_: Any) -> Any:  # type: ignore[override]
+        for mid, author in self.recent[:limit]:
+            yield SimpleNamespace(id=mid, author=SimpleNamespace(id=author))
+
+    def get_partial_message(self, message_id: int) -> Any:  # type: ignore[override]
+        async def add_reaction(emoji: str) -> None:
+            if self.fail:
+                raise _forbidden()
+            self.reacted.append((message_id, emoji))
+
+        return SimpleNamespace(add_reaction=add_reaction)
+
+
 class _Interaction:
-    def __init__(self, user: int) -> None:
+    def __init__(self, user: int, chat: _Chat | None = None) -> None:
         self.user = SimpleNamespace(id=user)
+        self.channel = chat
+        self.client = SimpleNamespace(user=SimpleNamespace(id=BOT))
         self.said: list[str] = []
         self.deferred = False
+        self.deleted = False
         self.response = SimpleNamespace(send_message=self._send, defer=self._defer)
         self.followup = SimpleNamespace(send=self._send)
+
+    async def delete_original_response(self) -> None:
+        self.deleted = True
 
     async def _send(self, text: str, *, ephemeral: bool) -> None:
         assert ephemeral
@@ -454,6 +480,24 @@ async def test_only_the_allowed_user_runs_a_command_and_the_answer_is_private() 
     assert them.deferred
     assert them.said == ["luna"]
     assert seen == [("fav", "a" * 500, "m2")]
+
+
+async def test_a_mark_reacts_on_the_message_and_sends_no_text() -> None:
+    marks = _Marks(ALLOWED, _commands([]))
+    chat = _Chat([(30, ALLOWED), (20, BOT), (10, BOT)])
+    latest, picked = _Interaction(ALLOWED, chat), _Interaction(ALLOWED, chat)
+    await marks.answer(latest, "flag", "bland", None)  # type: ignore[arg-type]
+    await marks.answer(picked, "flag", "", "10")  # type: ignore[arg-type]
+    assert chat.reacted == [(20, "👎"), (10, "👎")]
+    assert (latest.said, latest.deleted, picked.said, picked.deleted) == ([], True, [], True)
+
+
+async def test_a_mark_that_cannot_react_says_it_in_text() -> None:
+    marks = _Marks(ALLOWED, _commands([]))
+    refused, nothing = _Interaction(ALLOWED, _Chat([(20, BOT)], fail=True)), _Interaction(ALLOWED)
+    await marks.answer(refused, "flag", "", None)  # type: ignore[arg-type]
+    await marks.answer(nothing, "flag", "", None)  # type: ignore[arg-type]
+    assert (refused.said, nothing.said) == (["👎"], ["👎"])
 
 
 def _tree() -> app_commands.CommandTree:
