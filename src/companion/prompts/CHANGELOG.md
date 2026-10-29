@@ -538,6 +538,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## notes/ask-pronouns
 - **notes/ask-pronouns v1** (current). New. Added by code on a casual turn when how they want to be referred to is not set, the name is known, and neither the name nor the pronouns were asked in the last day (J48). Reason: how they want to be referred to was only a setting the owner types in (`companion address --set`), so a new user had no way to give it; asking it the way the name is asked lets the answer fill the setting, and the pinned `notes/address` line carries it from the next turn.
 
+## notes/map-ask
+- **notes/map-ask v1** (current). New (J48). Added by code on a casual turn, at most once in three days and never while another note asks them something, naming the thinnest askable part of the memory map (`features/knowing`, `PART` fills `$part`). Reason: the map's shadow picks ran a week (19 to 27 Oct) and read right at the owner's review of 2026-10-29: people had 6 memories out of 235. The three-day cap is the small budget the review asked for.
+
 ## notes/clock
 - **notes/clock v1** (current). Moved here on 2026-10-18 from `core/clock.py`, text unchanged. Earlier history is in git.
 

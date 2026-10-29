@@ -55,33 +55,11 @@ SHADOWS: tuple[Shadow, ...] = (
         " none needy or guilt-laden",
     ),
     Shadow(
-        "what it would ask to get to know them (the map)",
-        None,
-        "companion map",
-        date(2026, 10, 29),
-        "a week of picks that read right to the owner (J48)",
-    ),
-    Shadow(
         "a question when their words touch a basic it does not know (the hook)",
         None,
         "the decision log",
-        date(2026, 10, 29),
-        "would-asks that read right, at most daily (J48)",
-    ),
-    Shadow(
-        "the nightly memory check and the repeat check",
-        "memory check",
-        "companion memory review",
-        date(2026, 10, 29),
-        "closes and questions that match the owner's own review (ADR 0019)",
-    ),
-    Shadow(
-        "the mood (on for the owner in .env; the code default stays shadow until ADR 0016"
-        " is accepted)",
-        "mood",
-        "companion mood",
-        date(2026, 10, 29),
-        "a few days of flags on mood, then ADR 0016 accepted and the default made on (J5)",
+        date(2026, 11, 5),
+        "would-asks that read right, at most daily (J48; three reads by 2026-10-29, a week more)",
     ),
     Shadow(
         "promises it made in its own replies",

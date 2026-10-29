@@ -1,5 +1,5 @@
 """`companion map`: what it knows about them by part of their life and depth, the gap it would ask
-about now, and the recent shadow picks (J48). Writes nothing; `--label` labels new ones first."""
+about now, and the recent picks (J48). Writes nothing; `--label` labels new ones first."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
 from companion.core.types import Depth, Domain, RelationshipId
-from companion.features.knowing.logic import WOULD_ASK, pick_gap
+from companion.features.knowing.logic import ASKED, WOULD_ASK, pick_gap
 from companion.features.knowing.run import label_new
 from companion.kit.services import Services
 from companion.store.sqlite.store import Store
@@ -22,7 +22,7 @@ def run(db: Path, relationship: str) -> str:
     try:
         beliefs = store.user_beliefs(rel)
         labels = store.belief_labels(rel)
-        picks = store.decisions_with_key(rel, WOULD_ASK)
+        picks = store.decisions_with_key(rel, WOULD_ASK) + store.decisions_with_key(rel, ASKED)
     finally:
         store.close()
     cells = Counter((labels[b.id].domain, labels[b.id].depth) for b in beliefs if b.id in labels)
@@ -37,10 +37,11 @@ def run(db: Path, relationship: str) -> str:
     out.append(gap.reason if gap else "map: nothing labelled yet")
     if picks:
         zone = local_zone()
-        out.append("\nrecent shadow picks (would ask about, nothing was sent):")
-        for d in picks[-SHOWN_PICKS:]:
+        out.append("\nrecent picks (offered: the note was sent; shadow: only logged):")
+        for d in sorted(picks, key=lambda d: d.at)[-SHOWN_PICKS:]:
             domain = (d.detail or {}).get("domain", "?")
-            out.append(f"  {d.at.astimezone(zone):%a %d %b %H:%M}  {domain}")
+            how = "offered" if d.has_key(ASKED) else "shadow"
+            out.append(f"  {d.at.astimezone(zone):%a %d %b %H:%M}  {domain:10} {how}")
     return "\n".join(out)
 
 

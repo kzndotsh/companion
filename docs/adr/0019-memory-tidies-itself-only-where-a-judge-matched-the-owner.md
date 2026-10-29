@@ -1,8 +1,9 @@
 # 0019. Memory tidies itself only where a judge matched the owner; the rest is the owner's queue
 
-**Status:** proposed 2026-10-19. Built in shadow the same day: `COMPANION_CONSOLIDATE` is shadow unless
-`on` or `off`, and in shadow each action is logged and nothing changes. Accepted, or changed, after a week
-of the shadow log.
+**Status:** proposed 2026-10-19. Built in shadow the same day. Accepted 2026-10-29 after ten days of the
+shadow log: the five memories it would have closed were all passing moments of one day, and of the two it
+would have stored as evidence on an older one, one was the same and one was close. `COMPANION_CONSOLIDATE`
+is `on` by default; `shadow` logs each action and changes nothing, `off` skips it.
 
 **Context.** Memory fills with clutter. A review of 218 memories on 2026-10-19 found 16 groups of
 duplicates, 21 passing moments of one day (one coffee spill was five memories), 8 out of date, 7 habits

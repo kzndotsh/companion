@@ -56,13 +56,13 @@ SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_SPLIT", "split", ("on", "off")),
     Switch("COMPANION_LISTEN", "listen", ("on", "off")),
     Switch("COMPANION_INITIATIVE", "initiative", ("shadow", "off")),
-    Switch("COMPANION_MOOD", "mood", ("shadow", "on", "off")),
+    Switch("COMPANION_MOOD", "mood", ("on", "shadow", "off")),
     Switch("COMPANION_RESAMPLE", "resample", ("on", "off")),
     Switch(
         "COMPANION_ROUTE_INTIMATE", "intimate", ("off", "on"), {"on": "may route", "off": "stays"}
     ),
     Switch("COMPANION_RELEVANCE", "relevance", ("on", "shadow", "off")),
-    Switch("COMPANION_CONSOLIDATE", "memory check", ("shadow", "on", "off")),
+    Switch("COMPANION_CONSOLIDATE", "memory check", ("on", "shadow", "off")),
     Switch("COMPANION_PROMISES", "promises", ("shadow", "off")),
     Switch("COMPANION_LORE", "lore", ("on", "shadow", "off")),
     Switch("COMPANION_REMINDERS", "reminders", ("on", "off")),

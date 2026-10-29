@@ -11,17 +11,18 @@ from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Json, RelationshipId
 from companion.features.knowing.logic import (
+    ASKED,
     LABEL_BATCH,
     LABEL_PROMPT,
     LABEL_SCHEMA,
     MAP_EVERY,
-    WOULD_ASK,
+    ask_note,
     label_prompt,
     parse_labels,
     pick_gap,
 )
 from companion.kit.current import decide
-from companion.kit.features import Feature, Offer, Offered
+from companion.kit.features import Feature, Offer, Offered, asking
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
@@ -73,12 +74,12 @@ async def label_new(
 
 
 def map_offer(m: Moment, found: object, so_far: Offered) -> Offer:
-    """The gap it would ask about on a casual turn, at most once a day (J48, shadow). Nothing
-    reaches the talker. The name comes first, so nothing is picked while that note is offered."""
+    """On a casual turn, at most once in three days, a note to ask one light question about the
+    thinnest part of the map (J48). Nothing is offered while a note before it asks them something,
+    so the name comes first."""
     del found
     c, t = m.c, m.t
-    asking_name = bool(so_far["name"].lines)
-    if not m.casual or asking_name or c.store.decided_since(c.rel, WOULD_ASK, t.now - MAP_EVERY):
+    if not m.casual or asking(so_far) or c.store.decided_since(c.rel, ASKED, t.now - MAP_EVERY):
         return Offer()
     gap = pick_gap(c.store.user_beliefs(c.rel), c.store.belief_labels(c.rel))
     if gap is None:
@@ -89,8 +90,8 @@ def map_offer(m: Moment, found: object, so_far: Offered) -> Offer:
         "depth": gap.depth.value,
         "counts": {d.value: n for d, n in gap.counts.items()},
     }
-    return Offer(after=(lambda: decide(c, t, WOULD_ASK, detail),))
+    return Offer((ask_note(gap),), (lambda: decide(c, t, ASKED, detail),), asks=True)
 
 
-# Each new memory placed in their life, and the gap it would ask about (shadow, logged only).
+# Each new memory placed in their life, and a light question about the thinnest part.
 KNOWING = Feature("memory map", note=map_offer, after_theirs=label_new)

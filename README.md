@@ -231,7 +231,7 @@ stops the bot at start with its new name (`RENAMED` in `settings.py`).
 | `COMPANION_CHARACTER` | none | `mika` lays the sheet `data/characters/mika.md` (private, never committed) over the persona; a public sheet could live in `prompts/characters/mika/`, though none ships yet. A `## In roleplay and intimate moments` section reaches only the roleplay model, and a `## Scene reminder` section is sent after the history on roleplay turns. A `## Crisis message` section is the fixed message code sends with the crisis line on an urgent turn (`$line` filled in by code; ADR 0022), and no model sees it. It still says it is an AI when sincerely asked |
 | `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the roleplay model (ADR 0017), above an age floor in code that no setting changes |
 | `COMPANION_LISTEN` | on | the listening note before each reply; `off` turns it off |
-| `COMPANION_MOOD` | `shadow` | `on` adds the mood line, `shadow` works it out and logs it, `off` does neither |
+| `COMPANION_MOOD` | `on` | `on` adds the mood line, `shadow` works it out and logs it, `off` does neither |
 | `COMPANION_RESAMPLE` | on | a reply that fails a check is drawn once more; `off` disables it |
 | `COMPANION_PLATFORM` | `telegram` | which chat it runs on: `telegram` (needs `TELEGRAM_BOT_TOKEN`) or `discord` (needs `DISCORD_BOT_TOKEN` and `DISCORD_USER_ID`); one at a time, one relationship and one memory either way |
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow` |
@@ -256,7 +256,7 @@ stops the bot at start with its new name (`RENAMED` in `settings.py`).
 |---|---|---|
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
 | `COMPANION_REACH` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
-| `COMPANION_CONSOLIDATE` | `shadow` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
+| `COMPANION_CONSOLIDATE` | `on` | the memory check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 | `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads a message that is serious or uses crisis words for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a scene set aside for the turn, a reply that names means drawn once more, a day's hold on reaching out first), `off` skips it |
 

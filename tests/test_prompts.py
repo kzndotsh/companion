@@ -44,6 +44,7 @@ PLACEHOLDERS = {
     "notes/occasion-soon": {"name", "when"},
     "notes/occasion-us": {"span"},
     "notes/occasion-theirs": {"name"},
+    "notes/map-ask": {"part"},
     "notes/now-soon": {"ago", "what"},
     "system/reminder-send": {"what"},
     "system/greeting-send": {"what"},

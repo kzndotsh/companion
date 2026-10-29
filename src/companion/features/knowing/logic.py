@@ -3,7 +3,7 @@
 It asked plenty of questions, but only about the thing just said, so memory filled up with food and
 music and held almost nothing about their hopes or values. Each memory gets a label for the part of
 their life it is about and how personal it is. A model labels; code keeps the counts and picks the
-thinnest part of the map that is fine to ask about. For now the pick is only logged (shadow).
+thinnest part of the map that is fine to ask about, and a note lets it ask one light question there.
 """
 
 from __future__ import annotations
@@ -43,8 +43,23 @@ class Gap:
         )
 
 
-WOULD_ASK = "map: would ask about a gap (shadow)"
-MAP_EVERY = timedelta(hours=24)
+ASKED = "map: offered to ask about a gap"
+WOULD_ASK = (
+    "map: would ask about a gap (shadow)"  # the picks logged before it went live (2026-10-29)
+)
+# A small budget: one question every three days at most, read at the review of 2026-10-29.
+MAP_EVERY = timedelta(days=3)
+MAP_NOTE = get("notes/map-ask")
+# How each askable part reads in the note.
+PART: Mapping[Domain, str] = {
+    Domain.IDENTITY: "who they are: their age, what they do, what they would call themselves",
+    Domain.PEOPLE: "the people in their life: family, friends, who they live with",
+    Domain.DAILY: "their everyday life: their days, their routines, where they spend their time",
+    Domain.INTERESTS: "what they like doing and are into",
+    Domain.HISTORY: "where they come from and what their life was like before",
+    Domain.HOPES: "what they hope for and are working toward",
+    Domain.VALUES: "what matters to them and what they care about",
+}
 LABEL_PROMPT = get("system/memory-map")
 LABEL_BATCH = 60
 LABEL_SCHEMA: dict[str, Json] = {
@@ -104,17 +119,26 @@ def pick_gap(beliefs: Iterable[Belief], labels: Mapping[BeliefId, Label]) -> Gap
     return Gap(domain, Depth.SURFACE, dict(have))
 
 
+def ask_note(gap: Gap) -> str:
+    """The note that lets it ask about the gap."""
+    return MAP_NOTE.render(part=PART[gap.domain])
+
+
 __all__ = [
     "ASKABLE",
+    "ASKED",
     "LABEL_BATCH",
     "LABEL_PROMPT",
     "LABEL_SCHEMA",
     "MAP_EVERY",
+    "MAP_NOTE",
+    "PART",
     "WOULD_ASK",
     "Depth",
     "Domain",
     "Gap",
     "Label",
+    "ask_note",
     "counts",
     "label_prompt",
     "parse_labels",

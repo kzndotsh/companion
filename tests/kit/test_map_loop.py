@@ -18,7 +18,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.basics.logic import name_belief
-from companion.features.knowing.logic import WOULD_ASK
+from companion.features.knowing.logic import ASKED
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -55,27 +55,29 @@ async def _say(store: Store, judge: Judge, text: str = "lol ok", at: datetime = 
 
 
 def _picks(store: Store) -> list[str]:
-    turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=3), 50)}
+    turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=5), 50)}
     return [
         str((d.detail or {}).get("domain"))
         for t in turns
         for d in store.decisions_for_turn(REL, t)
-        if d.reason == WOULD_ASK
+        if d.has_key(ASKED)
     ]
 
 
-async def test_a_casual_turn_logs_the_gap_once_a_day_and_sends_nothing(store: Store) -> None:
-    talker = await _say(store, Judge())
-    await _say(store, Judge(), at=NOW + timedelta(hours=1))
+async def test_a_casual_turn_asks_about_the_gap_once_in_three_days(store: Store) -> None:
+    first = await _say(store, Judge())
+    later = await _say(store, Judge(), at=NOW + timedelta(days=2))
     assert _picks(store) == ["people"]
-    assert "people" not in talker.seen[0].card
-    await _say(store, Judge(), at=NOW + timedelta(days=1, minutes=1))
+    assert "the people in their life" in first.seen[0].card
+    assert "the people in their life" not in later.seen[0].card
+    await _say(store, Judge(), at=NOW + timedelta(days=3, minutes=1))
     assert _picks(store) == ["people", "people"]
 
 
 async def test_a_serious_turn_picks_nothing(store: Store) -> None:
-    await _say(store, Judge(severity=2), "my grandma died")
+    talker = await _say(store, Judge(severity=2), "my grandma died")
     assert _picks(store) == []
+    assert "the people in their life" not in talker.seen[0].card
 
 
 async def test_nothing_is_picked_while_it_still_asks_their_name(tmp_path: Path) -> None:

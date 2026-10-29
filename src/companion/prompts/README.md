@@ -71,6 +71,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/address` | note | how they want to be referred to, pinned first in every card, never turned into a pet name, `core/turn/address.py` | v2 |
 | `notes/ask-name` | note | memory does not know what to call them: ask once, lightly, on a casual turn, at most daily (J48) | v1 |
 | `notes/ask-pronouns` | note | how they want to be referred to is not set: once the name is known, ask their pronouns once, lightly, on a casual turn, at most daily (J48) | v1 |
+| `notes/map-ask` | note | the thinnest part of what it knows about them (the memory map): ask one light question about it on a casual turn, at most once in three days (J48) | v1 |
 | `notes/loop-follow-up` | note | a due open loop, offered when they next write: ask how it went (J15) | v1 |
 | `notes/loop-celebrate` | note | a celebration on its day, offered when they write (J15) | v1 |
 | `notes/loop-encourage` | note | an encouragement on its day, offered when they write (J15) | v1 |

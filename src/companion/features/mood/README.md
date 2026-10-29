@@ -2,7 +2,7 @@
 
 A mood that carries across hours and into the next day: cozy, tender or playful. Code owns it and it shows only in how the companion writes, never as a stated feeling and never as a pull to keep them talking.
 
-**Status:** shadow by code default, `on` for the owner in `.env` (review by 2026-10-29, judged on a few days of flags on mood, then ADR 0016 accepted and the default made `on`). Switch: `COMPANION_MOOD` (`shadow` default, `on`, `off`). Runs before the reply as a note in the system block, and writes its effects once the turn is stored.
+**Status:** on by default since the review of 2026-10-29, when ADR 0016 was accepted (a week on for the owner, no flag about the mood). Switch: `COMPANION_MOOD` (`on` default, `shadow`, `off`). Runs before the reply as a note in the system block, and writes its effects once the turn is stored.
 
 ## How it works
 
