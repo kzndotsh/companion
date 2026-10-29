@@ -206,7 +206,9 @@ setting with its value.
 ### Settings
 
 All optional. Set them in `.env`. A setting that was renamed and is still set under its old name
-stops the bot at start with its new name (`RENAMED` in `settings.py`).
+stops the bot at start with its new name (`RENAMED` in `settings.py`). A switch set to a value it
+does not know stops it too, naming the values it takes; an on or off word on a switch without that
+position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no live mode yet).
 
 <details>
 <summary><b>Models</b> (7): which model talks, judges and embeds</summary>

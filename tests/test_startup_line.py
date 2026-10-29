@@ -106,7 +106,7 @@ def test_the_initiative_mode_is_shadow_unless_turned_off(monkeypatch: pytest.Mon
         " | promises shadow | lore on | reminders on | episodes on | marks on | hedged plans loose"
         " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
     )
-    monkeypatch.setenv("COMPANION_INITIATIVE", "live")  # there is no live mode yet
+    monkeypatch.setenv("COMPANION_INITIATIVE", "on")  # there is no live mode yet
     assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
         "initiative shadow | mood on | resample on | intimate stays"
         " | relevance on | everyday standby off | re-read on"
@@ -129,7 +129,7 @@ def test_the_startup_line_names_the_character() -> None:
 
 
 @pytest.mark.parametrize(
-    ("raw", "shown"), [("", "on"), ("shadow", "shadow"), ("off", "off"), ("x", "on")]
+    ("raw", "shown"), [("", "on"), ("shadow", "shadow"), ("off", "off"), ("yes", "on")]
 )
 def test_the_mood_is_on_unless_set_shadow_or_off(
     monkeypatch: pytest.MonkeyPatch, raw: str, shown: str
@@ -198,7 +198,7 @@ def test_the_promise_read_is_shadow_unless_off(monkeypatch: pytest.MonkeyPatch) 
 
 
 def test_the_lore_note_is_on_unless_shadow_or_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    for raw, shown in (("shadow", "shadow"), ("off", "off"), ("x", "on")):
+    for raw, shown in (("shadow", "shadow"), ("off", "off"), ("", "on")):
         monkeypatch.setenv("COMPANION_LORE", raw)
         assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
             f"| lore {shown} | reminders on | episodes on | marks on | hedged plans loose"
@@ -237,14 +237,14 @@ def test_the_reach_dial_is_warm_unless_set(monkeypatch: pytest.MonkeyPatch) -> N
     assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
         "| reach rare | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
     )
-    monkeypatch.setenv("COMPANION_REACH", "pushy")
+    monkeypatch.setenv("COMPANION_REACH", "")
     assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
         "| reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
     )
 
 
 def test_the_crisis_path_is_shadow_unless_on_or_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    for raw, shown in (("", "shadow"), ("on", "on"), ("off", "off"), ("x", "shadow")):
+    for raw, shown in (("", "shadow"), ("on", "on"), ("off", "off")):
         monkeypatch.setenv("COMPANION_CRISIS", raw)
         assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
             f"| crisis {shown} | calendar on | now shadow | history shadow | scene shadow"

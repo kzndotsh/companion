@@ -46,9 +46,17 @@ class Switch:
     shown: Mapping[str, str] | None = None  # how a value reads on the startup line, when not as is
 
     def read(self, environ: Mapping[str, str]) -> str:
+        """Unset is the default, and an on or off word on a switch without that position (on for one
+        with no live mode) is its first one. Any other value it does not know stops the bot: a typo
+        used to become the default without a word."""
         raw = environ.get(self.env, "").strip().lower()
         value = "off" if raw in OFF else "on" if raw in ON else raw
-        return value if value in self.values else self.values[0]
+        if value in self.values:
+            return value
+        if raw and value not in ("on", "off"):
+            msg = f"{self.env}={raw!r} is not a value it knows: {', '.join(self.values)}"
+            raise SystemExit(msg)
+        return self.values[0]
 
 
 # In the order they appear on the startup line.
@@ -131,7 +139,7 @@ class Settings:
             raise SystemExit("renamed settings, change them in .env: " + "; ".join(stale))
         has_key = bool(env.get("OPENROUTER_API_KEY"))
         roleplay = env.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
-        standby = env.get("COMPANION_EVERYDAY_STANDBY", "").strip()
+        standby = env.get("COMPANION_EVERYDAY_STANDBY", "").strip() or roleplay
         pace = env.get("COMPANION_PACE", "").strip().lower()
         return cls(
             switches={s.label: s.read(env) for s in SWITCHES},
@@ -141,9 +149,7 @@ class Settings:
             everyday_model=env.get("COMPANION_EVERYDAY_MODEL")
             or (openrouter.DEFAULT_MODEL if has_key else anthropic.DEFAULT_MODEL),
             roleplay_model=None if roleplay.lower() == "none" or not has_key else roleplay,
-            everyday_standby=None
-            if not has_key or standby.lower() == "none"
-            else standby or roleplay,
+            everyday_standby=None if not has_key or standby.lower() == "none" else standby,
             embed_model=env.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
             judge_routes=_judge_routes(env.get("COMPANION_JUDGE_ROUTES", JUDGE_ROUTES)),
         )

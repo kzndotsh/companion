@@ -545,5 +545,5 @@ async def run(data_dir: Path) -> None:
         try:
             await until_stopped(lambda stop: delivery.run(answer, commands, stop))
         finally:
-            for task in background:
+            for task in (*background, *pending):  # a memory pass waiting to run stops too
                 task.cancel()

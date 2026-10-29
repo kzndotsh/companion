@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.settings import RENAMED, ROLEPLAY_MODEL, SWITCHES, Settings
+from companion.settings import RENAMED, ROLEPLAY_MODEL, SWITCHES, Settings, Switch
 
 
 def test_every_switch_reads_on_and_off_the_same_way() -> None:
@@ -19,16 +19,21 @@ def test_every_switch_reads_on_and_off_the_same_way() -> None:
 
 @pytest.mark.parametrize(
     ("raw", "platform"),
-    [("", "telegram"), ("Discord", "discord"), ("off", "telegram"), ("x", "telegram")],
+    [("", "telegram"), ("Discord", "discord"), ("off", "telegram"), ("on", "telegram")],
 )
 def test_the_platform_is_telegram_unless_discord_is_named(raw: str, platform: str) -> None:
     assert Settings.from_env({"COMPANION_PLATFORM": raw}).position("platform") == platform
 
 
-def test_unset_or_unknown_is_the_default() -> None:
-    blank = Settings.from_env({})
-    junk = Settings.from_env({sw.env: "junk" for sw in SWITCHES})
-    assert blank.switches == junk.switches == {sw.label: sw.values[0] for sw in SWITCHES}
+def test_unset_is_the_default() -> None:
+    blank = Settings.from_env({sw.env: " " for sw in SWITCHES})
+    assert blank.switches == {sw.label: sw.values[0] for sw in SWITCHES}
+
+
+@pytest.mark.parametrize("switch", SWITCHES, ids=lambda sw: sw.env)
+def test_a_value_it_does_not_know_stops_the_bot_and_says_what_it_takes(switch: Switch) -> None:
+    with pytest.raises(SystemExit, match=f"{switch.env}='shdow' is not a value it knows"):
+        Settings.from_env({switch.env: "shdow"})
 
 
 def test_models_follow_the_key_and_none() -> None:
@@ -44,6 +49,8 @@ def test_models_follow_the_key_and_none() -> None:
         }
     )
     assert (off.roleplay_model, off.everyday_standby) == (None, None)
+    no_roleplay = Settings.from_env({"OPENROUTER_API_KEY": "k", "COMPANION_ROLEPLAY_MODEL": "None"})
+    assert (no_roleplay.roleplay_model, no_roleplay.everyday_standby) == (None, None)
 
 
 def test_the_risk_judge_reads_on_deepseek_by_default() -> None:
