@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from companion.features.curiosity.basics.logic import name_belief
 from companion.features.threads.logic import Thread, ThreadState
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
+from companion.turn.beside import settled
 from companion.turn.fast import handle
 from companion.turn.mention import MET, PACE_SOONER
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
@@ -52,6 +54,7 @@ def store(tmp_path: Path) -> Store:
 async def _say(store: Store, judge: Judge, at: datetime, text: str = "hey hey") -> str:
     talker = Talker()
     await handle(Runtime(store, talker, PREFIX, REL, judge=judge), SESSION, text, "test", at)
+    await settled()
     return talker.seen[0].card
 
 
@@ -89,6 +92,26 @@ async def test_how_they_met_a_thread_is_read_once_from_their_next_message(store:
     await _say(store, Meets(), NOW + timedelta(minutes=1), "it went great, she is fine")
     assert _met(store) == ["picked_up"]
     await _say(store, Meets(), NOW + timedelta(minutes=2), "anyway")
+    assert _met(store) == ["picked_up"]
+
+
+class SlowMeets(Meets):
+    """Reads how they met it only after a long pause."""
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        props = schema["properties"]
+        if isinstance(props, dict) and set(props) == {"met"}:
+            await asyncio.sleep(0.2)
+        return await super().extract(system, user, schema)
+
+
+async def test_the_reply_does_not_wait_for_how_they_met_it(store: Store) -> None:
+    await _say(store, Meets(), NOW)
+    runtime = Runtime(store, Talker(), PREFIX, REL, judge=SlowMeets())
+    later = NOW + timedelta(minutes=1)
+    await asyncio.wait_for(handle(runtime, SESSION, "it went great", "test", later), timeout=0.15)
+    assert _met(store) == []
+    await settled()
     assert _met(store) == ["picked_up"]
 
 

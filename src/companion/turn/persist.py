@@ -43,6 +43,7 @@ from companion.kit.current import Turn, decide, mark, recorder
 from companion.registry import FEATURES
 from companion.store.sqlite.decisions import REACTED
 from companion.turn.assemble import Assembled, CardLog
+from companion.turn.beside import beside
 from companion.turn.frames import inputs_hash as frames_inputs_hash
 from companion.turn.frames import schema_hash as frames_schema_hash
 from companion.turn.mention import read_met
@@ -130,11 +131,13 @@ def with_reaction(
 
 
 async def after_turn(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
-    """Each feature's step once the turn is stored, in the registry's order."""
+    """Each feature's step once the turn is stored, in the registry's order. How they met what the
+    last reply brought up is read beside the turn: it only feeds the learned pace, in shadow, and
+    awaiting it held a reply for its judge (up to 8 s)."""
     for feature in FEATURES:
         if feature.after_turn is not None:
             await feature.after_turn(c, t, said, sent)
-    await read_met(c, t, said, sent)
+    beside(read_met(c, t, said, sent))
 
 
 def log_frame(

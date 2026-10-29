@@ -36,6 +36,12 @@ def beside(job: Coroutine[object, object, None]) -> None:
     task.add_done_callback(done)
 
 
+async def settled() -> None:
+    """Wait for what is running beside the turns to end (for tests and a clean stop)."""
+    while _BESIDE:
+        await asyncio.gather(*_BESIDE, return_exceptions=True)
+
+
 def shadows(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
     """What runs in shadow on a turn and never changes the reply: each feature's shadow look-up."""
     for feature in FEATURES:
