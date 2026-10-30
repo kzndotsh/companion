@@ -2512,3 +2512,48 @@ softer line about the topic found it 0 of 10 and 4 of 12. Cost about $0.15 in al
 scripts that call `kit/recall.py` `look_up` on a copy of the database for the flagged turns, 12 reads
 a cell (not kept; the real turns are private).
 
+
+## 2026-10-30: Review of promises, lore, made-up facts and names
+
+**Promises (J12).** Since the backfill of 2026-10-20 the promise read stored 10 rows, 9 distinct
+promises (one message was stored twice, with one quote inside the other, so the same-quote check
+missed it). All standing, none once; 2 rows (one promise) carry a word to avoid; the owner marked none
+of the new ones. By eye 3 are real changes to how it acts (drop a running joke, a daily greeting they
+asked for, say so when it disagrees), 1 is a real repair that should not be pinned (drop its worried
+tone when they joke, which would also weaken a real risk check), and 5 are banter or in-the-moment
+lines. Breaks: the word to avoid appears as a whole word in 23 later replies (18 said for real), but
+nearly all answered their own mention of it; 2 were real breaks (it brought the joke up unprompted,
+once inside the reply that made a different promise), 1 borderline. A sonnet subagent read every reply
+after the other promises: 0 breaks, and the daily greeting was kept. So a plain whole-word check with a
+redraw would have redrawn about 20 good replies for 2 bad ones: the check must skip a word they used in
+the last few messages.
+
+**One source (LR5).** Since 2026-10-21 the views ledger (`system/self-extract`, self promises) recorded
+1 promise; the promise read recorded 9. Both: 1. Only the promise read: 8, including all 3 real ones.
+Only the views: 0.
+
+**Its own lore (ADR 0020).** 40 tastes now (109 views: 40 taste, 39 stance, 14 rule, 11 self, 2 lived,
+3 not labelled), 21 new since 2026-10-20, none labelled lived. By eye 3 new tastes are wishes for
+things the two of them could share rather than tastes, and one new taste contradicts an older one on
+the same small topic (a case for LR3). The 2 lived labels are old apologies, harmless since lived is
+never lore. Over the week the look-up showed tastes on 48 turns, about 1 in 5 of some 244 ordinary
+turns; by eye about 15 of the 48 fit the moment, and the four shown most often matched on everyday
+words. Of 27 flags in the week 1 fell on a lore turn (about a question it asked, not the taste); none
+of 3 favourites did. One reply on a lore turn claimed a body feeling, and a new taste was stored from
+that turn.
+
+**Made-up facts (G42).** `companion invented --days 7 --cap 0.25`: 271 replies, $0.087. The cheap judge
+flagged 50 replies (56 quotes). Two sonnet subagents read each with 40 messages and the card: 4
+invented, 14 supported, 38 not claims; one "invented" was overturned by eye (the card held it). So 3 of
+271 replies, about 1.1%, against 5 of 367 (1.4%) at the first reading, within noise. All three were mild:
+a habit taken for granted, a shared past talk it said it half remembered, and a habit known only from
+talk older than the 40 messages. None came on a lore turn. The cheap judge was right about 1 quote in 19.
+
+**Names in shadow.** Since 2026-10-20, 3 turns logged a name with a memory off the card: 1 real (the
+relevance look-up had already picked that memory), 2 false matches on everyday words. Replaying the
+match over their messages, most names they used had no memory yet: the memory came from that message.
+`companion names` also prints a negative count of unread memories (reads of memories since retired).
+
+Rerun: `uv run companion promises`, `lore`, `names`, `invented --days 7 --cap 0.25 --dump F.json`, then
+Claude subagents on the dump and on the replies after each promise. Scratch scripts and private data in
+the session scratchpad, not in the repo.
