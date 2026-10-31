@@ -28,8 +28,10 @@ events, so on each new session after the first it fetches them the same way.
 
 On SIGTERM or SIGINT the bot takes nothing more, answers what it has already received, the reply in
 progress included, and only then exits, for up to 30 seconds (`io/stop.py`). `just restart` waits for
-that. A hard kill, or a reply still not out after 30 seconds, can still lose a message that was
-received but not answered on Telegram, where the poll offset has already moved past it.
+that. A hard kill, or a reply still not out after 30 seconds, can still lose a message. On both
+platforms the message being answered is lost: it was recorded as handled before its turn ran, and a
+start resumes after the recorded one. On Telegram, messages received and still waiting are lost
+too, since the poll offset has already moved past them; Discord fetches those again.
 
 A plain message that arrives while the previous one is still being answered, either being written or
 held before sending, replaces that answer, and the new reply sees both of their messages. A reply
