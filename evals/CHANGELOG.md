@@ -2557,3 +2557,15 @@ match over their messages, most names they used had no memory yet: the memory ca
 Rerun: `uv run companion promises`, `lore`, `names`, `invented --days 7 --cap 0.25 --dump F.json`, then
 Claude subagents on the dump and on the replies after each promise. Scratch scripts and private data in
 the session scratchpad, not in the repo.
+
+## 2026-10-31: A matched memory on the card is what makes it re-ask a known detail
+
+A flagged everyday turn: they mention a meal, and the reply asks whether it had the toppings they
+always have, a detail the companion had brought up several times in the weeks before. The recorded
+request was resent unchanged to GPT-6 Luna (the live talker): 4/12 replies named the detail. With
+the matching memory line taken off the card, 0/12 did, and 0/12 with its own matching taste line
+taken off as well; with only its taste line taken off, 3/12. Keeping the memory line and adding that
+it had already brought this up, and when, did not help: 8/24. A note on the line is read as more
+reason to mention it; only leaving the line off stopped it. About $0.007 in all. Rerun with a
+scratch script that loads the turn with `store/sqlite/replay.py` `replay_file`, edits
+`request.card` and sends it with `OpenRouterTalker.reply`.
