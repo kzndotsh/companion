@@ -2572,3 +2572,23 @@ in nine days, 90 of them offered before (one 14 times), and a read of two weeks 
 details brought up unasked, 6 of them again within a week, each time on the same kind of topic. Rerun with a
 scratch script that loads the turn with `store/sqlite/replay.py` `replay_file`, edits
 `request.card` and sends it with `OpenRouterTalker.reply`.
+
+## 2026-10-31: Do the redrawn replies beat the canned ones? (Q3) A toss-up
+
+All 40 resampled "a canned generic reaction" decisions from 2026-10-24 to 2026-10-31 (`system/quip@v3`,
+scored by Haiku 5.5). The first draw comes from the decision detail, the sent reply from the turn, with
+the last four messages as context. A/B randomised (seed 31), key kept apart, two blind subagent judges:
+which reply would a person rather get from a close friend over text, and is each still a canned generic
+reaction. One pair had identical text. Pairs, key and verdicts were in the session scratchpad (not kept);
+rebuild with a query on `decisions` where `reason like 'resampled: a canned%'`.
+
+| Judge | Redraw preferred | First draw preferred | Tie | Redraw still generic | First draw generic |
+|---|---|---|---|---|---|
+| Haiku | 21 | 13 | 6 | 23 of 40 | 24 of 40 |
+| Sonnet | 9 | 13 | 18 | 6 of 40 | 8 of 40 |
+
+Sign test on the non-ties: Haiku p about 0.23, Sonnet p about 0.52. Within noise for both. The two judges
+agreed on the winner for 22 of 40. Haiku calls most replies generic, either draw (same weakness as the
+precision finding of 2026-10-25); Sonnet calls few. By eye the redraw is often a plain rewording of the
+same reaction ("sounds like a solid dinner" for "is a solid dinner"), so the redraw changes little. Verdict:
+neither keep nor turn off; look at what the judge fires on. Nothing changed.

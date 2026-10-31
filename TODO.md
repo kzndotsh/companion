@@ -385,7 +385,7 @@ When the answer comes, the card moves to Todo or Done.
       loses. Owner agreed 2026-10-24. **2026-10-25:** the hand labels it shipped on were too loose; two blind
       raters relabelled the 200 replies, and against them Haiku's precision is 35 to 55%, not 88% (Luna and
       DeepSeek are more precise but catch less). Live it redrew 1 of 58 checked turns, so few pairs will be
-      logged by the review. Not changed yet. **Waits on:** the review of 2026-10-31.
+      logged by the review. **2026-10-31 (40 redraws, two blind judges):** a toss-up. Redraw preferred 21 to 13 (Haiku) and 9 to 13 (Sonnet), the rest ties, both within noise; the redraw was still generic in 23 and 6 of 40. Often a plain rewording of the same reaction. Not changed. **Waits on:** the owner: look at what the judge fires on (suggested), keep, or turn it off.
 - [ ] R16 Crisis and distress routing: decided as ADR 0022, accepted by the owner: two-stage detection with a
       three-read risk judge that tells a joke from a literal risk and fails safe, levels by code, an
       in-character note at concern and a fixed crisis-line message at urgent, 988 by default, no risk memories.
