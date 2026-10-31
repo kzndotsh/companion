@@ -2566,6 +2566,9 @@ request was resent unchanged to GPT-6 Luna (the live talker): 4/12 replies named
 the matching memory line taken off the card, 0/12 did, and 0/12 with its own matching taste line
 taken off as well; with only its taste line taken off, 3/12. Keeping the memory line and adding that
 it had already brought this up, and when, did not help: 8/24. A note on the line is read as more
-reason to mention it; only leaving the line off stopped it. About $0.007 in all. Rerun with a
+reason to mention it; only leaving the line off stopped it. Moving the same memory from the note into the card's plain list of
+memories made it worse: 13/24. About $0.009 in all. In the log, the note's look-up offered 158 memories
+in nine days, 90 of them offered before (one 14 times), and a read of two weeks of chat found 19
+details brought up unasked, 6 of them again within a week, each time on the same kind of topic. Rerun with a
 scratch script that loads the turn with `store/sqlite/replay.py` `replay_file`, edits
 `request.card` and sends it with `OpenRouterTalker.reply`.
