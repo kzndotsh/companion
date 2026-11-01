@@ -2592,3 +2592,26 @@ agreed on the winner for 22 of 40. Haiku calls most replies generic, either draw
 precision finding of 2026-10-25); Sonnet calls few. By eye the redraw is often a plain rewording of the
 same reaction ("sounds like a solid dinner" for "is a solid dinner"), so the redraw changes little. Verdict:
 neither keep nor turn off; look at what the judge fires on. Nothing changed.
+
+## 2026-11-01: In a long scene the roleplay talker mixes up who did what; the pronoun line placement does not decide it
+
+Two flagged turns late in a long intimate scene, replayed 12 times in each of three setups (about
+$0.03 in all, read by eye). In the first, the reply credited itself with an act the user had done,
+and the user asked about it. In the second, the user corrected that, and the reply misgendered them.
+The setups: as recorded on deepseek-v4.1-flash, the same with the pronoun line from the notes repeated
+at the end of the scene reminder (after the history), and gpt-6-luna on the recorded request.
+
+| Setup | First turn: owns the mix-up | Second turn: concedes who did it | Second turn: misgenders |
+|---|---|---|---|
+| deepseek, as recorded | 5/12 | 8/12 | 1/12 |
+| deepseek, pronoun line after the history | 7/12 | 7/12 | 0/12 |
+| gpt-6-luna | 10/12 | 12/12 | 0/12 |
+
+The misgendering was a rare draw (1 in 12, and 0 in 12 with the line moved), too few to tell the
+placements apart. The pronoun line was in the request both times. The mix-up is the common failure:
+on the roleplay talker about half the replies keep the swapped account, wave it off as "whatever" or
+"team effort", or invent a new version. On gpt-6-luna it slipped in 2 of 24, and twice it gave the
+user a title the user had given the companion. This does not reopen the 2026-10-24 result: gpt-6-luna
+stepped out of a third of scene turns there, and these two turns came after the explicit part, where
+it did not refuse. Rerun: a scratch script loads each turn with `replay_file`, sets `request.tail` to
+the reminder plus the pin line for the second setup, and sends each 12 times with `OpenRouterTalker`.
