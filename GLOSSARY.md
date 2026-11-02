@@ -364,7 +364,7 @@ The check when a memory is written that turns a repeat of an old memory into ano
 A suggested single memory for several about one thing, waiting for the owner.
 
 **Memory review**:
-The owner answering the questions the re-read, the repeat check and merge proposals raised.
+The owner answering the questions the re-read, the repeat check and merge proposals raised, and whether each new boundary is a lasting rule or was only for its moment.
 
 **Conflict question**:
 A question to the owner when a new memory may replace or contradict an older one.

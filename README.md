@@ -22,10 +22,12 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
   ([ADR 0001](docs/adr/0001-a-belief-is-a-quoted-claim-with-a-frame.md),
   [0002](docs/adr/0002-the-ledger-never-deletes.md), [0010](docs/adr/0010-the-frame-is-set-when-a-message-is-stored.md)).
 - **Shows the right memories.** Each turn's card holds fifteen memories. After their boundaries and its
-  promises, what they said in the last twelve hours comes first (up to eight), so a meal named this
-  afternoon is not crowded off. Sensitive ones only come into view when they are sharing something.
-  A one-day moment of daily life, or a personal event on a given
-  day, leaves the card a week after it was last mentioned. Feelings and sensitive memories carry a short
+  promises, the places go to the memories closest to the moment (their message and the reply before
+  it), one place for a fact stored in several wordings (`COMPANION_FOCUS`; with it off, what they said in
+  the last twelve hours comes first, then the rest by kind). Sensitive ones only come into view when
+  they are sharing something and close to it. A one-day moment of daily life, or a personal event on a
+  given day, leaves the card a week after it was last mentioned, and a plan or state bound to one day
+  ("plans to ... that day") leaves once that day is more than a day past. Feelings and sensitive memories carry a short
   note on what was being talked about ([ADR 0008](docs/adr/0008-beliefs-go-stale-they-are-not-deleted.md), [0012](docs/adr/0012-what-the-model-reads-besides-the-chat-goes-in-the-system-block.md)).
 - **Looks things up.** When they ask it to remember, or say it forgot, a small model searches all of
   memory and the finds ride that turn, in a pretend scene too. On every ordinary message, when a memory
@@ -36,7 +38,7 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
   for that time ride the turn (J12).
 - **Tidies itself, carefully.** A nightly check closes passing moments, a new memory that repeats an
   old one becomes evidence on it, and memories about one thing are proposed as one for the owner to
-  accept, but only where a judge matched the owner's own review. Each new memory is labelled about
+  accept (at once when the check on a new memory reads a pair as one, otherwise nightly), but only where a judge matched the owner's own review. Each new memory is labelled about
   their life, about the bot (dropped) or one day's routine (kept a week). Everything else
   is a question for the owner ([ADR 0019](docs/adr/0019-memory-tidies-itself-only-where-a-judge-matched-the-owner.md)).
 - **Gets to know them.** It asks what to call them, then their pronouns, keeps how they want to be

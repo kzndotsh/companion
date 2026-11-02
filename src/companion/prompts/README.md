@@ -133,7 +133,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/occasion-theirs` | note | after the history on a casual turn: today is a date of theirs read from memory (a birthday, an anniversary, someone's of theirs); mark it warmly, never say it was remembered or looked up (`features/calendar`, R19) | v1 |
 | `notes/now-soon` | note | after the history while something they said is coming is still open: how long ago they said it, and that it has not happened unless they say so (`features/now`, ADR 0024) | v1 |
 | `notes/scene-limits` | note | on a scene turn, in place of the memory card: their hard and soft limits from their own words, pinned first (ADR 0026, `COMPANION_SCENE_MEMORY=on`) | v1 |
-| `notes/scene-known` | note | on a scene turn: the intimate memories and patterns nearest the moment, at most three (ADR 0026) | v1 |
+| `notes/scene-known` | note | on a scene turn: the intimate memories and patterns nearest the moment, at most six (ADR 0026) | v1 |
 | `notes/scene-offer` | note | on a scene turn: one item they said they are curious about, which it may invite once if the moment fits (ADR 0026) | v1 |
 | `notes/scene-basics` | note | on a scene turn: what they are called; the only everyday memory a scene keeps (ADR 0026) | v1 |
 | `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
@@ -152,7 +152,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/name-capture` | system | after the companion asked what to call them, reads the name from their answer (J48) | v1 |
 | `system/pronoun-capture` | system | after the companion asked their pronouns, reads them from their answer; code sets how they want to be referred to (J48) | v1 |
 | `system/memory-map` | system | labels each memory with the part of their life it is about and how personal it is (J48) | v1 |
-| `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding (shadow) | v1 |
+| `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding; live above a closeness gate | v1 |
 | `system/openloops` | system | open-loop extraction, `features/threads/logic.py` | v4 |
 | `system/openloops-draft` | system | the follow-up draft, `features/threads/run.py` | v2 |
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, or leans on a canned generic reaction, `core/turn/quip.py` | v3 |

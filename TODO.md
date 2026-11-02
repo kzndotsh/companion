@@ -29,7 +29,7 @@ decision is made; it may be wrong, but never stale.
 
 ---
 
-## Where we are (2026-10-25)
+## Where we are (2026-11-02)
 
 Live: persona **v46** (v41 plus that it can send reminders and check-ins when asked) with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
@@ -95,6 +95,10 @@ Built and working:
   `companion calendar`): one note after the history on the first casual turn of the day for a warm US
   public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years;
   days of remembrance and contested days are left out. The judges stay on Haiku after a bake-off.
+- **Since 2026-11-02.** The memory card is ranked by closeness to the moment after the rules
+  (`COMPANION_FOCUS`), a plan or state bound to one day leaves the card once the day is past, the ack judge
+  reads 8 messages, a pair the write-time check reads as one is proposed for merging at once with a checked
+  wording, and each new boundary is a question in `memory review`.
 - **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
   messages, and a new message that arrives before the last answer is out replaces it. A reply
   the chat never delivered is recorded as undelivered and left out of what the model reads; a reply cut
@@ -142,6 +146,8 @@ Built and working:
 | A health note makes it point to a doctor | medication fixture 0/20 to 19/20 | `evals/CHANGELOG.md` |
 | A plain note makes it notice the day | Halloween named 0/12 with the date alone, 12/12 with a note; every day 6/6 with the direct wording | `evals/CHANGELOG.md` (2026-10-25) |
 | What they said today comes first on the card | a meal named three hours earlier: forgotten 12/12 to named 12/12 | `evals/CHANGELOG.md` (2026-10-25) |
+| A card ranked by the moment beats one ranked by kind | 131 to 8 (11 ties) on 150 audited turns, blind judges on the lists | `evals/CHANGELOG.md` (2026-11-02) |
+| The ack judge needs 8 messages of context | a curt thanks after a hurt: emoji only 12/12 with 4, a reply 11/12 with 8 | `evals/CHANGELOG.md` (2026-11-02) |
 | Notes after the history steer a run of questions | question-run: 14/30 to 0/30, judged no worse; question-game: 12/12 against 0 and 2 of 12 | `evals/CHANGELOG.md` (2026-10-24, 25) |
 | Naming their emoticon as theirs stops most copying | 14/40 to 4/40 on 20 real turns | `evals/CHANGELOG.md` (2026-10-24) |
 | Cheesy quips on a real flagged turn were not copied from the history | shorter history did not help; a per-turn note took it from 16/30 to 29/30 | `evals/CHANGELOG.md` |
@@ -768,6 +774,23 @@ Each card says what would bring it back.
 ## Done
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
+
+**2026-11-02**
+- [x] The ack judge reads the last 8 messages, not 4: a curt thanks after a hurt two exchanges back got only
+      an emoji 12/12 with 4 and a reply 11/12 with 8; past 8 nothing changed (2d09fda). Ack v3 and persona
+      v47 (a general read-the-moment line) kept as candidates: no measurable gain (8bf58d6, fcc40cf, 8714441).
+- [x] The memory card ranked by closeness to the moment (`COMPANION_FOCUS=on`, `features/focus/`): after the
+      rules, the places go to the closest memories, near-duplicates skipped, held and personal ones only when
+      close. On 150 audited turns blind judges preferred that list 131 to 8 (bf070b1, inbox note 253883f).
+- [x] A memory bound to one day ("plans to ... that day") leaves the card once that day is more than a day
+      past; it stays in memory (d33f725).
+- [x] Merging: a pair the write-time check reads as `merge` three times is proposed at once (4b1b829); a merged
+      wording that adds a name or number never said, or drops a date, keeps the fullest member's sentence
+      instead, which catches 12 of the 21 proposals judged to need a fix (8747a95). Still proposals only.
+- [x] Every new boundary is a question in `memory review`: a lasting rule, or retire it as meant for that
+      moment (c6a09e8). Three old ones retired by the owner.
+- [x] The scene card (shadow) shows the 6 entries nearest the moment, not 3: best of 3/6/9/12 on 69 logged
+      scene turns by three blind judges (9f07179). Judged as lists, not replies.
 
 **2026-10-29**
 - [x] Review of 2026-10-29. The mood (J5, ADR 0016 accepted): on for the owner since 2026-10-21, its line on
