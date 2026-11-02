@@ -13,12 +13,14 @@ from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import Belief, Depth, Domain, RelationshipId
 from companion.core.vectors import Embedder, nearest
+from companion.features.upkeep.merging.run import propose_group
 from companion.features.upkeep.reread.logic import (
     CHECK,
     CHECK_NAMES,
     CHECK_SCHEMA,
     PAIR,
     PAIR_SCHEMA,
+    Relation,
     check_prompt,
     pair_prompt,
     plan_for,
@@ -114,7 +116,9 @@ GATE = 0.55  # below this the nearest memory is not worth asking about (at 0.6, 
 @dataclass(frozen=True, slots=True)
 class SameCheck:
     """At write time: is a new memory the same as an existing one? Three pair reads on the nearest
-    memory by embedding; in shadow it only logs, `on` stores the new one as evidence instead."""
+    memory by embedding; in shadow it only logs, `on` stores the new one as evidence instead. When
+    every read says the two should be merged, `on` also proposes the pair for the owner at once, so
+    a repeat across days does not wait for a whole-store grouping run."""
 
     judge: StructuredModel
     embedder: Embedder
@@ -155,4 +159,6 @@ class SameCheck:
         reads = got.values
         found = verdict(reads)
         store.add_memory_check(rel, older.id, new.id, reads, found, prompt=PAIR.ref, at=now)
+        if found == Relation.MERGE and self.mode == "on":  # both are kept; the owner may join them
+            await propose_group(store, self.judge, rel, [older, new], now)
         return older if same_as(found) else None

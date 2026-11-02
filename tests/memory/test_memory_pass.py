@@ -267,6 +267,42 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
         assert {e.quote for e in b.evidence} == {"green tea", "green tea always"}
 
 
+class _MergeJudge:
+    """Every pair read says merge; the writer words the merged memory."""
+
+    async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+        del system, user
+        props = schema["properties"]
+        if isinstance(props, dict) and "keep_apart" in props:
+            return Extraction(
+                {"claim": "Drinks green tea, always", "keep_apart": False}, "j", 0.0, 1
+            )
+        return Extraction({"relation": "merge"}, "j", 0.0, 1)
+
+
+@pytest.mark.parametrize(("mode", "proposed"), [("shadow", 0), ("on", 1)])
+async def test_a_new_memory_to_merge_with_an_old_one_is_kept_and_proposed_at_once_when_on(
+    store: Store, mode: str, proposed: int
+) -> None:
+    _say(store, 1, Speaker.USER, "i drink green tea")
+    await memory_pass(
+        store,
+        FakeExtractor({"beliefs": [_belief("m1", "green tea", "Drinks green tea")]}),
+        REL,
+        T0 + timedelta(hours=1),
+    )
+    _say(store, 2, Speaker.USER, "green tea always, no honey")
+    same = SameCheck(_MergeJudge(), _Embedder(), "fake-embed", mode)
+    ex = FakeExtractor({"beliefs": [_belief("m2", "green tea always", "Always drinks green tea")]})
+    await memory_pass(store, ex, REL, T0 + timedelta(hours=2), same=same)
+    assert len(store.current_beliefs(REL)) == 2  # nothing merges without the owner
+    proposals = store.merge_proposals(REL)
+    assert len(proposals) == proposed
+    if proposed:
+        assert proposals[0].claim == "Drinks green tea, always"
+        assert len(proposals[0].members) == 2
+
+
 async def test_new_memories_are_embedded_after_the_pass_with_the_memory_check_off(
     store: Store,
 ) -> None:

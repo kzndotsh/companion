@@ -19,7 +19,8 @@ Two checks, both read three times by a small model (`READS = 3`, `kit/reads.py` 
 - It embeds any memory that has no vector, embeds the new claim, and takes the single nearest existing memory. If the cosine score is under 0.55 (`GATE`) it stops and asks nothing.
 - Otherwise `system/memory-pair` reads the pair (earlier, later) three times for one of `same`, `merge`, `distinct`, `replaces`, `contradicts`. The reads are stored in `memory_checks` with the other memory's id. If any read failed, nothing is recorded and the memory is stored as usual.
 - Read `same` three times, the memory is not stored as new. In `on` mode its quote is added as evidence on the older memory and the decision "confirmed: the same as an existing memory, stored as evidence on it" is logged. In shadow the decision "would store as evidence on an existing memory (shadow)" is logged and the memory is stored as usual.
-- Read `replaces` or `contradicts` three times, it is stored as usual and the pair is a question for the owner in `memory review` (keep one, the other, or both). Code never acts on a conflict. `merge` and `distinct` verdicts are stored but nothing reads them, since grouping is the merging feature's job.
+- Read `replaces` or `contradicts` three times, it is stored as usual and the pair is a question for the owner in `memory review` (keep one, the other, or both). Code never acts on a conflict.
+- Read `merge` three times, in `on` mode both are stored and the pair is proposed for the owner at once (`propose_group` in `merging/run.py`, with its merged wording), unless that pair was asked before. Before 2026-11-02 nothing acted on `merge`: of 107 pair checks, 23 said `merge`, and a repeat said on another day waited for a whole-store `companion memory group` run. `distinct` verdicts are stored and nothing reads them.
 - Any error in the check is logged as a warning and the memory is stored as usual.
 
 **Questions for the owner.** `companion memory review` (`cli/memory.py`, shared with merging) lists unanswered checks: merges first, then `out_of_date`, `overstated` and held `passing` memories, then conflicting pairs. A pair that sits inside a pending merge is held back, since pieces of one moment often read as a conflict apart. A passing memory that is not sensitive is not asked about. Answers are stored in `memory_answers`. Retire, keep, keep one or keep both are the choices, and a retirement states the reason and which one the owner kept. Nothing is merged or closed by a question that was skipped.
@@ -50,6 +51,7 @@ Spend is tagged `consolidate`.
 - 2026-10-19: single memories read passing by all three reads were all ones the owner had retired (24 of 24), out of date 4 of 6, overstated 2 of 5. Pairs read `same` three times were redundant 9 of 10 times. Only those two cases may act on their own (`evals/CHANGELOG.md`).
 - 2026-10-20: the pair judge read 14 of 14 invented corrections as a conflict, with 2 and 3 of 20 look-alikes on two runs. A draft v2 was dropped, so a conflict stays a question (`evals/CHANGELOG.md`).
 - 2026-10-21: the write-time check had labelled 7 pairs `merge` with nothing acting on them, which led to the grouping feature (`evals/CHANGELOG.md`).
+- 2026-11-02: since going on, 0 pair checks read `same` three times and 23 read `merge`, so the write-time check stored no repeat as evidence; a `merge` now becomes a proposal at once.
 
 ## Tests
 

@@ -96,21 +96,31 @@ async def propose(
     if len(beliefs) < 2:
         return Proposed()
     groups, cost = await _group_reads(judge, beliefs)
-    asked = {frozenset(p.members) for p in store.merge_proposals(rel)}
     made = 0
     for g in groups:
-        members = [beliefs[i] for i in sorted(g)]
-        ids = frozenset(b.id for b in members)
-        if ids in asked:
-            continue
-        claim, spent = await _wording(judge, members)
-        cost += spent
-        if claim is None:
-            continue
-        store.add_merge_proposal(rel, [b.id for b in members], claim, prompt=GROUP.ref, at=now)
-        asked.add(ids)
-        made += 1
+        got = await propose_group(store, judge, rel, [beliefs[i] for i in sorted(g)], now)
+        made, cost = made + got.groups, cost + got.cost_usd
     return Proposed(made, cost)
+
+
+async def propose_group(
+    store: Store,
+    judge: StructuredModel,
+    rel: RelationshipId,
+    members: Sequence[Belief],
+    now: datetime,
+) -> Proposed:
+    """Store one proposal for these members with its merged wording, unless this set was asked
+    before or the writer says to keep them apart. Used by the grouping and by the write-time check
+    when every read calls a new memory one to merge with an existing one (`reread/`)."""
+    ids = frozenset(b.id for b in members)
+    if len(ids) < 2 or ids in {frozenset(p.members) for p in store.merge_proposals(rel)}:
+        return Proposed()
+    claim, cost = await _wording(judge, members)
+    if claim is None:
+        return Proposed(0, cost)
+    store.add_merge_proposal(rel, [b.id for b in members], claim, prompt=GROUP.ref, at=now)
+    return Proposed(1, cost)
 
 
 def _by_day(beliefs: Sequence[Belief], tz: tzinfo) -> dict[str, list[Belief]]:

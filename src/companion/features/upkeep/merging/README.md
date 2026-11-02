@@ -10,6 +10,7 @@ Finds memories about one thing (one moment split into pieces, one interest resta
 - The nightly run (`recent`, called from `memory/nightly.py`) takes the memories of theirs recorded in the last two days (`RECENT_DAYS`), splits them by local day, and groups each day on its own.
 - `companion memory group` (`everything`) groups every day of the whole store, then the whole store at once, to catch repeats across days. One list can be long, and a day's list refused by the first model was read by the fallback.
 - A group already proposed (same set of members, whatever the answer) is not proposed again.
+- The write-time pair check (`reread/`) proposes a single pair the same way (`propose_group`) when all three of its reads say `merge`.
 
 **Wording.** For each new group `system/memory-merge` is called once with the members and writes one plain sentence about the user, third person, at most 30 words, keeping a few examples. It may set `keep_apart` instead, and then no proposal is stored. A failed call or an empty claim also stores nothing, and a warning is logged. The proposal is stored in `merge_proposals` with its members, the wording and the prompt as `name@version`.
 
