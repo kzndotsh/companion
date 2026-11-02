@@ -65,7 +65,9 @@ chooses how: `off`, `quick`, `natural` (the default) or `slow` (`io/pace.py`). S
 a run by hand. Commands are never held. The wait is a reading pause and then typing: the typing
 indicator stays off until the reading pause is over, as someone who has just seen the message would
 not be typing yet, and then stays on while the reply is written and held, refreshed every four
-seconds. A reply ready within the pause, such as a reaction, never shows typing.
+seconds. A reply ready within the pause, such as a reaction, never shows typing. The whole wait is at most 8 seconds,
+except that a long message takes longer to read: past its first 40 words each word adds a tenth of a
+second, up to about a minute, so a 600-word paste is not answered in 8 seconds.
 
 When Telegram answers "too many requests", a call waits the full time it asks for and tries again,
 for up to a minute of waiting in all; asking sooner is refused and can lengthen the block. A reply

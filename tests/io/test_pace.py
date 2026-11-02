@@ -8,6 +8,7 @@ from companion.io.pace import (
     PACES,
     hold_seconds,
     pace_factor,
+    read_seconds,
     target_seconds,
 )
 
@@ -30,7 +31,18 @@ def test_a_reaction_only_pays_the_reading_pause() -> None:
 
 
 def test_the_wait_is_capped_however_long_the_reply() -> None:
-    assert target_seconds("word " * 200, "word " * 400, 1.6, jitter=1.25) == MAX_SECONDS
+    assert target_seconds("word " * 40, "word " * 400, 1.6, jitter=1.25) == MAX_SECONDS
+
+
+def test_a_long_message_takes_longer_to_read_up_to_about_a_minute() -> None:
+    reply = "word " * 57
+    short = target_seconds("word " * 40, reply, 1.0)
+    paste = target_seconds("word " * 600, reply, 1.0)
+    assert short == MAX_SECONDS
+    assert paste == pytest.approx(MAX_SECONDS + 56.0)
+    assert read_seconds("word " * 600, 1.0) == pytest.approx(58.0)
+    assert read_seconds("word " * 5000, 1.6, jitter=1.25) == pytest.approx(2.0 * 1.6 * 1.25 + 58.0)
+    assert target_seconds("word " * 20, reply, 1.0) == MAX_SECONDS  # short chat unchanged
 
 
 def test_the_model_time_already_spent_is_subtracted_and_never_goes_negative() -> None:

@@ -3,7 +3,9 @@
 The model answers in about a second, which no one reading and typing could do. The wait is a pure
 function of the two texts: a short pause to read what they sent, then time to type the reply, less
 whatever the model already took. The typing indicator shows only once the reading pause is over.
-It is capped so a turn never feels broken. The pace setting scales it: "off" sends at once. The io
+It is capped so a turn never feels broken, except that a long message takes longer to read: past
+its first 40 words each word adds a tenth of a second, up to a minute (a 600-word paste was
+answered in 8.5 s, 2026-11-02). The pace setting scales it: "off" sends at once. The io
 layer adds the random jitter and does the waiting; nothing here reads a clock.
 """
 
@@ -16,6 +18,9 @@ READ_PER_WORD = 0.03
 READ_MAX_SECONDS = 2.0
 TYPE_PER_WORD = 0.15
 MAX_SECONDS = 8.0
+SKIM_WORDS = 40  # up to here reading is the short glance above
+LONG_READ_PER_WORD = 0.1
+LONG_READ_MAX_SECONDS = 58.0  # with the glance, about a minute at most
 
 
 def pace_factor(raw: str) -> float:
@@ -25,8 +30,18 @@ def pace_factor(raw: str) -> float:
 
 def read_seconds(user_text: str, factor: float, jitter: float = 1.0) -> float:
     """The pause to notice and read their message, before any typing shows."""
+    return _glance(user_text, factor, jitter) + _long_read(user_text, factor, jitter)
+
+
+def _glance(user_text: str, factor: float, jitter: float) -> float:
     read = min(READ_BASE_SECONDS + READ_PER_WORD * len(user_text.split()), READ_MAX_SECONDS)
     return min(read * factor * jitter, MAX_SECONDS)
+
+
+def _long_read(user_text: str, factor: float, jitter: float) -> float:
+    """The extra time a long message takes to read, outside the cap on the rest of the wait."""
+    extra = LONG_READ_PER_WORD * max(0, len(user_text.split()) - SKIM_WORDS)
+    return min(extra * factor * jitter, LONG_READ_MAX_SECONDS)
 
 
 def target_seconds(
@@ -34,9 +49,11 @@ def target_seconds(
 ) -> float:
     """The whole time from their message to the reply going out. An empty reply (a reaction)
     only pays the reading pause. A later part of a split reply has nothing new to read."""
-    read = read_seconds(user_text, factor, jitter) if reading else 0.0
+    if not reading:
+        user_text = ""
     typing = TYPE_PER_WORD * len(reply_text.split()) * factor * jitter
-    return min(read + typing, MAX_SECONDS)
+    glance = _glance(user_text, factor, jitter) if reading else 0.0
+    return min(glance + typing, MAX_SECONDS) + _long_read(user_text, factor, jitter)
 
 
 def hold_seconds(  # noqa: PLR0913, PLR0917
