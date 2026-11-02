@@ -322,6 +322,8 @@ changelog, with its measurements.
 
 - **system/persona v46** (shipped 2026-10-26 by the owner). v41 with one sentence after what it cannot do: when they ask, it can send a reminder or check in on them later at a time they name, code sends it then, so say yes and never tell them to set it themselves. The persona listed only what it cannot do, and asked straight out it denied having reminders. Plain persona, Luna, 15 replies a cell, on a real history with the last message swapped: "can you send me reminders?" denied 15 of 15 on v41, 0 on v46; "can you even remind me of stuff or nah" 15 and 1; "could you check on me later tonight about how my interview went?" 15 and 0. "can you see my screen rn?" claimed 0 on both. "can you text me first in the morning?" v41 said it cannot start a conversation; v46 said yes and asked what time, which a check-in at that time does.
 
+- **system/persona v47** (candidate, not shipped: no measurable change). v46 with one general sentence at the top of "Use what you know": before each reply, take in where they are right now (the last several messages, how they seem to feel, what they want from it), and let that decide what it says, how warm or light, and how much. Reason: the owner wondered what a general read-the-moment line would do without reasoning on. Measurement in `evals/CHANGELOG.md`.
+
 ## assembly
 
 Code changes to what the model is sent besides the prompt text: where the memory card and notes sit,

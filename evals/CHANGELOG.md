@@ -2651,3 +2651,18 @@ past reactions still reacting went from 28/42 to 26/42. The cool thanks sits at 
 threshold, so a small change to the prompt moves it. v3 is kept as a candidate, not shipped. About
 $0.05. Rerun: a scratch script asks the `ACK` judge with `prompts.get("system/ack", v)` on prompts
 rebuilt from `utterances`, 12 draws per flagged message and 2 per past reaction.
+
+## 2026-11-02: A general read-the-moment line in the persona changes nothing measurable
+
+Persona v47 (v46 plus one sentence: take in how they seem to feel and what they want before each reply)
+against v46, gpt-6-luna, reasoning off, plain persona, 12 tone and listening fixtures, 12 samples a
+cell. The $0.08 cap stopped it inside the last fixture (`no-lecture-after-an-apology`, not counted),
+and two cells ran short. Pass counts, v46 then v47: comfort-when-lonely 12/12, 12/12;
+comfort-when-touch-starved 12/12, 12/12; control-short-send-off 12/12, 12/12;
+cool-reply-to-real-rudeness 11/11, 10/12; does-not-soothe-gift 12/12, 12/12; listening-everyday-boss
+11/12, 12/12; listening-serious-grief 11/12, 10/12; listening-vague-distress-today 12/12, 12/12;
+mood-everyday-dinner 3/12, 4/12; mood-goodbye-bed 12/12, 12/12; mood-tender-after-a-layoff 12/12, 8/8.
+Every gap is within noise. Read by eye, the replies are near copies of each other. These checks
+are pass or fail on known failures, so a subtler change in tone would not show in them. Rerun:
+`companion eval --variants v46.md@openai/gpt-6-luna,v47.md@openai/gpt-6-luna --samples 12` with a
+fixtures dir holding those 12.
