@@ -686,6 +686,7 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 ## system/ack
 - **system/ack v1** (superseded). From commit 9622e19 on 2026-10-15: feat(ack): react instead of replying to acknowledgements, judged by a small model in parallel with the talker
 - **system/ack v2** (current). From commit ca3f4c3 on 2026-10-17: fix(ack): a lively reply in the middle of a chat is not an acknowledgement and gets a message
+- **system/ack v3** (candidate, not shipped). The invitation label also covers asking it for the next thing (a next question, go on). Reason: the owner's flag of 2026-11-01 on the window, a request for the next question got only a reaction. It fixed that message (12/12 reactions to 0/12) but a curt thanks while still cool after a hurt went back to a reaction 5/12 against 2/12, so v2 stays. Measurement in `evals/CHANGELOG.md`.
 
 ## system/callback-judge
 - **system/callback-judge v1** (superseded). New. Reads one reply beside the memories its card held and the recent messages, and labels whether it brought up a memory on its own, which one, and whether that was accurate, fitting and not forced. Feeds `companion callbacks` (J2). Precision first, after the research: a wrong callback hurts more than a missed one, and over-use is its own failure.

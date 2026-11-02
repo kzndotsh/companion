@@ -2639,3 +2639,15 @@ both had said goodnight). One moved the other way, a message asking for the next
 already got a reaction 2 times in 3 at 4 and should get a reply. Shipped at 8. Rerun: a scratch script
 rebuilds each prompt from `utterances` before the turn with `build_prompt`'s format and asks the
 `ACK` judge through `kit/ask.py`.
+
+## 2026-11-02: Naming "the next thing" as an invitation in the ack prompt costs the cool thanks
+
+A short message asking for the next question got only a reaction (2/3 at 4 messages of context,
+3/3 at 8). It is the only one of 17 short asks for more in the whole chat history that did; the
+others never reached the judge or got a reply. `system/ack` v3 adds asking for the next thing to the
+invitation label. At 8 messages, Haiku, against v2: the ask for the next question reacted 0/12 against
+12/12, but the cool thanks of the entry above reacted 5/12 against 2/12 (a longer wording: 7/12), and
+past reactions still reacting went from 28/42 to 26/42. The cool thanks sits at 0.60 to 0.70, on the
+threshold, so a small change to the prompt moves it. v3 is kept as a candidate, not shipped. About
+$0.05. Rerun: a scratch script asks the `ACK` judge with `prompts.get("system/ack", v)` on prompts
+rebuilt from `utterances`, 12 draws per flagged message and 2 per past reaction.
