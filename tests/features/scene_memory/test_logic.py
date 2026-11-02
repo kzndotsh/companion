@@ -21,6 +21,7 @@ from companion.features.scene_memory.logic import (
     BASICS_NOTE,
     KNOWN_NOTE,
     LIMITS_NOTE,
+    NEAREST,
     OFFER_NOTE,
     BrushRead,
     Entry,
@@ -254,7 +255,8 @@ SCORES = {"into1": 0.2, "style": 0.9, "care": 0.5, "into2": 0.7, "cur1": 0.95, "
 def test_the_scene_card_pins_limits_then_the_nearest_then_one_offer_then_the_basics() -> None:
     card = scene_card(ENTRIES, SCORES, ["The user's name is Sam."], may_offer=True)
     assert [e.id for e in card.limits] == ["hard", "soft"]
-    assert [e.id for e, _ in card.nearest] == ["style", "into2", "care"]
+    ranked = ["style", "into2", "care", "into1"]  # every known entry, nearest first
+    assert [e.id for e, _ in card.nearest] == ranked[:NEAREST]
     assert card.offer is not None
     assert card.offer.id == "cur1"
     text = render_scene(card)
@@ -264,7 +266,6 @@ def test_the_scene_card_pins_limits_then_the_nearest_then_one_offer_then_the_bas
     assert text.index("hard limit: claim hard") < text.index("soft limit: claim soft")
     assert "claim cur1" in text
     assert "claim cur2" not in text
-    assert "claim into1" not in text
 
 
 def test_a_limit_is_pinned_even_with_no_look_up_and_nothing_else_is_shown() -> None:

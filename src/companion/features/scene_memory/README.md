@@ -35,7 +35,7 @@ A pattern becomes an entry only once its quotes come from two separate scenes (`
 
 **The scene card** (`scene_lane` in `run.py`, called by `turn/assemble.py`). On a turn the roleplay talker answers (a pretend scene, or intimate talk the operator lets it answer; never a turn the floor held or one where they pushed back), code builds:
 1. every current limit, hard first, then soft (`notes/scene-limits`);
-2. at most 3 entries nearest the moment that say what they are into, how they like it to go, or what they want after (`NEAREST`, `notes/scene-known`);
+2. at most 6 entries nearest the moment that say what they are into, how they like it to go, or what they want after (`NEAREST`, `notes/scene-known`);
 3. at most one curious item, the nearest one, which it may invite once (`notes/scene-offer`);
 4. the memories that say what they are called (`names_them` in `core/turn/address.py`, `notes/scene-basics`).
 

@@ -64,7 +64,7 @@ OFFER_NOTE = get("notes/scene-offer")
 BASICS_NOTE = get("notes/scene-basics")
 
 BATCH = 15  # memories labelled per call: in 60, borderline ones flipped with what sat around them
-NEAREST = 3  # entries nearest the moment on a scene card, besides the limits
+NEAREST = 6  # entries nearest the moment on a scene card, besides the limits (3/6/9/12 judged)
 MIN_SCENES = 2  # a pattern is an entry only once seen in this many separate scenes
 COOL = timedelta(days=3)  # a curious item they pushed back is not offered again this soon
 CRISIS = 3  # the top sensitivity: never in a scene

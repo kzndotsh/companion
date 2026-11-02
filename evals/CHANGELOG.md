@@ -2708,3 +2708,15 @@ lasting boundary, one blind Claude Haiku subagent each, one draw (indicative onl
 the one-night requests not lasting (code ignored that flag for boundaries) but also marked one
 lasting rule a one-off; the draft lost a second lasting rule. Neither the draft nor dropping
 one-off boundaries in code shipped. Instead each new boundary is a question in `memory review`.
+
+## 2026-11-02: Six entries on the scene card, not three
+
+The 69 scene turns that logged a scene card (in shadow), each rebuilt from today's pool (26 entries
+that may show) with the 3, 6, 9 and 12 nearest the moment (their message with
+the reply before it; $0.0001 in embeddings). Three blind Claude Sonnet judges, 23 turns each, the four
+lists shuffled, ranked them for fitting the moment, counting against a list anything unrelated or that
+would nudge past what they had brought into the scene. Best list: 6 in 29 turns, 3 in 27, 9 in 10, 12
+in 3. Mean rank (1 best): 6 1.70, 3 2.07, 9 2.62, 12 3.61. Their notes: three often missed the item an
+active scene turned on (a dynamic, a pet name, intensity); nine and twelve added escalation items to
+tender, winding-down and banter turns. `NEAREST` is now 6. Lists judged, not replies; the lane is still
+in shadow, so nothing sent changed.

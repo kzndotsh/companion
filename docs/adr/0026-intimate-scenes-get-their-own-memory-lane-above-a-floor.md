@@ -42,7 +42,7 @@ nothing sorts the two lanes apart.
    with a turn the minor check held is never read. A pattern becomes usable only once quoted from two
    separate scenes (decision 1), and only ever reaches a scene card.
 4. **The scene card.** On a turn the roleplay talker answers, code builds the memory block as every
-   limit (hard first), then at most three entries nearest the moment (into, style, aftercare; by
+   limit (hard first), then at most three (six from 2026-11-02, measured) entries nearest the moment (into, style, aftercare; by
    embedding, as ADR 0018), then at most one curious item, then what they are called. It goes in the
    system block in place of the everyday card, as bracketed text (ADR 0012), with no everyday memory and
    none of its own views. How they want to be referred to stays pinned, as on every turn (decision 2).
