@@ -12,7 +12,7 @@ Finds memories about one thing (one moment split into pieces, one interest resta
 - A group already proposed (same set of members, whatever the answer) is not proposed again.
 - The write-time pair check (`reread/`) proposes a single pair the same way (`propose_group`) when all three of its reads say `merge`.
 
-**Wording.** For each new group `system/memory-merge` is called once with the members and writes one plain sentence about the user, third person, at most 30 words, keeping a few examples. It may set `keep_apart` instead, and then no proposal is stored. A failed call or an empty claim also stores nothing, and a warning is logged. The proposal is stored in `merge_proposals` with its members, the wording and the prompt as `name@version`.
+**Wording.** For each new group `system/memory-merge` is called once with the members and writes one plain sentence about the user, third person, at most 30 words, keeping a few examples. It may set `keep_apart` instead, and then no proposal is stored. A failed call or an empty claim also stores nothing, and a warning is logged. Code then checks the wording (`unsupported` in `logic.py`): every number, and every capitalised word after the first, must appear in a member's claim or quote, and every date a member names must still be there. A wording that fails is replaced by the fullest member's own sentence of the merged kind (`kept_wording`), and the reason is logged; the owner can still word it themselves. The proposal is stored in `merge_proposals` with its members, the wording and the prompt as `name@version`.
 
 **The owner's answer.** `companion memory review` (`cli/memory.py`, shared with `reread/`) asks merge proposals first, before the checks, and holds back a conflict between two pieces of a pending merge. The choices are merge, pick which belong, word it yourself, keep apart, note why, skip. Answers are stored in `merge_answers`.
 - Merge or word it yourself calls `kit/curate.py` `merge`: one new memory carrying every quote of the originals, which are closed as merged, never removed (ADR 0002). Its kind is `merged_kind`: a state if any member is a passing state, so it keeps fading, else the first member's kind. Sensitivity and confidence are the highest of the members.
@@ -25,7 +25,7 @@ Spend is tagged `consolidate`, which is also the name `COMPANION_JUDGE_ROUTES` u
 
 | File | What |
 |---|---|
-| `logic.py` | pure: the prompts (`GROUP`, `WRITE`), `listing`, `read_groups`, `agreed` (what counts as a group), `read_claim`, `merged_kind` |
+| `logic.py` | pure: the prompts (`GROUP`, `WRITE`), `listing`, `read_groups`, `agreed` (what counts as a group), `read_claim`, `merged_kind`, the wording check (`unsupported`) and its fallback (`kept_wording`) |
 | `run.py` | effects: `propose`, `repick`, the last two days each night (`recent`, `RECENT_DAYS`), the whole store (`everything`) |
 | `store.py` | its queries: `merge_proposals` and `merge_answers`, append-only (tables in `store/sqlite/migrations/`) |
 | `cli.py` | `companion memory group` (`group_now`) |
@@ -44,6 +44,7 @@ Spend is tagged `consolidate`, which is also the name `COMPANION_JUDGE_ROUTES` u
 ## Measured
 
 - 2026-10-21: `companion memory group` on the live store proposed 52 merges (sizes 2 to 6) for 2.1 cents. By eye the groups were right, a few looser ones are the owner's to keep apart (`evals/CHANGELOG.md`).
+- 2026-11-02: five Haiku readers judged the 71 open proposals: 11 safe as worded, 21 needing a fix to the wording, 13 to keep apart, 26 for the owner (sensitive or in conflict). The code check flags 12 of the 21 (mostly dropped dates) and 1 of the 11 (a date coarsened to a month). Grouping only same-kind memories would have blocked 11 wanted merges to stop 4 unwanted ones, so it was not added (`evals/CHANGELOG.md`).
 
 ## Tests
 

@@ -10,6 +10,7 @@ without the owner: each group is a question in `companion memory review`.
 from __future__ import annotations
 
 import itertools
+import re
 from collections.abc import Sequence
 
 from companion.core.types import Belief, BeliefKind, Json
@@ -93,3 +94,35 @@ def merged_kind(members: Sequence[Belief]) -> BeliefKind:
     """A merge that holds a passing state keeps fading like one; otherwise the first member's."""
     kinds = [b.kind for b in members]
     return BeliefKind.STATE if BeliefKind.STATE in kinds else kinds[0]
+
+
+# What a merged wording may not do on its own (2026-11-02: five readers judged 71 proposals, and 21
+# wordings added a name, a time or a title never said, or dropped the date that kept a one-off a
+# one-off). Checked in code; a wording that fails keeps one of the members' own sentences instead.
+_DATED = re.compile(r"\b20\d\d-\d\d-\d\d\b")
+_SPECIFIC = re.compile(r"[A-Za-z0-9][\w'\u2019.:-]*")
+_SENTENCE_START = frozenset({"the", "on", "as", "they", "their", "in", "at", "a", "an", "since"})
+
+
+def unsupported(claim: str, members: Sequence[Belief]) -> list[str]:
+    """The names, numbers and dates in a merged wording that no member's claim or quote has, and
+    the dates the members name that the wording dropped."""
+    said = " ".join([b.claim for b in members] + [e.quote for b in members for e in b.evidence])
+    source = said.lower()
+    added = [
+        tok.rstrip(".:-")
+        for i, tok in enumerate(_SPECIFIC.findall(claim))
+        if (any(ch.isdigit() for ch in tok) or (tok[0].isupper() and i > 0))
+        and tok.lower() not in _SENTENCE_START
+        and tok.rstrip(".:-").lower() not in source
+    ]
+    dropped = sorted(
+        {d for b in members for d in _DATED.findall(b.claim)} - set(_DATED.findall(claim))
+    )
+    return added + [f"dropped {d}" for d in dropped]
+
+
+def kept_wording(members: Sequence[Belief]) -> str:
+    """The fullest of the members' own sentences, of the kind the merged memory takes."""
+    kind = merged_kind(members)
+    return max((b for b in members if b.kind is kind), key=lambda b: len(b.claim)).claim

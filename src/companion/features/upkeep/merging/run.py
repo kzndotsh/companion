@@ -20,9 +20,11 @@ from companion.features.upkeep.merging.logic import (
     WRITE_SCHEMA,
     Group,
     agreed,
+    kept_wording,
     listing,
     read_claim,
     read_groups,
+    unsupported,
 )
 from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
@@ -58,7 +60,12 @@ async def _wording(judge: StructuredModel, members: Sequence[Belief]) -> tuple[s
     except Exception as err:
         log.warning("merged wording failed: %r", err)
         return None, 0.0
-    return read_claim(got.data), got.cost_usd
+    claim = read_claim(got.data)
+    wrong = [] if claim is None else unsupported(claim, members)
+    if wrong:
+        log.info("merged wording %r not in their words (%s); keeping a member's own", claim, wrong)
+        return kept_wording(members), got.cost_usd
+    return claim, got.cost_usd
 
 
 async def repick(

@@ -13,8 +13,8 @@ from tests.conftest import REL, T0
 class Grouper:
     """Puts the first two memories together on every read, and writes a merge unless told not to."""
 
-    def __init__(self, *, apart: bool = False) -> None:
-        self.apart, self.calls = apart, 0
+    def __init__(self, *, apart: bool = False, claim: str = "Has two dogs.") -> None:
+        self.apart, self.calls, self.claim = apart, 0, claim
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         del system, user
@@ -23,7 +23,7 @@ class Grouper:
         assert isinstance(props, dict)
         if "groups" in props:
             return Extraction({"groups": [["m1", "m2"]]}, "j", 0.0, 1)
-        return Extraction({"claim": "Has two dogs.", "keep_apart": self.apart}, "j", 0.0, 1)
+        return Extraction({"claim": self.claim, "keep_apart": self.apart}, "j", 0.0, 1)
 
 
 def _store(
@@ -74,3 +74,12 @@ async def test_a_pick_is_proposed_again_alone_with_new_wording(
     assert (await repick(store, Grouper(), REL, T0)).groups == 1
     assert store.merge_proposals(REL)[-1].members == (made[0].id, made[1].id)
     assert (await repick(store, Grouper(), REL, T0)).groups == 0
+
+
+async def test_a_wording_with_a_name_never_said_keeps_a_members_own_sentence(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    store, made = _store(tmp_path, utterance, belief)
+    await propose(store, Grouper(claim="Has two dogs, Rex and Max."), REL, made, T0)
+    [p] = store.merge_proposals(REL)
+    assert p.claim in {"Has a dog named Rex.", "Has a dog named Bo."}

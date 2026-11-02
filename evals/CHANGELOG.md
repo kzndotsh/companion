@@ -2685,3 +2685,17 @@ Embedding cost $0.0002. Shipped live as `COMPANION_FOCUS=on` with two changes th
 for: a mildly personal memory needs a close match (0.35), and a held one needs them sharing too.
 Rerun: a scratch script rebuilds the cards from `turn_requests` and `belief_embeddings` with the
 message and the reply before it embedded, and writes shuffled A/B lists for the judges.
+
+## 2026-11-02: Merge wordings checked in code: 12 of 21 bad ones caught, 1 of 11 good ones flagged
+
+The 71 open merge proposals, read by five Claude Haiku subagents with the owner's 13 past
+reworded or kept-apart answers as calibration: 11 safe to merge as worded, 21 right to merge but
+wrongly worded (a name, a time or an album title never said; a one-off made a habit; a date or a
+hedge dropped), 13 different things to keep apart, 26 for the owner (sexual, health or legal, or
+members that disagree). A code check on the stored wordings (`unsupported` in
+`features/upkeep/merging/logic.py`: numbers and capitalised words must be in a member's claim or
+quote, a member's date must stay) flags 12 of the 21 and 1 of the 11, and that one changed a date
+to a month. It misses paraphrase (one-off to habit, "mostly" for "whole"). A rule to group only
+memories of one kind family would have stopped 4 of the 13 keep-apart groups and 11 wanted merges,
+so it was left out. Shipped: a wording that fails keeps the fullest member's own sentence. No
+model calls; readers as subagents.
