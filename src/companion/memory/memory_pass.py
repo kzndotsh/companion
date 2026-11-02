@@ -42,6 +42,7 @@ from companion.core.memory_pass import PassRun
 from companion.core.types import (
     Belief,
     BeliefId,
+    BeliefKind,
     Json,
     RelationshipId,
     SessionId,
@@ -54,6 +55,7 @@ from companion.core.types import (
 from companion.core.vectors import Embedder
 from companion.features.promises.run import read_promises
 from companion.features.threads.run import Reading, catch_up_loops
+from companion.features.upkeep.reread.logic import ASK_RULE
 from companion.features.upkeep.reread.run import SameCheck
 from companion.kit.embed import embed_missing
 from companion.kit.record import Recorder
@@ -307,6 +309,10 @@ async def _extract_pass(
         store.insert_belief(made)
         stored.append(made)
         accepted += 1
+        if spec is USER_SPEC and made.kind is BeliefKind.BOUNDARY:
+            store.add_memory_check(
+                run.rel, made.id, None, [], ASK_RULE, prompt="code: a new boundary", at=run.now
+            )
         run.log(
             spec.accepted_reason,
             {

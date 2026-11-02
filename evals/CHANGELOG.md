@@ -2699,3 +2699,12 @@ to a month. It misses paraphrase (one-off to habit, "mostly" for "whole"). A rul
 memories of one kind family would have stopped 4 of the 13 keep-apart groups and 11 wanted merges,
 so it was left out. Shipped: a wording that fails keeps the fullest member's own sentence. No
 model calls; readers as subagents.
+
+## 2026-11-02: Which boundaries last is the owner's call, not the extractor's
+
+The ten boundaries ever stored, against the owner's verdicts (three lasting, the rest for one
+moment or about the bot's setup), with the extraction prompt as live (v8) and a draft that defined a
+lasting boundary, one blind Claude Haiku subagent each, one draw (indicative only). v8 already marked
+the one-night requests not lasting (code ignored that flag for boundaries) but also marked one
+lasting rule a one-off; the draft lost a second lasting rule. Neither the draft nor dropping
+one-off boundaries in code shipped. Instead each new boundary is a question in `memory review`.

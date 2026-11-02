@@ -227,3 +227,23 @@ def test_a_memory_labelled_about_the_bot_is_asked_and_retired_on_yes(
     review(path, REL, ask=lambda q: asked.append(q) or "r")
     assert "remark about the bot" in asked[0]
     assert Store(path).user_beliefs(REL) == []
+
+
+def test_a_new_rule_is_asked_and_retiring_it_ends_it(
+    tmp_path: Path, utterance: Callable[..., Utterance], belief: Callable[..., Belief]
+) -> None:
+    from companion.features.upkeep.reread.logic import ASK_RULE  # noqa: PLC0415
+
+    path = tmp_path / "rel.sqlite"
+    store = Store(path)
+    store.append_utterance(utterance(text="pause till tomorrow", uid="u1"))
+    store.insert_belief(
+        belief(bid="rule", utterance_id="u1", quote="pause till tomorrow", claim="Asked to pause")
+    )
+    store.add_memory_check(REL, belief(bid="rule").id, None, [], ASK_RULE, prompt="p", at=T0)
+    store.close()
+    asked: list[str] = []
+    out = review(path, REL, ask=lambda q: asked.append(q) or "r")
+    assert "a new rule for how to treat you" in asked[0]
+    assert "retired  Asked to pause" in out
+    assert Store(path).user_beliefs(REL) == []

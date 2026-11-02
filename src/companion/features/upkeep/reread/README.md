@@ -15,6 +15,8 @@ Two checks, both read three times by a small model (`READS = 3`, `kit/reads.py` 
 - In `on` mode the memory is retired through `kit/curate.py` `retire` with the reason "a passing moment, faded from the card (ADR 0019)". In shadow `log_would_close` records the decision "would close belief (shadow)" and closes nothing. The closing is a retirement, never a delete (ADR 0002).
 - One line is logged per night: how many were read, closed or would be closed, how many questions, and the cost.
 
+**A new rule.** Every new boundary of theirs that the memory pass stores is a question for the owner in `memory review` (`ASK_RULE` in `logic.py`, stored as a check with no reads): keep it as a rule from now on, or retire it as meant for that moment. A request to pause until tomorrow had stood first on every card for twelve days, and the extractor's own one-off flag had marked a rule the owner kept as a one-off (2026-11-02, `evals/CHANGELOG.md`).
+
 **The write-time pair check** (`SameCheck` in `run.py`, called from `_stored_as_evidence` in `memory/memory_pass.py` for each new memory of theirs, never for the companion's own views).
 - It embeds any memory that has no vector, embeds the new claim, and takes the single nearest existing memory. If the cosine score is under 0.55 (`GATE`) it stops and asks nothing.
 - Otherwise `system/memory-pair` reads the pair (earlier, later) three times for one of `same`, `merge`, `distinct`, `replaces`, `contradicts`. The reads are stored in `memory_checks` with the other memory's id. If any read failed, nothing is recorded and the memory is stored as usual.

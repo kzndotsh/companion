@@ -348,3 +348,27 @@ async def test_a_switch_step_runs_after_each_pass_and_its_cost_counts(store: Sto
     assert result.cost_usd >= 0.5
     assert not (await memory_pass(store, FakeExtractor(), REL, T0, steps=[history])).ran  # type: ignore[list-item]
     assert ran == [T0]
+
+
+async def test_a_new_boundary_is_a_question_for_the_owner(store: Store) -> None:
+    from companion.features.upkeep.reread.logic import ASK_RULE  # noqa: PLC0415
+
+    _say(store, 1, Speaker.USER, "pause the game till tomorrow, i like tea")
+    await memory_pass(
+        store,
+        FakeExtractor(
+            {
+                "beliefs": [
+                    _belief(
+                        "m1", "pause the game till tomorrow", "Asked to pause", kind="boundary"
+                    ),
+                    _belief("m1", "i like tea", "Likes tea", kind="preference"),
+                ]
+            }
+        ),
+        REL,
+    )
+    [check] = store.unanswered_checks(REL, [ASK_RULE])
+    asked = {b.id: b.claim for b in store.current_beliefs(REL)}
+    assert asked[check.belief_id] == "Asked to pause"
+    assert check.other_id is None

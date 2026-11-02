@@ -40,6 +40,10 @@ class Relation(StrEnum):
 
 
 MIXED = "mixed"
+# Every new boundary of theirs is a question for the owner: kept as a rule from now on, or retired
+# as meant for that moment. A request to pause until tomorrow stood first on every card for twelve
+# days, and the extractor's own one-off flag missed a rule the owner kept (2026-11-02).
+ASK_RULE = "rule?"
 ASK_OWNER = frozenset({Label.OUT_OF_DATE, Label.OVERSTATED})
 CHECK_SCHEMA: dict[str, Json] = {
     "type": "object",

@@ -12,7 +12,7 @@ from companion.core.clock import utc_now
 from companion.core.types import Belief, BeliefId, RelationshipId
 from companion.features.upkeep.merging.logic import NOTE, PICK, merged_kind
 from companion.features.upkeep.merging.store import Proposal
-from companion.features.upkeep.reread.logic import HELD, Label, Relation
+from companion.features.upkeep.reread.logic import ASK_RULE, HELD, Label, Relation
 from companion.features.upkeep.reread.store import MemoryCheck
 from companion.features.upkeep.sort.logic import ASK_ABOUT_THE_BOT, ASK_ROUTINE
 from companion.features.upkeep.sort.logic import ASKED as WORTH_ASKED
@@ -20,9 +20,11 @@ from companion.features.upkeep.sort.logic import Label as Worth
 from companion.kit.curate import merge, retire
 from companion.store.sqlite.store import Store
 
-ASKED = (Label.OUT_OF_DATE, Label.OVERSTATED, Label.PASSING)
+ASKED = (Label.OUT_OF_DATE, Label.OVERSTATED, Label.PASSING, ASK_RULE)
 CONFLICT = (Relation.REPLACES, Relation.CONTRADICTS)
 WHY: dict[str, str] = {
+    ASK_RULE: "a new rule for how to treat you: keep it from now on, or retire it if it was only"
+    " for that moment",
     Label.OUT_OF_DATE: "looks out of date",
     Label.OVERSTATED: "states a habit from what reads like one occasion",
     Label.PASSING: "looks like a passing moment (sensitive, so it is your call)",
