@@ -2666,3 +2666,5 @@ Every gap is within noise. Read by eye, the replies are near copies of each othe
 are pass or fail on known failures, so a subtler change in tone would not show in them. Rerun:
 `companion eval --variants v46.md@openai/gpt-6-luna,v47.md@openai/gpt-6-luna --samples 12` with a
 fixtures dir holding those 12.
+
+Blind check of the same replies: a Claude Sonnet subagent judged 128 shuffled v46/v47 pairs on which better reads the moment. Tie 82, v47 24, v46 22: a coin flip. Per fixture the biggest gaps were 6 to 2 for v47 on the rude message and 5 to 1 for v46 on the ignored-by-the-boss share, each within noise at 12 pairs. The judge's note: the better replies kept to company without a talk-about-it question, stayed short, and did not guess at motives. Both versions did that about equally often.
