@@ -17,6 +17,7 @@ from datetime import UTC, datetime, timedelta, tzinfo
 from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.quoted import wants_context
 from companion.core.types import Belief, BeliefId, BeliefKind
+from companion.core.vectors import Vector, dot
 
 HOLD_AT = 2
 MAX_ITEMS = 15
@@ -31,6 +32,12 @@ EVENT_SHOWN_DAYS = 7
 RECENT = timedelta(hours=12)
 RECENT_SLOTS = 8  # with 4, a busy evening's newer memories still pushed the meal off
 RULES = frozenset({BeliefKind.BOUNDARY, BeliefKind.PROMISE})  # always first, whatever is recent
+# With a focus, the places after their boundaries and its promises go to the memories closest to the
+# moment, not to the same kinds every turn: on 150 audited turns blind judges preferred that list
+# 131 to 8 (evals/CHANGELOG.md, 2026-11-02).
+FOCUS_SAME = 0.90  # a memory this close to one already chosen says the same thing
+FOCUS_HELD = 0.40  # a held memory only this close, and only when they are sharing
+FOCUS_PERSONAL = 0.35  # a mildly personal one (sensitivity 1) only this close
 KIND_ORDER = {
     kind: i
     for i, kind in enumerate(
@@ -52,6 +59,15 @@ KIND_ORDER = {
 class Aged:
     last_supported: datetime
     status: Freshness
+
+
+@dataclass(frozen=True, slots=True)
+class Focus:
+    """How close each memory is to the moment, from the focus look-up, and the vectors that tell
+    two memories that say the same thing apart."""
+
+    closeness: Mapping[BeliefId, float]
+    vectors: Mapping[BeliefId, Vector]
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,11 +98,14 @@ def build_card(  # noqa: PLR0913
     show_held: bool = True,
     everyday: Collection[BeliefId] = (),
     contexts: Mapping[BeliefId, str] | None = None,
+    focus: Focus | None = None,
 ) -> Card:
     """`support` is each belief's freshest evidence time, falling back to valid_from.
 
     With `show_held` off (a casual turn) sensitive beliefs are left out entirely and their places go
-    to ordinary ones: in view, a model links them to unrelated banter and raises them unasked."""
+    to ordinary ones: in view, a model links them to unrelated banter and raises them unasked.
+    With a `focus` the rest of the card is the memories closest to the moment, not the newest of
+    each kind (`_focused`)."""
     aged = {
         b.id: Aged(
             (last := support.get(b.id, b.valid_from)),
@@ -115,8 +134,14 @@ def build_card(  # noqa: PLR0913
     recent = [b for b in newest if b not in rules and now - aged[b.id].last_supported <= RECENT][
         :RECENT_SLOTS
     ]
-    ordered = [*rules, *recent, *(b for b in by_kind if b not in rules and b not in recent)]
-    ranked, crowded = ordered[:max_items], ordered[max_items:]
+    if focus is None:
+        ordered = [*rules, *recent, *(b for b in by_kind if b not in rules and b not in recent)]
+        ranked, crowded = ordered[:max_items], ordered[max_items:]
+    else:  # a place nothing close enough fills stays empty
+        rest = [b for b in current if b not in rules]
+        room = max_items - len(rules)
+        ranked = [*rules, *_focused(rest, focus, room, sharing=show_held)][:max_items]
+        crowded = [b for b in by_kind if b not in ranked]
     older_pool = [b for b in stale if b.sensitivity < HOLD_AT]
     older = tuple(older_pool[:MAX_OLDER])
     return Card(
@@ -131,6 +156,28 @@ def build_card(  # noqa: PLR0913
         kept_back=tuple(kept_back),
         contexts={k: v for k, v in (contexts or {}).items() if k in aged},
     )
+
+
+def _focused(beliefs: Sequence[Belief], focus: Focus, room: int, *, sharing: bool) -> list[Belief]:
+    """The closest memories first, at most `room`: a held one only when they are sharing and it is
+    close, a mildly personal one only when it is close, and none that says what one already chosen
+    says. A memory with no vector is not ranked."""
+    chosen: list[Belief] = []
+    for b in sorted(
+        (b for b in beliefs if b.id in focus.closeness and b.id in focus.vectors),
+        key=lambda b: -focus.closeness[b.id],
+    ):
+        if len(chosen) >= room:
+            break
+        near = focus.closeness[b.id]
+        if b.sensitivity >= HOLD_AT and (not sharing or near < FOCUS_HELD):
+            continue
+        if b.sensitivity == 1 and near < FOCUS_PERSONAL:
+            continue
+        if any(dot(focus.vectors[b.id], focus.vectors[x.id]) > FOCUS_SAME for x in chosen):
+            continue
+        chosen.append(b)
+    return chosen
 
 
 _ON_A_DATE = re.compile(r"\b20\d\d-\d\d-\d\d\b")

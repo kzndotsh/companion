@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from companion.core.card import EVENT_SHOWN_DAYS, Card, build_card, render
+from companion.core.card import EVENT_SHOWN_DAYS, Card, Focus, build_card, render
 from companion.core.clock import now_line
 from companion.core.frames import (
     is_assertable,
@@ -33,6 +33,7 @@ from companion.core.types import (
     Utterance,
 )
 from companion.core.views import ViewState, card_views
+from companion.features.focus.run import FOCUS
 from companion.features.scene_memory.run import SCENE, scene_lane
 from companion.kit.current import Heard, Turn, decide, mark
 from companion.kit.features import Lookups, Moment
@@ -167,6 +168,8 @@ def assemble(  # noqa: PLR0913
         bid for bid, x in labels.items() if x.domain is Domain.DAILY and x.depth is Depth.SURFACE
     }
     support, contexts = store.last_support(c.rel), store.belief_contexts(c.rel)
+    found = looked.found.get(FOCUS.name)
+    focus = found if isinstance(found, Focus) else None
 
     def card_of(beliefs: Sequence[Belief], shown_views: Sequence[Belief]) -> Card:
         return build_card(
@@ -177,9 +180,19 @@ def assemble(  # noqa: PLR0913
             show_held=sharing,
             everyday=everyday,
             contexts=contexts,
+            focus=focus,
         )
 
     card = card_of(assertable, views)
+    if focus is not None:
+        shown_ids = [b.id for b in (*card.usable, *card.held)]
+        decide(
+            c,
+            t,
+            "card: by focus",
+            {"closeness": {b: round(focus.closeness.get(b, 0.0), 3) for b in shown_ids}},
+            reason=f"card: {len(shown_ids)} memories, after the rules the closest to the moment",
+        )
     lane = scene_lane(c, t, looked.found.get(SCENE.name), roleplay=roleplay, card=card)
     if lane.text is not None:  # a scene turn: the scene card, and no everyday memories
         card, shown = card_of([], ()), [lane.text] if lane.text else []

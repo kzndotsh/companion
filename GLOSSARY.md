@@ -333,6 +333,9 @@ Ending a memory's time as current, with a logged reason; it stays in the ledger.
 The handful of memories shown to the talker each turn.
 _Avoid_: state card, memory block
 
+**Focus**:
+How close each memory is to the moment, used to choose most of the memory card.
+
 **Recall**:
 The look-up when they ask it to remember something or say it forgot.
 

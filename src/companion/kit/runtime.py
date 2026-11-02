@@ -34,6 +34,7 @@ class Runtime:
     embedder: Embedder | None = None  # the relevance look-up runs in shadow when set
     embed_model: str = ""
     lore: str = "off"  # on, shadow or off: its tastes nearest their message (ADR 0020)
+    focus: str = "off"  # on or off: the card ranked by closeness to the moment
     scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
     relevance: str = "shadow"  # on (picks shown when a memory is near), shadow or off (ADR 0018)
     reminders: bool = True  # reminders they ask for are read and set (J50)

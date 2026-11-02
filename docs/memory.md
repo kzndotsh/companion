@@ -42,10 +42,15 @@ pattern counts once quoted from two separate scenes (ADR 0026,
 ## How memory reaches the model
 
 On every turn, a memory card is built from the current memories (`core/card.py`) and placed in the
-system block. It holds up to 15 memories. Their boundaries and its promises come first, then up to 8 memories
-mentioned in the last 12 hours, newest first, so what they said this evening is in view; then the rest
-by kind (tells, traits, states, threads, preferences, events) and by how recently each was mentioned. Up to 3 older
-memories go in a separate block, marked as possibly out of date.
+system block. It holds up to 15 memories. Their boundaries and its promises come first. With
+`COMPANION_FOCUS=on` (the default) the other places go to the memories closest to the moment: their
+message, and the reply before it with it, embedded once a turn and compared with each memory's stored
+vector (`features/focus/`). A memory that says what one already chosen says is skipped, a held memory
+needs them sharing and a close match, a mildly personal one a close match, and a place nothing fills
+stays empty. If the look-up is off, fails or takes over 2 seconds, the card is built the old way: up to
+8 memories mentioned in the last 12 hours, newest first, then the rest by kind (tells, traits, states,
+threads, preferences, events) and by how recently each was mentioned. Up to 3 older memories go in a
+separate block, marked as possibly out of date.
 
 A memory is never deleted (ADR 0002, 0008). It ages instead, measured from the last time it was
 mentioned (`core/freshness.py`): a state goes stale after 14 days, a thread or a promise after 30, a
@@ -55,7 +60,7 @@ moment of daily life, and a personal event on a given date, leave the card a wee
 last mentioned.
 
 Memories marked sensitive are shown only on turns where they are sharing something (severity 1 or
-more). The memories the card has no room for are logged once per turn. Memories that bear on the
+more), and with the focus on, only when they are close to the moment. The memories the card has no room for are logged once per turn. Memories that bear on the
 message but are not on the card can still reach the model through the relevance look-up
 (`src/companion/features/relevance/README.md`).
 

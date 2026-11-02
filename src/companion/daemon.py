@@ -195,9 +195,9 @@ def _metered_models(
 def _embedder(
     client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Settings
 ) -> Embedder | None:
-    """The embedding model for the relevance look-up and its tastes, metered, or None when both
-    are off."""
-    if not s.openrouter or (not s.on("relevance") and not s.on("lore")):
+    """The embedding model for the relevance look-up, its tastes and the card's focus, metered, or
+    None when all three are off."""
+    if not s.openrouter or not (s.on("relevance") or s.on("lore") or s.on("focus")):
         return None
 
     def sink(event: SpendEvent) -> None:
@@ -430,6 +430,7 @@ async def run(data_dir: Path) -> None:
             embedder=_embedder(client, store, rel, s),
             embed_model=s.embed_model,
             lore=s.position("lore"),
+            focus=s.position("focus"),
             relevance=s.position("relevance"),
             reminders=s.on("reminders"),
             episodes=s.position("episodes"),

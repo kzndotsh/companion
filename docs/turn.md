@@ -56,7 +56,8 @@ stated, the most sensitive included since they asked, by a small model that read
 the topic and the last six messages of the conversation, both sides; what it finds rides that turn's
 system block (`core/recall.py`).
 
-Memories marked sensitive are on the card only on turns rated 1 or more. A turn that is ordinary,
+Memories marked sensitive are on the card only on turns rated 1 or more, and with `COMPANION_FOCUS=on`
+only when close to the moment; the rest of the card is the memories closest to it (`docs/memory.md`). A turn that is ordinary,
 real (not a scene) and not a goodbye counts as casual (`kit/current.py`, `is_casual`), and many
 features only act on casual turns. With `COMPANION_CRISIS=on`, a turn the crisis path reads as a risk
 is never casual (`Moment.casual`).

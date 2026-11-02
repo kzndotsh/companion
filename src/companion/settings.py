@@ -74,6 +74,7 @@ SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_REREAD", "re-read", ("on", "shadow", "off")),
     Switch("COMPANION_PROMISES", "promises", ("shadow", "off")),
     Switch("COMPANION_LORE", "lore", ("on", "shadow", "off")),
+    Switch("COMPANION_FOCUS", "focus", ("on", "off")),
     Switch("COMPANION_REMINDERS", "reminders", ("on", "off")),
     Switch("COMPANION_EPISODES", "episodes", ("on", "shadow", "off")),
     Switch("COMPANION_MARKS", "marks", ("on", "off")),

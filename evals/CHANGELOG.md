@@ -2668,3 +2668,20 @@ are pass or fail on known failures, so a subtler change in tone would not show i
 fixtures dir holding those 12.
 
 Blind check of the same replies: a Claude Sonnet subagent judged 128 shuffled v46/v47 pairs on which better reads the moment. Tie 82, v47 24, v46 22: a coin flip. Per fixture the biggest gaps were 6 to 2 for v47 on the rude message and 5 to 1 for v46 on the ignored-by-the-boss share, each within noise at 12 pairs. The judge's note: the better replies kept to company without a talk-about-it question, stayed short, and did not guess at motives. Both versions did that about equally often.
+
+## 2026-11-02: A memory card ranked by the topic beats the card by kind and recency, 131 to 8
+
+An audit of 150 turns sampled from the 371 since 2026-10-25 (five Haiku readers) found the card
+nearly the same every turn: 80 distinct memories across 371 cards, four on all of them, the most
+frequent ordinary ones on 250 to 273. The relevance note's gate skipped 82% of look-ups. Details and
+outside research in `docs/inbox/2026-11-02-the-card-does-not-follow-the-topic.md`.
+
+The same 150 cards rebuilt from the store at each turn's time: as sent, and topic-ranked (boundaries
+fixed, ten places by closeness to their message and to the reply before it with it, a memory within
+0.90 of one chosen skipped, held memories only at 0.40 or closer). Three blind Claude Sonnet judges
+(subagents), 50 turns each, lists shuffled, asked which list better helps a reply to that message:
+topic-ranked 131, as sent 8, tie 11 (44/3/3, 45/2/3, 42/3/5). The lists, not replies, were judged.
+Embedding cost $0.0002. Shipped live as `COMPANION_FOCUS=on` with two changes the judges' notes asked
+for: a mildly personal memory needs a close match (0.35), and a held one needs them sharing too.
+Rerun: a scratch script rebuilds the cards from `turn_requests` and `belief_embeddings` with the
+message and the reply before it embedded, and writes shuffled A/B lists for the judges.

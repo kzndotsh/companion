@@ -1067,3 +1067,6 @@ From 2026-10-26 the history carries a system line (`notes/history-gap`) wherever
 
 ## Request assembly: the ack judge reads the last 8 messages, not 4
 - From 2026-11-02 the ack judge (`system/ack`) sees the last 8 messages before their newest one, not 4 (`CONTEXT_MESSAGES` in `core/turn/ack.py`). Reason: the owner's flag of 2026-11-01, a curt thanks while still cool after a hurt got only a heart; the forgiveness that showed the coolness sat 5 to 8 messages back. Measured in `evals/CHANGELOG.md`.
+
+## Request assembly: the memory card ranked by closeness to the moment
+- From 2026-11-02, with `COMPANION_FOCUS=on` (the default), the memory card keeps their boundaries and its promises first and fills its other places with the memories closest to their message and the reply before it (`features/focus/`, `_focused` in `core/card.py`), skipping one that says what one already chosen says, held memories only when they share and it is close, mildly personal ones only when close. Before, the places went to memories from the last 12 hours and then by kind and recency, so the same memories were on most cards whatever the topic. Decided by the owner after a blind comparison of the lists on 150 turns (131 to 8, `evals/CHANGELOG.md`); replies not measured yet.

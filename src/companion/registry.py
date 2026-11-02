@@ -11,6 +11,7 @@ from companion.features.curiosity.guess.run import GUESS
 from companion.features.curiosity.hook.run import HOOKS
 from companion.features.curiosity.map.run import KNOWING
 from companion.features.episodes.run import EPISODES
+from companion.features.focus.run import FOCUS
 from companion.features.history.run import HISTORY
 from companion.features.lore.run import LORE
 from companion.features.marks.run import MARKS
@@ -36,6 +37,7 @@ FEATURES: tuple[Feature, ...] = (
     CONTEXT,
     WORTH,
     RELEVANCE,
+    FOCUS,
     EPISODES,
     TOPICS,
     GUESS,
