@@ -2720,3 +2720,20 @@ in 3. Mean rank (1 best): 6 1.70, 3 2.07, 9 2.62, 12 3.61. Their notes: three of
 active scene turned on (a dynamic, a pet name, intensity); nine and twelve added escalation items to
 tender, winding-down and banter turns. `NEAREST` is now 6. Lists judged, not replies; the lane is still
 in shadow, so nothing sent changed.
+
+## 2026-11-02: Review of reaching out for its own reasons (ADR 0021, shadow, nine days)
+
+Read from `companion initiative` and the stored drafts; one blind Claude Sonnet subagent judged the
+five would-sends (one draw, indicative only; two verdicts checked by eye and agreed). In nine days
+it would have sent 5 drafts, all "a thought" (none of the other kinds applied, no due plan), at 8 of
+38 conversations started (0.21) against warm's 0.33; 2 more drafts were dropped. Holds: 10 for an
+unanswered last one, 4 active chat, 3 too soon. Learned rhythm: missing-them pause 11.6 h, fully
+their own data (32 conversations), usual hours 9 to 13 and 16 to 20, quiet hours 2, 4 and 5 only.
+Judged: 2 of 5 read like a friend and fit the moment, 1 partly, 2 not (one about the relationship
+itself, one built on a memory that says the opposite). 2 of 5 landed at an unwelcome time (an early
+hour after an evening goodnight; a late hour right after a heavy chat). 3 of 5 drafts were stored as
+raw JSON text and one had garbled emoji bytes, so they would have gone out wrong. No draft was
+dropped by the guilt check; the 2 drops were an old length rule (since removed) and a failed draft
+call. Not ready to go live: stay in shadow; named changes are a floor on quiet hours, unwrapping
+JSON and fixing the emoji text, skipping memories that say what they never wanted, and no thought
+about the relationship itself. No model spend beyond one subagent.
