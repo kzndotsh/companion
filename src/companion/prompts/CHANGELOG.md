@@ -639,7 +639,12 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## notes/recall
 - **notes/recall v1** (superseded). The beliefs the recall look-up found, shown for that turn only, under "They asked you to remember this". Filled by `core/recall.py`.
-- **notes/recall v2** (current). v1 that also covers "you forgot": use what memory holds plainly, own a miss in a few words, and never ask them to say it again (J30). Measured in `evals/CHANGELOG.md`.
+- **notes/recall v2** (superseded). v1 that also covers "you forgot": use what memory holds plainly, own a miss in a few words, and never ask them to say it again (J30). Measured in `evals/CHANGELOG.md`.
+- **notes/recall v3** (current). v2 that asks for the part that answers them in a few words of its own, not
+  the whole read back, and, for something private or painful, to show it knows without spelling it out
+  unless asked. A flag (2026-11-02): asked whether it knew what they meant, it read three private
+  memories back as a list. Replies listing two or more private items 4/12 to 1/12, within noise; no
+  loss on an ordinary recall. Measured in `evals/CHANGELOG.md` (2026-11-02).
 
 ## notes/recall-empty
 - **notes/recall-empty v1** (current). New (J30). When the recall look-up ran and found nothing, the reply was given nothing and could guess or ask them to repeat; now it says so plainly in one line.

@@ -101,7 +101,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/mood-tender` | note | the tender mood line, shown when `COMPANION_MOOD=on` and tender is among the strongest states (ADR 0016) | v2 |
 | `notes/trivial-reactions` | data | the pool of short reactions a minor-vent note draws three size examples from (T14) | v1 |
 | `notes/lore` | note | its own tastes nearest their message, as the words it said, on an ordinary turn (ADR 0020) | v1 |
-| `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v2 |
+| `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v3 |
 | `notes/relevant` | note | memories a small model picked as bearing on their message, when the closest is near; never ask what this answers (ADR 0018) | v1 |
 | `notes/recent-times` | note | what the two of them did recently (episode lines), when their words point at a time or they are back after a gap; context, not to recite (J12, J49) | v1 |
 | `notes/crisis-concern` | note | after the history on a concern or urgent turn: warm, in its own voice, ask directly, listen, name the crisis line once, no length cap (ADR 0022, `COMPANION_CRISIS=on`) | v1 |

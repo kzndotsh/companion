@@ -2737,3 +2737,16 @@ dropped by the guilt check; the 2 drops were an old length rule (since removed) 
 call. Not ready to go live: stay in shadow; named changes are a floor on quiet hours, unwrapping
 JSON and fixing the emoji text, skipping memories that say what they never wanted, and no thought
 about the relationship itself. No model spend beyond one subagent.
+
+## 2026-11-02: The recall note read private memories back as a list; v3 helps a little
+
+A flag: asked whether it knew which private subject they meant, the talker read three private
+memories back as a list. Three recorded turns replayed on GPT-6 Luna, 12 draws each with
+`notes/recall` v2 and a v3 draft (the part that answers them in a few words of its own; for something
+private, show it knows without spelling it out unless asked). The flagged turn: named the subject 12/12
+with v2, 10/12 with v3; listed two or more private items 4/12 against 1/12. A second private recall: said
+it lacked the details 9/12 against 10/12. An ordinary "you forgot what I ate" turn: named the food 2/12
+against 4/12, so no loss. Every gap is within noise at 12; v3 shipped as cheap and harmless, not as
+proven. A structural option (show a short topic label instead of the stored sentences when the found
+memories are sensitive) is not built. About $0.012. Rerun: a scratch script swaps the note's last line in
+each replayed request (`replay_file`) and draws 12 replies per cell.
