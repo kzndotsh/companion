@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from companion.core.card import EVENT_SHOWN_DAYS, Card, Focus, build_card, render
+from companion.core.card import EVENT_SHOWN_DAYS, Card, Focus, build_card, day_over, render
 from companion.core.clock import now_line
 from companion.core.frames import (
     is_assertable,
@@ -83,6 +83,8 @@ class CardLog:
     @staticmethod
     def _why_dropped(b: Belief, card: Card) -> str:
         last = when_phrase(card.aged[b.id].last_supported, card.now)
+        if day_over(b, card.now):
+            return f"bound to a day that is over (last mentioned {last}); still in memory"
         horizon = HORIZON_DAYS[b.kind]
         if horizon is None:  # an event: history, only left out once it is an old one-day moment
             return (

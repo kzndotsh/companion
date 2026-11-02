@@ -12,8 +12,9 @@ from __future__ import annotations
 import re
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta, tzinfo
+from datetime import UTC, date, datetime, timedelta, tzinfo
 
+from companion.core.clock import local_zone
 from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.quoted import wants_context
 from companion.core.types import Belief, BeliefId, BeliefKind
@@ -118,6 +119,7 @@ def build_card(  # noqa: PLR0913
         for b in beliefs
         if (b.id in everyday and _faded(b, aged[b.id].last_supported, now))
         or _dated_past(b, aged[b.id].last_supported, now)
+        or day_over(b, now)
     ]
     current = [b for b in beliefs if aged[b.id].status is not Freshness.STALE and b not in faded]
     kept_back = [] if show_held else [b for b in current if b.sensitivity >= HOLD_AT]
@@ -193,6 +195,25 @@ def _dated_past(b: Belief, last: datetime, now: datetime) -> bool:
         and _ON_A_DATE.search(b.claim) is not None
         and now - last > timedelta(days=EVENT_SHOWN_DAYS)
     )
+
+
+# A plan, a state or a moment bound to one day: "plans to apply to jobs that day", "had just woken
+# up on", "expects it back on". Shown as current days later, it read as still true (2026-11-02).
+_ONE_DAY = re.compile(
+    r"\b(that day|the same day|today|tonight|that night|had just|just woke|about to|planned to"
+    r"|plans to|expects?|expecting|wanted to be reminded)\b",
+    re.IGNORECASE,
+)
+DAY_GRACE = 1  # shown on its day and the day after ("last night you said"), then left off
+
+
+def day_over(b: Belief, now: datetime) -> bool:
+    """A memory bound to the days it names, once the last of them is more than `DAY_GRACE` days
+    past in the local zone. It stays in memory; only the card leaves it off. Rules never end so."""
+    if b.kind in RULES or not _ONE_DAY.search(b.claim):
+        return False
+    named = [date.fromisoformat(d) for d in _ON_A_DATE.findall(b.claim)]
+    return bool(named) and (now.astimezone(local_zone()).date() - max(named)).days > DAY_GRACE
 
 
 def faded(b: Belief, last: datetime, now: datetime) -> bool:

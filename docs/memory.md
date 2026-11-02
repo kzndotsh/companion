@@ -57,7 +57,9 @@ mentioned (`core/freshness.py`): a state goes stale after 14 days, a thread or a
 trait or a preference after a year, and an event never does. Past half that time the card says it may
 have changed. A stale memory leaves the card but stays in memory. A one-day
 moment of daily life, and a personal event on a given date, leave the card a week after they were
-last mentioned.
+last mentioned. A memory bound to the day it names (a plan for that day, having just woken up,
+something expected on a date) leaves the card once that day is more than a day past, in the local
+zone (`day_over` in `core/card.py`); it stays in memory, and the decision log says why it was left off.
 
 Memories marked sensitive are shown only on turns where they are sharing something (severity 1 or
 more), and with the focus on, only when they are close to the moment. The memories the card has no room for are logged once per turn. Memories that bear on the
