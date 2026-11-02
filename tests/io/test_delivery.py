@@ -60,6 +60,28 @@ async def test_flag_with_bot_suffix_is_the_same_command() -> None:
     assert handled == ["FLAG:too_much"]
 
 
+async def test_a_bang_command_marks_the_message_it_replies_to() -> None:
+    fake, marked = Fake(), list[tuple[str, str | None]]()
+
+    async def flag(arg: str, replied_to: str | None) -> str | Reaction:
+        marked.append((arg, replied_to))
+        return Reaction("✍")
+
+    async def talk(m: Incoming) -> Reply:
+        raise AssertionError(m.text)
+
+    sent_as_reply = Incoming("7", "!flag too formal", "7", "sent-3")
+    await Delivery(fake).reply_to(sent_as_reply, talk, {"flag": flag})
+    assert marked == [("too formal", "sent-3")]
+
+
+async def test_a_bang_that_names_no_command_is_a_message() -> None:
+    for text in ("!!! omg", "!nonsense here"):
+        fake, handled = await _one(text)
+        assert handled == [text]
+        assert fake.sent == ["reply"]
+
+
 async def test_unknown_commands_and_start_are_ignored() -> None:
     for text in ("/start", "/nonsense"):
         fake, handled = await _one(text)

@@ -295,6 +295,7 @@ In the chat, on Telegram or in a Discord DM (plain messages, not Discord slash c
 /flag [kind] note mark the last reply; kind is off (default), forgot, too_much or unwanted
 /fav [note]       mark the last reply as one you loved
                   send /flag or /fav as a reply to one of its messages to mark that reply instead
+                  on Discord type !flag and !fav (a typed / opens Discord's command picker)
 /mode             which model wrote the last reply and why, and whether a scene is under way
 ```
 

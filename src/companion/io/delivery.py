@@ -171,7 +171,7 @@ class Delivery:
                 await turn
                 return
             newer = arrival.result()
-            if _command(current.text) is not None or _command(newer.text) is not None:
+            if any(_command(m.text, commands) is not None for m in (current, newer)):
                 waiting.append(newer)
                 await turn
                 return
@@ -190,7 +190,7 @@ class Delivery:
     async def reply_to(self, msg: Incoming, handle: Handler, commands: Commands) -> None:
         """Run the turn for one message and deliver what it returns. Never raises but on a
         cancel."""
-        command = _command(msg.text)
+        command = _command(msg.text, commands)
         log.debug(
             "message %s in: %d chars%s",
             msg.id,
@@ -376,9 +376,14 @@ def _kind(reply: Reply) -> str:
     return f"{len(reply.split())} words"
 
 
-def _command(text: str) -> tuple[str, str] | None:
-    """`/flag too long` -> ("flag", "too long"). `/flag@my_bot x` is the same command."""
-    if not text.startswith("/"):
+def _command(text: str, commands: Commands) -> tuple[str, str] | None:
+    """`/flag too long` -> ("flag", "too long"). `/flag@my_bot x` is the same command. `!flag x`
+    is too, but only for a command it knows: Discord turns a typed `/flag` into the app's slash
+    command and drops the reply it was sent as, and "!!! omg" is a message, not a command."""
+    if not text.startswith(("/", "!")):
         return None
     head, _, arg = text[1:].partition(" ")
-    return head.partition("@")[0].lower(), arg.strip()
+    name = head.partition("@")[0].lower()
+    if text.startswith("!") and name not in commands:
+        return None
+    return name, arg.strip()

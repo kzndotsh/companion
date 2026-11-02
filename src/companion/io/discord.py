@@ -4,10 +4,13 @@ messages, anyone else's and the bot's own are ignored. It asks for the DM messag
 Discord sends the text of a DM to the bot without the privileged message content intent. Errors
 name what failed and its status, never the token.
 
-`/flag`, `/fav` and `/mode` are also Discord's own slash commands, with Flag this and Favorite this
-on a message's Apps menu: typed as text, a command name another app also uses brings up that app's
-command. They run the same handlers as the text commands (`daemon.chat_commands`), answer only the
-allowed user, and answer privately, never as part of the chat."""
+`/mode` is also Discord's own slash command, with Flag this and Favorite this on a message's Apps
+menu. `/flag` and `/fav` are not slash commands: a slash command does not carry the message it was
+typed in reply to, so it could only mark the latest reply. On Discord they are typed `!flag` and
+`!fav`, as text that keeps the reply, since a typed `/` opens Discord's command picker. A
+command name another app also uses brings up that app's command. The menu and `/mode` run the same
+handlers as the text commands (`daemon.chat_commands`), answer only the allowed user, and answer
+privately, never as part of the chat."""
 
 from __future__ import annotations
 
@@ -18,7 +21,7 @@ import json
 import logging
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass
-from typing import Any, NoReturn
+from typing import NoReturn
 
 import aiohttp
 import discord
@@ -318,19 +321,6 @@ def command_tree(
     where = app_commands.AppCommandContext(guild=False, dm_channel=True, private_channel=False)
     installs = app_commands.AppInstallationType(guild=True, user=True)
 
-    def mark(name: str, description: str) -> app_commands.Command[Any, ..., None]:
-        @app_commands.describe(note="what about it, in a few words (optional)")
-        async def run(interaction: discord.Interaction, note: str = "") -> None:
-            await marks.answer(interaction, name, note, None)
-
-        return app_commands.Command(
-            name=name,
-            description=description,
-            callback=run,
-            allowed_contexts=where,
-            allowed_installs=installs,
-        )
-
     async def mode(interaction: discord.Interaction) -> None:
         await marks.answer(interaction, "mode", "", None)
 
@@ -345,8 +335,6 @@ def command_tree(
             name=menu.title, callback=run, allowed_contexts=where, allowed_installs=installs
         )
 
-    tree.add_command(mark("flag", "Mark the last reply as off"))
-    tree.add_command(mark("fav", "Mark the last reply as one you loved"))
     tree.add_command(
         app_commands.Command(
             name="mode",

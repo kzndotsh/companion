@@ -400,7 +400,7 @@ def test_the_tree_has_the_slash_commands_and_the_message_menu_in_dms_only() -> N
     tree = command_tree(discord.Client(intents=discord.Intents.none()), ALLOWED, _commands([]))
     slash = {c.name for c in tree.get_commands(type=discord.AppCommandType.chat_input)}
     menu = {c.name for c in tree.get_commands(type=discord.AppCommandType.message)}
-    assert slash == {"flag", "fav", "mode"}
+    assert slash == {"mode"}  # a slash /flag loses the message it replied to
     assert menu == {"Flag this", "Favorite this"}
     for command in tree.get_commands():
         assert isinstance(command, app_commands.Command | app_commands.ContextMenu)
