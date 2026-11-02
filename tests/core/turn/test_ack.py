@@ -57,12 +57,12 @@ def test_most_messages_never_reach_the_model(
     assert not is_candidate(text, _hist(utterance, *history))
 
 
-def test_the_prompt_has_the_last_four_messages_and_the_newest(
+def test_the_prompt_has_the_last_eight_messages_and_the_newest(
     utterance: Callable[..., Utterance],
 ) -> None:
-    hist = _hist(utterance, *[(C if i % 2 == 0 else U, f"m{i}") for i in range(6)])
+    hist = _hist(utterance, *[(C if i % 2 == 0 else U, f"m{i}") for i in range(10)])
     prompt = build_prompt(hist, "okie")
-    assert "m1" not in prompt
+    assert "m1\n" not in prompt
     assert "[COMPANION] m2" in prompt
     assert prompt.endswith("Newest USER message: okie")
 

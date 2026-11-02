@@ -1061,3 +1061,6 @@ From 2026-10-26 the history carries a system line (`notes/history-gap`) wherever
 
 ## Request assembly: a separate memory lane for intimate scenes (ADR 0026, shadow by default)
 - From 2026-10-26, with `COMPANION_SCENE_MEMORY=on`, a turn the roleplay talker answers gets the scene card (`notes/scene-limits`, `notes/scene-known`, `notes/scene-offer`, `notes/scene-basics`, in that order) as its memory block instead of the everyday card, with no everyday memories and none of its own views; every other turn's card, and the relevance look-up, leave out the memories placed in the intimate lane. In `shadow`, the default, both are worked out and logged (`scene memory: the scene card`, `scene memory: intimate memories left off the everyday card`) and the request is unchanged. `off` does nothing. Not measured yet.
+
+## Request assembly: the ack judge reads the last 8 messages, not 4
+- From 2026-11-02 the ack judge (`system/ack`) sees the last 8 messages before their newest one, not 4 (`CONTEXT_MESSAGES` in `core/turn/ack.py`). Reason: the owner's flag of 2026-11-01, a curt thanks while still cool after a hurt got only a heart; the forgiveness that showed the coolness sat 5 to 8 messages back. Measured in `evals/CHANGELOG.md`.

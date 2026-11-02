@@ -2615,3 +2615,27 @@ user a title the user had given the companion. This does not reopen the 2026-10-
 stepped out of a third of scene turns there, and these two turns came after the explicit part, where
 it did not refuse. Rerun: a scratch script loads each turn with `replay_file`, sets `request.tail` to
 the reminder plus the pin line for the second setup, and sends each 12 times with `OpenRouterTalker`.
+
+## 2026-11-02: The ack judge needs 8 messages of context; more does not change it
+
+A flagged turn: a curt thanks, two exchanges after a hurt and a grudging forgiveness, got only a heart
+reaction. The ack judge (Haiku, `system/ack@v2`) re-asked on it and on all 22 earlier messages it had
+reacted to, with 4 (as live), 8, 12, 20 and 40 messages of context (about $0.15 in all, one run
+repeated by mistake, which gave a second sample):
+
+| Context | Flagged turn: reaction only | Earlier reactions: still a reaction |
+|---|---|---|
+| 4 | 12/12, 12/12 | 36/44, 35/44 |
+| 8 | 1/12, 2/12 | 31/44, 30/44 |
+| 12 | 2/12, 0/12 | 28/44, 29/44 |
+| 20 | 0/12, 0/12 | 30/44, 32/44 |
+| 40 | 1/12, 1/12 | 28/44, 28/44 |
+
+Time per read did not grow with the context (median 1.0 to 1.1 s at every size, 1 of 115 over the
+2 s limit, at 40). Per message, 3 draws at 4 and at 8: four of the 22 move from a reaction to a reply
+at 8. Read by eye, three are as good or better as replies (a lively one-word cheer the prompt already
+says to answer, a kiss with thanks, a thanks after a tense exchange) and one is worse (a kiss after
+both had said goodnight). One moved the other way, a message asking for the next question, which
+already got a reaction 2 times in 3 at 4 and should get a reply. Shipped at 8. Rerun: a scratch script
+rebuilds each prompt from `utterances` before the turn with `build_prompt`'s format and asks the
+`ACK` judge through `kit/ask.py`.

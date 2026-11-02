@@ -19,7 +19,10 @@ from companion.prompts import get
 
 MAX_CHARS = 40
 MAX_WORDS = 4
-CONTEXT_MESSAGES = 4
+# 8, not 4: with 4, a curt "thanks" after a hurt and a grudging forgiveness two exchanges back read
+# as a plain ack every time (12/12) and got only an emoji; with 8 it got a reply 11/12. Past 8 the
+# reads did not change (evals/CHANGELOG.md, 2026-11-02).
+CONTEXT_MESSAGES = 8
 # 0.70, not higher: on 15 hand-labelled messages the clear acknowledgements scored 0.70 to 0.90
 # and the ones that needed a reply scored 0.60 or lower. Every judgement is logged to recalibrate.
 REACT_THRESHOLD = 0.70
