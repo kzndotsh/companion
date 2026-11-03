@@ -66,3 +66,21 @@ def test_a_time_they_keep_is_the_same_hour_on_most_of_the_last_week() -> None:
     assert kept_hour(mornings[:4], NOW, UTC) is None
     today = [datetime(2026, 10, 20, 7, m, tzinfo=UTC) for m in range(5)]
     assert kept_hour(mornings[:4] + today, NOW, UTC) is None  # today is not part of the habit
+
+
+def test_a_night_hour_is_quiet_unless_they_start_conversations_in_it() -> None:
+    tz = UTC
+    now = datetime(2026, 10, 30, 15, 0, tzinfo=tz)
+
+    def night(day: int, hour: int) -> list[datetime]:
+        start = datetime(2026, 10, 16 + day, hour, 0, tzinfo=tz)
+        return [start + timedelta(minutes=30 * i) for i in range((26 - hour) % 24 * 2)]
+
+    noons = [datetime(2026, 10, 16 + d, 12, 0, tzinfo=tz) for d in range(13)]
+    # Every day a chat starts at 10 PM and runs on to 2 AM: they write at 1 AM but never start then.
+    late = noons + [t for d in range(13) for t in night(d, 22)]
+    assert 1 in learn(late, now, tz).quiet
+    # Three nights they skip the evening and start at 1 AM instead: the hour is theirs.
+    evenings = [t for d in range(13) if d not in (1, 4, 7) for t in night(d, 22)]
+    owned = noons + evenings + [t for d in (2, 5, 8) for t in night(d, 1)]
+    assert 1 not in learn(owned, now, tz).quiet

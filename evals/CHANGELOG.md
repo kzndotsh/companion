@@ -2774,3 +2774,23 @@ Read-only counts from the ledger, 2026-10-24 to 2026-11-03 (no model run, no spe
   few of the 19 may not have had the note). Replies that ask at all: 38% before, 33% after. Read 12
   noted turns by eye: most reacted or added a thought of their own; about half left no clear hook
   and read flat but fitted the moment (a vent, a sleepy message). None dead-ended badly. Counts are small.
+
+## 2026-11-03: Reaching out by brainstorm and pick, replayed on the nine shadow days
+
+The reach tick (ADR 0021, amended) was replayed every 15 minutes over 2026-10-24 to 11-02 on a copy of the
+store, with the new gate (night hours quiet unless they start conversations there, a 12-hour hold after a
+heavy message). Free, with a fake model: it would have tried 7 times, all at 10, 16 or 19 local; none at
+night, and the heavy hold fired once. The real model was not run: credit was about $0.05 and the bot draws
+on it. Instead Claude Haiku subagents stood in for `system/reach-ideas@v1` and `system/reach-pick@v1` on
+the exact inputs code built for the 7 moments, and code's screen ran on their ideas (all 27 passed).
+One blind Claude Sonnet subagent rated the 7 picks and the 5 old would-sends, shuffled, times shown to the
+hour, on how glad the person would be (1 to 5): new 3.57, old 2.00. It flagged the old ones about the
+relationship, at bad hours, repeating one song, or resting on something the person never wanted; it
+grouped the 5 old ones together unprompted and would rather receive the new. One draw of each step, 7
+against 5: indicative, not a measurement. The judge did not see the chats, so it marked two callbacks to
+running jokes as odd. Two things it showed: the picker never chose none and took the first idea 5 of 7
+times, so the "none" path is untested and order may bias it; and building the inputs found three leaks,
+fixed before the run and covered by tests: last lines that skipped a scene reached back to a heavy
+disclosure, an intimate memory stored at low sensitivity was a seed, and a taste about the relationship
+itself was a seed. Rerun: the scratch `replay.py` (fake or `--real`, capped at $0.08) on a copy of the
+store, then the two prompts on the saved moments.

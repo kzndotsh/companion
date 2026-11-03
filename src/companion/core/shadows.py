@@ -50,9 +50,10 @@ SHADOWS: tuple[Shadow, ...] = (
         "reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021)",
         "initiative",
         "companion initiative",
-        date(2026, 11, 2),
-        "drafts the owner marks as wanted, landing at sensible times in their learned hours,"
-        " none needy or guilt-laden",
+        date(2026, 11, 10),
+        "picks the owner marks as wanted, specific to them and not generic, landing at hours they"
+        " start conversations, none needy, about the two of them, or right after a heavy chat"
+        " (brainstorm and pick since 2026-11-03)",
     ),
     Shadow(
         "a question when their words touch a basic it does not know (the hook)",

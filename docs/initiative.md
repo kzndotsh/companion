@@ -24,8 +24,10 @@ a reach-out.
 ## Why it would write first
 
 People who like each other write first because something made them think of the other, because it is
-the time they usually talk, or because they miss them (ADR 0021). Code chooses the reason, the moment
-and the one thing a message is about; a model only writes the words, after every check has passed.
+the time they usually talk, or because they miss them (ADR 0021). Code chooses the reason and the
+moment. For its own reasons, after every check has passed, a model brainstorms a few texts from what it
+knows, code drops any that break a rule, and a judge picks one or none
+(`src/companion/features/reach/README.md`).
 There are five reasons, and when several apply the first in this order is the one it acts on:
 
 - **A plan of theirs.** A firm plan, appointment or occasion they mentioned falls due. How plans are

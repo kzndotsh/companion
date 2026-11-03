@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
+from typing import cast
 
 # The key of a nudge it would send (features/nudges), read by any reach-out that counts its own.
 WOULD_NUDGE = "nudge (shadow): would send"
@@ -23,8 +25,39 @@ def draft_text(message: str) -> str:
     """The draft as the model wrote it, spacing tidied; empty when it wrote nothing. A long draft is
     neither cut nor dropped: the drafting prompts ask for a short message, and code never edits
     one (the owner's choice, 2026-10-25; before, a draft over 18 words was cut to its first
-    sentence when that was a question, else dropped)."""
-    return " ".join(message.split())
+    sentence when that was a question, else dropped). Two ways a model's answer arrives broken are
+    undone, since they are transport, not words: the whole answer wrapped again as JSON
+    (`{"message": ...}` inside the field, 3 of 5 shadow drafts by 2026-11-02), and UTF-8 read as
+    cp1252 (an emoji arriving as a run of accented Latin letters)."""
+    return " ".join(_unmangled(_unwrapped(message)).split())
+
+
+def _unwrapped(message: str) -> str:
+    try:
+        inner = json.loads(message)
+    except ValueError:
+        return message
+    if not isinstance(inner, dict):
+        return message
+    got = cast("dict[str, object]", inner).get("message")
+    return got if isinstance(got, str) else message
+
+
+_MOJIBAKE = re.compile("[ÃÂâð][\u0080-¿Œ-™]")
+
+
+def _unmangled(message: str) -> str:
+    if not _MOJIBAKE.search(message):
+        return message
+    try:
+        return message.encode("cp1252").decode("utf-8")
+    except UnicodeError:
+        return message
+
+
+def garbled(text: str) -> bool:
+    """Whether mis-decoded bytes are left that could not be undone."""
+    return _MOJIBAKE.search(text) is not None
 
 
 # A draft that reads as guilt, need, blame or urgency is dropped, never rewritten (ADR 0021). Every
@@ -77,5 +110,7 @@ def checked(message: str) -> tuple[str, str | None]:
     text = draft_text(message)
     if not text:
         return "", "empty"
+    if garbled(text):
+        return "", "garbled text"
     why = needy(text)
     return ("", why) if why is not None else (text, None)

@@ -3,7 +3,12 @@
 **Status:** accepted 2026-10-25 by the owner, and built in shadow the same day (`features/reach/`,
 `core/rhythm.py`; nothing is sent), review by 2026-10-30 (`core/shadows.py`). Replaces the "what can be
 reached out about" part and the back-off counts of ADR 0015; its gate, logging, paid-calls-last and
-shadow-first rules stand.
+shadow-first rules stand. Amended 2026-11-03 by the owner: what a message is about is no longer one thing
+chosen by code. After nine days in shadow the one-thing drafts read generic, so once every check has
+passed a model brainstorms a few texts from the moment, the last chat and what it knows, code drops
+any that break a rule (needy, about the two of them), and a judge picks one or none. When and why
+stay with code; also added then, nothing for 12 hours after a heavy message, and night hours stay
+quiet unless they start conversations in them.
 
 ## Context
 

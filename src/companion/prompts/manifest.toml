@@ -108,6 +108,8 @@
 "system/now" = "v1"
 "system/nudge-draft" = "v1"
 "system/reach-draft" = "v1"
+"system/reach-ideas" = "v1"
+"system/reach-pick" = "v1"
 "system/guess-invite" = "v2"
 "system/promise-read" = "v1"
 "system/self-extract" = "v4"

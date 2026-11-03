@@ -1,6 +1,7 @@
 """The tick that reaches out for its own reasons (ADR 0021), in shadow: it learns their rhythm,
-weighs every kind, asks the pure gate, and only then drafts. A would-send is recorded with its kind,
-the one thing, the draft and the numbers, and nothing is sent: no code path here sends a message.
+weighs every kind, asks the pure gate, and only then brainstorms a few messages, drops the ones that
+break a rule, and lets a judge pick one or none. A would-send is recorded with its kind, every idea,
+the pick and the numbers, and nothing is sent: no code path here sends a message.
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from datetime import datetime, timedelta, tzinfo
 from companion.core.crisis import reach_held
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
-from companion.core.reachout import WOULD_NUDGE, Held, checked
+from companion.core.reachout import WOULD_NUDGE, Held
 from companion.core.rhythm import WINDOW, kept_hour, learn
 from companion.core.types import (
     BeliefKind,
@@ -27,26 +28,43 @@ from companion.core.types import (
     TraceId,
     TurnId,
 )
-from companion.features.reach.gate import Situation, answer, firsts, hold, pace, share
+from companion.features.reach.gate import (
+    AFTER_HEAVY,
+    Situation,
+    answer,
+    firsts,
+    hold,
+    pace,
+    share,
+)
 from companion.features.reach.logic import (
-    DRAFT,
-    DRAFT_SCHEMA,
     DROPPED,
     HELD,
+    IDEAS,
+    IDEAS_SCHEMA,
+    LINES,
     PACED,
+    PICK,
+    PICK_SCHEMA,
     SENSITIVE,
     THING_REUSE,
     WOULD_SEND,
+    Context,
     Dial,
+    Idea,
     Kind,
     Look,
     Pool,
     Thing,
+    about_us,
+    brief,
     choose,
     consider,
-    draft_input,
+    pick_input,
     pick_thing,
-    read_draft,
+    read_ideas,
+    read_pick,
+    screened,
 )
 from companion.features.reach.store import Own
 from companion.kit.ask import Judge, ask
@@ -58,9 +76,13 @@ log = logging.getLogger("companion.initiative")
 SESSION = SessionId("initiative")
 HISTORY = 5000  # messages read back, enough for two weeks
 EPISODE_DAYS = timedelta(days=7)
-DRAFT_JUDGE = Judge(
-    "initiative", DRAFT, DRAFT_SCHEMA, read_draft, timeout=20.0, unread="no reach-out this time"
+IDEAS_JUDGE = Judge(
+    "initiative", IDEAS, IDEAS_SCHEMA, read_ideas, timeout=30.0, unread="no reach-out this time"
 )
+PICK_JUDGE = Judge(
+    "initiative", PICK, PICK_SCHEMA, read_pick, timeout=20.0, unread="no reach-out this time"
+)
+HEAVY = 2  # a listening read at this severity or above is a heavy message
 
 
 @dataclass(slots=True)
@@ -81,13 +103,19 @@ def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
 
 
 def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
+    """What a thought could be about. Never a memory the scene lane placed as intimate (ADR 0026):
+    some are stored at a low sensitivity, and one was picked for a weekday morning (2026-11-03)."""
     kinds = store.view_kinds(rel)
     keep = (BeliefKind.THREAD, BeliefKind.PREFERENCE)
+    intimate = store.scene_memory().intimate(rel)
     return Pool(
         memories=[
             (str(b.id), b.claim, b.sensitivity)
             for b in store.user_beliefs(rel)
-            if b.subject is Subject.USER and b.kind in keep and b.frame is Frame.REAL
+            if b.subject is Subject.USER
+            and b.kind in keep
+            and b.frame is Frame.REAL
+            and b.id not in intimate
         ],
         tastes=[
             (str(b.id), b.claim)
@@ -110,6 +138,77 @@ def _sent(store: Store, rel: RelationshipId, start: datetime) -> tuple[list[date
     nudges = [d.at for d in store.decisions_with_key(rel, WOULD_NUDGE, start)]
     loops = [r.at for r in store.reach_outs(rel, start)]
     return sorted([*(r.at for r in own if r.mode != "dropped"), *nudges, *loops]), own
+
+
+def _heavy_at(store: Store, rel: RelationshipId, now: datetime) -> datetime | None:
+    """Their newest message the listening read found heavy, in the window the gate holds for."""
+    found = [
+        d.at
+        for d in store.decisions_with_key(rel, "listening", now - AFTER_HEAVY)
+        if isinstance(labels := (d.detail or {}).get("labels"), dict)
+        and isinstance(sev := labels.get("severity"), int)
+        and sev >= HEAVY
+        and d.at <= now
+    ]
+    return max(found, default=None)
+
+
+def _kept_out(store: Store, rel: RelationshipId, since: datetime, now: datetime) -> bool:
+    """Whether the listening read found any of their messages since `since` intimate or heavy. The
+    last lines are shown only when they are plain everyday talk: an intimate stretch is not always
+    a pretend frame, and lines skipping a scene reached back to a heavy disclosure (2026-11-03)."""
+    return any(
+        isinstance(labels := (d.detail or {}).get("labels"), dict)
+        and (
+            labels.get("intimate") is True
+            or (isinstance(sev := labels.get("severity"), int) and sev >= HEAVY)
+        )
+        for d in store.decisions_with_key(rel, "listening", since)
+        if d.at <= now
+    )
+
+
+def context(
+    store: Store,
+    rel: RelationshipId,
+    when: tuple[datetime, tzinfo],
+    kind: Kind,
+    thing: Thing | None,
+) -> Context:
+    """What the brainstorm and the pick see, read from the store as it was at `when`."""
+    now, tz = when
+    said = store.history_before(rel, now, LINES)
+    if said and (
+        any(u.frame is not Frame.REAL for u in said) or _kept_out(store, rel, said[0].at, now)
+    ):
+        said = []
+    keep = (BeliefKind.THREAD, BeliefKind.PREFERENCE, BeliefKind.TRAIT)
+    intimate = store.scene_memory().intimate(rel)
+    theirs = sorted(
+        (
+            b
+            for b in store.user_beliefs_as_of(rel, now)
+            if b.subject is Subject.USER
+            and b.kind in keep
+            and b.frame is Frame.REAL
+            and b.sensitivity < SENSITIVE
+            and b.id not in intimate
+        ),
+        key=lambda b: b.valid_from,
+        reverse=True,
+    )
+    pool = _pool(store, rel, now)
+    own = store.own_reach_outs(rel, now - WINDOW)
+    return Context(
+        local=now.astimezone(tz),
+        kind=kind,
+        thing=thing,
+        lines=[("them" if u.speaker is Speaker.USER else "you", u.text) for u in said],
+        gists=[g for _, g in pool.episodes],
+        memories=[b.claim for b in theirs],
+        tastes=[c for _, c in pool.tastes if not about_us(c)],
+        sent=[r.draft for r in own if r.mode != "dropped" and r.at <= now],
+    )
 
 
 def _newest(own: list[Own], kind: Kind) -> datetime | None:
@@ -151,6 +250,7 @@ def situation(
         share=share(events, now),
         capped=over_cap(store, rel, reacher.cap, now) is not None,
         crisis=reach_held(lambda key, since: store.decided_since(rel, key, since), now),
+        heavy_at=_heavy_at(store, rel, now),
     )
     look = Look(
         now=now,
@@ -211,54 +311,70 @@ async def tick_reach(
         log.debug("reach held (%s): %s", pick.kind, held[1])
         return None
     reacher.last_hold = None
-    return await _draft(store, rel, now, reacher, (pick.kind, pick.why, base.thing, detail))
+    return await _draft(store, rel, when, reacher, (pick.kind, pick.why, base.thing, detail))
+
+
+async def ideas(judge: StructuredModel, c: Context) -> tuple[Idea | None, dict[str, Json]]:
+    """Brainstorm, drop what breaks a rule, and let the judge pick one or none. The picked idea, and
+    what happened at each step for the record."""
+    got = await ask(judge, IDEAS_JUDGE, brief(c))
+    if got is None:
+        return None, {"dropped": "the brainstorm call failed"}
+    kept, out = screened(got.value)
+    step: dict[str, Json] = {
+        "ideas": [{"angle": i.angle, "message": i.message, "about": i.about} for i in got.value],
+        "screened_out": [{"message": i.message, "why": why} for i, why in out],
+        "prompts": [IDEAS.ref, PICK.ref],
+    }
+    if not kept:
+        return None, {**step, "dropped": "no idea passed the checks"}
+    picked = await ask(judge, PICK_JUDGE, pick_input(c, kept))
+    if picked is None:
+        return None, {**step, "dropped": "the pick call failed"}
+    n, why = picked.value
+    step = {**step, "pick": n, "pick_why": why}
+    if not 1 <= n <= len(kept):
+        return None, {**step, "dropped": f"the judge sent none: {why}"}
+    return kept[n - 1], step
 
 
 async def _draft(
     store: Store,
     rel: RelationshipId,
-    now: datetime,
+    when: tuple[datetime, tzinfo],
     reacher: Reacher,
     chosen: tuple[Kind, str, Thing | None, dict[str, Json]],
 ) -> Own | None:
-    """The only paid call, made last: draft, check, record. A draft that fails the check is
-    dropped, never rewritten, and recorded so it is not tried again for six hours."""
+    """The only paid calls, made last: brainstorm, screen, pick, record. When nothing is picked, it
+    is recorded as dropped, so it is not tried again for six hours."""
+    now = when[0]
     kind, why, thing, detail = chosen
-    got = (
-        None
-        if reacher.judge is None
-        else await ask(reacher.judge, DRAFT_JUDGE, draft_input(kind, thing))
-    )
-    raw = got.value if got is not None else ""
-    text, dropped = checked(raw) if got is not None else ("", "the draft call failed")
+    if reacher.judge is None:
+        idea, step = None, {"dropped": "no model"}
+    else:
+        idea, step = await ideas(reacher.judge, context(store, rel, when, kind, thing))
     about: Json = None if thing is None else {"source": thing.source, "text": thing.text}
-    detail = {
-        **detail,
-        "kind": kind.value,
-        "why": why,
-        "thing": about,
-        "drafted": raw,
-        "prompt": DRAFT.ref,
-    }
+    detail = {**detail, "kind": kind.value, "why": why, "thing": about, **step}
+    dropped = step.get("dropped")
     row = Own(
         uuid.uuid4().hex,
         rel,
         kind.value,
         "" if thing is None else thing.id,
-        text,
-        "dropped" if dropped else "shadow",
+        "" if idea is None else idea.message,
+        "dropped" if idea is None else "shadow",
         detail,
         now,
     )
     store.add_own_reach_out(row)
-    if dropped:
+    if idea is None:
         _record(store, rel, now).decide(
             DROPPED, detail, reason=f"{DROPPED} ({kind}): {dropped}", kind=DecisionKind.DO_NOTHING
         )
-        log.info("reach: draft dropped (%s): %s", kind, dropped)
+        log.info("reach: nothing sent (%s): %s", kind, dropped)
         return None
     _record(store, rel, now).decide(
         WOULD_SEND, detail, reason=f"{WOULD_SEND} ({kind}): {why}", kind=DecisionKind.INITIATE
     )
-    log.info("reach shadow: would send %r (%s)", text, kind)
+    log.info("reach shadow: would send %r (%s, %s)", idea.message, kind, idea.angle)
     return row

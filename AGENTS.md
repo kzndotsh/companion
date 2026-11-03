@@ -77,7 +77,7 @@ together.
 |---|---|---|---|
 | Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
 | One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
-| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-02 |
+| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-10 |
 | A light question when their words touch a basic it does not know (age, work, home, place, birthday, school) | always shadow for now | the decision log | 2026-11-05 |
 | The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-30 |
 | Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-30 |

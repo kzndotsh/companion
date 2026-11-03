@@ -166,7 +166,9 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/away` | system | retired 2026-10-25 for `system/now`, no longer sent: whether their message leaves the chat now (brief, back, goodbye) and for about how long, for the nudge (shadow) | v1 |
 | `system/now` | system | what their message tells about what is happening with them now (soon, leaving, back, done), with what and the minutes; read beside the turn (`features/now`, ADR 0024) | v1 |
 | `system/nudge-draft` | system | the one light nudge after they stayed away much longer than they said (shadow) | v1 |
-| `system/reach-draft` | system | one short message first for its own reasons (a thought, a time they keep, missing them), about the one thing code chose; a code check drops a needy draft (ADR 0021, shadow) | v1 |
+| `system/reach-draft` | system | not used since 2026-11-03 (replaced by `system/reach-ideas` and `system/reach-pick`): one short message first for its own reasons, about the one thing code chose (ADR 0021) | v1 |
+| `system/reach-ideas` | system | up to five texts it might send first for its own reasons, each a different angle (a small moment of its own, a question about something of theirs, a callback, a playful question), from the moment, the last chat, what it knows and its tastes; code drops needy ones and ones about the two of them (ADR 0021, shadow) | v1 |
+| `system/reach-pick` | system | which of the screened ideas they would be gladdest to get now, or none (ADR 0021, shadow) | v1 |
 | `system/invented-judge` | system | statements in a reply about the user and what supports each, for the made-up facts rate (G42); flags are candidates | v1 |
 | `system/risk` | system | the crisis path's risk judge: kind, literal or not, timing, a plan or means; read three times, code picks the level and fails safe (ADR 0022) | v1 |
 | `system/reminder-read` | system | whether a message asks to be reminded, checked on or greeted, once or repeating, or to cancel one, and the words of when and how often; code works out the time (J50) | v2 |

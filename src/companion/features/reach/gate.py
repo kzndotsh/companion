@@ -4,7 +4,8 @@ same answer, and the first hold that applies is the reason, rendered here from t
 Kept from ADR 0015: quiet hours (now learned), a scene in progress, an active chat, the spend cap
 before any paid call, and the draft last. Added: never a second while the last is unanswered, at
 least six hours between its own, and the share of conversations it starts held under the dial,
-which steps down one level after a reach-out answered late or briefly, until they start one.
+which steps down one level after a reach-out answered late or briefly, until they start one, and
+nothing for 12 hours after a heavy message.
 """
 
 from __future__ import annotations
@@ -21,6 +22,9 @@ from companion.features.reach.logic import TARGET, Dial, step_down
 
 ACTIVE_MINUTES = 90
 MIN_GAP = timedelta(hours=6)
+# After a message read as heavy (listening severity 2 or more) a light text out of the blue reads as
+# not having listened: a shadow draft about goodnights came 5.5 h after one (2026-11-02).
+AFTER_HEAVY = timedelta(hours=12)
 BRIEF_WORDS = 3  # an answer this short, all told, is brief
 ANSWER_SPAN = timedelta(minutes=10)  # their words in this long after the first count as the answer
 
@@ -30,6 +34,7 @@ class Hold(StrEnum):
     CRISIS = "a crisis turn under a day old"
     QUIET = "quiet hours"
     SCENE = "a scene in progress"
+    HEAVY = "a heavy chat lately"
     ACTIVE = "an active chat"
     UNANSWERED = "the last one is unanswered"
     GAP = "too soon after its last"
@@ -104,6 +109,7 @@ class Situation:
     share: Share
     capped: bool  # the daily spend cap is reached
     crisis: bool = False  # a concern or urgent turn under a day old (ADR 0022)
+    heavy_at: datetime | None = None  # their newest message read as heavy
 
     @property
     def effective(self) -> Dial:
@@ -125,6 +131,7 @@ def hold(sit: Situation) -> tuple[Hold, str] | None:
     now, local = sit.now, sit.now.astimezone(sit.tz)
     active = None if sit.last_message_at is None else (now - sit.last_message_at).total_seconds()
     gap = None if sit.last_own is None else now - sit.last_own
+    heavy = None if sit.heavy_at is None else now - sit.heavy_at
     target = TARGET[sit.effective]
     checks: tuple[tuple[bool, Hold, Callable[[], str]], ...] = (
         (sit.dial is Dial.OFF, Hold.OFF, lambda: "COMPANION_REACH is off"),
@@ -135,6 +142,14 @@ def hold(sit: Situation) -> tuple[Hold, str] | None:
             lambda: f"{local.hour}:00 is one of their quiet hours",
         ),
         (sit.in_scene, Hold.SCENE, lambda: "a pretend scene is in progress"),
+        (
+            heavy is not None and heavy < AFTER_HEAVY,
+            Hold.HEAVY,
+            lambda: (
+                f"a message of theirs was read as heavy"
+                f" {(heavy or AFTER_HEAVY).total_seconds() / 3600:.1f}h ago, under 12h"
+            ),
+        ),
         (
             active is not None and active < ACTIVE_MINUTES * 60,
             Hold.ACTIVE,

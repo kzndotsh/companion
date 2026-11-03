@@ -2,22 +2,27 @@
 and the one thing a message is about. Pure. The check that drops a needy draft is shared by every
 reach-out (`core/reachout.py`).
 
-Code chooses the kind and the thing; a model only writes the words, after every check passed.
+Code chooses when and why (the kind); after every check passed, a model brainstorms a few messages
+from what it knows, code drops the ones that break a rule, and a judge picks one or none
+(2026-11-03: a single thing picked by code read as generic).
 """
 
 from __future__ import annotations
 
 import hashlib
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
+from companion.core.reachout import checked
 from companion.core.rhythm import Rhythm
 from companion.core.types import Json
 from companion.prompts import get
 
-DRAFT = get("system/reach-draft")
+IDEAS = get("system/reach-ideas")
+PICK = get("system/reach-pick")
 WOULD_SEND = "reach out (shadow): would send"
 HELD = "reach out: held"
 DROPPED = "reach out: draft dropped"
@@ -88,13 +93,14 @@ class Pool:
 
 
 def pick_thing(pool: Pool, used: frozenset[str], seed: str) -> Thing | None:
-    """One thing, the same for the same seed: never a sensitive memory, never one used lately."""
+    """One thing, the same for the same seed: never a sensitive memory, never one used lately, never
+    one about the two of them (a taste of its own about the relationship was a seed, 2026-11-02)."""
     found = [
         *(Thing("memory", i, c) for i, c, s in pool.memories if s < SENSITIVE),
         *(Thing("taste", i, c) for i, c in pool.tastes),
         *(Thing("episode", i, g) for i, g in pool.episodes),
     ]
-    fresh = [t for t in found if t.id not in used and t.text.strip()]
+    fresh = [t for t in found if t.id not in used and t.text.strip() and not about_us(t.text)]
     return min(
         fresh, key=lambda t: hashlib.sha256(f"{seed}:{t.id}".encode()).hexdigest(), default=None
     )
@@ -174,30 +180,144 @@ def choose(considered: Sequence[Considered]) -> Considered | None:
     return next((c for c in ranked if c.applies), None)
 
 
-DRAFT_SCHEMA: dict[str, Json] = {
+IDEAS_SCHEMA: dict[str, Json] = {
     "type": "object",
-    "properties": {"message": {"type": "string"}},
-    "required": ["message"],
+    "properties": {
+        "ideas": {
+            "type": "array",
+            "maxItems": 5,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "angle": {"type": "string", "enum": ["share", "ask", "callback", "playful"]},
+                    "message": {"type": "string"},
+                    "about": {"type": "string"},
+                },
+                "required": ["angle", "message", "about"],
+            },
+        }
+    },
+    "required": ["ideas"],
 }
-
-
-def read_draft(data: Json) -> str | None:
-    message = data.get("message") if isinstance(data, dict) else None
-    return message if isinstance(message, str) else None
-
-
-_ABOUT = {
-    "memory": "something of theirs",
-    "taste": "one of your own tastes",
-    "episode": "a recent stretch of your chats",
+PICK_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"pick": {"type": "integer"}, "why": {"type": "string"}},
+    "required": ["pick", "why"],
 }
+LINES = 6  # their last conversation's newest lines the brainstorm sees
+LINE_CUT = 200
+MEMORIES = 15
+TASTES = 8
+GISTS = 4
+SENT = 5
 
 
-def draft_input(kind: Kind, thing: Thing | None) -> str:
-    """What the drafter is told: the kind and the one thing, nothing about how long it has been."""
-    lines = [f"Kind: {kind.value}"]
-    if thing is not None:
-        lines.append(f"The one thing ({_ABOUT[thing.source]}): {thing.text}")
-    else:
-        lines.append("The one thing: none; keep it to a light hello")
-    return "\n".join(lines)
+@dataclass(frozen=True, slots=True)
+class Idea:
+    angle: str  # share (a small moment of its own), ask, callback (a bit of theirs), playful
+    message: str
+    about: str  # what it rests on, in the brainstorm's words
+
+
+def read_ideas(data: Json) -> tuple[Idea, ...] | None:
+    raw = data.get("ideas") if isinstance(data, dict) else None
+    if not isinstance(raw, list):
+        return None
+    out = [
+        Idea(str(i.get("angle", "")), message, str(i.get("about", "")))
+        for i in raw
+        if isinstance(i, dict) and isinstance(message := i.get("message"), str)
+    ]
+    return tuple(out) or None
+
+
+def read_pick(data: Json) -> tuple[int, str] | None:
+    """The number of the idea it would send, 0 for none, and why in the judge's words."""
+    pick = data.get("pick") if isinstance(data, dict) else None
+    why = data.get("why") if isinstance(data, dict) else None
+    if not isinstance(pick, int) or isinstance(pick, bool):
+        return None
+    return pick, why if isinstance(why, str) else ""
+
+
+# A message about the two of them, the relationship itself, is dropped: light and affectionate,
+# never about the relationship (ADR 0021). Two of five shadow drafts were (2026-11-02).
+_ABOUT_US = re.compile(
+    r"\b(us|our|between us|relationship|whatever this is|whatever we are|this thing we)\b"
+    r"|\bwe('re| are) (so|kind of|kinda|really)\b",
+    re.IGNORECASE,
+)
+
+
+def about_us(text: str) -> bool:
+    return _ABOUT_US.search(text) is not None
+
+
+@dataclass(frozen=True, slots=True)
+class Context:
+    """What the brainstorm and the pick see: the moment, why now, and what it knows. Nothing about
+    how long they have been quiet."""
+
+    local: datetime
+    kind: Kind
+    thing: Thing | None  # one thing that came to mind, chosen by code; the brainstorm may skip it
+    lines: Sequence[tuple[str, str]]  # (who, text) newest lines of the last everyday chat
+    gists: Sequence[str]  # recent everyday stretches of chat
+    memories: Sequence[str]  # about them, not sensitive
+    tastes: Sequence[str]  # its own (ADR 0020)
+    sent: Sequence[str]  # its own last reach-outs, so it does not say the same again
+
+
+_SEASON = (
+    *("winter", "winter", "spring", "spring", "spring", "summer"),
+    *("summer", "summer", "autumn", "autumn", "autumn", "winter"),
+)
+
+
+def _part(hour: int) -> str:
+    if hour < 12:
+        return "morning"
+    if hour < 17:
+        return "afternoon"
+    return "evening" if hour < 22 else "late evening"
+
+
+def _block(title: str, items: Sequence[str]) -> list[str]:
+    return [f"{title}:", *(f"- {i}" for i in items)] if items else [f"{title}: none"]
+
+
+def brief(c: Context) -> str:
+    """The brainstorm's input, rendered by code."""
+    when = c.local.strftime("%A %d %B")
+    out = [
+        f"Now: {when}, {_part(c.local.hour)} ({c.local:%H:%M}), {_SEASON[c.local.month - 1]}",
+        f"Why now: {c.kind.value}",
+        f"Came to mind (use it or not): {c.thing.text if c.thing else 'nothing in particular'}",
+        "Their last chat with you, newest last:",
+        *(f"{who}: {text[:LINE_CUT]}" for who, text in c.lines[-LINES:]),
+        *_block("Recent times together", c.gists[-GISTS:]),
+        *_block("What you know about them", c.memories[:MEMORIES]),
+        *_block("Your own tastes", c.tastes[:TASTES]),
+        *_block("What you sent first lately (say something else)", c.sent[-SENT:]),
+    ]
+    return "\n".join(out)
+
+
+def screened(ideas: Sequence[Idea]) -> tuple[list[Idea], list[tuple[Idea, str]]]:
+    """The ideas that pass code's checks, and the ones dropped with why. Never rewritten."""
+    kept: list[Idea] = []
+    dropped: list[tuple[Idea, str]] = []
+    for idea in ideas:
+        text, why = checked(idea.message)
+        if why is None and about_us(text):
+            why = "about the relationship itself"
+        if why is not None:
+            dropped.append((idea, why))
+        else:
+            kept.append(Idea(idea.angle, text, idea.about))
+    return kept, dropped
+
+
+def pick_input(c: Context, ideas: Sequence[Idea]) -> str:
+    numbered = [f"{n}. ({i.angle}) {i.message}" for n, i in enumerate(ideas, 1)]
+    return "\n".join([brief(c), "", "Ideas:", *numbered])

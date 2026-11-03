@@ -47,3 +47,10 @@ def test_a_long_draft_goes_whole_and_an_empty_one_is_dropped() -> None:
     long = "thought of you when i saw a dog in a tiny raincoat today, so done with everything"
     assert checked(long) == (long, None)
     assert checked("   ") == ("", "empty")
+
+
+def test_a_draft_wrapped_again_as_json_or_misdecoded_arrives_as_written() -> None:
+    assert checked('{"message": "how did the demo go?"}') == ("how did the demo go?", None)
+    smile = "\U0001f60a".encode().decode("cp1252", errors="replace")
+    assert checked(f"no pressure {smile}") == ("no pressure \U0001f60a", None)
+    assert checked("café at noon \U0001f319") == ("café at noon \U0001f319", None)

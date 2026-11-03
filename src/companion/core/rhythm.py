@@ -2,7 +2,8 @@
 
 From the times of their own messages over the last two weeks: their pauses between conversations (a
 conversation starts after two hours or more of quiet), the 75th percentile of those pauses, the
-hours of the day they write, and the hours they almost never write. Before there is history it is a
+hours of the day they write, and the hours they almost never write, with the night's hours quiet
+unless they start conversations in them. Before there is history it is a
 baseline: a 12-hour pause and waking hours of 9 AM to 10 PM, with 11 PM to 8 AM quiet. The two are
 blended by how many conversations it has seen, with full weight on theirs from 20, and the pause
 that counts as missing them is never under 8 hours.
@@ -27,6 +28,7 @@ FULL_WEIGHT = 20  # conversations seen before their own numbers count fully
 USUAL = 0.5  # an hour is usual when its blended score reaches this
 QUIET = 0.9  # and quiet when its blended quiet score reaches this
 RARE = 0.1  # an hour written in on under a tenth of the days of their busiest hour
+NIGHT_STARTS = 3  # a night hour is theirs once they started a conversation in it on this many days
 KEPT_DAYS = 7
 KEPT_MOST = 5  # a time they keep: the same hour on at least this many of the last 7 days
 
@@ -51,6 +53,17 @@ def percentile(values: Sequence[float], q: float) -> float:
     low = int(at)
     high = min(low + 1, len(ordered) - 1)
     return ordered[low] + (ordered[high] - ordered[low]) * (at - low)
+
+
+def _night_quiet(seen: Sequence[datetime], tz: tzinfo) -> frozenset[int]:
+    """The baseline's night hours they have not made their own by starting a conversation in them
+    on `NIGHT_STARTS` days. Writing late is not enough: a chat that began in the evening runs past
+    midnight, and counting those hours let a reach-out go at 2 AM (2026-11-02)."""
+    days: list[set[object]] = [set() for _ in range(24)]
+    for t in starts(seen):
+        local = t.astimezone(tz)
+        days[local.hour].add(local.date())
+    return frozenset(h for h in BASE_QUIET if len(days[h]) < NIGHT_STARTS)
 
 
 def _hour_share(times: Sequence[datetime], tz: tzinfo) -> list[float]:
@@ -95,7 +108,7 @@ def learn(theirs: Sequence[datetime], now: datetime, tz: tzinfo) -> Rhythm:
     mine = BASE_PAUSE_HOURS if learned is None else learned
     pause = max(FLOOR_HOURS, (1 - w) * BASE_PAUSE_HOURS + w * mine)
     share = _hour_share(seen, tz) if seen else [0.0] * 24
-    quiet = frozenset(
+    quiet = _night_quiet(seen, tz) | frozenset(
         h for h in range(24) if (1 - w) * (h in BASE_QUIET) + w * (share[h] < RARE) >= QUIET
     )
     usual = frozenset(

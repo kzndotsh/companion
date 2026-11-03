@@ -13,6 +13,7 @@ from companion.core.types import (
     RelationshipId,
     SessionId,
     Speaker,
+    TraceId,
     TurnId,
     Utterance,
     UtteranceId,
@@ -27,14 +28,24 @@ WHEN = (NOW, UTC)
 
 
 class Drafter:
-    def __init__(self, message: str) -> None:
+    """Brainstorms one idea, `message`, and picks idea `pick` (0 for none). `calls` counts
+    brainstorms, the first paid call."""
+
+    def __init__(self, message: str, pick: int = 1) -> None:
         self.message = message
+        self.pick = pick
         self.calls = 0
+        self.seen: list[str] = []
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
-        del system, user, schema
+        del system
+        props = schema.get("properties")
+        if isinstance(props, dict) and "pick" in props:
+            return Extraction({"pick": self.pick, "why": "fits"}, "fake", 0.0001, 3)
         self.calls += 1
-        return Extraction({"message": self.message}, "fake", 0.0001, 3)
+        self.seen.append(user)
+        idea: Json = {"angle": "ask", "message": self.message, "about": "a thread"}
+        return Extraction({"ideas": [idea]}, "fake", 0.0001, 3)
 
 
 @pytest.fixture
@@ -114,7 +125,8 @@ async def test_a_needy_draft_is_dropped_and_recorded(store: Store) -> None:
     assert await tick_reach(store, REL, WHEN, reacher) is None
     rows = store.own_reach_outs(REL)
     assert [(r.mode, r.draft) for r in rows] == [("dropped", "")]
-    assert rows[0].detail["drafted"] == drafter.message
+    why = "how long they have been gone"
+    assert rows[0].detail["screened_out"] == [{"message": drafter.message, "why": why}]
     assert _keys(store, DecisionKind.DO_NOTHING, DROPPED) == 1
     assert _keys(store, DecisionKind.INITIATE, WOULD_SEND) == 0
     # A dropped draft is not tried again within six hours.
@@ -139,3 +151,79 @@ async def test_the_initiative_command_shows_the_rhythm_the_share_and_the_would_s
     assert "share it started: 1 of 2" in out
     assert "missing them" in out and drafter.message in out
     assert "1  the last one is unanswered" in out
+
+
+async def test_nothing_goes_when_the_judge_picks_none_and_it_waits_six_hours(store: Store) -> None:
+    _said(store, NOW - timedelta(hours=13))
+    drafter = Drafter("how's the bread coming along?", pick=0)
+    reacher = Reacher(Dial.WARM, drafter)
+    assert await tick_reach(store, REL, WHEN, reacher) is None
+    rows = store.own_reach_outs(REL)
+    assert [(r.mode, r.detail["dropped"]) for r in rows] == [
+        ("dropped", "the judge sent none: fits")
+    ]
+    assert await tick_reach(store, REL, (NOW + timedelta(hours=1), UTC), reacher) is None
+    assert drafter.calls == 1
+
+
+async def test_a_text_about_the_two_of_them_is_dropped(store: Store) -> None:
+    _said(store, NOW - timedelta(hours=13))
+    drafter = Drafter("no label needed on whatever this is, i just like it")
+    assert await tick_reach(store, REL, WHEN, Reacher(Dial.WARM, drafter)) is None
+    (row,) = store.own_reach_outs(REL)
+    assert row.detail["screened_out"] == [
+        {"message": drafter.message, "why": "about the relationship itself"}
+    ]
+
+
+async def test_it_holds_for_twelve_hours_after_a_heavy_message(store: Store) -> None:
+    from companion.kit.record import Recorder  # noqa: PLC0415
+
+    _said(store, NOW - timedelta(hours=13))
+    heavy = NOW - timedelta(hours=11)
+    Recorder(store, REL, SessionId("s"), TurnId("t"), TraceId("t"), heavy).decide(
+        "listening", {"labels": {"severity": 2}}, reason="listening: severity 2"
+    )
+    drafter = Drafter("how's the bread coming along?")
+    assert await tick_reach(store, REL, WHEN, Reacher(Dial.WARM, drafter)) is None
+    assert drafter.calls == 0
+    (held,) = store.decisions_with_key(REL, HELD)
+    assert (held.detail or {}).get("hold") == "a heavy chat lately"
+
+
+async def test_the_brainstorm_sees_their_last_lines_and_never_a_scene(store: Store) -> None:
+    _said(store, NOW - timedelta(hours=13))
+    drafter = Drafter("how's the bread coming along?")
+    await tick_reach(store, REL, WHEN, Reacher(Dial.WARM, drafter))
+    (seen,) = drafter.seen
+    assert "them: off to bed, night!" in seen
+    assert "Why now: missing them" in seen
+    assert "Tuesday 20 October" in seen
+
+
+async def test_an_intimate_last_chat_is_kept_out_of_the_brainstorm(store: Store) -> None:
+    from companion.kit.record import Recorder  # noqa: PLC0415
+
+    said = NOW - timedelta(hours=13)
+    _said(store, said)
+    Recorder(store, REL, SessionId("s"), TurnId("t"), TraceId("t"), said).decide(
+        "listening", {"labels": {"severity": 0, "intimate": True}}, reason="listening: severity 0"
+    )
+    drafter = Drafter("how's the bread coming along?")
+    await tick_reach(store, REL, WHEN, Reacher(Dial.WARM, drafter))
+    (seen,) = drafter.seen
+    assert "off to bed" not in seen
+
+
+async def test_a_heavy_last_chat_is_kept_out_of_the_brainstorm_past_the_hold(store: Store) -> None:
+    from companion.kit.record import Recorder  # noqa: PLC0415
+
+    said = NOW - timedelta(hours=13)  # past the 12-hour hold, so it reaches out, without the lines
+    _said(store, said)
+    Recorder(store, REL, SessionId("s"), TurnId("t"), TraceId("t"), said).decide(
+        "listening", {"labels": {"severity": 3, "intimate": False}}, reason="listening: severity 3"
+    )
+    drafter = Drafter("how's the bread coming along?")
+    await tick_reach(store, REL, WHEN, Reacher(Dial.WARM, drafter))
+    (seen,) = drafter.seen
+    assert "off to bed" not in seen
