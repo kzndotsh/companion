@@ -2750,3 +2750,27 @@ against 4/12, so no loss. Every gap is within noise at 12; v3 shipped as cheap a
 proven. A structural option (show a short topic label instead of the stored sentences when the found
 memories are sensitive) is not built. About $0.012. Rerun: a scratch script swaps the note's last line in
 each replayed request (`replay_file`) and draws 12 replies per cell.
+
+## 2026-11-03: Review of plan reach-outs, nudges, loose plan notes and the question-run note
+
+Read-only counts from the ledger, 2026-10-24 to 2026-11-03 (no model run, no spend). Rerun with
+`uv run companion initiative` and a read-only query of `open_loops`, `open_loop_events`, `decisions`.
+
+- **Plan reach-outs (shadow):** none drafted. Four loops were recorded, all note-only; two were
+  closed by them bringing it up first, two were asked as a note. The earlier loops that were firm
+  and had a due time all ended before this window (dropped or resolved), so no firm plan fell due.
+  Holds on its own-reason reach-outs: 11 because the last was unanswered, 4 in an active chat, 3 too soon.
+- **Nudges (shadow):** one drafted in ten days (after a long stretch away). It was light and not
+  needy; the two-a-day cap was not tested. One draft is not enough to judge.
+- **Loose plan notes:** the certainty (`maybe`) is not stored, only `note_only`, which is also set
+  for same-day plans, so hedged plans cannot be counted on their own. Of four loops, at most one was
+  a hedged plan that was not same-day, and it was a weak one (an apology, no real plan). Five notes
+  were offered since the change; the reply asked about the loop in 1, asked about something else in 2,
+  and did not ask in 2. No reply pried or asked about something they had dropped.
+- **Question-run note:** by the same rule as the 2026-10-24 baseline (`?` in each of the last three
+  replies, real frame, per turn). Before it went live: 118 of 1058 replies (11%) came after three
+  questions in a row, and 62 of those 118 asked again. After: 19 of 317 (6%), and 2 of 19 asked
+  again (the note is not exact here: scene, serious and other-note exclusions are not applied, so a
+  few of the 19 may not have had the note). Replies that ask at all: 38% before, 33% after. Read 12
+  noted turns by eye: most reacted or added a thought of their own; about half left no clear hook
+  and read flat but fitted the moment (a vent, a sleepy message). None dead-ended badly. Counts are small.

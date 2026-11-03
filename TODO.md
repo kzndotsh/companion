@@ -368,14 +368,17 @@ When the answer comes, the card moves to Todo or Done.
       chat), so the review moved to 2026-11-03; what it can reach out about is widened by ADR 0021 (R20),
       whose gate, unanswered rule and share it now shares. A hedged plan of theirs is a note-only loop, asked
       once when they next write and never a reach-out (`COMPANION_HEDGED_PLANS`, loose by default).
-      **Waits on:** the review of 2026-11-03, then A6, J27 and J35 before going live.
+      **2026-11-03, second review:** still nothing drafted for a due plan (no firm plan fell due; the
+      loops since are note-only; holds were mostly an unanswered last reach-out). Nothing to judge.
+      **Waits on:** the owner: a new date (2026-11-24) or remove it, see `evals/CHANGELOG.md`.
 - [ ] R1b Nudges after stepping away (owner's choice: the looser rule B, also without "brb"). Built in
       shadow 2026-10-20: when they say they are leaving now and stay quiet twice as long and an hour, one
       light drafted nudge, logged. Replayed over six days: 18 times away, none nudged, since they always
       wrote again sooner. If it reads needy, tighten to rule A (only after they said they would be back).
       **2026-10-24, first review:** nothing drafted (every time away ended within a minute); moved to
       2026-10-31. `COMPANION_INITIATIVE=off` now also stops the stepping-away read.
-      **Waits on:** the review of 2026-11-03.
+      **2026-11-03, second review:** one nudge drafted in ten days, light and not needy; too few to judge.
+      **Waits on:** the owner: a new date (2026-11-24) or remove it.
 - [ ] R20 Reaching out for its own reasons (ADR 0021, accepted by the owner): a time they keep, a thought
       (one thing from memory, its tastes or a recent stretch of chat, never sensitive), missing them (a pause
       past their learned usual, at a usual hour), behind a pure gate with learned quiet hours, never on top of
