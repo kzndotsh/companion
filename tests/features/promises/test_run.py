@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC
 from pathlib import Path
 
@@ -9,7 +10,7 @@ import pytest
 from companion.core.extractor import Extraction
 from companion.core.types import Frame, Json, Speaker, Utterance
 from companion.features.promises.cli import run
-from companion.features.promises.logic import Proposed, to_promise
+from companion.features.promises.logic import Proposed, agreed, parse, to_promise
 from companion.features.promises.run import read_promises
 from companion.features.threads.run import Reading, catch_up_loops
 from companion.store.sqlite.store import Store
@@ -58,8 +59,11 @@ def _window(
     return {"m1": said, "m2": reply}
 
 
-def _proposed(quote: str, avoid: str = "", message: str = "m2") -> Proposed:
-    return Proposed(message, quote, "The companion won't call them buddy.", "standing", avoid)
+def _proposed(
+    quote: str, avoid: str = "", message: str = "m2", *, checkable: bool = True
+) -> Proposed:
+    claim = "The companion won't call them buddy."
+    return Proposed(message, quote, claim, "standing", avoid, checkable=checkable)
 
 
 def test_a_promise_is_kept_only_when_code_finds_it_in_its_own_forward_looking_words(
@@ -77,6 +81,8 @@ def test_a_promise_is_kept_only_when_code_finds_it_in_its_own_forward_looking_wo
     for why, p in cases.items():
         assert to_promise(p, window, "p") == why
     assert to_promise(_proposed("sorry!"), window, "p") == "nothing in it looks forward"
+    vague = _proposed("i won't call you buddy again", checkable=False)
+    assert to_promise(vague, window, "p") == "nothing in it a later reply could keep or break"
     hedged = _window(utterance, "i'll try not to call you buddy again")
     assert to_promise(_proposed("i'll try not to call you buddy"), hedged, "p") == "hedged"
     scene = _window(utterance, SORRY, Frame.PLAY)
@@ -133,3 +139,23 @@ async def test_the_owner_can_mark_one_not_a_promise_and_it_leaves_the_list(
     assert run(db, REL, wrong=pid[:6]).startswith("marked not a promise")
     assert run(db, REL) == "no promises recorded\n"
     assert Store(db).promises(REL)[0].mark == "not_a_promise"
+
+
+def test_a_promise_counts_only_when_every_read_found_it_and_checkable_only_if_all_said_so() -> None:
+    real = _proposed("i won't call you buddy again", "buddy")
+    joke = _proposed("i won't leave you in a glass box", message="m3")
+    loose = replace(real, quote="won't call you buddy", checkable=False)
+    kept, disputed = agreed([[real, joke], [real], [loose]])
+    assert kept == [replace(real, checkable=False)]
+    assert disputed == [joke]
+    assert agreed([]) == ([], [])
+
+
+def test_a_word_to_avoid_makes_a_promise_checkable_whatever_the_reader_said() -> None:
+    item: Json = {"message": "m2", "quote": "q", "claim": "c", "kind": "standing"}
+    assert parse({"promises": [{**item, "avoid": "buddy", "checkable": False}]}) == [
+        Proposed("m2", "q", "c", "standing", "buddy", checkable=True)
+    ]
+    assert parse({"promises": [{**item, "avoid": ""}]}) == [
+        Proposed("m2", "q", "c", "standing", "", checkable=False)
+    ]

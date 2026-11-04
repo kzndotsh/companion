@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from enum import StrEnum
 
@@ -48,8 +48,9 @@ SCHEMA: dict[str, Json] = {
                     "claim": {"type": "string"},
                     "kind": {"type": "string", "enum": [k.value for k in Kind]},
                     "avoid": {"type": "string"},
+                    "checkable": {"type": "boolean"},
                 },
-                "required": ["message", "quote", "claim", "kind", "avoid"],
+                "required": ["message", "quote", "claim", "kind", "avoid", "checkable"],
             },
         }
     },
@@ -64,6 +65,7 @@ class Proposed:
     claim: str
     kind: str
     avoid: str
+    checkable: bool = False  # it names something a later reply could keep or break
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,9 +90,43 @@ def parse(data: Json) -> list[Proposed] | None:
         if not isinstance(item, dict):
             continue
         fields = {k: item.get(k) for k in ("message", "quote", "claim", "kind", "avoid")}
+        message, quote, claim, kind, avoid = (fields[k] for k in fields)
         if all(isinstance(v, str) for v in fields.values()):
-            out.append(Proposed(*(str(v).strip() for v in fields.values())))
+            out.append(
+                Proposed(
+                    str(message).strip(),
+                    str(quote).strip(),
+                    str(claim).strip(),
+                    str(kind).strip(),
+                    str(avoid).strip(),
+                    # a word to stop using is always something a reply keeps or breaks
+                    checkable=item.get("checkable") is True or bool(str(avoid).strip()),
+                )
+            )
     return out
+
+
+def agreed(reads: Sequence[list[Proposed]]) -> tuple[list[Proposed], list[Proposed]]:
+    """The promises every read found (the same message, quotes that overlap), checkable only when
+    every read said so, and the ones only some found. Asked once, the reader took jokes and
+    compliments for promises (2026-11-03)."""
+    if not reads:
+        return [], []
+
+    def same(p: Proposed, q: Proposed) -> bool:
+        a, b = p.quote.lower(), q.quote.lower()
+        return p.message.strip("[] ") == q.message.strip("[] ") and (a in b or b in a)
+
+    kept: list[Proposed] = []
+    disputed: list[Proposed] = []
+    for p in reads[0]:
+        matches = [next((q for q in r if same(p, q)), None) for r in reads[1:]]
+        if all(m is not None for m in matches):
+            sure = p.checkable and all(m is not None and m.checkable for m in matches)
+            kept.append(replace(p, checkable=sure))
+        else:
+            disputed.append(p)
+    return kept, disputed
 
 
 def to_promise(  # noqa: PLR0911
@@ -112,6 +148,8 @@ def to_promise(  # noqa: PLR0911
         return "nothing in it looks forward"
     if p.kind not in set(Kind):
         return "unknown kind"
+    if not p.checkable:
+        return "nothing in it a later reply could keep or break"
     at = labels.index(label)
     near = " ".join(window[x].text for x in labels[max(0, at - NEAR) : at + 1]).lower()
     if p.avoid and (len(p.avoid.split()) > MAX_AVOID_WORDS or p.avoid.lower() not in near):

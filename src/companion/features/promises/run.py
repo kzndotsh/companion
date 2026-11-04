@@ -11,7 +11,6 @@ from datetime import datetime, tzinfo
 
 from companion.core.beliefs.extract import build_user_prompt
 from companion.core.extractor import StructuredModel
-from companion.core.spend import purpose
 from companion.core.types import Json, Speaker, Utterance, UtteranceId
 from companion.features.promises.logic import (
     CHECK,
@@ -20,6 +19,7 @@ from companion.features.promises.logic import (
     RECENT,
     SCHEMA,
     SYSTEM,
+    agreed,
     check_input,
     parse,
     read_check,
@@ -29,7 +29,9 @@ from companion.kit.ask import Judge, ask
 from companion.kit.beside import beside
 from companion.kit.current import Turn, decide
 from companion.kit.features import Feature
+from companion.kit.reads import read_times
 from companion.kit.runtime import Runtime
+from companion.lib.vote import READS
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.promises")
@@ -47,18 +49,21 @@ async def read_promises(  # noqa: PLR0913, PLR0917
     """Record the promises in its targeted messages. The cost, or None when the call failed so the
     batch is read again."""
     now, tz = when
-    try:
-        with purpose("promises"):
-            result = await extractor.extract(
-                SYSTEM, build_user_prompt(window, targets, {}, tz), SCHEMA
-            )
-    except Exception:
-        log.warning("promise read failed; the batch is kept for another try", exc_info=True)
+    got = await read_times(
+        extractor,
+        SYSTEM,
+        build_user_prompt(window, targets, {}, tz),
+        SCHEMA,
+        parse,
+        spend="promises",
+    )
+    reads = [r for r in got.values if r is not None]
+    if len(reads) < READS:
+        log.warning("promise read failed or was malformed; the batch is kept for another try")
         return None
-    proposed = parse(result.data)
-    if proposed is None:
-        note("promises: the answer was malformed and was ignored", {"model": result.model})
-        return result.cost_usd
+    proposed, disputed = agreed(reads)
+    for p in disputed:
+        note("promise dropped: the reads did not agree", {"quote": p.quote, "claim": p.claim})
     rel = next(iter(window.values())).relationship_id
     known = {(r.promise.utterance_id, r.promise.quote.lower()) for r in store.promises(rel)}
     for p in proposed:
@@ -68,7 +73,7 @@ async def read_promises(  # noqa: PLR0913, PLR0917
             continue
         if (outcome.utterance_id, outcome.quote.lower()) in known:
             continue
-        store.add_promise(outcome, model=result.model, prompt=PROMPT.ref, at=now)
+        store.add_promise(outcome, model=got.model, prompt=PROMPT.ref, at=now)
         known.add((outcome.utterance_id, outcome.quote.lower()))
         note(
             "promise recorded from its own words (shadow)",
@@ -81,7 +86,7 @@ async def read_promises(  # noqa: PLR0913, PLR0917
                 "prompt": PROMPT.ref,
             },
         )
-    return result.cost_usd
+    return got.cost_usd
 
 
 CHECK_JUDGE = Judge(

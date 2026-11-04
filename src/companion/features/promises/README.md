@@ -8,7 +8,9 @@ Records the promises the companion makes in its own replies, such as a promise t
 
 **Where it runs.** The memory pass hands `read_promises` to the open-loop pass (`Reading` in `features/threads/run.py`) when the switch is not `off`. The open-loop pass reads its own bookmark in batches of 40 messages with 4 before them as context, up to 3 batches per call. Their messages go to the open-loop reader as before and the companion's messages in the same batch go to the promise reader. Both must succeed for the batch to count as read.
 
-**The read.** `system/promise-read` gets the batch with the companion's messages as targets and returns, for each promise, the message label, the exact quote, a one-sentence claim, a kind (`standing`: a rule for every later message, `once`: one thing on a later day) and `avoid`, a word it promised to stop using or an empty string. Most messages contain none. The prompt counts only a promise to change how it talks or acts from now on, made because they asked, corrected it or complained. Limits, banter, company, reassurance, apologies with no rule and anything in a scene are not promises.
+**The read.** `system/promise-read` gets the batch with the companion's messages as targets and returns, for each promise, the message label, the exact quote, a one-sentence claim, a kind (`standing`: a rule for every later message, `once`: one thing on a later day) `avoid`, a word it promised to stop using or an empty string, and `checkable`, whether a later reply could keep or break it. Most messages contain none. The prompt counts only a promise to change how it talks or acts from now on, made because they asked, corrected it or complained. Limits, banter, teasing, a joke shaped like a promise, compliments, company, reassurance, apologies with no rule and anything said in a scene are not promises; a sincere promise about how it handles scenes, said outside one, is.
+
+**Three reads.** Each batch is read three times at once (`read_times`); a failed or unreadable read keeps the batch for another try. A promise counts only when all three reads found it (the same message, quotes that overlap) and is checkable only when all three said so (`agreed` in `logic.py`); one found by only some reads is logged as "promise dropped: the reads did not agree". Asked once, the reader took jokes and compliments said in ordinary chat for promises (review of 2026-11-03).
 
 **What code keeps** (`to_promise` in `logic.py`). A proposal is dropped, with the reason logged as "promise dropped: ...", unless all of these hold:
 - the message is one of its own, and the quote is in that message's text;
@@ -16,6 +18,7 @@ Records the promises the companion makes in its own replies, such as a promise t
 - the quote is not hedged (try, should, might, maybe, hope, probably, could);
 - the quote looks forward (won't, I'll, we'll, no more, stop, from now on, next time, again, always, never, anymore);
 - the kind is known;
+- it is checkable: it names something a later reply could keep or break, or it has a word to avoid;
 - a word to avoid is at most 3 words and appears in the promise's message or the 3 before it (`NEAR`).
 
 A promise already recorded for the same message and quote is not stored twice. Each new one is stored in `promises` with its model and prompt as `name@version`, and the decision "promise recorded from its own words (shadow)" is logged with the kind, claim, quote and avoid word.

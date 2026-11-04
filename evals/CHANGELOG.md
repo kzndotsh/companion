@@ -2826,3 +2826,17 @@ released it, it expired, safety needs it, it is too vague, or two promises pull 
 without the verdicts got 30 of 32; both misses were too strict (teasing about a thing they had just
 raised, a stock phrase said about a dog), which costs a redraw, not a broken promise. One draw each,
 cases and judge both Claude models: indicative. No model spend.
+
+## 2026-11-03: Its promises read again: three reads and "checkable" (promise-read v2)
+
+Owner review: of 22 promises `system/promise-read@v1` recorded, about 9 were jokes, compliments, vague
+reassurance or copies, said in ordinary chat so code's checks passed them. v2 (jokes shaped like
+promises, teasing and compliments named as not promises; a `checkable` field) was run by a Claude
+Haiku stand-in, one read, on the 22 source messages with three messages of context each: it agreed
+with the owner's strike list on 16. Of the rest: a promise with a word to avoid it called vague (now
+checkable by code whenever it has one), a compliment about a chosen name it kept (on a second look a
+real promise), copies, and one sincere promise about how it handles scenes it skipped. A scene line
+was added to the prompt and five batches read again: the jokes stayed out, and the scene promise was
+now read as a general content rule and skipped again; it is pinned live as a memory of kind
+`promise`, so nothing is lost. Live, code keeps a promise only when all three reads find it. One draw
+of a stand-in, not the live model: indicative. No model spend.
