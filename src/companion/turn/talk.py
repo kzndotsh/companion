@@ -80,12 +80,12 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     """The reply to send: the first, or one fresh draw when the first fails a check (two when the
     redraw still has an em dash: one redraw left 4 of 10 dashes in). On an ordinary
     turn every check runs and the result is logged; in a scene, on a serious turn, or when the
-    listening judge could not read the turn, only the code checks run, and only a resample is
+    listening judge could not read the turn, only the code checks run, and only a redraw is
     logged. Before 2026-10-24 an unread turn skipped the code checks too."""
     severity = heard[0].severity if heard is not None else None
     scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
     code_only = scene or severity is None or severity >= RECHECK_SERIOUS
-    if not c.resample:
+    if not c.redraw:
         return reply
     if not reply.text.strip():
         return await _redraw_empty(c, t, request, talker)

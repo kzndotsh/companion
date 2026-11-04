@@ -453,7 +453,7 @@ async def run(data_dir: Path) -> None:
             daily_cap_usd=s.daily_cap,
             listen=s.on("listen"),
             mood=s.position("mood"),
-            resample=s.on("resample"),
+            redraw=s.on("redraw"),
             route_intimate=s.on("intimate"),
             roleplay_prefix=roleplay_prefix,
             scene_reminder=character.scene_reminder if character is not None else "",

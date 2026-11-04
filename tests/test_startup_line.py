@@ -57,10 +57,10 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
         f"  judges   {daemon.JUDGE_MODEL} (crisis on deepseek/deepseek-v4.1-flash)",
         "  limits   daily cap $10.00, pace natural",
         (
-            "  live     split, listen, mood, resample, relevance, re-read, lore, focus, reminders,"
-            " episodes,"
+            "  live     split, listen, mood, redraw, relevance, re-read, lore, focus, reminders,"
+            " episodes, marks,"
         ),
-        "           marks, calendar",
+        "           calendar",
         "  shadow   initiative, promises, crisis, now, history, scene",
         "  off      none",
         "  dials    intimate stays, hedged plans loose, reach warm",
@@ -76,7 +76,7 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
         ("COMPANION_INITIATIVE", "initiative", "on", "shadow"),  # no live mode yet
         ("COMPANION_MOOD", "mood", "shadow", "shadow"),
         ("COMPANION_MOOD", "mood", "yes", "live"),
-        ("COMPANION_RESAMPLE", "resample", "off", "off"),
+        ("COMPANION_REDRAW", "redraw", "off", "off"),
         ("COMPANION_RELEVANCE", "relevance", "off", "off"),
         ("COMPANION_PROMISES", "promises", "on", "shadow"),  # nothing live yet
         ("COMPANION_LORE", "lore", "shadow", "shadow"),

@@ -248,7 +248,7 @@ async def test_a_scene_reply_with_an_em_dash_is_drawn_once_more(store: Store) ->
 
     scene, everyday = Dashing(), Talker("everyday")
     runtime = Runtime(
-        store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene, resample=True
+        store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene, redraw=True
     )
     await handle(runtime, SESSION, "let's pretend you're a knight", "t", NOW)
     out = await handle(runtime, SESSION, "*bows*", "t", NOW + timedelta(minutes=1))

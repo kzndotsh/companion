@@ -26,7 +26,7 @@ class Runtime:
     daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
     listen: bool = True  # ask how serious a message is before the reply
     mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
-    resample: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
+    redraw: bool = False  # draw one fresh reply when the first fails a check (core/recheck.py)
     route_intimate: bool = False  # intimate talk may go to the roleplay talker (ADR 0017)
     roleplay_prefix: Prefix | None = (
         None  # the roleplay talker's system prompt, with the sheet's scene section

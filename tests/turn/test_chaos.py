@@ -116,7 +116,7 @@ def _runtime(store: Store, judge: Chaos | None, talker: Talker) -> Runtime:
         roleplay_talker=Talker(),
         route_intimate=True,
         mood="on",
-        resample=True,
+        redraw=True,
         relevance="on",
         episodes="on",
         crisis="on",

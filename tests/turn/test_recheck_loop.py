@@ -70,7 +70,7 @@ def store(tmp_path: Path) -> Store:
 
 
 async def _say(store: Store, talker: Talker, judge: Judge, *, on: bool = True) -> str:
-    runtime = Runtime(store, talker, PREFIX, REL, judge=judge, resample=on)
+    runtime = Runtime(store, talker, PREFIX, REL, judge=judge, redraw=on)
     sent = await handle(runtime, SessionId("s"), "kinda too crispy/hard", "test", NOW)
     assert isinstance(sent, str)
     return sent
@@ -125,7 +125,7 @@ async def test_a_passing_reply_is_sent_and_logged_as_kept(store: Store) -> None:
     assert _reasons(store) == ["kept: the reply passed its checks"]
 
 
-async def test_resample_off_is_never_checked(store: Store) -> None:
+async def test_redraw_off_is_never_checked(store: Store) -> None:
     judge = Judge(0, joke=True)
     talker = Talker("ugh—" + JOKE, PLAIN)
     assert await _say(store, talker, judge, on=False) == "ugh—" + JOKE
