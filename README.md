@@ -55,8 +55,11 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
 - **Listens.** Each message is read for how serious it is before the reply, and code adds a matching note ([ADR 0014](docs/adr/0014-models-label-and-code-chooses-the-note.md)).
 - **Takes a real risk seriously, and a joke as a joke.** A message that may be a risk to their life is
   read three times by a risk judge; code picks the level and fails safe. At concern it asks them
-  directly and warmly and names a crisis line once; at urgent code also sends a fixed message with the
-  line after the reply. Shadow by default ([ADR 0022](docs/adr/0022-a-crisis-path-for-acute-messages.md)).
+  directly and warmly and names a crisis line, or a person they trust, once in a hard stretch; after
+  that it stays with them and gently encourages real help instead of asking again (after QPR:
+  question, persuade, refer). At urgent code also sends a fixed message with the line after the reply,
+  and reaching out first waits a day. Live since 2026-11-04
+  ([ADR 0022](docs/adr/0022-a-crisis-path-for-acute-messages.md)).
 - **Repairs.** When they say it got them wrong, it owns it in a line instead of improvising, and it
   never asks them to repeat something memory already holds. Once it has owned a slip, a note after the
   history tells it that was enough, so it does not pile on apologies.
@@ -71,11 +74,14 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
 - **Follows up.** Things they say about their near future become open loops. When one falls due, it is
   brought up lightly the next time they write. Reaching out first, about a plan, after they stepped
   away or for its own reasons (a thought, a time they keep, missing them, at a share of conversations
-  the owner sets), runs in shadow only; with the crisis path on it is held for a day after a risk turn
+  the owner sets: a few ideas brainstormed from their world, then one picked), runs in shadow only;
+  it waits a day after a risk turn
   ([ADR 0021](docs/adr/0021-reaching-out-for-its-own-reasons-inside-a-code-gate.md), [0015](docs/adr/0015-initiative-reaches-out-only-about-their-own-firm-plans-through-a-code-gate.md)).
 - **Reminds them.** "Remind me at 8pm to take the dog out" or "check up on me in a few days about the
   interview": a small model reads the words, code works out the time and asks when it is unclear, and
-  the reminder comes when due in its own voice. One-off only; a pretend scene holds it until it ends.
+  the reminder comes when due in its own voice; a pretend scene holds it until it ends. It can repeat
+  (every day, or a weekday each week), and "say good morning every day" becomes a small daily greeting
+  at the time they usually start or end their day, skipped when they already wrote.
 - **Knows the date.** The clock line gives the weekday, the date and the time, so it can place what
   they name.
 - **Notices the day.** On a casual turn code may add one note after the history: a warm or fun US
@@ -113,6 +119,12 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
   their message has one, the note names that one as theirs, so it stops copying it.
 - **Reacts like a person to small vents.** A short reaction, with varied size examples drawn per turn so
   it does not say the same line every time.
+- **Keeps its promises** (shadow). Promises it makes in its own replies ("i'll stop calling it
+  that") are read, kept as lasting or for one moment, and each reply is checked against them; for now
+  it only logs the replies it would redraw (`companion promises`).
+- **Keeps its own past straight** (shadow). Small stories of its past it makes up in chat are checked
+  against its character and the stories already kept, so it can tell the same past every time
+  ([ADR 0025](docs/adr/0025-its-own-history-is-canon-lore-checked-against-the-sheet.md)).
 - **Has a mood that carries.** Cozy, tender or playful, kept by code from what happened, shown only in
   how it replies ([ADR 0016](docs/adr/0016-a-mood-that-carries-owned-by-code-shown-in-behaviour.md)).
 
@@ -126,7 +138,9 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
   restrictive model, above an age floor in code that no setting changes
   ([ADR 0017](docs/adr/0017-the-operator-decides-where-intimate-talk-goes-above-a-fixed-floor.md)).
   A lone short reaction in asterisks ("\*explodes\*") does not start a scene on its own, and the
-  scene reminder keeps it at their level: as far as they take it, explicit only when they are.
+  scene reminder keeps it at their level: as far as they take it, explicit only when they are. In
+  shadow, intimate memories are kept in a lane of their own, shown only in scenes
+  ([ADR 0026](docs/adr/0026-intimate-scenes-get-their-own-memory-lane-above-a-floor.md)).
 - **Checks its own replies.** A reply with a known habit (an em dash, an AI disclaimer nobody asked for,
   the clock line copied from its own notes, the stock "X, especially when" or "X, even when" line, the stage
   direction "a beat", markdown that shows raw in a chat, and on ordinary turns a joke bolted onto an
@@ -138,6 +152,8 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
 - **Judges per model.** The judges share one small model, with a second for calls it refuses; a judge
   can be given its own model (`COMPANION_JUDGE_ROUTES`), and the crisis risk judge reads on DeepSeek
   first, since the shared model's provider refused many crisis messages.
+- **Spends within a cap.** Once the day's model spend reaches a cap ($10 by default,
+  `COMPANION_DAILY_CAP_USD`), nothing paid runs, replies included, until the next day, and that is logged.
 - **Stops without losing a message.** On a stop or restart it fetches nothing more and answers what it
   already received, the reply in progress included, for up to 30 seconds.
 
@@ -166,8 +182,9 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
 
 We often try new behaviour in shadow first: it works out and logs what it would do, but changes
 nothing in the chat until a review shows it reads right. Right now that includes reaching out first,
-the crisis path, the nightly re-read, the mood and the getting-to-know-you questions. The full
-list, with each one's setting and review date, is in [AGENTS.md](AGENTS.md#what-runs-in-shadow).
+its promises and the check on each reply, what they said is coming, its own history, the memory lane
+for intimate scenes, the basics question and the pace for bringing threads up. The full list, with
+each one's setting and review date, is in [AGENTS.md](AGENTS.md#what-runs-in-shadow).
 
 ## Quick start
 
