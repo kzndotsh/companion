@@ -36,6 +36,7 @@ class Reading:
     level: CrisisLevel
     mode: str
     light: bool = False  # a joke touched the subject and a read was unsure: one light check
+    asked: bool = False  # a concern turn after one earlier in the stretch: stay, do not ask again
 
     @property
     def risk(self) -> bool:

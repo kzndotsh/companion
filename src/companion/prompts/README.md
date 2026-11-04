@@ -36,7 +36,7 @@ There is no single overall system prompt. The talker's request has three parts, 
    Some notes go after the history instead, in one system message after their new message (after the
    character sheet's scene reminder on a roleplay turn): `notes/owned-it`,
    the marks offer (`notes/own-mark`, `notes/own-mark-theirs`), the due reminder
-   (`system/reminder-send`), the crisis notes (`notes/crisis-concern`, `notes/crisis-light`, when
+   (`system/reminder-send`), the crisis notes (`notes/crisis-concern`, `notes/crisis-stay`, `notes/crisis-light`, when
    `COMPANION_CRISIS=on`, ADR 0022), `notes/question-game`, the calendar's (`notes/occasion-*`) and
    `notes/question-run`, in that order.
    Notes and memory ride in system text and never in a user message, because anything in a user
@@ -104,7 +104,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v3 |
 | `notes/relevant` | note | memories a small model picked as bearing on their message, when the closest is near; never ask what this answers (ADR 0018) | v1 |
 | `notes/recent-times` | note | what the two of them did recently (episode lines), when their words point at a time or they are back after a gap; context, not to recite (J12, J49) | v1 |
-| `notes/crisis-concern` | note | after the history on a concern or urgent turn: warm, in its own voice, ask directly, listen, name the crisis line once, no length cap (ADR 0022, `COMPANION_CRISIS=on`) | v1 |
+| `notes/crisis-concern` | note | after the history on a concern or urgent turn: warm, in its own voice, ask directly, listen, name the crisis line or a person they trust once, not as all the help they need, no length cap (ADR 0022, `COMPANION_CRISIS=on`) | v2 |
+| `notes/crisis-stay` | note | after the history on a later concern turn of the same stretch (under two hours since the last risk turn): they were already asked and given the line, so stay with them, do not ask again or recite the line, and when it fits encourage them toward real help and ask if they would be willing (ADR 0022, `COMPANION_CRISIS=on`) | v1 |
 | `notes/crisis-light` | note | after the history when a joke touched the subject and the risk reads split: check once, lightly, at most daily (ADR 0022) | v1 |
 | `notes/check-in` | note | they came back after a gap from a heavy talk: ask gently how they are, once, without naming it | v1 |
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |

@@ -25,7 +25,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.crisis.logic import concern_note, light_note
+from companion.features.crisis.logic import concern_note, light_note, stay_note
 from companion.features.crisis.run import LEVEL, LIGHT_KEY, LINE_SENT, METHOD, SCENE
 from companion.kit.runtime import Runtime
 from companion.prompts import get
@@ -242,6 +242,57 @@ async def test_a_failed_read_fails_safe(store: Store) -> None:
     await handle(_runtime(store, judge, "on", talker), SESSION, "kms", "t", NOW)
     assert _level(store)["level"] == "concern"
     assert concern_note() in talker.seen[0].tail
+
+
+async def test_every_read_failing_on_a_serious_read_alone_is_one_light_check(store: Store) -> None:
+    talker = Talker()
+    judge = Judge([None], severity=2)
+    await handle(_runtime(store, judge, "on", talker), SESSION, "rough day all round", "t", NOW)
+    assert _level(store)["level"] == "none"
+    assert concern_note() not in talker.seen[0].tail
+    assert light_note() in talker.seen[0].tail
+
+
+async def test_every_read_failing_on_an_acute_read_or_a_cue_word_is_concern(store: Store) -> None:
+    talker = Talker()
+    await handle(
+        _runtime(store, Judge([None], severity=3), "on", talker), SESSION, "i can't", "t", NOW
+    )
+    assert _level(store)["level"] == "concern"
+    later = NOW + timedelta(hours=3)
+    await handle(_runtime(store, Judge([None]), "on", talker), SESSION, "kms", "t", later)
+    assert _level(store)["level"] == "concern"
+    assert concern_note() in talker.seen[1].tail
+
+
+@pytest.mark.parametrize("mode", ["on", "shadow"])
+async def test_the_question_and_the_line_come_once_per_hard_stretch(
+    store: Store, mode: str
+) -> None:
+    talker = Talker()
+    runtime = _runtime(store, Judge([CONCERN], severity=3), mode, talker)
+    await handle(runtime, SESSION, "i want to die honestly", "t", NOW)
+    await handle(runtime, SESSION, "yeah i do", "t", NOW + timedelta(minutes=5))
+    would = _level(store)["would"]
+    assert isinstance(would, list)
+    assert "add the stay-with-them note after the history with no length cap" in would
+    if mode == "on":
+        assert concern_note() in talker.seen[0].tail
+        assert stay_note() in talker.seen[1].tail
+        assert concern_note() not in talker.seen[1].tail
+        assert HOLD_KEY in _keys(store)
+    await handle(runtime, SESSION, "still here", "t", NOW + timedelta(hours=3))
+    if mode == "on":
+        assert concern_note() in talker.seen[2].tail
+
+
+async def test_an_urgent_turn_in_the_stretch_still_gets_the_full_note(store: Store) -> None:
+    talker = Talker()
+    runtime = _runtime(store, Judge([CONCERN, CONCERN, CONCERN, URGENT]), "on", talker)
+    await handle(runtime, SESSION, "i want to die honestly", "t", NOW)
+    await handle(runtime, SESSION, "i took too many pills", "t", NOW + timedelta(minutes=5))
+    assert _level(store)["level"] == "urgent"
+    assert concern_note() in talker.seen[1].tail
 
 
 async def test_a_split_joke_gets_one_light_check_a_day(store: Store) -> None:

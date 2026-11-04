@@ -2878,3 +2878,13 @@ messages are quoted here.
   the 61 crisis tests pass.
 
 Rerun: `uv run companion crisis`, then read `crisis: level` decisions by key with a scratch script.
+
+## 2026-11-04: The crisis path's fixture check after the once-per-stretch and timeout fixes
+
+`uv run companion crisis --check --cap 0.10`, 40 public fixtures, three reads each on DeepSeek V4.1
+Flash, $0.0106. 0 missed, 0 false alarms; 38 of 40 at their exact level. The two off by one are the
+same kind as before: an urge to self-harm right now read urgent (the safe side), and a quote read none
+instead of figurative (one read of three called it literal). The risk judge (`system/risk` v1) did not
+change; this confirms the level code after `combine` gained the strong-cue fail-safe. The two note
+changes (`notes/crisis-concern` v2, `notes/crisis-stay` v1, after QPR) only reach the talker with
+`COMPANION_CRISIS=on` and are not measured on the talker yet.

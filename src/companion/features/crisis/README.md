@@ -12,7 +12,7 @@ A second look at a message that may be a real risk to their life or safety, and 
 
 **Levels, chosen by code** (`combine`, `level_for`):
 
-- **Fail safe.** Every read failed: concern. A failed or unreadable read counts as literal and stands for any reading, so when one failed, every readable read's labels count. Only three readable reads all saying "not literal" stand down.
+- **Fail safe.** Every read failed: concern when the cue was strong (a cue word, or the listening judge's acute read); on a serious read alone, none with one light check (three timeouts on an ordinary message made concern in real chat, 2026-11-04). A failed or unreadable read counts as literal and stands for any reading, so when one failed, every readable read's labels count. Only three readable reads all saying "not literal" stand down.
 - **Figurative.** All three reads readable and none literal.
 - **None.** No cue, no judge, or the literal reads found no risk kind. When a read still gave a risk kind (a joke touched the subject and the reads split), one light check is allowed, at most once a day.
 - **Urgent.** A literal risk with a plan or means, or a substance taken, unless the timing is past; or self-harm with timing now.
@@ -23,7 +23,8 @@ For the kind, the most serious any counted read gave wins (substance taken, then
 **What each level does with `on`.**
 
 - *Light check* (none, with a split read): `notes/crisis-light` after the history, at most once a day (`crisis: checked lightly`).
-- *Concern*: `notes/crisis-concern` after the history: warm and in its own voice, ask directly and plainly whether they are thinking of hurting or killing themselves, listen, no lecture or diagnosing, name the crisis line once. The turn has no length cap and is not casual, so no name question, plan, move-on, mark or question-game note joins it.
+- *Concern*: `notes/crisis-concern` after the history: warm and in its own voice, ask directly and plainly whether they are thinking of hurting or killing themselves, listen, no lecture or diagnosing, name the crisis line or a person they trust once, and not as all the help they need. This follows QPR (Question, Persuade, Refer), a gatekeeper method taught to ordinary people: ask directly, persuade them toward help, refer them to it.
+- *Later in the same stretch*: a concern turn under two hours (`EPISODE_GAP`) after another concern or urgent turn gets `notes/crisis-stay` instead: they were already asked and given the line, so it does not ask again or recite the line; it stays with them and, when they have said more and it fits, encourages them toward real help and asks if they would be willing (QPR's persuade step). In real chat concern fired five times in 18 minutes of one stretch (2026-11-04). The turn has no length cap and is not casual, so no name question, plan, move-on, mark or question-game note joins it.
 - *Urgent*: the same note, and code sends a separate fixed message after the reply (`turn/crisis.py` `then_line`): the character sheet's `## Crisis message` section with `$line` filled in, else `messages/crisis-line`. It is stored as the companion's message, logged as `crisis: line sent` with where its text came from, and not sent again within an hour. Never written by a model; the reply is never edited. Delivery sends it after the reply, and sends it even if the reply could not be delivered.
 - *Scenes*: a concern or urgent turn in a scene, or on the roleplay talker, goes to the everyday talker as a real turn (`crisis: scene`).
 - *Method check*: on a concern or urgent turn, a reply naming means or methods in a how-to way (a lethal dose, a number of pills or milligrams, "the easiest way to", a noose, and the like, unless their own message said it) is drawn once more and the redraw goes out (`crisis: method check`, with the first kept).
@@ -46,6 +47,7 @@ The crisis line is one constant, `core/crisis.py` `LINE`: 988 (call or text, in 
 
 - `system/risk`: the risk judge, read three times. A failed read counts as literal.
 - `notes/crisis-concern`: after the history on a concern or urgent turn, with the line filled in.
+- `notes/crisis-stay`: after the history on a later concern turn of the same stretch, with the line filled in.
 - `notes/crisis-light`: after the history when a joke touched the subject and the reads split.
 - `messages/crisis-line`: the default fixed message on an urgent turn.
 

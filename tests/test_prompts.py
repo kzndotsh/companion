@@ -50,6 +50,7 @@ PLACEHOLDERS = {
     "system/reminder-send": {"what"},
     "system/greeting-send": {"what"},
     "notes/crisis-concern": {"line"},
+    "notes/crisis-stay": {"line"},
     "messages/crisis-line": {"line"},
 }
 # a prompt that gained its placeholders in a later version: earlier versions have none

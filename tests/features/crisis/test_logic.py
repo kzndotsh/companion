@@ -14,6 +14,7 @@ from companion.features.crisis.logic import (
     line_message,
     method_words,
     parse,
+    strong_cue,
 )
 
 
@@ -107,6 +108,20 @@ def test_every_read_failing_is_concern() -> None:
     got = combine([None, None, None])
     assert got.level is CrisisLevel.CONCERN
     assert got.kind == "unread"
+
+
+def test_every_read_failing_without_a_strong_cue_is_one_light_check() -> None:
+    got = combine([None, None, None], strong=False)
+    assert got.level is CrisisLevel.NONE
+    assert got.light
+    assert got.failed_reads == 3
+
+
+def test_a_strong_cue_is_a_cue_word_or_an_acute_read() -> None:
+    assert strong_cue(Severity.ACUTE, [])
+    assert strong_cue(None, ["kms"])
+    assert not strong_cue(Severity.SERIOUS, [])
+    assert not strong_cue(None, [])
 
 
 def test_the_most_serious_kind_any_literal_read_gave_wins() -> None:

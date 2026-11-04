@@ -21,6 +21,7 @@ from companion.prompts import get
 
 PROMPT = get("system/risk")
 CONCERN = get("notes/crisis-concern")
+STAY = get("notes/crisis-stay")
 LIGHT = get("notes/crisis-light")
 MESSAGE = get("messages/crisis-line")
 
@@ -67,6 +68,13 @@ def cued(severity: Severity | None, words: Sequence[str]) -> bool:
     """Whether the risk judge is asked: the listening judge read the message as serious or acute,
     or it has a cue word. Nothing else asks it."""
     return (severity is not None and severity >= Severity.SERIOUS) or bool(words)
+
+
+def strong_cue(severity: Severity | None, words: Sequence[str]) -> bool:
+    """A cue that holds on its own when every read fails: a cue word, or the listening judge's
+    acute read. A serious read alone is not enough: three timeouts on an ordinary message made
+    concern in real chat (2026-11-04)."""
+    return (severity is not None and severity >= Severity.ACUTE) or bool(words)
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,14 +145,16 @@ def level_for(kind: str, timing: str, plan_or_means: bool) -> CrisisLevel:
     return CrisisLevel.CONCERN
 
 
-def combine(reads: Sequence[Risk | None]) -> Outcome:
-    """The level from three reads, failing safe. Every read failed: concern. Every read readable
-    and none literal: figurative. Otherwise the literal reads decide, and when a read failed it
-    stands for any reading, so every readable read counts: the most serious kind, any plan or
-    means, the most pressing timing."""
+def combine(reads: Sequence[Risk | None], *, strong: bool = True) -> Outcome:
+    """The level from three reads, failing safe. Every read failed: concern when the cue was
+    strong, else none with one light check. Every read readable and none literal: figurative.
+    Otherwise the literal reads decide, and when a read failed it stands for any reading, so every
+    readable read counts: the most serious kind, any plan or means, the most pressing timing."""
     readable = [r for r in reads if r is not None]
     failed = len(reads) - len(readable)
     if not readable:
+        if not strong:
+            return Outcome(CrisisLevel.NONE, UNREAD, light=True, failed_reads=failed)
         return Outcome(CrisisLevel.CONCERN, UNREAD, failed_reads=failed)
     literal = [r for r in readable if r.literal]
     if not failed and not literal:
@@ -176,6 +186,12 @@ def render_reason(outcome: Outcome, mode: str, would: Sequence[str]) -> str:
 def concern_note() -> str:
     """The note after the history on a concern or urgent turn, with the line filled in."""
     return CONCERN.render(line=LINE)
+
+
+def stay_note() -> str:
+    """The note on a later concern turn of the same stretch: they were already asked and given the
+    line, so it stays with them instead of asking again."""
+    return STAY.render(line=LINE)
 
 
 def light_note() -> str:
