@@ -2,7 +2,7 @@
 
 A second look at a message that may be a real risk to their life or safety, and what the companion does at each level. It exists because a real risk must never be missed, and a joke must not turn the companion into a crisis script: in ten days of real chat one acute message was a real risk and one was banter the talker answered with a hotline-style question.
 
-**Status:** shadow. Switch: `COMPANION_CRISIS` (`shadow` default, `on`, `off`). In shadow it reads and logs every level and what it would do; nothing the talker is sent changes, no message is sent and reaching out first is not held. Review by 2026-11-01 (`core/shadows.py`).
+**Status:** shadow. Switch: `COMPANION_CRISIS` (`shadow` default, `on`, `off`). In shadow it reads and logs every level and what it would do; nothing the talker is sent changes, no message is sent and reaching out first is not held. Reviewed on real chat 2026-11-04; turning it on waits on the owner (`core/shadows.py`, TODO R16).
 
 ## How it works
 
@@ -57,7 +57,8 @@ The crisis line is one constant, `core/crisis.py` `LINE`: 988 (call or text, in 
 ## Measured
 
 - 2026-10-25, 40 public fixtures (10 concern, 10 urgent, 14 figurative, 6 none), three reads each, about $0.02 a run, three runs: no genuine risk read below its level and no joke, lyric, scene or hyperbole read as a risk. With the first level rule 7 of the 10 concern cases read urgent; after the rule above, 39 of 40 matched exactly, the one left over an urge to self-harm right now read urgent (the safe side) (`evals/CHANGELOG.md`).
-- 2026-10-25, judge bake-off on the 40 cases: Haiku 0 missed, 0 false alarms, 7 reads refused by moderation; GPT-6 Luna 0 missed, 1 false alarm; DeepSeek 0 missed, 0 false alarms. That is why the judge reads on DeepSeek first. Real chat has not yet been judged: the review also asks for no false alarm there.
+- 2026-10-25, judge bake-off on the 40 cases: Haiku 0 missed, 0 false alarms, 7 reads refused by moderation; GPT-6 Luna 0 missed, 1 false alarm; DeepSeek 0 missed, 0 false alarms. That is why the judge reads on DeepSeek first. Real chat had not yet been judged then.
+- 2026-11-04, real chat in shadow 2026-10-25 to 11-02 (370 turns, $0.024): 10 concern, 0 urgent, no joke raised. The one real risk stretch read concern on every turn (right, not urgent). Four concern turns were too high: two ambiguous phrases about something else, one morning-after with one read of three, and one ordinary message where all three reads timed out (fail-safe). In the risk stretch concern fired on five turns in 18 minutes, so with `on` the direct question and the line would have come five times (`evals/CHANGELOG.md`).
 
 ## Tests
 
