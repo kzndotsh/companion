@@ -25,6 +25,17 @@ questions) are one kind of thing with a quote, kept like a promise: always on th
 read by the same reply check, and retired when they take it back. "Stop X" and "do more of Y" are the
 same record with a direction.
 
+## For a while, not for good
+
+A third post there asks for the character's style (teasing, drama, metaphor, flirting) to soften for
+a while and come back, on request ("talk to me directly for a while") or on its own when the talk
+turns serious, technical or practical, while it stays the same companion with the same memories. It
+names people who read language literally, for whom constant metaphor is tiring, and warns against
+doing it by swapping prompts inside the chat. So a request has a scope, as a promise does: lasting,
+or for this stretch (until the episode ends or they say so). The level would live in state and reach
+the reply as a note chosen by code, never as text in the chat. Ours today lays the character sheet
+over the persona at one strength on every turn; only serious moments and vents change the shape.
+
 ## Before building
 
 - Counted 2026-11-04: memory already holds about 8 standing requests about how it talks (plainer
