@@ -42,9 +42,10 @@ class MentionCandidate:
 
 
 WINDOW = timedelta(hours=24)
-# The check-in after a heavy talk is its own note (it comes at serious moments the others wait
-# out), but it counts toward the pace and how it was met is read like the others.
-CHECKED_IN = "check-in: asked how they are after a heavy last talk"
+# The how-are-you question after a heavy talk is its own note (it comes at serious moments the
+# others wait out), but it counts toward the pace and how it was met is read like the others. The
+# key keeps its stored name.
+ASKED_HOW_THEY_ARE = "check-in: asked how they are after a heavy last talk"
 
 
 def choose(found: Sequence[MentionCandidate], recent: Sequence[Rank]) -> MentionCandidate | None:

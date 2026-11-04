@@ -30,7 +30,7 @@ from tests.turn.test_mood_loop import PREFIX, REL, SESSION, Judge, Talker
 
 HALLOWEEN = datetime(2026, 10, 31, 16, 0, tzinfo=UTC)  # noon in New York
 NOTE = DAY_NOTE.render(name="Halloween")
-QUIET = {"name": Offer(), "check-in": Offer()}
+QUIET = {"name": Offer(), "how-are-you": Offer()}
 
 
 @pytest.fixture(autouse=True)

@@ -217,7 +217,7 @@ class Favorite:
     id: FavoriteId
     relationship_id: RelationshipId
     turn_id: TurnId
-    note: str
+    comment: str  # what they wrote with it; the column keeps the name note
     at: datetime
 
     def __post_init__(self) -> None:
@@ -232,7 +232,7 @@ class Flag:
     relationship_id: RelationshipId
     turn_id: TurnId
     kind: FlagKind
-    note: str
+    comment: str  # what they wrote with it; the column keeps the name note
     at: datetime
 
     def __post_init__(self) -> None:

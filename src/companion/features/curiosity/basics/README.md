@@ -13,7 +13,7 @@ that says it does not know what they like to be called and asks it to react firs
 Code decides, not a model. The note is offered only when:
 
 - no current belief about them says what they are called (`knows_name`, a pattern over the claim text),
-- no check-in note is offered this turn,
+- no how-are-you question is offered this turn,
 - no ask-name has been logged in the last 24 hours (`ASK_EVERY`, decision key `basics: offered to ask what to call them`).
 
 The log line is written only once the turn is stored, so a turn that fails does not use up the day.
@@ -30,7 +30,7 @@ they use, in its own words and without making a thing of it. It is offered only 
 
 - how they want to be referred to is not set (the `address` setting, `core/turn/address.py`),
 - a belief says what they are called (the name comes first),
-- the turn is casual and no check-in note is offered,
+- the turn is casual and no how-are-you question is offered,
 - no ask-name has been logged in the last 24 hours, so the two never share a turn or a day,
 - no ask-pronouns has been logged in the last 24 hours (decision key `basics: offered to ask their pronouns`).
 

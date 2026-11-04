@@ -16,5 +16,5 @@ def run(db: Path, relationship: str) -> str:
         store.close()
     if not found:
         return "no favorites yet\n"
-    lines = [f"{f.at:%Y-%m-%d %H:%M}  {f.turn_id}  {f.note}" for f in found]
+    lines = [f"{f.at:%Y-%m-%d %H:%M}  {f.turn_id}  {f.comment}" for f in found]
     return "\n".join(lines) + "\n\nreplay one: companion replay <turn_id> --db <db>\n"

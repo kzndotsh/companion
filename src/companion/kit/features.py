@@ -55,9 +55,9 @@ type Mention = Callable[[Moment, object], MentionCandidate | None]
 
 
 def has_room(m: Moment, so_far: Offered) -> bool:
-    """A casual turn with no name asked, no check-in and nothing held: room for a plan or a
-    move on."""
-    return m.casual and not so_far["name"].lines and not so_far["check-in"].lines and not m.held
+    """A casual turn with no name asked, no how-are-you question and nothing held: room for a plan
+    or a move on."""
+    return m.casual and not so_far["name"].lines and not so_far["how-are-you"].lines and not m.held
 
 
 def asking(so_far: Offered) -> bool:

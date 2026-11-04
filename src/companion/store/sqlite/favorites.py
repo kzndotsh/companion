@@ -12,7 +12,7 @@ def add_favorite(conn: sqlite3.Connection, f: Favorite) -> None:
     with write_tx(conn):
         conn.execute(
             "INSERT INTO favorites (id, relationship_id, turn_id, note, at) VALUES (?, ?, ?, ?, ?)",
-            (f.id, f.relationship_id, f.turn_id, f.note, iso(f.at)),
+            (f.id, f.relationship_id, f.turn_id, f.comment, iso(f.at)),
         )
 
 
@@ -25,7 +25,7 @@ def list_favorites(conn: sqlite3.Connection, relationship_id: RelationshipId) ->
             id=FavoriteId(str(r["id"])),
             relationship_id=RelationshipId(str(r["relationship_id"])),
             turn_id=TurnId(str(r["turn_id"])),
-            note=str(r["note"]),
+            comment=str(r["note"]),
             at=parse_iso(str(r["at"])),
         )
         for r in rows

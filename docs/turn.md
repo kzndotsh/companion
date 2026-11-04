@@ -63,8 +63,8 @@ features only act on casual turns. With `COMPANION_CRISIS=on`, a turn the crisis
 is never casual (`Moment.casual`).
 
 When they come back 3 hours or more after a talk that turned serious (severity 2 within its last 12
-hours), their next message outside a scene that is not itself serious gets one gentle note to ask
-how they are now (`notes/check-in`), once per heavy talk.
+hours), their next message outside a scene that is not itself serious gets the how-are-you question, one
+gentle note to ask how they are now (`notes/check-in`), once per heavy talk.
 
 ## The crisis path
 
@@ -180,8 +180,8 @@ today, the relationship's date, a public or cultural day, a follow-up, a lead-up
 sources, unless the new one ranks higher, so a morning follow-up never holds back a birthday. A plan
 goes in the system block and a day after the history; either asks them something, so the question-run
 note stays out. It is logged under its source's key with its rank once the turn is stored, and how
-their next message met it is read for the learned pace (shadow), as is the check-in after a heavy
-talk. The notes that may ask them something themselves (guess, reminder, crisis, question game) come
+their next message met it is read for the learned pace (shadow), as is the how-are-you question after a
+heavy talk. The notes that may ask them something themselves (guess, reminder, crisis, question game) come
 before it in `ORDER`, so it always knows.
 
 ## Checking the reply

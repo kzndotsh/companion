@@ -9,6 +9,6 @@ Learning about them on purpose. Each part is its own folder, read like a feature
 
 Only one note asks them something on a turn: each part's offer says when it asks (`Offer(asks=True)`),
 and a part offered after one that asks stays out (`asking` in `kit/features.py`, which other notes read
-too). Questions asked for another reason stay with that reason: a thread's follow-up, the check-in after a
+too). Questions asked for another reason stay with that reason: a thread's follow-up, the how-are-you question after a
 heavy talk, the scene lane's curious item. How they want to be referred to stays shared
 (`core/turn/address.py`).

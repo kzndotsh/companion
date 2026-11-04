@@ -34,7 +34,7 @@ async def test_a_mark_sent_as_a_reply_lands_on_the_turn_of_that_message(tmp_path
     store.record_message(REL, "discord", "m1", TurnId("older"), T0, sent=True)
     await _marks(store)["fav"]("this one", "m1")
     await _marks(store)["fav"]("and now", None)
-    assert [(f.turn_id, f.note) for f in store.favorites(REL)] == [
+    assert [(f.turn_id, f.comment) for f in store.favorites(REL)] == [
         ("older", "this one"),
         ("latest", "and now"),
     ]

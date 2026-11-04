@@ -267,9 +267,10 @@ def delivery_hooks(store: Store, rel: RelationshipId, key: str, platform: str) -
 def chat_commands(
     store: Store, rel: RelationshipId, judges: StructuredModel, s: Settings
 ) -> Commands:
-    """The slash commands: `/flag` and `/fav` answer with a reaction, `/mode` with which talker.
-    `/flag` and `/fav` mark the latest reply, or, sent as a reply to one of its messages or of
-    theirs, that turn."""
+    """The commands: `/flag` and `/fav` (typed `!flag` and `!fav` on Discord) answer with a
+    reaction, `/mode` with which talker. `/flag` and `/fav` mark the latest reply, or, sent as a
+    reply to one of its messages or of theirs, that turn, with any words after them as the
+    comment."""
 
     def marked(replied_to: str | None) -> TurnId | None:
         if replied_to is None:
@@ -280,10 +281,10 @@ def chat_commands(
         turn = marked(replied_to)
         if turn is None:
             return UNKNOWN_REPLY if replied_to is not None else "nothing to flag yet"
-        kind, note = parse_flag(arg)
-        store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, note, datetime.now(UTC)))
-        logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, note)
-        implicated = await views_implicated(store, judges, rel, turn, note)
+        kind, comment = parse_flag(arg)
+        store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, comment, datetime.now(UTC)))
+        logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, comment)
+        implicated = await views_implicated(store, judges, rel, turn, comment)
         logging.getLogger("companion").debug("flag implicates %d view(s)", len(implicated))
         for claim in curate.retire_implicated_views(store, implicated):
             logging.getLogger("companion").info("flag retired a view: %s", claim)

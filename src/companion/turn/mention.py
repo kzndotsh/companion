@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.turn.mentions import (
-    CHECKED_IN,
+    ASKED_HOW_THEY_ARE,
     MET_PROMPT,
     MET_SCHEMA,
     PACE,
@@ -66,15 +66,17 @@ def _offers(c: Runtime, since: datetime) -> list[tuple[datetime, Rank]]:
 
 def _pace(c: Runtime, now: datetime, offered: list[datetime]) -> tuple[dict[str, Json], bool]:
     """What the learned pace says now (shadow): its wait, the answers it was learned from, and
-    whether it would bring one up. Check-ins count with the rest."""
+    whether it would bring one up. The how-are-you question counts with the rest."""
     mets = [
         m
         for d in c.store.decisions_with_key(c.rel, MET, now - PACE_LOOKBACK)
         if (m := parse_met(d.detail or {})) is not None
     ]
     wait = pace(mets)
-    checked_in = [d.at for d in c.store.decisions_with_key(c.rel, CHECKED_IN, now - PACE[-1])]
-    held = pace_holds(wait, [*offered, *checked_in], now)
+    asked_how = [
+        d.at for d in c.store.decisions_with_key(c.rel, ASKED_HOW_THEY_ARE, now - PACE[-1])
+    ]
+    held = pace_holds(wait, [*offered, *asked_how], now)
     detail: dict[str, Json] = {
         "wait_hours": wait.total_seconds() / 3600,
         "answers": [m.value for m in mets[-5:]],
@@ -128,13 +130,13 @@ def _offer(c: Runtime, t: Turn, pick: MentionCandidate, paced: dict[str, Json]) 
 
 
 async def read_met(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
-    """Once the turn is stored: when its last message brought something up (a mention or a
-    check-in), read how their message met it, once, for the learned pace."""
+    """Once the turn is stored: when its last message brought something up (a mention or the
+    how-are-you question), read how their message met it, once, for the learned pace."""
     del said, sent
     last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
     if c.judge is None or last is None:
         return
-    keys = (*KEYS.values(), CHECKED_IN)
+    keys = (*KEYS.values(), ASKED_HOW_THEY_ARE)
     offered = next(
         (
             d

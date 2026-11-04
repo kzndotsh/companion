@@ -23,7 +23,7 @@ from companion.core.turn.length import LengthTarget, length_target
 from companion.core.turn.listening import PROMPT as LISTEN_PROMPT
 from companion.core.turn.listening import listening_note, repair_note, rude_note
 from companion.core.turn.listening import render_reason as render_listening
-from companion.core.turn.mentions import CHECKED_IN
+from companion.core.turn.mentions import ASKED_HOW_THEY_ARE
 from companion.core.turn.ownup import owned_note
 from companion.core.turn.questions import question_note
 from companion.core.turn.quoted import quoted_note
@@ -43,8 +43,8 @@ if TYPE_CHECKING:
 from companion.kit.current import Heard, Turn, decide, mark
 
 log = logging.getLogger("companion.turn")
-CHECK_IN_NOTE = get("notes/check-in")
-CHECK_IN_GAP = timedelta(hours=3)  # away at least this long since their last message
+HOW_ARE_YOU_NOTE = get("notes/check-in")
+HOW_ARE_YOU_GAP = timedelta(hours=3)  # away at least this long since their last message
 HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
 SERIOUS = 2
 LOOK_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
@@ -262,17 +262,17 @@ def _severity(detail: dict[str, Json] | None) -> int:
     return value if isinstance(value, int) else -1
 
 
-def _check_in(m: Moment, _: Offered) -> Offer:
+def _how_are_you(m: Moment, _: Offered) -> Offer:
     """When they come back after a gap and the talk before it was heavy (a serious message in its
     last hours), one note to ask gently how they are, once per heavy talk."""
     c, t = m.c, m.t
     if m.heard is None or m.heard[0].severity >= SERIOUS or m.in_scene is not Frame.REAL:
         return Offer()
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
-    if not theirs or t.now - theirs[-1].at < CHECK_IN_GAP:
+    if not theirs or t.now - theirs[-1].at < HOW_ARE_YOU_GAP:
         return Offer()
     last = theirs[-1].at
-    if c.store.decided_since(c.rel, CHECKED_IN, last):
+    if c.store.decided_since(c.rel, ASKED_HOW_THEY_ARE, last):
         return Offer()
     recent = [u.turn_id for u in theirs if last - u.at <= HEAVY_WINDOW]
     heavy = any(
@@ -283,7 +283,7 @@ def _check_in(m: Moment, _: Offered) -> Offer:
     )
     if not heavy:
         return Offer()
-    return Offer((CHECK_IN_NOTE.text,), (lambda: decide(c, t, CHECKED_IN),), asks=True)
+    return Offer((HOW_ARE_YOU_NOTE.text,), (lambda: decide(c, t, ASKED_HOW_THEY_ARE),), asks=True)
 
 
 def _hold(m: Moment, _: Offered) -> Offer:
@@ -313,7 +313,7 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "repair": _repair,
     "owned": _owned,
     "recall": _recalled,
-    "check-in": _check_in,
+    "how-are-you": _how_are_you,
     "hold": _hold,
     "brush-off": _brush,
     "game": _game,
@@ -336,7 +336,7 @@ ORDER: tuple[str, ...] = (
     "now",
     "relevant",
     "recent",
-    "check-in",
+    "how-are-you",
     "mood",
     "hold",
     "brush-off",

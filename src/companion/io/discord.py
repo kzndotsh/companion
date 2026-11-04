@@ -39,7 +39,7 @@ TYPING_SECONDS = 2.0  # a typing indicator stuck behind a rate limit is skipped,
 # first had in fact gone through, the message shows twice, which is rarer than a dropped connection.
 SEND_SECONDS = 15.0
 SEND_TRIES = 2
-NOTE_CHARS = 500  # a note on a mark is a line or two
+COMMENT_CHARS = 500  # a comment on a mark is a line or two
 MARK_SEARCH = 20  # messages looked back through for the bot's latest, which a slash mark reacts to
 NOT_YOURS = "these commands are only for the person this bot talks to"
 FAILED = "that didn't work, try again in a bit"
@@ -230,11 +230,11 @@ def said(answer: str | Reaction | ReactAndReply) -> str:
 
 
 async def run_command(
-    commands: Commands, name: str, note: str, message_id: str | None
+    commands: Commands, name: str, comment: str, message_id: str | None
 ) -> str | Reaction | ReactAndReply:
     """Run one command by name. A failure is logged and answered, never raised to discord.py."""
     try:
-        return await commands[name](note, message_id)
+        return await commands[name](comment, message_id)
     except Exception:
         log.exception("command /%s failed", name)
         return FAILED
@@ -269,13 +269,13 @@ class _Marks:
     commands: Commands
 
     async def answer(
-        self, interaction: discord.Interaction, name: str, note: str, message_id: str | None
+        self, interaction: discord.Interaction, name: str, comment: str, message_id: str | None
     ) -> None:
         if interaction.user.id != self.allowed:
             await interaction.response.send_message(NOT_YOURS, ephemeral=True)
             return
         await interaction.response.defer(ephemeral=True, thinking=True)  # /flag may ask a judge
-        answer = await run_command(self.commands, name, note[:NOTE_CHARS], message_id)
+        answer = await run_command(self.commands, name, comment[:COMMENT_CHARS], message_id)
         if isinstance(answer, Reaction) and await _react(interaction, message_id, answer.emoji):
             # The mark shows as its emoji on the message; the private "thinking" line goes.
             with contextlib.suppress(*_FAILURES):
@@ -286,29 +286,29 @@ class _Marks:
 
 @dataclass(frozen=True, slots=True)
 class _Menu:
-    """A mark on a message's Apps menu: the command it runs, its name there, the note's prompt."""
+    """A mark on a message's Apps menu: the command, its name there, the comment's prompt."""
 
     command: str
     title: str
     label: str
 
 
-class _Note(discord.ui.Modal):
-    """The optional note for a mark made from a message's Apps menu."""
+class _Comment(discord.ui.Modal):
+    """The optional comment for a mark made from a message's Apps menu."""
 
     def __init__(self, marks: _Marks, menu: _Menu, message_id: str) -> None:
         super().__init__(title=menu.title)
-        self.note: discord.ui.TextInput[_Note] = discord.ui.TextInput(
+        self.comment: discord.ui.TextInput[_Comment] = discord.ui.TextInput(
             label=menu.label,
             style=discord.TextStyle.paragraph,
             required=False,
-            max_length=NOTE_CHARS,
+            max_length=COMMENT_CHARS,
         )
-        self.add_item(self.note)
+        self.add_item(self.comment)
         self._marks, self._command, self._id = marks, menu.command, message_id
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        await self._marks.answer(interaction, self._command, self.note.value, self._id)
+        await self._marks.answer(interaction, self._command, self.comment.value, self._id)
 
 
 def command_tree(
@@ -329,7 +329,7 @@ def command_tree(
             if interaction.user.id != allowed:
                 await interaction.response.send_message(NOT_YOURS, ephemeral=True)
                 return
-            await interaction.response.send_modal(_Note(marks, menu, str(message.id)))
+            await interaction.response.send_modal(_Comment(marks, menu, str(message.id)))
 
         return app_commands.ContextMenu(
             name=menu.title, callback=run, allowed_contexts=where, allowed_installs=installs

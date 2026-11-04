@@ -47,13 +47,13 @@ def store(tmp_path: Path) -> Store:
 
 
 def _note(
-    store: Store, beliefs: list[Belief], *, severity: int = 0, check_in: bool = False
+    store: Store, beliefs: list[Belief], *, severity: int = 0, asked_how: bool = False
 ) -> tuple[str, ...]:
     runtime = Runtime(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, TurnId("t"), NOW, [], "just got home")
     heard = (ListeningRead(severity, "other", vague=False), "j", "")
     m = Moment(runtime, t, Frame.REAL, heard, Lookups(), False, beliefs)
-    so_far = {"check-in": Offer(("[check in]",) if check_in else ())}
+    so_far = {"how-are-you": Offer(("[how are you]",) if asked_how else ())}
     offer = basics_offer(m, None, so_far)
     for write in offer.after:
         write()
@@ -74,7 +74,7 @@ def test_the_pronoun_note_needs_the_setting_unset_and_comes_once_a_day(
     named = [belief(bid="n", claim=NAMED)]
     store = Store(tmp_path / "a.sqlite")
     assert _note(store, named, severity=1) == ()  # not on a serious turn
-    assert _note(store, named, check_in=True) == ()
+    assert _note(store, named, asked_how=True) == ()
     assert _note(store, named) == (ASK_PRONOUNS.text,)
     assert store.decided_since(REL, ASKED_PRONOUNS, NOW)
     assert not store.decided_since(REL, ASKED, NOW - timedelta(days=1))

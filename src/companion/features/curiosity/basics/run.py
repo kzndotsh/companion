@@ -71,7 +71,7 @@ def basics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """On a casual turn, at most once a day each: ask what to call them until memory knows, then
     which pronouns they use until the setting holds them. Never both on one turn."""
     del found
-    if so_far["check-in"].lines:
+    if so_far["how-are-you"].lines:
         return Offer()
     c, t = m.c, m.t
     known = knows_name(m.beliefs)

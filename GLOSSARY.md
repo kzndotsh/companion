@@ -96,10 +96,10 @@ The earlier message they used reply on, quoted to the talker so it knows which o
 On a stop, taking nothing new and answering what already came in.
 
 **Slash command**:
-`/flag`, `/fav` or `/mode` on Discord, picked from Discord's own command list; answered privately and never part of the chat.
+`/mode` on Discord, picked from Discord's own command list; answered privately and never part of the chat. `/flag` and `/fav` are typed as `!flag` and `!fav` there, since a slash command cannot carry the message it replies to.
 
 **Flag this**:
-The Apps-menu action on one of the companion's messages on Discord that flags that exact reply, with an optional note. Favorite this is its pair.
+The Apps-menu action on one of the companion's messages on Discord that flags that exact reply, with an optional comment. Favorite this is its pair.
 
 **Message id**:
 A message's id on its platform, kept with its turn for both the companion's messages and theirs, so a reply, a mark or a reaction pointing at a message finds its turn.
@@ -541,8 +541,12 @@ Several replies in a row that each asked a question.
 **Question game**:
 Their asking the companion to keep asking them things.
 
+**How-are-you question**:
+One gentle question about how they are, after a heavy talk and a gap. Its note file is still named `notes/check-in` until its next version.
+
 **Check-in**:
-One gentle question about how they are, after a heavy talk and a gap.
+A reminder they asked for that checks on how something went.
+_Avoid_: check-in for the how-are-you question
 
 **Repair**:
 Owning a mistake in one line when they say it got them wrong, then carrying on.
@@ -652,6 +656,10 @@ The fixed name a decision is found by, apart from its reason text.
 
 **Flag**:
 The owner marking a reply as off, which sets what to fix next.
+
+**Comment**:
+The words they write with a flag or a favorite.
+_Avoid_: note (that is a line for the talker)
 
 **Flag kind**:
 What the owner says was wrong with a flagged reply: off, forgot, too much or unwanted.
@@ -763,10 +771,8 @@ These words are used in more than one sense across the repo. Say which one you m
 - **Stance**: what they are doing in a message (listening read), a kind of view, or an intimate memory's stance.
 - **Thread**: a memory kind, or something the companion may bring up.
 - **Promise**: a memory kind, or the companion's own promise.
-- **Check-in**: the gentle note after a heavy talk, or a kind of reminder they asked for.
 - **Loop**: an old name for a thread, or for the memory pass ("slow loop") and the reply path ("fast loop"), or a timer tick.
 - **Mode**: the /mode command, or the views setting (Views mode). A setting's value is its position.
-- **Note**: a line for the talker, or the free text on a flag.
 - **Pace**: the typing pause before a reply, or the learned wait between threads.
 - **Cap**: the daily spend cap, an eval's spend cap, or a limit on how many of something a day.
 - **Replay**: rebuilding one turn, or rerunning recorded turns in an eval.

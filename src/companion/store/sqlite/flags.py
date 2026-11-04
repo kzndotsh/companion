@@ -14,7 +14,7 @@ def add_flag(conn: sqlite3.Connection, f: Flag) -> None:
         conn.execute(
             "INSERT INTO flags (id, relationship_id, turn_id, kind, note, at)"
             " VALUES (?, ?, ?, ?, ?, ?)",
-            (f.id, f.relationship_id, f.turn_id, f.kind, f.note, iso(f.at)),
+            (f.id, f.relationship_id, f.turn_id, f.kind, f.comment, iso(f.at)),
         )
 
 
@@ -38,7 +38,7 @@ def list_flags(conn: sqlite3.Connection, relationship_id: RelationshipId) -> lis
             relationship_id=RelationshipId(str(r["relationship_id"])),
             turn_id=TurnId(str(r["turn_id"])),
             kind=FlagKind(str(r["kind"])),
-            note=str(r["note"]),
+            comment=str(r["note"]),
             at=parse_iso(str(r["at"])),
         )
         for r in rows
