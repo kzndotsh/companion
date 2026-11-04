@@ -29,13 +29,13 @@ decision is made; it may be wrong, but never stale.
 
 ---
 
-## Where we are (2026-11-02)
+## Where we are (2026-11-04)
 
 Live: persona **v46** (v41 plus that it can send reminders and check-ins when asked) with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
 **Claude Haiku 5.5** with a fallback model for calls it refuses, and a judge may read on its own model first
-(`COMPANION_JUDGE_ROUTES`; the crisis judge reads on DeepSeek first). 22 ADRs, 110 public eval fixtures and
-40 public crisis cases plus the private recorded ones, and about 1,460 tests with strict lint, types,
+(`COMPANION_JUDGE_ROUTES`; the crisis judge reads on DeepSeek first). 26 ADRs, 113 public eval fixtures and
+40 public crisis cases plus the private recorded ones, and about 1,735 tests with strict lint, types,
 import layers and code rules.
 
 Built and working:
@@ -63,8 +63,8 @@ Built and working:
   guesses (J16), an everyday standby (J21), daily backups (J36), the clock and notes in tags, and
   conflicting memories asked about in `memory review`.
 - **Since 2026-10-20.** Its own tastes shown back when the moment touches them (ADR 0020, live). In
-  shadow: promises it makes read from its replies (J12, `companion promises`), names matched against
-  memory (removed 2026-11-03: the card already held them), and its views labelled taste, stance, rule, self or lived (`companion lore`).
+  shadow: promises it makes read from its replies (J12, `companion promises`) and its views labelled taste, stance, rule, self or lived (`companion lore`). Names matched against memory were in
+  shadow too, and were removed 2026-11-03.
 - **Since 2026-10-21.** Reminders and check-ins they ask for, live (J50, `companion reminders`); from
   2026-10-26 also repeating ones and daily greetings, built and not yet measured.
   Memory review asks every question until quit and proposes merges of memories about one thing; feelings
@@ -90,7 +90,8 @@ Built and working:
   A hedged plan of theirs becomes a note-only loop (`COMPANION_HEDGED_PLANS`, loose). It asks which pronouns
   they use the way it asks a name. A lone short reaction in asterisks no longer starts a scene, and `/mode`
   says which talker answered. A stop answers what was already received before it exits. In shadow: reaching
-  out for its own reasons (ADR 0021, review 2026-11-02) and the crisis path (ADR 0022, review 2026-11-04).
+  out for its own reasons (ADR 0021, review 2026-11-02, moved to 2026-11-10) and the crisis path (ADR 0022,
+  live since 2026-11-04).
 - **Since 2026-10-25.** The clock line gives the date. A calendar of occasions, live (`COMPANION_CALENDAR`,
   `companion calendar`): one note after the history on the first casual turn of the day for a warm US
   public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years;
@@ -99,6 +100,17 @@ Built and working:
   (`COMPANION_FOCUS`), a plan or state bound to one day leaves the card once the day is past, the ack judge
   reads 8 messages, a pair the write-time check reads as one is proposed for merging at once with a checked
   wording, and each new boundary is a question in `memory review`.
+- **Since 2026-11-03.** The crisis path is live (2026-11-04): it asks and names the line once per hard
+  stretch, then stays with them (`notes/crisis-stay`); fixtures 40/40 with none missed. Fetch on mention is
+  removed (the closeness card held a memory for 33 of 35 names). A promise is lasting or for one moment
+  (`system/promise-read` v3), and a judge checks each reply against them in shadow (review 2026-11-17).
+  Reaching out for its own reasons brainstorms a few texts and a judge picks one or none
+  (`system/reach-ideas`, `system/reach-pick`; night hours quiet, 12 hours after a heavy message; review
+  2026-11-10). Audits run as `companion audit callbacks|invented`. `COMPANION_RESAMPLE` is
+  `COMPANION_REDRAW`. The local zone is the machine's named zone. The startup line is a block. The memory
+  is `data/companion.sqlite` on either platform, Discord or Telegram. A long message takes longer to read.
+  In shadow besides: threads' learned pace (ADR 0023), what they said is coming (ADR 0024), its own history
+  (ADR 0025) and the intimate memory lane (ADR 0026).
 - **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
   messages, and a new message that arrives before the last answer is out replaces it. A reply
   the chat never delivered is recorded as undelivered and left out of what the model reads; a reply cut
@@ -108,12 +120,15 @@ Built and working:
   sources share one gate and its caps: a due firm plan of theirs (ADR 0015), a nudge after they stepped
   away and stayed gone, and its own reasons (ADR 0021: a time they keep, a thought, missing them, on
   learned hours, at the share of conversations `COMPANION_REACH` sets, `warm` by default, with a guilt
-  check on every draft). At the first review (2026-10-24) the plan and nudge sources had drafted nothing.
-- **Crisis path (ADR 0022), shadow.** A three-read risk judge reads messages the listening judge calls
+  check on every draft). At the first review (2026-10-24) the plan and nudge sources had drafted nothing; at
+  the second (2026-11-03) still no plan, one light nudge in ten days. Since 2026-11-03 its own reasons
+  brainstorm a few texts and a judge picks one or none (replayed blind, 3.57 against 2.00 for the old drafts).
+- **Crisis path (ADR 0022), live since 2026-11-04.** A three-read risk judge reads messages the listening judge calls
   serious or that use crisis words, tells a literal risk from a joke and fails safe; code picks none,
-  figurative, concern or urgent and logs what it would do (an in-character note, a fixed crisis-line
-  message at urgent, 988 by default, a scene stepped out of, reach-outs held). `companion crisis --check`
-  runs the public cases.
+  figurative, concern or urgent and acts: an in-character note that asks and names the line once per hard
+  stretch, then stays with them; a fixed crisis-line message at urgent, 988 by default; a scene stepped
+  out of; reach-outs held a day. Three timeouts on a serious read alone are one light check. Region still
+  waits on R18. `companion crisis --check` runs the public cases.
 - **Prompts.** Every prompt, the persona included, is versioned text under `src/companion/prompts/`
   with a manifest, one changelog and tests. Decisions log `name@version`. `companion prompts` lists
   them and `companion replay <turn_id> --show-prompt` prints what a turn sent.
@@ -169,11 +184,12 @@ Built and working:
 ### Now
 
 Each item ends with the thing that tells us it is done. The cards are below; the reviews are dated in
-"Reviews this week".
+"Reviews to come".
 
 1. **Watch the live setup in real chat.** Flag and favourite as usual. *Done when:* a week of marks
    shows whether the roleplay model helps, where the voice changes at the boundary hurt, and how the
-   listening note and the pacing feel (D1, read at the review of 2026-10-29).
+   listening note and the pacing feel (D1). The review of 2026-10-29 recorded no outcome for the two
+   talkers; read it at the next review.
 2. **Hand labels for replies.** The owner marks replies from the review sheet in batches of ten
    (`evals/local/`); items 1 to 10 are in. *Done when:* the judges are calibrated against the marks and
    the trivial-vent question has an answer (T14).
@@ -183,16 +199,17 @@ Each item ends with the thing that tells us it is done. The cards are below; the
 4. **Its own promises and lore** (J12, ADR 0020): promises and the per-reply check in shadow, tastes shown
    live since 2026-10-20. *Done when:* the check's would-redraws read right at the review of 2026-11-17 and
    the owner decides whether it redraws live, and LR5.
-5. **Do the redrawn replies beat the canned ones?** (Q3) *Done when:* about 20 logged redraws are judged
-   blind against their first draws at the review of 2026-10-31 and the owner keeps, retunes or turns off
-   the canned-reaction label.
-6. **Reaching out for its own reasons** (ADR 0021, R20), in shadow since 2026-10-24. *Done when:* at the
-   review of 2026-11-02 about five drafts across the kinds read well to the owner and land at sensible
-   times in their learned hours, none needy, and the owner says whether it goes live (outcome recording,
-   A6, first).
-7. **A week of shadow mode** for plan reach-outs and nudges (R1, R1b). *Done when:* the owner has read
-   `companion initiative` at the review of 2026-11-03 and the caps are set. Going live also needs A6, J27
-   and J35.
+5. **Do the redrawn replies beat the canned ones?** (Q3) Reviewed 2026-10-31: a toss-up (redraw preferred
+   21 to 13 by Haiku, 9 to 13 by Sonnet, within noise), nothing changed. *Done when:* the owner keeps,
+   retunes or turns off the canned-reaction label (decision 2).
+6. **Reaching out for its own reasons** (ADR 0021, R20), in shadow since 2026-10-24. Reviewed 2026-11-02:
+   not ready (2 of 5 drafts read right, 2 at bad hours, 3 stored as raw JSON); the fixes and the
+   brainstorm and pick were built 2026-11-03. *Done when:* about five picks read well at the review of
+   2026-11-10, land at hours they start conversations, none needy, and the owner says whether it goes live
+   (outcome recording, A6, first).
+7. **Plan reach-outs and nudges** (R1, R1b). Reviewed 2026-11-03: nothing to judge (no plan drafted, one
+   nudge in ten days). *Done when:* the owner picks a new review date or removes them (decision 4). Going
+   live also needs A6, J27 and J35.
 8. **The crisis path** (ADR 0022, R16): live since 2026-11-04. *Done when:* a week of real chat shows the
    stay note holding over a long hard stretch (it does not push help on every message) and no false alarm
    the owner flags.
@@ -209,21 +226,22 @@ Each item ends with the thing that tells us it is done. The cards are below; the
     Not yet measured: `system/reminder-read` v2 on the live suite (`tests/live/test_reminder_read.py`, now
     with repeating and greeting cases), and `notes/reminder-repeat` and `system/greeting-send` on replies.
 
-### Reviews this week
+### Reviews to come
 
 Each shadow feature has a row in `core/shadows.py` (`companion shadows`); at its review it graduates or is
-removed. Live notes listed here are read from the log and the owner's marks.
+removed. Live notes listed here are read from the log and the owner's marks. Past reviews and their
+outcomes are in the plan above and in the cards.
 
 | Date | What | Read with | Decides |
 |---|---|---|---|
-| 2026-10-29 | the two talkers (D1) | `companion flags`, `companion favorites` | whether the roleplay talker helps and where the boundary hurts |
-| 2026-10-29 | the bland-replies wording round, then the move picker in shadow | `docs/inbox/2026-10-25-bland-replies-design-space.md`, `evals/CHANGELOG.md` | build the move picker |
-| 2026-10-30 | promises, lore labels, made-up facts, names | `companion promises`, `companion lore`, `companion audit invented` | J12 step 2 and LR5 (promises reviewed 2026-11-03, next review 2026-11-17); names removed 2026-11-03 |
-| 2026-10-31 | the redrawn replies (Q3) | the recheck decisions, blind judges | keep, retune or turn off the canned-reaction label |
-| 2026-11-02 | its own reach-outs (ADR 0021) | `companion initiative` | going live, and at what dial |
-| 2026-11-03 | plan reach-outs and nudges; the loose plan notes; the question-run note | `companion initiative`, the decision log | going live (after A6, J27, J35); whether loose stays the default; whether the note stays |
-| 2026-11-04 | the crisis path (ADR 0022) | `companion crisis`, `companion crisis --check`, the decision log | `COMPANION_CRISIS=on` |
+| overdue | plan reach-outs and nudges (R1, R1b; reviewed 2026-11-03, nothing to judge) | `companion initiative` | a new date or removal (decision 4) |
+| no date | the two talkers (D1; no outcome recorded at 2026-10-29) | `companion flags`, `companion favorites` | whether the roleplay talker helps and where the boundary hurts |
+| no date | the move picker for bland replies (one measurement, not built) | `docs/inbox/2026-10-25-bland-replies-design-space.md`, `evals/CHANGELOG.md` | build it or not (decision 13) |
 | 2026-11-05 | the hook (J48) | the decision log | whether its would-asks read right; going live or removed |
+| 2026-11-08 | threads' learned pace (ADR 0023); what they said is coming (ADR 0024) | the decision log; `companion now` | the labels read right; the pace beats the day's cap |
+| 2026-11-09 | its own history (ADR 0025); the intimate memory lane (ADR 0026) | `companion history`, `companion scene`, the decision log | canon rulings and scene cards read right |
+| 2026-11-10 | its own reach-outs, brainstorm and pick (ADR 0021) | `companion initiative` | going live, and at what dial |
+| 2026-11-17 | promises and the per-reply check (J12, LR5) | `companion promises`, the decision log | whether the check redraws live |
 
 ### Next
 
@@ -262,8 +280,8 @@ removed. Live notes listed here are read from the log and the owner's marks.
 
 ### Housekeeping that can stop the bot
 
-- [ ] **Top up OpenRouter.** About $1 left on 2026-10-22, not read since; the evals logged since cost under
-      a dollar. The bot goes quiet at zero, and the daily cap is $10. Paid eval runs share it: the runner
+- [ ] **Watch the OpenRouter balance.** Topped up to about $5 on 2026-11-04 (it was about $0.05 on
+      2026-11-03). The bot goes quiet at zero, and the daily cap is $10. Paid eval runs share it: the runner
       shows the balance first and refuses a run whose cap is above it.
 
 ### Not doing
@@ -281,15 +299,18 @@ the own-ups left as they are (J52), and the hook given a week more; the crisis d
 urgent level, 988 by default, the generic message kept for now), reaching out for its own reasons (ADR
 0021: dial `warm` by default, learned hours, wait after an unanswered one), no birthday of its own in
 the calendar, and threads (ADR 0023: one store for what it brings up, the interrupted story first, a pace
-learned from how they answer instead of a fixed number).
+learned from how they answer instead of a fixed number). On 2026-11-04: the crisis path on, after its two
+fixes. Earlier, 2026-10-25: a long reach-out draft is kept whole, never cut or dropped for length
+(`core/reachout.py` `draft_text`).
 
 1. **Promises (J12 step 2, LR5):** let the promise check redraw live, and which source, after the review of 2026-11-17.
-2. **The canned-reaction judge (Q3):** keep, retune or turn off, after the review of 2026-10-31.
-3. **Going live with its own reach-outs (ADR 0021):** after the review of 2026-11-02, and at which dial
+2. **The canned-reaction judge (Q3):** keep, retune or turn off. Reviewed 2026-10-31: a toss-up.
+3. **Going live with its own reach-outs (ADR 0021):** after the review of 2026-11-10, and at which dial
    (the ADR's rollout says `normal` first; the settled default is `warm`).
-4. **Going live with plan reach-outs and nudges:** after the review of 2026-11-03, with A6, J27 and J35
-   built first.
-5. **The crisis path on (ADR 0022):** decided 2026-11-04, on.
+4. **Plan reach-outs and nudges:** nothing to judge at the review of 2026-11-03 (no plan drafted, one
+   nudge). A new review date, or remove the two sources. Going live still needs A6, J27 and J35.
+5. **Threads' pace, what is coming, its own history, the intimate lane:** graduate or remove at their
+   reviews of 2026-11-08 and 2026-11-09.
 6. **Location (R18):** how it learns where they are, for the crisis line, the calendar and the time zone.
 7. **Pacing (T2):** evidence-based, the user dial ("quick", "natural", "slow burn"), or both? What is
    the default friction? With T17.
@@ -298,9 +319,8 @@ learned from how they answer instead of a fixed number).
 10. **Provider routing (T8).**
 11. **Flagged turns in history (T9).**
 12. **Conflict questions** waiting in `companion memory review`.
-
----
-15. ~~A long reach-out draft is cut, not dropped.~~ Decided 2026-10-25: long drafts are fine; code keeps a draft whole and never cuts or drops it for length (`core/reachout.py` `draft_text`).
+13. **Bland replies:** build the move picker gated by kind of message? One measurement: replies that add
+    something rose from 32 to 53 of 112 on non-tender turns (`evals/CHANGELOG.md`); not built.
 
 ## Doing
 
@@ -319,7 +339,7 @@ learned from how they answer instead of a fixed number).
       recorded what the two of them did together, when, and how it ended.
       **2026-10-20, promises in shadow:** plan reviewed with Grok (its own promises first, then names, then
       shared moments; no anniversaries, no pull at goodbye or silence); promises read from its own replies and
-      listed (`companion promises`). Next, after the review of 2026-10-30: standing promises and "don't call
+      listed (`companion promises`). Next, after the review of 2026-10-30 (superseded 2026-11-03: a judge, not a word check): standing promises and "don't call
       me" words pinned with a word check and one redraw; one-off promises as open loops.
       **2026-11-03, reviewed:** of 22 promises read, 10 marked not a promise and one retired. The reader now
       keeps only checkable promises agreed by all three reads, each lasting or for one moment (a week;
@@ -353,7 +373,7 @@ When the answer comes, the card moves to Todo or Done.
       **2026-10-24:** ADR 0021 took the user-chosen dial for reaching out (`COMPANION_REACH`, a share of
       conversations it starts); the pace of closeness is still open, with T17.
 - [ ] T23 A one-week live trial of GPT-6.1 Terra with medium reasoning as the everyday talker. **Owner
-      decided 2026-10-27: wait until the shadow reviews are done (the last on 2026-11-09)**, so a change in
+      decided 2026-10-27: wait until the shadow reviews are done (the last was 2026-11-09 then; now 2026-11-17, promises)**, so a change in
       flags is the model's and not a feature going live. Why: the owner's blind picks favoured it 18 to 8,
       against the Claude judges (see `evals/CHANGELOG.md`, 2026-10-27). Watch for it mirroring their words or
       emoticons, hedging about what it can check, and slow replies (p90 3.3 s); about 2.7 times Luna's cost.
@@ -391,8 +411,10 @@ When the answer comes, the card moves to Todo or Done.
       an unanswered one, six hours apart, and a guilt check that drops a needy draft. The dial is the share of
       conversations it starts over 14 days (`COMPANION_REACH`, `warm` by default, five steps), stepping down
       when an answer is late or short. Built in shadow 2026-10-24 (`features/reach`, `core/rhythm.py`), nothing
-      sent. **Waits on:** the review of 2026-11-02 (about five drafts across the kinds read well, at sensible
-      times), then outcome recording (A6) and live at a dial the owner picks.
+      sent. **Reviewed 2026-11-02:** 5 drafts, 2 read right, not ready. **Since 2026-11-03** it brainstorms a
+      few texts from the moment, the last chat and memory, and a judge picks one or none (`system/reach-ideas`,
+      `system/reach-pick`; 3.57 against 2.00 blind on a replay of the shadow days, 7 picks against 5 drafts).
+      **Waits on:** the review of 2026-11-10, then outcome recording (A6) and live at a dial the owner picks.
 - [ ] Q3 Do the redrawn replies beat the canned ones? `system/quip` v3 (2026-10-24) redraws a reply it
       reads as a canned generic reaction, and the redraw is sent unread. Once about 20 redraws are logged
       (the first draw is kept in the decision detail), give the pairs blind to two subagent judges: keep it
@@ -470,10 +492,11 @@ When the answer comes, the card moves to Todo or Done.
 Ordered. Pull from the top.
 
 - [ ] R21 Threads (ADR 0023, accepted 2026-10-25). One store, one picker and a learned pace for what it
-      brings up on its own. Step 1: generalise open loops into threads with no change in behaviour. Then the
-      shared casual test, the pace in shadow and plan check-ins on the reach gate; then the interrupted story,
-      weekly rhythms, milestones and pending outcomes, and a topic gone quiet, each counted in the ledger and
-      run in shadow first (`docs/inbox/2026-10-25-natural-reasons-to-talk.md`).
+      brings up on its own. Built 2026-10-25: step 1 (open loops are threads, `features/threads/`), step 2 (the
+      learned pace in shadow, plan check-ins and nudges on the shared reach gate) and step 5 (one picker,
+      `turn/mention.py`). Left: the interrupted story, weekly rhythms, milestones, pending outcomes and a
+      topic gone quiet, each counted in the ledger and run in shadow first
+      (`docs/inbox/2026-10-25-natural-reasons-to-talk.md`). The pace is reviewed 2026-11-08.
 - [ ] R18 Location (owner flag 2026-10-25: it would be useful if it knew where they are). Today the crisis
       line defaults to the US (988, ADR 0022), the calendar's region is "US" in one place (`features/calendar`
       `REGION`), and the clock uses the machine's named zone. One answer, kept from their own words or a
@@ -485,7 +508,9 @@ Ordered. Pull from the top.
       date; 12/12 on a birthday morning). Left: "a day" as a
       reach-out kind in shadow beside ADR 0021's kinds, region from a shared location (R18), and calendar
       moments (a season, the clocks changing). Measure first: the shipped wording, the lead-ups and the
-      relationship's dates are not yet measured; Halloween 2026-10-31 is the first real day.
+      relationship's dates are not yet measured; Halloween 2026-10-31 was the first real day, with no outcome
+      recorded yet. Its days are now candidates for the one picker (`turn/mention.py`), which may cover "a
+      day" as a reach-out kind.
 - [ ] J18 Cache generated replies keyed on fixture, model, prompt and sample, so re-judging or a new check
       does not regenerate them (eval-harness audit: lm-eval, lighteval).
 - [ ] J47 Small flags 2026-10-19. Em dash: caught by the resample check since 2026-10-19, and a redraw that
@@ -611,7 +636,7 @@ Unordered within each group. Pull a card into Todo when it is next.
 
 - [ ] G51 A second user, which exposes everything tuned to the first. (new)
 - [ ] G52 Wellbeing design: pushing toward people, crisis and disclosure protocols in character.
-      (partial: the crisis path, ADR 0022, in shadow, R16)
+      (partial: the crisis path, ADR 0022, live since 2026-11-04, R16; region waits on R18)
 - [ ] G53 Regulatory fit: disclosure laws, an adults-only gate, a consent record. No audited project
       has a working consent layer. (new)
 - [ ] G55 Extract the memory engine as its own product. Long term. (new)
@@ -774,6 +799,29 @@ Each card says what would bring it back.
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
+**2026-11-04**
+- [x] R16 The crisis path live (ADR 0022), 2026-11-04. Reviewed on 370 real turns in shadow (the real risk
+      read concern every turn, no joke raised, four concern turns too high), then two fixes: the question
+      and the line once per hard stretch, then `notes/crisis-stay` (QPR's persuade step), and three
+      timeouts on a serious read alone are one light check. Fixtures 40/40 with none missed; on the talker
+      the stay note 12/12 against 0/12. Region still waits on R18. (A25)
+- [x] Docs follow the work: the reply path, delivery, reach-outs, memory and evals docs live in `docs/dev/`
+      (59df4ec); the README's What it does and the board follow the live features (16cf260).
+
+**2026-11-03**
+- [x] Fetch on mention removed after its review: the closeness card held a memory for 33 of 35 probe
+      names (820e338).
+- [x] Promises: a small judge checks each reply against its promises, in shadow (463ceda; 30 of 32 edge
+      cases against 13 for a word check, e178256); the reader keeps a promise only when three reads agree and
+      it is checkable (eed79dc), and each is lasting or for one moment (90556c6). Review 2026-11-17.
+- [x] Reaching out for its own reasons brainstorms and picks (1f57075), with night hours quiet unless they
+      start conversations then, and 12 hours after a heavy message.
+- [x] Audits move into `features/audits`, run as `companion audit callbacks|invented` (9abb9e9).
+      `COMPANION_RESAMPLE` is `COMPANION_REDRAW` (9cca583). The memory is `data/companion.sqlite` on either
+      platform (80d26c0). The startup line is a block (b473330). The local zone is the machine's named zone
+      (e66a937). A long message takes longer to read (5d59e37). `notes/recall` v3 (074394d). `/flag` and
+      `/fav` on Discord no longer drop the message they reply to (8f70d36).
+
 **2026-11-02**
 - [x] The ack judge reads the last 8 messages, not 4: a curt thanks after a hurt two exchanges back got only
       an emoji 12/12 with 4 and a reply 11/12 with 8; past 8 nothing changed (2d09fda). Ack v3 and persona
@@ -821,14 +869,10 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       `## Crisis message` (5eedd0b, 0cfba84).
 
 **2026-10-24**
-- [x] R16 The crisis path live (ADR 0022), 2026-11-04. Reviewed on 370 real turns in shadow (the real risk
-      read concern every turn, no joke raised, four concern turns too high), then two fixes: the question
-      and the line once per hard stretch, then `notes/crisis-stay` (QPR's persuade step), and three
-      timeouts on a serious read alone are one light check. Fixtures 40/40 with none missed; on the talker
-      the stay note 12/12 against 0/12. Region still waits on R18. (A25)
 - [x] R16 built in shadow (ADR 0022 accepted, cf0379a): a three-read risk judge and levels by code, logged
       only. Having the thoughts now is concern, not urgent: 7 of 10 concern cases read urgent before, 39 of
-      40 exact after, none missed, no false alarm (1a6ca5a). The card stays in Waiting for its review.
+      40 exact after, none missed, no false alarm (1a6ca5a). The card stayed in Waiting for its review (live
+      2026-11-04, above).
 - [x] R20 built in shadow (ADR 0021 accepted, 3ed6ec9): reaching out for its own reasons behind a pure gate,
       `COMPANION_REACH` warm by default, a guilt check on every draft, nothing sent. The plan and nudge
       reviews moved to 2026-11-03, since neither had drafted anything (9f5980d).
