@@ -1,11 +1,11 @@
-"""The times they spent together (J12): the conversation cut into stretches, each with the facts
-code can work out and one line about it.
+"""The times they spent together (J12): the chat cut into episodes, each with the facts code
+can work out and one line about it, its gist.
 
 Facts about them are memories and their plans are open loops; what the two of them did together had
 no record, so the morning after a long pretend scene "still drained from last night" meant nothing.
-A stretch ends at a gap of GAP or more, or where the talk turns from everyday to a pretend scene (or
-back) for at least SWITCH messages. Code works out when, how long, how much was a scene, the most
-serious moment and the firsts; a small model only writes the line, never the facts.
+An episode ends at a gap of EPISODE_GAP or more, or where the talk turns from everyday to a pretend
+scene (or back) for at least SWITCH messages. Code works out when, how long, how much was a scene,
+the most serious moment and the firsts; a small model only writes the gist, never the facts.
 """
 
 from __future__ import annotations
@@ -16,14 +16,14 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, tzinfo
 from enum import StrEnum
 
+from companion.core.episode import EPISODE_GAP
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance
 from companion.prompts import get
 
 PROMPT = get("system/episode-gist")
-GAP = timedelta(hours=2)
-SWITCH = 20  # a change of frame starts a new stretch only when it lasts this many messages
+SWITCH = 20  # a change of frame starts a new episode only when it lasts this many messages
 SERIOUS = 2
-LINES = 40  # messages shown to the writer: the start and the end of a long stretch
+LINES = 40  # messages shown to the writer: the start and the end of a long episode
 CUT = 220  # characters kept of each message
 
 SCHEMA: dict[str, Json] = {
@@ -40,7 +40,7 @@ class Kind(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class Stretch:
+class Span:
     said: tuple[Utterance, ...]
 
     @property
@@ -52,15 +52,15 @@ def _scene(u: Utterance) -> bool:
     return u.frame is Frame.PLAY
 
 
-def stretches(said: Sequence[Utterance]) -> list[Stretch]:
+def cut(said: Sequence[Utterance]) -> list[Span]:
     """The conversation cut at gaps, then where it turns into or out of a scene for long enough."""
     by_gap: list[list[Utterance]] = []
     for u in said:
-        if by_gap and u.at - by_gap[-1][-1].at < GAP:
+        if by_gap and u.at - by_gap[-1][-1].at < EPISODE_GAP:
             by_gap[-1].append(u)
         else:
             by_gap.append([u])
-    return [Stretch(tuple(run)) for part in by_gap for run in _by_frame(part)]
+    return [Span(tuple(run)) for part in by_gap for run in _by_frame(part)]
 
 
 def _by_frame(part: list[Utterance]) -> list[list[Utterance]]:
@@ -91,24 +91,24 @@ def _majority(run: list[Utterance]) -> bool:
     return 2 * sum(_scene(u) for u in run) >= len(run)
 
 
-def kind(s: Stretch, severity: Mapping[TurnId, int]) -> Kind:
+def kind(s: Span, severity: Mapping[TurnId, int]) -> Kind:
     if top_severity(s, severity) >= SERIOUS:
         return Kind.HEAVY
     return Kind.SCENE if s.scene_share >= 0.5 else Kind.EVERYDAY
 
 
-def top_severity(s: Stretch, severity: Mapping[TurnId, int]) -> int:
+def top_severity(s: Span, severity: Mapping[TurnId, int]) -> int:
     return max((severity.get(u.turn_id, 0) for u in s.said if u.speaker is Speaker.USER), default=0)
 
 
 def firsts(found: Kind, seen: set[Kind]) -> list[str]:
-    """What this stretch is the first of, given the kinds already seen."""
+    """What this episode is the first of, given the kinds already seen."""
     names = {Kind.SCENE: "first pretend scene", Kind.HEAVY: "first heavy talk"}
     return [names[found]] if found in names and found not in seen else []
 
 
-def transcript(s: Stretch) -> str:
-    """The stretch as the writer sees it: all of a short one, the start and end of a long one."""
+def transcript(s: Span) -> str:
+    """The episode as the writer sees it: all of a short one, the start and end of a long one."""
     said = list(s.said)
     if len(said) > LINES:
         head = LINES // 3
@@ -121,7 +121,7 @@ def transcript(s: Stretch) -> str:
     return "\n".join(lines)
 
 
-def facts(s: Stretch, found: Kind) -> str:
+def facts(s: Span, found: Kind) -> str:
     minutes = int((s.said[-1].at - s.said[0].at).total_seconds() // 60)
     return (
         f"Length: {minutes} minutes, {len(s.said)} messages."
@@ -167,7 +167,7 @@ def period(said: str, now: datetime, tz: tzinfo) -> tuple[datetime, datetime] | 
 
 
 def when_said(end: datetime, now: datetime, tz: tzinfo) -> str:
-    """How long ago a stretch was, the way a person says it. A day runs from MORNING to MORNING, so
+    """How long ago an episode was, the way a person says it. A day runs from MORNING to MORNING, so
     at 3 a.m. the evening just gone is still tonight."""
     e, n = end.astimezone(tz), now.astimezone(tz)
 
@@ -190,7 +190,7 @@ NOTE = get("notes/recent-times")
 
 @dataclass(frozen=True, slots=True)
 class Told:
-    """A recorded stretch as the talker is shown it."""
+    """A recorded episode as the talker is shown it."""
 
     when: str
     gist: str
@@ -203,7 +203,7 @@ def recent(
     now: datetime,
     tz: tzinfo,
 ) -> list[Told]:
-    """Which recorded stretches (start, end, line) to show on this turn: those in the time their
+    """Which recorded episodes (start, end, line) to show on this turn: those in the time their
     words point at, else the last one when they come back after GAP_BACK; none otherwise."""
     done = [e for e in ends if e[1] < now]
     span = period(said, now, tz)

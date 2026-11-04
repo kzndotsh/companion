@@ -54,7 +54,7 @@ def add(conn: sqlite3.Connection, rel: RelationshipId, e: Episode) -> None:
 
 
 def all_(conn: sqlite3.Connection, rel: RelationshipId) -> list[Episode]:
-    """The newest line for each stretch, oldest stretch first."""
+    """The newest gist for each episode, oldest episode first."""
     rows = conn.execute(
         "SELECT * FROM episodes e WHERE relationship_id = ? AND at = (SELECT MAX(at) FROM episodes"
         " WHERE relationship_id = e.relationship_id AND first_id = e.first_id) ORDER BY start_at",

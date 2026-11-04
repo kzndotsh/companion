@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 
-from companion.core.frames import SCENE_GAP
+from companion.core.episode import EPISODE_GAP
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -300,11 +300,11 @@ class Scene:
 def scenes(messages: Sequence[Utterance]) -> list[Scene]:
     """The pretend scenes in a run of messages, oldest first. A scene starts at a message of theirs
     in play and holds the replies that follow; it ends at a message of theirs that is not play, or
-    after a gap of SCENE_GAP (as `core/frames.py` ends one)."""
+    after a gap of EPISODE_GAP (as `core/frames.py` ends one)."""
     out: list[list[Utterance]] = []
     current: list[Utterance] | None = None
     for u in messages:
-        if current is not None and u.at - current[-1].at >= SCENE_GAP:
+        if current is not None and u.at - current[-1].at >= EPISODE_GAP:
             current = None
         if u.speaker is Speaker.USER:
             if u.frame is not Frame.PLAY:
@@ -354,7 +354,7 @@ def closed(scene: Scene, after: Sequence[Utterance], now: datetime) -> bool:
     ended = any(
         u.at > last.at and u.speaker is Speaker.USER and u.frame is not Frame.PLAY for u in after
     )
-    return ended or now - last.at >= SCENE_GAP
+    return ended or now - last.at >= EPISODE_GAP
 
 
 PATTERN_SCHEMA: dict[str, Json] = {

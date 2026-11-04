@@ -15,13 +15,13 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 
+from companion.core.episode import EPISODE_GAP
 from companion.core.types import Belief, Frame, Json, Provenance, Speaker, Utterance
 from companion.prompts import get
 
 NON_REAL = frozenset({Frame.PLAY, Frame.STORY, Frame.HYPOTHETICAL})
-SCENE_GAP = timedelta(hours=2)  # back after this long, a scene has ended (as episodes cut the chat)
 MIN_CONFIDENCE = 0.7
 CONTEXT_MESSAGES = 4
 
@@ -66,17 +66,17 @@ def reaction(text: str) -> bool:
 
 def scene_frame(history: Sequence[Utterance], now: datetime) -> Frame:
     """The frame the conversation was in at the user's last message. Out of character ends it, and
-    so does a gap of SCENE_GAP or more: coming back hours later is not still the scene (a flag of
+    so does a gap of EPISODE_GAP or more: coming back hours later is not still the scene (a flag of
     2026-10-23: a scene held over a two-hour gap). A lone reaction ("*explodes*") does not start a
     scene: it stays pretend for memory, but a scene is under way only once a second message of
     theirs is pretend too (a flag of 2026-10-24: their next, sincere message went to the roleplay
     talker)."""
     theirs = [u for u in history if u.speaker is Speaker.USER]
-    if not theirs or now - theirs[-1].at >= SCENE_GAP or theirs[-1].frame not in NON_REAL:
+    if not theirs or now - theirs[-1].at >= EPISODE_GAP or theirs[-1].frame not in NON_REAL:
         return Frame.REAL
     last = theirs[-1]
     started = (
-        len(theirs) > 1 and theirs[-2].frame in NON_REAL and last.at - theirs[-2].at < SCENE_GAP
+        len(theirs) > 1 and theirs[-2].frame in NON_REAL and last.at - theirs[-2].at < EPISODE_GAP
     )
     if reaction(last.text) and not started:
         return Frame.REAL

@@ -242,7 +242,7 @@ The day after a risk turn the crisis path acted on, when the companion reaches o
 How a message was meant: real, play, story, hypothetical, or out of character. Set when the message is stored.
 
 **Scene**:
-A pretend or roleplay stretch in progress, answered by the roleplay talker.
+A pretend or roleplay run of chat in progress, answered by the roleplay talker; it ends with its episode.
 _Avoid_: roleplay (as a noun), play
 
 **Scene reminder**:
@@ -405,13 +405,12 @@ The few facts worth knowing early: what to call them, pronouns, age, birthday, w
 How they want to be called, pinned first on every card and never turned into a pet name.
 
 **Episode**:
-One line summing up a finished stretch of chat.
+A run of chat between two-hour quiet gaps, cut again where a scene starts or ends. A scene ends with its episode, and a conversation in their rhythm starts with one.
+_Avoid_: stretch, new conversation
 
-**Stretch**:
-A run of messages cut at a two-hour gap or where a scene starts or ends; the unit an episode sums up.
-
-**New conversation**:
-Talk that starts after two hours or more of quiet.
+**Gist**:
+The one-line summary of a finished episode.
+_Avoid_: episode line
 
 **Memory context**:
 A short line on what was being talked about when a memory was said, shown beside it.

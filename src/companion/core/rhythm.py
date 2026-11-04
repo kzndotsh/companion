@@ -1,12 +1,12 @@
 """Their rhythm, learned from when they write (ADR 0021). Pure.
 
 From the times of their own messages over the last two weeks: their pauses between conversations (a
-conversation starts after two hours or more of quiet), the 75th percentile of those pauses, the
-hours of the day they write, and the hours they almost never write, with the night's hours quiet
-unless they start conversations in them. Before there is history it is a
-baseline: a 12-hour pause and waking hours of 9 AM to 10 PM, with 11 PM to 8 AM quiet. The two are
-blended by how many conversations it has seen, with full weight on theirs from 20, and the pause
-that counts as missing them is never under 8 hours.
+conversation starts with each episode, after `EPISODE_GAP` of quiet), the 75th percentile of those
+pauses, the hours of the day they write, and the hours they almost never write, with the night's
+hours quiet unless they start conversations in them. Before there is history it is a baseline: a
+12-hour pause and waking hours of 9 AM to 10 PM, with 11 PM to 8 AM quiet. The two are blended by
+how many conversations it has seen, with full weight on theirs from 20, and the pause that counts as
+missing them is never under 8 hours.
 """
 
 from __future__ import annotations
@@ -16,10 +16,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from itertools import pairwise
 
+from companion.core.episode import EPISODE_GAP
 from companion.core.types import Json
 
 WINDOW = timedelta(days=14)
-NEW_CONVERSATION = timedelta(hours=2)
 BASE_PAUSE_HOURS = 12.0
 FLOOR_HOURS = 8.0
 WAKING = range(9, 22)  # 9 AM to 10 PM
@@ -36,14 +36,14 @@ KEPT_MOST = 5  # a time they keep: the same hour on at least this many of the la
 def starts(times: Sequence[datetime]) -> list[datetime]:
     """When each conversation began: the first time, and each after a pause of two hours or more."""
     ordered = sorted(times)
-    return [t for i, t in enumerate(ordered) if i == 0 or t - ordered[i - 1] >= NEW_CONVERSATION]
+    return [t for i, t in enumerate(ordered) if i == 0 or t - ordered[i - 1] >= EPISODE_GAP]
 
 
 def pauses(times: Sequence[datetime]) -> list[float]:
     """The pauses between their conversations, in hours."""
     ordered = sorted(times)
     gaps = (b - a for a, b in pairwise(ordered))
-    return [g.total_seconds() / 3600 for g in gaps if g >= NEW_CONVERSATION]
+    return [g.total_seconds() / 3600 for g in gaps if g >= EPISODE_GAP]
 
 
 def percentile(values: Sequence[float], q: float) -> float:

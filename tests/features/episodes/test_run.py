@@ -21,7 +21,7 @@ class Writer:
         return Extraction({"gist": "They talked a while; it ended warm."}, "j", 0.001, 1)
 
 
-async def test_only_finished_stretches_are_written_and_never_twice(
+async def test_only_finished_episodes_are_written_and_never_twice(
     tmp_path: Path, utterance: Callable[..., Utterance]
 ) -> None:
     store = Store(tmp_path / "rel.sqlite")

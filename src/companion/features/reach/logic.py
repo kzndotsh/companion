@@ -89,7 +89,7 @@ class Pool:
 
     memories: Sequence[tuple[str, str, int]]  # (id, claim, sensitivity) of their threads and likes
     tastes: Sequence[tuple[str, str]]  # (id, claim) of its own tastes (ADR 0020)
-    episodes: Sequence[tuple[str, str]]  # (id, gist) of recent everyday stretches of chat
+    episodes: Sequence[tuple[str, str]]  # (id, gist) of recent everyday episodes
 
 
 def pick_thing(pool: Pool, used: frozenset[str], seed: str) -> Thing | None:
@@ -262,7 +262,7 @@ class Context:
     kind: Kind
     thing: Thing | None  # one thing that came to mind, chosen by code; the brainstorm may skip it
     lines: Sequence[tuple[str, str]]  # (who, text) newest lines of the last everyday chat
-    gists: Sequence[str]  # recent everyday stretches of chat
+    gists: Sequence[str]  # recent everyday episodes
     memories: Sequence[str]  # about them, not sensitive
     tastes: Sequence[str]  # its own (ADR 0020)
     sent: Sequence[str]  # its own last reach-outs, so it does not say the same again

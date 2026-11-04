@@ -32,6 +32,6 @@ def run(db: Path, relationship: str) -> str:
 
 
 async def write_now(x: Services) -> str:
-    """Write a record of every finished stretch of chat that has none, for `companion episodes`."""
+    """Write a record of every finished episode that has none, for `companion episodes`."""
     done = await write_closed(x.store, x.judge, x.rel, utc_now())
     return f"wrote {done.written} episodes, ${done.cost_usd:.4f}\n"

@@ -5,9 +5,9 @@ from datetime import timedelta
 
 import pytest
 
+from companion.core.episode import EPISODE_GAP
 from companion.core.frames import (
     MIN_CONFIDENCE,
-    SCENE_GAP,
     Judgement,
     build_prompt,
     companion_frame,
@@ -69,9 +69,9 @@ def test_coming_back_after_a_long_gap_ends_the_scene(utterance: Callable[..., Ut
         )
     ]
     last = play[-1].at
-    assert scene_frame(play, last + SCENE_GAP - timedelta(minutes=1)) is Frame.PLAY
-    assert scene_frame(play, last + SCENE_GAP) is Frame.REAL
-    assert not needs_judge("hey, i'm back", play, last + SCENE_GAP)
+    assert scene_frame(play, last + EPISODE_GAP - timedelta(minutes=1)) is Frame.PLAY
+    assert scene_frame(play, last + EPISODE_GAP) is Frame.REAL
+    assert not needs_judge("hey, i'm back", play, last + EPISODE_GAP)
 
 
 def test_stepping_out_ends_the_scene(utterance: Callable[..., Utterance]) -> None:

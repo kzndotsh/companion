@@ -155,7 +155,7 @@ def _heavy_at(store: Store, rel: RelationshipId, now: datetime) -> datetime | No
 
 def _kept_out(store: Store, rel: RelationshipId, since: datetime, now: datetime) -> bool:
     """Whether the listening read found any of their messages since `since` intimate or heavy. The
-    last lines are shown only when they are plain everyday talk: an intimate stretch is not always
+    last lines are shown only when they are plain everyday talk: an intimate episode is not always
     a pretend frame, and lines skipping a scene reached back to a heavy disclosure (2026-11-03)."""
     return any(
         isinstance(labels := (d.detail or {}).get("labels"), dict)

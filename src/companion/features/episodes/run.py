@@ -1,4 +1,4 @@
-"""Writing a record of each stretch of chat once it is over (J12, shadow: nothing reaches the talker
+"""Writing a record of each episode of chat once it is over (J12, shadow: nothing reaches the talker
 yet). Run nightly and by `companion episodes --write`."""
 
 from __future__ import annotations
@@ -7,10 +7,10 @@ import asyncio
 from typing import TYPE_CHECKING, cast
 
 from companion.core.clock import local_zone
+from companion.core.episode import EPISODE_GAP
 from companion.core.types import Frame, Json, Speaker
-from companion.features.episodes.logic import GAP_BACK as EPISODE_GAP
+from companion.features.episodes.logic import GAP_BACK, Told, period
 from companion.features.episodes.logic import NOTE as EPISODES_NOTE
-from companion.features.episodes.logic import Told, period
 from companion.features.episodes.logic import note as episodes_note
 from companion.features.episodes.logic import recent as recent_times
 from companion.kit.current import Heard, Turn, decide, mark
@@ -29,15 +29,14 @@ from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.types import RelationshipId, TurnId
 from companion.features.episodes.logic import (
-    GAP,
     PROMPT,
     SCHEMA,
     Kind,
+    cut,
     facts,
     firsts,
     kind,
     parse,
-    stretches,
     top_severity,
     transcript,
 )
@@ -70,18 +69,18 @@ def _severities(store: Store, rel: RelationshipId) -> dict[TurnId, int]:
 async def write_closed(
     store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
 ) -> Written:
-    """A record for every stretch that has ended (no message for GAP) and has none yet."""
+    """A record for every episode that has ended (no message for EPISODE_GAP) and has none yet."""
     said = store.history_before(rel, FAR, WHOLE)
     done = store.episodes(rel)
     have = {e.first_id for e in done if e.prompt == PROMPT.ref}  # older prompts are written again
     seen = {Kind(e.kind) for e in done}
     severity = _severities(store, rel)
     written, cost = 0, 0.0
-    for s in stretches(said):
+    for s in cut(said):
         found = kind(s, severity)
         new_firsts = firsts(found, seen)
         seen.add(found)
-        if s.said[0].id in have or now - s.said[-1].at < GAP:
+        if s.said[0].id in have or now - s.said[-1].at < EPISODE_GAP:
             continue
         try:
             with purpose("episodes"):
@@ -117,7 +116,7 @@ async def write_closed(
     return Written(written, cost)
 
 
-EPISODE_SECONDS = 8.0  # writing a just-ended stretch before the reply; slower means it is left out
+EPISODE_SECONDS = 8.0  # writing a just-ended episode before the reply; slower means it is left out
 EPISODES_SHOWN = "episodes: what the two of them did recently, shown"
 
 
@@ -125,7 +124,7 @@ async def recent_for_turn(
     c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
 ) -> tuple[Told, ...]:
     """What the two of them did recently, when their words point at a time or they come back after
-    a gap (J12, J49). A stretch not yet recorded is written first. Logged; shown only when on."""
+    a gap (J12, J49). An episode not yet recorded is written first. Logged; shown only when on."""
     del heard
     if c.episodes == "off" or c.judge is None or in_scene is not Frame.REAL:
         return ()
@@ -133,7 +132,7 @@ async def recent_for_turn(
     last = theirs[-1].at if theirs else None
     zone = local_zone()
     pointed = period(t.text, t.now, zone) is not None
-    back = last is not None and t.now - last >= EPISODE_GAP
+    back = last is not None and t.now - last >= GAP_BACK
     if not (pointed or back):
         return ()
     mark(t, "recent times")

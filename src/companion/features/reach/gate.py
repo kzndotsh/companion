@@ -16,7 +16,8 @@ from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
 from companion.core.crisis import HOLD_REASON
-from companion.core.rhythm import NEW_CONVERSATION, WINDOW, Rhythm
+from companion.core.episode import EPISODE_GAP
+from companion.core.rhythm import WINDOW, Rhythm
 from companion.core.types import Json
 from companion.features.reach.logic import TARGET, Dial, step_down
 
@@ -56,7 +57,7 @@ class Share:
 def firsts(events: Sequence[tuple[datetime, bool]], now: datetime) -> list[tuple[datetime, bool]]:
     """The first message of each conversation in the last two weeks, from (time, it was mine)."""
     seen = sorted(e for e in events if now - WINDOW <= e[0] <= now)
-    return [e for i, e in enumerate(seen) if i == 0 or e[0] - seen[i - 1][0] >= NEW_CONVERSATION]
+    return [e for i, e in enumerate(seen) if i == 0 or e[0] - seen[i - 1][0] >= EPISODE_GAP]
 
 
 def share(events: Sequence[tuple[datetime, bool]], now: datetime) -> Share:
