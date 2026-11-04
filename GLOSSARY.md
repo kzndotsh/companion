@@ -561,11 +561,17 @@ The family of messages the companion starts on its own.
 One message the companion starts on its own, about a plan, after they stepped away, or for its own reasons.
 _Avoid_: outreach, initiation
 
+**Own reasons**:
+Why it might write first with nothing of theirs due: a thought, a time they keep, or missing them.
+
+**Brainstorm**:
+The few different texts a model writes for an own-reasons reach-out once the gate lets one through; code drops any that break a rule and a judge picks one or none.
+
 **Nudge**:
 The one light reach-out after they stepped away and stayed gone much longer than they said.
 
 **Gate**:
-The one set of checks every reach-out must pass, such as quiet hours, spacing and the dial.
+The one set of checks every reach-out must pass, such as quiet hours, a heavy talk in the last half day, spacing and the dial.
 
 **Dial**:
 How often the companion may start a conversation, from off to clingy.
@@ -575,7 +581,7 @@ _Avoid_: share
 Their learned pauses, active hours and quiet hours.
 
 **Quiet hours**:
-The hours they almost never write in; no reach-out goes out then.
+The hours they almost never write in, and the night's hours unless they start conversations in them; no reach-out goes out then.
 
 **Needy draft**:
 A reach-out draft that reads as guilt, need or blame; dropped, never rewritten.
