@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import timedelta
 
 from companion.core.clock import utc_now
-from companion.features.callbacks.logic import report
-from companion.features.callbacks.run import check_new
+from companion.features.audits.callbacks.logic import report
+from companion.features.audits.callbacks.run import check_new
 from companion.kit.services import Services
 
 
 async def judge_now(x: Services, days: int, cap_usd: float) -> str:
-    """Judge recent replies for callbacks, then report. For `companion callbacks`."""
+    """Judge recent replies for callbacks, then report. For `companion audit callbacks`."""
     start = utc_now() - timedelta(days=days)
     judged, spent = await check_new(x.store, x.judge, x.rel, start, cap_usd)
     verdicts = x.store.callback_checks_since(x.rel, start)

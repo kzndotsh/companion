@@ -2,8 +2,8 @@
 the conversation nor its memory supports. A cheap judge lists each statement about the user's life
 with what supports it; code keeps only statements quoted from the reply and said to them. On real
 replies the cheap judge's flags were right only about one time in twelve, so they are candidates:
-the rate is what a stronger reader confirms (`companion invented --dump`, read by a Claude judge in
-a review). Measured on demand, never on the reply path.
+the rate is what a stronger reader confirms (`companion audit invented --dump`, read by a Claude
+judge in a review). Measured on demand, never on the reply path.
 """
 
 from __future__ import annotations

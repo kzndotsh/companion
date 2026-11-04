@@ -2,7 +2,7 @@
 
 Measures how often a reply states something about the person that neither the conversation nor its memory supports. It is a measurement, never on the reply path.
 
-**Status:** measurement only. No switch. Runs only from `companion invented`.
+**Status:** measurement only. No switch. Runs only from `companion audit invented`.
 
 ## How it works
 
@@ -22,7 +22,7 @@ Measures how often a reply states something about the person that neither the co
 | `logic.py` | pure: the judge's prompt and schema (`PROMPT`, `SCHEMA`), `build_prompt`, `parse` (which statements count), `invented`, `report` |
 | `run.py` | effects: judging new replies within a spend cap, each turn once (`check_new`) |
 | `store.py` | its queries: `invented_checks` (tables in `store/sqlite/migrations/0025_invented_checks.sql`), `RECENT` |
-| `cli.py` | `companion invented`: judge recent replies within a cap, then print the report (`judge_now`) |
+| `cli.py` | `companion audit invented`: judge recent replies within a cap, then print the report (`judge_now`) |
 
 ## Prompts
 
@@ -30,7 +30,7 @@ Measures how often a reply states something about the person that neither the co
 
 ## Commands
 
-- `uv run companion invented --days 7 --cap 0.2 --dump out.json`: judges new replies from the last 7 days (default 7) up to a spend cap in dollars (default 0.10), prints the report, and with `--dump` writes the candidates with their context to a file.
+- `uv run companion audit invented --days 7 --cap 0.2 --dump out.json`: judges new replies from the last 7 days (default 7) up to a spend cap in dollars (default 0.10), prints the report, and with `--dump` writes the candidates with their context to a file.
 
 ## Measured
 
@@ -38,4 +38,4 @@ Measures how often a reply states something about the person that neither the co
 
 ## Tests
 
-`tests/features/invented/`
+`tests/features/audits/invented/`

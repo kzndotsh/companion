@@ -129,6 +129,7 @@ ignore_imports = [
     "companion.store.sqlite.** -> companion.features.*.store",
     "companion.store.sqlite.** -> companion.features.*.*.store",
     "companion.store.sqlite.** -> companion.features.*.logic",
+    "companion.store.sqlite.** -> companion.features.*.*.logic",
     "companion.registry -> companion.features.**",
 ]
 
@@ -151,6 +152,7 @@ ignore_imports = [
     "companion.store.sqlite.** -> companion.features.*.store",
     "companion.store.sqlite.** -> companion.features.*.*.store",
     "companion.store.sqlite.** -> companion.features.*.logic",
+    "companion.store.sqlite.** -> companion.features.*.*.logic",
 ]
 
 [[tool.importlinter.contracts]]

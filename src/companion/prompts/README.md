@@ -137,7 +137,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/scene-offer` | note | on a scene turn: one item they said they are curious about, which it may invite once if the moment fits (ADR 0026) | v1 |
 | `notes/scene-basics` | note | on a scene turn: what they are called; the only everyday memory a scene keeps (ADR 0026) | v1 |
 | `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
-| `system/callback-judge` | system | the callback check, `features/callbacks/logic.py`, `companion callbacks` | v2 |
+| `system/callback-judge` | system | the callback check, `features/audits/callbacks/logic.py`, `companion audit callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v8 |
 | `system/frames` | system | the frame judge, `core/frames.py` | v2 |

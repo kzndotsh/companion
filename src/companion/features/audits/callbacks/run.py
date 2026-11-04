@@ -10,7 +10,7 @@ from companion.core.card import memories_from_card
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId
-from companion.features.callbacks.logic import (
+from companion.features.audits.callbacks.logic import (
     PROMPT,
     SCHEMA,
     build_prompt,

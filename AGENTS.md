@@ -40,7 +40,7 @@ uv run companion memory review | group   # questions for the owner (conflicts, n
 uv run companion promises | lore | history   # shadow lists, its own tastes and its own past
 uv run companion retire ID --reason "..." | merge ID ID --claim "..."   # close one memory, or merge by hand
 uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
-uv run companion invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge
+uv run companion audit invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
 uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```

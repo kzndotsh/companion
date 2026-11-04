@@ -7,8 +7,8 @@ from datetime import timedelta
 from pathlib import Path
 
 from companion.core.clock import utc_now
-from companion.features.invented.logic import report as invented_report
-from companion.features.invented.run import check_new as check_invented
+from companion.features.audits.invented.logic import report as invented_report
+from companion.features.audits.invented.run import check_new as check_invented
 from companion.kit.services import Services
 
 

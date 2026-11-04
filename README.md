@@ -157,7 +157,7 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
   variants, with a spend cap, the real OpenRouter charge, and a margin of error on every result. A
   sample is made by the turn's own code: its notes, its request and its reply checks and redraws
   (`+raw` skips them), so it is what they would have received. The
-  made-up facts rate (`companion invented`) counts replies that state something about them that
+  made-up facts rate (`companion audit invented`) counts replies that state something about them that
   nothing supports ([ADR 0007](docs/adr/0007-evals-replay-recorded-turns-with-a-small-own-runner.md)).
 
 </details>
@@ -312,8 +312,8 @@ uv run companion initiative     # open loops, and what reaching out would have s
 uv run companion mood           # the mood now; --replay DAYS rebuilds it over past messages
 uv run companion map            # what it knows by part of their life; --label labels new memories
 uv run companion episodes       # the times they spent together, one line each; --write writes new ones
-uv run companion callbacks      # judge recent replies for callbacks to memories
-uv run companion invented --days 7 --cap 0.2 --dump out.json   # made-up facts about them: candidates, to confirm by a stronger reader
+uv run companion audit callbacks      # judge recent replies for callbacks to memories
+uv run companion audit invented --days 7 --cap 0.2 --dump out.json   # made-up facts about them: candidates, to confirm by a stronger reader
 uv run companion prompts        # every prompt and its current version
 uv run companion shadows        # every feature in shadow, its review date, overdue first
 uv run companion crisis         # crisis levels read lately and lines sent (counts only)

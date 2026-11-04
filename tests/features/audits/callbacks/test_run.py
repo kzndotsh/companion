@@ -24,7 +24,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.callbacks.run import check_new
+from companion.features.audits.callbacks.run import check_new
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

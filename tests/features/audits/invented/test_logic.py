@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from companion.core.types import Json
-from companion.features.invented.logic import (
+from companion.features.audits.invented.logic import (
     Statement,
     Support,
     build_prompt,
