@@ -1,4 +1,4 @@
-"""A daily spend cap, read from the spend ledger.
+"""A daily spend cap, read from the spend log.
 
 The cap is a number the owner sets and the model cannot change. It is checked before a turn and
 before the memory step, so once today's spend reaches it nothing paid runs until the next local

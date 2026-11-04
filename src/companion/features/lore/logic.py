@@ -1,6 +1,6 @@
 """Which of the companion's views are its lore (ADR 0020, phase 1).
 
-The views ledger records what it says about itself, but mixes its own tastes with advice it gave,
+The views store records what it says about itself, but mixes its own tastes with advice it gave,
 rules for how it treats the user, facts about what it is, and the odd claim of a lived event. A
 small model labels each view with one kind; code reads only `taste` as lore and never counts
 `lived` (A22). Shadow: nothing reaches the talker yet.

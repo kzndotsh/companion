@@ -288,6 +288,7 @@ _Avoid_: evidence (except for a later quote added to an existing memory)
 
 **Ledger**:
 The append-only store of messages and decisions; rows are retired, closed or marked, never removed.
+_Avoid_: ledger for the views store or the spend log
 
 **Speaker**:
 Who said something: them or the companion. Taken from the message, never from a model.
@@ -430,6 +431,9 @@ A view the companion said on two different days.
 
 **Views mode**:
 Whether the companion's views reach the card on their own (auto), only once approved (review), or never (off).
+
+**Views store**:
+Where the companion's views are kept, append-only, apart from the ledger.
 
 **Overstated view**:
 A view whose claim is surer than the words it rests on; it never reaches the card on its own.
@@ -662,6 +666,9 @@ A dollar limit: per day for the running companion, or per run for an eval.
 **Spend tag**:
 The purpose each paid model call is counted under.
 
+**Spend log**:
+One row per paid model call, with its cost and spend tag; the daily cap reads it.
+
 **Backup**:
 A checked snapshot of the database, at each start and once a day.
 _Avoid_: snapshot
@@ -765,7 +772,6 @@ These words are used in more than one sense across the repo. Say which one you m
 - **Replay**: rebuilding one turn, or rerunning recorded turns in an eval.
 - **Real**: the real frame, or real chat as opposed to invented fixtures.
 - **Now**: the present moment, or the Now feature for what is coming.
-- **Ledger**: the append-only message and decision store, the views store, or the spend record.
 - **Kind**: a memory kind, a thread kind, a view kind, a reminder kind or a flag kind. Name which.
 - **State**: a memory kind (a passing state of theirs), a thread's state, a mood state, or a reminder series' state.
 - **Lore**: the companion's tastes (the feature), or, loosely, everything made up about it.

@@ -6,7 +6,7 @@ Keeps what the companion likes the same from day to day. It sorts the views it s
 
 ## How it works
 
-**Labelling** (`label_views` in `run.py`, the `after_own` step of the feature, so it runs after each memory pass that stored new views of its own, and from `companion lore --label`). The views ledger mixes its own tastes with advice it gave, rules for how it treats the person, facts about what it is, and the odd claim of a lived event. Each view with no kind yet is sent to `system/lore-label` as `[vN] claim (it said: "quote")`, up to 60 per call (`BATCH`), and gets one of:
+**Labelling** (`label_views` in `run.py`, the `after_own` step of the feature, so it runs after each memory pass that stored new views of its own, and from `companion lore --label`). The views store mixes its own tastes with advice it gave, rules for how it treats the person, facts about what it is, and the odd claim of a lived event. Each view with no kind yet is sent to `system/lore-label` as `[vN] claim (it said: "quote")`, up to 60 per call (`BATCH`), and gets one of:
 - `taste`: a personal preference of its own, a quirk, a small ritual.
 - `stance`: advice or an opinion on a topic or on their situation.
 - `rule`: how it treats them, or what it will and will not do.

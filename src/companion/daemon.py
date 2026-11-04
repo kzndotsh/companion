@@ -200,7 +200,7 @@ def _with_fallback(client: httpx.AsyncClient, talker: Talker, fallback: str | No
 def _metered_models(
     client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Settings
 ) -> tuple[Talker, Talker | None, StructuredModel, StructuredModel]:
-    """The talkers and extractors, each reporting what its calls cost to the spend ledger. Each
+    """The talkers and extractors, each reporting what its calls cost to the spend log. Each
     talker has a fallback: the everyday one the fallback model, the roleplay one the everyday
     model."""
 
