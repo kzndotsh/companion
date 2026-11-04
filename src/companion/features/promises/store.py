@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.types import RelationshipId, UtteranceId
-from companion.features.promises.logic import Kind, Promise
+from companion.features.promises.logic import Kind, Promise, Scope
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
@@ -38,6 +38,20 @@ def add(conn: sqlite3.Connection, p: Promise, *, model: str, prompt: str, at: da
                 iso(at),
             ),
         )
+        conn.execute(
+            "INSERT INTO promise_scopes (promise_id, scope, by, at) VALUES (?, ?, ?, ?)",
+            (p.id, p.scope, prompt, iso(at)),
+        )
+
+
+def set_scope(
+    conn: sqlite3.Connection, promise_id: str, scope: Scope, by: str, at: datetime
+) -> None:
+    with write_tx(conn):
+        conn.execute(
+            "INSERT INTO promise_scopes (promise_id, scope, by, at) VALUES (?, ?, ?, ?)",
+            (promise_id, scope, by, iso(at)),
+        )
 
 
 def mark(conn: sqlite3.Connection, promise_id: str, kind: str, reason: str, at: datetime) -> None:
@@ -49,11 +63,12 @@ def mark(conn: sqlite3.Connection, promise_id: str, kind: str, reason: str, at: 
 
 
 def recorded(conn: sqlite3.Connection, rel: RelationshipId) -> list[Recorded]:
-    """Every promise, oldest first, with its newest mark."""
+    """Every promise, oldest first, with its newest mark and its newest scope."""
     rows = conn.execute(
         "SELECT p.*, (SELECT m.mark FROM promise_marks m WHERE m.promise_id = p.id"
-        " ORDER BY m.id DESC LIMIT 1) AS newest FROM promises p WHERE p.relationship_id = ?"
-        " ORDER BY p.at, p.id",
+        " ORDER BY m.id DESC LIMIT 1) AS newest, (SELECT s.scope FROM promise_scopes s"
+        " WHERE s.promise_id = p.id ORDER BY s.id DESC LIMIT 1) AS scope"
+        " FROM promises p WHERE p.relationship_id = ? ORDER BY p.at, p.id",
         (rel,),
     ).fetchall()
     return [
@@ -67,6 +82,7 @@ def recorded(conn: sqlite3.Connection, rel: RelationshipId) -> list[Recorded]:
                 Kind(str(r["kind"])),
                 str(r["avoid"]),
                 parse_iso(str(r["at"])),
+                Scope(str(r["scope"])) if r["scope"] is not None else Scope.LASTING,
             ),
             str(r["model"]),
             str(r["prompt"]),

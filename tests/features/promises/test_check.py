@@ -19,7 +19,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.promises.logic import Check, Kind, Promise, check_input, read_check
+from companion.features.promises.logic import Check, Kind, Promise, Scope, check_input, read_check
 from companion.features.promises.run import KEPT, WOULD_REDRAW, WOULD_RETIRE
 from companion.kit.beside import settled
 from companion.kit.runtime import Runtime
@@ -143,3 +143,14 @@ def test_the_input_labels_each_promise_and_ends_with_the_reply() -> None:
         "companion: hi",
         "Reply: a pun",
     ]
+
+
+async def test_a_moment_promise_is_not_checked_once_its_week_is_over(store: Store) -> None:
+    (only,) = store.promises(REL)
+    store.set_promise_scope(only.promise.id, Scope.MOMENT, "owner", NOW)
+    judge = Judge({"broken": "p1", "released": [], "why": "x"})
+    later = Runtime(store, Talker(), PREFIX, REL, judge=judge, promises="shadow")
+    await handle(later, SessionId("s"), "morning", "test", NOW + timedelta(days=7))
+    await settled()
+    assert judge.checks == []
+    assert store.decisions_with_key(REL, WOULD_REDRAW) == []

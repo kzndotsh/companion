@@ -47,6 +47,7 @@ from companion.features.mood import store as mood
 from companion.features.mood.logic import Effect, Said
 from companion.features.promises import store as promises
 from companion.features.promises.logic import Promise
+from companion.features.promises.logic import Scope as PromiseScope
 from companion.features.promises.store import Recorded as RecordedPromise
 from companion.features.reach import store as reach
 from companion.features.reminders import store as reminders
@@ -435,6 +436,11 @@ class Store:
 
     def mark_promise(self, promise_id: str, mark: str, reason: str, at: datetime) -> None:
         promises.mark(self._conn, promise_id, mark, reason, at)
+
+    def set_promise_scope(
+        self, promise_id: str, scope: PromiseScope, by: str, at: datetime
+    ) -> None:
+        promises.set_scope(self._conn, promise_id, scope, by, at)
 
     def promises(self, rel: RelationshipId) -> list[RecordedPromise]:
         return promises.recorded(self._conn, rel)

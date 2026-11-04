@@ -19,13 +19,17 @@ Records the promises the companion makes in its own replies, such as a promise t
 - the quote looks forward (won't, I'll, we'll, no more, stop, from now on, next time, again, always, never, anymore);
 - the kind is known;
 - it is checkable: it names something a later reply could keep or break, or it has a word to avoid;
+
+**How long it lasts.** Each kept promise has a scope: `lasting` (how it treats them or talks to them, until they release it) or `moment` (one joke, one slip or one moment). It is a moment's only when all three reads said so. A moment's promise binds for a week (`MOMENT_DAYS`, `in_force`), as a one-day moment leaves the card after a week: a promise to retire a joke about one mishap outlived the mishap (review of 2026-11-03). The scope is stored in `promise_scopes`, append-only, the newest row winning; a promise with none is lasting. The check on each reply reads only promises in force.
+
+The list:
 - a word to avoid is at most 3 words and appears in the promise's message or the 3 before it (`NEAR`).
 
 A promise already recorded for the same message and quote is not stored twice. Each new one is stored in `promises` with its model and prompt as `name@version`, and the decision "promise recorded from its own words (shadow)" is logged with the kind, claim, quote and avoid word.
 
 **Failures.** A failed call returns None, so the batch is not marked read and is tried again next pass. After 3 failed tries on one batch (`MAX_TRIES` in the open-loop pass) it is let go, with the reason logged, so plans never wait on it. A malformed answer is logged as "promises: the answer was malformed and was ignored" and counts as read. Spend is tagged `promises`.
 
-**The owner's marks.** `companion promises` lists the current ones, newest first, at most 30. `--not ID` marks one as not a promise and `--retire ID` retires it. Marks are appended with the reason "the owner said so", never deleted, and a marked promise leaves the list. The ID is a prefix and must match exactly one current promise.
+**The owner's marks.** `companion promises` lists the current ones, newest first, at most 30, with their scope and whether a moment's has passed. `--not ID` marks one as not a promise and `--retire ID` retires it; `--moment ID` and `--lasting ID` relabel how long one lasts. Marks are appended with the reason "the owner said so", never deleted, and a marked promise leaves the list. The ID is a prefix and must match exactly one current promise.
 
 **The check on each reply** (`check_reply`, the feature `promise check`, its `after_turn` step). Once a reply is stored, beside the turn so the next message never waits on it, a small judge (`system/promise-check`, 20 s, one try) reads the current promises (not marked by the owner), each under a label, the newest six messages and the reply. It names the promise the reply breaks in the way it meant it, or none, and the promises the newest messages show they released or that ran out. Not broken: they raised the thing or asked about it, released it, its time is over, keeping it would ignore a risk to their safety, it is too vague to break, or two promises pull apart. In shadow it logs `promise check (shadow): would redraw` with the promise, `promise check: kept`, and `promise check (shadow): would retire` for each one released; nothing is redrawn and nothing is marked. A failed or unreadable answer logs nothing. A code check on a promised word was tried first and got 13 of 32 edge cases, the judge 30 (`evals/CHANGELOG.md`, 2026-11-03), since a break is as often the same joke in other words as the word itself.
 
@@ -37,8 +41,8 @@ It never shows a promise to the talker and never enforces one.
 |---|---|
 | `logic.py` | pure: the prompt, the schema, `parse`, and `to_promise` (which promises code keeps), the `Promise` type and its `Kind`; the check's input and answer (`check_input`, `read_check`, `Check`) |
 | `run.py` | effects: reading its own messages in a batch (`read_promises`), and the check on each reply (`check_reply`, `PROMISE_CHECK`) |
-| `store.py` | its queries: `promises` and `promise_marks`, append-only (tables in `store/sqlite/migrations/0022_promises.sql`) |
-| `cli.py` | `companion promises`, `--not`, `--retire` (`run`) |
+| `store.py` | its queries: `promises`, `promise_marks` and `promise_scopes`, append-only (tables in `store/sqlite/migrations/0022_promises.sql` and `0039_promise_scopes.sql`) |
+| `cli.py` | `companion promises`, `--not`, `--retire`, `--moment`, `--lasting` (`run`) |
 
 ## Prompts
 

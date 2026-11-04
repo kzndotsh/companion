@@ -83,6 +83,8 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     pr = add("promises", help="the promises it made in its own replies (shadow), newest first")
     pr.add_argument("--not", dest="wrong", metavar="ID", help="mark one as not a promise")
     pr.add_argument("--retire", metavar="ID", help="retire one")
+    pr.add_argument("--moment", metavar="ID", help="mark one as about a moment: it binds a week")
+    pr.add_argument("--lasting", metavar="ID", help="mark one as lasting until released")
     _db_args(pr)
     ep = add("episodes", help="the times they spent together, with a line about each (shadow)")
     ep.add_argument(
@@ -365,7 +367,11 @@ def _now(a: argparse.Namespace) -> int:
 
 
 def _promises(a: argparse.Namespace) -> int:
-    return _out(promises.run(*_target(a), wrong=a.wrong, retire=a.retire))
+    return _out(
+        promises.run(
+            *_target(a), wrong=a.wrong, retire=a.retire, moment=a.moment, lasting=a.lasting
+        )
+    )
 
 
 def _favorites(a: argparse.Namespace) -> int:

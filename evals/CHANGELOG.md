@@ -2840,3 +2840,11 @@ was added to the prompt and five batches read again: the jokes stayed out, and t
 now read as a general content rule and skipped again; it is pinned live as a memory of kind
 `promise`, so nothing is lost. Live, code keeps a promise only when all three reads find it. One draw
 of a stand-in, not the live model: indicative. No model spend.
+
+## 2026-11-03: How long a promise lasts (promise-read v3)
+
+v3 adds `scope`, lasting or moment. A Claude Haiku stand-in, one read, on the same 22 source messages:
+the promise to retire a running joke about one day's mishap (the case behind the change) and a
+promise about one mix-up with settings were read as moments; the 14 others it kept were lasting,
+among them every promise about how it treats them. Live, a promise counts as a moment's only when all
+three reads say so, and binds for a week. No model spend; indicative.

@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import StrEnum
 
 from companion.core.types import Frame, Json, RelationshipId, Speaker, Utterance, UtteranceId
@@ -35,6 +35,18 @@ class Kind(StrEnum):
     ONCE = "once"  # one thing on a later day
 
 
+class Scope(StrEnum):
+    """How long a promise lasts: about how it treats them, or about one joke or moment."""
+
+    LASTING = "lasting"
+    MOMENT = "moment"
+
+
+# A promise about one moment is in force this long, as a one-day moment leaves the card a week after
+# (`core/card.py`): a promise to retire a joke about one spill outlived the spill (2026-11-03).
+MOMENT_DAYS = 7
+
+
 SCHEMA: dict[str, Json] = {
     "type": "object",
     "properties": {
@@ -49,8 +61,9 @@ SCHEMA: dict[str, Json] = {
                     "kind": {"type": "string", "enum": [k.value for k in Kind]},
                     "avoid": {"type": "string"},
                     "checkable": {"type": "boolean"},
+                    "scope": {"type": "string", "enum": [s.value for s in Scope]},
                 },
-                "required": ["message", "quote", "claim", "kind", "avoid", "checkable"],
+                "required": ["message", "quote", "claim", "kind", "avoid", "checkable", "scope"],
             },
         }
     },
@@ -66,6 +79,7 @@ class Proposed:
     kind: str
     avoid: str
     checkable: bool = False  # it names something a later reply could keep or break
+    scope: Scope = Scope.LASTING
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +92,12 @@ class Promise:
     kind: Kind
     avoid: str  # empty when it is not about a word
     at: datetime  # when it was said
+    scope: Scope = Scope.LASTING
+
+
+def in_force(p: Promise, now: datetime) -> bool:
+    """Whether a current promise still binds: a moment's promise lasts `MOMENT_DAYS`."""
+    return p.scope is Scope.LASTING or now - p.at <= timedelta(days=MOMENT_DAYS)
 
 
 def parse(data: Json) -> list[Proposed] | None:
@@ -101,6 +121,7 @@ def parse(data: Json) -> list[Proposed] | None:
                     str(avoid).strip(),
                     # a word to stop using is always something a reply keeps or breaks
                     checkable=item.get("checkable") is True or bool(str(avoid).strip()),
+                    scope=Scope.MOMENT if item.get("scope") == Scope.MOMENT else Scope.LASTING,
                 )
             )
     return out
@@ -123,7 +144,11 @@ def agreed(reads: Sequence[list[Proposed]]) -> tuple[list[Proposed], list[Propos
         matches = [next((q for q in r if same(p, q)), None) for r in reads[1:]]
         if all(m is not None for m in matches):
             sure = p.checkable and all(m is not None and m.checkable for m in matches)
-            kept.append(replace(p, checkable=sure))
+            # lasting unless every read called it a moment: a lasting promise is the safe mistake
+            brief = p.scope is Scope.MOMENT and all(
+                m is not None and m.scope is Scope.MOMENT for m in matches
+            )
+            kept.append(replace(p, checkable=sure, scope=Scope.MOMENT if brief else Scope.LASTING))
         else:
             disputed.append(p)
     return kept, disputed
@@ -155,7 +180,7 @@ def to_promise(  # noqa: PLR0911
     if p.avoid and (len(p.avoid.split()) > MAX_AVOID_WORDS or p.avoid.lower() not in near):
         return "the word to avoid is not in the exchange"
     return Promise(
-        promise_id, u.relationship_id, u.id, p.quote, p.claim, Kind(p.kind), p.avoid, u.at
+        promise_id, u.relationship_id, u.id, p.quote, p.claim, Kind(p.kind), p.avoid, u.at, p.scope
     )
 
 

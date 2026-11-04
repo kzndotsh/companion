@@ -21,6 +21,7 @@ from companion.features.promises.logic import (
     SYSTEM,
     agreed,
     check_input,
+    in_force,
     parse,
     read_check,
     to_promise,
@@ -107,7 +108,9 @@ async def check_reply(c: Runtime, t: Turn, said: Utterance, sent: str | None) ->
 
 
 async def _check(c: Runtime, t: Turn, sent: str) -> None:
-    current = [r.promise for r in c.store.promises(c.rel) if r.mark is None]
+    current = [
+        r.promise for r in c.store.promises(c.rel) if r.mark is None and in_force(r.promise, t.now)
+    ]
     if not current or c.judge is None:
         return
     recent = [(u.speaker, u.text) for u in t.prior[-(RECENT - 1) :]] + [(Speaker.USER, t.text)]

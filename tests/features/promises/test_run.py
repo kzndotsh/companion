@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import replace
-from datetime import UTC
+from datetime import UTC, timedelta
 from pathlib import Path
 
 import pytest
@@ -10,7 +10,15 @@ import pytest
 from companion.core.extractor import Extraction
 from companion.core.types import Frame, Json, Speaker, Utterance
 from companion.features.promises.cli import run
-from companion.features.promises.logic import Proposed, agreed, parse, to_promise
+from companion.features.promises.logic import (
+    MOMENT_DAYS,
+    Proposed,
+    Scope,
+    agreed,
+    in_force,
+    parse,
+    to_promise,
+)
 from companion.features.promises.run import read_promises
 from companion.features.threads.run import Reading, catch_up_loops
 from companion.store.sqlite.store import Store
@@ -159,3 +167,40 @@ def test_a_word_to_avoid_makes_a_promise_checkable_whatever_the_reader_said() ->
     assert parse({"promises": [{**item, "avoid": ""}]}) == [
         Proposed("m2", "q", "c", "standing", "", checkable=False)
     ]
+
+
+def test_a_moment_promise_needs_every_read_to_call_it_one() -> None:
+    p = _proposed("i won't call you buddy again", "buddy")
+    moment = replace(p, scope=Scope.MOMENT)
+    kept, _ = agreed([[moment], [moment], [moment]])
+    assert [k.scope for k in kept] == [Scope.MOMENT]
+    kept, _ = agreed([[moment], [moment], [p]])
+    assert [k.scope for k in kept] == [Scope.LASTING]  # a lasting promise is the safe mistake
+    item: Json = {"message": "m2", "quote": "q", "claim": "c", "kind": "standing", "avoid": ""}
+    (read,) = parse({"promises": [{**item, "scope": "moment"}]}) or []
+    assert read.scope is Scope.MOMENT
+    (read,) = parse({"promises": [{**item, "scope": "forever"}]}) or []
+    assert read.scope is Scope.LASTING
+
+
+def test_a_moment_promise_binds_for_a_week(utterance: Callable[..., Utterance]) -> None:
+    window = _window(utterance, SORRY)
+    made = to_promise(
+        replace(_proposed("i won't call you buddy again", "buddy"), scope=Scope.MOMENT), window, "p"
+    )
+    assert not isinstance(made, str)
+    assert made.scope is Scope.MOMENT
+    assert in_force(made, made.at + timedelta(days=MOMENT_DAYS))
+    assert not in_force(made, made.at + timedelta(days=MOMENT_DAYS, minutes=1))
+    assert in_force(replace(made, scope=Scope.LASTING), made.at + timedelta(days=365))
+
+
+async def test_the_owner_can_relabel_how_long_one_lasts(store: Store, tmp_path: Path) -> None:
+    await _catch_up(store, Reads())
+    store.close()
+    db = tmp_path / "rel.sqlite"
+    assert "lasting" in run(db, REL)
+    (only,) = Store(db).promises(REL)
+    assert run(db, REL, moment=only.promise.id[:6]).startswith("now moment:")
+    assert "moment   avoid 'buddy'  (its moment has passed)" in run(db, REL)  # said weeks ago
+    assert Store(db).promises(REL)[0].promise.scope is Scope.MOMENT
