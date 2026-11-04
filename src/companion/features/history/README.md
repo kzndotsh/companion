@@ -2,7 +2,7 @@
 
 Keeps the small details of its own past that the companion makes up in chat, so it tells the same past every time. A pet it once named, a haircut, a habit, a small memory: each is picked out of its own messages, checked against the character sheet and the stories already kept, and kept as canon or not with a reason.
 
-**Status:** step 1, shadow. `COMPANION_OWN_HISTORY`: `shadow` (default), `on`, `off`. Stories are captured and checked after each memory pass, and the look-up beside a turn logs what it would show. Nothing reaches the talker in step 1, so `on` behaves as `shadow` until step 2 adds a note. `off` reads nothing and logs nothing. Review by 2026-11-09 (`core/shadows.py`).
+**Status:** step 1, shadow. `COMPANION_HISTORY`: `shadow` (default), `on`, `off`. Stories are captured and checked after each memory pass, and the look-up beside a turn logs what it would show. Nothing reaches the talker in step 1, so `on` behaves as `shadow` until step 2 adds a note. `off` reads nothing and logs nothing. Review by 2026-11-09 (`core/shadows.py`).
 
 ## How it works
 

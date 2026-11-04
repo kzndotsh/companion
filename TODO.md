@@ -78,7 +78,7 @@ Built and working:
 - **Since 2026-10-23.** Intimate talk goes to the roleplay talker only once a message of theirs is
   explicit, and flirting no longer starts it; a push-back on flirting or a scene goes to the everyday
   talker with a note to drop it; a scene ends when they come back after two hours. One of its own
-  emoticons is offered after the history on casual turns (`COMPANION_OWN_MARKS`, on by the owner's choice). A
+  emoticons is offered after the history on casual turns (`COMPANION_MARKS`, on by the owner's choice). A
   view stored firmer than its words is marked overstated and never installs itself. An invited guess finds
   their ritual (J16). The code is laid out as turn stages and one folder per feature, with a layer contract,
   one judge runner, a chaos test of whole turns, code rules as tests and a register of shadow features
@@ -107,7 +107,7 @@ Built and working:
 - **Initiative.** All reaching out first is shadow: it drafts and records, and sends nothing. Three
   sources share one gate and its caps: a due firm plan of theirs (ADR 0015), a nudge after they stepped
   away and stayed gone, and its own reasons (ADR 0021: a time they keep, a thought, missing them, on
-  learned hours, at the share of conversations `COMPANION_OWN_REASONS` sets, `warm` by default, with a guilt
+  learned hours, at the share of conversations `COMPANION_REACH` sets, `warm` by default, with a guilt
   check on every draft). At the first review (2026-10-24) the plan and nudge sources had drafted nothing.
 - **Crisis path (ADR 0022), shadow.** A three-read risk judge reads messages the listening judge calls
   serious or that use crisis words, tells a literal risk from a joke and fails safe; code picks none,
@@ -190,7 +190,7 @@ Each item ends with the thing that tells us it is done. The cards are below; the
    times in their learned hours, none needy, and the owner says whether it goes live (outcome recording,
    A6, first).
 7. **A week of shadow mode** for plan reach-outs and nudges (R1, R1b). *Done when:* the owner has read
-   `companion reach-outs` at the review of 2026-11-03 and the caps are set. Going live also needs A6, J27
+   `companion initiative` at the review of 2026-11-03 and the caps are set. Going live also needs A6, J27
    and J35.
 8. **The crisis path** (ADR 0022, R16), in shadow since 2026-10-24. *Done when:* at the review of
    2026-11-01 the fixture check passes (no genuine risk missed in 30 samples, the jokes not raised), real
@@ -219,8 +219,8 @@ removed. Live notes listed here are read from the log and the owner's marks.
 | 2026-10-29 | the bland-replies wording round, then the move picker in shadow | `docs/inbox/2026-10-25-bland-replies-design-space.md`, `evals/CHANGELOG.md` | build the move picker |
 | 2026-10-30 | promises, lore labels, made-up facts, names | `companion promises`, `companion lore`, `companion invented`, `companion names` | J12 step 2 and LR5; whether names graduates |
 | 2026-10-31 | the redrawn replies (Q3) | the recheck decisions, blind judges | keep, retune or turn off the canned-reaction label |
-| 2026-11-02 | its own reach-outs (ADR 0021) | `companion reach-outs` | going live, and at what dial |
-| 2026-11-03 | plan reach-outs and nudges; the loose plan notes; the question-run note | `companion reach-outs`, the decision log | going live (after A6, J27, J35); whether loose stays the default; whether the note stays |
+| 2026-11-02 | its own reach-outs (ADR 0021) | `companion initiative` | going live, and at what dial |
+| 2026-11-03 | plan reach-outs and nudges; the loose plan notes; the question-run note | `companion initiative`, the decision log | going live (after A6, J27, J35); whether loose stays the default; whether the note stays |
 | 2026-11-04 | the crisis path (ADR 0022) | `companion crisis`, `companion crisis --check`, the decision log | `COMPANION_CRISIS=on` |
 | 2026-11-05 | the hook (J48) | the decision log | whether its would-asks read right; going live or removed |
 
@@ -331,7 +331,7 @@ Built in shadow or blocked, each waiting on a dated review or the owner's decisi
 When the answer comes, the card moves to Todo or Done.
 
 - [ ] LR6 Its own history (ADR 0025): the small details of its own past it makes up in chat, kept as canon
-      so it tells the same past every time. **2026-10-26, step 1 in shadow** (`COMPANION_OWN_HISTORY`,
+      so it tells the same past every time. **2026-10-26, step 1 in shadow** (`COMPANION_HISTORY`,
       `features/history`): after each memory pass its own messages are read for stories of its past (in a
       scene, only facts said in passing), each quoted with its frame; each new story is read three times
       against the character sheet and the stories already canon and kept as canon, as a telling of an earlier
@@ -344,7 +344,7 @@ When the answer comes, the card moves to Todo or Done.
 - [ ] T2 Pacing ADR: a relationship state the code keeps, evidence that moves it, bounded slow
       changes, a user-chosen dial, no use as an engagement or payment lever, and the character's
       pace kept separate from the model's own limits. **Needs decision** (see Decisions below).
-      **2026-10-24:** ADR 0021 took the user-chosen dial for reaching out (`COMPANION_OWN_REASONS`, a share of
+      **2026-10-24:** ADR 0021 took the user-chosen dial for reaching out (`COMPANION_REACH`, a share of
       conversations it starts); the pace of closeness is still open, with T17.
 - [ ] T23 A one-week live trial of GPT-6.1 Terra with medium reasoning as the everyday talker. **Owner
       decided 2026-10-27: wait until the shadow reviews are done (the last on 2026-11-09)**, so a change in
@@ -376,14 +376,14 @@ When the answer comes, the card moves to Todo or Done.
       light drafted nudge, logged. Replayed over six days: 18 times away, none nudged, since they always
       wrote again sooner. If it reads needy, tighten to rule A (only after they said they would be back).
       **2026-10-24, first review:** nothing drafted (every time away ended within a minute); moved to
-      2026-10-31. `COMPANION_REACH_OUTS=off` now also stops the stepping-away read.
+      2026-10-31. `COMPANION_INITIATIVE=off` now also stops the stepping-away read.
       **2026-11-03, second review:** one nudge drafted in ten days, light and not needy; too few to judge.
       **Waits on:** the owner: a new date (2026-11-24) or remove it.
 - [ ] R20 Reaching out for its own reasons (ADR 0021, accepted by the owner): a time they keep, a thought
       (one thing from memory, its tastes or a recent stretch of chat, never sensitive), missing them (a pause
       past their learned usual, at a usual hour), behind a pure gate with learned quiet hours, never on top of
       an unanswered one, six hours apart, and a guilt check that drops a needy draft. The dial is the share of
-      conversations it starts over 14 days (`COMPANION_OWN_REASONS`, `warm` by default, five steps), stepping down
+      conversations it starts over 14 days (`COMPANION_REACH`, `warm` by default, five steps), stepping down
       when an answer is late or short. Built in shadow 2026-10-24 (`features/reach`, `core/rhythm.py`), nothing
       sent. **Waits on:** the review of 2026-11-02 (about five drafts across the kinds read well, at sensible
       times), then outcome recording (A6) and live at a dial the owner picks.
@@ -427,7 +427,7 @@ When the answer comes, the card moves to Todo or Done.
       on its own"); at least five flags 2026-10-16 to 10-19. **Partial 2026-10-19:** five real turns as local
       fixtures; about 45% of replies add a joke on v36; wording does not fix it (v37, the ban replaced by a
       positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
-      joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_REDRAW`), 85 to 95 of 150 (within noise)
+      joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150 (within noise)
       plain. Left: watch live flags; banter they started is let through by design. The same judge reads
       canned generic reactions since 2026-10-24 (Q3).
       **Waits on:** live flags on bolted-on jokes; none named it since 2026-10-19.
@@ -829,7 +829,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       only. Having the thoughts now is concern, not urgent: 7 of 10 concern cases read urgent before, 39 of
       40 exact after, none missed, no false alarm (1a6ca5a). The card stays in Waiting for its review.
 - [x] R20 built in shadow (ADR 0021 accepted, 3ed6ec9): reaching out for its own reasons behind a pure gate,
-      `COMPANION_OWN_REASONS` warm by default, a guilt check on every draft, nothing sent. The plan and nudge
+      `COMPANION_REACH` warm by default, a guilt check on every draft, nothing sent. The plan and nudge
       reviews moved to 2026-11-03, since neither had drafted anything (9f5980d).
 - [x] What they said in the last 12 hours comes first on the card (up to 8, after boundaries and promises),
       and recall is told today's date: a meal named three hours earlier went from forgotten 12/12 to named
@@ -857,7 +857,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       sharing, 4 serious). Earlier results are not comparable with later ones.
 - [x] Fixes: a turn the listening judge could not read still gets the code checks (2d6587a); a new memory-check
       version rereads every memory, 40 a night (9dc29e9); the memory check's switch turns off only that step
-      (277173f); `COMPANION_REACH_OUTS=off` also stops the stepping-away read (4c6aae0); the callback judge on
+      (277173f); `COMPANION_INITIATIVE=off` also stops the stepping-away read (4c6aae0); the callback judge on
       the judge runner (43b15d1).
 - [x] Docs: every feature README in one template, checked by a test (2e4d164); turn, delivery, initiative and
       memory as prose docs (1798bce); the README brought up to date (f4bad8e). Every file has one 600-line
@@ -875,7 +875,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 - [x] Routing: flirting no longer starts an intimate scene, only an explicit message of theirs does (f0cae5f);
       a push-back on flirting or a scene goes to the everyday talker with a note to drop it, 24/24 backed off
       (09e0fd3); a scene ends when they come back after two hours (e1c6fca).
-- [x] One of its own emoticons offered after the history on casual turns (`COMPANION_OWN_MARKS`, on by the owner's
+- [x] One of its own emoticons offered after the history on casual turns (`COMPANION_MARKS`, on by the owner's
       choice, 89e1571); measured first as not stopping it copying theirs (mostly fixed 2026-10-24).
 - [x] Views: a view stored firmer than its words is overstated and never installs itself (c861ea7); the views
       heading no longer says they were approved, measured with no difference (964fc27). New memories are
@@ -1059,8 +1059,8 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       with the exact quote and a follow-up time (the morning after, or three days on), and a pure gate
       with named reasons decides every 15 minutes whether to reach out (quiet hours 11 PM to 8 AM, one a
       day, 20 hours apart, chat quiet 90 minutes, not in a scene, never sensitive, 2-day horizon). In
-      shadow it drafts the message and records it, and sends nothing. `companion reach-outs` lists it.
-      `COMPANION_REACH_OUTS=off` turns it off. There is no live mode yet.
+      shadow it drafts the message and records it, and sends nothing. `companion initiative` lists it.
+      `COMPANION_INITIATIVE=off` turns it off. There is no live mode yet.
 - [x] S2 Supersede: a plain message that arrives while the last one is being answered (written or
       held) replaces that answer, which is marked undelivered, and the new reply sees both. Polling runs
       in the background. Needed because the typing delay opened a 3 to 8 second window for it.

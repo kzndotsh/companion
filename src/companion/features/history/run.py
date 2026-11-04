@@ -206,7 +206,7 @@ type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitab
 
 
 def pass_step(mode: str, sheet: str) -> Step | None:
-    """The step the memory pass runs for `COMPANION_OWN_HISTORY`, or None when it is off."""
+    """The step the memory pass runs for `COMPANION_HISTORY`, or None when it is off."""
     if mode == "off":
         return None
 

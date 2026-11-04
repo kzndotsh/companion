@@ -34,7 +34,7 @@ SENSITIVE = 2  # memories at this sensitivity or above are never a thought
 
 
 class Dial(StrEnum):
-    """COMPANION_OWN_REASONS: the share of conversations it may start over the last two weeks."""
+    """COMPANION_REACH: the share of conversations it may start over the last two weeks."""
 
     OFF = "off"
     RARE = "rare"

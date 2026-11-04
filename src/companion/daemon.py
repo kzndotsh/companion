@@ -352,10 +352,10 @@ def _start_initiative(
 ) -> asyncio.Task[None] | None:
     """The timer that looks at open loops, times away and its own reasons to reach out (ADR 0021).
     In shadow mode it records and sends nothing."""
-    if not s.on("reach-outs"):
+    if not s.on("initiative"):
         return None
     ticker, draft = Ticker(), drafter(judge)
-    reacher = Reacher(dial(s.position("own reasons")), judge, s.daily_cap)
+    reacher = Reacher(dial(s.position("reach")), judge, s.daily_cap)
     log = logging.getLogger("companion.initiative")
 
     async def loop() -> None:
@@ -450,9 +450,9 @@ async def run(data_dir: Path) -> None:
             judge=judge,
             roleplay_talker=scene,
             daily_cap_usd=s.daily_cap,
-            listen=s.on("listening"),
+            listen=s.on("listen"),
             mood=s.position("mood"),
-            resample=s.on("redraw"),
+            resample=s.on("resample"),
             route_intimate=s.on("intimate"),
             roleplay_prefix=roleplay_prefix,
             scene_reminder=character.scene_reminder if character is not None else "",
@@ -463,13 +463,13 @@ async def run(data_dir: Path) -> None:
             relevance=s.position("relevance"),
             reminders=s.on("reminders"),
             episodes=s.position("episodes"),
-            marks=s.on("own marks"),
+            marks=s.on("marks"),
             calendar=s.on("calendar"),
-            initiative=s.on("reach-outs"),
+            initiative=s.on("initiative"),
             crisis=s.position("crisis"),
             now=s.position("now"),
-            history=s.position("own history"),
-            scene_memory=s.position("scene memory"),
+            history=s.position("history"),
+            scene_memory=s.position("scene"),
             serious_message=character.serious if character is not None else "",
         )
         same = (
@@ -481,10 +481,8 @@ async def run(data_dir: Path) -> None:
         steps = [
             step
             for step in (
-                pass_step(
-                    s.position("own history"), character.sheet if character is not None else ""
-                ),
-                scene_step(s.position("scene memory")),
+                pass_step(s.position("history"), character.sheet if character is not None else ""),
+                scene_step(s.position("scene")),
             )
             if step is not None
         ]

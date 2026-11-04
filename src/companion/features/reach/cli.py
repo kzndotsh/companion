@@ -1,4 +1,4 @@
-"""The part of `companion reach-outs` about reaching out for its own reasons (ADR 0021): their
+"""The part of `companion initiative` about reaching out for its own reasons (ADR 0021): their
 learned rhythm and how much of it is the baseline, the share of conversations it starts against the
 dial, each would-send with its time, kind and draft, the dropped drafts, and the holds by reason."""
 
@@ -39,7 +39,7 @@ def lines(
     weight = f"{r.weight:.0%} theirs and {1 - r.weight:.0%} baseline"
     pause = f"their 75th percentile pause {learned}, baseline 12h, never under 8h"
     out = [
-        f"reaching out for its own reasons (shadow), COMPANION_OWN_REASONS {dial.value}",
+        f"reaching out for its own reasons (shadow), COMPANION_REACH {dial.value}",
         f"  their rhythm: {r.conversations} conversations in two weeks, {weight}",
         f"  missing them after {r.pause:.1f}h ({pause})",
         f"  usual hours: {_hours(r.usual)}",

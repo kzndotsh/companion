@@ -13,8 +13,8 @@ from companion.cli import (
     beliefs,
     favorites,
     flags,
+    initiative,
     memory,
-    reach_outs,
     replay,
     spend,
 )
@@ -165,11 +165,7 @@ def _parser() -> argparse.ArgumentParser:
     _db_args(fl)
     _db_args(sub.add_parser("favorites", help="list the turns you loved"))
     _db_args(sub.add_parser("spend", help="what the paid calls cost, by purpose"))
-    _db_args(
-        sub.add_parser(
-            "reach-outs", help="threads, nudges and its own reasons: what shadow mode would send"
-        )
-    )
+    _db_args(sub.add_parser("initiative", help="open loops and what shadow mode would send"))
     _state_commands(sub.add_parser)
     sub.add_parser("shadows", help="every feature in shadow, its review date and the overdue ones")
     pr = sub.add_parser("prompts", help="the current version of every prompt, or the text of one")
@@ -336,8 +332,8 @@ def _mood(a: argparse.Namespace) -> int:
     return _out(mood.run(*_target(a), a.replay))
 
 
-def _reach_outs(a: argparse.Namespace) -> int:
-    return _out(reach_outs.run(*_target(a)))
+def _initiative(a: argparse.Namespace) -> int:
+    return _out(initiative.run(*_target(a)))
 
 
 def _lore(a: argparse.Namespace) -> int:
@@ -447,7 +443,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "replay": _replay,
     "flags": _flags,
     "favorites": _favorites,
-    "reach-outs": _reach_outs,
+    "initiative": _initiative,
     "mood": _mood,
     "promises": _promises,
     "reminders": _reminders,

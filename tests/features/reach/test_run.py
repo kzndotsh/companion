@@ -137,7 +137,7 @@ async def test_a_needy_draft_is_dropped_and_recorded(store: Store) -> None:
 async def test_the_initiative_command_shows_the_rhythm_the_share_and_the_would_sends(
     tmp_path: Path,
 ) -> None:
-    from companion.cli import reach_outs  # noqa: PLC0415
+    from companion.cli import initiative  # noqa: PLC0415
 
     store = Store(tmp_path / "rel.sqlite")
     _said(store, NOW - timedelta(hours=13))
@@ -145,8 +145,8 @@ async def test_the_initiative_command_shows_the_rhythm_the_share_and_the_would_s
     await tick_reach(store, REL, WHEN, Reacher(Dial.NORMAL, drafter))
     await tick_reach(store, REL, (NOW + timedelta(hours=6), UTC), Reacher(Dial.NORMAL, drafter))
     store.close()
-    out = reach_outs.run(tmp_path / "rel.sqlite", "rel", NOW + timedelta(hours=7))
-    assert "COMPANION_OWN_REASONS normal" in out
+    out = initiative.run(tmp_path / "rel.sqlite", "rel", NOW + timedelta(hours=7))
+    assert "COMPANION_REACH normal" in out
     assert "1 conversations in two weeks, 5% theirs and 95% baseline" in out
     assert "share it started: 1 of 2" in out
     assert "missing them" in out and drafter.message in out

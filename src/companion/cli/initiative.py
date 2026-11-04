@@ -1,4 +1,4 @@
-"""`companion reach-outs`: the threads, what shadow mode would have sent, the nudges after
+"""`companion initiative`: the open loops, what shadow mode would have sent, the nudges after
 they stepped away (times away it read, and the nudges it would have sent), and its reach-outs for
 its own reasons (ADR 0021): their learned rhythm, its share against the dial, its would-sends and
 its holds."""
@@ -35,11 +35,11 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
             store,
             rel,
             (now or utc_now(), local_zone()),
-            dial(Settings.from_env().position("own reasons")),
+            dial(Settings.from_env().position("reach")),
         )
     finally:
         store.close()
-    out = ["threads it would reach out about (state, kind, when, what they said)"]
+    out = ["open loops (state, kind, when to reach out, what they said)"]
     out += [
         f"  {lp.state:8} {lp.kind:9} {lp.follow_up_at:%a %m-%d %H:%M}  {lp.claim}"
         f'  "{lp.quote[:60]}"'

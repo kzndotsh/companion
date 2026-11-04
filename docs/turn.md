@@ -208,7 +208,7 @@ more, with the path on (`features/crisis/logic.py` `method_words`).
 When a check fails, the same model is asked once more, or twice if the redraw still has an em dash,
 and the last reply goes out whatever it is. The first is kept in the decision detail. Nothing is ever
 edited. An empty reply is drawn once more instead of leaving the turn silent.
-`COMPANION_REDRAW=off` turns these checks and the empty redraw off; the crisis method check and the
+`COMPANION_RESAMPLE=off` turns these checks and the empty redraw off; the crisis method check and the
 floor's check still run.
 
 ## When a model fails

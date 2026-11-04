@@ -35,11 +35,6 @@ RENAMED = {
     "COMPANION_JUDGE_MODELS": "COMPANION_JUDGE_ROUTES",
     "COMPANION_LOOP_NOTES": "COMPANION_HEDGED_PLANS",
     "COMPANION_CONSOLIDATE": "COMPANION_REREAD",
-    "COMPANION_INITIATIVE": "COMPANION_REACH_OUTS",
-    "COMPANION_REACH": "COMPANION_OWN_REASONS",
-    "COMPANION_HISTORY": "COMPANION_OWN_HISTORY",
-    "COMPANION_RESAMPLE": "COMPANION_REDRAW",
-    "COMPANION_MARKS": "COMPANION_OWN_MARKS",
 }
 
 
@@ -68,10 +63,10 @@ class Switch:
 SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_PLATFORM", "platform", ("telegram", "discord")),  # which chat it runs on
     Switch("COMPANION_SPLIT", "split", ("on", "off")),
-    Switch("COMPANION_LISTEN", "listening", ("on", "off")),
-    Switch("COMPANION_REACH_OUTS", "reach-outs", ("shadow", "off")),
+    Switch("COMPANION_LISTEN", "listen", ("on", "off")),
+    Switch("COMPANION_INITIATIVE", "initiative", ("shadow", "off")),
     Switch("COMPANION_MOOD", "mood", ("on", "shadow", "off")),
-    Switch("COMPANION_REDRAW", "redraw", ("on", "off")),
+    Switch("COMPANION_RESAMPLE", "resample", ("on", "off")),
     Switch(
         "COMPANION_ROUTE_INTIMATE", "intimate", ("off", "on"), {"on": "may route", "off": "stays"}
     ),
@@ -82,16 +77,14 @@ SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_FOCUS", "focus", ("on", "off")),
     Switch("COMPANION_REMINDERS", "reminders", ("on", "off")),
     Switch("COMPANION_EPISODES", "episodes", ("on", "shadow", "off")),
-    Switch("COMPANION_OWN_MARKS", "own marks", ("on", "off")),
+    Switch("COMPANION_MARKS", "marks", ("on", "off")),
     Switch("COMPANION_HEDGED_PLANS", "hedged plans", ("loose", "off"), {"off": "strict"}),
-    Switch(
-        "COMPANION_OWN_REASONS", "own reasons", ("warm", "off", "rare", "light", "normal", "clingy")
-    ),
+    Switch("COMPANION_REACH", "reach", ("warm", "off", "rare", "light", "normal", "clingy")),
     Switch("COMPANION_CRISIS", "crisis", ("shadow", "on", "off")),
     Switch("COMPANION_CALENDAR", "calendar", ("on", "off")),
     Switch("COMPANION_NOW", "now", ("shadow", "on", "off")),
-    Switch("COMPANION_OWN_HISTORY", "own history", ("shadow", "on", "off")),
-    Switch("COMPANION_SCENE_MEMORY", "scene memory", ("shadow", "on", "off")),
+    Switch("COMPANION_HISTORY", "history", ("shadow", "on", "off")),
+    Switch("COMPANION_SCENE_MEMORY", "scene", ("shadow", "on", "off")),
 )
 _BY_LABEL = {s.label: s for s in SWITCHES}
 
