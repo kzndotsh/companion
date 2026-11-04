@@ -403,8 +403,12 @@ When the answer comes, the card moves to Todo or Done.
       cases exact, none missed, no joke raised, three runs). Haiku's provider refused many crisis reads, so the
       risk judge reads on DeepSeek first by default (`COMPANION_JUDGE_ROUTES`; 40 of 40 with no refusals). The
       owner keeps the generic urgent message for now; a sheet may add its own (`## Crisis message`). Region
-      waits on R18. **Waits on:** the review of 2026-11-04 (fixtures pass, no false alarm in real chat), then
-      the owner turns it on. (A25)
+      waits on R18. **Reviewed 2026-11-04** (`evals/CHANGELOG.md`): 370 turns, 10 concern, 0 urgent, $0.024; the
+      real risk read concern every turn (right), no joke raised. Four concern turns were too high:
+      two ambiguous phrases about something else, one morning-after with one read of three, and
+      one ordinary message where all three reads timed out (fail-safe). The fixture rerun waits on a top-up
+      (balance $0.05). **Waits on:** the owner: turn it on, or first (a) stop three timeouts alone making
+      concern when no cue word was used, and (b) ask directly once per hard stretch, not on every turn of it. (A25)
 - [ ] T16 Randomized reply length. Built 2026-10-18 and live: `core/turn/length.py` scales a short statement's
       limit by 0.6 to 1.5, seeded per turn so replay matches (idea from a companion app config that picks a
       random word range per reply). **Measured 2026-10-23 on 370 real turns:** limits ran 5 to 20 words, but

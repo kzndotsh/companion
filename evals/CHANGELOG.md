@@ -2848,3 +2848,33 @@ the promise to retire a running joke about one day's mishap (the case behind the
 promise about one mix-up with settings were read as moments; the 14 others it kept were lasting,
 among them every promise about how it treats them. Live, a promise counts as a moment's only when all
 three reads say so, and binds for a week. No model spend; indicative.
+
+## 2026-11-04: The crisis path's first review on real chat (shadow, R16)
+
+`companion crisis` and the `crisis: level` decisions from 2026-10-25 to 2026-11-02 (the last turn
+logged), read by hand and by a blind Claude judge (Sonnet) on the same turns. Counts only; no
+messages are quoted here.
+
+- 370 turns logged: 360 none, 10 concern, 0 figurative, 0 urgent. No crisis line would have gone out.
+  47 turns were cued (44 by the listening read at serious or acute, 3 by cue words alone) and read by
+  the risk judge; 107 turns had no listening read (scenes), where only words cue.
+- 141 risk reads, 136 answered by DeepSeek V4.1 Flash, 5 failed, all timeouts at 6 s (one turn with
+  all three, two turns with one each). No refusals and no Haiku fallback. Cost $0.024 in all.
+- The judge never labels a none-kind read figurative, so the figurative level has not yet fired in
+  real chat; it did on the fixtures.
+- Of the 10 concern turns, 6 were a real risk without a plan, a means or an act: concern was right,
+  and urgent would have been wrong. Both readers agree.
+- 4 concern turns were higher than both readers would put them: two where an ambiguous phrase about
+  something else read as suicidal thoughts; one morning-after message where one read of
+  three said past thoughts; and one ordinary message where all three reads timed out and the fail-safe
+  made it concern.
+- The blind judge put one turn at none higher (concern, called borderline): a brushed-off answer two days
+  after a concern turn, which the risk judge's ten-message window no longer
+  showed. Level agreement with the blind judge: 14 of 19 turns. No joke was raised and no urgent turn
+  existed to miss.
+- A scan of the uncued turns for death, harm, overdose and distress words found 4 hits, none a risk.
+- `companion crisis --check` was not rerun: the OpenRouter balance ($0.05) was below the $0.10 cap.
+  `system/risk` is still v1 and the level code has had only refactors since the 2026-10-25 runs;
+  the 61 crisis tests pass.
+
+Rerun: `uv run companion crisis`, then read `crisis: level` decisions by key with a scratch script.
