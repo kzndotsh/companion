@@ -180,7 +180,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/scene-lane` | system | each memory about them: everyday or intimate, and an intimate one's stance (into, curious, hard or soft limit, style, aftercare); read three times (ADR 0026, shadow) | v2 |
 | `system/scene-limit-check` | system | asked of a memory the lane reads called a limit: do their own words say they do not want it, or want it only under a condition; every read must say yes (ADR 0026, shadow) | v1 |
 | `system/scene-pattern` | system | how they tend to play intimate scenes, from one ended scene, each quoted from their own message; never a limit (ADR 0026, shadow) | v2 |
-| `system/memory-names` | system | the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |
+| `system/memory-names` | system | not used since 2026-11-03 (fetch on mention removed after its shadow review): the names in memory (people, pets, bands, places) and the other words for each, for fetch on mention (shadow) | v1 |
 | `system/memory-pair` | system | two memories: same, merge, distinct, replaces or contradicts, read three times (ADR 0019) | v1 |
 | `system/memory-group` | system | which memories are about one thing and would read better as one, read three times (ADR 0019) | v1 |
 | `system/memory-merge` | system | one memory a friend would keep for a group: one sentence, each thing once, adding nothing; a proposal for the owner | v2 |

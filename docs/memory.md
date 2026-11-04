@@ -2,7 +2,7 @@
 
 How the companion turns the chat into memories, how it shows them to the model, how memory tidies
 itself, and how the database is kept safe. What each feature adds to a memory (labels, context,
-names, worth) is in its README under `src/companion/features/`.
+worth) is in its README under `src/companion/features/`.
 
 ## How a memory is made
 
@@ -19,7 +19,7 @@ bookmark, so a pass that crashes or runs twice reads nothing it already finished
 The same pass reads the companion's own messages for views it expressed. Those are gated before they
 can reach the card (ADR 0009). The same pass also reads plans for open loops
 (`src/companion/features/threads/README.md`). After a pass that stored new memories of theirs, each
-feature's step runs in the registry's order: labelling the memory map, listing names, writing context
+feature's step runs in the registry's order: labelling the memory map, writing context
 and judging worth; then the new memories are embedded. After a pass that stored new views of its own,
 the lore step labels them (`src/companion/features/lore/README.md`).
 

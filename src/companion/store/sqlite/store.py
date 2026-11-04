@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 import logging
 import uuid
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 
@@ -45,8 +45,6 @@ from companion.features.lore.logic import Kind as ViewKind
 from companion.features.lore.logic import Labelled as ViewLabel
 from companion.features.mood import store as mood
 from companion.features.mood.logic import Effect, Said
-from companion.features.names import store as names
-from companion.features.names.logic import Row as NameRow
 from companion.features.promises import store as promises
 from companion.features.promises.logic import Promise
 from companion.features.promises.store import Recorded as RecordedPromise
@@ -359,24 +357,6 @@ class Store:
 
     def answer_merge(self, proposal_id: int, said: str, at: datetime) -> None:
         merges.answer(self._conn, proposal_id, said, at)
-
-    def add_names(  # noqa: PLR0913
-        self,
-        rel: RelationshipId,
-        rows: Sequence[NameRow],
-        read: Iterable[BeliefId],
-        *,
-        model: str,
-        prompt: str,
-        at: datetime,
-    ) -> None:
-        names.add(self._conn, rel, rows, read, model=model, prompt=prompt, at=at)
-
-    def name_rows(self, rel: RelationshipId) -> list[NameRow]:
-        return names.rows(self._conn, rel)
-
-    def names_read(self, rel: RelationshipId) -> set[BeliefId]:
-        return names.read(self._conn, rel)
 
     def add_view_kinds(
         self,

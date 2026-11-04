@@ -323,7 +323,7 @@ uv run companion crisis --check --cap 0.10   # the risk judge on the public cris
 </details>
 
 <details>
-<summary><b>Look after memory</b>: beliefs, reviews, merges, views, lore, names, promises, reminders, calendar, backups</summary>
+<summary><b>Look after memory</b>: beliefs, reviews, merges, views, lore, promises, reminders, calendar, backups</summary>
 
 ```bash
 uv run companion beliefs        # what it holds about the user, with quotes
@@ -335,7 +335,6 @@ uv run companion opinions       # its own views, tentative or settled
 uv run companion views          # how its views reach the card; --mode auto, review or off
 uv run companion approve <id>   # let one of its own views reach the card
 uv run companion lore           # its own tastes (lore); --label labels new views, --relabel all of them
-uv run companion names          # things named in memory; --read reads new memories for names first
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
 uv run companion reminders      # the reminders they asked for and what became of each; --cancel ID
 uv run companion calendar       # the occasions in the next 30 days, lead-ups included, and what was offered lately

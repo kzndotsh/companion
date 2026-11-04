@@ -101,13 +101,6 @@ SHADOWS: tuple[Shadow, ...] = (
         "logged scene cards that read right to the owner: limits pinned, the nearest fit the"
         " scene, nothing everyday, nothing past the floor",
     ),
-    Shadow(
-        "memories about a name they mention, left off the card",
-        None,
-        "companion names",
-        date(2026, 10, 30),
-        "how often the card missed a memory about a name they used",
-    ),
 )
 
 

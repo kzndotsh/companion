@@ -2794,3 +2794,17 @@ fixed before the run and covered by tests: last lines that skipped a scene reach
 disclosure, an intimate memory stored at low sensitivity was a seed, and a taste about the relationship
 itself was a seed. Rerun: the scratch `replay.py` (fake or `--real`, capped at $0.08) on a copy of the
 store, then the two prompts on the saved moments.
+
+## 2026-11-03: Fetch on mention reviewed and removed; the closeness card covers names
+
+In two weeks of shadow the name match fired 4 times, all before the card was ranked by closeness: the
+card lacked the memory on 3. Rebuilt with the closeness card: the one real miss (a film) is now 6th
+closest and on the card; one was a false match (an album whose name is an everyday word, used as the
+word); one cannot be judged (its memory was two minutes old and retired the next day); one was already
+on it. A probe of 35 short, context-free messages, one per named thing in memory (three sensitive names
+left out, written by hand), run through today's card: a memory about the name was on it for 33. One
+miss is by design (a reminder past its day), the other the everyday-word album, where keyword matching
+misfires too. Cost under a tenth of a cent in embeddings. The feature, its command and its shadow row
+are removed; its tables and prompt stay. Rerun: the scratch `probe.py` and `focus_replay.py` on a copy
+of the store (`build_card` with a `Focus` from the stored memory vectors). Notes and options in
+`docs/inbox/2026-11-03-promises-and-names-reviews.md`.

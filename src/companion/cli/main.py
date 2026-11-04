@@ -34,7 +34,6 @@ from companion.features.history import cli as history
 from companion.features.invented import cli as invented
 from companion.features.lore import cli as lore
 from companion.features.mood import cli as mood
-from companion.features.names import cli as names
 from companion.features.now import cli as now_cli
 from companion.features.promises import cli as promises
 from companion.features.reminders import cli as reminders
@@ -81,13 +80,6 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     _db_args(lr)
     _db_args(add("history", help="the stories of its own past and their canon standing (shadow)"))
     _db_args(add("scene", help="the intimate scene lane by stance, and what is kept out (shadow)"))
-    nm = add(
-        "names", help="things named in memory and the words for each (fetch on mention, shadow)"
-    )
-    nm.add_argument(
-        "--read", action="store_true", help="read new memories for names first (a model call)"
-    )
-    _db_args(nm)
     pr = add("promises", help="the promises it made in its own replies (shadow), newest first")
     pr.add_argument("--not", dest="wrong", metavar="ID", help="mark one as not a promise")
     pr.add_argument("--retire", metavar="ID", help="retire one")
@@ -354,12 +346,6 @@ def _scene(a: argparse.Namespace) -> int:
     return _out(scene.run(*_target(a)))
 
 
-def _names(a: argparse.Namespace) -> int:
-    db, rel = _target(a)
-    first = asyncio.run(commands.run(db, rel, names.read_now)) if a.read else ""
-    return _out(first + names.run(db, rel))
-
-
 def _episodes(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     first = asyncio.run(commands.run(db, rel, episodes.write_now)) if a.write else ""
@@ -450,7 +436,6 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "calendar": _calendar,
     "now": _now,
     "episodes": _episodes,
-    "names": _names,
     "lore": _lore,
     "history": _history,
     "scene": _scene,

@@ -17,7 +17,6 @@ from companion.features.lore.run import LORE
 from companion.features.marks.run import MARKS
 from companion.features.mood.run import MOOD
 from companion.features.moves.run import MOVES
-from companion.features.names.run import NAMES
 from companion.features.now.run import NOW
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
@@ -33,7 +32,6 @@ FEATURES: tuple[Feature, ...] = (
     BASICS,
     MOVES,
     MOOD,
-    NAMES,
     CONTEXT,
     WORTH,
     RELEVANCE,
