@@ -63,11 +63,12 @@ SHADOWS: tuple[Shadow, ...] = (
         "would-asks that read right, at most daily (J48; three reads by 2026-10-29, a week more)",
     ),
     Shadow(
-        "promises it made in its own replies",
+        "promises it made in its own replies, and each reply checked against them",
         "promises",
-        "companion promises",
-        date(2026, 10, 30),
-        "standing promises worth pinning (J12 step 2, LR5)",
+        "companion promises, the decision log (promise check)",
+        date(2026, 11, 17),
+        "would-redraws that read as real breaks to the owner, none on a reply that kept them,"
+        " and breaks the owner flags (forgot) that the check also caught",
     ),
     Shadow(
         "how often it brings a thread up, learned from how they met the last ones (ADR 0023)",

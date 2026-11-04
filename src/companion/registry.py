@@ -18,6 +18,7 @@ from companion.features.marks.run import MARKS
 from companion.features.mood.run import MOOD
 from companion.features.moves.run import MOVES
 from companion.features.now.run import NOW
+from companion.features.promises.run import PROMISE_CHECK
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
 from companion.features.scene_memory.run import SCENE
@@ -31,6 +32,7 @@ FEATURES: tuple[Feature, ...] = (
     KNOWING,
     BASICS,
     MOVES,
+    PROMISE_CHECK,
     MOOD,
     CONTEXT,
     WORTH,

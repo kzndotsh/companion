@@ -413,7 +413,7 @@ def test_a_route_is_read_from_its_detail_and_an_old_one_by_its_reason() -> None:
 async def test_a_failing_shadow_look_up_is_logged(caplog: pytest.LogCaptureFixture) -> None:
     import asyncio  # noqa: PLC0415
 
-    from companion.turn.beside import beside  # noqa: PLC0415
+    from companion.kit.beside import beside  # noqa: PLC0415
 
     async def boom() -> None:
         raise RuntimeError("embedder down")

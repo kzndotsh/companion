@@ -189,6 +189,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/episode-gist` | system | one sentence on the shape of an episode the two of them had and how it ended; no details, intimacy only named (J12, shadow) | v2 |
 | `system/guess-invite` | system | whether their short question invites a guess about them, and what to look for (a habit or routine when they hint at what it is time for) (J16) | v2 |
 | `system/promise-read` | system | the promises the companion made in its own replies: standing or once, and a word it said it would stop using (J12) | v1 |
+| `system/promise-check` | system | whether a reply breaks one of its promises in the way it meant it, and which promises they released or ran out (J12, shadow) | v1 |
 | `system/self-extract` | system | the companion's own views, `core/beliefs/self_extract.py` | v4 |
 | `system/views-conflict` | system | the view conflict check, `core/beliefs/views_conflict.py` | v1 |
 | `system/views-implicated` | system | which views a flag implicates, `core/beliefs/views_implicated.py` | v1 |

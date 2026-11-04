@@ -1,6 +1,6 @@
-"""Reading the companion's own messages for the promises it made (J12). Runs in the open-loop
-pass's batch and keeps its bookmark, so a failed call is read again. Shadow only: nothing reaches
-the talker."""
+"""Reading the companion's own messages for the promises it made (J12), and checking each reply
+against them. The read runs in the open-loop pass's batch and keeps its bookmark, so a failed call
+is read again. Shadow only: nothing reaches the talker."""
 
 from __future__ import annotations
 
@@ -12,8 +12,24 @@ from datetime import datetime, tzinfo
 from companion.core.beliefs.extract import build_user_prompt
 from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
-from companion.core.types import Json, Utterance, UtteranceId
-from companion.features.promises.logic import PROMPT, SCHEMA, SYSTEM, parse, to_promise
+from companion.core.types import Json, Speaker, Utterance, UtteranceId
+from companion.features.promises.logic import (
+    CHECK,
+    CHECK_SCHEMA,
+    PROMPT,
+    RECENT,
+    SCHEMA,
+    SYSTEM,
+    check_input,
+    parse,
+    read_check,
+    to_promise,
+)
+from companion.kit.ask import Judge, ask
+from companion.kit.beside import beside
+from companion.kit.current import Turn, decide
+from companion.kit.features import Feature
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.promises")
@@ -66,3 +82,48 @@ async def read_promises(  # noqa: PLR0913, PLR0917
             },
         )
     return result.cost_usd
+
+
+CHECK_JUDGE = Judge(
+    "promise-check", CHECK, CHECK_SCHEMA, read_check, timeout=20.0, unread="no promise check"
+)
+WOULD_REDRAW = "promise check (shadow): would redraw"
+KEPT = "promise check: kept"
+WOULD_RETIRE = "promise check (shadow): would retire"
+
+
+async def check_reply(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
+    """Once the reply is stored, read it against its current promises beside the turn, so the
+    next message never waits on it. Shadow: it logs what it would redraw and retire."""
+    del said
+    if c.promises == "off" or c.judge is None or not sent:
+        return
+    beside(_check(c, t, sent))
+
+
+async def _check(c: Runtime, t: Turn, sent: str) -> None:
+    current = [r.promise for r in c.store.promises(c.rel) if r.mark is None]
+    if not current or c.judge is None:
+        return
+    recent = [(u.speaker, u.text) for u in t.prior[-(RECENT - 1) :]] + [(Speaker.USER, t.text)]
+    text, labels = check_input(current, recent, sent)
+    got = await ask(c.judge, CHECK_JUDGE, text)
+    if got is None:
+        return
+    found = got.value
+    shown: dict[str, Json] = {k: p.claim for k, p in labels.items()}
+    detail: dict[str, Json] = {"promises": shown, "why": found.why, "prompt": got.ref}
+    for label in found.released:
+        if label in labels:
+            p = labels[label]
+            reason = f"{WOULD_RETIRE}: they released it or its time is over: {p.claim}"
+            decide(c, t, WOULD_RETIRE, {**detail, "promise_id": p.id}, reason=reason)
+    broken = labels.get(found.broken or "")
+    if broken is None:
+        decide(c, t, KEPT, detail, reason=f"{KEPT}: {len(labels)} promises read")
+        return
+    reason = f"{WOULD_REDRAW}: it breaks {broken.claim}"
+    decide(c, t, WOULD_REDRAW, {**detail, "promise_id": broken.id}, reason=reason)
+
+
+PROMISE_CHECK = Feature("promise check", after_turn=check_reply)

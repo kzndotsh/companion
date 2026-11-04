@@ -10,7 +10,7 @@ listed for the owner, never shown to the talker.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
@@ -119,3 +119,57 @@ def to_promise(  # noqa: PLR0911
     return Promise(
         promise_id, u.relationship_id, u.id, p.quote, p.claim, Kind(p.kind), p.avoid, u.at
     )
+
+
+# The check on a reply: a small judge reads its promises, the newest messages and the reply, and
+# says which promise the reply breaks, if any, and which ones they released or ran out. A code check
+# on a promised word got 13 of 32 edge cases right, the judge 30 (evals/CHANGELOG.md, 2026-11-03):
+# a break is the same joke in other words as often as the word itself.
+CHECK = get("system/promise-check")
+RECENT = 6  # the newest messages the check reads, theirs last
+CHECK_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {
+        "broken": {"type": "string"},
+        "released": {"type": "array", "items": {"type": "string"}},
+        "why": {"type": "string"},
+    },
+    "required": ["broken", "released", "why"],
+}
+
+
+@dataclass(frozen=True, slots=True)
+class Check:
+    broken: str | None  # the label of the promise the reply breaks
+    released: tuple[str, ...]  # labels of promises they released or that ran out
+    why: str
+
+
+def read_check(data: Json) -> Check | None:
+    """The check's answer as labels, or None when it does not have the shape asked for."""
+    if not isinstance(data, dict):
+        return None
+    broken, released, why = data.get("broken"), data.get("released"), data.get("why")
+    if not isinstance(broken, str) or not isinstance(released, list):
+        return None
+    label = broken.strip().lower()
+    return Check(
+        None if label in ("", "none") else label,
+        tuple(r.strip().lower() for r in released if isinstance(r, str)),
+        why if isinstance(why, str) else "",
+    )
+
+
+def check_input(
+    promises: Sequence[Promise], recent: Sequence[tuple[Speaker, str]], reply: str
+) -> tuple[str, dict[str, Promise]]:
+    """What the check reads, and each label it is shown under."""
+    labels = {f"p{n}": p for n, p in enumerate(promises, 1)}
+    lines = [
+        "Promises:",
+        *(f'- {label}: "{p.quote}"' for label, p in labels.items()),
+        "Newest messages:",
+        *(f"{'them' if who is Speaker.USER else 'companion'}: {text}" for who, text in recent),
+        f"Reply: {reply}",
+    ]
+    return "\n".join(lines), labels

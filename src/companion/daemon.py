@@ -471,6 +471,7 @@ async def run(data_dir: Path) -> None:
             now=s.position("now"),
             history=s.position("history"),
             scene_memory=s.position("scene"),
+            promises=s.position("promises"),
             serious_message=character.serious if character is not None else "",
         )
         same = (

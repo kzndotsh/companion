@@ -112,6 +112,7 @@
 "system/reach-pick" = "v1"
 "system/guess-invite" = "v2"
 "system/promise-read" = "v1"
+"system/promise-check" = "v1"
 "system/self-extract" = "v4"
 "system/views-conflict" = "v1"
 "system/views-implicated" = "v1"

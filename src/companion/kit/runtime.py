@@ -50,4 +50,5 @@ class Runtime:
     )
     history: str = "off"  # its own history: shadow logs the stories it would show (ADR 0025)
     scene_memory: str = "off"  # the intimate scene lane: on, shadow (logged only) or off (ADR 0026)
+    promises: str = "off"  # its promises: shadow checks each reply and logs what it would redraw
     serious_message: str = ""  # the sheet's `## Crisis message` section, sent by code

@@ -2,7 +2,7 @@
 
 Records the promises the companion makes in its own replies, such as a promise to stop using a word. A repair promise lived only in the messages in view, and the companion broke one a few hours after making it.
 
-**Status:** shadow (review by 2026-10-30, judged on whether standing promises are worth pinning, J12 step 2 and LR5). `COMPANION_PROMISES`: `shadow` (default, records and lists), `off` (skips it). Runs after a memory pass, inside the open-loop batch. Nothing reaches the talker.
+**Status:** shadow (review by 2026-11-17, judged on would-redraws that read as real breaks, none on a reply that kept them, and breaks the owner flags with `forgot` that the check also caught; the first review, 2026-11-03, found 22 promises in two weeks, about 8 concrete, most already pinned as memories of kind `promise`). `COMPANION_PROMISES`: `shadow` (default, records and lists), `off` (skips it). Runs after a memory pass, inside the open-loop batch. Nothing reaches the talker.
 
 ## How it works
 
@@ -24,20 +24,23 @@ A promise already recorded for the same message and quote is not stored twice. E
 
 **The owner's marks.** `companion promises` lists the current ones, newest first, at most 30. `--not ID` marks one as not a promise and `--retire ID` retires it. Marks are appended with the reason "the owner said so", never deleted, and a marked promise leaves the list. The ID is a prefix and must match exactly one current promise.
 
+**The check on each reply** (`check_reply`, the feature `promise check`, its `after_turn` step). Once a reply is stored, beside the turn so the next message never waits on it, a small judge (`system/promise-check`, 20 s, one try) reads the current promises (not marked by the owner), each under a label, the newest six messages and the reply. It names the promise the reply breaks in the way it meant it, or none, and the promises the newest messages show they released or that ran out. Not broken: they raised the thing or asked about it, released it, its time is over, keeping it would ignore a risk to their safety, it is too vague to break, or two promises pull apart. In shadow it logs `promise check (shadow): would redraw` with the promise, `promise check: kept`, and `promise check (shadow): would retire` for each one released; nothing is redrawn and nothing is marked. A failed or unreadable answer logs nothing. A code check on a promised word was tried first and got 13 of 32 edge cases, the judge 30 (`evals/CHANGELOG.md`, 2026-11-03), since a break is as often the same joke in other words as the word itself.
+
 It never shows a promise to the talker and never enforces one.
 
 ## Files
 
 | File | What |
 |---|---|
-| `logic.py` | pure: the prompt, the schema, `parse`, and `to_promise` (which promises code keeps), the `Promise` type and its `Kind` |
-| `run.py` | effects: reading its own messages in a batch (`read_promises`) |
+| `logic.py` | pure: the prompt, the schema, `parse`, and `to_promise` (which promises code keeps), the `Promise` type and its `Kind`; the check's input and answer (`check_input`, `read_check`, `Check`) |
+| `run.py` | effects: reading its own messages in a batch (`read_promises`), and the check on each reply (`check_reply`, `PROMISE_CHECK`) |
 | `store.py` | its queries: `promises` and `promise_marks`, append-only (tables in `store/sqlite/migrations/0022_promises.sql`) |
 | `cli.py` | `companion promises`, `--not`, `--retire` (`run`) |
 
 ## Prompts
 
 - `system/promise-read`: finds the promises in its own messages. A failed call keeps the batch for another try and a malformed answer is ignored.
+- `system/promise-check`: whether a reply breaks one of them, and which were released. A failed or unreadable answer logs nothing.
 
 ## Commands
 

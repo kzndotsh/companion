@@ -51,7 +51,7 @@ rules: `core` imports nothing from the shell, only `store`, `lib/sqlite` and a f
 `companion.prompts`, which only reads packaged text. Imports point down (`direction` contract):
 `turn/` (the reply path's stages) and `memory/` (the memory pass, nightly, rebuild, views) run features, so
 they sit above `registry.py` and `features/`; what a feature uses sits below in `kit/` (the turn's
-values and `Runtime`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed`), then `core/`
+values and `Runtime`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed`, `beside`), then `core/`
 (shared vocabulary; `core/turn/` holds the reply path's own pure rules), then `lib/`.
 
 ## Principles
@@ -79,7 +79,7 @@ together.
 | One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
 | Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-10 |
 | A light question when their words touch a basic it does not know (age, work, home, place, birthday, school) | always shadow for now | the decision log | 2026-11-05 |
-| The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-30 |
+| The promises it made in its own replies, and each reply checked against them (J12) | `COMPANION_PROMISES` | `companion promises`, the decision log | 2026-11-17 |
 | How often it brings a thread up, learned from how they met the last ones (ADR 0023) | always shadow for now | the decision log | 2026-11-08 |
 | What they said is coming, kept until it happens, and the note that says so (ADR 0024) | `COMPANION_NOW` | `companion now` | 2026-11-08 |
 | Its own history: stories of its past it made up in chat, checked against the sheet and kept as canon, and the ones it would show (ADR 0025) | `COMPANION_HISTORY` | `companion history`, the decision log | 2026-11-09 |

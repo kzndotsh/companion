@@ -11,9 +11,9 @@ from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import Frame, Json, Sensitivity, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.curiosity.basics.logic import name_belief
 from companion.features.threads.logic import Thread, ThreadState
+from companion.kit.beside import settled
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
-from companion.turn.beside import settled
 from companion.turn.fast import handle
 from companion.turn.mention import MET, PACE_SOONER
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
