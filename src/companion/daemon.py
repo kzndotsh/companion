@@ -56,7 +56,7 @@ from companion.memory.views import views_implicated
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import ByJudge, RefusalFallback, TalkerFallback
 from companion.settings import Settings
-from companion.store.sqlite.store import Store
+from companion.store.sqlite.store import FIRST_RELATIONSHIP, Store, relationship_in
 from companion.turn.fast import handle
 from companion.turn.mode import mode_report
 
@@ -64,6 +64,7 @@ FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
 JUDGE_STANDBY = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
 JUDGE_MODEL = "anthropic/claude-haiku-5.5"
+DATABASE = "companion.sqlite"  # in the data folder, whichever platform it runs on
 UPDATE_KEY = "telegram.last_update_id"
 UNKNOWN_REPLY = (
     "can't tell which reply that was (it's from before i kept track), so nothing was marked."
@@ -126,7 +127,7 @@ def _talker(client: httpx.AsyncClient, s: Settings) -> Talker:
 
 
 def startup_lines(
-    rel: RelationshipId,
+    name: str,
     prefix_sha: str,
     character: Character | None = None,
     settings: Settings | None = None,
@@ -156,7 +157,7 @@ def startup_lines(
         ("off", states["off"]),
         ("dials", s.dials()),
     ]
-    return [f"up as {rel} on {s.position('platform')}"] + [
+    return [f"up as {name} on {s.position('platform')}"] + [
         line for label, items in rows for line in _row(label, items)
     ]
 
@@ -430,9 +431,8 @@ async def run(data_dir: Path) -> None:
     load_dotenv(Path(".env"))
     s = Settings.from_env()
     log_file = logs.configure(data_dir / "logs")
-    # The relationship keeps its Telegram name on either platform: it names the database file.
-    rel = RelationshipId(f"telegram-{int(_need('TELEGRAM_USER_ID'))}")
-    db = data_dir / f"{rel}.sqlite"
+    db = data_dir / DATABASE
+    rel = relationship_in(db) or FIRST_RELATIONSHIP
     backups.back_up_quietly(data_dir, db, "start", utc_now())  # before any migration runs
     store = Store(db)
     character = characters.chosen(data_dir / "characters")
@@ -563,7 +563,7 @@ async def run(data_dir: Path) -> None:
             return reply
 
         logging.getLogger("companion").info(
-            "\n".join(startup_lines(rel, prefix.sha256, character, s))
+            "\n".join(startup_lines(db.stem, prefix.sha256, character, s))
         )
         logging.getLogger("companion").info("full log: %s", log_file)
         background = [

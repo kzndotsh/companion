@@ -181,13 +181,14 @@ Create a `.env` in the repo root:
 
 ```bash
 TELEGRAM_BOT_TOKEN=...      # from BotFather
-TELEGRAM_USER_ID=...        # the one Telegram user the bot answers; also names the database
+TELEGRAM_USER_ID=...        # the one Telegram user the bot answers
 OPENROUTER_API_KEY=...      # models are called through OpenRouter
 ```
 
 To talk on Discord instead, add the three lines below (setup: [docs/delivery.md](docs/delivery.md#discord-setup)).
-`TELEGRAM_USER_ID` stays: it names the relationship and its database, so it is the same companion
-and the same memory on either platform.
+Its memory is `data/companion.sqlite` on either platform, so it is the same companion and the same
+memory on both; `TELEGRAM_USER_ID` and `TELEGRAM_BOT_TOKEN` are needed only on Telegram. (The rows
+keep the key `telegram-<user id>` from when it ran only on Telegram; nothing shows it.)
 
 ```bash
 COMPANION_PLATFORM=discord

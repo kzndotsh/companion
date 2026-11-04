@@ -3,8 +3,25 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from tests.conftest import T0
 
 from companion.cli.target import resolve_db, resolve_relationship
+from companion.core.types import (
+    Frame,
+    RelationshipId,
+    SessionId,
+    Speaker,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
+from companion.store.sqlite.store import Store
+
+
+def utterance(*, rel: RelationshipId, uid: str = "u1") -> Utterance:
+    return Utterance(
+        UtteranceId(uid), rel, SessionId("s"), TurnId(uid), Speaker.USER, "hi", Frame.REAL, "t", T0
+    )
 
 
 def test_an_explicit_db_wins(tmp_path: Path) -> None:
@@ -34,8 +51,22 @@ def test_none_or_several_is_a_clear_error(tmp_path: Path, monkeypatch: pytest.Mo
         resolve_db(None, tmp_path)
 
 
-def test_relationship_defaults_to_the_file_name() -> None:
-    assert (
-        resolve_relationship(None, Path("data/telegram-8562130357.sqlite")) == "telegram-8562130357"
-    )
-    assert resolve_relationship("other", Path("data/x.sqlite")) == "other"
+def test_relationship_is_the_one_the_database_holds(tmp_path: Path) -> None:
+    db = tmp_path / "companion.sqlite"
+    assert resolve_relationship(None, db) == "owner"  # no database yet
+    store = Store(db)
+    assert resolve_relationship(None, db) == "owner"  # no messages yet
+    store.append_utterance(utterance(rel=RelationshipId("telegram-1")))
+    store.close()
+    assert resolve_relationship(None, db) == "telegram-1"
+    assert resolve_relationship("other", db) == "other"
+
+
+def test_a_database_with_two_relationships_asks_which(tmp_path: Path) -> None:
+    db = tmp_path / "companion.sqlite"
+    store = Store(db)
+    store.append_utterance(utterance(rel=RelationshipId("a"), uid="u1"))
+    store.append_utterance(utterance(rel=RelationshipId("b"), uid="u2"))
+    store.close()
+    with pytest.raises(SystemExit, match="several relationships"):
+        resolve_relationship(None, db)

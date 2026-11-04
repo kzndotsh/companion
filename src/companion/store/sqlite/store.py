@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+import sqlite3
 import uuid
 from collections.abc import Mapping, Sequence
 from datetime import datetime
@@ -571,3 +572,27 @@ class Store:
             and (r := reasons.get(b.id, ""))
             and not r.startswith(mechanical)
         ]
+
+
+# A database with no messages yet belongs to this relationship. The live one keeps the id it was
+# first given, `telegram-<user id>`, from when the bot only ran on Telegram: it is in every row, and
+# the tables are append-only, so it stays as a key no one sees (2026-11-04).
+FIRST_RELATIONSHIP = RelationshipId("owner")
+
+
+def relationship_in(db: Path) -> RelationshipId | None:
+    """The one relationship a database holds messages for, None when it has none yet. More than
+    one stops the caller: this bot talks with one person."""
+    if not db.exists():
+        return None
+    conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    try:
+        found = [str(r[0]) for r in conn.execute("SELECT DISTINCT relationship_id FROM utterances")]
+    except sqlite3.OperationalError:
+        return None
+    finally:
+        conn.close()
+    if len(found) > 1:
+        msg = f"{db} holds several relationships ({', '.join(found)}); pass --relationship"
+        raise SystemExit(msg)
+    return RelationshipId(found[0]) if found else None

@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from companion.store.sqlite.store import FIRST_RELATIONSHIP, relationship_in
+
 
 def resolve_db(arg: Path | None, data: Path = Path("data")) -> Path:
     """--db, else $COMPANION_DB, else the one database in data/."""
@@ -25,8 +27,9 @@ def resolve_db(arg: Path | None, data: Path = Path("data")) -> Path:
 
 
 def resolve_relationship(arg: str | None, db: Path) -> str:
-    """--relationship, else the database's file name, which is how the daemon names it."""
-    return arg or db.stem
+    """--relationship, else the one relationship the database holds messages for, else the one a
+    new database starts with."""
+    return arg or relationship_in(db) or FIRST_RELATIONSHIP
 
 
 def find_db(arg: Path | None, data: Path = Path("data")) -> Path | None:
