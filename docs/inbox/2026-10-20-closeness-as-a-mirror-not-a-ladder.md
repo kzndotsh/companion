@@ -61,3 +61,13 @@ A visible meter or level, unlocks, the stage named in any reply, rewards for ret
 - Work the mirror out in shadow over past history, day by day, and read it by eye.
 - Its first use: gate J48's question depth, which already runs in shadow, and compare the picks.
 - Fixtures for a user who leads fast and one who leads slowly, checking the bot follows each.
+
+## Outside evidence (2026-11-04)
+
+Feedback on another companion service (summary in the local
+`docs/research/2026-11-04_animates-feedback-research.md`): users at the highest closeness said their
+companions still never started anything warm, only asked and waited, so the user felt they were doing
+all the steering. One character also slid into belittling itself as closeness grew. A rough count of
+ours: of 363 replies in scenes, 47 start an action of their own, none ask first and none belittle
+themselves. So the mirror should cover who leads, not only how warm: once they have shown they want
+it, it starts things too.
