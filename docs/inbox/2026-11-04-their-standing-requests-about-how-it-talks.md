@@ -1,7 +1,7 @@
 # Their standing requests about how it talks
 
 From a community thread about another companion service (summary kept locally in
-`docs/research/animates-feedback-research.md`). Users who told their companion "roast me back, have opinions,
+`docs/research/2026-11-04_animates-feedback-research.md`). Users who told their companion "roast me back, have opinions,
 talk longer" got it for a while, then it slid back to its default. One user repeated the requests
 for days until they stuck. This is the same drift as its own promises (instructions fade within a few
 turns in long chats; see `2026-11-03-promises-and-names-reviews.md`), from the other side.
