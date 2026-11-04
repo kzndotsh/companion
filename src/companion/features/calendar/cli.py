@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import datetime, time, timedelta
 from pathlib import Path
 
-from companion.core.clock import named_zone, utc_now
+from companion.core.clock import local_zone, utc_now
 from companion.core.types import RelationshipId
 from companion.features.calendar.logic import REGION, How, occasions, when
 from companion.features.calendar.run import theirs
@@ -18,7 +18,7 @@ DAYS = 30
 def run(db: Path, relationship: str, *, now: datetime | None = None) -> str:
     store = Store(db)
     rel = RelationshipId(relationship)
-    zone = named_zone()
+    zone = local_zone()
     local = (now or utc_now()).astimezone(zone)
     today = local.date()
     try:

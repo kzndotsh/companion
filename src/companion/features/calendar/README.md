@@ -6,7 +6,7 @@ Days worth a word: their own yearly dates from memory, US public and cultural da
 
 ## How it works
 
-**The occasions.** Code works out what today holds, in the machine's named zone (`named_zone`):
+**The occasions.** Code works out what today holds, in the machine's named zone (`local_zone`):
 
 - **Public and cultural days** come from the `holidays` library for the region (`REGION`, "US", set in one place): its `PUBLIC` category and its `UNOFFICIAL` one, with observed stand-ins (a Friday off for a Saturday holiday) left out. Names are put in plain words (`PLAIN`). Days of remembrance, civic, religious and contested days are then dropped (`LEFT_OUT`: Martin Luther King Jr. Day, Presidents' Day, Memorial Day, Juneteenth, Columbus Day, Veterans Day, Good Friday). What is left: New Year's Day, Groundhog Day, Valentine's Day, St. Patrick's Day, Easter, Mother's Day, Father's Day, Independence Day, Labor Day, Halloween, Thanksgiving, Christmas Eve, Christmas Day and New Year's Eve. New Year's Eve, Christmas Eve, Mother's Day and Father's Day are also written in code and used only when the library lacks them for the region.
 - **The relationship's dates** come from the local date of their first message in the ledger: a month, a hundred days, six months, a year and each year after. A month past a short month's end lands on its last day (31 January, then 28 or 29 February).

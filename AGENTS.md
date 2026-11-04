@@ -169,7 +169,7 @@ together.
   model or return junk at random (seeded): their message is stored once, a turn ends in a reply, a reaction
   or the floor's logged withholding, and a judge that always fails sends the talker what no judge would.
   Any change to the turn must keep it passing.
-- Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, `named_zone`). A test enforces it in `core/` and `kit/`
+- Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, a named zone with its rules). A test enforces it in `core/` and `kit/`
   (`tests/core/test_clock_guard.py`).
 
 **Evals**

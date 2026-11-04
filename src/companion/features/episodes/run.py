@@ -6,7 +6,7 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, cast
 
-from companion.core.clock import named_zone
+from companion.core.clock import local_zone
 from companion.core.types import Frame, Json, Speaker
 from companion.features.episodes.logic import GAP_BACK as EPISODE_GAP
 from companion.features.episodes.logic import NOTE as EPISODES_NOTE
@@ -131,7 +131,7 @@ async def recent_for_turn(
         return ()
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     last = theirs[-1].at if theirs else None
-    zone = named_zone()
+    zone = local_zone()
     pointed = period(t.text, t.now, zone) is not None
     back = last is not None and t.now - last >= EPISODE_GAP
     if not (pointed or back):

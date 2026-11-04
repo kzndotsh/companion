@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from datetime import datetime, time
 
-from companion.core.clock import named_zone
+from companion.core.clock import local_zone
 from companion.core.turn.mentions import MentionCandidate, Rank
 from companion.core.types import Frame, Json, RelationshipId
 from companion.features.calendar.logic import (
@@ -60,7 +60,7 @@ def calendar_candidate(m: Moment, found: object) -> MentionCandidate | None:
     c, t = m.c, m.t
     if not c.calendar:
         return None
-    zone = named_zone()
+    zone = local_zone()
     local = t.now.astimezone(zone)
     today = local.date()
     first = c.store.first_message_at(c.rel)

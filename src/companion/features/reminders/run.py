@@ -15,7 +15,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
-from companion.core.clock import named_zone, now_line
+from companion.core.clock import local_zone, now_line
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
 from companion.core.history import HISTORY_LIMIT, to_messages
@@ -307,7 +307,7 @@ async def deliver_due(  # noqa: PLR0913
             detail_stuck: dict[str, Json] = {"reminder": r.id, "series": r.series_id}
             log_decision(c, session, TurnId(uuid.uuid4().hex), STUCK_GONE, now, detail_stuck)
     due = [r for r in held if r.state == "pending" and r.due_at <= now]
-    every, zone = {x.id: x for x in c.store.series(c.rel)}, named_zone()
+    every, zone = {x.id: x for x in c.store.series(c.rel)}, local_zone()
     theirs = c.store.their_times(c.rel, now - LOOK_BACK)
     sent = 0
     for r in due:
@@ -411,7 +411,7 @@ async def reminder_for_turn(
     if c.judge is None or not c.reminders or not likely(t.text, asked_when=asked):
         return None
     mark(t, "reminder judge")
-    zone = named_zone()
+    zone = local_zone()
     slots = await read_slots(c.judge, unhandled(c, t.prior), t.text, t.now, zone)
     done = act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
     if done is None:

@@ -31,7 +31,7 @@ def describe_gap(gap: timedelta) -> str | None:
 def now_line(now: datetime, previous: datetime | None) -> str:
     """`now` is shown in the machine's local zone; `previous` is their own last message before
     this one, not the companion's reply, so "their last message" in the line is true."""
-    local = now.astimezone()
+    local = now.astimezone(local_zone())
     # The date too, so it can place holidays, seasons, "on the 30th" and the weekend (2026-10-25).
     stamp = f"{local:%A} {local.day} {local:%B %Y}, {local:%H:%M}"
     gap = describe_gap(now - previous) if previous is not None else None
@@ -47,22 +47,22 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-def named_zone() -> tzinfo:
-    """The machine's zone with its rules (America/New_York, not a fixed -04:00), so a time set
-    today for after a clock change keeps its wall time. TZ first, then /etc/localtime; the fixed
-    offset when neither names one."""
+def local_zone() -> tzinfo:
+    """The machine's zone with its rules (America/New_York, not a fixed -05:00), the one the clock
+    line shows. TZ first, then /etc/localtime; the current fixed offset only when neither names a
+    zone. A fixed offset read today put every time from before a clock change an hour off: learned
+    hours, daily caps and the shown times of October's reach-outs (2026-11-03)."""
     name = os.environ.get("TZ", "").lstrip(":")
     if not name:
         path = os.path.realpath("/etc/localtime")
         name = path.rpartition("zoneinfo/")[2] if "zoneinfo/" in path else ""
     try:
-        return ZoneInfo(name) if name else local_zone()
+        return ZoneInfo(name) if name else _fixed()
     except (ZoneInfoNotFoundError, ValueError):
-        return local_zone()
+        return _fixed()
 
 
-def local_zone() -> tzinfo:
-    """The machine's local zone, the one the clock line shows."""
+def _fixed() -> tzinfo:
     return datetime.now().astimezone().tzinfo or UTC
 
 
