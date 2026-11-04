@@ -88,6 +88,17 @@ for the sake of it. The rate of echoes should fall from about a third to well un
 13. **Revisit the talker only for overall quality.** Sonnet 5.5 had the most natural voice but
     disclaimed being an AI three times; GLM-5.3 and MiniMax add a little more. Not a fix for blandness.
 
+## Outside evidence (2026-11-04)
+
+A community thread about another companion service (summary kept locally in
+`docs/research/animates-threads/`) makes the same complaint from the user side, after that service moved to a cheaper
+model: replies "all respond the same", stick to a few patterns, end nearly every line in an either-or
+question, stay neutral unless pushed, and cannot roast back or keep a bit going. What users missed
+most was banter that runs for many turns, with the companion adding to the joke each time. That is
+option 6 (a joke or riff gets "build on it") and the J45 line between welcome banter and a bolted-on
+joke. Also named there: personality that swings day to day, which users put down to a router sending
+them to different models; our two talkers carry the same risk at the scene boundary.
+
 ## What to build first, and how to know
 
 Subtract, then compare two ways of adding, then keep the winner behind a meter.
