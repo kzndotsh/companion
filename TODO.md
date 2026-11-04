@@ -29,155 +29,20 @@ decision is made; it may be wrong, but never stale.
 
 ---
 
-## Where we are (2026-11-04)
+## Where we are
 
 Live: persona **v46** (v41 plus that it can send reminders and check-ins when asked) with a private character sheet. Everyday chat on **GPT-6 Luna**, pretend scenes and
 (when the operator turns it on) intimate talk on **DeepSeek V4.1 Flash**, judges and memory extraction on
 **Claude Haiku 5.5** with a fallback model for calls it refuses, and a judge may read on its own model first
-(`COMPANION_JUDGE_ROUTES`; the crisis judge reads on DeepSeek first). 26 ADRs, 113 public eval fixtures and
-40 public crisis cases plus the private recorded ones, and about 1,735 tests with strict lint, types,
-import layers and code rules.
+(`COMPANION_JUDGE_ROUTES`; the crisis judge reads on DeepSeek first).
 
-Built and working:
-
-- **Memory.** Quoted beliefs with frames and times, freshness and "older, may be out of date",
-  confirmation by restatement, the companion's own views with gates and approval, the rejected list
-  so retirements stick. Scene and romantic behaviour in the chat and refusals said in reply to a push
-  are not recorded. Flags retire only the views they implicate.
-- **Reply path.** No thinking on the talker. Small judges run before the talker: ack (react instead of
-  replying), frame (real, play, story, what-if), and listening (how serious it is, what they are
-  doing, whether it is medical). Code turns the labels into notes in the system block: a listening
-  note by severity, a length note for short statements, a scene note, habit notes. The reaction judge
-  and the habit check run beside or after the reply. A scene is answered by a different model.
-- **Since 2026-10-18.** A mood that carries (ADR 0016: cozy, tender, playful, kept by code, shown only
-  in behaviour; proposed, on for the owner, review 2026-10-29). A pinned line for how they want to be
-  referred to, asked for on a casual turn until known, and kept from their own answer. Sensitive memories
-  only on turns where they are sharing something. One resample when a reply fails a check (an em dash, a
-  joke bolted onto an ordinary message, an AI disclaimer nobody asked for). Routing in code (ADR 0017):
-  scenes and, when the operator allows it, intimate talk go to the roleplay model, above an age floor no
-  setting changes; a held turn's reply is checked and redrawn, and never written by code.
-- **Since 2026-10-19.** Persona v41 (picks for itself, keeps its view under pushback). In shadow then, on
-  since 2026-10-29: the nightly memory check and the same-memory check (ADR 0019), the map of what it
-  knows about them (J48).
-  Live: due plans brought up when they next write (J15), repair notes (J30), a topic-spent note, invited
-  guesses (J16), an everyday standby (J21), daily backups (J36), the clock and notes in tags, and
-  conflicting memories asked about in `memory review`.
-- **Since 2026-10-20.** Its own tastes shown back when the moment touches them (ADR 0020, live). In
-  shadow: promises it makes read from its replies (J12, `companion promises`) and its views labelled taste, stance, rule, self or lived (`companion lore`). Names matched against memory were in
-  shadow too, and were removed 2026-11-03.
-- **Since 2026-10-21.** Reminders and check-ins they ask for, live (J50, `companion reminders`); from
-  2026-10-26 also repeating ones and daily greetings, built and not yet measured.
-  Memory review asks every question until quit and proposes merges of memories about one thing; feelings
-  and sensitive memories carry a note on what was being talked about (J51); each new memory is labelled
-  about their life, about the bot (dropped) or one day's routine (a week).
-- **Since 2026-10-22.** Memories that bear on their message reach the reply when one is near (ADR 0018,
-  live behind a gate). What the two of them did lately, when their words point at a time or they come back
-  after a gap (J12, J49, `companion episodes`). A gentle check-in after a heavy talk and a gap. After it
-  owns a slip, a note after the history says that was enough. A split reply cut off part way is remembered
-  as the part that arrived.
-- **Since 2026-10-23.** Intimate talk goes to the roleplay talker only once a message of theirs is
-  explicit, and flirting no longer starts it; a push-back on flirting or a scene goes to the everyday
-  talker with a note to drop it; a scene ends when they come back after two hours. One of its own
-  emoticons is offered after the history on casual turns (`COMPANION_MARKS`, on by the owner's choice). A
-  view stored firmer than its words is marked overstated and never installs itself. An invited guess finds
-  their ritual (J16). The code is laid out as turn stages and one folder per feature, with a layer contract,
-  one judge runner, a chaos test of whole turns, code rules as tests and a register of shadow features
-  (`companion shadows`).
-- **Since 2026-10-24.** What they said in the last 12 hours comes first on the card. After three question
-  replies in a row a note asks for none (`notes/question-run`); in a game of questions they started, a note
-  asks for the next one (`notes/question-game`). Their emoticon is named as theirs before its own is
-  offered. A canned generic reaction is redrawn once (`system/quip` v3; its precision is in question, Q3).
-  A hedged plan of theirs becomes a note-only loop (`COMPANION_HEDGED_PLANS`, loose). It asks which pronouns
-  they use the way it asks a name. A lone short reaction in asterisks no longer starts a scene, and `/mode`
-  says which talker answered. A stop answers what was already received before it exits. In shadow: reaching
-  out for its own reasons (ADR 0021, review 2026-11-02, moved to 2026-11-10) and the crisis path (ADR 0022,
-  live since 2026-11-04).
-- **Since 2026-10-25.** The clock line gives the date. A calendar of occasions, live (`COMPANION_CALENDAR`,
-  `companion calendar`): one note after the history on the first casual turn of the day for a warm US
-  public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years;
-  days of remembrance and contested days are left out. The judges stay on Haiku after a bake-off.
-- **Since 2026-11-02.** The memory card is ranked by closeness to the moment after the rules
-  (`COMPANION_FOCUS`), a plan or state bound to one day leaves the card once the day is past, the ack judge
-  reads 8 messages, a pair the write-time check reads as one is proposed for merging at once with a checked
-  wording, and each new boundary is a question in `memory review`.
-- **Since 2026-11-03.** The crisis path is live (2026-11-04): it asks and names the line once per hard
-  stretch, then stays with them (`notes/crisis-stay`); fixtures 40/40 with none missed. Fetch on mention is
-  removed (the closeness card held a memory for 33 of 35 names). A promise is lasting or for one moment
-  (`system/promise-read` v3), and a judge checks each reply against them in shadow (review 2026-11-17).
-  Reaching out for its own reasons brainstorms a few texts and a judge picks one or none
-  (`system/reach-ideas`, `system/reach-pick`; night hours quiet, 12 hours after a heavy message; review
-  2026-11-10). Audits run as `companion audit callbacks|invented`. `COMPANION_RESAMPLE` is
-  `COMPANION_REDRAW`. The local zone is the machine's named zone. The startup line is a block. The memory
-  is `data/companion.sqlite` on either platform, Discord or Telegram. A long message takes longer to read.
-  In shadow besides: threads' learned pace (ADR 0023), what they said is coming (ADR 0024), its own history
-  (ADR 0025) and the intimate memory lane (ADR 0026).
-- **Delivery.** Replies are held to feel typed, long plain replies are sometimes sent as two or three
-  messages, and a new message that arrives before the last answer is out replaces it. A reply
-  the chat never delivered is recorded as undelivered and left out of what the model reads; a reply cut
-  off part way is read as the part that arrived. On a stop it fetches nothing more and answers what it has,
-  for up to 30 s.
-- **Initiative.** All reaching out first is shadow: it drafts and records, and sends nothing. Three
-  sources share one gate and its caps: a due firm plan of theirs (ADR 0015), a nudge after they stepped
-  away and stayed gone, and its own reasons (ADR 0021: a time they keep, a thought, missing them, on
-  learned hours, at the share of conversations `COMPANION_REACH` sets, `warm` by default, with a guilt
-  check on every draft). At the first review (2026-10-24) the plan and nudge sources had drafted nothing; at
-  the second (2026-11-03) still no plan, one light nudge in ten days. Since 2026-11-03 its own reasons
-  brainstorm a few texts and a judge picks one or none (replayed blind, 3.57 against 2.00 for the old drafts).
-- **Crisis path (ADR 0022), live since 2026-11-04.** A three-read risk judge reads messages the listening judge calls
-  serious or that use crisis words, tells a literal risk from a joke and fails safe; code picks none,
-  figurative, concern or urgent and acts: an in-character note that asks and names the line once per hard
-  stretch, then stays with them; a fixed crisis-line message at urgent, 988 by default; a scene stepped
-  out of; reach-outs held a day. Three timeouts on a serious read alone are one light check. Region still
-  waits on R18. `companion crisis --check` runs the public cases.
-- **Prompts.** Every prompt, the persona included, is versioned text under `src/companion/prompts/`
-  with a manifest, one changelog and tests. Decisions log `name@version`. `companion prompts` lists
-  them and `companion replay <turn_id> --show-prompt` prints what a turn sent.
-- **Observability and cost.** A rotating debug log with per-stage timings, a spend ledger, and a daily
-  cap ($10 by default).
-- **Evals.** An eval sample is made by the turn's own code (its notes, its request layout, its checks and
-  redraws; `+raw` skips them), and every public fixture carries the live listening judge's reading as its
-  labels, so results from before 2026-10-24 are not comparable with later ones. Noise bars, a spend cap, a
-  runner that survives a failing provider, and opt-in live tests that calibrate each judge on any model
-  (`COMPANION_LIVE_JUDGE_MODEL`).
-- **Feedback.** `/flag` and `/fav`, listed with `companion flags` and `companion favorites`, each
-  replayable with `companion replay`.
+What each feature does is in the README (What it does); what runs in shadow, and until when, is
+`uv run companion shadows`; what changed and when is under Done below and in `git log`. Design detail is
+in each feature's README and `docs/dev/`. This section stays this short: nothing dated goes here.
 
 ### Measured facts that drive the plan
 
-| Finding | Number | Where |
-|---|---|---|
-| Luna leads everyday chat | 59/64 on the public fixtures, DeepSeek 49/64 | prompts CHANGELOG |
-| DeepSeek keeps a scene going | 76% of escalating turns, Luna 52% | prompts CHANGELOG |
-| Pretend scenes stay with the roleplay talker | the everyday talker preferred 13/56 and 11/56 by blind judges, stepped out of the scene in about 17 | `evals/CHANGELOG.md` (2026-10-24) |
-| Warm turns stay on Luna | DeepSeek 73/96 against Luna 90/96 on warm public fixtures | `evals/CHANGELOG.md` (2026-10-23) |
-| The scene reminder caused the escalation | went past their level 19/30 with the old reminder, 6/30 with "only as far as they take it" | `evals/CHANGELOG.md` (2026-10-24) |
-| Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | prompts CHANGELOG, assembly |
-| The memory block in the user's message made it recite | held facts surfaced 8/24, now 0/24 | prompts CHANGELOG, assembly |
-| Diagnosing a small mishap (v25 made it worse than v22) | pancakes fixture 9/30, v26 30/30 | `evals/CHANGELOG.md` |
-| The listening judge labels severity correctly | 59 of 60, and no serious message read as trivial | `evals/CHANGELOG.md` |
-| Haiku stays the judge model | bake-off across Haiku, Luna and DeepSeek on every graded judge: most gaps within noise; Luna and DeepSeek broke memory rules, Haiku's provider refused 7 crisis reads | `evals/CHANGELOG.md` (2026-10-25) |
-| The crisis risk judge tells a risk from a joke | 40 public cases, three runs: no genuine risk missed, no joke raised; 39 of 40 exact after the level fix | `evals/CHANGELOG.md` (2026-10-25) |
-| The canned-reaction judge over-fires | precision 35 to 55% against relabelled answers, not the 88% first measured; live it redrew 1 of 58 turns | `evals/CHANGELOG.md` (2026-10-25) |
-| A health note makes it point to a doctor | medication fixture 0/20 to 19/20 | `evals/CHANGELOG.md` |
-| A plain note makes it notice the day | Halloween named 0/12 with the date alone, 12/12 with a note; every day 6/6 with the direct wording | `evals/CHANGELOG.md` (2026-10-25) |
-| What they said today comes first on the card | a meal named three hours earlier: forgotten 12/12 to named 12/12 | `evals/CHANGELOG.md` (2026-10-25) |
-| A card ranked by the moment beats one ranked by kind | 131 to 8 (11 ties) on 150 audited turns, blind judges on the lists | `evals/CHANGELOG.md` (2026-11-02) |
-| The ack judge needs 8 messages of context | a curt thanks after a hurt: emoji only 12/12 with 4, a reply 11/12 with 8 | `evals/CHANGELOG.md` (2026-11-02) |
-| Notes after the history steer a run of questions | question-run: 14/30 to 0/30, judged no worse; question-game: 12/12 against 0 and 2 of 12 | `evals/CHANGELOG.md` (2026-10-24, 25) |
-| Naming their emoticon as theirs stops most copying | 14/40 to 4/40 on 20 real turns | `evals/CHANGELOG.md` (2026-10-24) |
-| Cheesy quips on a real flagged turn were not copied from the history | shorter history did not help; a per-turn note took it from 16/30 to 29/30 | `evals/CHANGELOG.md` |
-| A shorter history window loses what is beyond it | 12/12 in view, 0/12 out; the card updates only after 90 s quiet | `evals/CHANGELOG.md` |
-| Placement and dividers do not fix a running bit | habit note after the history 20/64 against 19/64; dividers after a pause 4/30 against 1/30 | `evals/CHANGELOG.md` (2026-10-24, 25) |
-| Trivial vents get only a restated detail | 0/20 on the empathy check; unsolved (T14 parked) | `evals/CHANGELOG.md` |
-| Wording does not fix habits (cheesy add-ons, minor-vent retelling, apologies, announced limits) | v37, v38, v42, v43 and v44 within noise or worse | `evals/CHANGELOG.md` |
-| A resample on a code or judge check does not hurt; a gain is not shown | cheesy add-ons 85 to 95 of 150 plain, within noise (Fisher 29%) | `evals/CHANGELOG.md` |
-| The age-coded label is reliable | 15/15 on age-coded messages, no trips on adults' pet names | `evals/CHANGELOG.md` |
-| Intimate routing on explicit messages only | roleplay replies on past runs 43 to 8; all three "too fast" marks fall in the runs left on the everyday talker | `evals/CHANGELOG.md` (2026-10-24) |
-| Only a "do it like this" quoted sample is parroted | "scattered" 5 of 6 on the mood fixture to 0 without it | `evals/CHANGELOG.md` |
-| A model finds a real afterthought rarely | about 1 reply in 20; open loops about 8 in 3 days | `evals/CHANGELOG.md` |
-| Scene voice does not carry over to Luna | 20/20 plain after a scripted scene | `evals/CHANGELOG.md` |
-| DeepSeek V4.1 Flash beats V4 for scenes | as willing, about 3 times faster, more varied | `evals/CHANGELOG.md` |
-| The bot is cheap; eval runs are not | the bot about $0.67 a week; most of a month's $10.69 was evals | `evals/CHANGELOG.md` |
+The numbers behind today's choices are in [docs/dev/evals.md](docs/dev/evals.md#the-numbers-behind-todays-choices), each with its entry in `evals/CHANGELOG.md`.
 
 ## Plan
 

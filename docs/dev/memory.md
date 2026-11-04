@@ -13,11 +13,16 @@ memories.
 
 A candidate is kept only if it rests on an exact quote from a message, with who said it and in which
 frame (real, play, story or hypothetical) (ADR 0001, 0010). Anything said in play never becomes a
-fact about their life. Every acceptance and rejection is a logged decision. The run log is the
+fact about their life. Nor does romantic, flirtatious or sexual behaviour between the two of them in
+the chat (who invited, pushed or declined what, how far a scene went): only what they plainly say about
+themselves there, such as a preference or a boundary, is kept. Every acceptance and rejection is a logged decision. The run log is the
 bookmark, so a pass that crashes or runs twice reads nothing it already finished.
 
 The same pass reads the companion's own messages for views it expressed. Those are gated before they
-can reach the card (ADR 0009). The same pass also reads plans for open loops
+can reach the card (ADR 0009). A retired view goes on a rejected list, and the same view is not installed
+again; memories about them have no such list yet (R15). A `/flag` does not retire every view the
+flagged turn carried: a small model names the views the reply relied on or contradicted
+(`system/views-implicated`), unclear means none, and only those are retired. The same pass also reads plans for open loops
 (`src/companion/features/threads/README.md`). After a pass that stored new memories of theirs, each
 feature's step runs in the registry's order: labelling the memory map, writing context
 and judging worth; then the new memories are embedded. After a pass that stored new views of its own,

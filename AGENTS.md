@@ -14,7 +14,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 | Where | What |
 |---|---|
 | `GLOSSARY.md` | the project's words, one meaning each, with the ones to avoid and the words that mean more than one thing |
-| `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here |
+| `TODO.md` | the work board and the plan: the live setup in a few lines, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here. It holds no feature descriptions (README), no measured numbers (`docs/dev/evals.md`) and no dated log outside Done |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files and setting: read it before changing the feature |
 | `docs/dev/turn.md`, `docs/dev/delivery.md`, `docs/dev/initiative.md`, `docs/dev/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
 | `docs/adr/` | decisions, once made, with the reason |
@@ -22,7 +22,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
 | `src/companion/prompts/` | every prompt the bot sends, as versioned text: `system/` (the persona and the judges' prompts), `notes/` (lines added to the talker's system block each turn), `messages/`. `README.md` lists them, `manifest.toml` says which version is current |
 | `src/companion/prompts/CHANGELOG.md` | every version of every prompt and every change to how a request is assembled, with the reason |
-| `docs/dev/evals.md` | how we measure: fixtures, samples, variants, replays, blind Claude judges, costs, reading a result |
+| `docs/dev/evals.md` | how we measure: fixtures, samples, variants, replays, blind Claude judges, costs, reading a result; what the record shows, and the numbers behind today's choices (add a row when a measurement changes one) |
 | `evals/README.md`, `evals/CHANGELOG.md` | how the eval runner works, and what it has measured |
 | `evals/fixtures/` | public scripted fixtures. `evals/local/` is private, not committed |
 

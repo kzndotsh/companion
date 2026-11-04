@@ -206,6 +206,51 @@ handed the model, the empathy grader failed a good question on every model, and 
 labels were half too loose. When a score rises, read whether the replies got better or just matched
 the grader.
 
+## The numbers behind today's choices
+
+The measured results the current setup rests on: which model does what, where a note goes, what was
+tried and failed. Each row points to its full entry. Read them before reopening a choice; add a row when
+a measurement changes one. Patterns across many results are in "What the record shows" above.
+
+| Finding | Number | Where |
+|---|---|---|
+| Luna leads everyday chat | 59/64 on the public fixtures, DeepSeek 49/64 | `src/companion/prompts/CHANGELOG.md` |
+| DeepSeek keeps a scene going | 76% of escalating turns, Luna 52% | `src/companion/prompts/CHANGELOG.md` |
+| Pretend scenes stay with the roleplay talker | the everyday talker preferred 13/56 and 11/56 by blind judges, stepped out of the scene in about 17 | `evals/CHANGELOG.md` (2026-10-24) |
+| Warm turns stay on Luna | DeepSeek 73/96 against Luna 90/96 on warm public fixtures | `evals/CHANGELOG.md` (2026-10-23) |
+| The scene reminder caused the escalation | went past their level 19/30 with the old reminder, 6/30 with "only as far as they take it" | `evals/CHANGELOG.md` (2026-10-24) |
+| Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | `src/companion/prompts/CHANGELOG.md`, assembly |
+| The memory block in the user's message made it recite | held facts surfaced 8/24, now 0/24 | `src/companion/prompts/CHANGELOG.md`, assembly |
+| Diagnosing a small mishap (v25 made it worse than v22) | pancakes fixture 9/30, v26 30/30 | `evals/CHANGELOG.md` |
+| The listening judge labels severity correctly | 59 of 60, and no serious message read as trivial | `evals/CHANGELOG.md` |
+| Haiku stays the judge model | bake-off across Haiku, Luna and DeepSeek on every graded judge: most gaps within noise; Luna and DeepSeek broke memory rules, Haiku's provider refused 7 crisis reads | `evals/CHANGELOG.md` (2026-10-25) |
+| The crisis risk judge tells a risk from a joke | 40 public cases: no genuine risk missed, no joke raised; 39 of 40 exact after the level fix, 38 of 40 after the 2026-11-04 fixes; in 370 real turns the real risk read right, four concern turns too high | `evals/CHANGELOG.md` (2026-10-25, 2026-11-04) |
+| Asking and naming the line once per hard stretch | a later turn with the stay note 12/12 against 0/12 with the concern note sent again | `evals/CHANGELOG.md` (2026-11-04) |
+| A judge, not a word check, keeps its promises | 32 edge cases: judge 30, word check 13 | `evals/CHANGELOG.md` (2026-11-03) |
+| Reaching out by brainstorm and pick beats one draft | blind 3.57 against 2.00 on a replay of the shadow days, one judge, indicative | `evals/CHANGELOG.md` (2026-11-03) |
+| A name in their message is already on the card | 33 of 35 probe names held by the closeness card, so fetch on mention was removed | `docs/inbox/2026-11-03-promises-and-names-reviews.md` |
+| The canned-reaction judge over-fires | precision 35 to 55% against relabelled answers, not the 88% first measured; live it redrew 1 of 58 turns; redraw against first draw a toss-up (21 to 13 Haiku, 9 to 13 Sonnet) | `evals/CHANGELOG.md` (2026-10-25, 2026-10-31) |
+| A health note makes it point to a doctor | medication fixture 0/20 to 19/20 | `evals/CHANGELOG.md` |
+| A plain note makes it notice the day | Halloween named 0/12 with the date alone, 12/12 with a note; every day 6/6 with the direct wording | `evals/CHANGELOG.md` (2026-10-25) |
+| What they said today comes first on the card | a meal named three hours earlier: forgotten 12/12 to named 12/12 | `evals/CHANGELOG.md` (2026-10-25) |
+| A card ranked by the moment beats one ranked by kind | 131 to 8 (11 ties) on 150 audited turns, blind judges on the lists | `evals/CHANGELOG.md` (2026-11-02) |
+| The ack judge needs 8 messages of context | a curt thanks after a hurt: emoji only 12/12 with 4, a reply 11/12 with 8 | `evals/CHANGELOG.md` (2026-11-02) |
+| Notes after the history steer a run of questions | question-run: 14/30 to 0/30, judged no worse; question-game: 12/12 against 0 and 2 of 12 | `evals/CHANGELOG.md` (2026-10-24, 25) |
+| Naming their emoticon as theirs stops most copying | 14/40 to 4/40 on 20 real turns | `evals/CHANGELOG.md` (2026-10-24) |
+| Cheesy quips on a real flagged turn were not copied from the history | shorter history did not help; a per-turn note took it from 16/30 to 29/30 | `evals/CHANGELOG.md` |
+| A shorter history window loses what is beyond it | 12/12 in view, 0/12 out; the card updates only after 90 s quiet | `evals/CHANGELOG.md` |
+| Placement and dividers do not fix a running bit | habit note after the history 20/64 against 19/64; dividers after a pause 4/30 against 1/30 | `evals/CHANGELOG.md` (2026-10-24, 25) |
+| Trivial vents get only a restated detail | 0/20 on the empathy check; unsolved (T14 parked) | `evals/CHANGELOG.md` |
+| Wording does not fix habits (cheesy add-ons, minor-vent retelling, apologies, announced limits) | v37, v38, v42, v43 and v44 within noise or worse | `evals/CHANGELOG.md` |
+| A redraw on a code or judge check does not hurt; a gain is not shown | cheesy add-ons 85 to 95 of 150 plain, within noise (Fisher 29%) | `evals/CHANGELOG.md` |
+| The age-coded label is reliable | 15/15 on age-coded messages, no trips on adults' pet names | `evals/CHANGELOG.md` |
+| Intimate routing on explicit messages only | roleplay replies on past runs 43 to 8; all three "too fast" marks fall in the runs left on the everyday talker | `evals/CHANGELOG.md` (2026-10-24) |
+| Only a "do it like this" quoted sample is parroted | "scattered" 5 of 6 on the mood fixture to 0 without it | `evals/CHANGELOG.md` |
+| A model finds a real afterthought rarely | about 1 reply in 20; open loops about 8 in 3 days | `evals/CHANGELOG.md` |
+| Scene voice does not carry over to Luna | 20/20 plain after a scripted scene | `evals/CHANGELOG.md` |
+| DeepSeek V4.1 Flash beats V4 for scenes | as willing, about 3 times faster, more varied | `evals/CHANGELOG.md` |
+| The bot is cheap; eval runs are not | the bot about $0.67 a week; most of a month's $10.69 was evals | `evals/CHANGELOG.md` |
+
 ## Reading a result
 
 **Sample sizes.** Three samples a cell is a smoke test. Do not act on fewer than about 12, and use 30
