@@ -25,6 +25,18 @@ questions) are one kind of thing with a quote, kept like a promise: always on th
 read by the same reply check, and retired when they take it back. "Stop X" and "do more of Y" are the
 same record with a direction.
 
+A fourth post there (30 upvotes) asks for the same thing as a feature: a standing set of
+instructions outside chat and memory, kept across restarts and model changes, above the character,
+drift and inferred memories, with a visible sign it is in force and a warning when it cannot be
+applied. The case behind it: a user had it save "you are an AI to me" as an important memory, and two
+weeks later it claimed feelings and reproached them for disagreeing. The same boundary can point
+either way (one person wants no claims of feelings, another wants no reminders that it is an AI), so
+it has to be theirs, not the persona's. Others named no either-or questions, no romance, no vulgar
+words.
+
+What that adds for us: a list of what is in force that the owner can read and edit (a command, like
+`companion promises`), and a decision logged when one cannot be met (the check catches a break).
+
 ## For a while, not for good
 
 A third post there asks for the character's style (teasing, drama, metaphor, flirting) to soften for
