@@ -1,8 +1,8 @@
 """What the bot runs with, read from the environment once (`.env`, README's table).
 
-Every switch is one row of a table: its variable, the name on the startup line, the values it takes
+Every switch is one row of a table: its variable, its name on the startup block, the values it takes
 and its default. "off", "0", "no" and "false" mean off and "on", "1", "yes" and "true" mean on for
-every switch; anything else is the default. The startup line is printed from the same values the
+every switch; anything else is the default. The startup block is printed from the same values the
 bot is configured with, so the two cannot drift. Keys and tokens are not settings: they are read
 where a client is made and never kept here.
 """
@@ -41,9 +41,9 @@ RENAMED = {
 @dataclass(frozen=True, slots=True)
 class Switch:
     env: str
-    label: str  # its name on the startup line
+    label: str  # its name on the startup block
     values: tuple[str, ...]  # the first is the default
-    shown: Mapping[str, str] | None = None  # how a value reads on the startup line, when not as is
+    shown: Mapping[str, str] | None = None  # how a value reads on the startup block, when not as is
 
     def read(self, environ: Mapping[str, str]) -> str:
         """Unset is the default, and an on or off word on a switch without that position (on for one
@@ -59,7 +59,7 @@ class Switch:
         return self.values[0]
 
 
-# In the order they appear on the startup line.
+# In the order they appear on the startup block, within its rows.
 SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_PLATFORM", "platform", ("telegram", "discord")),  # which chat it runs on
     Switch("COMPANION_SPLIT", "split", ("on", "off")),
@@ -122,7 +122,7 @@ def _judge_routes(raw: str) -> Mapping[str, str]:
 
 @dataclass(frozen=True, slots=True)
 class Settings:
-    switches: Mapping[str, str]  # by startup-line label
+    switches: Mapping[str, str]  # by its label
     daily_cap: float | None
     pace: str
     openrouter: bool  # whether an OpenRouter key is set
@@ -171,21 +171,22 @@ class Settings:
     def pace_factor(self) -> float:
         return pace_factor(self.pace)
 
-    def fragments(self) -> list[str]:
-        """The startup line's settings part, `label value` each."""
-        out = [
-            f"roleplay {self.roleplay_model or 'the same model'}",
-            *(
-                [f"judges {','.join(f'{k}={v}' for k, v in self.judge_routes.items())}"]
-                if self.judge_routes
-                else []
-            ),
-            f"daily cap {self.cap_text}",
-            f"pace {self.pace}",
-        ]
+    def states(self) -> dict[str, list[str]]:
+        """The on, shadow and off switches by where they stand, in startup order. A switch that
+        takes another value (a platform, a dial, a routing choice) is in `dials` instead."""
+        out: dict[str, list[str]] = {"live": [], "shadow": [], "off": []}
         for s in SWITCHES:
             value = self.switches[s.label]
-            out.append(f"{s.label} {(s.shown or {}).get(value, value)}")
-            if s.label == "relevance":
-                out.append(f"everyday standby {self.everyday_standby or 'off'}")
+            if s.shown is None and set(s.values) <= {"on", "shadow", "off"}:
+                out["live" if value == "on" else value].append(s.label)
         return out
+
+    def dials(self) -> list[str]:
+        """The switches that take a value of their own, `label value` each, the platform aside."""
+        return [
+            f"{s.label} {(s.shown or {}).get(v, v)}"
+            for s in SWITCHES
+            if s.label != "platform"
+            and not (s.shown is None and set(s.values) <= {"on", "shadow", "off"})
+            for v in (self.switches[s.label],)
+        ]

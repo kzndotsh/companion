@@ -190,8 +190,9 @@ together.
 
 **Running the bot**
 - Settings are environment variables in `.env`, listed with their defaults in `README.md`. They are read
-  once into `companion/settings.py` (`Settings`, one row per switch in `SWITCHES`); the startup line is
-  printed from it. A new switch is one row there.
+  once into `companion/settings.py` (`Settings`, one row per switch in `SWITCHES`); the startup block
+  (`startup_lines` in `daemon.py`: prompts, models, limits, then the switches as live, shadow, off and
+  dials) is printed from it. A new switch is one row there.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`lib/logs.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.
@@ -200,7 +201,7 @@ together.
 - Restart with `just restart` in a terminal the owner can see, never as a hidden background job or under a
   timeout (it runs the bot in the foreground). It stops the old process first and waits while it answers
   what it already received (up to 30 s). Two bots on one token fight over updates. After a
-  restart, confirm the "up as" line shows the new prefix and persona.
+  restart, confirm the startup block under "up as" shows the new prefix and persona.
 - How a feature works is in its folder's `README.md`; the reply path, delivery, initiative and memory
   over time are in `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md` and `docs/memory.md`. When you
   change one, change its description in the same commit.

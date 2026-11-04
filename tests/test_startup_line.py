@@ -5,279 +5,145 @@ import pytest
 from companion import daemon, prompts
 from companion.characters import parse
 from companion.core.types import RelationshipId
-from companion.settings import ROLEPLAY_MODEL
+from companion.settings import ROLEPLAY_MODEL, SWITCHES
 
 
 @pytest.fixture(autouse=True)
-def _no_key(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Without OpenRouter there is no talker fallback; the first test sets a key and shows one."""
-    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-    monkeypatch.delenv("COMPANION_EVERYDAY_STANDBY", raising=False)
-    monkeypatch.delenv("COMPANION_REREAD", raising=False)
-    monkeypatch.delenv("COMPANION_ROLEPLAY_MODEL", raising=False)
-    monkeypatch.delenv("COMPANION_PLATFORM", raising=False)
+def _clean(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every switch at its default and no OpenRouter key, unless a test sets one."""
+    for s in SWITCHES:
+        monkeypatch.delenv(s.env, raising=False)
+    for name in (
+        "OPENROUTER_API_KEY",
+        "COMPANION_EVERYDAY_MODEL",
+        "COMPANION_EVERYDAY_STANDBY",
+        "COMPANION_ROLEPLAY_MODEL",
+        "COMPANION_JUDGE_MODEL",
+        "COMPANION_JUDGE_ROUTES",
+        "COMPANION_DAILY_CAP_USD",
+        "COMPANION_PACE",
+    ):
+        monkeypatch.delenv(name, raising=False)
 
 
-def test_the_startup_line_names_the_persona_the_prefix_and_both_models(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def _lines(character: str | None = None) -> list[str]:
+    char = parse(f"You are {character}.\n", character, "local") if character else None
+    return daemon.startup_lines(RelationshipId("t"), "abcdef0123456789", char)
+
+
+def _row(label: str) -> list[str]:
+    """A row's items, its wrapped lines joined."""
+    lines = _lines()
+    start = next(i for i, line in enumerate(lines) if line.startswith(f"  {label} "))
+    text = lines[start][11:]
+    for line in lines[start + 1 :]:
+        if not line.startswith(" " * 11):
+            break
+        text += " " + line.strip()
+    return [item.strip() for item in text.split(",")]
+
+
+def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
-    monkeypatch.delenv("COMPANION_EVERYDAY_MODEL", raising=False)
-    monkeypatch.delenv("COMPANION_ROLEPLAY_MODEL", raising=False)
-    monkeypatch.delenv("COMPANION_DAILY_CAP_USD", raising=False)
-    monkeypatch.delenv("COMPANION_PACE", raising=False)
-    monkeypatch.delenv("COMPANION_SPLIT", raising=False)
-    monkeypatch.delenv("COMPANION_INITIATIVE", raising=False)
-    monkeypatch.delenv("COMPANION_LISTEN", raising=False)
-    monkeypatch.delenv("COMPANION_MOOD", raising=False)
-    monkeypatch.delenv("COMPANION_RESAMPLE", raising=False)
-    monkeypatch.delenv("COMPANION_ROUTE_INTIMATE", raising=False)
-    line = daemon.startup_line(RelationshipId("telegram-1"), "abcdef0123456789")
     persona = prompts.get("system/persona").version
-    assert line == (
-        f"up as telegram-1 | persona {persona} (prefix abcdef012345) | character none"
-        f" | prompts {prompts.set_hash()}"
-        f" | everyday {daemon.openrouter.DEFAULT_MODEL} | roleplay {ROLEPLAY_MODEL}"
-        " | judges crisis=deepseek/deepseek-v4.1-flash"
-        " | daily cap $10.00 | pace natural | platform telegram | split on | listen on"
-        " | initiative shadow"
-        " | mood on | resample on | intimate stays"
-        " | relevance on | everyday standby deepseek/deepseek-v4.1-flash | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
+    assert _lines() == [
+        "up as t on telegram",
+        (
+            f"  prompts  persona {persona} (prefix abcdef012345), character none,"
+            f" set {prompts.set_hash()}"
+        ),
+        f"  everyday {daemon.openrouter.DEFAULT_MODEL}, standby {ROLEPLAY_MODEL}",
+        f"  roleplay {ROLEPLAY_MODEL}",
+        f"  judges   {daemon.JUDGE_MODEL} (crisis on deepseek/deepseek-v4.1-flash)",
+        "  limits   daily cap $10.00, pace natural",
+        (
+            "  live     split, listen, mood, resample, relevance, re-read, lore, focus, reminders,"
+            " episodes,"
+        ),
+        "           marks, calendar",
+        "  shadow   initiative, promises, crisis, now, history, scene",
+        "  off      none",
+        "  dials    intimate stays, hedged plans loose, reach warm",
+    ]
 
 
-def test_the_pace_setting_is_shown_and_an_unknown_one_means_natural(
+@pytest.mark.parametrize(
+    ("env", "label", "raw", "row"),
+    [
+        ("COMPANION_SPLIT", "split", "off", "off"),
+        ("COMPANION_LISTEN", "listen", "off", "off"),
+        ("COMPANION_INITIATIVE", "initiative", "off", "off"),
+        ("COMPANION_INITIATIVE", "initiative", "on", "shadow"),  # no live mode yet
+        ("COMPANION_MOOD", "mood", "shadow", "shadow"),
+        ("COMPANION_MOOD", "mood", "yes", "live"),
+        ("COMPANION_RESAMPLE", "resample", "off", "off"),
+        ("COMPANION_RELEVANCE", "relevance", "off", "off"),
+        ("COMPANION_PROMISES", "promises", "on", "shadow"),  # nothing live yet
+        ("COMPANION_LORE", "lore", "shadow", "shadow"),
+        ("COMPANION_REMINDERS", "reminders", "off", "off"),
+        ("COMPANION_MARKS", "marks", "off", "off"),
+        ("COMPANION_CRISIS", "crisis", "on", "live"),
+        ("COMPANION_CALENDAR", "calendar", "off", "off"),
+    ],
+)
+def test_a_switch_is_listed_where_it_stands(
+    monkeypatch: pytest.MonkeyPatch, env: str, label: str, raw: str, row: str
+) -> None:
+    monkeypatch.setenv(env, raw)
+    assert label in _row(row)
+    assert all(label not in _row(other) for other in {"live", "shadow", "off"} - {row})
+
+
+@pytest.mark.parametrize(
+    ("env", "raw", "shown"),
+    [
+        ("COMPANION_REACH", "rare", "reach rare"),
+        ("COMPANION_REACH", "", "reach warm"),
+        ("COMPANION_ROUTE_INTIMATE", "on", "intimate may route"),
+        ("COMPANION_HEDGED_PLANS", "off", "hedged plans strict"),
+    ],
+)
+def test_a_dial_is_shown_with_its_value(
+    monkeypatch: pytest.MonkeyPatch, env: str, raw: str, shown: str
+) -> None:
+    monkeypatch.setenv(env, raw)
+    assert shown in _row("dials")
+
+
+def test_the_platform_is_in_the_heading(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("COMPANION_PLATFORM", "discord")
+    assert _lines()[0] == "up as t on discord"
+
+
+def test_the_pace_is_shown_and_an_unknown_one_means_natural(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("COMPANION_PACE", "slow")
-    assert " | pace slow" in daemon.startup_line(RelationshipId("t"), "a" * 12)
+    assert "pace slow" in _row("limits")
     monkeypatch.setenv("COMPANION_PACE", "warp")
-    assert " | pace natural" in daemon.startup_line(RelationshipId("t"), "a" * 12)
-
-
-def test_the_platform_is_shown(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_PLATFORM", "discord")
-    assert " | pace natural | platform discord | split " in daemon.startup_line(
-        RelationshipId("t"), "a" * 12
-    )
-
-
-def test_the_split_setting_is_shown_and_off_turns_it_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_SPLIT", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "split off | listen on | initiative shadow | mood on | resample on | intimate stays"
-        " | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-    monkeypatch.setenv("COMPANION_SPLIT", "on")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "split on | listen on | initiative shadow | mood on | resample on | intimate stays"
-        " | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
+    assert "pace natural" in _row("limits")
 
 
 def test_an_override_and_no_roleplay_talker_are_shown_as_they_are(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("COMPANION_EVERYDAY_MODEL", "some/model")
-    line = daemon.startup_line(RelationshipId("t"), "a" * 12)
-    assert "everyday some/model" in line
-    assert "roleplay the same model" in line
+    assert _row("everyday") == ["some/model", "standby none"]
+    assert _row("roleplay") == ["the everyday model"]
 
 
-def test_the_initiative_mode_is_shadow_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("COMPANION_MOOD", raising=False)
-    monkeypatch.delenv("COMPANION_INITIATIVE", raising=False)
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "initiative shadow | mood on | resample on | intimate stays"
-        " | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-    monkeypatch.setenv("COMPANION_INITIATIVE", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "initiative off | mood on | resample on | intimate stays"
-        " | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-    monkeypatch.setenv("COMPANION_INITIATIVE", "on")  # there is no live mode yet
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "initiative shadow | mood on | resample on | intimate stays"
-        " | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-
-
-def test_listen_is_on_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_LISTEN", "off")
-    assert " | listen off | " in daemon.startup_line(RelationshipId("t"), "a" * 12)
-    monkeypatch.setenv("COMPANION_LISTEN", "on")
-    assert " | listen on | " in daemon.startup_line(RelationshipId("t"), "a" * 12)
-
-
-def test_the_startup_line_names_the_character() -> None:
-    mika = parse("You are Mika. Bubbly.\n", "mika", "local")
-    line = daemon.startup_line(RelationshipId("t"), "a" * 12, mika)
-    assert " | character mika@local | " in line
-
-
-@pytest.mark.parametrize(
-    ("raw", "shown"), [("", "on"), ("shadow", "shadow"), ("off", "off"), ("yes", "on")]
-)
-def test_the_mood_is_on_unless_set_shadow_or_off(
-    monkeypatch: pytest.MonkeyPatch, raw: str, shown: str
-) -> None:
-    monkeypatch.setenv("COMPANION_MOOD", raw)
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        f"mood {shown} | resample on | intimate stays"
-        " | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-
-
-def test_resample_is_on_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_RESAMPLE", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "resample off | intimate stays"
-        " | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-    monkeypatch.delenv("COMPANION_RESAMPLE")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "resample on | intimate stays"
-        " | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-
-
-def test_intimate_talk_stays_unless_routing_is_turned_on(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_ROUTE_INTIMATE", "on")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "intimate may route | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-    monkeypatch.setenv("COMPANION_ROUTE_INTIMATE", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "intimate stays | relevance on | everyday standby off | re-read on"
-        " | promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-
-
-def test_the_relevance_look_up_is_on_unless_shadow_or_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_RELEVANCE", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "relevance off | everyday standby off | re-read on | promises shadow"
-        " | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose | reach warm"
-        " | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-
-
-def test_the_promise_read_is_shadow_unless_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_PROMISES", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "| promises off | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-    monkeypatch.setenv("COMPANION_PROMISES", "on")  # nothing live yet, so on reads as shadow
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "| promises shadow | lore on"
-        " | focus on | reminders on | episodes on | marks on | hedged plans loose"
-        " | reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-
-
-def test_the_lore_note_is_on_unless_shadow_or_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    for raw, shown in (("shadow", "shadow"), ("off", "off"), ("", "on")):
-        monkeypatch.setenv("COMPANION_LORE", raw)
-        assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-            f"| lore {shown}"
-            f" | focus on | reminders on | episodes on | marks on | hedged plans loose"
-            " | reach warm | crisis shadow | calendar on | now shadow | history shadow"
-            " | scene shadow"
-        )
-
-
-def test_reminders_are_on_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_REMINDERS", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "| reminders off | episodes on | marks on | hedged plans loose | reach warm | crisis shadow"
-        " | calendar on | now shadow | history shadow | scene shadow"
-    )
-
-
-def test_the_own_marks_are_on_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_MARKS", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "| marks off | hedged plans loose | reach warm | crisis shadow | calendar on | now shadow"
-        " | history shadow | scene shadow"
-    )
-
-
-def test_loop_notes_are_loose_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_HEDGED_PLANS", "off")
-    line = daemon.startup_line(RelationshipId("t"), "a" * 12)
-    assert line.endswith(
-        "| hedged plans strict | reach warm | crisis shadow | calendar on | now shadow"
-        " | history shadow | scene shadow"
-    )
-
-
-def test_the_reach_dial_is_warm_unless_set(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_REACH", "rare")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "| reach rare | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-    monkeypatch.setenv("COMPANION_REACH", "")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "| reach warm | crisis shadow | calendar on | now shadow | history shadow | scene shadow"
-    )
-
-
-def test_the_crisis_path_is_shadow_unless_on_or_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    for raw, shown in (("", "shadow"), ("on", "on"), ("off", "off")):
-        monkeypatch.setenv("COMPANION_CRISIS", raw)
-        assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-            f"| crisis {shown} | calendar on | now shadow | history shadow | scene shadow"
-        )
-
-
-def test_judge_models_are_shown_unless_there_are_none(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_judge_routes_are_shown_unless_there_are_none(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("COMPANION_JUDGE_ROUTES", "crisis=a/b,listen=c/d")
-    line = daemon.startup_line(RelationshipId("t"), "a" * 12)
-    assert " | roleplay the same model | judges crisis=a/b,listen=c/d | daily cap " in line
+    assert " ".join(_row("judges")) == f"{daemon.JUDGE_MODEL} (crisis on a/b listen on c/d)"
     monkeypatch.setenv("COMPANION_JUDGE_ROUTES", "none")
-    line = daemon.startup_line(RelationshipId("t"), "a" * 12)
-    assert "judges" not in line
-    assert " | roleplay the same model | daily cap " in line
+    assert _row("judges") == [daemon.JUDGE_MODEL]
 
 
-def test_the_calendar_note_is_on_unless_turned_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("COMPANION_CALENDAR", "off")
-    assert daemon.startup_line(RelationshipId("t"), "a" * 12).endswith(
-        "| crisis shadow | calendar off | now shadow | history shadow | scene shadow"
-    )
+def test_the_startup_block_names_the_character() -> None:
+    assert "character mika@local" in " ".join(_lines("mika"))
+
+
+def test_every_switch_appears_once() -> None:
+    shown = [x.split(" ")[0] for row in ("live", "shadow", "off", "dials") for x in _row(row)]
+    labels = [s.label.split(" ")[0] for s in SWITCHES if s.label != "platform"]
+    assert sorted(x for x in shown if x != "none") == sorted(labels)

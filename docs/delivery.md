@@ -112,6 +112,6 @@ stored beside it. The model then reads only what was actually seen.
 4. In `.env`, set `COMPANION_PLATFORM=discord`, `DISCORD_BOT_TOKEN` to the token and
    `DISCORD_USER_ID` to your id. Keep `TELEGRAM_USER_ID`: it names the relationship and its
    database, so the companion remembers the same things. Then `just restart` and check that the
-   "up as" line says `platform discord`.
+   "up as" line ends `on discord`.
 
 The token is scrubbed from every log like the other secrets, and no error the bot raises carries it.

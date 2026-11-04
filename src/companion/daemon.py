@@ -125,26 +125,55 @@ def _talker(client: httpx.AsyncClient, s: Settings) -> Talker:
     return anthropic.AnthropicTalker(_need("ANTHROPIC_API_KEY"), client, s.everyday_model)
 
 
-def startup_line(
+def startup_lines(
     rel: RelationshipId,
     prefix_sha: str,
     character: Character | None = None,
     settings: Settings | None = None,
-) -> str:
-    """The line that says what is running: persona, prefix hash, models and every setting, printed
-    from the same values the bot is configured with."""
+) -> list[str]:
+    """What is running, a heading and one labelled row each for the prompts, the models, the limits
+    and the switches by where they stand, printed from the same values the bot is configured
+    with."""
     s = settings or Settings.from_env()
-    persona = prompts.get("system/persona").version
-    return " | ".join(
-        [
-            f"up as {rel}",
-            f"persona {persona} (prefix {prefix_sha[:12]})",
-            f"character {character.ref if character else 'none'}",
-            f"prompts {prompts.set_hash()}",
-            f"everyday {s.everyday_model}",
-            *s.fragments(),
-        ]
-    )
+    judges = os.environ.get("COMPANION_JUDGE_MODEL", JUDGE_MODEL)
+    routed = ", ".join(f"{k} on {v}" for k, v in s.judge_routes.items())
+    states = s.states()
+    rows = [
+        (
+            "prompts",
+            [
+                f"persona {prompts.get('system/persona').version} (prefix {prefix_sha[:12]})",
+                f"character {character.ref if character else 'none'}",
+                f"set {prompts.set_hash()}",
+            ],
+        ),
+        ("everyday", [s.everyday_model, f"standby {s.everyday_standby or 'none'}"]),
+        ("roleplay", [s.roleplay_model or "the everyday model"]),
+        ("judges", [judges + (f" ({routed})" if routed else "")]),
+        ("limits", [f"daily cap {s.cap_text}", f"pace {s.pace}"]),
+        ("live", states["live"]),
+        ("shadow", states["shadow"]),
+        ("off", states["off"]),
+        ("dials", s.dials()),
+    ]
+    return [f"up as {rel} on {s.position('platform')}"] + [
+        line for label, items in rows for line in _row(label, items)
+    ]
+
+
+def _row(label: str, items: list[str], width: int = 100) -> list[str]:
+    """One labelled row, its items joined by commas and wrapped under the first."""
+    lead = f"  {label:<9}"
+    lines: list[str] = []
+    line = lead
+    for item in items or ["none"]:
+        piece = item if line == lead else f", {item}"
+        if line != lead and len(line) + len(piece) > width:
+            lines.append(line + ",")
+            line = " " * len(lead) + item
+        else:
+            line += piece
+    return [*lines, line]
 
 
 ROLEPLAY_MAX_TOKENS = 700  # scene replies run longer; 400 cut some off mid-sentence
@@ -531,7 +560,9 @@ async def run(data_dir: Path) -> None:
             schedule_reflect()
             return reply
 
-        logging.getLogger("companion").info(startup_line(rel, prefix.sha256, character, s))
+        logging.getLogger("companion").info(
+            "\n".join(startup_lines(rel, prefix.sha256, character, s))
+        )
         logging.getLogger("companion").info("full log: %s", log_file)
         background = [
             task

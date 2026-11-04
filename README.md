@@ -202,8 +202,9 @@ just run
 ```
 
 Use `just restart` after a change. It stops the old process first, because two bots on one token
-fight over updates. The "up as" line shows the persona, the prompt set, the models and every
-setting with its value.
+fight over updates. The startup block, under "up as", shows the persona, the prompt set, the models,
+the limits, and every switch sorted into live, shadow and off, with the ones that take a value of
+their own under dials.
 
 ### Settings
 
