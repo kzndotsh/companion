@@ -2808,3 +2808,21 @@ misfires too. Cost under a tenth of a cent in embeddings. The feature, its comma
 are removed; its tables and prompt stay. Rerun: the scratch `probe.py` and `focus_replay.py` on a copy
 of the store (`build_card` with a `Focus` from the stored memory vectors). Notes and options in
 `docs/inbox/2026-11-03-promises-and-names-reviews.md`.
+
+## 2026-11-03: Keeping its promises: a word check fails, a judge holds up, on 32 edge cases
+
+Before building a check for promises it made (see `docs/inbox/2026-11-03-promises-and-names-reviews.md`),
+a Claude Sonnet subagent wrote 32 adversarial cases (a promise, the newest messages, a draft reply and
+the right verdict: 11 broken, 10 allowed, 11 untouched), covering: they raise the topic themselves, a
+direct question about it, the word in another sense, emoji, misspellings, synonyms, the same joke in
+other words, negation, quoting them, a promise released or expired, two promises in conflict, safety
+over a promise, a promise it cannot keep, a pretend scene, a joke promise, a vague promise, a stance
+promise, another language, an apology that names the slip. Seven verdicts checked by eye and agreed.
+A code check on a promised avoid-word (whole word, plurals, skipped when their message has the word)
+got 13 of 32: it missed every break in other words, an emoji, a misspelling or another language, and
+fired on the word in another sense, on a quote, on a released promise and on an apology. A Claude
+Haiku subagent given a draft judge prompt (break only in the meaning promised; not when they raised it,
+released it, it expired, safety needs it, it is too vague, or two promises pull apart) and the cases
+without the verdicts got 30 of 32; both misses were too strict (teasing about a thing they had just
+raised, a stock phrase said about a dog), which costs a redraw, not a broken promise. One draw each,
+cases and judge both Claude models: indicative. No model spend.
