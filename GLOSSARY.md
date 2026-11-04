@@ -543,12 +543,12 @@ One gentle question about how they are, after a heavy talk and a gap.
 **Repair**:
 Owning a mistake in one line when they say it got them wrong, then carrying on.
 
-**Initiative**:
-The family of messages the companion starts on its own.
-
 **Reach-out**:
-One message the companion starts on its own, about a plan, after they stepped away, or for its own reasons.
-_Avoid_: outreach, initiation
+One message the companion starts on its own, about a plan, after they stepped away, or for its own reasons. Reach-outs, plural, is the whole family and its switch.
+_Avoid_: outreach, initiation, initiative
+
+**Own reasons**:
+Why it might write first with nothing of theirs due: a thought, a time they keep, or missing them. Its dial sets the share of conversations it may start.
 
 **Nudge**:
 The one light reach-out after they stepped away and stayed gone much longer than they said.

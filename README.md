@@ -211,7 +211,7 @@ their own under dials.
 All optional. Set them in `.env`. A setting that was renamed and is still set under its old name
 stops the bot at start with its new name (`RENAMED` in `settings.py`). A switch set to a value it
 does not know stops it too, naming the values it takes; an on or off word on a switch without that
-position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no live mode yet).
+position is its default (`COMPANION_REACH_OUTS=on` is `shadow`, as it has no live mode yet).
 
 <details>
 <summary><b>Models</b> (7): which model talks, judges and embeds</summary>
@@ -237,18 +237,18 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 | `COMPANION_ROUTE_INTIMATE` | off | `on` lets intimate talk go to the roleplay model (ADR 0017), above an age floor in code that no setting changes |
 | `COMPANION_LISTEN` | on | the listening note before each reply; `off` turns it off |
 | `COMPANION_MOOD` | `on` | `on` adds the mood line, `shadow` works it out and logs it, `off` does neither |
-| `COMPANION_RESAMPLE` | on | a reply that fails a check is drawn once more; `off` disables it |
+| `COMPANION_REDRAW` | on | a reply that fails a check is drawn once more; `off` disables it |
 | `COMPANION_PLATFORM` | `telegram` | which chat it runs on: `telegram` (needs `TELEGRAM_BOT_TOKEN`) or `discord` (needs `DISCORD_BOT_TOKEN` and `DISCORD_USER_ID`); one at a time, one relationship and one memory either way |
 | `COMPANION_PACE` | `natural` | how long replies are held to feel typed: `off`, `quick`, `natural` or `slow` |
 | `COMPANION_SPLIT` | on | long plain replies are sometimes sent as two or three messages; `off` stops it |
 | `COMPANION_RELEVANCE` | `on` | memories that bear on their message, picked when one is near and shown to it (ADR 0018); `shadow` only logs, `off` stops it |
 | `COMPANION_EPISODES` | `on` | what the two of them did recently, shown when they point at a time or come back after a gap (J12); `shadow` only logs, `off` stops it |
-| `COMPANION_MARKS` | `on` | one of its own emoticons offered after the history on casual turns: always when their message has one, else about one in four; never theirs or a recent one (`features/marks`); `off` stops it |
+| `COMPANION_OWN_MARKS` | `on` | one of its own emoticons offered after the history on casual turns: always when their message has one, else about one in four; never theirs or a recent one (`features/marks`); `off` stops it |
 | `COMPANION_HEDGED_PLANS` | `loose` | a hedged plan of theirs ("may watch a movie tonight") becomes a note-only loop, asked once when they next write and never a reach-out (`features/threads`); `off` keeps only firm plans |
 | `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
 | `COMPANION_CALENDAR` | `on` | one note after the history on a casual turn about the day: a US public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years (`features/calendar`); `off` stops it |
 | `COMPANION_NOW` | `shadow` | what they said is coming, kept until it happens (ADR 0024): `on` sends one line after the history while it is open ("about 2 minutes ago they said dinner is coming soon; it has not happened unless they say so"), `shadow` logs the line and sends nothing, `off` stops the note; the reader also runs while reaching out is on, for nudges |
-| `COMPANION_HISTORY` | `shadow` | its own history (ADR 0025): after each memory pass, the small details of its own past it made up in chat are captured and checked against the character sheet and the stories already kept; beside an ordinary turn the canon stories nearest their message are logged. Nothing is shown yet, so `on` acts as `shadow` until step 2; `off` reads and logs nothing |
+| `COMPANION_OWN_HISTORY` | `shadow` | its own history (ADR 0025): after each memory pass, the small details of its own past it made up in chat are captured and checked against the character sheet and the stories already kept; beside an ordinary turn the canon stories nearest their message are logged. Nothing is shown yet, so `on` acts as `shadow` until step 2; `off` reads and logs nothing |
 | `COMPANION_SCENE_MEMORY` | `shadow` | a separate memory lane for intimate scenes (ADR 0026): after each memory pass, memories are placed everyday or intimate (read three times, under a floor in code) and ended scenes are read for how they play; `on` sends the scene card (their limits, the entries nearest the moment, perhaps one curious item, their name) instead of the memory card on a turn the roleplay talker answers, and leaves the intimate lane off every other turn; `shadow` logs both and sends the card as before; `off` reads and logs nothing |
 | `COMPANION_FOCUS` | `on` | rank the memory card by closeness to the moment (their message and the reply before it), after their boundaries and its promises; `off` builds it by kind and recency as before |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
@@ -260,8 +260,8 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 
 | Variable | Default | What it does |
 |---|---|---|
-| `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
-| `COMPANION_REACH` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
+| `COMPANION_REACH_OUTS` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
+| `COMPANION_OWN_REASONS` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
 | `COMPANION_REREAD` | `on` | the re-read and the repeat check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 | `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads a message that is serious or uses crisis words for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a scene set aside for the turn, a reply that names means drawn once more, a day's hold on reaching out first), `off` skips it |
@@ -308,7 +308,7 @@ uv run companion flags          # replies marked /flag; --to-fav ID moves one to
 uv run companion favorites      # replies marked /fav
 uv run companion replay <turn_id> --show-prompt   # rebuild a turn and everything it sent
 uv run companion spend          # model spend by purpose
-uv run companion initiative     # open loops, and what reaching out would have sent
+uv run companion reach-outs     # open loops, and what reaching out would have sent
 uv run companion mood           # the mood now; --replay DAYS rebuilds it over past messages
 uv run companion map            # what it knows by part of their life; --label labels new memories
 uv run companion episodes       # the times they spent together, one line each; --write writes new ones
@@ -402,7 +402,7 @@ what it sees. Each message passes through a few stages (read, route, look things
 and check, store), described in [docs/turn.md](docs/turn.md), with delivery on Telegram and Discord in
 [docs/delivery.md](docs/delivery.md). Beside the chat, timers run the memory pass after a quiet spell
 and the night's memory work at 04:00 ([docs/memory.md](docs/memory.md)), the reach-out tick every 15
-minutes and reminders every minute ([docs/initiative.md](docs/initiative.md)), and a backup at every
+minutes and reminders every minute ([docs/reach-outs.md](docs/reach-outs.md)), and a backup at every
 start and once a day. Every prompt, and how a request is put together, is in
 [src/companion/prompts/](src/companion/prompts/README.md).
 
@@ -431,7 +431,7 @@ from the logs by value.
 | Where | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) | the working rules for anyone, human or agent, changing this repo |
-| [docs/turn.md](docs/turn.md), [delivery.md](docs/delivery.md), [initiative.md](docs/initiative.md), [memory.md](docs/memory.md) | how a reply is made, how delivery on Telegram and Discord works, plans and reach-outs, and memory over time |
+| [docs/turn.md](docs/turn.md), [delivery.md](docs/delivery.md), [reach-outs.md](docs/reach-outs.md), [memory.md](docs/memory.md) | how a reply is made, how delivery on Telegram and Discord works, plans and reach-outs, and memory over time |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files, prompts, setting and what was measured |
 | [TODO.md](TODO.md) | the work board and the plan: where we are, measured facts, what comes next |
 | [docs/adr/](docs/adr) | decisions and their reasons |

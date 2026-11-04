@@ -33,23 +33,23 @@ SHADOWS: tuple[Shadow, ...] = (
     ),
     Shadow(
         "reaching out first about a due plan",
-        "initiative",
-        "companion initiative",
+        "reach-outs",
+        "companion reach-outs",
         date(2026, 11, 3),
         "would-sends that read right to the owner, none in quiet hours or mid-chat"
         " (A6, J27, J35 before live)",
     ),
     Shadow(
         "a nudge after they stepped away and stayed gone",
-        "initiative",
-        "companion initiative",
+        "reach-outs",
+        "companion reach-outs",
         date(2026, 11, 3),
         "drafts that do not read needy, at most two a day",
     ),
     Shadow(
         "reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021)",
-        "initiative",
-        "companion initiative",
+        "reach-outs",
+        "companion reach-outs",
         date(2026, 11, 10),
         "picks the owner marks as wanted, specific to them and not generic, landing at hours they"
         " start conversations, none needy, about the two of them, or right after a heavy chat"
@@ -86,7 +86,7 @@ SHADOWS: tuple[Shadow, ...] = (
     Shadow(
         "its own history: stories of its past it made up in chat, checked against the sheet and"
         " kept as canon, and the ones it would show (ADR 0025)",
-        "history",
+        "own history",
         "companion history, the decision log",
         date(2026, 11, 9),
         "canon rulings that read right to the owner (nothing big or contradicting kept, the same"
@@ -95,7 +95,7 @@ SHADOWS: tuple[Shadow, ...] = (
     Shadow(
         "a separate memory lane for intimate scenes: memories placed by lane, patterns from"
         " scenes, and the scene card it would send (ADR 0026)",
-        "scene",
+        "scene memory",
         "companion scene, the decision log (scene memory: the scene card)",
         date(2026, 11, 9),
         "logged scene cards that read right to the owner: limits pinned, the nearest fit the"

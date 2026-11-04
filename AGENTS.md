@@ -16,7 +16,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 | `GLOSSARY.md` | the project's words, one meaning each, with the ones to avoid and the words that mean more than one thing |
 | `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files and setting: read it before changing the feature |
-| `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md`, `docs/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
+| `docs/turn.md`, `docs/delivery.md`, `docs/reach-outs.md`, `docs/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
@@ -35,7 +35,7 @@ just logs         # follow data/logs/companion.log: every stage, judge, model an
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 just inbox some idea   # jot an idea into docs/inbox/
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar | shadows | crisis | now | scene
+uv run companion flags | favorites | spend | beliefs | reach-outs | prompts | callbacks | mood | address | map | backup | calendar | shadows | crisis | now | scene
 uv run companion memory review | group   # questions for the owner (conflicts, new boundaries), merge proposals
 uv run companion promises | names | lore | history   # shadow lists, its own tastes and its own past
 uv run companion retire ID --reason "..." | merge ID ID --claim "..."   # close one memory, or merge by hand
@@ -75,15 +75,15 @@ together.
 
 | Feature | Setting | Read it with | Review by |
 |---|---|---|---|
-| Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
-| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
-| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-10 |
+| Reaching out first about a due plan | `COMPANION_REACH_OUTS` | `companion reach-outs` | 2026-11-03 |
+| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_REACH_OUTS` | `companion reach-outs` | 2026-11-03 |
+| Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_OWN_REASONS` sets | `COMPANION_REACH_OUTS` | `companion reach-outs` | 2026-11-10 |
 | A light question when their words touch a basic it does not know (age, work, home, place, birthday, school) | always shadow for now | the decision log | 2026-11-05 |
 | The promises it made in its own replies (J12) | `COMPANION_PROMISES` | `companion promises` | 2026-10-30 |
 | Memories about a name they mention, left off the card | always shadow for now | `companion names` | 2026-10-30 |
 | How often it brings a thread up, learned from how they met the last ones (ADR 0023) | always shadow for now | the decision log | 2026-11-08 |
 | What they said is coming, kept until it happens, and the note that says so (ADR 0024) | `COMPANION_NOW` | `companion now` | 2026-11-08 |
-| Its own history: stories of its past it made up in chat, checked against the sheet and kept as canon, and the ones it would show (ADR 0025) | `COMPANION_HISTORY` | `companion history`, the decision log | 2026-11-09 |
+| Its own history: stories of its past it made up in chat, checked against the sheet and kept as canon, and the ones it would show (ADR 0025) | `COMPANION_OWN_HISTORY` | `companion history`, the decision log | 2026-11-09 |
 | The crisis path: a second look at a message that may be a risk, and what each level would do (ADR 0022) | `COMPANION_CRISIS` | `companion crisis`, the decision log | 2026-11-04 |
 | A separate memory lane for intimate scenes: memories placed by lane, patterns from scenes, and the scene card it would send (ADR 0026) | `COMPANION_SCENE_MEMORY` | `companion scene`, the decision log | 2026-11-09 |
 
@@ -202,8 +202,8 @@ together.
   timeout (it runs the bot in the foreground). It stops the old process first and waits while it answers
   what it already received (up to 30 s). Two bots on one token fight over updates. After a
   restart, confirm the startup block under "up as" shows the new prefix and persona.
-- How a feature works is in its folder's `README.md`; the reply path, delivery, initiative and memory
-  over time are in `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md` and `docs/memory.md`. When you
+- How a feature works is in its folder's `README.md`; the reply path, delivery, reach-outs and memory
+  over time are in `docs/turn.md`, `docs/delivery.md`, `docs/reach-outs.md` and `docs/memory.md`. When you
   change one, change its description in the same commit.
 
 **Working with the owner**

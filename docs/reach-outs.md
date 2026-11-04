@@ -2,7 +2,7 @@
 
 How the companion notices what the person has coming up, and when it would write first. Everything
 that would send a message unprompted runs in shadow for now: it drafts and records what it would have
-sent, and sends nothing. `uv run companion initiative` shows what it would have done, and
+sent, and sends nothing. `uv run companion reach-outs` shows what it would have done, and
 `uv run companion shadows` shows when each part is due for review.
 
 ## Two ways to bring something up
@@ -15,10 +15,10 @@ reason to write first is planned (phase 3 of the calendar plan) and not built.
 
 Everything else is reaching out: a tick every 15 minutes decides whether to send a message first,
 and skips that look entirely once the daily spend cap is reached.
-This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`). `off` stops the whole tick. The
+This is shadow only, behind `COMPANION_REACH_OUTS` (`shadow` or `off`). `off` stops the whole tick. The
 read of whether they stepped away belongs to `now` (`COMPANION_NOW`) and keeps running while that is
 not `off`, since its labels feed its own note too; with both off it stops. The note in the chat is not
-affected by initiative. The two never double up: a plan brought up in the chat is marked asked, so it is never also
+affected by `COMPANION_REACH_OUTS`. The two never double up: a plan brought up in the chat is marked asked, so it is never also
 a reach-out.
 
 ## Why it would write first
@@ -55,11 +55,11 @@ they write, and the hours they almost never write. Before there is history it us
 sees more conversations, fully from twenty, so a few odd days early on cannot swing it. Someone who
 works nights gets quiet hours in the day. Missing them never starts before eight hours, whatever the
 data says. The numbers, and how much of them is still the baseline, go with every decision and are
-shown by `companion initiative`.
+shown by `companion reach-outs`.
 
 ## How often
 
-The dial is a share, not a count: `COMPANION_REACH` says what share of the conversations over the last
+The dial is a share, not a count: `COMPANION_OWN_REASONS` says what share of the conversations over the last
 two weeks it may start. `rare` is about one in eight, `light` one in five, `normal` one in four, `warm`
 one in three (the default) and `clingy` one in two; `off` stops these reasons, plan check-ins and
 nudges, which all ask the same gate (ADR 0023). Its own messages are at least six hours apart. In shadow a message it would have

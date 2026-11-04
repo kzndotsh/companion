@@ -134,7 +134,7 @@ def hold(sit: Situation) -> tuple[Hold, str] | None:
     heavy = None if sit.heavy_at is None else now - sit.heavy_at
     target = TARGET[sit.effective]
     checks: tuple[tuple[bool, Hold, Callable[[], str]], ...] = (
-        (sit.dial is Dial.OFF, Hold.OFF, lambda: "COMPANION_REACH is off"),
+        (sit.dial is Dial.OFF, Hold.OFF, lambda: "COMPANION_OWN_REASONS is off"),
         (sit.crisis, Hold.CRISIS, lambda: HOLD_REASON),
         (
             local.hour in sit.rhythm.quiet,

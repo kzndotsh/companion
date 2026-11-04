@@ -57,13 +57,13 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
         f"  judges   {daemon.JUDGE_MODEL} (crisis on deepseek/deepseek-v4.1-flash)",
         "  limits   daily cap $10.00, pace natural",
         (
-            "  live     split, listen, mood, resample, relevance, re-read, lore, focus, reminders,"
+            "  live     split, listening, mood, redraw, relevance, re-read, lore, focus, reminders,"
             " episodes,"
         ),
-        "           marks, calendar",
-        "  shadow   initiative, promises, crisis, now, history, scene",
+        "           own marks, calendar",
+        "  shadow   reach-outs, promises, crisis, now, own history, scene memory",
         "  off      none",
-        "  dials    intimate stays, hedged plans loose, reach warm",
+        "  dials    intimate stays, hedged plans loose, own reasons warm",
     ]
 
 
@@ -71,17 +71,17 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
     ("env", "label", "raw", "row"),
     [
         ("COMPANION_SPLIT", "split", "off", "off"),
-        ("COMPANION_LISTEN", "listen", "off", "off"),
-        ("COMPANION_INITIATIVE", "initiative", "off", "off"),
-        ("COMPANION_INITIATIVE", "initiative", "on", "shadow"),  # no live mode yet
+        ("COMPANION_LISTEN", "listening", "off", "off"),
+        ("COMPANION_REACH_OUTS", "reach-outs", "off", "off"),
+        ("COMPANION_REACH_OUTS", "reach-outs", "on", "shadow"),  # no live mode yet
         ("COMPANION_MOOD", "mood", "shadow", "shadow"),
         ("COMPANION_MOOD", "mood", "yes", "live"),
-        ("COMPANION_RESAMPLE", "resample", "off", "off"),
+        ("COMPANION_REDRAW", "redraw", "off", "off"),
         ("COMPANION_RELEVANCE", "relevance", "off", "off"),
         ("COMPANION_PROMISES", "promises", "on", "shadow"),  # nothing live yet
         ("COMPANION_LORE", "lore", "shadow", "shadow"),
         ("COMPANION_REMINDERS", "reminders", "off", "off"),
-        ("COMPANION_MARKS", "marks", "off", "off"),
+        ("COMPANION_OWN_MARKS", "own marks", "off", "off"),
         ("COMPANION_CRISIS", "crisis", "on", "live"),
         ("COMPANION_CALENDAR", "calendar", "off", "off"),
     ],
@@ -97,8 +97,8 @@ def test_a_switch_is_listed_where_it_stands(
 @pytest.mark.parametrize(
     ("env", "raw", "shown"),
     [
-        ("COMPANION_REACH", "rare", "reach rare"),
-        ("COMPANION_REACH", "", "reach warm"),
+        ("COMPANION_OWN_REASONS", "rare", "own reasons rare"),
+        ("COMPANION_OWN_REASONS", "", "own reasons warm"),
         ("COMPANION_ROUTE_INTIMATE", "on", "intimate may route"),
         ("COMPANION_HEDGED_PLANS", "off", "hedged plans strict"),
     ],

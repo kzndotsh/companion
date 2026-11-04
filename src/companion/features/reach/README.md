@@ -2,7 +2,7 @@
 
 A friend who likes you writes first now and then: because something made them think of you, because it is the time you usually talk, or because they simply missed you. This lets the companion do that, with code choosing the reason and the moment, a model brainstorming a few things it might say, code dropping the ones that break a rule, and a judge picking one or none.
 
-**Status:** shadow (review by 2026-11-10, judged on picks the owner marks as wanted, specific to them, at hours they start conversations, none needy, about the two of them, or right after a heavy chat; the first review, 2026-11-02, found the one-thing drafts generic). Switches: `COMPANION_INITIATIVE` (`shadow` default, `off`) runs or stops the whole 15-minute tick; `COMPANION_REACH` sets the dial (`warm` default; `off`, `rare`, `light`, `normal`, `clingy`). Nothing is ever sent: no code path here sends a message.
+**Status:** shadow (review by 2026-11-10, judged on picks the owner marks as wanted, specific to them, at hours they start conversations, none needy, about the two of them, or right after a heavy chat; the first review, 2026-11-02, found the one-thing drafts generic). Switches: `COMPANION_REACH_OUTS` (`shadow` default, `off`) runs or stops the whole 15-minute tick; `COMPANION_OWN_REASONS` sets the dial (`warm` default; `off`, `rare`, `light`, `normal`, `clingy`). Nothing is ever sent: no code path here sends a message.
 
 ## How it works
 
@@ -33,7 +33,7 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 
 "Its reach-outs" here are all of them: these, the open-loop reach-outs and the nudges, shadow or live.
 
-**The dial.** `COMPANION_REACH` is the share of conversations it may start over the last 14 days: `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3 (the default), `clingy` 1/2. In shadow a would-send counts as a conversation it started and as a message they have not answered, so shadow holds and paces the way live would. Code follows how they answer: when its last reach-out was answered later than their usual pause, or in 3 words or fewer (their words in the 10 minutes after their first reply), the dial steps down one level (`warm` to `normal`, `rare` to `off`) until they start a conversation themselves after that answer. The step down is logged once as `reach out: dial stepped down`. Not answering at all is the unanswered hold above. Nothing counts streaks or optimises how often they write.
+**The dial.** `COMPANION_OWN_REASONS` is the share of conversations it may start over the last 14 days: `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3 (the default), `clingy` 1/2. In shadow a would-send counts as a conversation it started and as a message they have not answered, so shadow holds and paces the way live would. Code follows how they answer: when its last reach-out was answered later than their usual pause, or in 3 words or fewer (their words in the 10 minutes after their first reply), the dial steps down one level (`warm` to `normal`, `rare` to `off`) until they start a conversation themselves after that answer. The step down is logged once as `reach out: dial stepped down`. Not answering at all is the unanswered hold above. Nothing counts streaks or optimises how often they write.
 
 **The draft.** Only when every check has passed, two paid calls, purpose `initiative`. First a small model brainstorms (`system/reach-ideas`, 30 s, one try): it gets the moment (day, part of day, season), the kind, one thing code picked as a seed (it may skip it), the newest six lines of the chat, only when none of them is pretend or was read as intimate or heavy (lines that skipped a scene once reached back to a heavy disclosure), recent everyday stretches, non-sensitive memories about them (threads, likes, traits, as they stood then, never one the scene lane placed as intimate), its own tastes (never one about the two of them) and its own last reach-outs, and nothing about how long it has been. It writes up to five texts, each a different angle: a small moment of its own, a question about something of theirs, a callback, a playful question. Code screens each (`screened` in `logic.py`): it undoes an answer wrapped again as JSON and mis-decoded emoji, and drops, never rewrites, an empty or garbled one, a needy one (`checked` in `core/reachout.py`, the check every reach-out's draft passes, plans' and nudges' too: waiting, being forgotten or ignored, how long they were gone, why they went quiet or whether they are okay, urgency, making them responsible for how it feels) and one about the two of them (`about_us`). Then a judge (`system/reach-pick`, 20 s) sees the same and the ideas that passed, and picks the one they would be gladdest to get now, or none. When nothing passes or none is picked, the attempt is recorded as dropped with why and counts for the 6-hour gap, so it is not retried every tick. In 2026-11-02's nine days of shadow the single draft about one thing picked by a hash of the date read generic.
 
@@ -49,7 +49,7 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 | `gate.py` | pure: the share of conversations it started, how its last was answered, the step down, and the holds in order (`hold`, `share`, `pace`) |
 | `run.py` | effects: reads the store, learns the rhythm, the tick, the context, and the brainstorm and pick (`tick_reach`, `Reacher`, `context`, `ideas`) |
 | `store.py` | its queries (the table is in `store/sqlite/migrations/0032_own_reach_outs.sql`) |
-| `cli.py` | its part of `companion initiative` |
+| `cli.py` | its part of `companion reach-outs` |
 
 ## Prompts
 
@@ -59,7 +59,7 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 
 ## Commands
 
-- `uv run companion initiative`: after the open loops and nudges, the learned rhythm (and how much is baseline), the share against the dial, each would-send with its time, kind and draft, the dropped drafts, and the holds by reason.
+- `uv run companion reach-outs`: after the open loops and nudges, the learned rhythm (and how much is baseline), the share against the dial, each would-send with its time, kind and draft, the dropped drafts, and the holds by reason.
 
 ## Measured
 

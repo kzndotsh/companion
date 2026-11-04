@@ -23,5 +23,5 @@ def mark_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer(tail=(note(mark, t.text),), after=(lambda: decide(c, t, OFFERED, {"mark": mark}),))
 
 
-# One of its own emoticons now and then, never theirs (`COMPANION_MARKS`, on unless `off`).
+# One of its own emoticons now and then, never theirs (`COMPANION_OWN_MARKS`, on unless `off`).
 MARKS = Feature("mark", note=mark_offer)

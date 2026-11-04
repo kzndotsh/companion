@@ -14,7 +14,7 @@ def test_every_switch_reads_on_and_off_the_same_way() -> None:
         assert all(not s.on(sw.label) for sw in SWITCHES if "off" in sw.values), word
     on = Settings.from_env({sw.env: "yes" for sw in SWITCHES})
     assert on.position("intimate") == "on"
-    assert on.position("initiative") == "shadow"  # it has no live mode: anything but off is shadow
+    assert on.position("reach-outs") == "shadow"  # it has no live mode: anything but off is shadow
 
 
 @pytest.mark.parametrize(

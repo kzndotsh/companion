@@ -2,7 +2,7 @@
 
 A light nudge when they step away and stay gone much longer than they said, the way a friend might tease about a long shower. It exists so the owner can see how the looser rule behaves, so it only drafts and records.
 
-**Status:** shadow (review by 2026-11-03, judged on drafts that do not read needy, at most two a day). Switch: `COMPANION_INITIATIVE` (`shadow` default, `off`). `off` stops the 15-minute tick that drafts the nudge. The read beside the turn of whether they stepped away is `now`'s and keeps running while `COMPANION_NOW` is not `off`; it stops only when both are off. Nothing is ever sent.
+**Status:** shadow (review by 2026-11-03, judged on drafts that do not read needy, at most two a day). Switch: `COMPANION_REACH_OUTS` (`shadow` default, `off`). `off` stops the 15-minute tick that drafts the nudge. The read beside the turn of whether they stepped away is `now`'s and keeps running while `COMPANION_NOW` is not `off`; it stops only when both are off. Nothing is ever sent.
 
 ## How it works
 
@@ -37,7 +37,7 @@ Since 2026-10-25 nudges use the shared gate instead of fixed quiet hours of 23:0
 
 ## Commands
 
-- `uv run companion initiative`: lists the times away it read and the nudges it would have sent, after the open loops.
+- `uv run companion reach-outs`: lists the times away it read and the nudges it would have sent, after the open loops.
 
 ## Measured
 
