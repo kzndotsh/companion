@@ -63,7 +63,7 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 
 ## Measured
 
-- Nothing measured yet: built and accepted 2026-10-24 in shadow (ADR 0021), and `system/reach-draft` has had no eval or bake-off. The 2026-10-24 shadow review of the older reach-out and nudge ticks found nothing drafted yet to judge. The owner reads the would-sends for three to five days before any of it goes live.
+- 2026-11-03: the brainstorm and pick replayed on the nine shadow days with the new gate: 7 tries, all at hours they start conversations; a blind judge scored the picks 3.57 against 2.00 for the old single drafts, and three leaks found in the replay (intimate lines, a heavy disclosure, a taste about the two of them) were fixed (`evals/CHANGELOG.md`, 2026-11-03). Not yet run on a real model in shadow; the owner reads the would-sends before any of it goes live.
 
 ## Tests
 

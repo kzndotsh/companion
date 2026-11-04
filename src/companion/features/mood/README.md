@@ -24,7 +24,7 @@ Minutes chatted are the gaps between today's messages that are no longer than 10
 
 **Working out the mood.** A repeat from one source restarts its timer at the larger of what was left and what it brings, and never adds, so the order of reading cannot matter. Sources then add up within a state. Easing adds up instead, takes away from tender, and only counts after the latest effect that raised tender, so play before something hard does not soften the next one. Tender holds playful back: playful is zero while tender is at 0.3 or more, and weakened by it otherwise. Late at night (22:00 to 02:59 in their zone) cozy never falls below 0.35. Each strength is held to 1.0.
 
-**What shows.** A state shows at 0.3 or more, at most two states, strongest first. Each shown state adds its line (`notes/mood-<state>`) to the `<notes>` in the system block, after the check-in note and before the hold, name and topic notes. No line is shown, whatever the mood, when:
+**What shows.** A state shows at 0.3 or more, at most two states, strongest first. Each shown state adds its line (`notes/mood-<state>`) to the `<notes>` in the system block, after the how-are-you note and before the hold, name and topic notes. No line is shown, whatever the mood, when:
 
 - the turn is serious (it has the listening note)
 - a pretend scene is in progress

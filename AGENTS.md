@@ -35,12 +35,12 @@ just logs         # follow data/logs/companion.log: every stage, judge, model an
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 just inbox some idea   # jot an idea into docs/inbox/
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | callbacks | mood | address | map | backup | calendar | shadows | crisis | now | scene
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | mood | address | map | backup | calendar | shadows | crisis | now | scene
 uv run companion memory review | group   # questions for the owner (conflicts, new boundaries), merge proposals
 uv run companion promises | lore | history   # shadow lists, its own tastes and its own past
 uv run companion retire ID --reason "..." | merge ID ID --claim "..."   # close one memory, or merge by hand
 uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
-uv run companion audit invented --days 7 --cap 0.2 --dump F.json   # made-up facts candidates; confirm with a Claude judge
+uv run companion audit callbacks | invented --days 7 --cap 0.2 --dump F.json   # callbacks to memories; made-up facts candidates, confirm with a Claude judge
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
 uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```

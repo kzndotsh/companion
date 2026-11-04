@@ -114,7 +114,7 @@ When they push the flirting or a scene back, even jokingly, a small judge says s
 everyday talker with `notes/brush-off`, and the floor still comes first.
 
 A "scene" means a pretend scene in progress, as the frame judge labels it. It ends when they step out
-of it, or when they come back after two hours or more (`core/frames.py`, `SCENE_GAP`). A lone short
+of it, or when they come back after two hours or more (`core/frames.py`, `EPISODE_GAP` in `core/episode.py`). A lone short
 reaction in asterisks ("\*explodes\*", three words at most) is pretend for memory but does not start a
 scene on its own: a scene is under way once a second message of theirs is pretend too. Inside a scene
 already going, a reaction carries it on.

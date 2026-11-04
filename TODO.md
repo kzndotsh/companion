@@ -64,7 +64,7 @@ Built and working:
   conflicting memories asked about in `memory review`.
 - **Since 2026-10-20.** Its own tastes shown back when the moment touches them (ADR 0020, live). In
   shadow: promises it makes read from its replies (J12, `companion promises`), names matched against
-  memory (`companion names`), and its views labelled taste, stance, rule, self or lived (`companion lore`).
+  memory (removed 2026-11-03: the card already held them), and its views labelled taste, stance, rule, self or lived (`companion lore`).
 - **Since 2026-10-21.** Reminders and check-ins they ask for, live (J50, `companion reminders`); from
   2026-10-26 also repeating ones and daily greetings, built and not yet measured.
   Memory review asks every question until quit and proposes merges of memories about one thing; feelings
@@ -180,8 +180,9 @@ Each item ends with the thing that tells us it is done. The cards are below; the
 3. **Getting to know them on purpose** (J48): the name and pronoun asks and the map's question are live
    (the map since 2026-10-29); the hook runs in shadow. *Done when:* the hook's would-asks read right to the
    owner (review 2026-11-05).
-4. **Its own promises and lore** (J12, ADR 0020): promises and labels in shadow, tastes shown live since
-   2026-10-20. *Done when:* the review of 2026-10-30 is read and the owner decides J12 step 2 and LR5.
+4. **Its own promises and lore** (J12, ADR 0020): promises and the per-reply check in shadow, tastes shown
+   live since 2026-10-20. *Done when:* the check's would-redraws read right at the review of 2026-11-17 and
+   the owner decides whether it redraws live, and LR5.
 5. **Do the redrawn replies beat the canned ones?** (Q3) *Done when:* about 20 logged redraws are judged
    blind against their first draws at the review of 2026-10-31 and the owner keeps, retunes or turns off
    the canned-reaction label.
@@ -217,7 +218,7 @@ removed. Live notes listed here are read from the log and the owner's marks.
 |---|---|---|---|
 | 2026-10-29 | the two talkers (D1) | `companion flags`, `companion favorites` | whether the roleplay talker helps and where the boundary hurts |
 | 2026-10-29 | the bland-replies wording round, then the move picker in shadow | `docs/inbox/2026-10-25-bland-replies-design-space.md`, `evals/CHANGELOG.md` | build the move picker |
-| 2026-10-30 | promises, lore labels, made-up facts, names | `companion promises`, `companion lore`, `companion invented`, `companion names` | J12 step 2 and LR5; whether names graduates |
+| 2026-10-30 | promises, lore labels, made-up facts, names | `companion promises`, `companion lore`, `companion audit invented` | J12 step 2 and LR5 (promises reviewed 2026-11-03, next review 2026-11-17); names removed 2026-11-03 |
 | 2026-10-31 | the redrawn replies (Q3) | the recheck decisions, blind judges | keep, retune or turn off the canned-reaction label |
 | 2026-11-02 | its own reach-outs (ADR 0021) | `companion initiative` | going live, and at what dial |
 | 2026-11-03 | plan reach-outs and nudges; the loose plan notes; the question-run note | `companion initiative`, the decision log | going live (after A6, J27, J35); whether loose stays the default; whether the note stays |
@@ -282,7 +283,7 @@ urgent level, 988 by default, the generic message kept for now), reaching out fo
 the calendar, and threads (ADR 0023: one store for what it brings up, the interrupted story first, a pace
 learned from how they answer instead of a fixed number).
 
-1. **Promises (J12 step 2, LR5):** pin standing promises, and which source, after the review of 2026-10-30.
+1. **Promises (J12 step 2, LR5):** let the promise check redraw live, and which source, after the review of 2026-11-17.
 2. **The canned-reaction judge (Q3):** keep, retune or turn off, after the review of 2026-10-31.
 3. **Going live with its own reach-outs (ADR 0021):** after the review of 2026-11-02, and at which dial
    (the ADR's rollout says `normal` first; the settled default is `warm`).
@@ -320,6 +321,11 @@ learned from how they answer instead of a fixed number).
       shared moments; no anniversaries, no pull at goodbye or silence); promises read from its own replies and
       listed (`companion promises`). Next, after the review of 2026-10-30: standing promises and "don't call
       me" words pinned with a word check and one redraw; one-off promises as open loops.
+      **2026-11-03, reviewed:** of 22 promises read, 10 marked not a promise and one retired. The reader now
+      keeps only checkable promises agreed by all three reads, each lasting or for one moment (a week;
+      `system/promise-read` v3, `companion promises --moment|--lasting`). A judge checks each reply against
+      those in force beside the turn and logs what it would redraw (`system/promise-check`, shadow). On 32
+      edge cases the judge caught 30, a word check 13. Next review 2026-11-17: the logged would-redraws.
       **2026-10-22, episodes:** the chat cut into stretches, each with one line on its shape and how it ended
       (`companion episodes`); the lines for the time their words point at, or the last one after a gap, reach
       the reply (`notes/recent-times`, also J49). The owner read the lines and turned it on. Next: the recall
@@ -431,7 +437,7 @@ When the answer comes, the card moves to Todo or Done.
       on its own"); at least five flags 2026-10-16 to 10-19. **Partial 2026-10-19:** five real turns as local
       fixtures; about 45% of replies add a joke on v36; wording does not fix it (v37, the ban replaced by a
       positive ending rule, was worse; v38 within noise). Shipped: one resample when `system/quip` v2 says a
-      joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_RESAMPLE`), 85 to 95 of 150 (within noise)
+      joke was bolted onto an ordinary message (`core/recheck.py`, `COMPANION_REDRAW`), 85 to 95 of 150 (within noise)
       plain. Left: watch live flags; banter they started is let through by design. The same judge reads
       canned generic reactions since 2026-10-24 (Q3).
       **Waits on:** live flags on bolted-on jokes; none named it since 2026-10-19.
@@ -941,7 +947,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
 - [x] LR1 Its own lore labelled by kind (ADR 0020 phase 1): taste, stance, rule, self or lived, on every
       view it holds; `companion lore` lists the tastes. The owner read them and retired three wrong tastes; each view is now read three times
       and a taste needs all three.
-- [x] G42 / J9 Made-up facts rate (`companion invented`): a cheap judge lists candidates, a Claude judge
+- [x] G42 / J9 Made-up facts rate (`companion audit invented`): a cheap judge lists candidates, a Claude judge
       confirms. First reading 5 of 367 replies (about 1.4%); the cheap judge is right about one flag in
       twelve. Read weekly in the review.
 - [x] LR2 Its own tastes nearest their message, at most two at 0.3 or more, shown on ordinary turns as the
@@ -949,7 +955,8 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       17/20, never brought up when they did not fit (40/40). Watch: three weather replies claimed to hear
       rain on a window.
 - [x] Fetch on mention, in shadow: names in memory with their other words, read once per memory; each
-      turn that names one logs the memories about it the card left out (`companion names`). Counted first
+      turn that names one logs the memories about it the card left out (was `companion names`; removed
+      2026-11-03, the closeness card held a memory for 33 of 35 probe names). Counted first
       as two real misses in six days; the owner asked for the log to decide as memory grows.
 - [x] J1 More attitude, in character. Persona v41 shipped: without a character it now picks for itself
       (1 to 20 of 20) and keeps its view under pushback with no reason (8 to 16 of 20), everyday fixtures
@@ -1031,7 +1038,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       character-sheet line all landed within noise (10 to 12% on playful fixtures); it follows the excited
       moment, and live it already says "ohhh", "okayyy". Follow-up if it still reads polished: a code note
       for excited moments, measured on genuinely excited fixtures.
-- [x] J2 Callback score: `companion callbacks` judges replies against the memories their card held and
+- [x] J2 Callback score: `companion audit callbacks` judges replies against the memories their card held and
       reports precision first; four fixtures (one opening, three traps). First reading: about 2 genuine
       callbacks in 338 real replies, traps 24/24, the obvious opening taken 4/20. Raising how often is J15.
 - [x] J4 texting style (persona v31), J2 callback score, J1 rude note, the recall look-up, the
