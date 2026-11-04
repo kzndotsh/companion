@@ -224,7 +224,7 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 | `COMPANION_JUDGE_MODEL` | `anthropic/claude-haiku-5.5` | the judges and the memory pass, except a judge named in `COMPANION_JUDGE_ROUTES` |
 | `COMPANION_JUDGE_STANDBY` | `deepseek/deepseek-v4.1-flash` | asked only when the judges' model refuses a call; the floor never relies on its answers; `none` disables it |
 | `COMPANION_JUDGE_ROUTES` | `crisis=deepseek/deepseek-v4.1-flash` | a model per judge, as `judge=provider/model` pairs separated by commas: a judge named here reads on that model first and on the judges' model when it refuses (that answer counts as the fallback's). The default puts the crisis risk judge on DeepSeek, since Haiku's provider refuses many crisis messages; `none` sends every judge to the judges' model. A malformed value stops the bot at start |
-| `COMPANION_EMBED_MODEL` | `openai/text-embedding-3-small` | embeddings for the memory look-up and the repeat check |
+| `COMPANION_EMBED_MODEL` | `openai/text-embedding-3-small` | embeddings for the memory look-up and the restatement check |
 
 </details>
 
@@ -262,7 +262,7 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 |---|---|---|
 | `COMPANION_INITIATIVE` | `shadow` | the reach-out gate drafts and records but sends nothing; `off` disables it |
 | `COMPANION_REACH` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
-| `COMPANION_REREAD` | `on` | the re-read and the repeat check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
+| `COMPANION_REREAD` | `on` | the re-read and the restatement check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them; `off` skips it |
 | `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads a message that is serious or uses crisis words for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a scene set aside for the turn, a reply that names means drawn once more, a day's hold on reaching out first), `off` skips it |
 

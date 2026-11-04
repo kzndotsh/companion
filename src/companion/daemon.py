@@ -527,14 +527,14 @@ async def run(data_dir: Path) -> None:
                 return
             if result.ran:
                 logging.getLogger("companion.memory").info(
-                    "memory pass: +%d beliefs, %d confirmed, %d rejected, %d duplicates;"
-                    " views +%d, %d confirmed, %d rejected, %d checked (%d conflict); $%.5f",
+                    "memory pass: +%d beliefs, %d restated, %d rejected, %d already known;"
+                    " views +%d, %d restated, %d rejected, %d checked (%d conflict); $%.5f",
                     result.accepted,
-                    result.confirmed,
+                    result.restated,
                     result.rejected,
-                    result.duplicates,
+                    result.already_known,
                     result.views_accepted,
-                    result.views_confirmed,
+                    result.views_restated,
                     result.views_rejected,
                     result.views_checked,
                     result.views_conflicts,

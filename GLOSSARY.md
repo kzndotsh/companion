@@ -305,9 +305,12 @@ How sure an extractor is of a candidate memory, 0 to 1; a candidate below a floo
 **Candidate memory**:
 A memory the memory pass proposes, not yet accepted; code keeps it only if its quote is in the message.
 
-**Restatement**:
-Their saying something memory already holds; the new quote is added to the old memory, which makes it fresh again.
-_Avoid_: duplicate
+**Restated**:
+Their saying again something memory already holds, in a new quote; the quote is added to the old memory, which makes it fresh again.
+_Avoid_: confirmed, duplicate
+
+**Already known**:
+A candidate memory whose exact quote is already stored; it is rejected with that reason.
 
 **Memory kind**:
 What sort of claim a memory is: trait, state, event, preference, thread, boundary, tell or promise (one the companion made). It sets how long the memory stays fresh.
@@ -351,21 +354,22 @@ The background step after a conversation goes quiet that reads new messages and 
 _Avoid_: slow loop, reflect
 
 **Upkeep**:
-Everything done to a memory after it is written: at write the sort, the repeat check and the memory context; each night the re-read, merge grouping and retiring routine moments.
+Everything done to a memory after it is written: at write the sort, the restatement check and the memory context; each night the re-read, merge grouping and retiring routine moments.
 _Avoid_: nightly (as a name), consolidation
 
 **Re-read**:
 The nightly re-reading of settled memories that closes faded passing moments and queues questions for the owner.
 _Avoid_: memory check, consolidation
 
-**Repeat check**:
-The check when a memory is written that turns a repeat of an old memory into another quote for it.
+**Restatement check**:
+The check when a memory is written that finds it restated and adds its quote to the old memory instead.
+_Avoid_: repeat check
 
 **Merge proposal**:
 A suggested single memory for several about one thing, waiting for the owner.
 
 **Memory review**:
-The owner answering the questions the re-read, the repeat check and merge proposals raised, and whether each new boundary is a lasting rule or was only for its moment.
+The owner answering the questions the re-read, the restatement check and merge proposals raised, and whether each new boundary is a lasting rule or was only for its moment.
 
 **Conflict question**:
 A question to the owner when a new memory may replace or contradict an older one.

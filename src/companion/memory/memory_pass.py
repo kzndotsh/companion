@@ -14,7 +14,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, tzinfo
 from typing import Protocol
 
-from companion.core.beliefs.dedupe import is_duplicate_candidate
+from companion.core.beliefs.dedupe import is_already_known
 from companion.core.beliefs.extract import (
     PROMPT as USER_PROMPT,
 )
@@ -90,12 +90,12 @@ class PassResult:
     ran: bool
     accepted: int = 0
     rejected: int = 0
-    duplicates: int = 0
-    confirmed: int = 0
+    already_known: int = 0
+    restated: int = 0
     cost_usd: float = 0.0
     upto: tuple[datetime, UtteranceId] | None = None
     views_accepted: int = 0
-    views_confirmed: int = 0
+    views_restated: int = 0
     views_rejected: int = 0
     views_checked: int = 0
     views_conflicts: int = 0
@@ -215,8 +215,8 @@ class _Counts:
     candidates: int = 0
     accepted: int = 0
     rejected: int = 0
-    duplicates: int = 0
-    confirmed: int = 0
+    already_known: int = 0
+    restated: int = 0
     accepted_ids: frozenset[BeliefId] = frozenset()
     cost: float = 0.0
     latency_ms: int = 0
@@ -269,7 +269,7 @@ async def _extract_pass(
     candidates, rejections = spec.parse(result.data)
     n_candidates = len(candidates) + len(rejections)
     seen = {normalise(b.claim) for b in known}
-    accepted = duplicates = confirmed = 0
+    accepted = already_known = restated = 0
     stored: list[Belief] = []
     for c in candidates:
         if c.confirms:
@@ -277,10 +277,10 @@ async def _extract_pass(
             if isinstance(outcome, Rejection):
                 rejections.append(outcome)
             elif isinstance(outcome, Skip):
-                duplicates += 1
+                already_known += 1
             else:
                 store.add_evidence(outcome.belief.id, outcome.evidence)
-                confirmed += 1
+                restated += 1
                 run.log(
                     "confirmed: a new restatement keeps the belief fresh",
                     {
@@ -297,14 +297,14 @@ async def _extract_pass(
             rejections.append(made)
             continue
         source = made.evidence[0]
-        if normalise(made.claim) in seen or is_duplicate_candidate(
+        if normalise(made.claim) in seen or is_already_known(
             source.utterance_id, source.quote, [*known, *stored, *(rejected or [])]
         ):
-            duplicates += 1
+            already_known += 1
             continue
         seen.add(normalise(made.claim))
         if await _stored_as_evidence(ctx, spec, made):
-            confirmed += 1
+            restated += 1
             continue
         store.insert_belief(made)
         stored.append(made)
@@ -326,15 +326,15 @@ async def _extract_pass(
     for r in rejections:
         run.log(f"rejected: {r.reason}", {"candidate": r.raw})
     log.debug(
-        "%s pass on %d messages: %d candidates, %d stored, %d rejected, %d duplicates,"
-        " %d confirmed, %dms, $%.5f, %s",
+        "%s pass on %d messages: %d candidates, %d stored, %d rejected, %d already known,"
+        " %d restated, %dms, $%.5f, %s",
         spec.speaker,
         len(targets),
         n_candidates,
         accepted,
         len(rejections),
-        duplicates,
-        confirmed,
+        already_known,
+        restated,
         result.latency_ms,
         result.cost_usd,
         result.model,
@@ -343,8 +343,8 @@ async def _extract_pass(
         n_candidates,
         accepted,
         len(rejections),
-        duplicates,
-        confirmed,
+        already_known,
+        restated,
         frozenset(b.id for b in stored),
         result.cost_usd,
         result.latency_ms,
@@ -363,7 +363,7 @@ async def memory_pass_from(
 
     Two passes over the same batch: beliefs about the user from the user's words, and views the
     companion expressed from its own words. `ignore` names old beliefs that a rebuild is
-    replacing, so they do not count as duplicates of their own restatements.
+    replacing, so they are not counted as already known against their own restatements.
     """
     now = options.now or utc_now()
     batch = store.utterances_after(rel, start, BATCH)
@@ -431,12 +431,12 @@ async def memory_pass_from(
         True,
         users.accepted,
         users.rejected,
-        users.duplicates,
-        users.confirmed,
+        users.already_known,
+        users.restated,
         users.cost + own.cost + check.cost_usd + loops.cost_usd + labelled,
         upto,
         views_accepted=own.accepted,
-        views_confirmed=own.confirmed,
+        views_restated=own.restated,
         views_rejected=own.rejected,
         views_checked=check.checked,
         views_conflicts=check.conflicts,

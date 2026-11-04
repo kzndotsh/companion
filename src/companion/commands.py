@@ -48,7 +48,7 @@ async def memory_pass_now(db: Path, relationship: str, *, from_start: bool = Fal
     """Drain the memory pass's backlog, one batch at a time. For `companion memory-pass`.
 
     `from_start` re-reads everything, for after the extraction prompt improves. Claims already
-    recorded are skipped as duplicates, so it only adds what was missed.
+    recorded are skipped as already known, so it only adds what was missed.
     """
     lines: list[str] = []
     async with _services(db, relationship) as x:
@@ -59,9 +59,9 @@ async def memory_pass_now(db: Path, relationship: str, *, from_start: bool = Fal
                 break
             start = result.upto
             lines.append(
-                f"+{result.accepted} beliefs, {result.confirmed} confirmed, "
-                f"{result.rejected} rejected, {result.duplicates} duplicates; "
-                f"views +{result.views_accepted}, {result.views_confirmed} confirmed, "
+                f"+{result.accepted} beliefs, {result.restated} restated, "
+                f"{result.rejected} rejected, {result.already_known} already known; "
+                f"views +{result.views_accepted}, {result.views_restated} restated, "
                 f"{result.views_rejected} rejected; ${result.cost_usd:.5f}"
             )
     return "\n".join(lines or ["nothing new to read"]) + "\n"

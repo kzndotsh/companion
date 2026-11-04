@@ -131,7 +131,7 @@ async def test_a_repeated_claim_is_not_stored_twice(store: Store) -> None:
     }
     ex2 = FakeExtractor(again)
     result = await memory_pass(store, ex2, REL)
-    assert (result.accepted, result.duplicates) == (0, 1)
+    assert (result.accepted, result.already_known) == (0, 1)
     assert len(store.current_beliefs(REL)) == 1
 
 
@@ -171,7 +171,7 @@ async def test_a_paraphrase_resting_on_the_same_words_is_a_duplicate(store: Stor
         }
     )
     result = await memory_pass(store, ex, REL)
-    assert (result.accepted, result.duplicates) == (1, 1)
+    assert (result.accepted, result.already_known) == (1, 1)
 
 
 class _Spy(FakeExtractor):
@@ -202,7 +202,7 @@ async def test_a_restatement_refreshes_the_belief_with_new_evidence(store: Store
     result = await memory_pass(store, spy, REL, T0 + timedelta(days=9))
 
     assert "[k1] Feels lonely lately." in spy.prompts[0]
-    assert (result.accepted, result.confirmed, result.rejected) == (0, 1, 0)
+    assert (result.accepted, result.restated, result.rejected) == (0, 1, 0)
     assert [x.id for x in store.current_beliefs(REL)] == [b.id]
     assert store.last_support(REL)[b.id] == later.at > before
     assert {e.utterance_id for e in store.current_beliefs(REL)[0].evidence} == {"u1", "u2"}
@@ -212,7 +212,7 @@ async def test_a_confirmation_pointing_nowhere_is_rejected_and_logged(store: Sto
     _say(store, 1, Speaker.USER, "i feel so lonely lately")
     ex = FakeExtractor({"beliefs": [_restatement("m1", "so lonely", "k5")]})
     result = await memory_pass(store, ex, REL)
-    assert (result.confirmed, result.rejected) == (0, 1)
+    assert (result.restated, result.rejected) == (0, 1)
     assert store.current_beliefs(REL) == []
 
 
@@ -229,7 +229,7 @@ async def test_a_fabricated_restatement_quote_never_attaches(store: Store) -> No
     result = await memory_pass(
         store, FakeExtractor({"beliefs": [_restatement("m2", "still lonely", "k1")]}), REL
     )
-    assert (result.confirmed, result.rejected) == (0, 1)
+    assert (result.restated, result.rejected) == (0, 1)
     [b] = store.current_beliefs(REL)
     assert len(b.evidence) == 1
 
@@ -262,7 +262,7 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
     result = await memory_pass(store, ex, REL, T0 + timedelta(hours=2), same=same)
     assert len(store.current_beliefs(REL)) == stored
     if mode == "on":
-        assert result.confirmed == 1
+        assert result.restated == 1
         [b] = store.current_beliefs(REL)
         assert {e.quote for e in b.evidence} == {"green tea", "green tea always"}
 

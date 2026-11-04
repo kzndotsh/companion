@@ -165,7 +165,7 @@ async def test_a_view_is_tentative_until_restated_on_another_day(store: Store) -
         ]
     }
     result = await memory_pass(store, Routed(views=[restated]), REL)
-    assert result.views_confirmed == 1
+    assert result.views_restated == 1
     assert len(store.self_beliefs(REL)) == 1
     assert is_settled(store.self_beliefs(REL)[0], store.evidence_days(REL))
     assert card_views(store.self_beliefs(REL), store.view_state(REL)) == ()  # unchecked

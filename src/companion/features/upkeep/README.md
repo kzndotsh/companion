@@ -5,7 +5,7 @@ Everything done to a memory after it is written, feeding one review queue for th
 
 **At write**, after each memory pass:
 - `sort/`: whether a new memory is about their life, about the companion, or one day's routine.
-- `reread/` (its write-time half): the repeat check, which turns a repeat of an old memory into another
+- `reread/` (its write-time half): the restatement check, which turns a repeat of an old memory into another
   quote for it and raises a question when a new memory may replace or contradict an older one.
 - `context/`: a short line on what was being talked about, shown beside the memory.
 

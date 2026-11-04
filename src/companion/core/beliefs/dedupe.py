@@ -21,7 +21,7 @@ def rests_on_same_words(a: Belief, b: Belief) -> bool:
     )
 
 
-def is_duplicate_candidate(utterance_id: UtteranceId, quote: str, known: Sequence[Belief]) -> bool:
+def is_already_known(utterance_id: UtteranceId, quote: str, known: Sequence[Belief]) -> bool:
     return any(
         e.utterance_id == utterance_id and quotes_overlap(e.quote, quote)
         for b in known
