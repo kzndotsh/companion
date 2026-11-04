@@ -6,6 +6,10 @@ talk longer" got it for a while, then it slid back to its default. One user repe
 for days until they stuck. This is the same drift as its own promises (instructions fade within a few
 turns in long chats; see `2026-11-03-promises-and-names-reviews.md`), from the other side.
 
+A second thread there (same summary file) adds two cases: a request to act back in a scene held for
+two or three messages even after "remember this", and "don't call me by my name" was apologised for
+and broken again a message later, mostly in emotional moments. Users called the repeating exhausting.
+
 ## What we have
 
 - Its own promises are read, kept and (in shadow) checked on each reply (J12).
