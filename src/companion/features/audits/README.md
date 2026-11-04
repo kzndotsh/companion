@@ -9,5 +9,5 @@ owner. Each part is its own folder, read like a feature, with its own README.
 - `invented/`: replies that state something about them that no memory or message in view supports,
   the made-up facts rate, as candidates for a stronger reader to confirm (`companion audit invented`).
 
-Evals (replayed fixtures, `docs/evals.md`) and calibrate stay separate: they rerun recorded turns,
+Evals (replayed fixtures, `docs/dev/evals.md`) and calibrate stay separate: they rerun recorded turns,
 while an audit judges what was already sent. Spend tags keep their names (`callbacks`, `invented`).

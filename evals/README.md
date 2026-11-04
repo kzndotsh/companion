@@ -3,7 +3,7 @@
 Replay a recorded turn against a persona variant, score the reply, and print one table.
 
 For the method as a whole (why we measure, the other ways we measure, blind judging with Claude
-subagents, costs, reading a result), read [docs/evals.md](../docs/evals.md). This file is the runner's
+subagents, costs, reading a result), read [docs/dev/evals.md](../docs/dev/evals.md). This file is the runner's
 reference.
 
 ```bash

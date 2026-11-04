@@ -185,7 +185,7 @@ TELEGRAM_USER_ID=...        # the one Telegram user the bot answers
 OPENROUTER_API_KEY=...      # models are called through OpenRouter
 ```
 
-To talk on Discord instead, add the three lines below (setup: [docs/delivery.md](docs/delivery.md#discord-setup)).
+To talk on Discord instead, add the three lines below (setup: [docs/dev/delivery.md](docs/dev/delivery.md#discord-setup)).
 Its memory is `data/companion.sqlite` on either platform, so it is the same companion and the same
 memory on both; `TELEGRAM_USER_ID` and `TELEGRAM_BOT_TOKEN` are needed only on Telegram. (The rows
 keep the key `telegram-<user id>` from when it ran only on Telegram; nothing shows it.)
@@ -399,10 +399,10 @@ for anyone changing it, are in [AGENTS.md](AGENTS.md).
 
 There is no single big prompt: one talker model writes the reply, and small judges and code decide
 what it sees. Each message passes through a few stages (read, route, look things up, assemble, talk
-and check, store), described in [docs/turn.md](docs/turn.md), with delivery on Telegram and Discord in
-[docs/delivery.md](docs/delivery.md). Beside the chat, timers run the memory pass after a quiet spell
-and the night's memory work at 04:00 ([docs/memory.md](docs/memory.md)), the reach-out tick every 15
-minutes and reminders every minute ([docs/initiative.md](docs/initiative.md)), and a backup at every
+and check, store), described in [docs/dev/turn.md](docs/dev/turn.md), with delivery on Telegram and Discord in
+[docs/dev/delivery.md](docs/dev/delivery.md). Beside the chat, timers run the memory pass after a quiet spell
+and the night's memory work at 04:00 ([docs/dev/memory.md](docs/dev/memory.md)), the reach-out tick every 15
+minutes and reminders every minute ([docs/dev/initiative.md](docs/dev/initiative.md)), and a backup at every
 start and once a day. Every prompt, and how a request is put together, is in
 [src/companion/prompts/](src/companion/prompts/README.md).
 
@@ -431,7 +431,7 @@ from the logs by value.
 | Where | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) | the working rules for anyone, human or agent, changing this repo |
-| [docs/turn.md](docs/turn.md), [delivery.md](docs/delivery.md), [initiative.md](docs/initiative.md), [memory.md](docs/memory.md) | how a reply is made, how delivery on Telegram and Discord works, plans and reach-outs, and memory over time |
+| [docs/dev/turn.md](docs/dev/turn.md), [delivery.md](docs/dev/delivery.md), [initiative.md](docs/dev/initiative.md), [memory.md](docs/dev/memory.md) | how a reply is made, how delivery on Telegram and Discord works, plans and reach-outs, and memory over time |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files, prompts, setting and what was measured |
 | [TODO.md](TODO.md) | the work board and the plan: where we are, measured facts, what comes next |
 | [docs/adr/](docs/adr) | decisions and their reasons |

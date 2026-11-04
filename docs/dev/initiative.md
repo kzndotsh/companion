@@ -10,7 +10,7 @@ sent, and sends nothing. `uv run companion initiative` shows what it would have 
 A plan of theirs that is due can be offered to the talker as a note on a casual turn, so the
 companion asks about it naturally when they next write. This is live, and it is part of open loops.
 The calendar (`src/companion/features/calendar/README.md`) reaches the chat the same way and only
-that way: an occasion is a note after the history on a casual turn (`docs/turn.md`). "A day" as a
+that way: an occasion is a note after the history on a casual turn (`docs/dev/turn.md`). "A day" as a
 reason to write first is planned (phase 3 of the calendar plan) and not built.
 
 Everything else is reaching out: a tick every 15 minutes decides whether to send a message first,

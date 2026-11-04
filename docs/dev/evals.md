@@ -2,8 +2,8 @@
 
 This is how a change is shown to help before it ships: the eval runner and its fixtures, the other
 ways we measure, how replies are judged, what it costs, and how to read a result without fooling
-yourself. The runner's own reference is [evals/README.md](../evals/README.md). Every result, newest
-last, is in [evals/CHANGELOG.md](../evals/CHANGELOG.md).
+yourself. The runner's own reference is [evals/README.md](../../evals/README.md). Every result, newest
+last, is in [evals/CHANGELOG.md](../../evals/CHANGELOG.md).
 
 ## Why we measure
 

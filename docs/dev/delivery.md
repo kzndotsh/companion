@@ -56,7 +56,7 @@ nothing and says so.
 A plain message sent as a reply also brings the message it points at: its text and whether the
 companion or they sent it (`Incoming.quoted`). Discord sends it with the message (a forward or a
 deleted message brings nothing); Telegram sends it too, or only the part they picked when they
-quoted part of it. The turn quotes it in a note (`docs/turn.md`).
+quoted part of it. The turn quotes it in a note (`docs/dev/turn.md`).
 
 ## Sending
 

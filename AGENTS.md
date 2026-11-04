@@ -16,13 +16,13 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 | `GLOSSARY.md` | the project's words, one meaning each, with the ones to avoid and the words that mean more than one thing |
 | `TODO.md` | the work board and the plan: where we are, measured facts, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files and setting: read it before changing the feature |
-| `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md`, `docs/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
+| `docs/dev/turn.md`, `docs/dev/delivery.md`, `docs/dev/initiative.md`, `docs/dev/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
 | `docs/adr/` | decisions, once made, with the reason |
 | `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
 | `src/companion/prompts/` | every prompt the bot sends, as versioned text: `system/` (the persona and the judges' prompts), `notes/` (lines added to the talker's system block each turn), `messages/`. `README.md` lists them, `manifest.toml` says which version is current |
 | `src/companion/prompts/CHANGELOG.md` | every version of every prompt and every change to how a request is assembled, with the reason |
-| `docs/evals.md` | how we measure: fixtures, samples, variants, replays, blind Claude judges, costs, reading a result |
+| `docs/dev/evals.md` | how we measure: fixtures, samples, variants, replays, blind Claude judges, costs, reading a result |
 | `evals/README.md`, `evals/CHANGELOG.md` | how the eval runner works, and what it has measured |
 | `evals/fixtures/` | public scripted fixtures. `evals/local/` is private, not committed |
 
@@ -180,7 +180,7 @@ together.
 - A flag can be a rare draw. Replay the flagged turn 12 to 30 times and count before building a fix.
 - Never quote a line you want in a prompt or note: the model copies it. Describe the behaviour. A
   note that only says "don't" seldom works; name the thing and give another way. The record behind
-  these is "What the record shows" in `docs/evals.md`.
+  these is "What the record shows" in `docs/dev/evals.md`.
 - A judge is a model: check a few of its verdicts by eye. Use a different model from the one under
   test where you can.
 - Scratch scripts for one-off experiments go in the session scratchpad, not the repo. Write the
@@ -202,8 +202,8 @@ together.
   what it already received (up to 30 s). Two bots on one token fight over updates. After a
   restart, confirm the startup block under "up as" shows the new prefix and persona.
 - How a feature works is in its folder's `README.md`; the reply path, delivery, initiative and memory
-  over time are in `docs/turn.md`, `docs/delivery.md`, `docs/initiative.md` and `docs/memory.md`. When you
-  change one, change its description in the same commit.
+  over time are in `docs/dev/turn.md`, `docs/dev/delivery.md`, `docs/dev/initiative.md` and
+  `docs/dev/memory.md`. When you change one, change its description in the same commit.
 
 **Working with the owner**
 - Plain English, short, and say what changed and what it was measured on. Lead with what matters.
