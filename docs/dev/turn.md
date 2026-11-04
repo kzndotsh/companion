@@ -69,8 +69,8 @@ gentle note to ask how they are now (`notes/check-in`), once per heavy talk.
 ## The crisis path
 
 A message that may be a real risk gets a second look (ADR 0022, `features/crisis`, `turn/crisis.py`),
-behind `COMPANION_CRISIS`, which is `shadow` by default: it reads and logs, and nothing the talker is
-sent changes. Two things ask for it, and nothing else: the listening read at severity 2 or 3, and a
+behind `COMPANION_CRISIS`, which is `on` by default since 2026-11-04 (`shadow` reads and logs only, and
+nothing the talker is sent changes). Two things ask for it, and nothing else: the listening read at severity 2 or 3, and a
 code check for words touching death, self-harm, an overdose or a substance taken, or a weapon. A risk
 judge (`system/risk`) then reads their message with the last ten messages, three times, as one of the
 look-ups. Code chooses the level from its labels and fails safe: a failed read counts as literal, and

@@ -193,9 +193,9 @@ Each item ends with the thing that tells us it is done. The cards are below; the
 7. **A week of shadow mode** for plan reach-outs and nudges (R1, R1b). *Done when:* the owner has read
    `companion initiative` at the review of 2026-11-03 and the caps are set. Going live also needs A6, J27
    and J35.
-8. **The crisis path** (ADR 0022, R16), in shadow since 2026-10-24. *Done when:* at the review of
-   2026-11-01 the fixture check passes (no genuine risk missed in 30 samples, the jokes not raised), real
-   chat shows no false alarm, and the owner turns `COMPANION_CRISIS=on`.
+8. **The crisis path** (ADR 0022, R16): live since 2026-11-04. *Done when:* a week of real chat shows the
+   stay note holding over a long hard stretch (it does not push help on every message) and no false alarm
+   the owner flags.
 9. **The calendar in real use** (R19), live since 2026-10-25. *Done when:* Halloween (2026-10-31) and the
     first relationship date are named lightly in real chat with no flag for assuming plans, family or a
     religion; the shipped wording, lead-ups and the relationship's dates are not yet measured.
@@ -289,7 +289,7 @@ learned from how they answer instead of a fixed number).
    (the ADR's rollout says `normal` first; the settled default is `warm`).
 4. **Going live with plan reach-outs and nudges:** after the review of 2026-11-03, with A6, J27 and J35
    built first.
-5. **The crisis path on (ADR 0022):** `COMPANION_CRISIS=on`, after the review of 2026-11-04.
+5. **The crisis path on (ADR 0022):** decided 2026-11-04, on.
 6. **Location (R18):** how it learns where they are, for the crisis line, the calendar and the time zone.
 7. **Pacing (T2):** evidence-based, the user dial ("quick", "natural", "slow burn"), or both? What is
    the default friction? With T17.
@@ -401,20 +401,6 @@ When the answer comes, the card moves to Todo or Done.
       raters relabelled the 200 replies, and against them Haiku's precision is 35 to 55%, not 88% (Luna and
       DeepSeek are more precise but catch less). Live it redrew 1 of 58 checked turns, so few pairs will be
       logged by the review. **2026-10-31 (40 redraws, two blind judges):** a toss-up. Redraw preferred 21 to 13 (Haiku) and 9 to 13 (Sonnet), the rest ties, both within noise; the redraw was still generic in 23 and 6 of 40. Often a plain rewording of the same reaction. Not changed. **Waits on:** the owner: look at what the judge fires on (suggested), keep, or turn it off.
-- [ ] R16 Crisis and distress routing: decided as ADR 0022, accepted by the owner: two-stage detection with a
-      three-read risk judge that tells a joke from a literal risk and fails safe, levels by code, an
-      in-character note at concern and a fixed crisis-line message at urgent, 988 by default, no risk memories.
-      **Built in shadow 2026-10-24** (`COMPANION_CRISIS=shadow`, `companion crisis`): logs each level and what
-      it would do, changes nothing. Having the thoughts now reads as concern, not urgent (39 of 40 public
-      cases exact, none missed, no joke raised, three runs). Haiku's provider refused many crisis reads, so the
-      risk judge reads on DeepSeek first by default (`COMPANION_JUDGE_ROUTES`; 40 of 40 with no refusals). The
-      owner keeps the generic urgent message for now; a sheet may add its own (`## Crisis message`). Region
-      waits on R18. **Reviewed 2026-11-04** (`evals/CHANGELOG.md`): 370 turns, 10 concern, 0 urgent, $0.024; the
-      real risk read concern every turn (right), no joke raised. Four concern turns were too high:
-      two ambiguous phrases about something else, one morning-after with one read of three, and
-      one ordinary message where all three reads timed out (fail-safe). The fixture rerun waits on a top-up
-      (balance $0.05). **Waits on:** the owner: turn it on, or first (a) stop three timeouts alone making
-      concern when no cue word was used, and (b) ask directly once per hard stretch, not on every turn of it. (A25)
 - [ ] T16 Randomized reply length. Built 2026-10-18 and live: `core/turn/length.py` scales a short statement's
       limit by 0.6 to 1.5, seeded per turn so replay matches (idea from a companion app config that picks a
       random word range per reply). **Measured 2026-10-23 on 370 real turns:** limits ran 5 to 20 words, but
@@ -835,6 +821,11 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       `## Crisis message` (5eedd0b, 0cfba84).
 
 **2026-10-24**
+- [x] R16 The crisis path live (ADR 0022), 2026-11-04. Reviewed on 370 real turns in shadow (the real risk
+      read concern every turn, no joke raised, four concern turns too high), then two fixes: the question
+      and the line once per hard stretch, then `notes/crisis-stay` (QPR's persuade step), and three
+      timeouts on a serious read alone are one light check. Fixtures 40/40 with none missed; on the talker
+      the stay note 12/12 against 0/12. Region still waits on R18. (A25)
 - [x] R16 built in shadow (ADR 0022 accepted, cf0379a): a three-read risk judge and levels by code, logged
       only. Having the thoughts now is concern, not urgent: 7 of 10 concern cases read urgent before, 39 of
       40 exact after, none missed, no false alarm (1a6ca5a). The card stays in Waiting for its review.

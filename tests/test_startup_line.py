@@ -60,8 +60,8 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
             "  live     split, listen, mood, redraw, relevance, re-read, lore, focus, reminders,"
             " episodes, marks,"
         ),
-        "           calendar",
-        "  shadow   initiative, promises, crisis, now, history, scene",
+        "           crisis, calendar",
+        "  shadow   initiative, promises, now, history, scene",
         "  off      none",
         "  dials    intimate stays, hedged plans loose, reach warm",
     ]

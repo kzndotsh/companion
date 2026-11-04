@@ -233,6 +233,9 @@ _Avoid_: risk level, severity (a different scale)
 The fixed helpline message code sends after the reply on an urgent turn; never written by a model.
 _Avoid_: hotline message
 
+**Hard stretch**:
+Risk turns less than two hours apart, counted as one: the companion asks directly and names the crisis line once in it, then stays with them.
+
 **Crisis hold**:
 The day after a risk turn the crisis path acted on, when the companion reaches out to no one first.
 

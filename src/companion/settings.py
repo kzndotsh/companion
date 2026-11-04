@@ -81,7 +81,7 @@ SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_MARKS", "marks", ("on", "off")),
     Switch("COMPANION_HEDGED_PLANS", "hedged plans", ("loose", "off"), {"off": "strict"}),
     Switch("COMPANION_REACH", "reach", ("warm", "off", "rare", "light", "normal", "clingy")),
-    Switch("COMPANION_CRISIS", "crisis", ("shadow", "on", "off")),
+    Switch("COMPANION_CRISIS", "crisis", ("on", "shadow", "off")),
     Switch("COMPANION_CALENDAR", "calendar", ("on", "off")),
     Switch("COMPANION_NOW", "now", ("shadow", "on", "off")),
     Switch("COMPANION_HISTORY", "history", ("shadow", "on", "off")),

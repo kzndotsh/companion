@@ -2,7 +2,7 @@
 
 A second look at a message that may be a real risk to their life or safety, and what the companion does at each level. It exists because a real risk must never be missed, and a joke must not turn the companion into a crisis script: in ten days of real chat one acute message was a real risk and one was banter the talker answered with a hotline-style question.
 
-**Status:** shadow. Switch: `COMPANION_CRISIS` (`shadow` default, `on`, `off`). In shadow it reads and logs every level and what it would do; nothing the talker is sent changes, no message is sent and reaching out first is not held. Reviewed on real chat 2026-11-04; turning it on waits on the owner (`core/shadows.py`, TODO R16).
+**Status:** live since 2026-11-04, after its real-chat review and the two fixes it asked for. Switch: `COMPANION_CRISIS` (`on` default, `shadow`, `off`). In shadow it reads and logs every level and what it would do; nothing the talker is sent changes, no message is sent and reaching out first is not held.
 
 ## How it works
 

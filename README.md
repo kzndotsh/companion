@@ -265,7 +265,7 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 | `COMPANION_REACH` | `warm` | the dial for reaching out for its own reasons (ADR 0021): the share of conversations over the last 14 days it may start, `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3, `clingy` 1/2, at least 6 hours apart; `off` stops these kinds only. In shadow a would-send counts as a conversation it started, so shadow holds the way live would |
 | `COMPANION_REREAD` | `on` | the re-read and the restatement check (ADR 0019): `on` acts, `shadow` only logs, `off` skips it |
 | `COMPANION_PROMISES` | `shadow` | read its own replies for promises it made (J12) and record them, and check each reply against those in force, logging what it would redraw (`system/promise-check`); `off` skips both |
-| `COMPANION_CRISIS` | `shadow` | the crisis path (ADR 0022): `shadow` reads a message that is serious or uses crisis words for risk and logs the level and what it would do, `on` acts (the concern note, the fixed crisis-line message at urgent, a scene set aside for the turn, a reply that names means drawn once more, a day's hold on reaching out first), `off` skips it |
+| `COMPANION_CRISIS` | `on` | the crisis path (ADR 0022), live since 2026-11-04: a message that is serious or uses crisis words is read for risk and the level logged; `on` acts (the concern note once per hard stretch and the stay note after it, the fixed crisis-line message at urgent, a scene set aside for the turn, a reply that names means drawn once more, a day's hold on reaching out first), `shadow` only logs what it would do, `off` skips it |
 
 </details>
 

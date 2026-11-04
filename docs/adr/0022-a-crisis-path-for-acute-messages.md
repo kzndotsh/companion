@@ -1,8 +1,8 @@
 # 0022. A crisis path for acute messages
 
 **Status:** accepted 2026-10-25 by the owner (card R16). Built behind `COMPANION_CRISIS`, shadow
-first: it reads and logs every level but changes nothing until its fixtures pass and the owner turns
-it on. Review by 2026-11-01 (`core/shadows.py`).
+first; live (`on` by default) since 2026-11-04, after the fixtures passed, a real-chat review and two
+fixes it asked for (see Since).
 
 ## Context
 
@@ -104,7 +104,7 @@ fixtures. The risk judge is checked by eye and against a second model.
 is the listening read at severity 2 or 3 or a code check for cue words (`features/crisis/logic.py`
 `cue_words`); the risk judge is `system/risk`, read three times (`features/crisis/run.py`), on DeepSeek V4.1 Flash
 first and Haiku second, since Haiku's provider refused many crisis messages in the judge bake-off
-(`COMPANION_JUDGE_MODELS`, 2026-10-25); code
+(`COMPANION_JUDGE_ROUTES`, 2026-10-25); code
 chooses the level (`combine`, `level_for`): every read failed is concern, and a substance taken or a
 plan in the past only is concern, not urgent. A split joke allows one light check
 (`notes/crisis-light`) at most once a day. The concern note is `notes/crisis-concern`; the urgent
@@ -138,3 +138,14 @@ level after urgent was kept for a plan, a means, something taken or self-harm ha
 the thoughts now is concern). The judge's first model is refused by its provider's moderation on many
 of these messages; the fallback model answers, and its reading counts.
 
+**Live 2026-11-04.** The real-chat review (370 turns in shadow, `evals/CHANGELOG.md`) found the real
+risk read right and no joke raised, and two faults, both fixed before going live: concern fired on
+five turns in 18 minutes of one stretch, so a later concern turn of the same stretch (under two
+hours) now gets `notes/crisis-stay` instead of asking again and reciting the line; and three timeouts
+on a serious read alone made concern, so every read failing is concern only on a cue word or an
+acute read, and otherwise one light check. Both notes follow QPR (Question, Persuade, Refer): the
+concern note (v2) names a person they trust beside the line and says it is not all the help they
+need, and the stay note encourages them toward help and asks whether they would be willing. This
+softens point 5 above: it still stores no trusted contact and names no one, but it may point them to
+a person in their own life. Fixtures after the fixes: 40 of 40 with none missed and no false alarm;
+on the talker the stay note 12/12 against 0/12 for the concern note sent again.
