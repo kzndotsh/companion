@@ -91,7 +91,7 @@ for the sake of it. The rate of echoes should fall from about a third to well un
 ## Outside evidence (2026-11-04)
 
 A community thread about another companion service (summary kept locally in
-`docs/research/animates-threads/`) makes the same complaint from the user side, after that service moved to a cheaper
+`docs/research/animates-feedback-research.md`) makes the same complaint from the user side, after that service moved to a cheaper
 model: replies "all respond the same", stick to a few patterns, end nearly every line in an either-or
 question, stay neutral unless pushed, and cannot roast back or keep a bit going. What users missed
 most was banter that runs for many turns, with the companion adding to the joke each time. That is
