@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta, tzinfo
 
-from companion.core.types import RelationshipId, UtteranceId
+from companion.core.types import RelationshipId, Sensitivity, UtteranceId
 from companion.features.threads.gate import evaluate
 from companion.features.threads.logic import Thread, ThreadKind, ThreadState
 
@@ -19,7 +19,7 @@ def _loop(follow_up: datetime = NOON - timedelta(hours=2), **over: object) -> Th
         "the vet tomorrow",
         UtteranceId("u1"),
         follow_up,
-        0,
+        Sensitivity.ORDINARY,
         follow_up - timedelta(days=2),
     )
     return replace(base, **over)  # type: ignore[arg-type]

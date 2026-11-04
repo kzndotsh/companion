@@ -5,10 +5,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from companion.core.types import Belief, BeliefKind, Speaker, Utterance
+from companion.core.types import Belief, BeliefKind, Sensitivity, Speaker, Utterance
 
 BEFORE, AFTER = 6, 1  # messages around the quote that a memory is read with
-SENSITIVE = 2
+SENSITIVE = Sensitivity.DELICATE
 
 
 def build_prompt(b: Belief, around: Sequence[Utterance]) -> str:

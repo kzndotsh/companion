@@ -14,16 +14,22 @@ from __future__ import annotations
 
 import re
 
-SERIOUS = 2
+from companion.core.types import Severity
+
 EM_DASH = "—"
 DASHED = "an em dash"  # the reason a reply with one fails
 QUIP = "a joke bolted onto an ordinary message"
 GENERIC = "a canned generic reaction"
 
 
-def eligible(*, severity: int | None, in_scene: bool, reply: str) -> bool:
+def eligible(*, severity: Severity | None, in_scene: bool, reply: str) -> bool:
     """Ordinary turns the listening judge read: not serious, not a scene, not an empty reply."""
-    return severity is not None and severity < SERIOUS and not in_scene and bool(reply.strip())
+    return (
+        severity is not None
+        and severity < Severity.SERIOUS
+        and not in_scene
+        and bool(reply.strip())
+    )
 
 
 _DISCLAIMER = re.compile(

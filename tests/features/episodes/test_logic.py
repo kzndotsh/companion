@@ -6,6 +6,7 @@ from companion.core.types import (
     Frame,
     RelationshipId,
     SessionId,
+    Severity,
     Speaker,
     TurnId,
     Utterance,
@@ -46,7 +47,7 @@ def test_a_long_turn_into_a_scene_starts_one_but_a_short_one_does_not() -> None:
 def test_heavy_wins_then_scene_then_everyday_and_firsts_are_named_once() -> None:
     scene = Span(tuple(_said(i, i, Frame.PLAY) for i in range(4)))
     assert kind(scene, {}) is Kind.SCENE
-    assert kind(scene, {TurnId("t0"): 2}) is Kind.HEAVY
+    assert kind(scene, {TurnId("t0"): Severity.SERIOUS}) is Kind.HEAVY
     assert kind(Span((_said(0, 0),)), {}) is Kind.EVERYDAY
     assert firsts(Kind.SCENE, set()) == ["first pretend scene"]
     assert firsts(Kind.SCENE, {Kind.SCENE}) == []

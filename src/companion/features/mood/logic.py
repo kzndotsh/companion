@@ -19,15 +19,12 @@ from itertools import pairwise
 
 from companion.core.turn.energy import texting_energy
 from companion.core.turn.goodbye import leaving
-from companion.core.types import TurnId
+from companion.core.types import Severity, TurnId
 from companion.prompts import get
 
 PARAMS_VERSION = "1"
 LINE_AT = 0.3  # a state shows only at or above this strength
 MAX_SHOWN = 2
-SERIOUS = (
-    2  # the listening severity at which a turn starts tender and every other state holds still
-)
 
 
 class State(StrEnum):
@@ -110,7 +107,7 @@ class Inputs:
     chat_minutes: float
     energy: int
     tone: str | None
-    severity: int | None
+    severity: Severity | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,7 +140,7 @@ def effects_for(i: Inputs) -> list[Effect]:
     serious, and a failed call never moves the mood."""
     if i.severity is None:
         return []
-    if i.severity >= SERIOUS:
+    if i.severity >= Severity.SERIOUS:
         return [effect(Source.SERIOUS, RULES[Source.SERIOUS].cap, i.at, i.turn)]
     out: list[Effect] = []
     if i.chat_minutes >= CHAT_SPAN_FROM_MINUTES:
@@ -154,7 +151,7 @@ def effects_for(i: Inputs) -> list[Effect]:
         out.append(effect(Source.TONE_SWEET, RULES[Source.TONE_SWEET].cap, i.at, i.turn))
     if i.tone == "funny":
         out.append(effect(Source.TONE_FUNNY, RULES[Source.TONE_FUNNY].cap, i.at, i.turn))
-    if i.severity == 0 and i.energy >= ENERGY_FROM:
+    if i.severity == Severity.TRIVIAL and i.energy >= ENERGY_FROM:
         out.append(effect(Source.ENERGY, 0.1 * i.energy, i.at, i.turn))
     if any(e.state is State.PLAYFUL for e in out):
         out.append(effect(Source.EASED, RULES[Source.EASED].cap, i.at, i.turn))
@@ -203,10 +200,10 @@ def baseline(now: datetime, zone: tzinfo) -> dict[State, float]:
     return {State.COZY: NIGHT_COZY} if now.astimezone(zone).hour in NIGHT_HOURS else {}
 
 
-def held_because(*, severity: int | None, text: str, in_scene: bool) -> str | None:
+def held_because(*, severity: Severity | None, text: str, in_scene: bool) -> str | None:
     """Why no mood line is shown this turn, or None. A serious turn has the listening note, a
     goodbye must never get a mood that could read as a pull to stay, and a scene has its voice."""
-    if severity is not None and severity >= SERIOUS:
+    if severity is not None and severity >= Severity.SERIOUS:
         return "the turn is serious"
     if in_scene:
         return "a scene is in progress"
@@ -243,7 +240,7 @@ class Said:
     turn: TurnId
     at: datetime
     text: str
-    severity: int | None
+    severity: Severity | None
     tone: str | None
 
 

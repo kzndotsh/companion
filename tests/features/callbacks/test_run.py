@@ -16,6 +16,7 @@ from companion.core.types import (
     Json,
     Provenance,
     RelationshipId,
+    Sensitivity,
     SessionId,
     Speaker,
     Subject,
@@ -85,7 +86,7 @@ async def test_each_reply_is_judged_once_and_the_verdict_is_kept(tmp_path: Path)
             confidence=0.7,
             valid_from=said.at,
             recorded_at=said.at,
-            sensitivity=0,
+            sensitivity=Sensitivity.ORDINARY,
         )
     )
     runtime = Runtime(store, Talker(), PREFIX, REL)

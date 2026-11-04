@@ -24,10 +24,12 @@ from companion.core.types import (
     Json,
     Provenance,
     RelationshipId,
+    Sensitivity,
     Speaker,
     Subject,
     Utterance,
     UtteranceId,
+    nearest_sensitivity,
 )
 from companion.prompts import get
 
@@ -38,7 +40,7 @@ MIN_CONFIDENCE = 0.4
 # applies only to low-sensitivity states and preferences, where the noise is, and never to events,
 # threads, habits or anything sensitive.
 MOMENTARY_KINDS = frozenset({BeliefKind.STATE, BeliefKind.PREFERENCE})
-SENSITIVE = 2
+SENSITIVE = Sensitivity.DELICATE
 # What the user plainly says about themselves in a romantic or sexual setting may be kept. What the
 # model concludes from how they behave in the chat (a tell, an event, a state) may not.
 ROMANTIC_KINDS = frozenset({BeliefKind.TRAIT, BeliefKind.PREFERENCE, BeliefKind.BOUNDARY})
@@ -105,7 +107,7 @@ class MemoryCandidate:
     kind: BeliefKind
     provenance: Provenance
     confidence: float
-    sensitivity: int
+    sensitivity: Sensitivity
     lasting: bool = True
     confirms: str = ""
     grounding: str = ""
@@ -188,7 +190,7 @@ def parse(data: Json) -> tuple[list[MemoryCandidate], list[Rejection]]:
                     kind=BeliefKind(str(fields.get("kind"))),
                     provenance=Provenance(str(fields.get("provenance"))),
                     confidence=_number(fields.get("confidence")),
-                    sensitivity=int(_number(fields.get("sensitivity"))),
+                    sensitivity=nearest_sensitivity(_number(fields.get("sensitivity"))),
                     lasting=fields.get("lasting") is not False,
                     confirms=str(fields.get("confirms") or "").strip(),
                     grounding=str(fields.get("grounding") or "").strip(),
@@ -290,7 +292,7 @@ def to_belief(
             confidence=min(c.confidence, SINGLE_EVIDENCE_CONFIDENCE_CAP),
             valid_from=source.at,
             recorded_at=now,
-            sensitivity=min(max(c.sensitivity, 0), 3),
+            sensitivity=c.sensitivity,
         )
     except ValueError as err:
         return Rejection(f"violates a belief invariant: {err}", raw)

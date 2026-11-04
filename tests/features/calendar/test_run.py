@@ -12,6 +12,7 @@ from companion.core.types import (
     Evidence,
     Frame,
     Provenance,
+    Sensitivity,
     Speaker,
     Subject,
     TurnId,
@@ -114,7 +115,12 @@ async def test_offered_once_a_day_and_logged_only_when_the_turn_is_stored(store:
 
 
 def remember(
-    store: Store, bid: str, claim: str, *, sensitivity: int = 0, frame: Frame = Frame.REAL
+    store: Store,
+    bid: str,
+    claim: str,
+    *,
+    sensitivity: Sensitivity = Sensitivity.ORDINARY,
+    frame: Frame = Frame.REAL,
 ) -> None:
     said = Utterance(
         UtteranceId(f"u-{bid}"),
@@ -153,6 +159,6 @@ def test_their_birthday_from_memory_comes_before_the_public_day(store: Store) ->
 
 
 def test_a_sensitive_or_pretend_date_is_never_marked(store: Store) -> None:
-    remember(store, "b1", "The user's anniversary is October 31.", sensitivity=2)
+    remember(store, "b1", "The user's anniversary is October 31.", sensitivity=Sensitivity.DELICATE)
     remember(store, "b2", "The user's birthday is October 31.", frame=Frame.PLAY)
     assert _tail(store, HALLOWEEN).tail == (NOTE,)

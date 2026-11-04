@@ -9,7 +9,7 @@ from companion.core.card import Card
 from companion.core.extractor import Extraction
 from companion.core.turn.listening import ListeningRead
 from companion.core.turn.now import KEY
-from companion.core.types import Frame, Json, TraceId, TurnId
+from companion.core.types import Frame, Json, Severity, TraceId, TurnId
 from companion.features.now.run import SENT, SHADOW, now_note, read_now
 from companion.kit.current import Heard, Turn
 from companion.kit.features import Lookups, Moment
@@ -18,8 +18,16 @@ from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
-CALM: Heard = (ListeningRead(severity=0, stance="other", vague=False, age_coded=False), "j", "p")
-HEAVY: Heard = (ListeningRead(severity=2, stance="other", vague=False, age_coded=False), "j", "p")
+CALM: Heard = (
+    ListeningRead(severity=Severity.TRIVIAL, stance="other", vague=False, age_coded=False),
+    "j",
+    "p",
+)
+HEAVY: Heard = (
+    ListeningRead(severity=Severity.SERIOUS, stance="other", vague=False, age_coded=False),
+    "j",
+    "p",
+)
 LINE = (
     "[About 2 minutes ago they said dinner is coming soon."
     " It has not happened yet unless they say so.]"

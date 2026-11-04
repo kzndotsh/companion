@@ -11,6 +11,7 @@ from companion.core.turn.length import (
     length_target,
     reply_limit,
 )
+from companion.core.types import Severity
 
 
 def test_a_short_statement_gets_a_note_with_a_limit_near_what_they_wrote() -> None:
@@ -51,13 +52,13 @@ def test_the_longest_message_that_still_counts_as_short_gets_a_target() -> None:
 
 
 def test_a_serious_message_gets_the_serious_target_and_an_acute_one_none() -> None:
-    serious = length_target("i want to die", severity=2)
+    serious = length_target("i want to die", severity=Severity.SERIOUS)
     assert serious is not None
     assert serious.words == SERIOUS_WORDS
     assert f"under about {SERIOUS_WORDS} words" in serious.note
     assert "Their message was short" not in serious.note
-    assert length_target("i want to die", severity=3) is None
-    assert length_target("long serious story " * 10, severity=2) is not None
+    assert length_target("i want to die", severity=Severity.ACUTE) is None
+    assert length_target("long serious story " * 10, severity=Severity.SERIOUS) is not None
 
 
 def test_a_scene_gets_no_target() -> None:

@@ -20,6 +20,7 @@ from companion.core.types import (
     Frame,
     RelationshipId,
     SessionId,
+    Severity,
     Speaker,
     TurnId,
     Utterance,
@@ -108,7 +109,10 @@ async def test_a_spent_topic_is_seen_and_nothing_else_is() -> None:
                 spent = parse((await extractor.extract(JUDGE.text, prompt, SCHEMA)).data)
                 total += 1
                 # score what code would do: goodbyes and unlikely moments never reach the note
-                leaving = held_because(severity=0, text=case.text, in_scene=False) is not None
+                leaving = (
+                    held_because(severity=Severity.TRIVIAL, text=case.text, in_scene=False)
+                    is not None
+                )
                 if (spent and likely(prior, case.text) and not leaving) == case.spent:
                     right += 1
                 else:

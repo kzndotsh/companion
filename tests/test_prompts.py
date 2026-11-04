@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from companion import prompts
+from companion.core.types import Severity
 
 ROOT = Path(str(resources.files("companion.prompts")))
 PLACEHOLDERS = {
@@ -162,6 +163,8 @@ def test_a_listening_note_reaches_the_model_bracketed() -> None:
 
     for severity in (0, 1, 2):
         for vague in (False, True):
-            j = ListeningRead(severity, "listening", vague, medical=severity == 2, rude=False)
+            j = ListeningRead(
+                Severity(severity), "listening", vague, medical=severity == 2, rude=False
+            )
             note = listening_note(j, [])
             assert note is None or (note.startswith("[") and note.endswith("]")), note

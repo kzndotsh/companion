@@ -19,6 +19,7 @@ from companion.core.types import (
     Json,
     Provenance,
     RelationshipId,
+    Sensitivity,
     SessionId,
     Speaker,
     Subject,
@@ -47,7 +48,7 @@ SAID = Utterance(
 )
 
 
-def _belief(bid: str, claim: str, quote: str, sens: int = 0) -> Belief:
+def _belief(bid: str, claim: str, quote: str, sens: Sensitivity = Sensitivity.ORDINARY) -> Belief:
     return Belief(
         id=BeliefId(bid),
         relationship_id=REL,
@@ -158,7 +159,9 @@ async def test_the_look_up_is_logged_with_the_topic_and_what_it_found(store: Sto
 async def test_when_asked_the_look_up_reads_the_conversation_and_reaches_sensitive_memories(
     store: Store,
 ) -> None:
-    store.insert_belief(_belief("b2", "The user carries a heavy secret.", "burger", sens=3))
+    store.insert_belief(
+        _belief("b2", "The user carries a heavy secret.", "burger", sens=Sensitivity.GRAVE)
+    )
     judge = Judge(["r2"])
     talker = await _ask(store, judge)
     [asked] = judge.asked
@@ -171,7 +174,7 @@ async def test_when_asked_the_look_up_reads_the_conversation_and_reaches_sensiti
 def test_only_stated_beliefs_below_crisis_level_are_candidates_and_picks_are_capped() -> None:
     labelled = candidates([_belief(f"b{i}", f"claim {i}", "burger") for i in range(8)])
     assert len(labelled) == 8
-    assert candidates([_belief("x", "in crisis", "burger", sens=3)]) == {}
+    assert candidates([_belief("x", "in crisis", "burger", sens=Sensitivity.GRAVE)]) == {}
     picked = parse({"labels": [*labelled, "r1", "nope"]}, labelled)
     assert len(picked) == 5
     assert "holds nothing on it" in recall_note([])  # owns the gap instead of guessing

@@ -16,10 +16,11 @@ from companion.core.turn.ack import (
     render_reason,
     schema_hash,
 )
-from companion.core.turn.listening import SERIOUS
 from companion.core.types import (
     Frame,
+    Severity,
     Speaker,
+    severity_from,
 )
 from companion.features.crisis.logic import cue_words
 from companion.kit.current import Heard, Turn, decide, mark
@@ -76,8 +77,8 @@ def _after_serious(c: Runtime, t: Turn) -> bool:
         return False
     for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
         labels = d.detail.get("labels") if d.detail else None
-        severity = labels.get("severity") if isinstance(labels, dict) else None
-        if isinstance(severity, int) and not isinstance(severity, bool) and severity >= SERIOUS:
+        severity = severity_from(labels.get("severity") if isinstance(labels, dict) else None)
+        if severity is not None and severity >= Severity.SERIOUS:
             return True
     return False
 

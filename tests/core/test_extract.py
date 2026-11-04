@@ -18,6 +18,7 @@ from companion.core.types import (
     Frame,
     Json,
     Provenance,
+    Sensitivity,
     Speaker,
     Subject,
     Utterance,
@@ -37,7 +38,7 @@ def _candidate(**over: object) -> MemoryCandidate:
         "kind": BeliefKind.TRAIT,
         "provenance": Provenance.STATED,
         "confidence": 0.95,
-        "sensitivity": 2,
+        "sensitivity": Sensitivity.DELICATE,
     }
     base.update(over)
     return MemoryCandidate(**base)  # type: ignore[arg-type]
@@ -60,10 +61,19 @@ def test_single_evidence_confidence_is_capped(utterance: Callable[..., Utterance
     assert got.confidence == 0.6
 
 
-def test_sensitivity_is_clamped(utterance: Callable[..., Utterance]) -> None:
-    got = _make(_candidate(sensitivity=9), utterance(text=TEXT, uid="u1"))
-    assert isinstance(got, Belief)
-    assert got.sensitivity == 3
+def test_sensitivity_is_clamped() -> None:
+    item: Json = {
+        "ref": "m1",
+        "quote": "q",
+        "claim": "c",
+        "subject": "user",
+        "kind": "trait",
+        "provenance": "stated",
+        "confidence": 0.5,
+    }
+    ok, bad = parse({"beliefs": [{**item, "sensitivity": 9}, {**item, "sensitivity": -2}]})
+    assert bad == []
+    assert [c.sensitivity for c in ok] == [Sensitivity.GRAVE, Sensitivity.ORDINARY]
 
 
 def test_an_invented_quote_is_rejected(utterance: Callable[..., Utterance]) -> None:
@@ -187,15 +197,15 @@ def test_a_momentary_want_is_rejected(utterance: Callable[..., Utterance]) -> No
 @pytest.mark.parametrize(
     ("kind", "sensitivity"),
     [
-        (BeliefKind.STATE, 2),
-        (BeliefKind.THREAD, 0),
-        (BeliefKind.EVENT, 0),
-        (BeliefKind.TELL, 1),
-        (BeliefKind.TRAIT, 0),
+        (BeliefKind.STATE, Sensitivity.DELICATE),
+        (BeliefKind.THREAD, Sensitivity.ORDINARY),
+        (BeliefKind.EVENT, Sensitivity.ORDINARY),
+        (BeliefKind.TELL, Sensitivity.PRIVATE),
+        (BeliefKind.TRAIT, Sensitivity.ORDINARY),
     ],
 )
 def test_the_momentary_filter_never_drops_these(
-    utterance: Callable[..., Utterance], kind: BeliefKind, sensitivity: int
+    utterance: Callable[..., Utterance], kind: BeliefKind, sensitivity: Sensitivity
 ) -> None:
     got = _make(
         _candidate(lasting=False, kind=kind, sensitivity=sensitivity),

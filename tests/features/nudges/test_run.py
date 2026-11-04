@@ -7,14 +7,18 @@ from companion.core.extractor import Extraction
 from companion.core.reachout import WOULD_NUDGE, Held
 from companion.core.turn.listening import ListeningRead
 from companion.core.turn.now import KEY as NOW_KEY
-from companion.core.types import Json, TraceId, TurnId
+from companion.core.types import Json, Severity, TraceId, TurnId
 from companion.features.nudges.run import NUDGE_DROPPED, tick_nudge
 from companion.kit.current import Heard
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, REL, SESSION
 
-CALM: Heard = (ListeningRead(severity=0, stance="other", vague=False, age_coded=False), "j", "p")
+CALM: Heard = (
+    ListeningRead(severity=Severity.TRIVIAL, stance="other", vague=False, age_coded=False),
+    "j",
+    "p",
+)
 
 
 class Drafts:

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 from companion.core.clock import local_zone
 from companion.core.episode import EPISODE_GAP
-from companion.core.types import Frame, Json, Speaker
+from companion.core.types import Frame, Json, Severity, Speaker, severity_from
 from companion.features.episodes.logic import GAP_BACK, Told, period
 from companion.features.episodes.logic import NOTE as EPISODES_NOTE
 from companion.features.episodes.logic import note as episodes_note
@@ -54,14 +54,14 @@ class Written:
     cost_usd: float = 0.0
 
 
-def _severities(store: Store, rel: RelationshipId) -> dict[TurnId, int]:
-    out: dict[TurnId, int] = {}
+def _severities(store: Store, rel: RelationshipId) -> dict[TurnId, Severity]:
+    out: dict[TurnId, Severity] = {}
     for d in store.decisions_with_key(rel, "listening"):
         if not d.detail:
             continue
         labels = d.detail.get("labels")
-        value = labels.get("severity") if isinstance(labels, dict) else None
-        if isinstance(value, int):
+        value = severity_from(labels.get("severity") if isinstance(labels, dict) else None)
+        if value is not None:
             out[d.turn_id] = value
     return out
 

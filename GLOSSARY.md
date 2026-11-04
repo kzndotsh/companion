@@ -178,7 +178,7 @@ The reaction judge's read of a message: funny, sweet, impressive, exciting, sad 
 How much typed energy a message has (stretched words, exclamation marks, emoji), counted by code.
 
 **Severity**:
-How serious a message is, 0 to 3: trivial, everyday friction, serious and personal, acute.
+How serious a message is, in four levels (0 to 3): trivial, everyday, serious, acute.
 
 **Reply check**:
 A check on a drafted reply before it goes out, in code or by a judge.
@@ -322,7 +322,7 @@ Whether a memory is fresh, aging or stale, from the age of its newest quote.
 A memory past its freshness, shown as possibly out of date and kept.
 
 **Sensitivity**:
-How delicate a memory is, 0 to 3. A sensitive memory is held.
+How delicate a memory is, in four levels (0 to 3): ordinary, private, delicate, grave. A sensitive memory is held.
 
 **Held memory**:
 A sensitive memory the companion knows but raises only when they are sharing something themselves.

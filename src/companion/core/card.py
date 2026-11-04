@@ -17,10 +17,10 @@ from datetime import UTC, date, datetime, timedelta, tzinfo
 from companion.core.clock import local_zone
 from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.quoted import wants_context
-from companion.core.types import Belief, BeliefId, BeliefKind
+from companion.core.types import Belief, BeliefId, BeliefKind, Sensitivity
 from companion.core.vectors import Vector, dot
 
-HOLD_AT = 2
+HOLD_AT = Sensitivity.DELICATE
 MAX_ITEMS = 15
 MAX_OLDER = 3
 # A one-day moment of daily life (a spill, a meal, a long shower: an event the memory map labels
@@ -38,7 +38,7 @@ RULES = frozenset({BeliefKind.BOUNDARY, BeliefKind.PROMISE})  # always first, wh
 # 131 to 8 (evals/CHANGELOG.md, 2026-11-02).
 FOCUS_SAME = 0.90  # a memory this close to one already chosen says the same thing
 FOCUS_HELD = 0.40  # a held memory only this close, and only when they are sharing
-FOCUS_PERSONAL = 0.35  # a mildly personal one (sensitivity 1) only this close
+FOCUS_PERSONAL = 0.35  # a mildly personal one (private) only this close
 KIND_ORDER = {
     kind: i
     for i, kind in enumerate(
@@ -174,7 +174,7 @@ def _focused(beliefs: Sequence[Belief], focus: Focus, room: int, *, sharing: boo
         near = focus.closeness[b.id]
         if b.sensitivity >= HOLD_AT and (not sharing or near < FOCUS_HELD):
             continue
-        if b.sensitivity == 1 and near < FOCUS_PERSONAL:
+        if b.sensitivity == Sensitivity.PRIVATE and near < FOCUS_PERSONAL:
             continue
         if any(dot(focus.vectors[b.id], focus.vectors[x.id]) > FOCUS_SAME for x in chosen):
             continue
@@ -191,7 +191,7 @@ def _dated_past(b: Belief, last: datetime, now: datetime) -> bool:
     their history, and an ordinary dated one (a project started) is a milestone; both stay."""
     return (
         b.kind is BeliefKind.EVENT
-        and b.sensitivity >= 1
+        and b.sensitivity >= Sensitivity.PRIVATE
         and _ON_A_DATE.search(b.claim) is not None
         and now - last > timedelta(days=EVENT_SHOWN_DAYS)
     )
@@ -224,7 +224,7 @@ def faded(b: Belief, last: datetime, now: datetime) -> bool:
 def _faded(b: Belief, last: datetime, now: datetime) -> bool:
     return (
         b.kind is BeliefKind.EVENT
-        and b.sensitivity == 0
+        and b.sensitivity == Sensitivity.ORDINARY
         and now - last > timedelta(days=EVENT_SHOWN_DAYS)
     )
 

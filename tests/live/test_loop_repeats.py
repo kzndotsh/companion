@@ -19,6 +19,7 @@ from companion.core.beliefs.extract import index_window
 from companion.core.types import (
     Frame,
     RelationshipId,
+    Sensitivity,
     SessionId,
     Speaker,
     TurnId,
@@ -103,7 +104,9 @@ def _chat(store: Store, lines: tuple[tuple[Speaker, str], ...], start: datetime)
 def _open(store: Store, claim: str) -> None:
     said = _chat(store, ((U, claim),), T0 - timedelta(days=1))[0]
     when = T0 + timedelta(days=2)
-    store.add_open_loop(Thread("old", REL, claim, claim, said.id, when, 0, said.at))
+    store.add_open_loop(
+        Thread("old", REL, claim, claim, said.id, when, Sensitivity.ORDINARY, said.at)
+    )
 
 
 async def test_repeats_become_one_thread_and_different_plans_stay_apart(tmp_path: Path) -> None:

@@ -29,6 +29,7 @@ from companion.core.types import (
     Depth,
     Domain,
     Frame,
+    Severity,
     Speaker,
     Utterance,
 )
@@ -164,7 +165,7 @@ def assemble(  # noqa: PLR0913
     view_state = store.view_state(c.rel)
     views = card_views(store.self_beliefs(c.rel), view_state)
     assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
-    sharing = heard is not None and heard[0].severity >= 1
+    sharing = heard is not None and heard[0].severity >= Severity.EVERYDAY
     labels = store.belief_labels(c.rel)
     everyday = {
         bid for bid, x in labels.items() if x.domain is Domain.DAILY and x.depth is Depth.SURFACE

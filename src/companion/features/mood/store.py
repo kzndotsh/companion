@@ -6,7 +6,7 @@ import sqlite3
 from collections.abc import Sequence
 from datetime import datetime
 
-from companion.core.types import RelationshipId, TurnId
+from companion.core.types import RelationshipId, Severity, TurnId
 from companion.features.mood.logic import PARAMS_VERSION, Effect, Said, Source, State
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
@@ -85,7 +85,7 @@ def said_since(conn: sqlite3.Connection, rel: RelationshipId, start: datetime) -
             TurnId(str(r["turn_id"])),
             parse_iso(str(r["at"])),
             str(r["text"]),
-            None if r["severity"] is None else int(r["severity"]),
+            None if r["severity"] is None else Severity(int(r["severity"])),
             None if r["tone"] is None else str(r["tone"]),
         )
         for r in rows

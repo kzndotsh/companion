@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from companion.core.frames import is_assertable
-from companion.core.types import Belief, Json
+from companion.core.types import Belief, Json, Sensitivity
 from companion.prompts import get
 
 PROMPT = get("system/relevance")
@@ -21,8 +21,10 @@ LIVE = "relevance: what it was shown"
 GATE = 0.42  # live: the small model picks only when the closest memory is this near (1 turn in 5)
 SHOWN = 2  # live: at most this many picks reach the talker, none already on the card
 MAX_PICKS = 3
-MAX_SENSITIVITY = 2  # never a crisis-level memory on its own
-HELD = 2  # held memories only on a turn where they share something, as on the card
+MAX_SENSITIVITY = Sensitivity.DELICATE  # never a crisis-level memory on its own
+HELD = (
+    Sensitivity.DELICATE
+)  # held memories only on a turn where they share something, as on the card
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -34,7 +36,7 @@ SCHEMA: dict[str, Json] = {
 def eligible(beliefs: Sequence[Belief], *, sharing: bool) -> list[Belief]:
     """What may be looked up this turn: stated for real, never crisis-level, and held (sensitive)
     memories only when they are sharing something, the same rule as the card."""
-    top = MAX_SENSITIVITY if sharing else HELD - 1
+    top = MAX_SENSITIVITY if sharing else Sensitivity.PRIVATE
     return [b for b in beliefs if is_assertable(b) and b.sensitivity <= top]
 
 

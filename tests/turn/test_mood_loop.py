@@ -19,6 +19,7 @@ from companion.core.types import (
     Json,
     Provenance,
     RelationshipId,
+    Sensitivity,
     SessionId,
     Speaker,
     Subject,
@@ -200,7 +201,7 @@ async def test_held_memories_are_in_view_only_when_they_are_sharing_something(
             confidence=0.7,
             valid_from=said.at,
             recorded_at=said.at,
-            sensitivity=2,
+            sensitivity=Sensitivity.DELICATE,
         )
     )
     talker = await _say(store, Judge(severity=severity), "off", "i want a beer lol")

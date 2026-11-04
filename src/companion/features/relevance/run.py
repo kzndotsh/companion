@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, cast
 from companion.core.card import Card
 from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
-from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Speaker
+from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Severity, Speaker
 from companion.core.vectors import Embedder, nearest
 from companion.features.relevance.logic import GATE as RELEVANCE_GATE
 from companion.features.relevance.logic import LIVE as RELEVANCE_LIVE
@@ -201,7 +201,7 @@ async def relevant_for_turn(
         model=c.embed_model,
         said=t.text,
         last_reply=replies[-1] if replies else None,
-        sharing=heard is not None and heard[0].severity >= 1,
+        sharing=heard is not None and heard[0].severity >= Severity.EVERYDAY,
         on_card=(),
         now=t.now,
         gate=RELEVANCE_GATE,
@@ -250,7 +250,7 @@ async def shadow_for_turn(
         model=c.embed_model,
         said=t.text,
         last_reply=replies[-1] if replies else None,
-        sharing=heard is not None and heard[0].severity >= 1,
+        sharing=heard is not None and heard[0].severity >= Severity.EVERYDAY,
         on_card=[b.id for b in (*card.usable, *card.held, *card.older)],
         now=t.now,
         hidden=_hidden(c),

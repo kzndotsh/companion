@@ -21,7 +21,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from companion.core.frames import is_assertable
-from companion.core.types import Belief, Json
+from companion.core.types import Belief, Json, Sensitivity
 from companion.prompts import get
 
 PROMPT = get("system/recall")
@@ -29,8 +29,9 @@ SYSTEM = PROMPT.text
 _NOTE = get("notes/recall")
 _EMPTY = get("notes/recall-empty")
 MAX_PICKS = 5
-MAX_SENSITIVITY = 2  # never look up crisis-level beliefs on its own
-ASKED_SENSITIVITY = 3  # when they ask it to remember, anything they said may be found
+MAX_SENSITIVITY = Sensitivity.DELICATE  # never look up crisis-level beliefs on its own
+# When they ask it to remember, anything they said may be found.
+ASKED_SENSITIVITY = Sensitivity.GRAVE
 RECENT = 6  # messages of the conversation the look-up reads when they asked, theirs last
 
 SCHEMA: dict[str, Json] = {
@@ -41,7 +42,7 @@ SCHEMA: dict[str, Json] = {
 
 
 def candidates(
-    beliefs: Sequence[Belief], max_sensitivity: int = MAX_SENSITIVITY
+    beliefs: Sequence[Belief], max_sensitivity: Sensitivity = MAX_SENSITIVITY
 ) -> dict[str, Belief]:
     """Short labels (r1, r2, ...) for the beliefs it may look up: stated for real and, unless they
     asked, not crisis."""

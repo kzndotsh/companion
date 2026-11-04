@@ -7,7 +7,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.types import RelationshipId, UtteranceId
+from companion.core.types import RelationshipId, Severity, UtteranceId
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 
@@ -21,7 +21,7 @@ class Episode:
     messages: int
     kind: str
     scene_share: float
-    top_severity: int
+    top_severity: Severity
     firsts: tuple[str, ...]
     gist: str
     prompt: str
@@ -70,7 +70,7 @@ def all_(conn: sqlite3.Connection, rel: RelationshipId) -> list[Episode]:
             int(r["messages"]),
             str(r["kind"]),
             float(r["scene_share"]),
-            int(r["top_severity"]),
+            Severity(int(r["top_severity"])),
             tuple(str(x) for x in json.loads(str(r["firsts"]))),
             str(r["gist"]),
             str(r["prompt"]),

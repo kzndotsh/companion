@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 from typing import NewType
 
 RelationshipId = NewType("RelationshipId", str)
@@ -18,6 +18,39 @@ FlagId = NewType("FlagId", str)
 FavoriteId = NewType("FavoriteId", str)
 
 type Json = str | int | float | bool | list[Json] | dict[str, Json] | None
+
+
+class Severity(IntEnum):
+    """How serious a message is, as the listening read levels it."""
+
+    TRIVIAL = 0
+    EVERYDAY = 1
+    SERIOUS = 2
+    ACUTE = 3
+
+
+def severity_from(value: Json) -> Severity | None:
+    """A number a model or a log gave as a level; None when it is not one of the four."""
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    try:
+        return Severity(value)
+    except ValueError:
+        return None
+
+
+class Sensitivity(IntEnum):
+    """How delicate a memory is."""
+
+    ORDINARY = 0
+    PRIVATE = 1
+    DELICATE = 2
+    GRAVE = 3
+
+
+def nearest_sensitivity(value: float) -> Sensitivity:
+    """A number as a level; one out of range counts as the nearest level."""
+    return Sensitivity(min(max(int(value), Sensitivity.ORDINARY), Sensitivity.GRAVE))
 
 
 class Speaker(StrEnum):
@@ -117,7 +150,7 @@ class Belief:
     confidence: float
     valid_from: datetime
     recorded_at: datetime
-    sensitivity: int = 0
+    sensitivity: Sensitivity = Sensitivity.ORDINARY
     valid_until: datetime | None = None
     superseded_by: BeliefId | None = None
 
@@ -130,9 +163,6 @@ class Belief:
             raise ValueError(msg)
         if not 0.0 <= self.confidence <= 1.0:
             msg = "confidence must be within [0, 1]"
-            raise ValueError(msg)
-        if not 0 <= self.sensitivity <= 3:
-            msg = "sensitivity must be within [0, 3]"
             raise ValueError(msg)
         _require_aware("valid_from", self.valid_from)
         _require_aware("recorded_at", self.recorded_at)

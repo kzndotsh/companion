@@ -17,6 +17,7 @@ from companion.core.types import (
     Frame,
     Json,
     SessionId,
+    Severity,
     TraceId,
     TurnId,
     Utterance,
@@ -68,7 +69,7 @@ def is_casual(t: Turn, in_scene: Frame, heard: Heard | None) -> bool:
     """An ordinary moment: read as not serious, not in a scene, not a goodbye."""
     return (
         heard is not None
-        and heard[0].severity == 0
+        and heard[0].severity == Severity.TRIVIAL
         and in_scene is Frame.REAL
         and not leaving(t.text)
     )

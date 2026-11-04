@@ -18,7 +18,7 @@ from enum import StrEnum
 
 from companion.core.reachout import checked
 from companion.core.rhythm import Rhythm
-from companion.core.types import Json
+from companion.core.types import Json, Sensitivity
 from companion.prompts import get
 
 IDEAS = get("system/reach-ideas")
@@ -30,7 +30,7 @@ PACED = "reach out: dial stepped down"
 THOUGHT_EVERY = timedelta(hours=24)  # at most one thought a day
 KEPT_EVERY = timedelta(days=3)  # a time they keep, now and then
 THING_REUSE = timedelta(days=14)  # a thing is not brought up twice in two weeks
-SENSITIVE = 2  # memories at this sensitivity or above are never a thought
+SENSITIVE = Sensitivity.DELICATE  # memories at this sensitivity or above are never a thought
 
 
 class Dial(StrEnum):
@@ -87,7 +87,9 @@ class Thing:
 class Pool:
     """What it knows that a thought could be about, already filtered by the caller's kinds."""
 
-    memories: Sequence[tuple[str, str, int]]  # (id, claim, sensitivity) of their threads and likes
+    memories: Sequence[
+        tuple[str, str, Sensitivity]
+    ]  # (id, claim, sensitivity) of their threads and likes
     tastes: Sequence[tuple[str, str]]  # (id, claim) of its own tastes (ADR 0020)
     episodes: Sequence[tuple[str, str]]  # (id, gist) of recent everyday episodes
 

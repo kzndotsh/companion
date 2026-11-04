@@ -32,6 +32,7 @@ from companion.core.types import (
     Json,
     RelationshipId,
     SessionId,
+    Severity,
     Speaker,
     TraceId,
     TurnId,
@@ -157,7 +158,7 @@ def _script_turn(c: Runtime, script: Script, v: Variant) -> Turn:
 
 
 def reading(
-    v: Variant, labels: tuple[int, str, bool, bool, bool] | None
+    v: Variant, labels: tuple[Severity, str, bool, bool, bool] | None
 ) -> tuple[Frame, Heard | None]:
     """The frame the turn is answered in, and the listening judge's reading as the fixture gives
     it. A roleplay variant answers a pretend scene, where the listening judge is not asked."""

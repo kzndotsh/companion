@@ -4,6 +4,7 @@ from datetime import date, timedelta
 
 import pytest
 
+from companion.core.types import Sensitivity
 from companion.features.calendar.logic import (
     REGION,
     Dated,
@@ -124,7 +125,13 @@ def test_a_yearly_date_is_read_from_a_memory_and_a_hard_one_never(
 
 def test_their_dates_skip_a_sensitive_memory_and_come_once() -> None:
     birthday = "Their birthday is December 4."
-    found = their_dates([(birthday, 0), (birthday, 1), ("Their anniversary is June 12.", 2)])
+    found = their_dates(
+        [
+            (birthday, Sensitivity.ORDINARY),
+            (birthday, Sensitivity.PRIVATE),
+            ("Their anniversary is June 12.", Sensitivity.DELICATE),
+        ]
+    )
     assert found == (Dated("their birthday", 12, 4),)
     assert Dated("their birthday", 2, 29).on(2027) == date(2027, 2, 28)
 

@@ -13,7 +13,7 @@ from companion.core.turn.ownup import NOTE as OWNED_NOTE
 from companion.core.turn.questions import NOTE as QUESTION_NOTE
 from companion.core.turn.questions import RUN
 from companion.core.turn.quoted import Quoted
-from companion.core.types import Speaker
+from companion.core.types import Severity, Speaker
 from companion.features.curiosity.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
@@ -204,7 +204,19 @@ async def test_recent_times_reach_the_talker_only_when_on_and_the_log_says_which
     store.add_episode(
         REL,
         Episode(
-            "e1", first.id, last.id, first.at, last.at, 2, "everyday", 0.0, 0, (), gist, "p", NOW
+            "e1",
+            first.id,
+            last.id,
+            first.at,
+            last.at,
+            2,
+            "everyday",
+            0.0,
+            Severity.TRIVIAL,
+            (),
+            gist,
+            "p",
+            NOW,
         ),
     )
     later = NOW + timedelta(hours=5)

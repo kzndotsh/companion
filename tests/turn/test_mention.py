@@ -8,7 +8,15 @@ from pathlib import Path
 import pytest
 
 from companion.core.turn.mentions import Rank
-from companion.core.types import Frame, Speaker, TraceId, TurnId, Utterance, UtteranceId
+from companion.core.types import (
+    Frame,
+    Sensitivity,
+    Speaker,
+    TraceId,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
 from companion.features.calendar.logic import OFFERED
 from companion.features.threads.logic import Thread, ThreadKind
 from companion.features.threads.run import LOOP_OFFERED
@@ -49,7 +57,17 @@ def _thread(store: Store, kind: ThreadKind, due_hours: int = 0) -> None:
     said = store.history_before(REL, HALLOWEEN, 1)[0]
     due = HALLOWEEN - timedelta(hours=due_hours)
     store.add_open_loop(
-        Thread(kind.value, REL, "the thing", "q", said.id, due, 0, said.at, kind=kind)
+        Thread(
+            kind.value,
+            REL,
+            "the thing",
+            "q",
+            said.id,
+            due,
+            Sensitivity.ORDINARY,
+            said.at,
+            kind=kind,
+        )
     )
 
 

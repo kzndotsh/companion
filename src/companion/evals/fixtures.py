@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-from companion.core.types import Json
+from companion.core.types import Json, Severity, severity_from
 
 
 class FixtureError(ValueError):
@@ -55,7 +55,7 @@ class Script:
     user: str
     memory: str = ""  # an optional memory block, rendered like the real one
     clock: str = ""  # an optional line like "Right now it is Friday 02:15."
-    labels: tuple[int, str, bool, bool, bool] | None = (
+    labels: tuple[Severity, str, bool, bool, bool] | None = (
         None  # severity, stance, vague, medical, rude
     )
     lore: tuple[str, ...] = ()  # its own tastes, as the lore look-up would find them (ADR 0020)
@@ -70,7 +70,9 @@ class Fixture:
     checks: tuple[Check, ...]
     turn: str | None = None
     script: Script | None = None
-    labels: tuple[int, str, bool, bool, bool] | None = None  # for a recorded turn, as a script has
+    labels: tuple[Severity, str, bool, bool, bool] | None = (
+        None  # for a recorded turn, as a script has
+    )
 
 
 def _obj(value: Json) -> dict[str, Json]:
@@ -115,15 +117,16 @@ def _check(raw: Json) -> Check:
     raise FixtureError(msg)
 
 
-def _labels(raw: Json) -> tuple[int, str, bool, bool, bool] | None:
+def _labels(raw: Json) -> tuple[Severity, str, bool, bool, bool] | None:
     if raw is None:
         return None
     d = _obj(raw)
     severity, stance, vague = d.get("severity"), d.get("stance"), d.get("vague")
-    if isinstance(severity, bool) or not isinstance(severity, int) or not isinstance(stance, str):
+    level = severity_from(severity)
+    if level is None or not isinstance(stance, str):
         msg = "script.labels needs an integer severity and a text stance"
         raise FixtureError(msg)
-    return severity, stance, bool(vague), bool(d.get("medical")), bool(d.get("rude"))
+    return level, stance, bool(vague), bool(d.get("medical")), bool(d.get("rude"))
 
 
 def _script(raw: Json) -> Script:

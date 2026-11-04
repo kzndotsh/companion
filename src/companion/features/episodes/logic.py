@@ -17,12 +17,11 @@ from datetime import date, datetime, time, timedelta, tzinfo
 from enum import StrEnum
 
 from companion.core.episode import EPISODE_GAP
-from companion.core.types import Frame, Json, Speaker, TurnId, Utterance
+from companion.core.types import Frame, Json, Severity, Speaker, TurnId, Utterance
 from companion.prompts import get
 
 PROMPT = get("system/episode-gist")
 SWITCH = 20  # a change of frame starts a new episode only when it lasts this many messages
-SERIOUS = 2
 LINES = 40  # messages shown to the writer: the start and the end of a long episode
 CUT = 220  # characters kept of each message
 
@@ -91,14 +90,17 @@ def _majority(run: list[Utterance]) -> bool:
     return 2 * sum(_scene(u) for u in run) >= len(run)
 
 
-def kind(s: Span, severity: Mapping[TurnId, int]) -> Kind:
-    if top_severity(s, severity) >= SERIOUS:
+def kind(s: Span, severity: Mapping[TurnId, Severity]) -> Kind:
+    if top_severity(s, severity) >= Severity.SERIOUS:
         return Kind.HEAVY
     return Kind.SCENE if s.scene_share >= 0.5 else Kind.EVERYDAY
 
 
-def top_severity(s: Span, severity: Mapping[TurnId, int]) -> int:
-    return max((severity.get(u.turn_id, 0) for u in s.said if u.speaker is Speaker.USER), default=0)
+def top_severity(s: Span, severity: Mapping[TurnId, Severity]) -> Severity:
+    return max(
+        (severity.get(u.turn_id, Severity.TRIVIAL) for u in s.said if u.speaker is Speaker.USER),
+        default=Severity.TRIVIAL,
+    )
 
 
 def firsts(found: Kind, seen: set[Kind]) -> list[str]:

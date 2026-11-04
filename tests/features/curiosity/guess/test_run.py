@@ -14,6 +14,7 @@ from companion.core.types import (
     Frame,
     Json,
     Provenance,
+    Sensitivity,
     Speaker,
     Subject,
     TurnId,
@@ -47,7 +48,9 @@ class Guesser(Judge):
         return await super().extract(system, user, schema)
 
 
-def _remember(store: Store, bid: str, text: str, claim: str, sensitivity: int = 0) -> None:
+def _remember(
+    store: Store, bid: str, text: str, claim: str, sensitivity: Sensitivity = Sensitivity.ORDINARY
+) -> None:
     said = Utterance(
         UtteranceId(f"u-{bid}"),
         REL,
@@ -82,7 +85,13 @@ def _remember(store: Store, bid: str, text: str, claim: str, sensitivity: int = 
 @pytest.fixture
 def store(tmp_path: Path) -> Store:
     s = Store(tmp_path / "rel.sqlite")
-    _remember(s, "secret", "a private thing", "The user has a private worry.", sensitivity=2)
+    _remember(
+        s,
+        "secret",
+        "a private thing",
+        "The user has a private worry.",
+        sensitivity=Sensitivity.DELICATE,
+    )
     _remember(s, "coffee", "coffee is my ritual", "The user loves the ritual of coffee.")
     said = Utterance(
         UtteranceId("u0"),

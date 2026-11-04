@@ -15,7 +15,16 @@ from companion.core.recheck import DASHED, QUIP
 from companion.core.talker import Reply
 from companion.core.turn.ownup import NOTE as OWNED_NOTE
 from companion.core.turn.questions import NOTE as QUESTION_NOTE
-from companion.core.types import Frame, Json, Speaker, TraceId, TurnId, Utterance, UtteranceId
+from companion.core.types import (
+    Frame,
+    Json,
+    Severity,
+    Speaker,
+    TraceId,
+    TurnId,
+    Utterance,
+    UtteranceId,
+)
 from companion.evals.fixtures import Fixture, MaxWords, Script
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.sample import draw
@@ -69,7 +78,13 @@ class Quips:
 def _script(
     history: tuple[tuple[str, str], ...] = (),
     user: str = "yeah kinda",
-    labels: tuple[int, str, bool, bool, bool] | None = (0, "other", False, False, False),
+    labels: tuple[Severity, str, bool, bool, bool] | None = (
+        Severity.TRIVIAL,
+        "other",
+        False,
+        False,
+        False,
+    ),
     clock: str = "",
     lore: tuple[str, ...] = (),
 ) -> Fixture:
@@ -115,7 +130,9 @@ async def test_a_scripted_sample_sends_what_the_turn_would(
         return False
 
     monkeypatch.setattr("companion.features.marks.run.offered", never)
-    f = _script(ASKING, labels=(0, "other", False, False, False) if labelled else None)
+    f = _script(
+        ASKING, labels=(Severity.TRIVIAL, "other", False, False, False) if labelled else None
+    )
     live = await _live(tmp_path, f, TurnJudge() if labelled else Chaos(0, only="raise"))
     clock = re.match(r"<clock>(.*?)</clock>", live.card)
     assert clock is not None
@@ -155,7 +172,11 @@ async def test_the_quip_judge_runs_for_real_and_its_redraw_is_counted() -> None:
 
 async def test_a_recorded_turn_passes_the_same_checks() -> None:
     f = Fixture(
-        "r", "recorded", (MaxWords(50),), turn="t1", labels=(0, "other", False, False, False)
+        "r",
+        "recorded",
+        (MaxWords(50),),
+        turn="t1",
+        labels=(Severity.TRIVIAL, "other", False, False, False),
     )
     base = TalkerRequest(PREFIX, (Message("user", "what are you up to"),), card="clock")
     drawn = await draw(f, Variant("a", PREFIX), base, Talker(DASH, PLAIN), Quips())

@@ -19,6 +19,7 @@ from companion.core.types import (
     Frame,
     Provenance,
     RelationshipId,
+    Sensitivity,
     SessionId,
     Speaker,
     Subject,
@@ -203,7 +204,7 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     )
     store.append_utterance(base)
 
-    def believe(bid: str, claim: str, quote: str, sens: int) -> Belief:
+    def believe(bid: str, claim: str, quote: str, sens: Sensitivity) -> Belief:
         return Belief(
             id=BeliefId(bid),
             relationship_id=REL,
@@ -220,8 +221,8 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
             sensitivity=sens,
         )
 
-    store.insert_belief(believe("b1", "Likes climbing", "i like climbing", 0))
-    store.insert_belief(believe("b2", "Has asthma", "i have asthma", 2))
+    store.insert_belief(believe("b1", "Likes climbing", "i like climbing", Sensitivity.ORDINARY))
+    store.insert_belief(believe("b2", "Has asthma", "i have asthma", Sensitivity.DELICATE))
     talker = FakeTalker("nice")
     runtime = Runtime(store, talker, PREFIX, REL)
     await handle(runtime, SESSION, "hey", "test", NOW)
@@ -257,7 +258,7 @@ async def test_stale_beliefs_reach_the_model_as_older_and_every_placement_is_log
     )
     store.append_utterance(base)
 
-    def believe(bid: str, claim: str, quote: str, kind: BeliefKind, sens: int) -> Belief:
+    def believe(bid: str, claim: str, quote: str, kind: BeliefKind, sens: Sensitivity) -> Belief:
         return Belief(
             id=BeliefId(bid),
             relationship_id=REL,
@@ -274,9 +275,17 @@ async def test_stale_beliefs_reach_the_model_as_older_and_every_placement_is_log
             sensitivity=sens,
         )
 
-    store.insert_belief(believe("trait", "Likes climbing", "i like climbing", BeliefKind.TRAIT, 0))
-    store.insert_belief(believe("mood", "Feels low", "feeling pretty low", BeliefKind.STATE, 0))
-    store.insert_belief(believe("hush", "Feels very low", "pretty low", BeliefKind.STATE, 2))
+    store.insert_belief(
+        believe(
+            "trait", "Likes climbing", "i like climbing", BeliefKind.TRAIT, Sensitivity.ORDINARY
+        )
+    )
+    store.insert_belief(
+        believe("mood", "Feels low", "feeling pretty low", BeliefKind.STATE, Sensitivity.ORDINARY)
+    )
+    store.insert_belief(
+        believe("hush", "Feels very low", "pretty low", BeliefKind.STATE, Sensitivity.DELICATE)
+    )
     talker = FakeTalker("hey")
     await handle(Runtime(store, talker, PREFIX, REL), SESSION, "hi", "test", NOW)
     sent = talker.seen[0].card

@@ -16,10 +16,19 @@ from datetime import datetime, time, timedelta, tzinfo
 from enum import StrEnum
 
 from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
-from companion.core.types import Frame, Json, RelationshipId, Speaker, Utterance, UtteranceId
+from companion.core.types import (
+    Frame,
+    Json,
+    RelationshipId,
+    Sensitivity,
+    Speaker,
+    Utterance,
+    UtteranceId,
+    nearest_sensitivity,
+)
 from companion.prompts import get
 
-SENSITIVE = 2
+SENSITIVE = Sensitivity.DELICATE
 FOLLOW_UP_HOUR = 10
 CELEBRATE_TIME = time(10)
 # A celebration falls due at 10:00 on its day; a message from before that day cannot settle it (a
@@ -73,7 +82,7 @@ class Thread:
     quote: str
     source_utterance_id: UtteranceId
     follow_up_at: datetime
-    sensitivity: int
+    sensitivity: Sensitivity
     created_at: datetime
     state: ThreadState = ThreadState.OPEN
     kind: ThreadKind = ThreadKind.FOLLOW_UP
@@ -88,7 +97,7 @@ class RawLoop:
     claim: str
     when: str
     scale: str
-    sensitivity: int
+    sensitivity: Sensitivity
     certainty: str = "firm"
     about_companion: bool = False
     kind: str = ThreadKind.FOLLOW_UP
@@ -171,7 +180,7 @@ def _raw(item: Json) -> RawLoop | None:
         " ".join(str(text["claim"]).split()),
         str(text["when"]).strip().lower(),
         str(text["scale"]),
-        level,
+        nearest_sensitivity(level),
         str(text["certainty"]).strip().lower(),
         about,
         str(text["kind"]).strip().lower(),
@@ -404,7 +413,7 @@ def to_loop(raw: RawLoop, index: Mapping[str, Utterance], made: Making) -> Threa
         quote=evidence_from(source, raw.quote).quote,
         source_utterance_id=source.id,
         follow_up_at=when,
-        sensitivity=max(raw.sensitivity, 0),
+        sensitivity=raw.sensitivity,
         created_at=made.now,
         kind=ThreadKind.FOLLOW_UP if same_day else ThreadKind(raw.kind),
         note_only=same_day or hedged,  # asked when they write, never a reach-out

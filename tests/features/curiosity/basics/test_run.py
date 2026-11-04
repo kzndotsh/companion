@@ -13,6 +13,7 @@ from companion.core.types import (
     Belief,
     Frame,
     Json,
+    Severity,
     Speaker,
     TurnId,
     Utterance,
@@ -47,7 +48,11 @@ def store(tmp_path: Path) -> Store:
 
 
 def _note(
-    store: Store, beliefs: list[Belief], *, severity: int = 0, asked_how: bool = False
+    store: Store,
+    beliefs: list[Belief],
+    *,
+    severity: Severity = Severity.TRIVIAL,
+    asked_how: bool = False,
 ) -> tuple[str, ...]:
     runtime = Runtime(store, Talker(), PREFIX, REL)
     t = Turn(SESSION, TurnId("t"), NOW, [], "just got home")
@@ -73,7 +78,7 @@ def test_the_pronoun_note_needs_the_setting_unset_and_comes_once_a_day(
 ) -> None:
     named = [belief(bid="n", claim=NAMED)]
     store = Store(tmp_path / "a.sqlite")
-    assert _note(store, named, severity=1) == ()  # not on a serious turn
+    assert _note(store, named, severity=Severity.EVERYDAY) == ()  # not on a serious turn
     assert _note(store, named, asked_how=True) == ()
     assert _note(store, named) == (ASK_PRONOUNS.text,)
     assert store.decided_since(REL, ASKED_PRONOUNS, NOW)

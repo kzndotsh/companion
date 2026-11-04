@@ -23,10 +23,12 @@ from companion.core.types import (
     Json,
     RelationshipId,
     SessionId,
+    Severity,
     Speaker,
     Subject,
     TraceId,
     TurnId,
+    severity_from,
 )
 from companion.features.reach.gate import (
     AFTER_HEAVY,
@@ -82,7 +84,7 @@ IDEAS_JUDGE = Judge(
 PICK_JUDGE = Judge(
     "initiative", PICK, PICK_SCHEMA, read_pick, timeout=20.0, unread="no reach-out this time"
 )
-HEAVY = 2  # a listening read at this severity or above is a heavy message
+HEAVY = Severity.SERIOUS  # a listening read at this severity or above is a heavy message
 
 
 @dataclass(slots=True)
@@ -125,9 +127,7 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
         episodes=[
             (e.id, e.gist)
             for e in store.episodes(rel)
-            if e.kind == "everyday"
-            and e.top_severity < SENSITIVE
-            and now - e.end_at <= EPISODE_DAYS
+            if e.kind == "everyday" and e.top_severity < HEAVY and now - e.end_at <= EPISODE_DAYS
         ],
     )
 
@@ -146,7 +146,7 @@ def _heavy_at(store: Store, rel: RelationshipId, now: datetime) -> datetime | No
         d.at
         for d in store.decisions_with_key(rel, "listening", now - AFTER_HEAVY)
         if isinstance(labels := (d.detail or {}).get("labels"), dict)
-        and isinstance(sev := labels.get("severity"), int)
+        and (sev := severity_from(labels.get("severity"))) is not None
         and sev >= HEAVY
         and d.at <= now
     ]
@@ -161,7 +161,7 @@ def _kept_out(store: Store, rel: RelationshipId, since: datetime, now: datetime)
         isinstance(labels := (d.detail or {}).get("labels"), dict)
         and (
             labels.get("intimate") is True
-            or (isinstance(sev := labels.get("severity"), int) and sev >= HEAVY)
+            or ((sev := severity_from(labels.get("severity"))) is not None and sev >= HEAVY)
         )
         for d in store.decisions_with_key(rel, "listening", since)
         if d.at <= now

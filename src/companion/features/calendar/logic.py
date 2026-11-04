@@ -20,6 +20,7 @@ from enum import StrEnum
 
 import holidays
 
+from companion.core.types import Sensitivity
 from companion.prompts import get
 
 REGION = "US"  # the one place the region is set, until where they live is known
@@ -178,10 +179,12 @@ def yearly(claim: str) -> Dated | None:
     return Dated(f"their {what}", month, day)
 
 
-SENSITIVE = 2  # a memory this sensitive never gives a date: such a day is never marked on its own
+SENSITIVE = (
+    Sensitivity.DELICATE
+)  # a memory this sensitive never gives a date: such a day is never marked on its own
 
 
-def their_dates(memories: Sequence[tuple[str, int]]) -> tuple[Dated, ...]:
+def their_dates(memories: Sequence[tuple[str, Sensitivity]]) -> tuple[Dated, ...]:
     """Their yearly dates from what memory holds, as (claim, sensitivity), each once."""
     found = (yearly(claim) for claim, level in memories if level < SENSITIVE)
     return tuple(dict.fromkeys(d for d in found if d is not None))

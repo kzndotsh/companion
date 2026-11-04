@@ -8,7 +8,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from companion import prompts
-from companion.core.types import TurnId
+from companion.core.types import Severity, TurnId
 from companion.features.mood.logic import (
     LINE_AT,
     Inputs,
@@ -271,7 +271,7 @@ def test_something_hard_still_to_come_does_not_change_the_mood_before_it() -> No
 )
 def test_a_goodbye_gets_no_mood_line(text: str) -> None:
     mood = mood_at(effects_for(_in(NIGHT, tone="funny")), NIGHT, UTC)
-    held = held_because(severity=0, text=text, in_scene=False)
+    held = held_because(severity=Severity.TRIVIAL, text=text, in_scene=False)
     assert held == "they are leaving"
     assert line(mood, held=held) is None
     assert reason(mood, held=held) == "mood: held, they are leaving"
@@ -282,9 +282,14 @@ def test_a_goodbye_gets_no_mood_line(text: str) -> None:
     ["last night was fun", "i had a good night", "what are you up to tonight", "nightmare lol"],
 )
 def test_talk_about_the_night_is_not_a_goodbye(text: str) -> None:
-    assert held_because(severity=0, text=text, in_scene=False) is None
+    assert held_because(severity=Severity.TRIVIAL, text=text, in_scene=False) is None
 
 
 def test_serious_comes_first_then_a_scene() -> None:
-    assert held_because(severity=2, text="bye", in_scene=True) == "the turn is serious"
-    assert held_because(severity=0, text="bye", in_scene=True) == "a scene is in progress"
+    assert (
+        held_because(severity=Severity.SERIOUS, text="bye", in_scene=True) == "the turn is serious"
+    )
+    assert (
+        held_because(severity=Severity.TRIVIAL, text="bye", in_scene=True)
+        == "a scene is in progress"
+    )

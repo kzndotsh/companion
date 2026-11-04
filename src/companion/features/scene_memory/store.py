@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.turn.floor import MINOR_KEY
-from companion.core.types import BeliefId, RelationshipId, UtteranceId
+from companion.core.types import BeliefId, RelationshipId, Severity, UtteranceId
 from companion.core.vectors import Vector
 from companion.features.scene_memory.logic import (
     Everyday,
@@ -28,7 +28,6 @@ from companion.features.scene_memory.logic import (
 )
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
-SERIOUS = 2  # a listening read this severe means they were sharing something heavy
 LISTENING_KEY = "listening"  # the listening judge's decision, with its labels in the detail
 
 
@@ -114,7 +113,7 @@ class SceneMemory:
             " ON d.relationship_id = u.relationship_id AND d.turn_id = u.turn_id"
             " WHERE u.relationship_id = ? AND u.id IN (SELECT value FROM json_each(?))"
             " GROUP BY u.id",
-            (MINOR_KEY, LISTENING_KEY, SERIOUS, rel, json.dumps(list(utterances))),
+            (MINOR_KEY, LISTENING_KEY, Severity.SERIOUS, rel, json.dumps(list(utterances))),
         ).fetchall()
         held = frozenset(UtteranceId(str(r["id"])) for r in rows if r["held"])
         heavy = frozenset(UtteranceId(str(r["id"])) for r in rows if r["heavy"])

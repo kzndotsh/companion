@@ -28,6 +28,7 @@ from companion.core.types import (
     Frame,
     Json,
     Provenance,
+    Sensitivity,
     Speaker,
     TurnId,
     Utterance,
@@ -67,7 +68,7 @@ BATCH = 15  # memories labelled per call: in 60, borderline ones flipped with wh
 NEAREST = 6  # entries nearest the moment on a scene card, besides the limits (3/6/9/12 judged)
 MIN_SCENES = 2  # a pattern is an entry only once seen in this many separate scenes
 COOL = timedelta(days=3)  # a curious item they pushed back is not offered again this soon
-CRISIS = 3  # the top sensitivity: never in a scene
+CRISIS = Sensitivity.GRAVE  # the top sensitivity: never in a scene
 
 
 class Lane(StrEnum):

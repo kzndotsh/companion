@@ -15,7 +15,6 @@ from companion.core.frames import (
 from companion.core.prompt.request import TalkerRequest
 from companion.core.recheck import DASHED as EM_DASH_CHECK
 from companion.core.recheck import GENERIC, QUIP, code_checks
-from companion.core.recheck import SERIOUS as RECHECK_SERIOUS
 from companion.core.recheck import eligible as recheck_eligible
 from companion.core.talker import Reply, Talker
 from companion.core.turn.floor import INTIMATE_CHECK
@@ -24,6 +23,7 @@ from companion.core.turn.react import ToneRead
 from companion.core.types import (
     Frame,
     Json,
+    Severity,
 )
 from companion.kit.current import Heard, Turn, decide, mark
 from companion.turn.crisis import method_checked
@@ -84,7 +84,7 @@ async def _recheck(  # noqa: PLR0913, PLR0917
     logged. Before 2026-10-24 an unread turn skipped the code checks too."""
     severity = heard[0].severity if heard is not None else None
     scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
-    code_only = scene or severity is None or severity >= RECHECK_SERIOUS
+    code_only = scene or severity is None or severity >= Severity.SERIOUS
     if not c.redraw:
         return reply
     if not reply.text.strip():

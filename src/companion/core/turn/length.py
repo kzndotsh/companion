@@ -21,6 +21,7 @@ import random
 import re
 from dataclasses import dataclass
 
+from companion.core.types import Severity
 from companion.prompts import get
 
 MAX_USER_WORDS = 12
@@ -28,7 +29,6 @@ FLOOR_WORDS = 8
 MIN_VARIED_WORDS = 5
 VARY = (0.6, 1.5)  # the range a short statement's target is scaled by, per turn
 SERIOUS_WORDS = 35
-SERIOUS, ACUTE = 2, 3  # listening severities
 # A short message that asks it something without a question mark: "what about you", "ask me
 # something", "and you". Capped like a statement, the reply answered and stopped (flags 2026-10-25).
 _ASKS = re.compile(
@@ -62,12 +62,12 @@ def varied(base: int, seed: str) -> int:
 
 
 def length_target(
-    user_text: str, *, severity: int | None = None, in_scene: bool = False, seed: str = ""
+    user_text: str, *, severity: Severity | None = None, in_scene: bool = False, seed: str = ""
 ) -> LengthTarget | None:
     """The one length target for this turn, or None when nothing should cap it."""
-    if in_scene or (severity is not None and severity >= ACUTE):
+    if in_scene or (severity is not None and severity >= Severity.ACUTE):
         return None
-    if severity is not None and severity >= SERIOUS:
+    if severity is not None and severity >= Severity.SERIOUS:
         note = _SERIOUS_NOTE.render(limit=SERIOUS_WORDS)
         return LengthTarget(SERIOUS_WORDS, "serious message", note)
     words = len(user_text.split())

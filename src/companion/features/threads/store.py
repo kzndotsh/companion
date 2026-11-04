@@ -7,7 +7,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.types import RelationshipId, UtteranceId
+from companion.core.types import RelationshipId, UtteranceId, nearest_sensitivity
 from companion.features.threads.logic import Source, Thread, ThreadKind, ThreadState
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
@@ -87,7 +87,7 @@ def loops(conn: sqlite3.Connection, rel: RelationshipId) -> list[Thread]:
             quote=str(r["quote"]),
             source_utterance_id=UtteranceId(str(r["source_utterance_id"])),
             follow_up_at=parse_iso(str(r["follow_up_at"])),
-            sensitivity=int(r["sensitivity"]),
+            sensitivity=nearest_sensitivity(int(r["sensitivity"])),
             created_at=parse_iso(str(r["created_at"])),
             state=ThreadState(str(r["state"])),
             kind=ThreadKind(str(r["kind"])),

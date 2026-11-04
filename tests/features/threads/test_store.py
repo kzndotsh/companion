@@ -7,7 +7,7 @@ from datetime import timedelta
 
 import pytest
 
-from companion.core.types import Utterance, UtteranceId
+from companion.core.types import Sensitivity, Utterance, UtteranceId
 from companion.features.threads import store as open_loops
 from companion.features.threads.logic import Source, Thread, ThreadState
 from companion.features.threads.store import ReachOut
@@ -25,7 +25,7 @@ def _loop(conn: sqlite3.Connection, utterance: Callable[..., Utterance]) -> Thre
         "going to the vet tomorrow",
         UtteranceId("u-src"),
         T0 + timedelta(days=1),
-        0,
+        Sensitivity.ORDINARY,
         T0,
     )
     open_loops.add_loop(conn, loop)
@@ -98,7 +98,7 @@ def test_reach_outs_can_be_listed_since_a_time(
 
 
 def test_a_loop_must_point_at_a_real_message(conn: sqlite3.Connection) -> None:
-    ghost = Thread("l9", REL, "x", "x", UtteranceId("nope"), T0, 0, T0)
+    ghost = Thread("l9", REL, "x", "x", UtteranceId("nope"), T0, Sensitivity.ORDINARY, T0)
     with pytest.raises(sqlite3.IntegrityError):
         open_loops.add_loop(conn, ghost)
 

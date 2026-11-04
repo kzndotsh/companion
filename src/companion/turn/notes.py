@@ -30,7 +30,9 @@ from companion.core.turn.quoted import quoted_note
 from companion.core.types import (
     Frame,
     Json,
+    Severity,
     Speaker,
+    severity_from,
 )
 from companion.kit.features import Feature, Lookups, Moment, Offer, Offered, asking
 from companion.kit.recall import Context, Recalled, look_up
@@ -46,7 +48,6 @@ log = logging.getLogger("companion.turn")
 HOW_ARE_YOU_NOTE = get("notes/check-in")
 HOW_ARE_YOU_GAP = timedelta(hours=3)  # away at least this long since their last message
 HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
-SERIOUS = 2
 LOOK_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
 
 
@@ -225,7 +226,7 @@ def _owned(m: Moment, so_far: Offered) -> Offer:
 def _game(m: Moment, _: Offered) -> Offer:
     """When they asked it to keep asking them things, a note after the history to ask the next
     one: outside a scene, not on a serious turn and not on one the crisis path reads as a risk."""
-    serious = m.risk or (m.heard is not None and m.heard[0].severity >= SERIOUS)
+    serious = m.risk or (m.heard is not None and m.heard[0].severity >= Severity.SERIOUS)
     if m.in_scene is not Frame.REAL or serious:
         return Offer()
     note = game_note(m.t.prior, m.t.text, m.t.now)
@@ -235,7 +236,7 @@ def _game(m: Moment, _: Offered) -> Offer:
 def _questions(m: Moment, so_far: Offered) -> Offer:
     """When its last replies were all questions, a note to ask nothing this time: outside a scene,
     not on a serious turn, and not when another note asks them something. After the history."""
-    serious = m.heard is not None and m.heard[0].severity >= SERIOUS
+    serious = m.heard is not None and m.heard[0].severity >= Severity.SERIOUS
     if m.in_scene is not Frame.REAL or serious or asking(so_far):
         return Offer()
     replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]
@@ -258,15 +259,15 @@ def _recalled(m: Moment, _: Offered) -> Offer:
 def _severity(detail: dict[str, Json] | None) -> int:
     """The severity a listening decision logged, or -1."""
     labels = (detail or {}).get("labels")
-    value = labels.get("severity") if isinstance(labels, dict) else None
-    return value if isinstance(value, int) else -1
+    level = severity_from(labels.get("severity") if isinstance(labels, dict) else None)
+    return -1 if level is None else level
 
 
 def _how_are_you(m: Moment, _: Offered) -> Offer:
     """When they come back after a gap and the talk before it was heavy (a serious message in its
     last hours), one note to ask gently how they are, once per heavy talk."""
     c, t = m.c, m.t
-    if m.heard is None or m.heard[0].severity >= SERIOUS or m.in_scene is not Frame.REAL:
+    if m.heard is None or m.heard[0].severity >= Severity.SERIOUS or m.in_scene is not Frame.REAL:
         return Offer()
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     if not theirs or t.now - theirs[-1].at < HOW_ARE_YOU_GAP:
@@ -276,7 +277,7 @@ def _how_are_you(m: Moment, _: Offered) -> Offer:
         return Offer()
     recent = [u.turn_id for u in theirs if last - u.at <= HEAVY_WINDOW]
     heavy = any(
-        _severity(d.detail) >= SERIOUS
+        _severity(d.detail) >= Severity.SERIOUS
         for turn in recent
         for d in c.store.decisions_for_turn(c.rel, turn)
         if d.has_key("listening")

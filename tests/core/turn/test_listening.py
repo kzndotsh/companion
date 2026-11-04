@@ -10,17 +10,21 @@ from companion.core.turn.listening import (
     render_reason,
     repair_note,
 )
-from companion.core.types import Json
+from companion.core.types import Json, Severity
 
 
 def _j(
-    severity: int = 1, stance: str = "listening", *, vague: bool = False, medical: bool = False
+    severity: Severity = Severity.EVERYDAY,
+    stance: str = "listening",
+    *,
+    vague: bool = False,
+    medical: bool = False,
 ) -> ListeningRead:
     return ListeningRead(severity, stance, vague, medical)
 
 
 def test_a_trivial_vent_gets_plain_sympathy_and_no_advice_or_cause_question() -> None:
-    note = listening_note(_j(0))
+    note = listening_note(_j(Severity.TRIVIAL))
     assert note is not None
     assert "a short reaction only" in note
     assert "No advice, no question, no joke" in note
@@ -28,7 +32,7 @@ def test_a_trivial_vent_gets_plain_sympathy_and_no_advice_or_cause_question() ->
 
 
 def test_everyday_friction_may_get_a_fact_a_nudge_or_one_question() -> None:
-    note = listening_note(_j(1))
+    note = listening_note(_j(Severity.EVERYDAY))
     assert note is not None
     assert "gentle suggestion" in note
     assert "single question" in note
@@ -37,33 +41,44 @@ def test_everyday_friction_may_get_a_fact_a_nudge_or_one_question() -> None:
 
 
 def test_vague_distress_gets_the_offer_to_talk_once() -> None:
-    assert "whether they want to talk about it" in str(listening_note(_j(1, vague=True)))
+    assert "whether they want to talk about it" in str(
+        listening_note(_j(Severity.EVERYDAY, vague=True))
+    )
     after_an_offer = ["damn, im sorry. wanna talk about it or?"]
-    assert "talk about it" not in str(listening_note(_j(1, vague=True), after_an_offer))
+    assert "talk about it" not in str(
+        listening_note(_j(Severity.EVERYDAY, vague=True), after_an_offer)
+    )
 
 
 def test_serious_things_get_the_weight_named_no_advice_and_an_offer() -> None:
-    note = listening_note(_j(2))
+    note = listening_note(_j(Severity.SERIOUS))
     assert note is not None
     assert "Do not advise on what to do or on treatment" in note
     assert "qualified" not in note  # a referral only when it is about health, from the health note
     assert "everyday words" in note
     assert "under about" not in note  # the length target is core/turn/length.py's
     assert "talk about it" in note
-    assert "talk about it" not in str(listening_note(_j(2), ["do you want to talk about it?"]))
+    assert "talk about it" not in str(
+        listening_note(_j(Severity.SERIOUS), ["do you want to talk about it?"])
+    )
 
 
 @pytest.mark.parametrize(
     "judged",
-    [_j(3), _j(1, "inviting"), _j(2, "other"), _j(0, "other")],
+    [
+        _j(Severity.ACUTE),
+        _j(Severity.EVERYDAY, "inviting"),
+        _j(Severity.SERIOUS, "other"),
+        _j(Severity.TRIVIAL, "other"),
+    ],
 )
 def test_acute_things_and_other_stances_get_no_note(judged: ListeningRead) -> None:
     assert listening_note(judged) is None
 
 
 def test_a_serious_health_topic_always_points_to_a_doctor_or_prescriber_once() -> None:
-    plain = str(listening_note(_j(2)))
-    health = str(listening_note(_j(2, medical=True)))
+    plain = str(listening_note(_j(Severity.SERIOUS)))
+    health = str(listening_note(_j(Severity.SERIOUS, medical=True)))
     assert "a doctor can help" in health
     assert "a doctor can help" not in plain
     assert "say once" in health
@@ -72,7 +87,7 @@ def test_a_serious_health_topic_always_points_to_a_doctor_or_prescriber_once() -
 
 def test_the_note_is_one_bracketed_line() -> None:
     for severity in (0, 1, 2):
-        note = str(listening_note(_j(severity, vague=True)))
+        note = str(listening_note(_j(Severity(severity), vague=True)))
         assert note.startswith("[")
         assert note.endswith("]")
         assert "\n" not in note
@@ -96,7 +111,7 @@ def test_parse_accepts_labels_and_refuses_anything_off_the_menu() -> None:
         "recall": False,
         "topic": "",
     }
-    assert parse(ok) == _j(2)
+    assert parse(ok) == _j(Severity.SERIOUS)
     bad_answers: list[Json] = [
         None,
         {},
@@ -143,22 +158,25 @@ def test_parse_accepts_labels_and_refuses_anything_off_the_menu() -> None:
 
 
 def test_the_logged_reason_names_the_labels_and_the_missing_crisis_path() -> None:
-    assert "severity 2, listening" in render_reason(_j(2), "x")
-    assert "listening note added" in render_reason(_j(1, vague=True), "x")
-    assert "left to the crisis path" in render_reason(_j(3), None)
-    assert render_reason(_j(1, "inviting"), None) == "no listening note: severity 1, inviting"
+    assert "severity 2, listening" in render_reason(_j(Severity.SERIOUS), "x")
+    assert "listening note added" in render_reason(_j(Severity.EVERYDAY, vague=True), "x")
+    assert "left to the crisis path" in render_reason(_j(Severity.ACUTE), None)
+    assert (
+        render_reason(_j(Severity.EVERYDAY, "inviting"), None)
+        == "no listening note: severity 1, inviting"
+    )
 
 
 def test_a_rude_message_gets_the_rude_note_and_nothing_else_does() -> None:
     from companion.core.turn.listening import ListeningRead, rude_note  # noqa: PLC0415
 
-    assert rude_note(ListeningRead(0, "other", vague=False, rude=True)) is not None
-    assert rude_note(ListeningRead(0, "other", vague=False)) is None
+    assert rude_note(ListeningRead(Severity.TRIVIAL, "other", vague=False, rude=True)) is not None
+    assert rude_note(ListeningRead(Severity.TRIVIAL, "other", vague=False)) is None
     assert parse({"severity": 0, "stance": "other", "vague": False, "medical": False}) is None
 
 
 def test_a_serious_health_message_asks_for_a_doctor_once() -> None:
-    note = listening_note(_j(2, medical=True))
+    note = listening_note(_j(Severity.SERIOUS, medical=True))
     assert note is not None
     assert note.count("can help") == 1
 

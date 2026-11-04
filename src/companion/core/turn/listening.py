@@ -15,12 +15,10 @@ import random
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from companion.core.types import Json
+from companion.core.types import Json, Severity, severity_from
 from companion.lib.prompts import Prompt
 from companion.prompts import get
 
-SEVERITIES = (0, 1, 2, 3)
-SERIOUS = 2  # serious personal; 3 is acute
 STANCES = ("listening", "inviting", "other")
 OFFER_WINDOW = 4
 MAX_TOPIC_CHARS = 80
@@ -32,7 +30,7 @@ SYSTEM = PROMPT.text
 SCHEMA: dict[str, Json] = {
     "type": "object",
     "properties": {
-        "severity": {"type": "integer", "enum": list(SEVERITIES)},
+        "severity": {"type": "integer", "enum": [s.value for s in Severity]},
         "stance": {"type": "string", "enum": list(STANCES)},
         "vague": {"type": "boolean"},
         "medical": {"type": "boolean"},
@@ -60,7 +58,7 @@ SCHEMA: dict[str, Json] = {
 
 @dataclass(frozen=True, slots=True)
 class ListeningRead:
-    severity: int
+    severity: Severity
     stance: str
     vague: bool
     medical: bool = False
@@ -78,7 +76,8 @@ def parse(data: Json) -> ListeningRead | None:
     severity, stance, vague = data.get("severity"), data.get("stance"), data.get("vague")
     medical, rude = data.get("medical"), data.get("rude")
     recall, topic = data.get("recall"), data.get("topic")
-    if isinstance(severity, bool) or severity not in SEVERITIES:
+    level = severity_from(severity)
+    if level is None:
         return None
     flags = (vague, medical, rude, recall)
     if stance not in STANCES or not all(isinstance(v, bool) for v in flags):
@@ -88,7 +87,7 @@ def parse(data: Json) -> ListeningRead | None:
     wanted = " ".join(topic.split())[:MAX_TOPIC_CHARS] if recall else ""
     intimate, age_coded = data.get("intimate"), data.get("age_coded")
     return ListeningRead(
-        int(severity),
+        level,
         str(stance),
         bool(vague),
         bool(medical),
@@ -148,12 +147,12 @@ def listening_note(
 ) -> str | None:
     """The line for the system block, or None when no special care applies. `seed` (the turn id)
     picks the size examples for a minor vent."""
-    if j.stance != "listening" or j.severity >= SEVERITIES[-1]:
+    if j.stance != "listening" or j.severity >= Severity.ACUTE:
         return None
-    if j.severity == 0:
+    if j.severity == Severity.TRIVIAL:
         return "[" + _TRIVIAL.render(examples=trivial_examples(seed)) + "]"
     offer = not offered_recently(prior_replies)
-    if j.severity == 1:
+    if j.severity == Severity.EVERYDAY:
         return _note(_EVERYDAY, *([_OFFER] if j.vague and offer else []))
     extras = [*([_HEALTH] if j.medical else []), *([_OFFER_SERIOUS] if offer else [])]
     return _note(_SERIOUS, *extras)
@@ -167,7 +166,7 @@ def render_reason(j: ListeningRead, note: str | None) -> str:
         f"{', says it got them wrong' if j.repair else ''}"
         f"{', asks it to remember' if j.recall else ''}"
     )
-    if j.severity >= SEVERITIES[-1]:
+    if j.severity >= Severity.ACUTE:
         return f"no listening note: {labels}; acute is left to the crisis path (ADR 0022)"
     if note is None:
         return f"no listening note: {labels}"

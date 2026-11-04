@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 from companion.core.rhythm import learn
+from companion.core.types import Sensitivity
 from companion.features.reach.logic import (
     Dial,
     Kind,
@@ -66,7 +67,11 @@ def test_missing_them_and_a_thought_wait_for_a_usual_hour() -> None:
 
 def test_a_thought_is_never_a_sensitive_memory_and_never_one_used_lately() -> None:
     pool = Pool(
-        memories=[("m2", "a health worry", 2), ("m3", "a private matter", 3), ("m0", "a show", 0)],
+        memories=[
+            ("m2", "a health worry", Sensitivity.DELICATE),
+            ("m3", "a private matter", Sensitivity.GRAVE),
+            ("m0", "a show", Sensitivity.ORDINARY),
+        ],
         tastes=[],
         episodes=[],
     )
@@ -76,7 +81,7 @@ def test_a_thought_is_never_a_sensitive_memory_and_never_one_used_lately() -> No
 
 def test_the_pick_is_the_same_for_the_same_seed() -> None:
     pool = Pool(
-        memories=[(f"m{i}", f"thread {i}", 1) for i in range(6)],
+        memories=[(f"m{i}", f"thread {i}", Sensitivity.PRIVATE) for i in range(6)],
         tastes=[("t1", "it likes rainy mornings")],
         episodes=[("e1", "a long chat about a game")],
     )

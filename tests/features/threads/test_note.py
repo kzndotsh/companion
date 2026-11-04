@@ -8,7 +8,7 @@ import pytest
 
 from companion.core.extractor import Extraction
 from companion.core.turn.address import KEY as ADDRESS_KEY
-from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
+from companion.core.types import Frame, Json, Sensitivity, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.curiosity.basics.logic import name_belief
 from companion.features.threads.logic import Thread, ThreadState
 from companion.kit.runtime import Runtime
@@ -44,7 +44,7 @@ def store(tmp_path: Path) -> Store:
             "the vet is tomorrow",
             said.id,
             NOW - timedelta(hours=1),
-            0,
+            Sensitivity.ORDINARY,
             said.at,
         )
     )

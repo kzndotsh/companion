@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from companion.core.crisis import LINE, CrisisLevel
-from companion.core.types import Json
+from companion.core.types import Json, Severity
 from companion.features.crisis.logic import (
     Risk,
     combine,
@@ -50,11 +50,11 @@ def test_ordinary_words_are_no_cue(text: str) -> None:
 
 
 def test_a_serious_or_acute_listening_read_or_a_cue_word_asks_the_risk_judge() -> None:
-    assert cued(2, [])
-    assert cued(3, [])
+    assert cued(Severity.SERIOUS, [])
+    assert cued(Severity.ACUTE, [])
     assert cued(None, ["dead"])
-    assert cued(0, ["dead"])
-    assert not cued(1, [])
+    assert cued(Severity.TRIVIAL, ["dead"])
+    assert not cued(Severity.EVERYDAY, [])
     assert not cued(None, [])
 
 

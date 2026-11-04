@@ -13,11 +13,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
-from companion.core.types import Belief, Json
+from companion.core.types import Belief, Json, Sensitivity
 from companion.lib.vote import unanimous
 from companion.prompts import get
 
-HELD = 2  # sensitive memories are only ever the owner's call
+HELD = Sensitivity.DELICATE  # sensitive memories are only ever the owner's call
 CHECK = get("system/memory-check")
 # Every name the check's prompt has had, so a rename keeps what it already read.
 CHECK_NAMES = ("system/memory-check",)

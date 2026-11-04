@@ -20,6 +20,7 @@ from companion.core.types import (
     Evidence,
     Json,
     Provenance,
+    Sensitivity,
     Speaker,
     Subject,
     Utterance,
@@ -87,7 +88,7 @@ def name_belief(said: Utterance, name: str, belief_id: str, now: datetime) -> Be
         confidence=0.9,
         valid_from=said.at,
         recorded_at=now,
-        sensitivity=0,
+        sensitivity=Sensitivity.ORDINARY,
     )
 
 

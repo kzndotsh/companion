@@ -32,6 +32,7 @@ from companion.core.types import (
     Json,
     Provenance,
     RelationshipId,
+    Sensitivity,
     Speaker,
     Subject,
     Utterance,
@@ -105,7 +106,7 @@ def parse_views(data: Json) -> tuple[list[MemoryCandidate], list[Rejection]]:
                 **fields,
                 "subject": Subject.SELF.value,
                 "provenance": Provenance.COMPANION_SAID.value,
-                "sensitivity": 0,
+                "sensitivity": Sensitivity.ORDINARY.value,
                 "lasting": True,
             }
         )

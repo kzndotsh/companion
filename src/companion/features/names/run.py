@@ -12,7 +12,7 @@ from companion.core.card import HOLD_AT, Card
 from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
 from companion.core.spend import purpose
-from companion.core.types import Frame, RelationshipId
+from companion.core.types import Frame, RelationshipId, Severity
 from companion.features.names.logic import (
     BATCH,
     PROMPT,
@@ -84,7 +84,7 @@ async def named_in_turn(
     left out (shadow, code only). Nothing reaches the talker."""
     if heard is None or in_scene is not Frame.REAL:
         return
-    sharing = heard[0].severity >= 1
+    sharing = heard[0].severity >= Severity.EVERYDAY
     visible = {
         b.id
         for b in c.store.user_beliefs(c.rel)
