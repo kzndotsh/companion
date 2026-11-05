@@ -2908,3 +2908,19 @@ Two new public fixtures, persona v46 on the live talker, each note sent after th
 Rerun: render the notes to files with `concern_note()` and `stay_note()` from
 `features/crisis/logic.py`, then `uv run companion eval --fixture crisis-stay-later --variants
 "v46.md+note=STAY@tail,v46.md+note=CONCERN@tail" --samples 12 --cap 0.05 --show`.
+
+## 2026-11-05: The habit check named the topic and missed the bits (owner flags)
+
+Two flags while planning a date: it kept saving "the seat beside you" (3 times in 5 minutes) and
+looking forward to "your first-watch reactions" (3 times). The habit note on the next turn named
+neither; it named a film title the companion had suggested (the code pet-word check, since the words
+were not in their messages) and "the diner plan" they were making (the judge).
+
+- Code: a single word written as a name or a title in its own replies is no longer a pet word. On the
+  real turn the note went from the title's two words to nothing (`core/turn/habits.py` `names`).
+- Judge: `system/habits` v3 on that evening's 26 windows of 6 replies, one read each on Haiku at
+  temperature 0, against v2: the topic listed as a habit about 6 times with v2, 2 with v3; the reworded
+  seat and closeness bit named about 3 times with v2, 5 with v3. One evening, one read: indicative, not
+  a measured rate. $0.0101.
+
+Rerun: the scratch `habits_ab.py` (v2 and v3 texts against `build_prompt` of each 6-reply window).

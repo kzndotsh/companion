@@ -720,8 +720,9 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/habits
 - **system/habits v1** (superseded). From commit 005c5b4 on 2026-10-15: feat(moves): a model reads the last replies in the background and names what repeats; the next turns get a note
-- **system/habits v2** (current). From commit ec5fdc5 on 2026-10-15: feat(persona): v16 plain-text rule; habit check drops habits seen in fewer than three replies; fixtures
+- **system/habits v2** (superseded). From commit ec5fdc5 on 2026-10-15: feat(persona): v16 plain-text rule; habit check drops habits seen in fewer than three replies; fixtures
 
+- **system/habits v3** (current). v2 plus: the subject they are talking about (a plan, a place, a title or a name both keep mentioning) is never a habit, since a habit is in how it says things; and the same image, promise or line said again in new words counts. Reason: owner flags of 2026-11-05: while planning a date the note told it to stop mentioning the diner plan they were making, and missed a seat it kept saving and a reaction it kept looking forward to. On that evening's 26 windows of 6 replies, one read each: the topic listed as a habit about 6 times with v2, 2 with v3; the reworded seat and closeness bit named about 3 times with v2, 5 with v3 (`evals/CHANGELOG.md`, 2026-11-05).
 ## system/judge
 - **system/judge v1** (current). From commit 973b63b on 2026-10-15: feat(evals): replay recorded turns against persona variants, with a judge, a spend cap and nine fixtures
 
@@ -1097,3 +1098,6 @@ From 2026-10-26 the history carries a system line (`notes/history-gap`) wherever
 
 ## Request assembly: the crisis path asks once per hard stretch, and a timeout alone no longer raises concern
 - From 2026-11-04, with `COMPANION_CRISIS=on`: a concern turn under two hours (`EPISODE_GAP`) after another concern or urgent turn gets `notes/crisis-stay` instead of `notes/crisis-concern`, so the direct question and the line come once per hard stretch; an urgent turn still gets the full note and the fixed line. And when all three risk reads fail, the fail-safe makes concern only on a strong cue (a cue word, or the listening judge's acute read); on a serious read alone it is level none with one light check (`notes/crisis-light`, at most daily). In shadow the decision log says which it would do. Reason: the first real-chat review (2026-11-04) found concern on five turns in 18 minutes of one stretch, and one ordinary message raised to concern by three timeouts. Not yet measured on the talker.
+
+## Request assembly: a name or a title is never a pet word
+- From 2026-11-05 the code habit note (`notes/habit-phrases`) no longer names a single word written as a name or a title in its own replies (capitalised mid-sentence), as it named "sing", "street" for a film it suggested and they kept talking about (owner flag 2026-11-05; `core/turn/habits.py` `names`). Words from their own messages were already left out.

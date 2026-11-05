@@ -27,6 +27,9 @@ MAX_PHRASES = 3
 WORD_MIN_REPLIES = 3  # a single word in this many of its last replies is a pet word
 WORD_MIN_CHARS = 4
 _FIRST_WORD = re.compile(r"\W*(\w+)")
+# A capitalised word that does not start a sentence: a name or a title in lower-case replies.
+_NAMED = re.compile(r"(?<![.!?]\s)(?<!^)(?<![.!?])\b([A-Z][\w']*)")
+_PRONOUN_I = frozenset({"i", "i'm", "i'll", "i've", "i'd"})
 _WORD = re.compile(r"[a-z0-9']+")
 # Everyday function words. A habit is a run that starts and ends on a real word.
 _FUNCTION_TEXT = (
@@ -94,14 +97,22 @@ def repeated_phrases(prior: Sequence[Utterance]) -> list[str]:
     return [text for _, _, text in found[:MAX_PHRASES]]
 
 
+def names(texts: Sequence[str]) -> set[str]:
+    """Words written as a name or a title (capitalised mid-sentence), lower-cased. A title it
+    brought up and they went on talking about is the topic, not a pet word ("sing", "street" for a
+    film it suggested, owner's flag of 2026-11-05)."""
+    return {m.group(1).lower() for text in texts for m in _NAMED.finditer(text)} - _PRONOUN_I
+
+
 def pet_words(prior: Sequence[Utterance]) -> list[str]:
-    """Single words it keeps reaching for: in several of its last few replies and in none of
-    their messages in view, so a topic they brought up is not counted ("tiny" in 7 of 38 replies
-    after one bit, owner's flag of 2026-10-25)."""
+    """Single words it keeps reaching for: in several of its last few replies, in none of their
+    messages in view, so a topic they brought up is not counted ("tiny" in 7 of 38 replies after one
+    bit, owner's flag of 2026-10-25), and never a name or a title."""
     mine = [u.text for u in prior if u.speaker is Speaker.COMPANION and u.frame is Frame.REAL][
         -PHRASE_WINDOW:
     ]
     theirs = {w for u in prior if u.speaker is Speaker.USER for w in _WORD.findall(u.text.lower())}
+    named = names(mine)
     seen = Counter(w for text in mine for w in set(_WORD.findall(text.lower())))
     return sorted(
         w
@@ -111,6 +122,7 @@ def pet_words(prior: Sequence[Utterance]) -> list[str]:
         and w not in _FUNCTION_WORDS
         and w not in _EVERYDAY_WORDS
         and w not in theirs
+        and w not in named
     )
 
 

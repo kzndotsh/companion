@@ -135,3 +135,17 @@ def test_a_word_they_used_is_their_topic_not_its_habit(
         *(utterance(text=f"coffee round {i}", speaker=Speaker.COMPANION) for i in range(3)),
     ]
     assert "coffee" not in pet_words(prior)
+
+
+def test_a_title_it_brought_up_is_the_topic_not_its_habit(
+    utterance: Callable[..., Utterance],
+) -> None:
+    replies = [
+        "okay, then i'm picking *Sing Street*, a sweet funny movie",
+        "perfect, *Sing Street* after coffee",
+        "friday: coffee, *Sing Street*, then the diner",
+        "Sing along, I dare you",
+    ]
+    prior = [utterance(text=r, speaker=Speaker.COMPANION) for r in replies]
+    assert "street" not in pet_words(prior)
+    assert "sing" not in pet_words(prior)
