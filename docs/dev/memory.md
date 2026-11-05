@@ -74,8 +74,9 @@ and, when they ask it to remember, the asked look-up (`src/companion/features/re
 With `COMPANION_INTIMATE_MEMORY=on`, the default since 2026-11-05, a turn the roleplay talker answers gets
 the roleplay card instead: the intimate memories and patterns nearest the moment and perhaps one thing they
 are curious about, with their limits, what they are called and what they said about their own body sent
-after the history. Every other turn leaves the intimate lane off the card and out of the relevance
-look-up. In `shadow` both are logged and the card is as above (ADR 0026).
+after the history. Every other turn leaves the intimate lane off the card, and both recall look-ups
+(asked and near, `features/recall`) leave it out on every turn. In `shadow` both are logged and the card
+is as above (ADR 0026).
 
 ## How memory tidies itself
 
