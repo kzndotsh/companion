@@ -257,9 +257,9 @@ The fixed lines between the persona and the character sheet that tell the talker
 **Intimate talk**:
 Sexual or explicit talk, as distinct from flirting and affection.
 
-**Scene memory**:
-The separate lane for intimate memories, kept off the everyday memory card.
-_Avoid_: scene lane
+**Intimate memory lane**:
+The separate lane for intimate memories, kept off the everyday memory card (`features/intimate`, `COMPANION_INTIMATE_MEMORY`).
+_Avoid_: scene memory, scene lane
 
 **Lane**:
 Whether a memory is everyday or intimate.
