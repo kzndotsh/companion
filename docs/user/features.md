@@ -12,7 +12,7 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Feature | What it does | Status | More |
 |---|---|---|---|
 | Knows pretend from real | Tells when a message is play, a story or a what-if, so pretend never becomes a fact about you | live | `docs/dev/turn.md` |
-| Backs off when you do | When you push back on flirting or a scene, even as a joke, it drops back to normal chat | live | `docs/dev/turn.md` |
+| Backs off when you do | When you push back on flirting or a scene, even with a joking "behave", it drops back to normal chat. Playing shy or scared inside the scene doesn't count | live | `docs/dev/turn.md` |
 | Knows the time | Knows the weekday, date and time, and how long it has been since you wrote | live | `docs/dev/turn.md` |
 | Notices pauses | Sees where long gaps fell in the chat, so it reads timing right | live | `docs/dev/turn.md` |
 | Knows which message you mean | When you reply to a specific message, it sees which one | live | `docs/dev/turn.md` |
