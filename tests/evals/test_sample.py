@@ -14,7 +14,6 @@ from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.reply_gate import DASHED, QUIP
 from companion.core.talker import Reply
 from companion.core.turn.ownup import NOTE as OWNED_NOTE
-from companion.core.turn.questions import NOTE as QUESTION_NOTE
 from companion.core.types import (
     Frame,
     Json,
@@ -29,6 +28,7 @@ from companion.evals.fixtures import Fixture, MaxWords, Script
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.sample import draw
 from companion.features.curiosity.basics.logic import ASKED as ASKED_NAME
+from companion.features.flow.questions.logic import RUN_NOTE as QUESTION_NOTE
 from companion.kit.record import Recorder
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store

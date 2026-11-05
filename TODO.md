@@ -288,7 +288,7 @@ When the answer comes, the card moves to Todo or Done.
       raters relabelled the 200 replies, and against them Haiku's precision is 35 to 55%, not 88% (Luna and
       DeepSeek are more precise but catch less). Live it redrew 1 of 58 checked turns, so few pairs will be
       logged by the review. **2026-10-31 (40 redraws, two blind judges):** a toss-up. Redraw preferred 21 to 13 (Haiku) and 9 to 13 (Sonnet), the rest ties, both within noise; the redraw was still generic in 23 and 6 of 40. Often a plain rewording of the same reaction. Not changed. **Waits on:** the owner: look at what the judge fires on (suggested), keep, or turn it off.
-- [ ] T16 Randomized reply length. Built 2026-10-18 and live: `core/turn/length.py` scales a short statement's
+- [ ] T16 Randomized reply length. Built 2026-10-18 and live: `features/flow/length` scales a short statement's
       limit by 0.6 to 1.5, seeded per turn so replay matches (idea from a companion app config that picks a
       random word range per reply). **Measured 2026-10-23 on 370 real turns:** limits ran 5 to 20 words, but
       replies sat near 15 to 20 whatever the limit (median 15 at a limit of 5 to 8 or 9 to 12, about 19 at 13

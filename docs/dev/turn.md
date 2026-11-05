@@ -171,10 +171,10 @@ scene gets `notes/owned-it` after the history: that was enough, no more apologie
 
 When each of its last three replies asked them a question, the next turn outside a scene, not
 serious and with no other note asking them something gets `notes/question-run` after the history:
-ask nothing this time, but leave them something to answer (`core/turn/questions.py`). When one of
+ask nothing this time, but leave them something to answer (`features/flow/questions`). When one of
 their last three messages told it to ask them things ("ask me anything"), with no long pause since,
 `notes/question-game` asks for the next question instead, and the question-run note stays out
-(`core/turn/game.py`).
+(`features/flow/questions`).
 
 While something they said is coming is still open (dinner on its way, a shower soon), one line after
 the history says how long ago they said it and that it has not happened unless they say so

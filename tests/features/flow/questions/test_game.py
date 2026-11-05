@@ -5,8 +5,8 @@ from datetime import timedelta
 
 import pytest
 
-from companion.core.turn.game import NOTE, asking_game, game_note
 from companion.core.types import Speaker, Utterance
+from companion.features.flow.questions.logic import GAME_NOTE, asking_game, game_note
 
 
 @pytest.mark.parametrize(
@@ -24,7 +24,7 @@ def test_telling_it_to_ask_starts_the_game(utterance: Callable[..., Utterance], 
     said = utterance(text=asked, speaker=Speaker.USER)
     later = said.at + timedelta(minutes=1)
     assert asking_game([said], "they talk to the locals", later)
-    assert game_note([said], "they talk to the locals", later) == NOTE.text
+    assert game_note([said], "they talk to the locals", later) == GAME_NOTE.text
 
 
 @pytest.mark.parametrize(

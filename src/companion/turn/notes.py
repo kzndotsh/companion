@@ -16,14 +16,11 @@ from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import RECENT, recall_note
 from companion.core.turn.context import inputs_hash
 from companion.core.turn.floor import BRUSH_NOTE, HOLD_NOTE
-from companion.core.turn.game import game_note
-from companion.core.turn.length import LengthTarget, length_target
 from companion.core.turn.listening import PROMPT as LISTEN_PROMPT
 from companion.core.turn.listening import listening_note, repair_note, rude_note
 from companion.core.turn.listening import render_reason as render_listening
 from companion.core.turn.mentions import ASKED_HOW_THEY_ARE
 from companion.core.turn.ownup import owned_note
-from companion.core.turn.questions import question_note
 from companion.core.turn.quoted import quoted_note
 from companion.core.types import (
     Frame,
@@ -32,7 +29,7 @@ from companion.core.types import (
     Speaker,
     severity_from,
 )
-from companion.kit.features import Feature, Lookups, Moment, Offer, Offered, asking
+from companion.kit.features import Feature, Lookups, Moment, Offer, Offered
 from companion.kit.recall import Context, Recalled, look_up
 from companion.prompts import get
 from companion.registry import FEATURES
@@ -138,35 +135,6 @@ async def _recall(c: Runtime, t: Turn, heard: Heard | None) -> Recalled | None:
     return recalled
 
 
-def _notes(in_scene: Frame, size: LengthTarget | None) -> list[str]:
-    """What it should know about a scene in progress and how long to answer.
-    These go in the system block with the memory card: in a user message the model read them as
-    something they said."""
-    notes = [scene_note(in_scene), size.note if size else None]
-    return [n for n in notes if n is not None]
-
-
-def _length(m: Moment) -> LengthTarget | None:
-    """The one length target for this turn, logged with the reason code wrote for it. None on a
-    turn the crisis path reads as a risk (ADR 0022)."""
-    c, t = m.c, m.t
-    severity = m.heard[0].severity if m.heard is not None else None
-    size = (
-        None
-        if m.risk
-        else length_target(
-            t.text, severity=severity, in_scene=m.in_scene is not Frame.REAL, seed=str(t.turn)
-        )
-    )
-    reason = f"length: under about {size.words} words, {size.why}" if size else "length: no cap"
-    if m.risk:
-        reason = "length: no cap, the crisis path read a risk"
-    decide(
-        c, t, "length", {"words": size.words if size else None, "severity": severity}, reason=reason
-    )
-    return size
-
-
 @dataclass(frozen=True, slots=True)
 class Notes:
     lines: tuple[str, ...]
@@ -175,8 +143,10 @@ class Notes:
 
 
 def _base(m: Moment, _: Offered) -> Offer:
-    size = _length(m)
-    return Offer(tuple(_notes(m.in_scene, size)))
+    """What it should know about a scene in progress. In the system block with the memory card: in
+    a user message the model read it as something they said."""
+    note = scene_note(m.in_scene)
+    return Offer((note,) if note else ())
 
 
 def _replied_to(m: Moment, _: Offered) -> Offer:
@@ -218,27 +188,6 @@ def _owned(m: Moment, so_far: Offered) -> Offer:
         return Offer()
     replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]
     note = owned_note(replies, repairing=bool(so_far["repair"].lines))
-    return Offer(tail=(note,) if note else ())
-
-
-def _game(m: Moment, _: Offered) -> Offer:
-    """When they asked it to keep asking them things, a note after the history to ask the next
-    one: outside a scene, not on a serious turn and not on one the crisis path reads as a risk."""
-    serious = m.risk or (m.heard is not None and m.heard[0].severity >= Severity.SERIOUS)
-    if m.in_scene is not Frame.REAL or serious:
-        return Offer()
-    note = game_note(m.t.prior, m.t.text, m.t.now)
-    return Offer(tail=(note,) if note else (), asks=True)
-
-
-def _questions(m: Moment, so_far: Offered) -> Offer:
-    """When its last replies were all questions, a note to ask nothing this time: outside a scene,
-    not on a serious turn, and not when another note asks them something. After the history."""
-    serious = m.heard is not None and m.heard[0].severity >= Severity.SERIOUS
-    if m.in_scene is not Frame.REAL or serious or asking(so_far):
-        return Offer()
-    replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]
-    note = question_note(replies)
     return Offer(tail=(note,) if note else ())
 
 
@@ -315,9 +264,7 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "how-are-you": _how_are_you,
     "hold": _hold,
     "brush-off": _brush,
-    "game": _game,
     "mention": mention_note,
-    "questions": _questions,
 }
 
 # Every note, in the order it reaches the system block. A source sees what the ones before it
@@ -326,6 +273,7 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
 ORDER: tuple[str, ...] = (
     "moves",
     "base",
+    "length",
     "replied-to",
     "listening",
     "rude",

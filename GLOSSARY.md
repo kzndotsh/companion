@@ -147,6 +147,9 @@ What a note source gives for a turn: its lines, whether it asks them something, 
 **Length target**:
 The one word limit a reply gets, chosen by code from the message.
 
+**Flow**:
+The rhythm of the chat: when to move on from a topic, how long to answer, and when to ask or not ask a question. Each reads how the conversation is going and shapes the next reply to fit.
+
 ## Judging
 
 **Judge**:

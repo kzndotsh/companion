@@ -8,15 +8,14 @@ import pytest
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.floor import HOLD_NOTE
-from companion.core.turn.game import NOTE as GAME_NOTE
 from companion.core.turn.ownup import NOTE as OWNED_NOTE
-from companion.core.turn.questions import NOTE as QUESTION_NOTE
-from companion.core.turn.questions import RUN
 from companion.core.turn.quoted import Quoted
 from companion.core.types import Severity, Speaker
 from companion.features.curiosity.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
 from companion.features.episodes.store import Episode
+from companion.features.flow.questions.logic import GAME_NOTE, RUN
+from companion.features.flow.questions.logic import RUN_NOTE as QUESTION_NOTE
 from companion.features.reminders.run import ASKED, SET, Read, reminder_offer
 from companion.kit.current import Turn
 from companion.kit.features import Offer, asking

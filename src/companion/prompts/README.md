@@ -84,8 +84,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/habit-moves` | note | the habit finder found a habit | v1 |
 | `notes/habit-opener` | note | an opening word is overused | v1 |
 | `notes/habit-phrases` | note | phrases or, on casual turns, single pet words are repeated; use other words | v2 |
-| `notes/length` | note | a short statement, `core/turn/length.py` | v1 |
-| `notes/length-serious` | note | a message judged serious, `core/turn/length.py` | v1 |
+| `notes/length` | note | a short statement, `features/flow/length` | v1 |
+| `notes/length-serious` | note | a message judged serious, `features/flow/length` | v1 |
 | `notes/listening-everyday` | note | listening note, severity 1 | v3 |
 | `notes/listening-health` | note | added to the severity 2 note for a health topic | v2 |
 | `notes/listening-offer` | note | added to the severity 1 note when they were vague | v1 |

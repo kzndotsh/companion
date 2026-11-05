@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.turn.length import (
+from companion.core.types import Severity
+from companion.features.flow.length.logic import (
     FLOOR_WORDS,
     MAX_USER_WORDS,
     MIN_VARIED_WORDS,
@@ -11,7 +12,6 @@ from companion.core.turn.length import (
     length_target,
     reply_limit,
 )
-from companion.core.types import Severity
 
 
 def test_a_short_statement_gets_a_note_with_a_limit_near_what_they_wrote() -> None:

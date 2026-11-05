@@ -46,4 +46,4 @@ None.
 
 ## Tests
 
-`tests/features/topics/`
+`tests/features/flow/topics/`

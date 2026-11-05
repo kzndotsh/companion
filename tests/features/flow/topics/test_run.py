@@ -10,7 +10,7 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.curiosity.basics.logic import name_belief
-from companion.features.topics.logic import SPENT
+from companion.features.flow.topics.logic import SPENT
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle

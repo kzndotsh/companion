@@ -8,11 +8,18 @@ from typing import TYPE_CHECKING
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
 from companion.core.types import Frame, Speaker, Utterance
-from companion.features.topics.logic import EVERY_TURNS as TOPIC_EVERY
-from companion.features.topics.logic import JUDGE, SCHEMA, asks, judge_prompt, parse, topic_note
-from companion.features.topics.logic import NOTE as TOPIC_NOTE
-from companion.features.topics.logic import SPENT as TOPIC_SPENT
-from companion.features.topics.logic import likely as topic_likely
+from companion.features.flow.topics.logic import EVERY_TURNS as TOPIC_EVERY
+from companion.features.flow.topics.logic import (
+    JUDGE,
+    SCHEMA,
+    asks,
+    judge_prompt,
+    parse,
+    topic_note,
+)
+from companion.features.flow.topics.logic import NOTE as TOPIC_NOTE
+from companion.features.flow.topics.logic import SPENT as TOPIC_SPENT
+from companion.features.flow.topics.logic import likely as topic_likely
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, is_casual, mark
 from companion.kit.features import Feature, Offer, Offered, has_room
