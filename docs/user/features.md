@@ -7,20 +7,15 @@ Everything the companion does, in one place, in plain words. How each one works 
 do (see `uv run companion shadows`), **your choice** is off until you turn it on in `.env`, **tool** runs only when you run
 a command. The settings that turn each one on or off are listed in `README.md`.
 
-## How it talks
+## Reading you
 
 | Feature | What it does | Status | More |
 |---|---|---|---|
-| Two talkers | The everyday talker writes normal replies, and the roleplay talker answers pretend scenes | live | `docs/dev/turn.md` |
 | Knows pretend from real | Tells when a message is play, a story or a what-if, so pretend never becomes a fact about you | live | `docs/dev/turn.md` |
-| Intimate talk | Lets intimate talk go to the roleplay talker once you have been explicit, never below an age floor | your choice | ADR 0017 |
 | Backs off when you do | When you push back on flirting or a scene, even as a joke, it drops back to normal chat | live | `docs/dev/turn.md` |
-| Standby talker | If the talker errors or hasn't answered in 10 s, a standby model is asked too and the first answer goes out | live | `docs/dev/turn.md` |
 | Knows the time | Knows the weekday, date and time, and how long it has been since you wrote | live | `docs/dev/turn.md` |
 | Notices pauses | Sees where long gaps fell in the chat, so it reads timing right | live | `docs/dev/turn.md` |
-| Right length | Keeps replies to a short message short, instead of three times longer | live | `docs/dev/turn.md` |
-| Just a reaction | A short "ok" after something it said can get an emoji reaction instead of a reply | live | `docs/dev/turn.md` |
-| Reacts and replies | Now and then reacts to a message with a fitting emoji as well as answering it | live | `docs/dev/turn.md` |
+| Knows which message you mean | When you reply to a specific message, it sees which one | live | `docs/dev/turn.md` |
 | Listens | Works out how serious a message is, so a vent gets heard instead of fixed | live | `docs/dev/turn.md` |
 | Small vents | A small complaint gets a short, natural reaction, not a speech | live | `README.md` |
 | Cools down when you're rude | A rude message gets a cooler reply that turn | live | `docs/dev/turn.md` |
@@ -28,7 +23,14 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Stops apologising | After it has owned a slip, it doesn't keep saying sorry | live | `docs/dev/turn.md` |
 | Checks in after a hard talk | Coming back hours after a heavy conversation, it gently asks how you are now, once | live | `docs/dev/turn.md` |
 | Lets you go | When you say goodbye or goodnight, nothing it says tries to keep you | live | `docs/dev/turn.md` |
-| Knows which message you mean | When you reply to a specific message, it sees which one | live | `docs/dev/turn.md` |
+
+## How it replies
+
+| Feature | What it does | Status | More |
+|---|---|---|---|
+| Right length | Keeps replies to a short message short, instead of three times longer | live | `docs/dev/turn.md` |
+| Just a reaction | A short "ok" after something it said can get an emoji reaction instead of a reply | live | `docs/dev/turn.md` |
+| Reacts and replies | Now and then reacts to a message with a fitting emoji as well as answering it | live | `docs/dev/turn.md` |
 | Mood | Has a mood (cozy, tender, playful) that lasts across hours and shows in how it writes, never stated | live | `features/mood` |
 | Breaks its habits | Notices openers and phrases it keeps repeating, and stops copying your emoji back | live | `features/moves` |
 | Moves on | When a small topic has run its course, it moves the chat along | live | `features/topics` |
@@ -39,9 +41,17 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Quality checks | Catches em dashes, unasked AI disclaimers, stock phrases, tacked-on jokes and empty praise, and writes the reply again. It never edits a reply | live | `docs/dev/turn.md` |
 | Feels typed | Waits a little before sending, like someone typing | live | `docs/dev/delivery.md` |
 | Several messages | Sometimes sends a long reply as two or three messages | live | `docs/dev/delivery.md` |
+
+## Behind the scenes
+
+| Feature | What it does | Status | More |
+|---|---|---|---|
+| Two talkers | The everyday talker writes normal replies, and the roleplay talker answers pretend scenes | live | `docs/dev/turn.md` |
+| Intimate talk | Lets intimate talk go to the roleplay talker once you have been explicit, never below an age floor | your choice | ADR 0017 |
+| Character | Puts a private character sheet over the default personality | your choice | `README.md` |
+| Standby talker | If the talker errors or hasn't answered in 10 s, a standby model is asked too and the first answer goes out | live | `docs/dev/turn.md` |
 | Telegram or Discord | Runs on one or the other, with the same memory either way | live | `docs/dev/delivery.md` |
 | Never loses a message | On a restart it finishes what you already sent and answers each message once | live | `docs/dev/delivery.md` |
-| Character | Puts a private character sheet over the default personality | your choice | `README.md` |
 
 ## What it remembers
 
