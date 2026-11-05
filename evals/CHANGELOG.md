@@ -2924,3 +2924,15 @@ were not in their messages) and "the diner plan" they were making (the judge).
   a measured rate. $0.0101.
 
 Rerun: the scratch `habits_ab.py` (v2 and v3 texts against `build_prompt` of each 6-reply window).
+
+## 2026-11-05: A reaction instead of a reply to "😂 fineee" (owner flag)
+
+The ack judge (`system/ack`, Haiku) replayed on all nine reactions instead of a reply since
+2026-10-21, with the 10 messages before each: the flagged "😂 fineee" read ack at 0.70 (10) or 0.80 (2)
+in 12 of 12, so it always reacts; the other flagged one ("Thanks Ani", 2026-11-02) read ack at 0.60 in 11
+of 12, so live it was a rare draw. The reactions the owner did not flag read ack at 0.70 to 0.85
+(a heart, goodnight, "so true") or emotional at 0.50. A higher threshold would also have dropped the
+heart, so the fix is in code: a stretched word is never a reaction candidate. $0.0083.
+
+Rerun: the scratch `ack_replay.py` (each reacted turn, 12 reads for the flagged ones, 3 for the rest).
+

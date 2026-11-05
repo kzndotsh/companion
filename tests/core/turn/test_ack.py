@@ -49,6 +49,8 @@ def test_it_is_only_a_prefilter_so_no_word_list_decides_anything(
         ([(C, "go eat.")], "ok that makes sense to me now"),
         ([(C, "go eat.")], "x" * 41),
         ([(C, "go eat.")], "   "),
+        ([(C, "not explaining the crash 😭")], "😂 fineee"),
+        ([(C, "go eat.")], "yesss"),
     ],
 )
 def test_most_messages_never_reach_the_model(

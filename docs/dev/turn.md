@@ -17,7 +17,9 @@ A turn runs in stages, one module each under `src/companion/turn/`, driven by `h
 nothing paid runs, and they are told once that day (`messages/spend-cap`).
 
 1. **Hear** (`hear.py`). Side by side, it decides whether the message needs a reply at all or only a
-   reaction emoji, and reads how serious it is (the listening read, below).
+   reaction emoji, and reads how serious it is (the listening read, below). Only a short message after
+   a statement of its own is asked about (`core/turn/ack.py` `is_candidate`); one with a stretched word
+   ("fineee", "yesss") always gets a reply, since it hands a bit back.
 2. **Route** (`route.py`). It chooses which talker answers: the everyday model or the roleplay model.
 3. **Look** (`notes.py`). Every feature that looks something up before the reply does so here, side
    by side, under one 9 s deadline. A look-up that is late or fails simply adds nothing that turn.

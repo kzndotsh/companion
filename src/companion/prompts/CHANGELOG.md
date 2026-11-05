@@ -1101,3 +1101,7 @@ From 2026-10-26 the history carries a system line (`notes/history-gap`) wherever
 
 ## Request assembly: a name or a title is never a pet word
 - From 2026-11-05 the code habit note (`notes/habit-phrases`) no longer names a single word written as a name or a title in its own replies (capitalised mid-sentence), as it named "sing", "street" for a film it suggested and they kept talking about (owner flag 2026-11-05; `core/turn/habits.py` `names`). Words from their own messages were already left out.
+
+## Request assembly: a stretched word always gets a reply
+- From 2026-11-05 a short message with a stretched word (a letter held three times or more, "fineee", "yesss") is never sent to the ack judge, so it always gets a reply, not only an emoji (`core/turn/ack.py` `stretched`). `system/ack` already says a stretched, playful answer mid-conversation is not an ack, but on a flagged turn ("😂 fineee" after a joke of its own) it read ack at 0.70 or more in 12 of 12 replays. Of the nine reactions instead of a reply since 2026-10-21, it is the only one with a stretched word; the other eight are unchanged (`evals/CHANGELOG.md`, 2026-11-05).
+

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -26,6 +27,7 @@ CONTEXT_MESSAGES = 8
 # 0.70, not higher: on 15 hand-labelled messages the clear acknowledgements scored 0.70 to 0.90
 # and the ones that needed a reply scored 0.60 or lower. Every judgement is logged to recalibrate.
 REACT_THRESHOLD = 0.70
+_STRETCHED = re.compile(r"([a-z])\1{2,}\b", re.IGNORECASE)
 KINDS = ("ack", "answer", "emotional", "invitation", "other")
 EMOJI = ("👍", "❤", "😁", "🔥", "🙏", "👌", "🤗", "🫡")
 
@@ -87,14 +89,21 @@ def ends_with_question(text: str) -> bool:
     return text.rstrip().endswith("?")
 
 
+def stretched(text: str) -> bool:
+    """Whether a word in it ends on a letter held three times or more ("fineee", "yesss"): a playful
+    answer handed back mid-bit, which the prompt already says is not an ack, yet the judge read
+    "fineee" as one at 0.70 or more in 12 of 12 reads (owner flag of 2026-11-05)."""
+    return _STRETCHED.search(text) is not None
+
+
 def is_candidate(text: str, history: Sequence[Utterance], *, after_serious: bool = False) -> bool:
-    """Worth asking the model: a short message that follows a statement, not a question, and not
-    right after a serious message of theirs."""
+    """Worth asking the model: a short message that follows a statement, not a question, not a
+    stretched word, and not right after a serious message of theirs."""
     if after_serious or not history or history[-1].speaker is not Speaker.COMPANION:
         return False
     if ends_with_question(history[-1].text):
         return False
-    if "?" in text or not text.strip() or len(text) > MAX_CHARS:
+    if "?" in text or not text.strip() or len(text) > MAX_CHARS or stretched(text):
         return False
     return len(text.split()) <= MAX_WORDS
 
