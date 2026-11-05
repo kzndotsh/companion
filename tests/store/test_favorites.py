@@ -6,7 +6,7 @@ import pytest
 
 from companion.core.prompt.prefix import build_prefix
 from companion.core.replay import TurnRecord
-from companion.core.types import Favorite, FavoriteId, SessionId, TurnId
+from companion.core.types import Favorite, FavoriteId, TurnId
 from companion.store.sqlite import favorites, turns
 from tests.conftest import REL, T0
 
@@ -14,9 +14,7 @@ from tests.conftest import REL, T0
 def _turn(conn: sqlite3.Connection, tid: str) -> TurnId:
     p = build_prefix("x " * 3000)
     turns.save_prefix(conn, p)
-    turns.record_turn(
-        conn, TurnRecord(TurnId(tid), REL, SessionId("s"), p.sha256, "", "0" * 64, None, T0)
-    )
+    turns.record_turn(conn, TurnRecord(TurnId(tid), REL, p.sha256, "", "0" * 64, None, T0))
     return TurnId(tid)
 
 

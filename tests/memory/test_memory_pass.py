@@ -11,7 +11,6 @@ from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -47,7 +46,6 @@ def _say(store: Store, n: int, speaker: Speaker, text: str) -> Utterance:
     u = Utterance(
         UtteranceId(f"u{n}"),
         REL,
-        SessionId("s"),
         TurnId(f"t{n}"),
         speaker,
         text,

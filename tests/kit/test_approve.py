@@ -13,7 +13,6 @@ from companion.core.types import (
     Frame,
     Provenance,
     RelationshipId,
-    SessionId,
     Speaker,
     Subject,
     TurnId,
@@ -34,7 +33,6 @@ def store(tmp_path: Path) -> Store:
         Utterance(
             UtteranceId("c1"),
             REL,
-            SessionId("s"),
             TurnId("t1"),
             Speaker.COMPANION,
             "i think short replies feel more human",
@@ -94,7 +92,6 @@ def test_a_belief_about_the_user_cannot_be_approved_as_a_view(store: Store) -> N
         Utterance(
             UtteranceId("u1"),
             REL,
-            SessionId("s"),
             TurnId("t2"),
             Speaker.USER,
             "i like climbing",

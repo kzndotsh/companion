@@ -5,7 +5,6 @@ from datetime import timedelta
 from companion.core.types import (
     Frame,
     RelationshipId,
-    SessionId,
     Severity,
     Speaker,
     TurnId,
@@ -20,7 +19,6 @@ def _said(n: int, minutes: float, frame: Frame = Frame.REAL) -> Utterance:
     return Utterance(
         UtteranceId(f"u{n}"),
         RelationshipId("r"),
-        SessionId("s"),
         TurnId(f"t{n}"),
         Speaker.USER if n % 2 == 0 else Speaker.COMPANION,
         "hi",

@@ -19,7 +19,6 @@ from companion.core.types import (
     Json,
     Provenance,
     RelationshipId,
-    SessionId,
     Speaker,
     Subject,
     TurnId,
@@ -76,7 +75,6 @@ def _say(store: Store, n: int, speaker: Speaker, text: str) -> Utterance:
     u = Utterance(
         UtteranceId(f"u{n}"),
         REL,
-        SessionId("s"),
         TurnId(f"t{n}"),
         speaker,
         text,
@@ -262,7 +260,6 @@ async def test_only_approved_views_reach_the_model_and_the_placement_is_logged(
     talker = _Talker()
     await handle(
         Runtime(store, talker, PREFIX, REL),
-        SessionId("s"),
         "hi",
         "test",
         T0 + timedelta(days=3),
@@ -406,7 +403,6 @@ async def _carried_turn(store: Store) -> TurnId:
     talker = _Talker()
     await handle(
         Runtime(store, talker, PREFIX, REL),
-        SessionId("s"),
         "hi",
         "test",
         T0 + timedelta(days=3),
@@ -471,7 +467,7 @@ async def test_a_label_the_model_invents_is_ignored(store: Store) -> None:
 
 async def test_a_turn_that_carried_no_views_never_asks_the_model(store: Store) -> None:
     talker = _Talker()
-    await handle(Runtime(store, talker, PREFIX, REL), SessionId("s"), "hi", "test", T0)
+    await handle(Runtime(store, talker, PREFIX, REL), "hi", "test", T0)
     turn = store.latest_turn(REL)
     assert turn is not None
     ex = Routed()

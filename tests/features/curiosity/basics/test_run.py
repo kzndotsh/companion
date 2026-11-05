@@ -25,7 +25,7 @@ from companion.kit.current import Turn
 from companion.kit.features import Lookups, Moment, Offer
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 NAMED = "The user's name is Sam."
 
@@ -55,7 +55,7 @@ def _note(
     asked_how: bool = False,
 ) -> tuple[str, ...]:
     runtime = Runtime(store, Talker(), PREFIX, REL)
-    t = Turn(SESSION, TurnId("t"), NOW, [], "just got home")
+    t = Turn(TurnId("t"), NOW, [], "just got home")
     heard = (ListeningRead(severity, "other", vague=False), "j", "")
     m = Moment(runtime, t, Frame.REAL, heard, Lookups(), False, beliefs)
     so_far = {"how-are-you": Offer(("[how are you]",) if asked_how else ())}
@@ -94,7 +94,6 @@ async def _capture(store: Store, reader: Reader, asked: str, said: str) -> None:
         Utterance(
             UtteranceId("c1"),
             REL,
-            SESSION,
             TurnId("t0"),
             Speaker.COMPANION,
             asked,
@@ -104,7 +103,7 @@ async def _capture(store: Store, reader: Reader, asked: str, said: str) -> None:
         )
     ]
     runtime = Runtime(store, Talker(), PREFIX, REL, judge=reader)
-    await capture_pronouns(runtime, Turn(SESSION, TurnId("t1"), NOW, prior, said))
+    await capture_pronouns(runtime, Turn(TurnId("t1"), NOW, prior, said))
 
 
 async def test_capture_sets_how_to_refer_to_them_from_their_own_words(store: Store) -> None:

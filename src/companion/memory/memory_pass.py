@@ -45,7 +45,6 @@ from companion.core.types import (
     BeliefKind,
     Json,
     RelationshipId,
-    SessionId,
     Speaker,
     TraceId,
     TurnId,
@@ -109,16 +108,15 @@ class _Pass:
     rel: RelationshipId
     run_id: str
     now: datetime
-    session: SessionId
     turn: TurnId
     model: str = "none"
     cost: float = 0.0
     latency_ms: int = 0
 
     def log(self, reason: str, detail: dict[str, Json]) -> None:
-        Recorder(
-            self.store, self.rel, self.session, self.turn, TraceId(self.run_id), self.now
-        ).decide(reason, detail)
+        Recorder(self.store, self.rel, self.turn, TraceId(self.run_id), self.now).decide(
+            reason, detail
+        )
 
     def finish(self, last: Utterance, n_utterances: int, **counts: int) -> None:
         self.store.record_pass(
@@ -377,7 +375,7 @@ async def memory_pass_from(
     user_targets = [u for u in batch if u.speaker is Speaker.USER]
     own_targets = [u for u in batch if u.speaker is Speaker.COMPANION]
     anchor = user_targets[-1] if user_targets else last
-    run = _Pass(store, rel, _id(), now, anchor.session_id, anchor.turn_id)
+    run = _Pass(store, rel, _id(), now, anchor.turn_id)
     if not user_targets and not own_targets:
         run.finish(last, len(batch))
         return PassResult(ran=True, upto=upto)

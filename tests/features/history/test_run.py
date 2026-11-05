@@ -25,7 +25,7 @@ from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 from tests.features.diction.marks.test_run import CALM
-from tests.turn.test_mood_loop import PREFIX, SESSION, Talker
+from tests.turn.test_mood_loop import PREFIX, Talker
 
 PEBBLE = "i named a stray cat pebble"
 MOCHI = "my cat growing up was called mochi"
@@ -189,7 +189,7 @@ class Words:
 async def _beside(store: Store, words: Words, mode: str, text: str = "my cat ignores me") -> Talker:
     talker = Talker()
     runtime = Runtime(store, talker, PREFIX, REL, embedder=words, embed_model="fake", history=mode)
-    t = Turn(SESSION, TurnId("t-now"), T0.replace(hour=23), [], text)
+    t = Turn(TurnId("t-now"), T0.replace(hour=23), [], text)
     await stories_beside(runtime, t, Frame.REAL, CALM, Card((), (), (), (), {}, t.now))
     return talker
 

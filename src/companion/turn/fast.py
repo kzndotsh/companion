@@ -16,7 +16,6 @@ from companion.core.turn.quoted import Quoted
 from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import (
     Frame,
-    SessionId,
     TraceId,
     TurnId,
 )
@@ -48,7 +47,6 @@ def _id() -> str:
 
 async def handle(  # noqa: PLR0913
     c: Runtime,
-    session: SessionId,
     text: str,
     platform: str,
     now: datetime | None = None,
@@ -59,7 +57,7 @@ async def handle(  # noqa: PLR0913
     """One message in, one reply out (or a reaction, or nothing at the cap). `quoted` is the
     message they used reply on, if they did; `message_id` their message's id on the platform."""
     now = now or utc_now()
-    t = Turn(session, TurnId(_id()), now, [], text, quoted, message_id)
+    t = Turn(TurnId(_id()), now, [], text, quoted, message_id)
     capped = _stopped_by_cap(c, t, platform)
     if capped is not None:
         return capped
@@ -75,7 +73,7 @@ def _stopped_by_cap(c: Runtime, t: Turn, platform: str) -> str | None:
     if spent is None:
         return None
     store_user(c, t, platform, Frame.REAL)
-    Recorder(c.store, c.rel, t.session, t.turn, TraceId(t.turn), t.now).decide(
+    Recorder(c.store, c.rel, t.turn, TraceId(t.turn), t.now).decide(
         "daily spend cap reached",
         reason=f"daily spend cap reached: ${spent:.2f} of ${c.daily_cap_usd or 0:.2f}, no reply",
     )

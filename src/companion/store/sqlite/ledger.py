@@ -8,7 +8,6 @@ from datetime import datetime
 from companion.core.types import (
     Frame,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -16,12 +15,15 @@ from companion.core.types import (
 )
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
+# The session_id column's only value from 2026-11-05. The code no longer has sessions (ADR 0005:
+# one conversation per relationship); older rows keep what they were written with.
+SESSION = "main"
+
 
 def _utterance(row: sqlite3.Row) -> Utterance:
     return Utterance(
         id=UtteranceId(str(row["id"])),
         relationship_id=RelationshipId(str(row["relationship_id"])),
-        session_id=SessionId(str(row["session_id"])),
         turn_id=TurnId(str(row["turn_id"])),
         speaker=Speaker(str(row["speaker"])),
         text=str(row["text"]),
@@ -69,7 +71,7 @@ def append_utterance(conn: sqlite3.Connection, u: Utterance) -> None:
             (
                 u.id,
                 u.relationship_id,
-                u.session_id,
+                SESSION,
                 u.turn_id,
                 u.speaker,
                 u.text,
@@ -83,16 +85,6 @@ def append_utterance(conn: sqlite3.Connection, u: Utterance) -> None:
 def get_utterance(conn: sqlite3.Connection, utterance_id: UtteranceId) -> Utterance | None:
     row = conn.execute("SELECT * FROM utterances WHERE id = ?", (utterance_id,)).fetchone()
     return _utterance(row) if row is not None else None
-
-
-def session_utterances(
-    conn: sqlite3.Connection, relationship_id: RelationshipId, session_id: SessionId
-) -> list[Utterance]:
-    rows = conn.execute(
-        "SELECT * FROM utterances WHERE relationship_id = ? AND session_id = ? ORDER BY at, id",
-        (relationship_id, session_id),
-    ).fetchall()
-    return [_utterance(r) for r in rows]
 
 
 def history_before(

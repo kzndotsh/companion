@@ -17,7 +17,6 @@ from companion.core.types import (
     Provenance,
     RelationshipId,
     Sensitivity,
-    SessionId,
     Speaker,
     Subject,
     TurnId,
@@ -63,7 +62,6 @@ async def test_each_reply_is_judged_once_and_the_verdict_is_kept(tmp_path: Path)
     said = Utterance(
         UtteranceId("u0"),
         REL,
-        SessionId("s"),
         TurnId("t0"),
         Speaker.USER,
         "i'm dreading a call with my landlord",
@@ -90,7 +88,7 @@ async def test_each_reply_is_judged_once_and_the_verdict_is_kept(tmp_path: Path)
         )
     )
     runtime = Runtime(store, Talker(), PREFIX, REL)
-    await handle(runtime, SessionId("s"), "ugh long day", "test", NOW)
+    await handle(runtime, "ugh long day", "test", NOW)
     judge = Judge()
     assert await check_new(store, judge, REL, NOW - timedelta(days=1), 1.0) == (1, 0.001)
     assert await check_new(store, judge, REL, NOW - timedelta(days=1), 1.0) == (0, 0.0)

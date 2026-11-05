@@ -29,7 +29,7 @@ def _prompt_in_order(report: ReplayReport) -> list[str]:
 def render(report: ReplayReport, *, show_prompt: bool = False) -> str:
     r = report.record
     lines = [
-        f"turn {r.turn_id}  session {r.session_id}  model {r.model or '-'}",
+        f"turn {r.turn_id}  model {r.model or '-'}",
         f"prefix {r.prefix_sha256[:12]}  request {r.request_sha256[:12]}  "
         + ("MATCH" if report.matched else "MISMATCH: the rebuilt request differs from the record"),
         "",

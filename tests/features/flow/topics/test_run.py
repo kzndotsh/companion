@@ -14,7 +14,7 @@ from companion.features.flow.topics.logic import SPENT
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
 class Spent(Judge):
@@ -44,7 +44,6 @@ def store(tmp_path: Path) -> Store:
     said = Utterance(
         UtteranceId("u0"),
         REL,
-        SESSION,
         TurnId("t0"),
         Speaker.USER,
         "sam",
@@ -62,7 +61,7 @@ async def _say(
 ) -> str:
     talker = Asker()
     runtime = Runtime(store, talker, PREFIX, REL, judge=judge or Spent())
-    await handle(runtime, SESSION, text, "t", at)
+    await handle(runtime, text, "t", at)
     return talker.seen[0].card
 
 
@@ -79,7 +78,6 @@ async def test_a_spent_topic_gets_one_move_then_not_again_for_ten_of_their_messa
         Utterance(
             UtteranceId("c1"),
             REL,
-            SESSION,
             TurnId("tc"),
             Speaker.COMPANION,
             "what sauce?",

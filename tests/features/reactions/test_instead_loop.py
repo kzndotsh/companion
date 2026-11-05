@@ -12,7 +12,7 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
-from companion.core.types import Json, RelationshipId, SessionId, TurnId
+from companion.core.types import Json, RelationshipId, TurnId
 from companion.features.reactions import run as ack_loop
 from companion.features.reactions.logic import INSTEAD_THRESHOLD
 from companion.kit.runtime import Runtime
@@ -20,7 +20,6 @@ from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
-SESSION = SessionId("s")
 PREFIX = build_prefix("You are steady and warm. " * 200)
 NOW = datetime(2026, 10, 15, 9, 0, tzinfo=UTC)
 
@@ -75,8 +74,8 @@ async def _two_turns(
 ) -> tuple[Talker, str | Reaction | ReactAndReply | ThenSend]:
     talker = Talker(first, "a normal reply")
     runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
-    await handle(runtime, SESSION, "too much to explain rn", "test", NOW)
-    out = await handle(runtime, SESSION, second, "test", NOW + timedelta(seconds=30))
+    await handle(runtime, "too much to explain rn", "test", NOW)
+    out = await handle(runtime, second, "test", NOW + timedelta(seconds=30))
     return talker, out
 
 

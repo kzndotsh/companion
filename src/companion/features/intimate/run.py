@@ -26,7 +26,6 @@ from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
-    SessionId,
     Speaker,
     TraceId,
     TurnId,
@@ -91,7 +90,6 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.scene")
 
-SESSION = SessionId("scene memory")
 READ = 400  # messages read past the bookmark per pass
 SCENES = 3  # ended scenes read per pass
 LOOK_SECONDS = 2.0
@@ -112,7 +110,7 @@ class Spent:
 
 def _pass_recorder(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
     run = uuid.uuid4().hex
-    return Recorder(store, rel, SESSION, TurnId(run), TraceId(run), now)
+    return Recorder(store, rel, TurnId(run), TraceId(run), now)
 
 
 def facts_of(b: Belief, held: frozenset[UtteranceId], heavy: frozenset[UtteranceId]) -> Facts:

@@ -20,7 +20,6 @@ from companion.core.types import (
     Provenance,
     RelationshipId,
     Sensitivity,
-    SessionId,
     Speaker,
     Subject,
     TurnId,
@@ -33,7 +32,6 @@ from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
-SESSION = SessionId("s")
 NOW = datetime(2026, 10, 19, 17, 0, tzinfo=UTC)
 PREFIX = build_prefix("You are a companion. " * 300)
 # notes reach the model inside <notes>, without their brackets (core/prompt/sections.py)
@@ -91,9 +89,7 @@ async def _say(
     store: Store, judge: Judge, mode: str, text: str = "lol ok", at: datetime = NOW
 ) -> Talker:
     talker = Talker()
-    await handle(
-        Runtime(store, talker, PREFIX, REL, judge=judge, mood=mode), SESSION, text, "test", at
-    )
+    await handle(Runtime(store, talker, PREFIX, REL, judge=judge, mood=mode), text, "test", at)
     return talker
 
 
@@ -135,7 +131,7 @@ async def test_a_serious_turn_shows_no_mood_and_the_next_one_is_tender(store: St
 async def test_a_turn_that_fails_adds_nothing_to_the_mood(store: Store) -> None:
     runtime = Runtime(store, Talker(fail=True), PREFIX, REL, judge=Judge(), mood="on")
     with pytest.raises(RuntimeError):
-        await handle(runtime, SESSION, "haha yesss!! 😂", "test", NOW)
+        await handle(runtime, "haha yesss!! 😂", "test", NOW)
     assert store.mood_effects_since(REL, NOW - timedelta(days=1)) == []
 
 
@@ -178,7 +174,6 @@ async def test_held_memories_are_in_view_only_when_they_are_sharing_something(
     said = Utterance(
         UtteranceId("u0"),
         REL,
-        SESSION,
         TurnId("t0"),
         Speaker.USER,
         "i slip up sometimes",
@@ -220,7 +215,6 @@ async def test_their_answer_to_what_to_call_them_is_remembered_in_their_words(st
     asked = Utterance(
         UtteranceId("c0"),
         REL,
-        SESSION,
         TurnId("t0"),
         Speaker.COMPANION,
         "what name do you like being called?",

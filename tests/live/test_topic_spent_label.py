@@ -19,7 +19,6 @@ import pytest
 from companion.core.types import (
     Frame,
     RelationshipId,
-    SessionId,
     Severity,
     Speaker,
     TurnId,
@@ -83,7 +82,6 @@ def _utt(i: int, who: str, text: str) -> Utterance:
     return Utterance(
         UtteranceId(f"u{i}"),
         RelationshipId("r"),
-        SessionId("s"),
         TurnId(f"t{i}"),
         speaker,
         text,

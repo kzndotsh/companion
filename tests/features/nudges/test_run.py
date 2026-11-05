@@ -12,7 +12,7 @@ from companion.features.nudges.run import NUDGE_DROPPED, tick_nudge
 from companion.kit.current import Heard
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
-from tests.turn.test_mood_loop import NOW, REL, SESSION
+from tests.turn.test_mood_loop import NOW, REL
 
 CALM: Heard = (
     ListeningRead(severity=Severity.TRIVIAL, stance="other", vague=False, age_coded=False),
@@ -39,7 +39,7 @@ def _stepped_away(tmp_path: Path) -> Store:
         "minutes": 20,
         "said": "brb, shower",
     }
-    Recorder(store, REL, SESSION, TurnId("t1"), TraceId("t1"), NOW).decide(NOW_KEY, detail)
+    Recorder(store, REL, TurnId("t1"), TraceId("t1"), NOW).decide(NOW_KEY, detail)
     return store
 
 

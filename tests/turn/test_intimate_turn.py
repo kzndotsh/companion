@@ -41,7 +41,7 @@ from companion.store.sqlite.store import Store
 from companion.turn.assemble import Assembled, assemble
 from companion.turn.fast import handle
 from tests.features.recall.test_run import Embedder, Picker
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 NAME = "The user's name is Sam."
 NURSE = "The user works nights as a nurse."
@@ -66,7 +66,6 @@ def store(tmp_path: Path) -> Store:
         said = Utterance(
             UtteranceId(f"u{n}"),
             REL,
-            SESSION,
             TurnId(f"t{n}"),
             Speaker.USER,
             claim,
@@ -108,7 +107,7 @@ def _brush(store: Store, *, declines: bool | None, turn: TurnId = TURN, at: date
     detail: dict[str, Json] = {"declines": bool(declines)}
     if declines is not None:
         detail["scorer"] = "fake"
-    Recorder(store, REL, SESSION, turn, TraceId(turn), at).decide(BRUSH_KEY, detail)
+    Recorder(store, REL, turn, TraceId(turn), at).decide(BRUSH_KEY, detail)
 
 
 def _scores(store: Store) -> Lookups:
@@ -118,7 +117,7 @@ def _scores(store: Store) -> Lookups:
 
 
 def _turn(store: Store, mode: str, *, roleplay: bool, looked: Lookups | None = None) -> Assembled:
-    t = Turn(SESSION, TURN, NOW, [], "*leans in*")
+    t = Turn(TURN, NOW, [], "*leans in*")
     in_scene = Frame.PLAY if roleplay else Frame.REAL
     return assemble(
         _runtime(store, mode), t, in_scene, None, looked or _scores(store), roleplay=roleplay
@@ -202,7 +201,7 @@ def test_no_offer_unless_this_turns_brush_off_read_answered_no(store: Store) -> 
 def test_an_item_they_pushed_back_is_not_offered_again_within_three_days(store: Store) -> None:
     blind = next(e.id for e in entries(store, REL) if e.claim == BLIND)
     earlier = TurnId("t-earlier")
-    Recorder(store, REL, SESSION, earlier, TraceId("e"), NOW - timedelta(days=1)).decide(
+    Recorder(store, REL, earlier, TraceId("e"), NOW - timedelta(days=1)).decide(
         OFFERED, {"entry": blind}
     )
     _brush(store, declines=True, turn=TurnId("t-next"), at=NOW - timedelta(days=1, minutes=-1))
@@ -232,7 +231,7 @@ async def test_on_the_relevance_look_up_never_searches_the_intimate_lane(store: 
         relevance="on",
         intimate_memory="on",
     )
-    await handle(runtime, SESSION, "what a day", "test", NOW)
+    await handle(runtime, "what a day", "test", NOW)
     [live] = [d.detail for d in store.decisions_with_key(REL, LIVE)]
     assert live is not None
     assert live["searched"] == 2  # the name and the work, none of the four intimate memories

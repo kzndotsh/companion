@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.crisis import PAUSE_KEY, PAUSE_REASON
-from companion.core.types import RelationshipId, SessionId, TraceId, TurnId
+from companion.core.types import RelationshipId, TraceId, TurnId
 from companion.features.reach.logic import Dial
 from companion.features.reach.run import Reacher, holds
 from companion.kit.record import Recorder
@@ -30,6 +30,6 @@ def test_every_reach_out_gate_holds_for_a_day_after_a_risk_turn(
 ) -> None:
     store = Store(tmp_path / "rel.sqlite")
     assert not _holds(store, NOW)
-    Recorder(store, REL, SessionId("s"), TurnId("t"), TraceId("t"), NOW).decide(PAUSE_KEY)
+    Recorder(store, REL, TurnId("t"), TraceId("t"), NOW).decide(PAUSE_KEY)
     assert _holds(store, NOW + timedelta(hours=hours)) is held
     store.close()

@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import (
@@ -30,7 +30,6 @@ def store(tmp_path: Path) -> Store:
     said = Utterance(
         UtteranceId("u0"),
         REL,
-        SESSION,
         TurnId("t0"),
         Speaker.USER,
         "sam",
@@ -48,9 +47,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, judge: Judge, text: str = "lol ok", at: datetime = NOW) -> Talker:
     talker = Talker()
-    await handle(
-        Runtime(store, talker, PREFIX, REL, judge=judge, mood="off"), SESSION, text, "test", at
-    )
+    await handle(Runtime(store, talker, PREFIX, REL, judge=judge, mood="off"), text, "test", at)
     return talker
 
 

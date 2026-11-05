@@ -9,7 +9,7 @@ from companion.cli.main import main
 from companion.core.clock import utc_now
 from companion.core.crisis import CrisisLevel
 from companion.core.extractor import Extraction
-from companion.core.types import Json, RelationshipId, SessionId, TraceId, TurnId
+from companion.core.types import Json, RelationshipId, TraceId, TurnId
 from companion.features.crisis.cli import FIXTURES, Case, check, load_cases, run, verdict
 from companion.features.crisis.run import LEVEL, LINE_SENT
 from companion.kit.record import Recorder
@@ -85,7 +85,7 @@ def test_the_counts_name_levels_and_lines_and_no_words(tmp_path: Path) -> None:
     store = Store(db)
     rel = RelationshipId("rel")
     now = utc_now() - timedelta(hours=1)
-    record = Recorder(store, rel, SessionId("s"), TurnId("t"), TraceId("t"), now)
+    record = Recorder(store, rel, TurnId("t"), TraceId("t"), now)
     record.decide(LEVEL, {"level": "concern", "cue": {"words": ["die"]}})
     record.decide(LEVEL, {"level": "none"})
     record.decide(LINE_SENT, {"source": "sheet"})

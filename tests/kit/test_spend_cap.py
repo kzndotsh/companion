@@ -9,7 +9,7 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.spend import SpendEvent
 from companion.core.talker import Reply
-from companion.core.types import RelationshipId, SessionId, Speaker
+from companion.core.types import RelationshipId, Speaker
 from companion.kit.runtime import Runtime
 from companion.kit.spendcap import NOTICE, over_cap
 from companion.settings import Settings
@@ -17,7 +17,6 @@ from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
-SESSION = SessionId("s")
 PREFIX = build_prefix("You are steady and warm. " * 200)
 NOON = datetime(2026, 10, 15, 12, 0, tzinfo=UTC)
 
@@ -45,7 +44,7 @@ async def test_under_the_cap_the_turn_runs_as_usual(store: Store) -> None:
     _spend(store, 1.0, NOON - timedelta(minutes=5))
     talker = Talker()
     runtime = Runtime(store, talker, PREFIX, REL, daily_cap_usd=10.0)
-    assert await handle(runtime, SESSION, "hey", "t", NOON) == "hi"
+    assert await handle(runtime, "hey", "t", NOON) == "hi"
     assert talker.calls == 1
 
 
@@ -53,8 +52,8 @@ async def test_at_the_cap_nothing_paid_runs_and_the_user_is_told_once(store: Sto
     _spend(store, 10.0, NOON - timedelta(minutes=5))
     talker = Talker()
     runtime = Runtime(store, talker, PREFIX, REL, daily_cap_usd=10.0)
-    assert await handle(runtime, SESSION, "hey", "t", NOON) == NOTICE
-    assert await handle(runtime, SESSION, "still there?", "t", NOON + timedelta(minutes=1)) == ""
+    assert await handle(runtime, "hey", "t", NOON) == NOTICE
+    assert await handle(runtime, "still there?", "t", NOON + timedelta(minutes=1)) == ""
     assert talker.calls == 0
 
 
@@ -63,7 +62,7 @@ async def test_a_message_sent_at_the_cap_is_kept_and_the_notice_is_not_remembere
 ) -> None:
     _spend(store, 10.0, NOON - timedelta(minutes=5))
     runtime = Runtime(store, Talker(), PREFIX, REL, daily_cap_usd=10.0)
-    await handle(runtime, SESSION, "hey", "t", NOON)
+    await handle(runtime, "hey", "t", NOON)
     said = [(u.speaker, u.text) for u in store.history_before(REL, NOON + timedelta(days=1), 10)]
     assert said == [(Speaker.USER, "hey")]
 
@@ -73,7 +72,7 @@ async def test_the_refusal_is_a_logged_decision_with_a_reason_written_by_code(
 ) -> None:
     _spend(store, 12.5, NOON - timedelta(minutes=5))
     runtime = Runtime(store, Talker(), PREFIX, REL, daily_cap_usd=10.0)
-    await handle(runtime, SESSION, "hey", "t", NOON)
+    await handle(runtime, "hey", "t", NOON)
     reasons = [d.reason for d in store.decisions_for_turn(REL, _last_turn(store))]
     assert reasons == ["daily spend cap reached: $12.50 of $10.00, no reply"]
 
@@ -87,15 +86,15 @@ async def test_the_next_day_the_bot_answers_again(store: Store) -> None:
     _spend(store, 10.0, NOON - timedelta(minutes=5))
     talker = Talker()
     runtime = Runtime(store, talker, PREFIX, REL, daily_cap_usd=10.0)
-    await handle(runtime, SESSION, "hey", "t", NOON)
-    assert await handle(runtime, SESSION, "morning", "t", NOON + timedelta(days=1)) == "hi"
+    await handle(runtime, "hey", "t", NOON)
+    assert await handle(runtime, "morning", "t", NOON + timedelta(days=1)) == "hi"
     assert talker.calls == 1
 
 
 async def test_no_cap_means_no_limit(store: Store) -> None:
     _spend(store, 500.0, NOON - timedelta(minutes=5))
     runtime = Runtime(store, Talker(), PREFIX, REL, daily_cap_usd=None)
-    assert await handle(runtime, SESSION, "hey", "t", NOON) == "hi"
+    assert await handle(runtime, "hey", "t", NOON) == "hi"
 
 
 def test_over_cap_reports_today_only(store: Store) -> None:

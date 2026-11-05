@@ -120,7 +120,6 @@ def then_line(
     said = Utterance(
         UtteranceId(uuid.uuid4().hex),
         c.rel,
-        t.session,
         t.turn,
         Speaker.COMPANION,
         text,

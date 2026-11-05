@@ -26,7 +26,7 @@ from companion.features.curiosity.guess.logic import INVITED
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
 class Guesser(Judge):
@@ -54,7 +54,6 @@ def _remember(
     said = Utterance(
         UtteranceId(f"u-{bid}"),
         REL,
-        SESSION,
         TurnId(f"t-{bid}"),
         Speaker.USER,
         text,
@@ -96,7 +95,6 @@ def store(tmp_path: Path) -> Store:
     said = Utterance(
         UtteranceId("u0"),
         REL,
-        SESSION,
         TurnId("t0"),
         Speaker.USER,
         "sam",
@@ -111,7 +109,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, judge: Guesser, text: str, at: datetime = NOW) -> str:
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), SESSION, text, "t", at)
+    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), text, "t", at)
     return talker.seen[0].card
 
 

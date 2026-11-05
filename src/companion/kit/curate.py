@@ -36,9 +36,9 @@ def _log(store: Store, b: Belief, key: str, now: datetime, reason: str) -> None:
     if source is None:
         msg = f"belief {b.id} cites an utterance missing from the ledger"
         raise ValueError(msg)
-    Recorder(
-        store, b.relationship_id, source.session_id, source.turn_id, TraceId(uuid.uuid4().hex), now
-    ).decide(key, {"belief_id": b.id, "claim": b.claim}, reason=reason)
+    Recorder(store, b.relationship_id, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
+        key, {"belief_id": b.id, "claim": b.claim}, reason=reason
+    )
 
 
 def close_duplicates(store: Store, rel: RelationshipId, now: datetime | None = None) -> list[str]:
@@ -126,7 +126,7 @@ def approve(store: Store, rel: RelationshipId, id_prefix: str, now: datetime | N
         raise ValueError(msg)
     hedge = overstated(view)
     store.approve_view(view.id, now)
-    Recorder(store, rel, source.session_id, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
+    Recorder(store, rel, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
         "approved by the user: this view now reaches the card",
         {"belief_id": view.id, "claim": view.claim},
     )

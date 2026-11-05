@@ -53,7 +53,6 @@ def store_user(c: Runtime, t: Turn, platform: str, frame: Frame) -> Utterance:
     said = Utterance(
         UtteranceId(uuid.uuid4().hex),
         c.rel,
-        t.session,
         t.turn,
         Speaker.USER,
         t.text,
@@ -132,7 +131,7 @@ def log_frame(
 def persist_reply(c: Runtime, t: Turn, reply: Reply, user_frame: Frame, platform: str) -> str:
     """Store the companion's reply and the decision that sent it. Returns what to send."""
     replied_at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1))
-    ids = (c.rel, t.session, t.turn)
+    ids = (c.rel, t.turn)
     if not reply.text:
         decide(c, t, "model returned no text", kind=DecisionKind.DO_NOTHING, at=replied_at)
         return ""
@@ -190,7 +189,6 @@ async def finish(
         TurnRecord(
             t.turn,
             c.rel,
-            t.session,
             request.prefix.sha256,
             "",
             request_sha256(request),

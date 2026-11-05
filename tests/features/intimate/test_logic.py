@@ -11,7 +11,6 @@ from companion.core.types import (
     Frame,
     Json,
     Provenance,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -165,7 +164,6 @@ def _u(n: int, speaker: Speaker, frame: Frame, minutes: int, text: str = "") -> 
     return Utterance(
         UtteranceId(f"u{n}"),
         REL,
-        SessionId("s"),
         TurnId(f"t{n}"),
         speaker,
         text or f"message {n}",

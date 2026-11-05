@@ -74,9 +74,7 @@ def retire_story(store: Store, rel: RelationshipId, id_prefix: str, reason: str)
     )
     source = store.get_utterance(story.utterance_id)
     if source is not None:
-        Recorder(
-            store, rel, source.session_id, source.turn_id, TraceId(uuid.uuid4().hex), now
-        ).decide(
+        Recorder(store, rel, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
             RETIRED, {"story_id": story.id, "claim": story.claim}, reason=f"{RETIRED}: {reason}"
         )
     return f"retired  {story.claim}"

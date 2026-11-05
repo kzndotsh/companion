@@ -38,3 +38,10 @@ received is left out of the window (ADR 0002).
 ## Reverses if
 
 Relationships span multiple channels or people that must not share history.
+
+## Update 2026-11-05
+
+The code no longer carries a session id (kzndotsh/companion#1). The `session_id` column stays on
+`utterances`, `decisions` and `turn_requests`, and new rows are written with `main`. Older rows keep
+what they were written with: `main`, the first day's `tg-2026-10-15`, and labels that background jobs
+used (`initiative`, `scene memory`, `owner`). Nothing reads the column.

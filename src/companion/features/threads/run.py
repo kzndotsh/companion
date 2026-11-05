@@ -25,7 +25,6 @@ from companion.core.types import (
     DecisionKind,
     Json,
     RelationshipId,
-    SessionId,
     Speaker,
     TraceId,
     TurnId,
@@ -63,7 +62,6 @@ if TYPE_CHECKING:
     from companion.kit.features import Moment
 
 log = logging.getLogger("companion.initiative")
-SESSION = SessionId("initiative")
 Draft = Callable[[Thread], Awaitable[str]]
 Log = Callable[[str, dict[str, Json]], None]
 
@@ -191,7 +189,7 @@ DRAFT_DROPPED = "open loop: the check-in draft was dropped, not sent"
 
 def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
     trace = _id()
-    return Recorder(store, rel, SESSION, TurnId(trace), TraceId(trace), now)
+    return Recorder(store, rel, TurnId(trace), TraceId(trace), now)
 
 
 async def tick(  # noqa: PLR0913, PLR0917

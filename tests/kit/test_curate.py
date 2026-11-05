@@ -15,7 +15,6 @@ from companion.core.types import (
     Json,
     Provenance,
     RelationshipId,
-    SessionId,
     Speaker,
     Subject,
     TurnId,
@@ -38,7 +37,6 @@ def store(tmp_path: Path) -> Store:
         Utterance(
             UtteranceId("u1"),
             REL,
-            SessionId("s"),
             TurnId("t1"),
             Speaker.USER,
             TEXT,

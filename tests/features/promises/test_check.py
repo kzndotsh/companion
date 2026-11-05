@@ -13,7 +13,6 @@ from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -59,7 +58,6 @@ def store(tmp_path: Path) -> Store:
     said = Utterance(
         UtteranceId("u0"),
         REL,
-        SessionId("s"),
         TurnId("t0"),
         Speaker.COMPANION,
         "ok i'll retire the coffee bit",
@@ -84,7 +82,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _turn(store: Store, judge: Judge, *, promises: str = "shadow") -> list[str]:
     runtime = Runtime(store, Talker(), PREFIX, REL, judge=judge, promises=promises)
-    await handle(runtime, SessionId("s"), "how did my morning look to you", "test", NOW)
+    await handle(runtime, "how did my morning look to you", "test", NOW)
     await settled()
     return [d.reason for d in store.decisions_with_key(REL, WOULD_REDRAW)] + [
         d.reason for d in store.decisions_with_key(REL, KEPT)
@@ -150,7 +148,7 @@ async def test_a_moment_promise_is_not_checked_once_its_week_is_over(store: Stor
     store.set_promise_scope(only.promise.id, Scope.MOMENT, "owner", NOW)
     judge = Judge({"broken": "p1", "released": [], "why": "x"})
     later = Runtime(store, Talker(), PREFIX, REL, judge=judge, promises="shadow")
-    await handle(later, SessionId("s"), "morning", "test", NOW + timedelta(days=7))
+    await handle(later, "morning", "test", NOW + timedelta(days=7))
     await settled()
     assert judge.checks == []
     assert store.decisions_with_key(REL, WOULD_REDRAW) == []

@@ -15,7 +15,6 @@ from companion.core.types import (
     Frame,
     Provenance,
     RelationshipId,
-    SessionId,
     Speaker,
     Subject,
     TurnId,
@@ -52,7 +51,6 @@ def utterance() -> Callable[..., Utterance]:
         return Utterance(
             id=UtteranceId(uid or f"u{counter}"),
             relationship_id=REL,
-            session_id=SessionId("s1"),
             turn_id=TurnId(f"t{counter}"),
             speaker=speaker,
             text=text,

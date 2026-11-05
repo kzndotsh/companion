@@ -9,7 +9,7 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.types import Json, RelationshipId, SessionId
+from companion.core.types import Json, RelationshipId
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -71,7 +71,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, talker: Talker, judge: Judge, *, on: bool = True) -> str:
     runtime = Runtime(store, talker, PREFIX, REL, judge=judge, redraw=on)
-    sent = await handle(runtime, SessionId("s"), "kinda too crispy/hard", "test", NOW)
+    sent = await handle(runtime, "kinda too crispy/hard", "test", NOW)
     assert isinstance(sent, str)
     return sent
 

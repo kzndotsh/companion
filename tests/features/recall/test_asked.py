@@ -20,7 +20,6 @@ from companion.core.types import (
     Provenance,
     RelationshipId,
     Sensitivity,
-    SessionId,
     Speaker,
     Subject,
     TurnId,
@@ -34,13 +33,11 @@ from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
-SESSION = SessionId("s")
 NOW = datetime(2026, 10, 18, 17, 0, tzinfo=UTC)
 PREFIX = build_prefix("You are a companion. " * 300)
 SAID = Utterance(
     UtteranceId("u0"),
     REL,
-    SESSION,
     TurnId("t0"),
     Speaker.USER,
     "i always want a burger lol",
@@ -120,7 +117,7 @@ def store(tmp_path: Path) -> Store:
 async def _ask(store: Store, judge: Judge, intimate_memory: str = "off") -> Talker:
     talker = Talker()
     runtime = Runtime(store, talker, PREFIX, REL, judge=judge, intimate_memory=intimate_memory)
-    await handle(runtime, SESSION, "come on, you know this one", "test", NOW)
+    await handle(runtime, "come on, you know this one", "test", NOW)
     return talker
 
 

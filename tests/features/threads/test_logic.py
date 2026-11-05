@@ -10,7 +10,6 @@ from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -77,9 +76,7 @@ def test_the_follow_up_is_the_morning_after_it_happens_or_a_few_days_on(
 
 
 def _utt(text: str, speaker: Speaker = Speaker.USER, frame: Frame = Frame.REAL) -> Utterance:
-    return Utterance(
-        UtteranceId("u1"), REL, SessionId("s"), TurnId("t"), speaker, text, frame, "test", MON
-    )
+    return Utterance(UtteranceId("u1"), REL, TurnId("t"), speaker, text, frame, "test", MON)
 
 
 def _said_at(text: str, at: datetime) -> Utterance:

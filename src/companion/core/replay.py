@@ -15,14 +15,13 @@ from datetime import datetime
 from companion.core.history import to_messages
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import TalkerRequest, build_request, request_sha256
-from companion.core.types import RelationshipId, SessionId, TurnId, Utterance
+from companion.core.types import RelationshipId, TurnId, Utterance
 
 
 @dataclass(frozen=True, slots=True)
 class TurnRecord:
     turn_id: TurnId
     relationship_id: RelationshipId
-    session_id: SessionId
     prefix_sha256: str
     volatile: str
     request_sha256: str

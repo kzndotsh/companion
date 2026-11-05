@@ -7,7 +7,7 @@ from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.mode import mode_report
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
 async def test_mode_says_which_talker_answered_and_whether_a_scene_is_under_way(
@@ -16,7 +16,7 @@ async def test_mode_says_which_talker_answered_and_whether_a_scene_is_under_way(
     store = Store(tmp_path / "r.sqlite")
     assert mode_report(store, REL, NOW, "luna", "deepseek") == "no replies yet"
     runtime = Runtime(store, Talker(), PREFIX, REL, judge=Judge(), roleplay_talker=Talker())
-    await handle(runtime, SESSION, "hey", "t", NOW)
+    await handle(runtime, "hey", "t", NOW)
     report = mode_report(store, REL, NOW + timedelta(minutes=1), "luna", "deepseek")
     assert "everyday talker (luna)" in report
     assert "no scene" in report

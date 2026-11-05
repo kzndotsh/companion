@@ -20,7 +20,6 @@ from companion.core.types import (
     Frame,
     RelationshipId,
     Sensitivity,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -88,7 +87,6 @@ def _chat(store: Store, lines: tuple[tuple[Speaker, str], ...], start: datetime)
         u = Utterance(
             UtteranceId(f"u{start.timestamp():.0f}-{i}"),
             REL,
-            SessionId("s"),
             TurnId(f"t{start.timestamp():.0f}-{i}"),
             who,
             text,

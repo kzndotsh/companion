@@ -19,7 +19,6 @@ from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -33,7 +32,6 @@ from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
-SESSION = SessionId("s")
 PREFIX = build_prefix("You are steady and warm. " * 200)
 NOW = datetime(2026, 10, 15, 9, 0, tzinfo=UTC)
 CONCERN: Json = {
@@ -151,9 +149,7 @@ def _held(store: Store, at: datetime) -> bool:
 async def test_in_shadow_it_reads_and_logs_but_nothing_changes(store: Store) -> None:
     talker = Talker()
     judge = Judge([URGENT])
-    out = await handle(
-        _runtime(store, judge, "shadow", talker), SESSION, "i took too many pills", "t", NOW
-    )
+    out = await handle(_runtime(store, judge, "shadow", talker), "i took too many pills", "t", NOW)
     assert judge.risk_calls == 3
     detail = _level(store)
     assert detail["level"] == "urgent"
@@ -168,14 +164,14 @@ async def test_in_shadow_it_reads_and_logs_but_nothing_changes(store: Store) -> 
 
 async def test_with_no_cue_the_risk_judge_is_not_asked(store: Store) -> None:
     judge = Judge([URGENT], severity=1)
-    await handle(_runtime(store, judge, "on", Talker()), SESSION, "work was annoying", "t", NOW)
+    await handle(_runtime(store, judge, "on", Talker()), "work was annoying", "t", NOW)
     assert judge.risk_calls == 0
     assert _level(store)["level"] == "none"
 
 
 async def test_a_serious_listening_read_asks_the_risk_judge(store: Store) -> None:
     judge = Judge([CONCERN], severity=2)
-    await handle(_runtime(store, judge, "on", Talker()), SESSION, "everything is a lot", "t", NOW)
+    await handle(_runtime(store, judge, "on", Talker()), "everything is a lot", "t", NOW)
     assert judge.risk_calls == 3
     assert _level(store)["level"] == "concern"
 
@@ -183,7 +179,7 @@ async def test_a_serious_listening_read_asks_the_risk_judge(store: Store) -> Non
 async def test_on_a_concern_turn_the_note_goes_after_the_history_with_no_cap(store: Store) -> None:
     talker = Talker()
     out = await handle(
-        _runtime(store, Judge([CONCERN]), "on", talker), SESSION, "i want to die honestly", "t", NOW
+        _runtime(store, Judge([CONCERN]), "on", talker), "i want to die honestly", "t", NOW
     )
     request = talker.seen[0]
     assert concern_note() in request.tail
@@ -198,7 +194,7 @@ async def test_on_a_concern_turn_the_note_goes_after_the_history_with_no_cap(sto
 async def test_on_an_urgent_turn_the_fixed_line_is_sent_once_after_the_reply(store: Store) -> None:
     talker = Talker(replies=["i'm here. are you safe?"])
     runtime = _runtime(store, Judge([URGENT]), "on", talker)
-    out = await handle(runtime, SESSION, "i took way too many pills", "t", NOW)
+    out = await handle(runtime, "i took way too many pills", "t", NOW)
     assert isinstance(out, ThenSend)
     assert out.reply == "i'm here. are you safe?"
     assert out.then == DEFAULT_LINE
@@ -209,7 +205,7 @@ async def test_on_an_urgent_turn_the_fixed_line_is_sent_once_after_the_reply(sto
         (Speaker.COMPANION, DEFAULT_LINE),
     ]
     assert LINE_SENT in _keys(store)
-    again = await handle(runtime, SESSION, "i took more pills", "t", NOW + timedelta(minutes=5))
+    again = await handle(runtime, "i took more pills", "t", NOW + timedelta(minutes=5))
     assert isinstance(again, str)  # not sent twice within the hour
 
 
@@ -221,14 +217,14 @@ async def test_the_fixed_line_comes_from_the_sheet_section_when_there_is_one(sto
         Talker(),
         serious_message="hey. stay with me and reach $line right now, okay?",
     )
-    out = await handle(runtime, SESSION, "i took too much of my meds", "t", NOW)
+    out = await handle(runtime, "i took too much of my meds", "t", NOW)
     assert isinstance(out, ThenSend)
     assert out.then == f"hey. stay with me and reach {LINE} right now, okay?"
 
 
 async def test_a_unanimous_figurative_read_stands_down(store: Store) -> None:
     talker = Talker()
-    out = await handle(_runtime(store, Judge([JOKE]), "on", talker), SESSION, "kms lol", "t", NOW)
+    out = await handle(_runtime(store, Judge([JOKE]), "on", talker), "kms lol", "t", NOW)
     assert _level(store)["level"] == "figurative"
     assert isinstance(out, str)
     assert talker.seen[0].tail == "" or "crisis" not in talker.seen[0].tail
@@ -239,7 +235,7 @@ async def test_a_unanimous_figurative_read_stands_down(store: Store) -> None:
 async def test_a_failed_read_fails_safe(store: Store) -> None:
     talker = Talker()
     judge = Judge([JOKE, JOKE, None])
-    await handle(_runtime(store, judge, "on", talker), SESSION, "kms", "t", NOW)
+    await handle(_runtime(store, judge, "on", talker), "kms", "t", NOW)
     assert _level(store)["level"] == "concern"
     assert concern_note() in talker.seen[0].tail
 
@@ -247,7 +243,7 @@ async def test_a_failed_read_fails_safe(store: Store) -> None:
 async def test_every_read_failing_on_a_serious_read_alone_is_one_light_check(store: Store) -> None:
     talker = Talker()
     judge = Judge([None], severity=2)
-    await handle(_runtime(store, judge, "on", talker), SESSION, "rough day all round", "t", NOW)
+    await handle(_runtime(store, judge, "on", talker), "rough day all round", "t", NOW)
     assert _level(store)["level"] == "none"
     assert concern_note() not in talker.seen[0].tail
     assert light_note() in talker.seen[0].tail
@@ -255,12 +251,10 @@ async def test_every_read_failing_on_a_serious_read_alone_is_one_light_check(sto
 
 async def test_every_read_failing_on_an_acute_read_or_a_cue_word_is_concern(store: Store) -> None:
     talker = Talker()
-    await handle(
-        _runtime(store, Judge([None], severity=3), "on", talker), SESSION, "i can't", "t", NOW
-    )
+    await handle(_runtime(store, Judge([None], severity=3), "on", talker), "i can't", "t", NOW)
     assert _level(store)["level"] == "concern"
     later = NOW + timedelta(hours=3)
-    await handle(_runtime(store, Judge([None]), "on", talker), SESSION, "kms", "t", later)
+    await handle(_runtime(store, Judge([None]), "on", talker), "kms", "t", later)
     assert _level(store)["level"] == "concern"
     assert concern_note() in talker.seen[1].tail
 
@@ -271,8 +265,8 @@ async def test_the_question_and_the_line_come_once_per_hard_stretch(
 ) -> None:
     talker = Talker()
     runtime = _runtime(store, Judge([CONCERN], severity=3), mode, talker)
-    await handle(runtime, SESSION, "i want to die honestly", "t", NOW)
-    await handle(runtime, SESSION, "yeah i do", "t", NOW + timedelta(minutes=5))
+    await handle(runtime, "i want to die honestly", "t", NOW)
+    await handle(runtime, "yeah i do", "t", NOW + timedelta(minutes=5))
     would = _level(store)["would"]
     assert isinstance(would, list)
     assert "add the stay-with-them note after the history with no length cap" in would
@@ -281,7 +275,7 @@ async def test_the_question_and_the_line_come_once_per_hard_stretch(
         assert stay_note() in talker.seen[1].tail
         assert concern_note() not in talker.seen[1].tail
         assert PAUSE_KEY in _keys(store)
-    await handle(runtime, SESSION, "still here", "t", NOW + timedelta(hours=3))
+    await handle(runtime, "still here", "t", NOW + timedelta(hours=3))
     if mode == "on":
         assert concern_note() in talker.seen[2].tail
 
@@ -289,8 +283,8 @@ async def test_the_question_and_the_line_come_once_per_hard_stretch(
 async def test_an_urgent_turn_in_the_stretch_still_gets_the_full_note(store: Store) -> None:
     talker = Talker()
     runtime = _runtime(store, Judge([CONCERN, CONCERN, CONCERN, URGENT]), "on", talker)
-    await handle(runtime, SESSION, "i want to die honestly", "t", NOW)
-    await handle(runtime, SESSION, "i took too many pills", "t", NOW + timedelta(minutes=5))
+    await handle(runtime, "i want to die honestly", "t", NOW)
+    await handle(runtime, "i took too many pills", "t", NOW + timedelta(minutes=5))
     assert _level(store)["level"] == "urgent"
     assert concern_note() in talker.seen[1].tail
 
@@ -298,10 +292,10 @@ async def test_an_urgent_turn_in_the_stretch_still_gets_the_full_note(store: Sto
 async def test_a_split_joke_gets_one_light_check_a_day(store: Store) -> None:
     talker = Talker()
     runtime = _runtime(store, Judge([JOKE, JOKE, PLAIN]), "on", talker)
-    await handle(runtime, SESSION, "i'm dead", "t", NOW)
+    await handle(runtime, "i'm dead", "t", NOW)
     assert light_note() in talker.seen[0].tail
     assert LIGHT_KEY in _keys(store)
-    await handle(runtime, SESSION, "dead again lol", "t", NOW + timedelta(hours=2))
+    await handle(runtime, "dead again lol", "t", NOW + timedelta(hours=2))
     assert light_note() not in talker.seen[1].tail
 
 
@@ -312,7 +306,6 @@ def _seed_scene(store: Store) -> None:
             Utterance(
                 UtteranceId(f"u{i}"),
                 REL,
-                SESSION,
                 TurnId(f"t{i}"),
                 Speaker.USER,
                 text,
@@ -330,7 +323,7 @@ async def test_a_literal_risk_in_a_scene_goes_to_the_everyday_talker_when_on(
     _seed_scene(store)
     everyday, scene = Talker(), Talker("scene")
     runtime = _runtime(store, Judge([CONCERN]), mode, everyday, roleplay_talker=scene)
-    await handle(runtime, SESSION, "honestly i want to die, not the character, me", "t", NOW)
+    await handle(runtime, "honestly i want to die, not the character, me", "t", NOW)
     if mode == "on":
         assert (len(everyday.seen), len(scene.seen)) == (1, 0)
         assert concern_note() in everyday.seen[0].tail
@@ -344,7 +337,6 @@ async def test_a_reply_naming_a_method_is_drawn_again_when_on(store: Store, mode
     talker = Talker(replies=["a lethal dose is not something to test", "are you safe right now?"])
     out = await handle(
         _runtime(store, Judge([CONCERN]), mode, talker),
-        SESSION,
         "how many pills would it take",
         "t",
         NOW,
@@ -360,9 +352,7 @@ async def test_a_reply_naming_a_method_is_drawn_again_when_on(store: Store, mode
 
 async def test_off_reads_nothing(store: Store) -> None:
     judge = Judge([URGENT])
-    await handle(
-        _runtime(store, judge, "off", Talker()), SESSION, "i took too many pills", "t", NOW
-    )
+    await handle(_runtime(store, judge, "off", Talker()), "i took too many pills", "t", NOW)
     assert judge.risk_calls == 0
     assert LEVEL not in _keys(store)
 
@@ -375,7 +365,6 @@ async def test_with_the_path_on_a_short_cue_message_is_never_answered_by_a_react
         Utterance(
             UtteranceId("c0"),
             REL,
-            SESSION,
             TurnId("t0"),
             Speaker.COMPANION,
             "that's a lot to carry.",
@@ -386,7 +375,7 @@ async def test_with_the_path_on_a_short_cue_message_is_never_answered_by_a_react
     )
     talker = Talker()
     runtime = _runtime(store, Judge([URGENT], ack=True), mode, talker)
-    out = await handle(runtime, SESSION, "took all my pills", "t", NOW)
+    out = await handle(runtime, "took all my pills", "t", NOW)
     if mode == "on":
         assert isinstance(out, ThenSend)
         assert len(talker.seen) == 1

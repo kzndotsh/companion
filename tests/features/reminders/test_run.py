@@ -14,7 +14,7 @@ from companion.features.reminders.run import ASKED, CANCELLED, SET, deliver_due
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 # NOW is Monday 19 Oct 2026, 17:00 UTC: 13:00 in New York
 
@@ -54,7 +54,7 @@ def store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Store:
 
 async def say(store: Store, judge: Judge, text: str, at: datetime = NOW) -> str:
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), SESSION, text, "t", at)
+    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), text, "t", at)
     return talker.seen[0].card
 
 
@@ -154,7 +154,6 @@ def _user(store: Store, text: str, frame: Frame, at: datetime) -> None:
         Utterance(
             UtteranceId(f"u-{at.timestamp()}"),
             REL,
-            SESSION,
             TurnId(f"t-{at.timestamp()}"),
             Speaker.USER,
             text,
@@ -174,7 +173,7 @@ async def _deliver(
         out.append(text)
 
     c = Runtime(store, talker, PREFIX, REL)
-    await deliver_due(c, send, SESSION, now, started, platform="discord")
+    await deliver_due(c, send, now, started, platform="discord")
     return out
 
 
@@ -235,7 +234,6 @@ async def test_a_failed_send_leaves_it_pending_for_the_next_tick(store: Store) -
     await deliver_due(
         Runtime(store, Writer("x"), PREFIX, REL),
         broken,
-        SESSION,
         NOW,
         NOW - timedelta(days=1),
         platform="telegram",

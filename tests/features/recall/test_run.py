@@ -27,7 +27,7 @@ from companion.features.recall.logic import SHADOW
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
 class Embedder:
@@ -54,7 +54,6 @@ def _belief(store: Store, bid: str, claim: str) -> None:
     said = Utterance(
         UtteranceId(f"u-{bid}"),
         REL,
-        SESSION,
         TurnId("t0"),
         Speaker.USER,
         claim,
@@ -94,7 +93,7 @@ async def _say(store: Store, embedder: Embedder, text: str) -> Talker:
     runtime = Runtime(
         store, talker, PREFIX, REL, judge=Picker(), embedder=embedder, embed_model="fake-embed"
     )
-    await handle(runtime, SESSION, text, "test", NOW)
+    await handle(runtime, text, "test", NOW)
     for _ in range(50):
         await asyncio.sleep(0)
     return talker
@@ -149,7 +148,7 @@ async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Stor
         embed_model="fake-embed",
         relevance="on",
     )
-    await handle(runtime, SESSION, "my dog just stole a sock", "test", NOW)
+    await handle(runtime, "my dog just stole a sock", "test", NOW)
     turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 50)}
     [live] = [d.detail for t in turns for d in store.decisions_for_turn(REL, t) if d.has_key(LIVE)]
     assert live is not None
@@ -172,7 +171,7 @@ async def test_with_listening_switched_off_the_live_look_up_does_not_run(store: 
         relevance="on",
         listen=False,
     )
-    await handle(runtime, SESSION, "my dog just stole a sock", "test", NOW)
+    await handle(runtime, "my dog just stole a sock", "test", NOW)
     turns = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 50)}
     assert not [d for t in turns for d in store.decisions_for_turn(REL, t) if d.has_key(LIVE)]
 
@@ -184,7 +183,7 @@ def test_a_pick_not_on_the_card_reaches_the_notes(store: Store) -> None:
     from companion.turn.notes import notes_for  # noqa: PLC0415
 
     runtime = Runtime(store, Talker(), PREFIX, REL)
-    t = Turn(SESSION, TurnId("t1"), NOW, [], "fries sound good")
+    t = Turn(TurnId("t1"), NOW, [], "fries sound good")
     pick = ((BeliefId("food"), "The user likes fries."),)
     shown = notes_for(
         Moment(runtime, t, F.REAL, None, Lookups(found={"relevant": pick}), False, [])

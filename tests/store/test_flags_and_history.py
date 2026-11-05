@@ -7,20 +7,18 @@ from datetime import timedelta
 import pytest
 
 from companion.core.replay import TurnRecord
-from companion.core.types import Belief, Flag, FlagId, FlagKind, SessionId, TurnId, Utterance
+from companion.core.types import Belief, Flag, FlagId, FlagKind, TurnId, Utterance
 from companion.lib.sqlite.db import connect
 from companion.store.sqlite import flags, ledger, turns
 from companion.store.sqlite.db import migrate
 from tests.conftest import REL, T0
 
 
-def test_history_before_crosses_sessions_and_keeps_order(
+def test_history_before_keeps_order(
     conn: sqlite3.Connection, utterance: Callable[..., Utterance]
 ) -> None:
-    from dataclasses import replace  # noqa: PLC0415
-
     a = utterance(text="yesterday", uid="a")
-    b = replace(utterance(text="today", uid="b"), session_id=SessionId("other"))
+    b = utterance(text="today", uid="b")
     for u in (a, b):
         ledger.append_utterance(conn, u)
     got = ledger.history_before(conn, REL, b.at + timedelta(seconds=1), 10)
@@ -42,9 +40,7 @@ def _turn(conn: sqlite3.Connection, tid: str) -> TurnId:
 
     p = build_prefix("x " * 3000)
     turns.save_prefix(conn, p)
-    turns.record_turn(
-        conn, TurnRecord(TurnId(tid), REL, SessionId("s"), p.sha256, "", "0" * 64, None, T0)
-    )
+    turns.record_turn(conn, TurnRecord(TurnId(tid), REL, p.sha256, "", "0" * 64, None, T0))
     return TurnId(tid)
 
 
@@ -127,3 +123,11 @@ def test_a_withdrawn_flag_leaves_the_list_but_stays_in_the_ledger(conn: sqlite3.
     flags.withdraw_flag(conn, FlagId("f1"), "moved to a favourite", T0)
     assert flags.list_flags(conn, REL) == []
     assert conn.execute("SELECT COUNT(*) FROM flags").fetchone()[0] == 1
+
+
+def test_the_session_column_is_filled_with_main(
+    conn: sqlite3.Connection, utterance: Callable[..., Utterance]
+) -> None:
+    # The code has no sessions (ADR 0005); the column stays, as history, and new rows say main.
+    ledger.append_utterance(conn, utterance(text="hi", uid="s"))
+    assert conn.execute("SELECT session_id FROM utterances WHERE id = 's'").fetchone()[0] == "main"

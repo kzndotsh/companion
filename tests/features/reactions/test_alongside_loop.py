@@ -10,13 +10,12 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.reply import ReactAndReply, Reaction
-from companion.core.types import Json, RelationshipId, SessionId
+from companion.core.types import Json, RelationshipId
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
-SESSION = SessionId("s")
 PREFIX = build_prefix("You are steady and warm. " * 200)
 NOW = datetime(2026, 10, 15, 9, 0, tzinfo=UTC)
 FUNNY: Json = {"tone": "funny", "confidence": 0.95, "emoji": "😁"}
@@ -54,7 +53,7 @@ def store(tmp_path: Path) -> Store:
 async def _say(store: Store, judge: Judge | None, texts: list[str]) -> list[object]:
     runtime = Runtime(store, Talker(), PREFIX, REL, judge=judge)
     return [
-        await handle(runtime, SESSION, text, "test", NOW + timedelta(minutes=i))
+        await handle(runtime, text, "test", NOW + timedelta(minutes=i))
         for i, text in enumerate(texts)
     ]
 

@@ -18,7 +18,6 @@ from companion.core.types import (
     Frame,
     Json,
     Provenance,
-    SessionId,
     Speaker,
     Subject,
     TraceId,
@@ -124,7 +123,6 @@ def _say(store: Store, text: str, frame: Frame = Frame.REAL, minutes: int = 0) -
     u = Utterance(
         UtteranceId(f"u{n}"),
         REL,
-        SessionId("s"),
         TurnId(f"t{n}"),
         Speaker.USER,
         text,
@@ -164,7 +162,7 @@ def _source(store: Store, b: Belief) -> Utterance:
 
 
 def _decide(store: Store, u: Utterance, key: str, detail: dict[str, Json]) -> None:
-    Recorder(store, REL, u.session_id, u.turn_id, TraceId("x"), u.at).decide(key, detail)
+    Recorder(store, REL, u.turn_id, TraceId("x"), u.at).decide(key, detail)
 
 
 async def test_three_reads_place_a_memory_by_lane_with_the_stance_most_of_them_gave(

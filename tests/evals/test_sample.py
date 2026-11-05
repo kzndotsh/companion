@@ -34,7 +34,7 @@ from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.turn.test_chaos import Chaos
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION
+from tests.turn.test_mood_loop import NOW, PREFIX, REL
 from tests.turn.test_recheck_loop import Judge as TurnJudge
 
 ASKING = (
@@ -107,15 +107,13 @@ async def _live(tmp_path: Path, f: Fixture, judge: Chaos | TurnJudge) -> TalkerR
         uid = uuid.uuid4().hex
         at = NOW - timedelta(minutes=n + 1 - i)
         store.append_utterance(
-            Utterance(
-                UtteranceId(uid), REL, SESSION, TurnId(uid), speaker, text, Frame.REAL, "t", at
-            )
+            Utterance(UtteranceId(uid), REL, TurnId(uid), speaker, text, Frame.REAL, "t", at)
         )
-    Recorder(store, REL, SESSION, TurnId("x"), TraceId("x"), NOW).decide(
+    Recorder(store, REL, TurnId("x"), TraceId("x"), NOW).decide(
         ASKED_NAME, at=NOW - timedelta(hours=1)
     )
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), SESSION, f.script.user, "t", NOW)
+    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), f.script.user, "t", NOW)
     store.close()
     return talker.seen[0]
 

@@ -17,7 +17,6 @@ from companion.core.types import (
     Decision,
     DecisionId,
     DecisionKind,
-    SessionId,
     Speaker,
     TraceId,
     TurnId,
@@ -54,7 +53,6 @@ def _seed(
     record = TurnRecord(
         turn_id=second.turn_id,
         relationship_id=REL,
-        session_id=SessionId("s1"),
         prefix_sha256=p.sha256,
         volatile="it is 06:10",
         request_sha256=request_sha256(request),
@@ -114,7 +112,6 @@ def test_decisions_are_shown(conn: sqlite3.Connection, utterance: Callable[..., 
         Decision(
             id=DecisionId("d1"),
             relationship_id=REL,
-            session_id=SessionId("s1"),
             turn_id=record.turn_id,
             trace_id=TraceId("tr1"),
             kind=DecisionKind.DO_NOTHING,

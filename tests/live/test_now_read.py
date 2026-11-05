@@ -18,7 +18,6 @@ from companion.core.turn.now import PROMPT, SCHEMA, Phase, parse, reader_input
 from companion.core.types import (
     Frame,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -59,7 +58,6 @@ def _companion(text: str) -> Utterance:
     return Utterance(
         UtteranceId("c"),
         RelationshipId("r"),
-        SessionId("s"),
         TurnId("t"),
         Speaker.COMPANION,
         text,

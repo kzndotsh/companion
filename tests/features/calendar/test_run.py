@@ -27,7 +27,7 @@ from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.mention import mention_note
 from tests.features.diction.marks.test_run import CALM, HEAVY
-from tests.turn.test_mood_loop import PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import PREFIX, REL, Judge, Talker
 
 HALLOWEEN = datetime(2026, 10, 31, 16, 0, tzinfo=UTC)  # noon in New York
 NOTE = DAY_NOTE.render(name="Halloween")
@@ -54,7 +54,7 @@ def _tail(
     on: bool = True,
 ) -> Offer:
     runtime = Runtime(store, Talker(), PREFIX, REL, calendar=on)
-    t = Turn(SESSION, TurnId("t1"), now, [], "hey, what's up")
+    t = Turn(TurnId("t1"), now, [], "hey, what's up")
     m = Moment(runtime, t, frame, heard, Lookups(), False, [])  # type: ignore[arg-type]
     return mention_note(m, so_far if so_far is not None else QUIET)
 
@@ -77,7 +77,6 @@ def test_a_hundred_days_since_the_first_message_comes_before_the_day(store: Stor
         Utterance(
             UtteranceId("u0"),
             REL,
-            SESSION,
             TurnId("t0"),
             Speaker.USER,
             "hi",
@@ -94,7 +93,6 @@ async def test_offered_once_a_day_and_logged_only_when_the_turn_is_stored(store:
         talker = talker or Talker()
         await handle(
             Runtime(store, talker, PREFIX, REL, judge=Judge(), calendar=True),
-            SESSION,
             text,
             "t",
             at,
@@ -125,7 +123,6 @@ def remember(
     said = Utterance(
         UtteranceId(f"u-{bid}"),
         REL,
-        SESSION,
         TurnId(f"t-{bid}"),
         Speaker.USER,
         claim,

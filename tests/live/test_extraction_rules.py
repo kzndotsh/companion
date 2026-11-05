@@ -22,7 +22,6 @@ from companion.core.types import (
     Belief,
     Frame,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -216,7 +215,6 @@ def _chat(case: Case) -> list[Utterance]:
         Utterance(
             UtteranceId(f"u{i}"),
             REL,
-            SessionId("s"),
             TurnId(f"t{i // 2}"),
             speaker,
             text,

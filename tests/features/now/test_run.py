@@ -16,7 +16,7 @@ from companion.kit.features import Lookups, Moment
 from companion.kit.record import Recorder
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 CALM: Heard = (
     ListeningRead(severity=Severity.TRIVIAL, stance="other", vague=False, age_coded=False),
@@ -53,12 +53,12 @@ def store(tmp_path: Path) -> Store:
 def _said(store: Store, phase: str, minutes_ago: int, what: str = "dinner is coming soon") -> None:
     detail: dict[str, Json] = {"phase": phase, "what": what, "minutes": 30, "said": "words"}
     at = NOW - timedelta(minutes=minutes_ago)
-    Recorder(store, REL, SESSION, TurnId(f"t{minutes_ago}"), TraceId("x"), at).decide(KEY, detail)
+    Recorder(store, REL, TurnId(f"t{minutes_ago}"), TraceId("x"), at).decide(KEY, detail)
 
 
 def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str, ...], list[str]]:
     runtime = Runtime(store, Talker(), PREFIX, REL, now=mode)
-    t = Turn(SESSION, TurnId("t"), NOW, [], "lol out of all the things")
+    t = Turn(TurnId("t"), NOW, [], "lol out of all the things")
     offer = now_note(Moment(runtime, t, frame, CALM, Lookups(), False, []), None, {})
     for write in offer.after:
         write()
@@ -68,7 +68,7 @@ def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str
 
 async def _read(store: Store, judge: Reads, heard: Heard | None, **kw: object) -> None:
     runtime = Runtime(store, Talker(), PREFIX, REL, judge=judge, **kw)  # type: ignore[arg-type]
-    t = Turn(SESSION, TurnId("t"), NOW, [], "getting dinner soon")
+    t = Turn(TurnId("t"), NOW, [], "getting dinner soon")
     await read_now(runtime, t, Frame.REAL, heard, Card((), (), (), (), {}, NOW))
 
 

@@ -11,7 +11,6 @@ from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
-    SessionId,
     Speaker,
     TraceId,
     TurnId,
@@ -58,7 +57,6 @@ def _said(store: Store, at: datetime, uid: str = "u1", speaker: Speaker = Speake
         Utterance(
             UtteranceId(uid),
             REL,
-            SessionId("s"),
             TurnId(uid),
             speaker,
             "off to bed, night!",
@@ -181,7 +179,7 @@ async def test_it_holds_for_twelve_hours_after_a_heavy_message(store: Store) -> 
 
     _said(store, NOW - timedelta(hours=13))
     heavy = NOW - timedelta(hours=11)
-    Recorder(store, REL, SessionId("s"), TurnId("t"), TraceId("t"), heavy).decide(
+    Recorder(store, REL, TurnId("t"), TraceId("t"), heavy).decide(
         "listening", {"labels": {"severity": 2}}, reason="listening: severity 2"
     )
     drafter = Drafter("how's the bread coming along?")
@@ -206,7 +204,7 @@ async def test_an_intimate_last_chat_is_kept_out_of_the_brainstorm(store: Store)
 
     said = NOW - timedelta(hours=13)
     _said(store, said)
-    Recorder(store, REL, SessionId("s"), TurnId("t"), TraceId("t"), said).decide(
+    Recorder(store, REL, TurnId("t"), TraceId("t"), said).decide(
         "listening", {"labels": {"severity": 0, "intimate": True}}, reason="listening: severity 0"
     )
     drafter = Drafter("how's the bread coming along?")
@@ -220,7 +218,7 @@ async def test_a_heavy_last_chat_is_kept_out_of_the_brainstorm_past_the_hold(sto
 
     said = NOW - timedelta(hours=13)  # past the 12-hour hold, so it reaches out, without the lines
     _said(store, said)
-    Recorder(store, REL, SessionId("s"), TurnId("t"), TraceId("t"), said).decide(
+    Recorder(store, REL, TurnId("t"), TraceId("t"), said).decide(
         "listening", {"labels": {"severity": 3, "intimate": False}}, reason="listening: severity 3"
     )
     drafter = Drafter("how's the bread coming along?")

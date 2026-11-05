@@ -22,7 +22,6 @@ from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
-    SessionId,
     Severity,
     Speaker,
     Subject,
@@ -75,7 +74,6 @@ from companion.kit.spendcap import over_cap
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.initiative")
-SESSION = SessionId("initiative")
 HISTORY = 5000  # messages read back, enough for two weeks
 EPISODE_DAYS = timedelta(days=7)
 IDEAS_JUDGE = Judge(
@@ -101,7 +99,7 @@ class Reacher:
 
 def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
     trace = uuid.uuid4().hex
-    return Recorder(store, rel, SESSION, TurnId(trace), TraceId(trace), now)
+    return Recorder(store, rel, TurnId(trace), TraceId(trace), now)
 
 
 def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:

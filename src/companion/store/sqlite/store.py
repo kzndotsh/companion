@@ -103,7 +103,6 @@ class Store:
                 Decision(
                     DecisionId(uuid.uuid4().hex),
                     rel,
-                    marked.session_id,
                     marked.turn_id,
                     TraceId(marked.turn_id),
                     DecisionKind.POLICY,
@@ -131,7 +130,6 @@ class Store:
             Decision(
                 DecisionId(uuid.uuid4().hex),
                 rel,
-                marked.session_id,
                 marked.turn_id,
                 TraceId(marked.turn_id),
                 DecisionKind.POLICY,

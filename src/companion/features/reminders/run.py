@@ -25,7 +25,6 @@ from companion.core.reply_gate import code_checks
 from companion.core.types import (
     Frame,
     Json,
-    SessionId,
     Speaker,
     TraceId,
     TurnId,
@@ -247,15 +246,14 @@ def act(  # noqa: PLR0913, PLR0917
     )
 
 
-def log_decision(  # noqa: PLR0913, PLR0917
+def log_decision(
     c: Runtime,
-    session: SessionId,
     turn: TurnId,
     reason: str,
     now: datetime,
     detail: dict[str, Json] | None = None,
 ) -> None:
-    Recorder(c.store, c.rel, session, turn, TraceId(turn), now).decide(reason, detail)
+    Recorder(c.store, c.rel, turn, TraceId(turn), now).decide(reason, detail)
 
 
 async def _write(
@@ -285,10 +283,9 @@ async def _write(
     return (text, model) if text else (plain(r.kind, r.thing), "code: the talker said nothing")
 
 
-async def deliver_due(  # noqa: PLR0913
+async def deliver_due(
     c: Runtime,
     send: Callable[[str], Awaitable[object]],
-    session: SessionId,
     now: datetime,
     started: datetime,
     *,
@@ -305,7 +302,7 @@ async def deliver_due(  # noqa: PLR0913
             why = "claimed and never finished, cut off mid-send; whether it arrived is unknown"
             c.store.reminder_event(r.id, "expired", why + ", so it is not sent again", now)
             detail_stuck: dict[str, Json] = {"reminder": r.id, "series": r.series_id}
-            log_decision(c, session, TurnId(uuid.uuid4().hex), STUCK_GONE, now, detail_stuck)
+            log_decision(c, TurnId(uuid.uuid4().hex), STUCK_GONE, now, detail_stuck)
     due = [r for r in held if r.state == "pending" and r.due_at <= now]
     every, zone = {x.id: x for x in c.store.series(c.rel)}, local_zone()
     theirs = c.store.their_times(c.rel, now - LOOK_BACK)
@@ -316,7 +313,6 @@ async def deliver_due(  # noqa: PLR0913
             c.store.reminder_event(r.id, "expired", "the bot was not running when it was due", now)
             log_decision(
                 c,
-                session,
                 turn,
                 "reminders: let go, missed while not running",
                 now,
@@ -329,7 +325,7 @@ async def deliver_due(  # noqa: PLR0913
             if c.store.claim_reminder(r.id, now):
                 c.store.reminder_event(r.id, "skipped", why, now)
                 detail: dict[str, Json] = {"reminder": r.id, "series": r.series_id, "why": why}
-                log_decision(c, session, turn, SKIPPED, now, detail)
+                log_decision(c, turn, SKIPPED, now, detail)
             continue
         prior = c.store.history_before(c.rel, now, HISTORY_LIMIT)
         if scene_frame(prior, now) is not Frame.REAL:
@@ -348,7 +344,6 @@ async def deliver_due(  # noqa: PLR0913
             Utterance(
                 UtteranceId(uuid.uuid4().hex),
                 c.rel,
-                session,
                 turn,
                 Speaker.COMPANION,
                 text,
@@ -361,7 +356,6 @@ async def deliver_due(  # noqa: PLR0913
         c.store.reminder_event(r.id, "late" if late else "sent", f"sent by {by}", now)
         log_decision(
             c,
-            session,
             turn,
             f"reminders: sent{' late' if late else ''}",
             now,
@@ -371,16 +365,16 @@ async def deliver_due(  # noqa: PLR0913
         sent += 1
     for series in c.store.series(c.rel):  # read again: a turn may have stopped one while it sent
         if series.state is not Standing.STOPPED:
-            _tend(c, series, session, now, zone)
+            _tend(c, series, now, zone)
     return sent
 
 
-def _tend(c: Runtime, series: Series, session: SessionId, now: datetime, tz: tzinfo) -> None:
+def _tend(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> None:
     step = schedule(c, series, now, tz)
     if step.state is not None:
         key = PAUSED if step.state is Standing.PAUSED else RESUMED
         detail: dict[str, Json] = {"series": series.id, "why": step.reason}
-        log_decision(c, session, TurnId(uuid.uuid4().hex), key, now, detail)
+        log_decision(c, TurnId(uuid.uuid4().hex), key, now, detail)
 
 
 def unhandled(c: Runtime, prior: Sequence[Utterance]) -> list[Utterance]:
@@ -416,7 +410,7 @@ async def reminder_for_turn(
     done = act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
     if done is None:
         return None
-    log_decision(c, t.session, t.turn, done.reason, t.now, done.detail | {"prompt": PROMPT.ref})
+    log_decision(c, t.turn, done.reason, t.now, done.detail | {"prompt": PROMPT.ref})
     return done
 
 

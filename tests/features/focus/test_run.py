@@ -12,7 +12,7 @@ from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.features.recall.test_run import Embedder
 from tests.features.recall.test_run import _belief as belief_in  # pyright: ignore[reportPrivateUsage]
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
 class Broken:
@@ -41,7 +41,7 @@ async def _say(store: Store, embedder: object, text: str, focus: str = "on") -> 
         relevance="off",
         focus=focus,
     )
-    await handle(runtime, SESSION, text, "test", NOW)
+    await handle(runtime, text, "test", NOW)
     for _ in range(50):
         await asyncio.sleep(0)
     return talker

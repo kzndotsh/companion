@@ -19,7 +19,6 @@ from companion.core.turn.context import build_prompt
 from companion.core.types import (
     Frame,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -121,7 +120,6 @@ def _chat(pairs: tuple[tuple[Speaker, str], ...]) -> list[Utterance]:
         Utterance(
             UtteranceId(f"u{n}"),
             RelationshipId("rel"),
-            SessionId("s"),
             TurnId(f"t{n}"),
             sp,
             text,

@@ -7,7 +7,7 @@ from typing import Any
 
 from companion.core.prompt.prefix import build_prefix
 from companion.core.replay import TurnRecord
-from companion.core.types import SessionId, TurnId
+from companion.core.types import TurnId
 from companion.daemon import UNKNOWN_REPLY, chat_commands, delivery_hooks
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
@@ -19,9 +19,7 @@ def _store(tmp_path: Path) -> Store:
     prefix = build_prefix("x " * 3000)
     store.save_prefix(prefix)
     for tid in ("older", "latest"):
-        store.record_turn(
-            TurnRecord(TurnId(tid), REL, SessionId("s"), prefix.sha256, "", "0" * 64, None, T0)
-        )
+        store.record_turn(TurnRecord(TurnId(tid), REL, prefix.sha256, "", "0" * 64, None, T0))
     return store
 
 

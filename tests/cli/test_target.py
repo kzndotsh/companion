@@ -9,7 +9,6 @@ from companion.cli.target import resolve_db, resolve_relationship
 from companion.core.types import (
     Frame,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -19,9 +18,7 @@ from companion.store.sqlite.store import Store
 
 
 def utterance(*, rel: RelationshipId, uid: str = "u1") -> Utterance:
-    return Utterance(
-        UtteranceId(uid), rel, SessionId("s"), TurnId(uid), Speaker.USER, "hi", Frame.REAL, "t", T0
-    )
+    return Utterance(UtteranceId(uid), rel, TurnId(uid), Speaker.USER, "hi", Frame.REAL, "t", T0)
 
 
 def test_an_explicit_db_wins(tmp_path: Path) -> None:

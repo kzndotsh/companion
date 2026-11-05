@@ -8,7 +8,6 @@ from enum import IntEnum, StrEnum
 from typing import NewType
 
 RelationshipId = NewType("RelationshipId", str)
-SessionId = NewType("SessionId", str)
 TurnId = NewType("TurnId", str)
 UtteranceId = NewType("UtteranceId", str)
 BeliefId = NewType("BeliefId", str)
@@ -108,7 +107,6 @@ def _require_aware(name: str, value: datetime) -> None:
 class Utterance:
     id: UtteranceId
     relationship_id: RelationshipId
-    session_id: SessionId
     turn_id: TurnId
     speaker: Speaker
     text: str
@@ -206,7 +204,6 @@ class Decision:
 
     id: DecisionId
     relationship_id: RelationshipId
-    session_id: SessionId
     turn_id: TurnId
     trace_id: TraceId
     kind: DecisionKind

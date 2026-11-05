@@ -17,7 +17,6 @@ from companion.core.turn.now import from_decisions
 from companion.core.types import (
     DecisionKind,
     RelationshipId,
-    SessionId,
     Speaker,
     TraceId,
     TurnId,
@@ -39,13 +38,12 @@ if TYPE_CHECKING:
     pass
 
 log = logging.getLogger("companion.nudges")
-SESSION = SessionId("initiative")
 NUDGE_DROPPED = "nudge (shadow): draft dropped, not sent"
 
 
 def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
     trace = uuid.uuid4().hex
-    return Recorder(store, rel, SESSION, TurnId(trace), TraceId(trace), now)
+    return Recorder(store, rel, TurnId(trace), TraceId(trace), now)
 
 
 def _look(store: Store, rel: RelationshipId, now: datetime) -> Look:

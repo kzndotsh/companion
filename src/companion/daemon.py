@@ -31,7 +31,6 @@ from companion.core.types import (
     Flag,
     FlagId,
     RelationshipId,
-    SessionId,
     TurnId,
 )
 from companion.core.vectors import Embedder
@@ -76,7 +75,6 @@ COMMANDS_KEY = "discord.commands_synced"  # the fingerprint of the slash command
 PASS_IDLE_SECONDS = 90
 PASS_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 REMINDER_TICK_SECONDS = 60
-SESSION = SessionId("main")  # one continuous conversation per relationship, see ADR 0005
 
 
 def load_dotenv(path: Path) -> None:
@@ -402,7 +400,6 @@ def _start_reminders(
                 await deliver_due(
                     runtime,
                     transport.send,
-                    SESSION,
                     utc_now(),
                     started,
                     platform=s.position("platform"),
@@ -560,7 +557,6 @@ async def run(data_dir: Path) -> None:
         async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
             reply = await handle(
                 runtime,
-                SESSION,
                 msg.text,
                 s.position("platform"),
                 quoted=msg.quoted,

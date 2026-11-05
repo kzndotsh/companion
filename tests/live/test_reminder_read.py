@@ -20,7 +20,6 @@ import pytest
 from companion.core.types import (
     Frame,
     RelationshipId,
-    SessionId,
     Speaker,
     TurnId,
     Utterance,
@@ -100,7 +99,6 @@ def _said(text: str, speaker: Speaker, n: int) -> Utterance:
     return Utterance(
         UtteranceId(f"u{n}"),
         RelationshipId("r"),
-        SessionId("s"),
         TurnId(f"t{n}"),
         speaker,
         text,

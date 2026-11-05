@@ -28,7 +28,7 @@ from companion.store.sqlite.store import Store
 from companion.turn.mention import MET, mention_note, read_met
 from tests.features.calendar.test_run import CALM, HALLOWEEN, NOTE, QUIET, remember
 from tests.features.threads.test_note import Meets
-from tests.turn.test_mood_loop import PREFIX, REL, SESSION, Talker
+from tests.turn.test_mood_loop import PREFIX, REL, Talker
 
 BIRTHDAY = "The user's birthday is October 31."
 
@@ -46,7 +46,7 @@ def store(tmp_path: Path) -> Store:
 def _turn(store: Store, minutes: int) -> tuple[str, ...]:
     """One casual turn's mention, its writes run as if the turn were stored."""
     runtime = Runtime(store, Talker(), PREFIX, REL, calendar=True)
-    t = Turn(SESSION, TurnId(f"t{minutes}"), HALLOWEEN + timedelta(minutes=minutes), [], "hey")
+    t = Turn(TurnId(f"t{minutes}"), HALLOWEEN + timedelta(minutes=minutes), [], "hey")
     offer: Offer = mention_note(Moment(runtime, t, Frame.REAL, CALM, Lookups(), False, []), QUIET)
     for write in offer.after:
         write()
@@ -87,7 +87,7 @@ def test_their_birthday_is_marked_once_though_two_sources_know_it(store: Store) 
 def test_a_morning_follow_up_never_holds_back_their_birthday(store: Store) -> None:
     remember(store, "b1", BIRTHDAY)
     morning = HALLOWEEN - timedelta(hours=3)
-    Recorder(store, REL, SESSION, TurnId("m"), TraceId("m"), morning).decide(
+    Recorder(store, REL, TurnId("m"), TraceId("m"), morning).decide(
         LOOP_OFFERED, {"rank": int(Rank.FOLLOW_UP), "about": "the vet"}
     )
     assert "their birthday" in "".join(_turn(store, 0))
@@ -106,7 +106,6 @@ async def test_how_they_met_a_day_is_read_like_a_plan(store: Store) -> None:
     reply = Utterance(
         UtteranceId("r0"),
         REL,
-        SESSION,
         TurnId("t0"),
         Speaker.COMPANION,
         "happy halloween! any plans?",
@@ -117,7 +116,7 @@ async def test_how_they_met_a_day_is_read_like_a_plan(store: Store) -> None:
     store.append_utterance(reply)
     runtime = Runtime(store, Talker(), PREFIX, REL, judge=Meets())
     then = HALLOWEEN + timedelta(minutes=2)
-    t = Turn(SESSION, TurnId("t1"), then, [reply], "yes!! a costume party")
+    t = Turn(TurnId("t1"), then, [reply], "yes!! a costume party")
     await read_met(runtime, t, reply, None)
     met = store.decisions_with_key(REL, MET)
     assert [(d.detail or {}).get("about") for d in met] == ["Halloween"]

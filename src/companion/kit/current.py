@@ -16,7 +16,6 @@ from companion.core.types import (
     DecisionKind,
     Frame,
     Json,
-    SessionId,
     Severity,
     TraceId,
     TurnId,
@@ -32,7 +31,6 @@ log = logging.getLogger("companion.turn")
 
 @dataclass(frozen=True, slots=True)
 class Turn:
-    session: SessionId
     turn: TurnId
     now: datetime
     prior: list[Utterance]
@@ -48,7 +46,7 @@ def mark(t: Turn, what: str) -> None:
 
 
 def recorder(c: Runtime, t: Turn) -> Recorder:
-    return Recorder(c.store, c.rel, t.session, t.turn, TraceId(t.turn), t.now)
+    return Recorder(c.store, c.rel, t.turn, TraceId(t.turn), t.now)
 
 
 def decide(  # noqa: PLR0913

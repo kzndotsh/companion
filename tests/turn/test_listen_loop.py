@@ -10,13 +10,12 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.reply import Reaction
-from companion.core.types import Json, RelationshipId, SessionId
+from companion.core.types import Json, RelationshipId
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
-SESSION = SessionId("s")
 PREFIX = build_prefix("You are steady and warm. " * 200)
 NOW = datetime(2026, 10, 15, 9, 0, tzinfo=UTC)
 
@@ -69,7 +68,7 @@ def store(tmp_path: Path) -> Store:
 async def _ask(store: Store, judge: Judge, text: str = "my boss ignored me again today") -> Talker:
     talker = Talker()
     runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
-    await handle(runtime, SESSION, text, "test", NOW)
+    await handle(runtime, text, "test", NOW)
     return talker
 
 
@@ -116,7 +115,7 @@ async def test_a_failing_judge_means_no_note_and_the_reply_still_goes_out(store:
 
 async def test_no_judge_at_all_changes_nothing(store: Store) -> None:
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL), SESSION, "rough week", "test", NOW)
+    await handle(Runtime(store, talker, PREFIX, REL), "rough week", "test", NOW)
     assert "[They are" not in talker.seen[0].card
 
 
@@ -129,7 +128,7 @@ async def test_acute_is_logged_as_having_no_crisis_path(store: Store) -> None:
 async def test_listen_off_never_asks_the_judge_and_adds_no_note(store: Store) -> None:
     talker = Talker()
     runtime = Runtime(store, talker, PREFIX, REL, judge=Judge(_labels(2)), listen=False)
-    await handle(runtime, SESSION, "rough week", "test", NOW)
+    await handle(runtime, "rough week", "test", NOW)
     assert "[They are" not in talker.seen[0].card
 
 
@@ -170,8 +169,8 @@ async def test_after_a_serious_message_a_bare_thanks_gets_words_not_an_emoji(
     store: Store, severity: int, *, reacted: bool
 ) -> None:
     runtime = Runtime(store, Talker(), PREFIX, REL, judge=AckAndListen(severity, 0))
-    await handle(runtime, SESSION, "my mom is in the hospital", "test", NOW)
-    answer = await handle(runtime, SESSION, "thanks", "test", NOW + timedelta(minutes=1))
+    await handle(runtime, "my mom is in the hospital", "test", NOW)
+    answer = await handle(runtime, "thanks", "test", NOW + timedelta(minutes=1))
     assert isinstance(answer, Reaction) is reacted
 
 

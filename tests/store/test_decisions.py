@@ -12,7 +12,6 @@ from companion.core.types import (
     Decision,
     DecisionId,
     DecisionKind,
-    SessionId,
     TraceId,
     TurnId,
     Utterance,
@@ -30,7 +29,6 @@ def make(
     fields: dict[str, object] = {
         "id": DecisionId(did),
         "relationship_id": REL,
-        "session_id": SessionId("s1"),
         "turn_id": TurnId("t1"),
         "trace_id": TraceId("tr1"),
         "kind": kind,

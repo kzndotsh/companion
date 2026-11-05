@@ -77,9 +77,7 @@ class HistoryRead:
 
 
 def _recorder(store: Store, u: Utterance, now: datetime) -> Recorder:
-    return Recorder(
-        store, u.relationship_id, u.session_id, u.turn_id, TraceId(uuid.uuid4().hex), now
-    )
+    return Recorder(store, u.relationship_id, u.turn_id, TraceId(uuid.uuid4().hex), now)
 
 
 async def _capture(

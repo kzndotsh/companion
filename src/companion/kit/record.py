@@ -18,7 +18,6 @@ from companion.core.types import (
     DecisionKind,
     Json,
     RelationshipId,
-    SessionId,
     TraceId,
     TurnId,
 )
@@ -31,7 +30,6 @@ class Recorder:
 
     store: Store
     rel: RelationshipId
-    session: SessionId
     turn: TurnId
     trace: TraceId
     now: datetime
@@ -50,7 +48,6 @@ class Recorder:
             Decision(
                 DecisionId(uuid.uuid4().hex),
                 self.rel,
-                self.session,
                 self.turn,
                 self.trace,
                 kind,

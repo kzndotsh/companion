@@ -13,11 +13,11 @@ from companion.core.types import (
     DecisionKind,
     Json,
     RelationshipId,
-    SessionId,
     TraceId,
     TurnId,
 )
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
+from companion.store.sqlite.ledger import SESSION
 
 REACTED = "reacted "  # the key of a reaction sent instead of a reply
 CLOSED = "closed belief:"  # the key of a memory closed
@@ -42,7 +42,6 @@ def _decision(row: sqlite3.Row) -> Decision:
     return Decision(
         id=DecisionId(str(row["id"])),
         relationship_id=RelationshipId(str(row["relationship_id"])),
-        session_id=SessionId(str(row["session_id"])),
         turn_id=TurnId(str(row["turn_id"])),
         trace_id=TraceId(str(row["trace_id"])),
         kind=DecisionKind(str(row["kind"])),
@@ -63,7 +62,7 @@ def append_decision(conn: sqlite3.Connection, d: Decision) -> None:
             (
                 d.id,
                 d.relationship_id,
-                d.session_id,
+                SESSION,
                 d.turn_id,
                 d.trace_id,
                 d.kind,

@@ -10,7 +10,7 @@ from companion.kit.current import Heard, Turn
 from companion.kit.features import Lookups, Moment
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
-from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
+from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 CALM: Heard = (
     ListeningRead(severity=Severity.TRIVIAL, stance="other", vague=False, age_coded=False),
@@ -26,7 +26,7 @@ HEAVY: Heard = (
 
 def _offer(tmp_path: Path, text: str, heard: Heard, *, marks: bool = True) -> tuple[str, ...]:
     runtime = Runtime(Store(tmp_path / "r.sqlite"), Talker(), PREFIX, REL, marks=marks)
-    t = Turn(SESSION, TurnId("t1"), NOW, [], text)
+    t = Turn(TurnId("t1"), NOW, [], text)
     return mark_offer(Moment(runtime, t, Frame.REAL, heard, Lookups(), False, []), None, {}).tail
 
 

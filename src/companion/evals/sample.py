@@ -31,7 +31,6 @@ from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
-    SessionId,
     Severity,
     Speaker,
     TraceId,
@@ -53,7 +52,6 @@ from companion.turn.gate import checked
 from companion.turn.notes import Notes, notes_for
 
 REL = RelationshipId("eval")
-SESSION = SessionId("eval")
 CLOCK = "Right now it is Thursday 12:00."  # a script with no clock line of its own
 READ_BY = "fixture"  # the scorer named on a reading the fixture gives
 EMPTY = "the model returned no text"
@@ -138,7 +136,6 @@ def _script_turn(c: Runtime, script: Script, v: Variant) -> Turn:
             Utterance(
                 UtteranceId(uuid.uuid4().hex),
                 REL,
-                SESSION,
                 TurnId(uuid.uuid4().hex),
                 Speaker.USER if role == "user" else Speaker.COMPANION,
                 text,
@@ -150,8 +147,8 @@ def _script_turn(c: Runtime, script: Script, v: Variant) -> Turn:
     prior = c.store.history_before(REL, now, HISTORY_LIMIT)
     if v.history is not None:
         prior = prior[max(0, len(prior) - v.history + 1) :]
-    t = Turn(SESSION, TurnId(uuid.uuid4().hex), now, prior, script.user)
-    Recorder(c.store, REL, SESSION, t.turn, TraceId(t.turn), now).decide(
+    t = Turn(TurnId(uuid.uuid4().hex), now, prior, script.user)
+    Recorder(c.store, REL, t.turn, TraceId(t.turn), now).decide(
         ASKED_NAME, at=now - timedelta(hours=1)
     )
     return t
@@ -238,7 +235,7 @@ async def draw(
             assert recorded is not None
             request = recorded_request(recorded, v)
             text = request.messages[-1].content
-            t = Turn(SESSION, TurnId(uuid.uuid4().hex), utc_now(), [], text)
+            t = Turn(TurnId(uuid.uuid4().hex), utc_now(), [], text)
         first = await talker.reply(request)
         if v.raw:
             return Drawn(request, first, ())

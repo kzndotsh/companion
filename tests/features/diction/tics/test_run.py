@@ -10,14 +10,13 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.types import Json, RelationshipId, SessionId
+from companion.core.types import Json, RelationshipId
 from companion.kit.runtime import Runtime
 from companion.kit.tics import TicMemory
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
-SESSION = SessionId("s")
 PREFIX = build_prefix("You are steady and warm. " * 200)
 NOW = datetime(2026, 10, 15, 9, 0, tzinfo=UTC)
 
@@ -60,7 +59,7 @@ async def _chat(store: Store, judge: Judge | None, n: int) -> Talker:
     talker = Talker()
     runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
     for i in range(n):
-        await handle(runtime, SESSION, f"message {i}", "test", NOW + timedelta(minutes=2 * i))
+        await handle(runtime, f"message {i}", "test", NOW + timedelta(minutes=2 * i))
         if runtime.tics.pending is not None:
             await runtime.tics.pending
     return talker
