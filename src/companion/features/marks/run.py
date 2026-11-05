@@ -14,9 +14,9 @@ from companion.kit.features import Feature, Moment, Offer, Offered
 def mark_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     del found, so_far
     c, t = m.c, m.t
-    if not c.marks or not m.casual or not offered(str(t.turn), t.text):
-        return Offer()
     mine = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
+    if not c.marks or not m.casual or not offered(str(t.turn), t.text, mine):
+        return Offer()
     mark = pick(str(t.turn), t.text, mine)
     if mark is None:
         return Offer()

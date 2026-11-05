@@ -3,8 +3,9 @@
 On its own it used almost no text emoticons, so when they sent one it copied it (30% of replies
 after one, 1% otherwise). A note against copying changed nothing, and a list in the character sheet
 made it reach for one mark half the time while still copying theirs. So code picks: on a turn where
-their message has a mark, and on about one casual turn in four, one mark of its own is offered,
-never one they just used or one it used lately. Pure.
+their message has a mark, and on about half the playful ones (a laugh, an emoji, a stretched word),
+one mark of its own is offered, never one they just used or one it used lately, and none while one
+of its last few replies already has one. Pure.
 """
 
 from __future__ import annotations
@@ -14,14 +15,20 @@ import re
 from collections.abc import Sequence
 from importlib.resources import files
 
-from companion.core.turn.habits import EMOTICON
+from companion.core.turn.ack import stretched
+from companion.core.turn.habits import EMOJI, EMOTICON
 from companion.prompts import get
 
 NOTE = get("notes/own-mark")
 THEIRS_NOTE = get("notes/own-mark-theirs")  # when their message has a mark: named as theirs
 OFFERED = "mark: one of its own offered"
-EVERY = 4  # on a casual turn with no mark of theirs, one in this many is offered one
+# Offered whenever it was one casual turn in four, a mark ended 55% of those replies and 17 of 46 in
+# one evening, which read as a habit (owner flag 2026-11-05). Now only a playful message of theirs,
+# half the time, and never while one of its last SPACING replies has a mark.
+EVERY = 2  # on a playful turn with no mark of theirs, one in this many is offered one
+SPACING = 3  # its replies that must have no mark before another is offered
 RECENT = 6  # its replies a mark must not have been used in
+_LAUGH = re.compile(r"\b(?:lol+|lmao+|lmfao|haha\w*|hehe\w*|ahaha\w*)\b", re.IGNORECASE)
 
 # Its own marks, one per line in marks.txt (kept as text: they are made of look-alike characters).
 MARKS: tuple[str, ...] = tuple(
@@ -44,9 +51,25 @@ def _draw(seed: str, n: int) -> int:
     return int.from_bytes(hashlib.sha256(seed.encode()).digest()[:8], "big") % n
 
 
-def offered(seed: str, theirs: str) -> bool:
-    """Whether this turn offers a mark: always when their message has one, else one in EVERY."""
-    return bool(EMOTICON.search(theirs)) or _draw(seed, EVERY) == 0
+def playful(text: str) -> bool:
+    """Whether their message is playful: a laugh, an emoji or a stretched word."""
+    return bool(_LAUGH.search(text) or EMOJI.search(text)) or stretched(text)
+
+
+def has_mark(text: str) -> bool:
+    """Whether a reply has one of its marks, or any text emoticon."""
+    return EMOTICON.search(text) is not None or any(_used(m, text) for m in MARKS)
+
+
+def offered(seed: str, theirs: str, recent: Sequence[str] = ()) -> bool:
+    """Whether this turn offers a mark: always when their message has one, so it is named as
+    theirs; else on a playful message, one in EVERY, and only when none of its last SPACING replies
+    has one."""
+    if EMOTICON.search(theirs):
+        return True
+    if any(has_mark(r) for r in recent[-SPACING:]):
+        return False
+    return playful(theirs) and _draw(seed, EVERY) == 0
 
 
 def pick(seed: str, theirs: str, recent: Sequence[str]) -> str | None:

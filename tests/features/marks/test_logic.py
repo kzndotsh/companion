@@ -15,10 +15,20 @@ def test_with_every_mark_used_there_is_no_pick() -> None:
     assert pick("t", "", [" ".join(MARKS)]) is None
 
 
-def test_their_mark_always_brings_an_offer_and_otherwise_about_one_turn_in_four() -> None:
+def test_their_mark_always_brings_an_offer_and_a_playful_message_about_half_the_time() -> None:
     assert all(offered(f"t{i}", "nice :3") for i in range(50))
-    rate = sum(offered(f"t{i}", "nice") for i in range(4000)) / 4000
+    rate = sum(offered(f"t{i}", "lol nice") for i in range(4000)) / 4000
     assert abs(rate - 1 / EVERY) < 0.03
+
+
+def test_a_plain_message_never_brings_an_offer() -> None:
+    assert not any(offered(f"t{i}", "went to the store") for i in range(500))
+
+
+def test_no_offer_while_one_of_its_last_few_replies_has_a_mark() -> None:
+    recent = ["sounds fun (¬‿¬)", "ok", "sure"]
+    assert not any(offered(f"t{i}", "hahaha 😂", recent) for i in range(200))
+    assert any(offered(f"t{i}", "hahaha 😂", ["ok", "sure", "nice"]) for i in range(200))
 
 
 def test_the_same_turn_always_gets_the_same_answer() -> None:

@@ -6,7 +6,7 @@ Its own emoticons and kaomoji, offered by code now and then, so it has marks of 
 
 ## How it works
 
-On a casual turn, code decides whether to offer a mark. A casual turn is one the listening judge read as not serious (severity 0), outside a pretend scene, and not a goodbye (`is_casual`). On any other turn, or when listening failed, nothing is offered. A mark is offered when their message has an emoticon, and on about one other turn in four. The draw comes from a hash of the turn id, so a replay draws the same.
+On a casual turn, code decides whether to offer a mark. A casual turn is one the listening judge read as not serious (severity 0), outside a pretend scene, and not a goodbye (`is_casual`). On any other turn, or when listening failed, nothing is offered. A mark is offered when their message has an emoticon, so it is named as theirs. Otherwise only on a playful message of theirs (a laugh, an emoji, a stretched word), about one in two, and never while one of its last 3 replies already has a mark (`SPACING`). A plain message never brings one. The draw comes from a hash of the turn id, so a replay draws the same. Until 2026-11-05 it was one casual turn in four whatever they wrote; a mark then ended 55% of the replies it was offered on, and on 17 of 46 replies in one evening, which read as a habit (owner flag). Replayed over the two weeks before, the new rule offers on 73 of 406 casual turns against 130.
 
 Code then picks one mark at random from `marks.txt`, leaving out any mark that stands on its own in their message or in the companion's last six replies (a word mark as a whole word, a symbol mark not glued to other symbols, so ✧ inside a longer kaomoji does not rule ✧ out). The pick also depends only on the turn id. If every mark is ruled out, nothing is offered. The pick goes in one line after the history (`TalkerRequest.tail`), where it weighs most: "If an emoticon fits this reply, use this one of yours". The model may still use none.
 
@@ -18,7 +18,7 @@ Once the turn is stored, the offer is logged as the decision `mark: one of its o
 
 | File | What |
 |---|---|
-| `logic.py` | pure: when a turn offers a mark, which one (never theirs, never one it used lately), the note text (`EVERY`, `RECENT`, `OFFERED`) |
+| `logic.py` | pure: when a turn offers a mark, which one (never theirs, never one it used lately), the note text (`EVERY`, `SPACING`, `RECENT`, `OFFERED`) |
 | `marks.txt` | the marks, one per line (kept as text: they are made of look-alike characters) |
 | `run.py` | effects: the note after the history on a casual turn, logged with the mark (`MARKS`) |
 
