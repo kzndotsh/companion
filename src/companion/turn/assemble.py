@@ -212,7 +212,7 @@ def assemble(  # noqa: PLR0913
         Moment(c, t, in_scene, heard, looked, held, assertable, on_card, brushed, risk)
     )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
-    scene = c.scene_reminder if roleplay else ""
+    scene = "\n".join(p for p in (c.scene_reminder if roleplay else "", lane.pinned) if p)
     request = Layout(prefix, t.prior, t.text, clock, pinned, shown, notes, scene, now).request()
     if request.tail:
         decide(c, t, TAIL, {"text": request.tail})  # what replay needs to rebuild it

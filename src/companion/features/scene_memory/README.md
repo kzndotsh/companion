@@ -37,9 +37,9 @@ A pattern becomes an entry only once its quotes come from two separate scenes (`
 1. every current limit, hard first, then soft (`notes/scene-limits`);
 2. at most 6 entries nearest the moment that say what they are into, how they like it to go, or what they want after (`NEAREST`, `notes/scene-known`);
 3. at most one curious item, the nearest one, which it may invite once (`notes/scene-offer`);
-4. the memories that say what they are called (`names_them` in `core/turn/address.py`, `notes/scene-basics`).
+4. the basics: the memories that say what they are called (`names_them` in `core/turn/address.py`) and those in which they describe their own body (`describes_body`, a word list in code, never a model; nothing that touches age), with a heading that asks to keep to them (`notes/scene-basics`).
 
-It goes in the system block in place of the memory card (ADR 0012), with none of the everyday card and none of its own views. How they want to be referred to stays pinned, as on every turn.
+What they are into and the offer go in the system block in place of the memory card (ADR 0012), with none of the everyday card and none of its own views. The limits and the basics are sent after the history, after the scene reminder (`render_pinned`): on the card, a fact about their body changed almost no reply; after the history with the heading, the assumed body fell from 21 to 12 of 36 draws and their own rose from 1 to 12 (three recorded turns, 2026-11-05, owner flag). How they want to be referred to stays pinned, as on every turn.
 
 "Nearest" comes from the look-up before the reply (`nearest_for_turn`, the feature's `look`): on a turn in a pretend scene, or an intimate turn the operator lets the roleplay talker answer, it embeds the reply before their message with their message, plus any entry with no vector yet in the same call, under 2 seconds (`LOOK_SECONDS`), and scores every entry by cosine. New vectors are kept (`belief_embeddings` for memories, `scene_vectors` for patterns). A slow or failed look-up leaves only the limits and the basics.
 

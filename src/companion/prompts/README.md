@@ -136,7 +136,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/scene-limits` | note | on a scene turn, in place of the memory card: their hard and soft limits from their own words, pinned first (ADR 0026, `COMPANION_SCENE_MEMORY=on`) | v1 |
 | `notes/scene-known` | note | on a scene turn: the intimate memories and patterns nearest the moment, at most six (ADR 0026) | v1 |
 | `notes/scene-offer` | note | on a scene turn: one item they said they are curious about, which it may invite once if the moment fits (ADR 0026) | v1 |
-| `notes/scene-basics` | note | on a scene turn: what they are called; the only everyday memory a scene keeps (ADR 0026) | v1 |
+| `notes/scene-basics` | note | on a scene turn, after the history with the limits: what they are called and what they said about their own body, kept to (ADR 0026) | v2 |
 | `system/ack` | system | the ack judge, `core/turn/ack.py` | v3 |
 | `system/callback-judge` | system | the callback check, `features/audits/callbacks/logic.py`, `companion audit callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |

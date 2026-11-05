@@ -61,6 +61,7 @@ from companion.features.scene_memory.logic import (
     agree,
     closed,
     cooled,
+    describes_body,
     lane_prompt,
     limit_prompt,
     parse_lanes,
@@ -69,10 +70,12 @@ from companion.features.scene_memory.logic import (
     pattern_entry,
     pattern_prompt,
     refuse,
+    render_pinned,
     render_scene,
     scene_card,
     scenes,
     screen,
+    touches_age,
 )
 from companion.features.scene_memory.store import By
 from companion.kit.current import Heard, Turn, decide
@@ -386,6 +389,7 @@ class SceneLane:
 
     hidden: frozenset[BeliefId] = frozenset()  # left off the everyday card
     text: str | None = None  # sent instead of the everyday card
+    pinned: str = ""  # their limits and the basics, sent after the history
     after: tuple[Callable[[], None], ...] = ()  # the offer's log, once the turn is stored
 
 
@@ -456,24 +460,34 @@ def scene_lane(
     made = scene_card(
         scored.entries if scored is not None else entries(c.store, c.rel),
         scored.scores if scored is not None else {},
-        [b.claim for b in c.store.user_beliefs(c.rel) if is_assertable(b) and names_them(b)],
+        [
+            b.claim
+            for b in c.store.user_beliefs(c.rel)
+            if is_assertable(b)
+            and (names_them(b) or describes_body(b.claim, (e.quote for e in b.evidence)))
+            and not touches_age(b.claim, *(e.quote for e in b.evidence))
+        ],
         may_offer=may,
         cooled=_cooled(c, t) if may else (),
     )
-    text = render_scene(made)
+    text, pinned = render_scene(made), render_pinned(made)
     decide(
         c,
         t,
         CARD,
-        _card_detail(made, text, sent=live, scored=scored is not None),
+        _card_detail(
+            made, "\n".join(p for p in (text, pinned) if p), sent=live, scored=scored is not None
+        ),
         reason=f"{CARD}: {len(made.limits)} limits, {len(made.nearest)} nearest,"
         f" {'one curious item it may offer' if made.offer else 'no offer'},"
         f" {len(made.basics)} basics" + ("" if live else " (shadow: not sent)"),
     )
     offer = made.offer
     if not live or offer is None:
-        return SceneLane(text=text if live else None)
-    return SceneLane(text=text, after=(lambda: decide(c, t, OFFERED, {"entry": offer.id}),))
+        return SceneLane(text=text if live else None, pinned=pinned if live else "")
+    return SceneLane(
+        text=text, pinned=pinned, after=(lambda: decide(c, t, OFFERED, {"entry": offer.id}),)
+    )
 
 
 SCENE = Feature("scene", look=nearest_for_turn)

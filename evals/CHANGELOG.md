@@ -2963,3 +2963,19 @@ to the everyday talker as if intimate talk were starting, since "under way" look
 
 Rerun: the scratch `brush_ab.py`, `hold_ab.py`, `swap.py`, `anat.py`, `anat2.py` (each replays the logged
 request with one part changed).
+
+## 2026-11-05: The scene card's limits and basics after the history (scene lane review)
+
+The roleplay talker kept assuming a body the user does not have. The scene lane's card was built with
+their own memories about their body added to the basics, and replayed on three recorded scene turns,
+12 draws each on DeepSeek V4.1 Flash, judged by word lists for each kind of body:
+
+| Layout | their own body | the assumed one |
+|---|---|---|
+| whole card in the system block | 1/36 | 21/36 |
+| limits and basics after the history | 11/36 | 18/36 |
+| the same, basics headed "keep to this, their body above all" (`notes/scene-basics` v2) | 12/36 | 12/36 |
+
+Shipped the third. Word lists, not a judge, and three turns: indicative. $0.0137.
+Rerun: the scratch `lane_ab.py` (the logged scene card of each turn, split as the code does).
+

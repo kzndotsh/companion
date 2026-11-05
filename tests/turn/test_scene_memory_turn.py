@@ -26,10 +26,6 @@ from companion.core.types import (
 )
 from companion.features.relevance.logic import LIVE
 from companion.features.scene_memory.logic import (
-    BASICS_NOTE,
-    KNOWN_NOTE,
-    LIMITS_NOTE,
-    OFFER_NOTE,
     Everyday,
     Intimate,
     Place,
@@ -61,10 +57,6 @@ PLACES: dict[str, Place] = {
     TEASE: Intimate(Stance.SOFT_LIMIT),
     BLIND: Intimate(Stance.CURIOUS),
 }
-
-
-def _heads() -> list[str]:
-    return [n.text.split("\n")[0] for n in (LIMITS_NOTE, KNOWN_NOTE, OFFER_NOTE, BASICS_NOTE)]
 
 
 @pytest.fixture
@@ -137,16 +129,16 @@ def _keys(store: Store, key: str) -> list[dict[str, Json]]:
     return [d.detail or {} for d in store.decisions_with_key(REL, key)]
 
 
-def test_on_a_scene_turn_the_card_is_limits_nearest_offer_basics_and_nothing_everyday(
+def test_on_a_scene_turn_limits_and_basics_follow_the_history_and_nothing_everyday(
     store: Store,
 ) -> None:
     _brush(store, declines=False)
     asm = _turn(store, "on", roleplay=True)
-    card = asm.request.card
-    at = [card.index(h) for h in _heads()]
-    assert at == sorted(at)
-    assert card.index(CHOKE) < card.index(TEASE) < card.index(SLOW) < card.index(BLIND)
-    assert card.index(BLIND) < card.index(NAME)
+    card, tail = asm.request.card, asm.request.tail
+    assert card.index(SLOW) < card.index(BLIND)  # what they are into, then the one offer
+    assert tail.index(CHOKE) < tail.index(TEASE) < tail.index(NAME)  # limits, then the basics
+    for claim in (CHOKE, TEASE, NAME):
+        assert claim not in card
     assert NURSE not in card
     assert "[What you remember" not in card
     [logged] = _keys(store, CARD)
@@ -220,11 +212,11 @@ def test_an_item_they_pushed_back_is_not_offered_again_within_three_days(store: 
 
 def test_with_no_look_up_a_scene_keeps_its_limits_and_basics(store: Store) -> None:
     _brush(store, declines=False)
-    card = _turn(store, "on", roleplay=True, looked=Lookups()).request.card
-    assert CHOKE in card
-    assert NAME in card
-    assert SLOW not in card
-    assert BLIND not in card
+    request = _turn(store, "on", roleplay=True, looked=Lookups()).request
+    assert CHOKE in request.tail
+    assert NAME in request.tail
+    assert SLOW not in request.card + request.tail
+    assert BLIND not in request.card + request.tail
 
 
 async def test_on_the_relevance_look_up_never_searches_the_intimate_lane(store: Store) -> None:

@@ -151,6 +151,21 @@ _AGE = re.compile(
 )
 
 
+# Words that name a part of the body a scene would describe, or a surgery that changes one: a memory
+# of theirs with one is a basic, pinned on every scene card, so the talker does not assume a body
+# they do not have (owner flag 2026-11-05).
+_ANATOMY = re.compile(
+    r"\b(?:penis|dick|cock|vagina|vulva|pussy|clit\w*|breasts?|boobs?|tits?|nipples?"
+    r"|erections?|testicles|(?:top|bottom) surgery|chastity cage)\b",
+    re.IGNORECASE,
+)
+
+
+def describes_body(claim: str, quotes: Iterable[str] = ()) -> bool:
+    """Whether a memory of theirs says something about their own body a scene would describe."""
+    return any(_ANATOMY.search(text) for text in (claim, *quotes))
+
+
 def touches_age(*texts: str) -> bool:
     """Whether any text touches age, minors, school or an age-regression headspace."""
     return any(_AGE.search(t) for t in texts)
@@ -476,18 +491,26 @@ def scene_card(
 _LIMIT_WORDS = {Stance.HARD_LIMIT: "hard limit", Stance.SOFT_LIMIT: "soft limit"}
 
 
-def render_scene(card: SceneCard) -> str:
-    """The scene card as bracketed blocks for the system block, in the card's order."""
+def render_pinned(card: SceneCard) -> str:
+    """What every scene card pins, their limits and the basics, as bracketed blocks sent after the
+    history: on the card a fact about their body changed no reply in 12, after the history it was
+    used in 8 of 12 (2026-11-05)."""
     parts: list[str] = []
     if card.limits:
         items = "\n".join(f"- {_LIMIT_WORDS[e.stance]}: {e.claim}" for e in card.limits)
         parts.append(LIMITS_NOTE.render(items=items))
+    if card.basics:
+        parts.append(BASICS_NOTE.render(items="\n".join(f"- {b}" for b in card.basics)))
+    return "\n".join(parts)
+
+
+def render_scene(card: SceneCard) -> str:
+    """The rest of the scene card, what they are into and the one offer, for the system block."""
+    parts: list[str] = []
     if card.nearest:
         parts.append(KNOWN_NOTE.render(items="\n".join(f"- {e.claim}" for e, _ in card.nearest)))
     if card.offer is not None:
         parts.append(OFFER_NOTE.render(items=f"- {card.offer.claim}"))
-    if card.basics:
-        parts.append(BASICS_NOTE.render(items="\n".join(f"- {b}" for b in card.basics)))
     return "\n".join(parts)
 
 

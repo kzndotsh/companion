@@ -18,7 +18,6 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.scene_memory.logic import (
-    BASICS_NOTE,
     KNOWN_NOTE,
     LIMITS_NOTE,
     NEAREST,
@@ -38,9 +37,11 @@ from companion.features.scene_memory.logic import (
     agree,
     closed,
     cooled,
+    describes_body,
     parse_lanes,
     pattern_entry,
     refuse,
+    render_pinned,
     render_scene,
     scene_card,
     scenes,
@@ -252,20 +253,27 @@ ENTRIES = [
 SCORES = {"into1": 0.2, "style": 0.9, "care": 0.5, "into2": 0.7, "cur1": 0.95, "cur2": 0.6}
 
 
-def test_the_scene_card_pins_limits_then_the_nearest_then_one_offer_then_the_basics() -> None:
+def test_the_scene_card_pins_limits_and_basics_and_shows_the_nearest_then_one_offer() -> None:
     card = scene_card(ENTRIES, SCORES, ["The user's name is Sam."], may_offer=True)
     assert [e.id for e in card.limits] == ["hard", "soft"]
     ranked = ["style", "into2", "care", "into1"]  # every known entry, nearest first
     assert [e.id for e, _ in card.nearest] == ranked[:NEAREST]
     assert card.offer is not None
     assert card.offer.id == "cur1"
-    text = render_scene(card)
-    heads = [n.text.split("\n")[0] for n in (LIMITS_NOTE, KNOWN_NOTE, OFFER_NOTE, BASICS_NOTE)]
-    at = [text.index(h) for h in heads]
-    assert at == sorted(at)
-    assert text.index("hard limit: claim hard") < text.index("soft limit: claim soft")
+    text, pinned = render_scene(card), render_pinned(card)
+    heads = [n.text.split("\n")[0] for n in (KNOWN_NOTE, OFFER_NOTE)]
+    assert [text.index(h) for h in heads] == sorted(text.index(h) for h in heads)
+    assert pinned.index(LIMITS_NOTE.text.split("\n")[0]) < pinned.index("The user's name is Sam.")
+    assert pinned.index("hard limit: claim hard") < pinned.index("soft limit: claim soft")
+    assert "claim hard" not in text  # the limits go after the history, not in the system block
     assert "claim cur1" in text
     assert "claim cur2" not in text
+
+
+def test_a_memory_about_their_own_body_is_a_basic() -> None:
+    assert describes_body("The user wears a chastity cage.")
+    assert describes_body("The user is tall.", ["my breasts are small"])
+    assert not describes_body("The user loves playing footsies.")
 
 
 def test_a_limit_is_pinned_even_with_no_look_up_and_nothing_else_is_shown() -> None:
