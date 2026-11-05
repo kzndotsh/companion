@@ -693,7 +693,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/ack
 - **system/ack v1** (superseded). From commit 9622e19 on 2026-10-15: feat(ack): react instead of replying to acknowledgements, judged by a small model in parallel with the talker
-- **system/ack v2** (current). From commit ca3f4c3 on 2026-10-17: fix(ack): a lively reply in the middle of a chat is not an acknowledgement and gets a message
+- **system/ack v2** (superseded). From commit ca3f4c3 on 2026-10-17: fix(ack): a lively reply in the middle of a chat is not an acknowledgement and gets a message
+- **system/ack v3** (current). v2 with four more reactions to choose from when a message only acknowledges: 😘 for an affectionate goodnight or kiss, 🥹 for a touched thank you, 💀 or 😭 for dying laughing (`core/turn/ack.py` `EMOJI`). The labels and the confidence bar are unchanged. Reason: the owner's choice of emoji, 2026-11-05. Not measured.
 - **system/ack v3** (candidate, not shipped). The invitation label also covers asking it for the next thing (a next question, go on). Reason: the owner's flag of 2026-11-01 on the window, a request for the next question got only a reaction. It fixed that message (12/12 reactions to 0/12) but a curt thanks while still cool after a hurt went back to a reaction 5/12 against 2/12, so v2 stays. Measurement in `evals/CHANGELOG.md`.
 
 ## system/callback-judge
@@ -770,7 +771,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 - **system/quip v3** (current, 2026-10-24). v2 unchanged, plus a second label, `generic`: whether the reply leans on a canned reaction that could sit under many messages ("that sounds so good", "X is always the best part", restating their point back as praise). A generic reply is drawn once more, as a joke is. Same call, no added time. Reason: a full read of 1,057 everyday replies found such a line in about one in six. On 200 of them labelled by hand it was right 88% of the times it said generic, and caught 46% of the marked ones (62% of the wholly generic). Measurement in `evals/CHANGELOG.md`.
 
 ## system/react
-- **system/react v1** (current). From commit 10b8404 on 2026-10-15: feat(react): a reaction can go with a reply, judged beside the talker, with a confidence bar, a cooldown and no reaction to heavy messages
+- **system/react v1** (superseded). From commit 10b8404 on 2026-10-15: feat(react): a reaction can go with a reply, judged beside the talker, with a confidence bar, a cooldown and no reaction to heavy messages
+- **system/react v2** (current). v1 with fifteen more reactions, each tied to a tone: 💀 😭 🤪 😅 for funny, 🥹 🥺 😘 🫠 😇 for sweet, 😈 🥵 😜 🫣 for flirty or cheeky teasing, 😎 for impressive, 🥳 for exciting (`core/turn/react.py` `EMOJI`). The tones, the confidence bar and the cooldown are unchanged, so it reacts as often as before. Reason: the owner's choice of emoji, 2026-11-05. Not measured.
 
 ## system/recall
 - **system/recall v1** (superseded). New. The look-up when they ask it to remember: a topic and every candidate belief, labelled; it returns at most five labels that bear on the topic. Code keeps only labels it showed and never a crisis-level belief (`core/recall.py`).

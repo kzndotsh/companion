@@ -22,7 +22,36 @@ MIN_CONFIDENCE = 0.65
 # At least this many of the user's messages since the last reaction, so a reaction is occasional.
 MIN_GAP = 3
 TONES = ("funny", "sweet", "impressive", "exciting", "sad", "plain")
-EMOJI = ("😁", "🤣", "❤", "🥰", "😍", "🔥", "🤯", "👏", "🎉", "🤗", "😢", "💯", "👀")
+EMOJI = (
+    "😁",
+    "🤣",
+    "💀",
+    "😭",
+    "🤪",
+    "😅",
+    "❤",
+    "🥰",
+    "😍",
+    "🥹",
+    "🥺",
+    "😘",
+    "🫠",
+    "😇",
+    "😈",
+    "🥵",
+    "😜",
+    "🫣",
+    "👏",
+    "🎉",
+    "💯",
+    "😎",
+    "🔥",
+    "🤯",
+    "🥳",
+    "🤗",
+    "😢",
+    "👀",
+)
 
 PROMPT = get("system/react")
 SYSTEM = PROMPT.text

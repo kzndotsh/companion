@@ -29,7 +29,7 @@ CONTEXT_MESSAGES = 8
 REACT_THRESHOLD = 0.70
 _STRETCHED = re.compile(r"([a-z])\1{2,}\b", re.IGNORECASE)
 KINDS = ("ack", "answer", "emotional", "invitation", "other")
-EMOJI = ("👍", "❤", "😁", "🔥", "🙏", "👌", "🤗", "🫡")
+EMOJI = ("👍", "❤", "😘", "🥹", "😁", "💀", "😭", "🔥", "🙏", "👌", "🤗", "🫡")
 
 
 @dataclass(frozen=True, slots=True)

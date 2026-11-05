@@ -21,6 +21,20 @@ log = logging.getLogger("companion.telegram")
 RATE_LIMIT_BUDGET_SECONDS = 60.0
 
 
+# Telegram takes only a fixed list of reaction emoji; each of these has a near one there.
+TELEGRAM_SWAPS = {
+    "💀": "🤣",
+    "🫣": "🙈",
+    "🫠": "🥰",
+    "🥹": "🥰",
+    "🥺": "🥰",
+    "🥵": "🔥",
+    "🥳": "🎉",
+    "😅": "😁",
+    "😜": "🤪",
+}
+
+
 class TelegramError(DeliveryError):
     """A Telegram call failed. The message names the method and status, never the URL, because the
     URL contains the bot token and logs must not."""
@@ -89,7 +103,7 @@ class Telegram:
             "setMessageReaction",
             chat_id=self._allowed,
             message_id=int(message_id),
-            reaction=[{"type": "emoji", "emoji": emoji}],
+            reaction=[{"type": "emoji", "emoji": TELEGRAM_SWAPS.get(emoji, emoji)}],
         )
 
     async def typing(self) -> None:

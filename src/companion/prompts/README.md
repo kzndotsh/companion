@@ -137,7 +137,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/scene-known` | note | on a scene turn: the intimate memories and patterns nearest the moment, at most six (ADR 0026) | v1 |
 | `notes/scene-offer` | note | on a scene turn: one item they said they are curious about, which it may invite once if the moment fits (ADR 0026) | v1 |
 | `notes/scene-basics` | note | on a scene turn: what they are called; the only everyday memory a scene keeps (ADR 0026) | v1 |
-| `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
+| `system/ack` | system | the ack judge, `core/turn/ack.py` | v3 |
 | `system/callback-judge` | system | the callback check, `features/audits/callbacks/logic.py`, `companion audit callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v10 |
@@ -157,7 +157,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/openloops` | system | open-loop extraction, `features/threads/logic.py` | v4 |
 | `system/openloops-draft` | system | the follow-up draft, `features/threads/run.py` | v2 |
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, or leans on a canned generic reaction, `core/turn/quip.py` | v3 |
-| `system/react` | system | the reaction judge, `core/turn/react.py` | v1 |
+| `system/react` | system | the reaction judge, `core/turn/react.py` | v2 |
 | `system/recall` | system | the recall look-up, `core/recall.py` | v2 |
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |
 | `system/thread-met` | system | how their next message met a thread it brought up (picked up, brushed off, ignored), for the learned pace, `features/threads/run.py` (ADR 0023) | v1 |

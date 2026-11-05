@@ -110,6 +110,13 @@ async def test_a_reaction_and_a_message_go_to_their_chat() -> None:
     ]
 
 
+async def test_a_reaction_telegram_does_not_take_is_sent_as_its_nearest() -> None:
+    calls: list[tuple[str, dict[str, object]]] = []
+    tg = Telegram("t", ALLOWED, httpx.AsyncClient(transport=_ok(calls)))
+    await tg.react("99", "💀")
+    assert calls[0][1]["reaction"] == [{"type": "emoji", "emoji": "🤣"}]
+
+
 async def test_a_failed_typing_indicator_does_not_lose_the_reply() -> None:
     sent: list[str] = []
 
