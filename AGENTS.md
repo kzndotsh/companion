@@ -211,3 +211,17 @@ together.
 - Never run filesystem-wide searches (`find /`, `grep -r` from `$HOME`). Scope to this repo.
 - Subagents get the same rules in their brief, including the no-global-search rule, and they are
   read-only unless the task says otherwise.
+
+## Agent skills
+
+### Issue tracker
+
+Work is tracked as GitHub issues on `kzndotsh/companion`, through `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default roles, each label named as its role. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` at the root and `docs/adr/`. See `docs/agents/domain.md`.
