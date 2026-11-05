@@ -99,6 +99,32 @@ option 6 (a joke or riff gets "build on it") and the J45 line between welcome ba
 joke. Also named there: personality that swings day to day, which users put down to a router sending
 them to different models; our two talkers carry the same risk at the scene boundary.
 
+## More research (2026-11-05)
+
+- **Choosing the act before writing is an established pattern.** Alternating a dialogue-act choice
+  with generation raised engagement in an open-domain study (arXiv 1807.07255, 2018), and LLM replies
+  differ from human ones in the acts they make (HCI+NLP 2025, "Dialogue Acts as a Lens on Human-LLM
+  Interaction").
+- **With LLMs, a wrong act is the main failure.** When the model picks its own strategy the gains are
+  slight, and wrong strategy choices are a large share of the errors (arXiv 2305.13626, 2023). That
+  matches the forced fact in about 1 reply in 10 here, and supports code choosing the move from a
+  label, with no move when nothing fits.
+- **Agreeing and mirroring grow with what the model knows about them.** Over two weeks with 38 users,
+  agreement sycophancy rose with user context, most with memory profiles (arXiv 2509.12517, 2025). The
+  memory card on every turn pulls the same way.
+- **How a partner answers good news matters.** Of four ways to respond, only the active and
+  constructive one (glad, asking about it, building on it) went with more trust, intimacy and
+  satisfaction; a quiet "that's nice" did not (Gable, Reis, Impett and Asher 2004, J Pers Soc Psychol;
+  correlational). An echo reply is the quiet kind. A move for good news: be glad and go into the
+  specifics.
+- **Draft first, then rewrite for engagement** is the other approach (arXiv 2601.01037, 2026). Best of
+  three with a picking judge (8 above) did not help here, because the judge did not pick what the raters
+  called adding.
+
+If built: the move label goes in the listening judge's next version (issue 1 plans a "wants" label
+there), the move is a note after the history, code picks it, good news gets its own move, no move on
+tender, vent or logistics turns, one wording round against the forced facts, then shadow.
+
 ## What to build first, and how to know
 
 Subtract, then compare two ways of adding, then keep the winner behind a meter.
