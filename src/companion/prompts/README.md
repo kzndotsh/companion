@@ -107,7 +107,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/crisis-concern` | note | after the history on a concern or urgent turn: warm, in its own voice, ask directly, listen, name the crisis line or a person they trust once, not as all the help they need, no length cap (ADR 0022, `COMPANION_CRISIS=on`) | v2 |
 | `notes/crisis-stay` | note | after the history on a later concern turn of the same stretch (under two hours since the last risk turn): they were already asked and given the line, so stay with them, do not ask again or recite the line, and when it fits encourage them toward real help and ask if they would be willing (ADR 0022, `COMPANION_CRISIS=on`) | v1 |
 | `notes/crisis-light` | note | after the history when a joke touched the subject and the risk reads split: check once, lightly, at most daily (ADR 0022) | v1 |
-| `notes/check-in` | note | they came back after a gap from a heavy talk: ask gently how they are, once, without naming it | v1 |
+| `notes/check-in` | note | the how-are-you question (the file keeps its old name until its next version): they came back after a gap from a heavy talk: ask gently how they are, once, without naming it | v1 |
 | `notes/recall-empty` | note | the look-up found nothing: say so plainly, never guess (J30) | v1 |
 | `notes/repair` | note | they say it got them wrong: own it in one line, go on from what they said (J30) | v1 |
 | `notes/replied-to` | note | the message they used reply on, quoted, and whose it was, `core/turn/quoted.py` | v1 |

@@ -25,8 +25,7 @@ what it would bring up on its own waits that turn. Once the turn is stored it is
 about a gap`, with the reason, the domain, the depth and the counts. Nothing is picked when nothing is labelled
 yet. Picks from the shadow week (19 to 27 Oct) stay in the log as `map: would ask about a gap (shadow)`.
 
-The note is the only output. How they want to be referred to and the name question are in `basics/`,
-and the basic-fact question is in `hook/`.
+The note is the only output. How they want to be referred to and the name question are in `basics/`.
 
 ## Files
 

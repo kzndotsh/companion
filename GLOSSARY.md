@@ -185,7 +185,7 @@ A check on a drafted reply before it goes out, in code or by a judge.
 _Avoid_: recheck
 
 **Redraw**:
-Asking for a fresh reply after a reply check fails; the last draw goes out whatever it is. A reply is never edited.
+Asking for a fresh reply after a reply check fails. Usually the last draw goes out; on a held turn the new one replaces the old only if it passes. A reply is never edited.
 _Avoid_: resample, regenerate
 
 **Quip**:
@@ -202,6 +202,9 @@ The fixed rule in code that no setting moves: romance or sex with anything child
 
 **Held turn**:
 A turn the floor kept with the everyday talker, whose reply is checked for intimacy before it goes out.
+
+**Intimate check**:
+The reading of a held turn's reply for anything sexual, which has it drawn again or not sent.
 _Avoid_: floor hold
 
 **Age-coded**:
@@ -218,6 +221,12 @@ Their pushing back on flirting or a scene, which keeps the turn with the everyda
 
 **Crisis path**:
 The second look at a message that may be a real risk, after which code picks a crisis level.
+
+**Light check**:
+One gentle question, at most once a day, when a joke touched a risky subject and the reads were split.
+
+**Method check**:
+On a concern or urgent turn, a reply that names means or methods in a how-to way is drawn again.
 
 **Cue**:
 Words, or a listening read of severity 2 or 3, that ask for the crisis path's second look but decide nothing alone.
@@ -259,7 +268,7 @@ The fixed lines between the persona and the character sheet that tell the talker
 Sexual or explicit talk, as distinct from flirting and affection.
 
 **Intimate memory lane**:
-The separate lane for intimate memories, kept off the everyday memory card (`features/intimate`, `COMPANION_INTIMATE_MEMORY`).
+The separate lane for intimate memories, kept off the everyday memory card and shown only on the roleplay card.
 _Avoid_: scene memory, scene lane
 
 **Lane**:
@@ -403,16 +412,16 @@ How personal a memory is: surface, personal or core.
 The part of their life memory knows least about, which the companion asks about now and then.
 
 **Curiosity**:
-Learning about them on purpose: asking the basics, the map's question about a gap, and guesses when invited.
+Learning about them on purpose: asking what to call them and their pronouns, the map's question about a gap, and guesses when invited.
 
 **Basics**:
-The few facts worth knowing early: what to call them, pronouns, age, birthday, work, school, home, place.
+What to call them and which pronouns they use, the two things it asks for until it knows them. On a roleplay card the basics are their name and what they said about their own body.
 
 **Address**:
 How they want to be called, pinned first on every card and never turned into a pet name.
 
 **Episode**:
-A run of chat between two-hour quiet gaps, cut again where a scene starts or ends. A scene ends with its episode, and a conversation in their rhythm starts with one.
+A run of chat between two-hour quiet gaps, cut again where a long stretch turns into a scene or back. A scene ends with its episode, and a conversation in their rhythm starts with one.
 _Avoid_: stretch, new conversation
 
 **Gist**:
@@ -477,11 +486,17 @@ One thing that happened adding to one mood state for a while, fading on a half-l
 The line that shows a mood in how the companion writes, never naming it.
 
 **Own mark**:
-An emoticon or kaomoji of the companion's own, offered on some casual turns.
+An emoticon or kaomoji of the companion's own, offered now and then on a playful casual message, never twice in a short while.
 _Avoid_: marks (alone)
 
 **Promise**:
-Something the companion promised in its own reply, once or as a standing rule.
+Something the companion promised in its own reply, to change how it talks or acts. It is lasting, until they release it, or for one moment; each reply is checked against the ones in force.
+
+**Moment promise**:
+A promise about one joke, slip or moment; it stops binding after a week. Its pair is the lasting promise.
+
+**Promise check**:
+The reading of each reply against the promises in force, which says whether one was kept, broken or released.
 
 **Standing promise**:
 A promise to follow a rule from now on, such as dropping a word.
@@ -548,7 +563,7 @@ Several replies in a row that each asked a question.
 Their asking the companion to keep asking them things.
 
 **How-are-you question**:
-One gentle question about how they are, after a heavy talk and a gap. Its note file is still named `notes/check-in` until its next version.
+One gentle question about how they are, after a heavy talk and a gap.
 
 **Check-in**:
 A reminder they asked for that checks on how something went.
@@ -762,6 +777,9 @@ The letter on a card that says where it came from, such as J for the research wa
 
 **Research**:
 Audits and studies kept locally as read-only background, never committed.
+
+**Audit**:
+A measurement of replies already sent, run by the owner under a spend cap, that never changes a chat. Not the same as a research audit.
 
 **Inbox**:
 Ideas and questions that are not yet anything.
