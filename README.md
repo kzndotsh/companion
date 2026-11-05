@@ -43,8 +43,7 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
   is a question for the owner ([ADR 0019](docs/adr/0019-memory-tidies-itself-only-where-a-judge-matched-the-owner.md)).
 - **Gets to know them.** It asks what to call them, then their pronouns, keeps how they want to be
   referred to pinned in every turn, labels each memory by part of their life and, on a casual turn at
-  most once in three days, asks one light question about the part it knows least. In shadow it works out
-  when their own words open the door to a basic it does not know.
+  most once in three days, asks one light question about the part it knows least.
 - **Asks about conflicts.** A new memory that may replace or contradict an older one is a question for
   the owner, who keeps one or both ([ADR 0019](docs/adr/0019-memory-tidies-itself-only-where-a-judge-matched-the-owner.md)).
 
@@ -184,7 +183,7 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
 We often try new behaviour in shadow first: it works out and logs what it would do, but changes
 nothing in the chat until a review shows it reads right. Right now that includes reaching out first,
 its promises and the check on each reply, what they said is coming, its own history, the memory lane
-for intimate scenes, the basics question and the pace for bringing threads up. The full list, with
+for intimate scenes and the pace for bringing threads up. The full list, with
 each one's setting and review date, is in [AGENTS.md](AGENTS.md#what-runs-in-shadow).
 
 ## Quick start

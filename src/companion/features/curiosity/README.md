@@ -4,7 +4,6 @@ Learning about them on purpose. Each part is its own folder, read like a feature
 
 - `basics/`: asks what to call them and their pronouns until it knows, and keeps their answers.
 - `map/`: places each memory in a part of their life and asks one light question about the thinnest part.
-- `hook/` (shadow): a light question when their words touch a basic it does not know.
 - `guess/`: a guess when they invite one, checked against what memory holds.
 
 Only one note asks them something on a turn: each part's offer says when it asks (`Offer(asks=True)`),

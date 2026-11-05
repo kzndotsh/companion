@@ -59,8 +59,8 @@ Each item ends with the thing that tells us it is done. The cards are below; the
    (`evals/local/`); items 1 to 10 are in. *Done when:* the judges are calibrated against the marks and
    the trivial-vent question has an answer (T14).
 3. **Getting to know them on purpose** (J48): the name and pronoun asks and the map's question are live
-   (the map since 2026-10-29); the hook runs in shadow. *Done when:* the hook's would-asks read right to the
-   owner (review 2026-11-05).
+   (the map since 2026-10-29); the hook was removed at its review of 2026-11-05. *Done when:* the map's
+   questions draw answers that fill the parts it knew least, read in `companion map`.
 4. **Its own promises and lore** (J12, ADR 0020): promises and the per-reply check in shadow, tastes shown
    live since 2026-10-20. *Done when:* the check's would-redraws read right at the review of 2026-11-17 and
    the owner decides whether it redraws live, and LR5.
@@ -102,7 +102,6 @@ outcomes are in the plan above and in the cards.
 | overdue | plan reach-outs and nudges (R1, R1b; reviewed 2026-11-03, nothing to judge) | `companion initiative` | a new date or removal (decision 4) |
 | no date | the two talkers (D1; no outcome recorded at 2026-10-29) | `companion flags`, `companion favorites` | whether the roleplay talker helps and where the boundary hurts |
 | no date | the move picker for bland replies (one measurement, not built) | `docs/inbox/2026-10-25-bland-replies-design-space.md`, `evals/CHANGELOG.md` | build it or not (decision 13) |
-| 2026-11-05 | the hook (J48) | the decision log | whether its would-asks read right; going live or removed |
 | 2026-11-08 | threads' learned pace (ADR 0023); what they said is coming (ADR 0024) | the decision log; `companion now` | the labels read right; the pace beats the day's cap |
 | 2026-11-09 | its own history (ADR 0025); the intimate memory lane (ADR 0026) | `companion history`, `companion scene`, the decision log | canon rulings and scene cards read right |
 | 2026-11-10 | its own reach-outs, brainstorm and pick (ADR 0021) | `companion initiative` | going live, and at what dial |
@@ -340,7 +339,11 @@ When the answer comes, the card moves to Todo or Done.
       **2026-10-29 review:** the map's picks read right (people, 6 of 235 memories, every day for a week), so
       it asks: `notes/map-ask` on a casual turn, at most once in three days. The hook read only three times
       (no would-ask; one read a dish their dad made as their home), so it runs a week more.
-      **Waits on:** the hook's review of 2026-11-05.
+      **2026-11-05 review, the hook removed:** in 13 days it read 4 messages and would have asked none; the
+      check of memory matched an unrelated memory 3 times in 4, and the map's question already asks. Web
+      research (follow-up questions raise liking; a bot that shares first draws deeper sharing) is in
+      `docs/inbox/2026-11-05-share-first-to-get-to-know-them.md`, against the 2026-10-20 call above.
+      **Waits on:** the map's answers filling its thinnest parts.
 - [ ] T17 Closeness stage. A stage computed in code from real history (how long they have talked, how much
       they have shared, how often they flirt), not from points a judge hands out for compliments, picks one
       note line from "just met, already kind of likes them" up to "close" (ADR 0014). It paces intimacy by how
@@ -663,6 +666,10 @@ Each card says what would bring it back.
 ## Done
 
 Shipped and measured. Newest first. Commit ids are in `git log`.
+
+**2026-11-05**
+- [x] The hook (J48, shadow) removed at its review: 4 reads in 13 days, no would-ask, the check of memory
+      wrong 3 times in 4; `features/curiosity/hook` deleted, its prompts kept and marked unused.
 
 **2026-11-04**
 - [x] R16 The crisis path live (ADR 0022), 2026-11-04. Reviewed on 370 real turns in shadow (the real risk

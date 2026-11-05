@@ -47,13 +47,6 @@ SHADOWS: tuple[Shadow, ...] = (
         " (brainstorm and pick since 2026-11-03)",
     ),
     Shadow(
-        "a question when their words touch a basic it does not know (the hook)",
-        None,
-        "the decision log",
-        date(2026, 11, 5),
-        "would-asks that read right, at most daily (J48; three reads by 2026-10-29, a week more)",
-    ),
-    Shadow(
         "promises it made in its own replies, and each reply checked against them",
         "promises",
         "companion promises, the decision log (promise check)",

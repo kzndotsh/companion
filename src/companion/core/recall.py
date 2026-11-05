@@ -12,8 +12,8 @@ the topic is the listening judge's guess, and may reach their most sensitive mem
 asked for them. On 2026-10-29 "the serious stuff we talked about early" was guessed as self-harm and
 found mood memories in 12 of 12 reads; with the conversation and the most sensitive memories it
 found the one they meant in 34 of 34. Their side alone was not enough: "you know this already" only
-means something next to the question it answers. Looking something up on its own, as the hook
-does, still stops below crisis level.
+means something next to the question it answers. A look-up made on its own, with no question from
+them, still stops below crisis level.
 """
 
 from __future__ import annotations

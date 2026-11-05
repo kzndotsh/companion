@@ -8,7 +8,6 @@ from companion.features.calendar.run import CALENDAR
 from companion.features.crisis.run import CRISIS
 from companion.features.curiosity.basics.run import BASICS
 from companion.features.curiosity.guess.run import GUESS
-from companion.features.curiosity.hook.run import HOOKS
 from companion.features.curiosity.map.run import KNOWING
 from companion.features.episodes.run import EPISODES
 from companion.features.focus.run import FOCUS
@@ -48,7 +47,6 @@ FEATURES: tuple[Feature, ...] = (
     CRISIS,
     NOW,
     CALENDAR,
-    HOOKS,
     HISTORY,
     SCENE,
 )
