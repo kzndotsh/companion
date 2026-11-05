@@ -26,7 +26,7 @@ from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.mention import mention_note
-from tests.features.marks.test_run import CALM, HEAVY
+from tests.features.diction.marks.test_run import CALM, HEAVY
 from tests.turn.test_mood_loop import PREFIX, REL, SESSION, Judge, Talker
 
 HALLOWEEN = datetime(2026, 10, 31, 16, 0, tzinfo=UTC)  # noon in New York

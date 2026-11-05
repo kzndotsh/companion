@@ -24,7 +24,7 @@ from companion.kit.current import Turn
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
-from tests.features.marks.test_run import CALM
+from tests.features.diction.marks.test_run import CALM
 from tests.turn.test_mood_loop import PREFIX, SESSION, Talker
 
 PEBBLE = "i named a stray cat pebble"

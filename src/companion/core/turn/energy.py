@@ -8,7 +8,11 @@ from __future__ import annotations
 
 import re
 
-from companion.core.turn.habits import EMOJI, EMOTICON
+# A text emoticon or an emoji: what its own marks (`features/diction/marks`) and this count read.
+EMOTICON = re.compile(
+    r"(?<![\w/:])(?:[:;=][-']?[)(DPpOo3*/\\|\]\[]|\^[_.]?\^|[xX][Dd]\b|<3|T_T|uwu|owo|>_<|-_-)"
+)
+EMOJI = re.compile("[\U0001f000-\U0001faff\u2600-\u27bf\u2764\u2b50]")
 
 _STRETCHED = re.compile(r"\b\w*([a-z])\1{2,}\w*\b", re.IGNORECASE)
 _STRETCHED_END = re.compile(r"([a-z])\1{2,}\b", re.IGNORECASE)

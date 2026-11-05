@@ -203,9 +203,13 @@ _Avoid_: resample, regenerate
 **Quip**:
 A joke bolted onto an ordinary message, or a canned stock reaction; a reply check catches it.
 
-**Habit**:
-A pattern the companion keeps repeating in its own replies, such as an opener, a phrase or a copied emoji, named in a note so the next reply differs.
-_Avoid_: tic
+**Tic**:
+A pattern the companion keeps repeating in its own replies, such as an opener, a phrase, a pet word or a move, named in a note so the next reply differs.
+_Avoid_: habit (kept for the owner's routines)
+
+**Diction**:
+The companion's own word and emoji choices: its tics, which it avoids, and its own marks, which are its own.
+_Avoid_: voice (kept for a future voice mode)
 
 ## Safety
 

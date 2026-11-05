@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from companion.features.marks.logic import EVERY, MARKS, note, offered, pick
+from companion.features.diction.marks.logic import EVERY, MARKS, note, offered, pick
 
 
 def test_a_mark_is_never_one_they_just_used_or_one_it_used_lately() -> None:
@@ -53,7 +53,7 @@ def test_the_list_holds_the_kaomoji_as_written() -> None:
 
 
 def test_a_mark_counts_as_used_only_where_it_stands_on_its_own() -> None:
-    from companion.features.marks.logic import _used  # noqa: PLC0415  # pyright: ignore[reportPrivateUsage]
+    from companion.features.diction.marks.logic import _used  # noqa: PLC0415  # pyright: ignore[reportPrivateUsage]
 
     assert not _used("✧", "so cute (｡•̀ᴗ-)✧")
     assert _used("✧", "so cute ✧")

@@ -6,7 +6,7 @@ only; logged with the mark offered once the turn is stored."""
 from __future__ import annotations
 
 from companion.core.types import Speaker
-from companion.features.marks.logic import OFFERED, note, offered, pick
+from companion.features.diction.marks.logic import OFFERED, note, offered, pick
 from companion.kit.current import decide
 from companion.kit.features import Feature, Moment, Offer, Offered
 

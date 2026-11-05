@@ -221,7 +221,7 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
 # offered: what it brings up on its own (`mention`) waits while their name is asked or any note
 # before it asks them something, and a move on knows a plan was brought up.
 ORDER: tuple[str, ...] = (
-    "moves",
+    "tics",
     "base",
     "length",
     "replied-to",

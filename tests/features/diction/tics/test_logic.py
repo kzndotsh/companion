@@ -5,7 +5,7 @@ from collections.abc import Callable
 import pytest
 
 from companion.core.types import Json, Speaker, Utterance
-from companion.features.moves.logic import (
+from companion.features.diction.tics.logic import (
     MAX_HABIT_CHARS,
     MAX_HABITS,
     MIN_SEEN_IN,

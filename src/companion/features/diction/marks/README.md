@@ -39,4 +39,4 @@ severity 0), drawn afresh each sample.
 
 ## Tests
 
-`tests/features/marks/`
+`tests/features/diction/marks/`

@@ -4,8 +4,8 @@ from pathlib import Path
 
 from companion.core.turn.listening import ListeningRead
 from companion.core.types import Frame, Severity, TurnId
-from companion.features.marks.logic import MARKS
-from companion.features.marks.run import mark_offer
+from companion.features.diction.marks.logic import MARKS
+from companion.features.diction.marks.run import mark_offer
 from companion.kit.current import Heard, Turn
 from companion.kit.features import Lookups, Moment
 from companion.kit.runtime import Runtime

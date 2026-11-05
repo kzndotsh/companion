@@ -129,7 +129,7 @@ async def test_a_scripted_sample_sends_what_the_turn_would(
         del seed, theirs, recent
         return False
 
-    monkeypatch.setattr("companion.features.marks.run.offered", never)
+    monkeypatch.setattr("companion.features.diction.marks.run.offered", never)
     f = _script(
         ASKING, labels=(Severity.TRIVIAL, "other", False, False, False) if labelled else None
     )

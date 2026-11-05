@@ -10,7 +10,7 @@ from companion.core.prompt.prefix import Prefix
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
 from companion.core.vectors import Embedder
-from companion.kit.habits import HabitMemory
+from companion.kit.tics import TicMemory
 from companion.store.sqlite.store import Store
 
 
@@ -21,7 +21,7 @@ class Runtime:
     prefix: Prefix
     rel: RelationshipId
     judge: StructuredModel | None = None
-    habits: HabitMemory = field(default_factory=HabitMemory)
+    tics: TicMemory = field(default_factory=TicMemory)
     roleplay_talker: Talker | None = None  # replies while a pretend scene is in progress
     daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
     listen: bool = True  # ask how serious a message is before the reply
@@ -42,7 +42,7 @@ class Runtime:
     calendar: bool = (
         False  # a note about the day: a holiday, a lead-up, their date (`features/calendar`)
     )
-    marks: bool = False  # offer one of its own emoticons now and then (`features/marks`)
+    marks: bool = False  # offer one of its own emoticons now and then (`features/diction/marks`)
     episodes: str = "off"  # what they did together lately, when it bears: on, shadow or off (J12)
     crisis: str = "off"  # the crisis path: on, shadow (reads and logs only) or off (ADR 0022)
     now: str = (

@@ -9,6 +9,8 @@ from companion.features.crisis.run import CRISIS
 from companion.features.curiosity.basics.run import BASICS
 from companion.features.curiosity.guess.run import GUESS
 from companion.features.curiosity.map.run import KNOWING
+from companion.features.diction.marks.run import MARKS
+from companion.features.diction.tics.run import TICS
 from companion.features.episodes.run import EPISODES
 from companion.features.flow.length.run import LENGTH
 from companion.features.flow.questions.run import GAME, QUESTIONS
@@ -17,9 +19,7 @@ from companion.features.focus.run import FOCUS
 from companion.features.history.run import HISTORY
 from companion.features.intimate.run import SCENE
 from companion.features.lore.run import LORE
-from companion.features.marks.run import MARKS
 from companion.features.mood.run import MOOD
-from companion.features.moves.run import MOVES
 from companion.features.now.run import NOW
 from companion.features.promises.run import PROMISE_CHECK
 from companion.features.recall.run import RECALL, RELEVANCE
@@ -32,7 +32,7 @@ from companion.kit.features import Feature
 FEATURES: tuple[Feature, ...] = (
     KNOWING,
     BASICS,
-    MOVES,
+    TICS,
     PROMISE_CHECK,
     MOOD,
     CONTEXT,

@@ -102,8 +102,8 @@ def _floor_withheld(store: Store, turn: TurnId) -> bool:
 
 
 async def _settled(runtime: Runtime) -> None:
-    if runtime.habits.pending is not None:
-        await asyncio.gather(runtime.habits.pending, return_exceptions=True)
+    if runtime.tics.pending is not None:
+        await asyncio.gather(runtime.tics.pending, return_exceptions=True)
 
 
 def _runtime(store: Store, judge: Chaos | None, talker: Talker) -> Runtime:

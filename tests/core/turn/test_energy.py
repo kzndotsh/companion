@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.turn.energy import texting_energy
+from companion.core.turn.energy import EMOJI, EMOTICON, texting_energy
 
 
 @pytest.mark.parametrize(
@@ -40,3 +40,22 @@ def test_a_pasted_block_is_not_typing() -> None:
     pasted = "here!!\n" + "\n".join(f"| row {n} | :D |" for n in range(6))
     assert texting_energy(pasted) == 0
     assert texting_energy("yesss!! " * 60) == 0
+
+
+@pytest.mark.parametrize(
+    ("text", "marked"),
+    [
+        ("i try i try :P", True),
+        ("yaaaaay 😊", True),
+        ("home finally :3", True),
+        ("haha xD", True),
+        ("hmm :/ idk", True),
+        ("see https://a.b/c", False),
+        ("10:30 tomorrow", False),
+        ("lol ok", False),
+    ],
+)
+def test_an_emoji_or_emoticon_is_found_and_urls_and_times_are_not(
+    text: str, *, marked: bool
+) -> None:
+    assert bool(EMOTICON.search(text) or EMOJI.search(text)) is marked

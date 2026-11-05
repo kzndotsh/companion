@@ -11,8 +11,8 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId, SessionId
-from companion.kit.habits import HabitMemory
 from companion.kit.runtime import Runtime
+from companion.kit.tics import TicMemory
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -61,8 +61,8 @@ async def _chat(store: Store, judge: Judge | None, n: int) -> Talker:
     runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
     for i in range(n):
         await handle(runtime, SESSION, f"message {i}", "test", NOW + timedelta(minutes=2 * i))
-        if runtime.habits.pending is not None:
-            await runtime.habits.pending
+        if runtime.tics.pending is not None:
+            await runtime.tics.pending
     return talker
 
 
@@ -94,14 +94,14 @@ async def test_no_judge_means_no_note(store: Store) -> None:
 
 
 async def test_a_habit_is_dropped_after_a_couple_of_turns() -> None:
-    memory = HabitMemory(["a"], 0)
+    memory = TicMemory(["a"], 0)
     assert memory.fresh(2) == ["a"]
     assert memory.fresh(2) == ["a"]
     assert memory.fresh(2) == []
 
 
 async def test_only_one_check_runs_at_a_time() -> None:
-    memory = HabitMemory()
+    memory = TicMemory()
     release = asyncio.Event()
 
     async def slow() -> list[str]:
@@ -116,4 +116,4 @@ async def test_only_one_check_runs_at_a_time() -> None:
     release.set()
     assert memory.pending is not None
     await memory.pending
-    assert memory.habits == ["first"]
+    assert memory.tics == ["first"]

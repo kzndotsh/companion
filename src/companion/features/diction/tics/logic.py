@@ -1,13 +1,15 @@
-"""Notes about what the next reply is likely to copy, built by code, never by the model.
+"""Tics: what its own replies keep repeating, and the notes that tell the next reply. Built by code
+from counts and from a judge's labels, never written by the model, and they never touch a reply.
 
-The model sees its earlier replies and copies them: a few "Ha," openers in a row make the next one
-likelier, and so does a phrase it keeps reaching for. When the last few replies share an opening
-word or a run of words, the note says so plainly. It also copies their message back: after a
-message with an emoji the reply used the same one 22 times in 49, and after an emoticon 14 times in
-36, while it almost never copied a laugh or a stretched word (owner's flag of 2026-10-18), so a
-message with one gets the echo note. Notes add context to the next request; they never touch a
-reply. Nothing here knows any topic: it only counts what repeats.
-"""
+Counted by code: the model sees its earlier replies and copies them. A few "Ha," openers in a row
+make the next one likelier, and so does a phrase or a single word it keeps reaching for. When the
+last few replies share an opening word or a run of words, the note says so plainly. Nothing here
+knows any topic: it only counts what repeats.
+
+Read by a judge: counting misses most of it (a pet name, an action in asterisks followed by a quoted
+line, the same gesture in new words). A small model reads the last few replies and names what
+repeats; its text is bounded in length and count, and the decision to ask is logged with the scorer,
+never rendered as a reason by the model (ADR 0006)."""
 
 from __future__ import annotations
 
@@ -15,10 +17,10 @@ import re
 from collections import Counter
 from collections.abc import Sequence
 
-from companion.core.types import Frame, Speaker, Utterance
+from companion.core.types import Frame, Json, Speaker, Utterance
 from companion.prompts import get
 
-WINDOW = 5
+OPENER_WINDOW = 5
 STREAK = 3
 PHRASE_WINDOW = 6
 PHRASE_MIN_REPLIES = {5: 2, 4: 2, 3: 3}  # a longer run repeated twice is already a habit
@@ -50,11 +52,6 @@ _EVERYDAY_TEXT = (
     "before while still that's what's there's can't didn't won't i'd you'd we're they're"
 )
 _EVERYDAY_WORDS = frozenset(_EVERYDAY_TEXT.split())
-EMOTICON = re.compile(
-    r"(?<![\w/:])(?:[:;=][-']?[)(DPpOo3*/\\|\]\[]|\^[_.]?\^|[xX][Dd]\b|<3|T_T|uwu|owo|>_<|-_-)"
-)
-EMOJI = re.compile("[\U0001f000-\U0001faff\u2600-\u27bf\u2764\u2b50]")
-_ECHO_NOTE = get("notes/habit-echo")
 
 
 def opener_note(prior: Sequence[Utterance]) -> str | None:
@@ -63,7 +60,7 @@ def opener_note(prior: Sequence[Utterance]) -> str | None:
         m.group(1).lower()
         for u in prior
         if u.speaker is Speaker.COMPANION and (m := _FIRST_WORD.match(u.text))
-    ][-WINDOW:]
+    ][-OPENER_WINDOW:]
     if not firsts:
         return None
     word, n = Counter(firsts).most_common(1)[0]
@@ -126,8 +123,8 @@ def pet_words(prior: Sequence[Utterance]) -> list[str]:
     )
 
 
-def habit_note(prior: Sequence[Utterance], *, words: bool = False) -> str | None:
-    """Everything worth telling the next turn about its own recent habits, or None. Single pet
+def tic_note(prior: Sequence[Utterance], *, words: bool = False) -> str | None:
+    """Everything worth telling the next turn about its own recent tics, or None. Single pet
     words are counted only when `words` is set (a casual turn): in intimate talk and scenes the
     same body words recur by nature."""
     notes = [opener_note(prior)]
@@ -141,12 +138,71 @@ def habit_note(prior: Sequence[Utterance], *, words: bool = False) -> str | None
     return joined or None
 
 
-def has_marks(text: str) -> bool:
-    """Whether a message has an emoji or a text emoticon in it."""
-    return bool(EMOTICON.search(text) or EMOJI.search(text))
+# The judge.
+WINDOW = 6
+MIN_REPLIES = 4
+# A habit counts only if the model says it appears in at least this many of the replies it read.
+MIN_SEEN_IN = 3
+MAX_HABITS = 3
+MAX_HABIT_CHARS = 90
+# A habit found on one turn is only used for the next two, so a stale one does not linger.
+FRESH_FOR = 2
+
+PROMPT = get("system/habits")
+SYSTEM = PROMPT.text
+
+SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {
+        "habits": {
+            "type": "array",
+            "maxItems": MAX_HABITS,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "habit": {"type": "string", "maxLength": MAX_HABIT_CHARS},
+                    "replies": {"type": "integer"},
+                },
+                "required": ["habit", "replies"],
+            },
+        }
+    },
+    "required": ["habits"],
+}
 
 
-def echo_note(user_text: str) -> str | None:
-    """The note for a message the reply is likely to copy a symbol from, or None. It names nothing,
-    so it cannot hand the model the thing to copy."""
-    return _ECHO_NOTE.text if has_marks(user_text) else None
+def replies_to_read(prior: Sequence[Utterance], latest: str) -> list[str]:
+    """The companion's last few replies, oldest first, ending with the one just sent. None when
+    there are too few to judge."""
+    mine = [u.text for u in prior if u.speaker is Speaker.COMPANION][-(WINDOW - 1) :]
+    replies = [*mine, latest]
+    return replies if len(replies) >= MIN_REPLIES else []
+
+
+def build_prompt(replies: Sequence[str]) -> str:
+    return "\n".join(f"[reply {i}] {text}" for i, text in enumerate(replies, start=1))
+
+
+def parse(data: Json) -> list[str] | None:
+    """The habits named, cleaned and bounded, or None if the answer was malformed. A habit the
+    model saw in fewer than MIN_SEEN_IN replies is dropped, so weak or invented ones never count."""
+    raw = data.get("habits") if isinstance(data, dict) else None
+    if not isinstance(raw, list):
+        return None
+    habits: list[str] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            return None
+        text, seen = item.get("habit"), item.get("replies")
+        if not isinstance(text, str) or isinstance(seen, bool) or not isinstance(seen, int):
+            return None
+        cleaned = " ".join(text.split())[:MAX_HABIT_CHARS]
+        if cleaned and seen >= MIN_SEEN_IN:
+            habits.append(cleaned)
+    return habits[:MAX_HABITS]
+
+
+def note_for(habits: Sequence[str]) -> str | None:
+    if not habits:
+        return None
+    return get("notes/habit-moves").render(habits="; ".join(habits))

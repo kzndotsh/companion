@@ -80,7 +80,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/history-gap` | note | a system line in the history where a pause of 20 minutes or more came between two messages | v1 |
 | `notes/floor-hold` | note | a turn the floor kept on the everyday talker: stay warm, nothing sexual, no explaining (ADR 0017) | v1 |
 | `notes/brush-off` | note | they pushed the flirting or the scene back: drop it, answer what they said, warm and normal | v1 |
-| `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy, `core/turn/habits.py` | v1 |
+| `notes/habit-echo` | note | their message has an emoji or emoticon the reply would copy; dropped, not used | v1 |
 | `notes/habit-moves` | note | the habit finder found a habit | v1 |
 | `notes/habit-opener` | note | an opening word is overused | v1 |
 | `notes/habit-phrases` | note | phrases or, on casual turns, single pet words are repeated; use other words | v2 |
@@ -95,8 +95,8 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/mood-buzzing` | note | dropped candidate mood line for buzzing (ADR 0016), kept to try with the `+note=src/companion/prompts/notes/mood-buzzing/v1.md@card` eval switch | v1 |
 | `notes/mood-cozy` | note | the cozy mood line, shown when `COMPANION_MOOD=on` and cozy is among the strongest states (ADR 0016) | v2 |
 | `notes/mood-flat` | note | the flat mood line; measured, but the engine has no source for flat yet (waits for J6), so it is not shown | v2 |
-| `notes/own-mark` | note | one emoticon of its own offered by code, never one of theirs, `features/marks` | v1 |
-| `notes/own-mark-theirs` | note | the same offer when their message has a mark, naming that one as theirs to leave to them, `features/marks` | v1 |
+| `notes/own-mark` | note | one emoticon of its own offered by code, never one of theirs, `features/diction/marks` | v1 |
+| `notes/own-mark-theirs` | note | the same offer when their message has a mark, naming that one as theirs to leave to them, `features/diction/marks` | v1 |
 | `notes/mood-playful` | note | the playful mood line, shown when `COMPANION_MOOD=on` and playful is among the strongest states (ADR 0016) | v2 |
 | `notes/mood-tender` | note | the tender mood line, shown when `COMPANION_MOOD=on` and tender is among the strongest states (ADR 0016) | v2 |
 | `notes/trivial-reactions` | data | the pool of short reactions a minor-vent note draws three size examples from (T14) | v1 |
@@ -142,7 +142,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
 | `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v10 |
 | `system/frames` | system | the frame judge, `core/frames.py` | v2 |
-| `system/habits` | system | the habit finder, `features/moves/logic.py` | v3 |
+| `system/habits` | system | the tics judge, `features/diction/tics/logic.py` | v3 |
 | `system/minor-check` | system | asked again when the listening judge reads a routed turn as age-coded: does the text say or imply someone is under 18; only a yes, or no reading, holds the turn (ADR 0017) | v2 |
 | `system/intimate-check` | system | reads whether a reply on a held turn is intimate (sexual, not affection) (ADR 0017) | v1 |
 | `system/judge` | system | the eval pass/fail judge, `evals/judge.py` | v1 |

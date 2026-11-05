@@ -32,12 +32,12 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Just a reaction | A short "ok" after something it said can get an emoji reaction instead of a reply. A short message with a stretched word ("fineee") or a crisis word always gets a reply | live | `features/reactions` |
 | Reacts and replies | Now and then reacts to a message with a fitting emoji as well as answering it | live | `features/reactions` |
 | Mood | Has a mood (cozy, tender, playful) that lasts across hours and shows in how it writes, never stated | live | `features/mood` |
-| Breaks its habits | Notices openers, phrases and bits it keeps repeating, and stops copying your emoji back. What you are both talking about, or a name or a title, never counts as a habit | live | `features/moves` |
+| Breaks its tics | Notices openers, phrases and bits it keeps repeating. What you are both talking about, or a name or a title, never counts as a tic | live | `features/diction/tics` |
 | Moves on | When a small topic has run its course, it moves the chat along | live | `features/flow/topics` |
 | Plays along with a guess | "You know what time it is?" gets a playful guess from what it knows about you | live | `features/curiosity/guess` |
 | Doesn't interview you | After three replies in a row that asked a question, the next one asks none | live | `features/flow/questions` |
 | Question game | When you say "ask me anything", it keeps asking | live | `features/flow/questions` |
-| Its own emoticons | Uses emoticons and kaomoji of its own now and then on playful messages, not only yours | live | `features/marks` |
+| Its own emoticons | Uses emoticons and kaomoji of its own now and then on playful messages, not only yours | live | `features/diction/marks` |
 | Quality checks | Catches em dashes, unasked AI disclaimers, stock phrases, tacked-on jokes and empty praise, and writes the reply again. It never edits a reply | live | `docs/dev/turn.md` |
 | Holding back quietly | When it holds back from something, a reply that says so out loud is written again | live | `docs/dev/turn.md` |
 | Feels typed | Waits a little before sending, like someone typing | live | `docs/dev/delivery.md` |
