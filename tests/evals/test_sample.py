@@ -125,8 +125,8 @@ async def test_a_scripted_sample_sends_what_the_turn_would(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, labelled: bool
 ) -> None:
     # the mark is drawn from the turn's random id, which differs between the two turns
-    def never(seed: str, theirs: str) -> bool:
-        del seed, theirs
+    def never(seed: str, theirs: str, recent: object = ()) -> bool:
+        del seed, theirs, recent
         return False
 
     monkeypatch.setattr("companion.features.marks.run.offered", never)
