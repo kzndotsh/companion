@@ -15,7 +15,7 @@ def mark_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     del found, so_far
     c, t = m.c, m.t
     mine = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
-    if not c.marks or not m.casual or not offered(str(t.turn), t.text, mine):
+    if not c.own_marks or not m.casual or not offered(str(t.turn), t.text, mine):
         return Offer()
     mark = pick(str(t.turn), t.text, mine)
     if mark is None:
@@ -23,5 +23,5 @@ def mark_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer(tail=(note(mark, t.text),), after=(lambda: decide(c, t, OFFERED, {"mark": mark}),))
 
 
-# One of its own emoticons now and then, never theirs (`COMPANION_MARKS`, on unless `off`).
+# One of its own emoticons now and then, never theirs (`COMPANION_OWN_MARKS`, on unless `off`).
 MARKS = Feature("mark", note=mark_offer)

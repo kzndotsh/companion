@@ -2979,3 +2979,7 @@ their own memories about their body added to the basics, and replayed on three r
 Shipped the third. Word lists, not a judge, and three turns: indicative. $0.0137.
 Rerun: the scratch `lane_ab.py` (the logged scene card of each turn, split as the code does).
 
+## 2026-11-05: the tics judge's spend tag is `tics`
+
+From 2026-11-05 the judge that names its repeated moves logs and spends as `tics`; earlier rows say
+`habits`. Add the two when comparing its cost across the date (`features/diction/tics`).

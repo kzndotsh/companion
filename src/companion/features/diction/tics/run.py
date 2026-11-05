@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
 
 TIMEOUT_SECONDS = 6.0
-TICS_JUDGE = Judge("habits", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="no note")
+TICS_JUDGE = Judge("tics", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="no note")
 
 
 async def find_tics(

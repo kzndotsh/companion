@@ -2,7 +2,7 @@
 
 Its own emoticons and kaomoji, offered by code now and then, so it has marks of its own instead of only copying theirs. It exists because it used almost no text emoticons on its own, and copied theirs when they sent one.
 
-**Status:** live. Switch: `COMPANION_MARKS` (`on` default, `off`). Runs before the reply, as a note sent after the history on a casual turn. No model call is made.
+**Status:** live. Switch: `COMPANION_OWN_MARKS` (`on` default, `off`; was `COMPANION_MARKS`). Runs before the reply, as a note sent after the history on a casual turn. No model call is made.
 
 ## How it works
 

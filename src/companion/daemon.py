@@ -468,7 +468,7 @@ async def run(data_dir: Path) -> None:
             relevance=s.position("relevance"),
             reminders=s.on("reminders"),
             episodes=s.position("episodes"),
-            marks=s.on("marks"),
+            own_marks=s.on("own marks"),
             calendar=s.on("calendar"),
             initiative=s.on("initiative"),
             crisis=s.position("crisis"),

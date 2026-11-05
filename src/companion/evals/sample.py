@@ -202,7 +202,7 @@ def _scratch(talker: Talker, prefix: Prefix, *, roleplay: bool) -> Generator[Run
                 judge=Unread(),
                 roleplay_talker=talker if roleplay else None,
                 redraw=True,
-                marks=True,
+                own_marks=True,
                 mood="shadow",
             )
         finally:

@@ -58,9 +58,9 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
         "  limits   daily cap $10.00, pace natural",
         (
             "  live     split, listen, mood, redraw, relevance, re-read, lore, focus, reminders,"
-            " episodes, marks,"
+            " episodes,"
         ),
-        "           crisis, calendar, intimate memory",
+        "           own marks, crisis, calendar, intimate memory",
         "  shadow   initiative, promises, now, history",
         "  off      none",
         "  dials    intimate stays, hedged plans loose, reach warm",
@@ -81,7 +81,7 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
         ("COMPANION_PROMISES", "promises", "on", "shadow"),  # nothing live yet
         ("COMPANION_LORE", "lore", "shadow", "shadow"),
         ("COMPANION_REMINDERS", "reminders", "off", "off"),
-        ("COMPANION_MARKS", "marks", "off", "off"),
+        ("COMPANION_OWN_MARKS", "own marks", "off", "off"),
         ("COMPANION_CRISIS", "crisis", "on", "live"),
         ("COMPANION_CALENDAR", "calendar", "off", "off"),
     ],

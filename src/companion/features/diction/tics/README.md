@@ -21,7 +21,7 @@ Each check is logged as `habit check` with the scorer model, the prompt version,
 | File | What |
 |---|---|
 | `logic.py` | pure: the code counts (openers, phrases, pet words) and their note, and the judge's window, limits, prompt, parsing and note |
-| `run.py` | effects: the judge (`TICS_JUDGE`, stored name `habits`), the background check after a turn (`check_tics`), the note, and the `Feature` (`TICS`) |
+| `run.py` | effects: the judge (`TICS_JUDGE`, named `tics`; spend rows before 2026-11-05 say `habits`), the background check after a turn (`check_tics`), the note, and the `Feature` (`TICS`) |
 
 ## Prompts
 

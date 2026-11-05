@@ -42,7 +42,7 @@ class Runtime:
     calendar: bool = (
         False  # a note about the day: a holiday, a lead-up, their date (`features/calendar`)
     )
-    marks: bool = False  # offer one of its own emoticons now and then (`features/diction/marks`)
+    own_marks: bool = False  # one of its own emoticons now and then (`features/diction/marks`)
     episodes: str = "off"  # what they did together lately, when it bears: on, shadow or off (J12)
     crisis: str = "off"  # the crisis path: on, shadow (reads and logs only) or off (ADR 0022)
     now: str = (

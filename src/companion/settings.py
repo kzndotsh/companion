@@ -37,6 +37,7 @@ RENAMED = {
     "COMPANION_CONSOLIDATE": "COMPANION_REREAD",
     "COMPANION_SCENE_MEMORY": "COMPANION_INTIMATE_MEMORY",
     "COMPANION_RESAMPLE": "COMPANION_REDRAW",
+    "COMPANION_MARKS": "COMPANION_OWN_MARKS",
 }
 
 
@@ -79,7 +80,7 @@ SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_FOCUS", "focus", ("on", "off")),
     Switch("COMPANION_REMINDERS", "reminders", ("on", "off")),
     Switch("COMPANION_EPISODES", "episodes", ("on", "shadow", "off")),
-    Switch("COMPANION_MARKS", "marks", ("on", "off")),
+    Switch("COMPANION_OWN_MARKS", "own marks", ("on", "off")),
     Switch("COMPANION_HEDGED_PLANS", "hedged plans", ("loose", "off"), {"off": "strict"}),
     Switch("COMPANION_REACH", "reach", ("warm", "off", "rare", "light", "normal", "clingy")),
     Switch("COMPANION_CRISIS", "crisis", ("on", "shadow", "off")),

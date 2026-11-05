@@ -13,5 +13,8 @@ Its standing promises (words it agreed to drop) join diction once the promises r
 owner's routines, never the companion's tics.
 
 The folder was gathered from `features/moves`, `core/turn/habits.py`, `kit/habits.py` and
-`features/marks`. Stored names did not change: the `habits` judge, the `habit check` and
-`mark: one of its own offered` decision keys, `COMPANION_MARKS` and every prompt file.
+`features/marks`. The judge is named `tics` (its spend and log name; older spend rows say `habits`) and the
+switch is `COMPANION_OWN_MARKS` (the old name stops the bot at start). The decision keys stay as stored
+(`habit check`, `mark: one of its own offered`): the decision log is append-only, so renaming them
+would leave two names for one thing. The prompt files take their feature's name at their next
+version.

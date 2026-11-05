@@ -25,7 +25,7 @@ HEAVY: Heard = (
 
 
 def _offer(tmp_path: Path, text: str, heard: Heard, *, marks: bool = True) -> tuple[str, ...]:
-    runtime = Runtime(Store(tmp_path / "r.sqlite"), Talker(), PREFIX, REL, marks=marks)
+    runtime = Runtime(Store(tmp_path / "r.sqlite"), Talker(), PREFIX, REL, own_marks=marks)
     t = Turn(TurnId("t1"), NOW, [], text)
     return mark_offer(Moment(runtime, t, Frame.REAL, heard, Lookups(), False, []), None, {}).tail
 
