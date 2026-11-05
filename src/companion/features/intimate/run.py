@@ -445,7 +445,7 @@ def intimate_lane(
     live = c.intimate_memory == "on"
     if not roleplay:
         hidden = c.store.intimate_memory().intimate(c.rel)
-        on_card = hidden & {b.id for b in (*card.usable, *card.held, *card.older)}
+        on_card = hidden & {b.id for b in (*card.usable, *card.guarded, *card.older)}
         if on_card:
             decide(
                 c,

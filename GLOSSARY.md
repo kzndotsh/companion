@@ -236,8 +236,9 @@ _Avoid_: hotline message
 **Hard stretch**:
 Risk turns less than two hours apart, counted as one: the companion asks directly and names the crisis line once in it, then stays with them.
 
-**Crisis hold**:
-The day after a risk turn the crisis path acted on, when the companion reaches out to no one first.
+**Crisis pause**:
+For a day after a risk turn the crisis path acted on, the companion starts nothing on its own.
+_Avoid_: crisis hold
 
 ## Scenes and frames
 
@@ -328,8 +329,9 @@ A memory past its freshness, shown as possibly out of date and kept.
 **Sensitivity**:
 How delicate a memory is, in four levels (0 to 3): ordinary, private, delicate, grave. A sensitive memory is held.
 
-**Held memory**:
-A sensitive memory the companion knows but raises only when they are sharing something themselves.
+**Guarded memory**:
+A delicate or grave memory the companion knows but raises only when they are sharing something themselves.
+_Avoid_: held memory
 
 **Assertable**:
 A memory the companion may treat as true; anything from play or a joke is kept on record only.
@@ -773,7 +775,7 @@ These words are used in more than one sense across the repo. Say which one you m
 
 - **Card**: the memory card, the roleplay card, or a board card.
 - **History**: the chat window the talker reads, or the companion's own history.
-- **Held / hold**: a held memory, a held turn, a reach-out the gate held, or the owner's "hold" meaning do nothing yet.
+- **Held / hold**: a held turn (the floor's word), a reach-out the gate held (to become deferred at the reach review), or the owner's "hold" meaning do nothing yet.
 - **Severity, sensitivity, crisis level**: three separate scales. Severity is a message's seriousness, sensitivity a memory's, and crisis level what the crisis path decided.
 - **Judge**: a judge in the running companion, a grader in evals, or a Claude reviewer run by hand.
 - **Read**: a judge's answer, the listening read, or three reads.

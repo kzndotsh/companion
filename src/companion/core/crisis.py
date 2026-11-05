@@ -47,13 +47,14 @@ class Reading:
         return self.mode == "on"
 
 
-# Logged once a concern or urgent turn is stored with the path on; reaching out first waits a day.
-HOLD_KEY = "crisis: reach-outs held"
-HOLD = timedelta(hours=24)
-HOLD_REASON = "a concern or urgent turn under a day old (ADR 0022)"
+# The crisis pause: logged once a concern or urgent turn is stored with the path on; reaching out
+# first waits a day. The key keeps its stored wording.
+PAUSE_KEY = "crisis: reach-outs held"
+PAUSE = timedelta(hours=24)
+PAUSE_REASON = "a concern or urgent turn under a day old (ADR 0022)"
 
 
-def reach_held(decided_since: Callable[[str, datetime], bool], now: datetime) -> bool:
-    """Whether reaching out first holds now: a risk turn acted on in the last day. In shadow
-    nothing is logged under HOLD_KEY, so the gates are unaffected."""
-    return decided_since(HOLD_KEY, now - HOLD)
+def crisis_paused(decided_since: Callable[[str, datetime], bool], now: datetime) -> bool:
+    """Whether the crisis pause is on now: a risk turn acted on in the last day. In shadow
+    nothing is logged under PAUSE_KEY, so the gates are unaffected."""
+    return decided_since(PAUSE_KEY, now - PAUSE)

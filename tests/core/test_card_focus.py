@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import timedelta
 
-from companion.core.card import FOCUS_HELD, FOCUS_PERSONAL, Focus, build_card
+from companion.core.card import FOCUS_GUARDED, FOCUS_PERSONAL, Focus, build_card
 from companion.core.types import Belief, BeliefId, BeliefKind
 from companion.core.vectors import unit
 from tests.conftest import T0
@@ -66,13 +66,13 @@ def test_a_memory_that_says_what_one_already_chosen_says_is_skipped(
 
 def test_a_held_memory_needs_them_sharing_and_a_close_match(belief: Callable[..., Belief]) -> None:
     beliefs = [belief(bid="h", claim="Takes a medication", sensitivity=2)]
-    near = _focus({"h": FOCUS_HELD + 0.05})
-    far = _focus({"h": FOCUS_HELD - 0.05})
-    assert _claims(build_card(beliefs, {}, NOW, show_held=True, focus=near).held) == [
+    near = _focus({"h": FOCUS_GUARDED + 0.05})
+    far = _focus({"h": FOCUS_GUARDED - 0.05})
+    assert _claims(build_card(beliefs, {}, NOW, show_guarded=True, focus=near).guarded) == [
         "Takes a medication"
     ]
-    assert not build_card(beliefs, {}, NOW, show_held=True, focus=far).held
-    assert not build_card(beliefs, {}, NOW, show_held=False, focus=near).held
+    assert not build_card(beliefs, {}, NOW, show_guarded=True, focus=far).guarded
+    assert not build_card(beliefs, {}, NOW, show_guarded=False, focus=near).guarded
 
 
 def test_a_mildly_personal_memory_needs_a_close_match(belief: Callable[..., Belief]) -> None:

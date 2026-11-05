@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
-from companion.core.crisis import HOLD_REASON
+from companion.core.crisis import PAUSE_REASON
 from companion.core.episode import EPISODE_GAP
 from companion.core.rhythm import WINDOW, Rhythm
 from companion.core.types import Json
@@ -136,7 +136,7 @@ def hold(sit: Situation) -> tuple[Hold, str] | None:
     target = TARGET[sit.effective]
     checks: tuple[tuple[bool, Hold, Callable[[], str]], ...] = (
         (sit.dial is Dial.OFF, Hold.OFF, lambda: "COMPANION_REACH is off"),
-        (sit.crisis, Hold.CRISIS, lambda: HOLD_REASON),
+        (sit.crisis, Hold.CRISIS, lambda: PAUSE_REASON),
         (
             local.hour in sit.rhythm.quiet,
             Hold.QUIET,

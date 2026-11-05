@@ -251,7 +251,7 @@ async def shadow_for_turn(
         said=t.text,
         last_reply=replies[-1] if replies else None,
         sharing=heard is not None and heard[0].severity >= Severity.EVERYDAY,
-        on_card=[b.id for b in (*card.usable, *card.held, *card.older)],
+        on_card=[b.id for b in (*card.usable, *card.guarded, *card.older)],
         now=t.now,
         hidden=_hidden(c),
     )

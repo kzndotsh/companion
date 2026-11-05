@@ -10,7 +10,7 @@ The look-up (`focus_for_turn`, the feature's `look`) embeds their message alone 
 
 With a focus, the card keeps their boundaries and its promises first, then fills the other places (15 in all) with the closest memories (`_focused` in `core/card.py`):
 - a memory within 0.90 of one already chosen is skipped (`FOCUS_SAME`), so one fact stored in several wordings takes one place;
-- a held memory (sensitivity 2 or more) only when they are sharing and it scores at least 0.40 (`FOCUS_HELD`);
+- a guarded memory (sensitivity 2 or more) only when they are sharing and it scores at least 0.40 (`FOCUS_GUARDED`);
 - a mildly personal one (sensitivity 1) only at 0.35 or more (`FOCUS_PERSONAL`);
 - a place nothing fills stays empty, and the rest are logged as crowded out.
 

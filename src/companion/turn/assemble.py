@@ -57,7 +57,7 @@ class CardLog:
     def write(self, card: Card) -> None:
         for b in card.usable:
             self._one(DecisionKind.SURFACE, b, "in the card")
-        for b in card.held:
+        for b in card.guarded:
             self._one(
                 DecisionKind.WITHHOLD, b, f"sensitivity {b.sensitivity}: known, held for listening"
             )
@@ -67,14 +67,14 @@ class CardLog:
             self.record.decide(
                 "card: held left out",
                 {"kept_back": [b.id for b in card.kept_back]},
-                reason=f"card: {len(card.kept_back)} held beliefs left out, the turn is casual",
+                reason=f"card: {len(card.kept_back)} guarded memories left out, the turn is casual",
             )
         if card.crowded:
             self.record.decide(
                 "card: crowded out",
                 {"crowded": [b.id for b in card.crowded]},
                 reason=f"card: {len(card.crowded)} current beliefs crowded out, it holds "
-                f"{len(card.usable) + len(card.held)}",
+                f"{len(card.usable) + len(card.guarded)}",
             )
         for b in card.dropped:
             self._one(DecisionKind.WITHHOLD, b, self._why_dropped(b, card))
@@ -103,7 +103,7 @@ def _mark_start(t: Turn, in_scene: Frame, card: Card, card_text: str) -> None:
     mark(
         t,
         f"start: {len(t.prior)} history messages, scene={in_scene.value},"
-        f" card {len(card_text)} chars ({len(card.usable)} usable, {len(card.held)} held,"
+        f" card {len(card_text)} chars ({len(card.usable)} usable, {len(card.guarded)} guarded,"
         f" {len(card.older)} older, {len(card.dropped)} dropped, {len(card.views)} views),"
         f" text {len(t.text)} chars",
     )
@@ -180,7 +180,7 @@ def assemble(  # noqa: PLR0913
             support,
             now,
             views=shown_views,
-            show_held=sharing,
+            show_guarded=sharing,
             everyday=everyday,
             contexts=contexts,
             focus=focus,
@@ -188,7 +188,7 @@ def assemble(  # noqa: PLR0913
 
     card = card_of(assertable, views)
     if focus is not None:
-        shown_ids = [b.id for b in (*card.usable, *card.held)]
+        shown_ids = [b.id for b in (*card.usable, *card.guarded)]
         decide(
             c,
             t,
@@ -207,7 +207,7 @@ def assemble(  # noqa: PLR0913
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)
     pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
-    on_card = frozenset(b.id for b in (*card.usable, *card.held, *card.older))
+    on_card = frozenset(b.id for b in (*card.usable, *card.guarded, *card.older))
     notes = notes_for(
         Moment(c, t, in_scene, heard, looked, held, assertable, on_card, brushed, risk)
     )

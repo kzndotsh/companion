@@ -14,7 +14,7 @@ from collections.abc import Sequence
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from companion.core.crisis import HOLD_KEY, HOLD_REASON, RISK, CrisisLevel, Reading
+from companion.core.crisis import PAUSE_KEY, PAUSE_REASON, RISK, CrisisLevel, Reading
 from companion.core.episode import EPISODE_GAP
 from companion.core.extractor import StructuredModel
 from companion.core.types import Frame, Json, Speaker
@@ -139,7 +139,7 @@ def crisis_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     if found.risk:
         return Offer(
             tail=(stay_note() if found.asked else concern_note(),),
-            after=(lambda: decide(c, t, HOLD_KEY, reason=f"{HOLD_KEY}: {HOLD_REASON}"),),
+            after=(lambda: decide(c, t, PAUSE_KEY, reason=f"{PAUSE_KEY}: {PAUSE_REASON}"),),
             asks=True,
         )
     if found.light:

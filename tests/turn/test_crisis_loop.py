@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.crisis import HOLD_KEY, LINE, reach_held
+from companion.core.crisis import LINE, PAUSE_KEY, crisis_paused
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
@@ -145,7 +145,7 @@ def _level(store: Store) -> dict[str, Json]:
 
 
 def _held(store: Store, at: datetime) -> bool:
-    return reach_held(lambda key, since: store.decided_since(REL, key, since), at)
+    return crisis_paused(lambda key, since: store.decided_since(REL, key, since), at)
 
 
 async def test_in_shadow_it_reads_and_logs_but_nothing_changes(store: Store) -> None:
@@ -162,7 +162,7 @@ async def test_in_shadow_it_reads_and_logs_but_nothing_changes(store: Store) -> 
     assert "send the crisis line after the reply" in would
     assert isinstance(out, str)  # no message of code's own
     assert concern_note() not in talker.seen[0].tail
-    assert HOLD_KEY not in _keys(store)
+    assert PAUSE_KEY not in _keys(store)
     assert not _held(store, NOW + timedelta(hours=1))
 
 
@@ -190,7 +190,7 @@ async def test_on_a_concern_turn_the_note_goes_after_the_history_with_no_cap(sto
     assert concern_note().strip("[]") not in request.card
     assert "under about" not in request.card  # no length cap
     assert isinstance(out, str)
-    assert HOLD_KEY in _keys(store)
+    assert PAUSE_KEY in _keys(store)
     assert _held(store, NOW + timedelta(hours=23))
     assert not _held(store, NOW + timedelta(hours=25))
 
@@ -280,7 +280,7 @@ async def test_the_question_and_the_line_come_once_per_hard_stretch(
         assert concern_note() in talker.seen[0].tail
         assert stay_note() in talker.seen[1].tail
         assert concern_note() not in talker.seen[1].tail
-        assert HOLD_KEY in _keys(store)
+        assert PAUSE_KEY in _keys(store)
     await handle(runtime, SESSION, "still here", "t", NOW + timedelta(hours=3))
     if mode == "on":
         assert concern_note() in talker.seen[2].tail

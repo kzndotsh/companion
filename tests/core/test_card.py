@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
-from companion.core.card import EVENT_SHOWN_DAYS, HOLD_AT, build_card, render
+from companion.core.card import EVENT_SHOWN_DAYS, GUARDED_AT, build_card, render
 from companion.core.types import Belief, BeliefId, BeliefKind
 from tests.conftest import T0
 
@@ -26,8 +26,8 @@ def test_sensitive_beliefs_are_held_not_surfaced(belief: Callable[..., Belief]) 
         ]
     )
     assert [b.claim for b in card.usable] == ["Likes climbing"]
-    assert [b.claim for b in card.held] == ["Has asthma"]
-    assert HOLD_AT == 2
+    assert [b.claim for b in card.guarded] == ["Has asthma"]
+    assert GUARDED_AT == 2
 
 
 def test_the_rendering_separates_the_lists_and_never_leaks_held_into_usable(
@@ -85,7 +85,7 @@ def test_a_stale_state_leaves_the_main_card_and_goes_to_the_older_block(
 def test_a_stale_sensitive_state_is_left_out_entirely(belief: Callable[..., Belief]) -> None:
     b = _b(belief, "a", "Feels lonely", kind=BeliefKind.STATE, sensitivity=2)
     card = _card([b], now=T0 + timedelta(days=40))
-    assert (card.usable, card.held, card.older) == ((), (), ())
+    assert (card.usable, card.guarded, card.older) == ((), (), ())
     assert [x.id for x in card.dropped] == ["a"]
     assert render(card) == ""
     assert card.empty
@@ -138,12 +138,12 @@ def test_on_a_casual_turn_held_beliefs_are_left_out_and_their_places_go_to_ordin
         _b(belief, f"p{i}", f"pref {i}", kind=BeliefKind.PREFERENCE, valid_from=T0 + timedelta(i))
         for i in range(6)
     ]
-    held = _b(belief, "h", "A sensitive thing", kind=BeliefKind.TRAIT, sensitivity=HOLD_AT)
+    held = _b(belief, "h", "A sensitive thing", kind=BeliefKind.TRAIT, sensitivity=GUARDED_AT)
     now = NOW + timedelta(days=7)
     sharing = build_card([*ordinary, held], {}, now, max_items=5)
-    casual = build_card([*ordinary, held], {}, now, max_items=5, show_held=False)
-    assert held in sharing.held
-    assert casual.held == ()
+    casual = build_card([*ordinary, held], {}, now, max_items=5, show_guarded=False)
+    assert held in sharing.guarded
+    assert casual.guarded == ()
     assert casual.kept_back == (held,)
     assert len(casual.usable) == 5
     assert "A sensitive thing" not in render(casual)
@@ -159,7 +159,7 @@ def test_an_old_everyday_moment_leaves_the_card_but_history_and_serious_ones_sta
     card = build_card(
         [spill, loss, taste], {}, later, everyday={BeliefId("spill"), BeliefId("loss")}
     )
-    shown = {b.id for b in (*card.usable, *card.held)}
+    shown = {b.id for b in (*card.usable, *card.guarded)}
     assert shown == {"loss", "taste"}
     assert spill in card.dropped  # still in memory, logged as left out
     fresh = build_card(
@@ -190,7 +190,7 @@ def test_a_dated_happening_leaves_the_card_after_a_week_but_history_stays(
     )
     history = belief(bid="past", kind=BeliefKind.EVENT, claim="As a kid they moved a lot.")
     card = build_card([dated, history], {}, T0 + timedelta(days=8))
-    shown = {b.id for b in (*card.usable, *card.held, *card.older)}
+    shown = {b.id for b in (*card.usable, *card.guarded, *card.older)}
     assert "past" in shown
     assert "dated" not in shown
 

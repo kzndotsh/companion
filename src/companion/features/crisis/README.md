@@ -29,7 +29,7 @@ For the kind, the most serious any counted read gave wins (substance taken, then
 - *Scenes*: a concern or urgent turn in a scene, or on the roleplay talker, goes to the everyday talker as a real turn (`crisis: scene`).
 - *Method check*: on a concern or urgent turn, a reply naming means or methods in a how-to way (a lethal dose, a number of pills or milligrams, "the easiest way to", a noose, and the like, unless their own message said it) is drawn once more and the redraw goes out (`crisis: method check`, with the first kept).
 - *Never a reaction alone*: a short message with a cue word always gets a reply, never only an emoji (`turn/hear.py`).
-- *Reaching out first*: once a concern or urgent turn is stored, `crisis: reach-outs held` is logged, and the plan, nudge and own-reason gates hold for 24 hours (`core/crisis.py` `reach_held`).
+- *The crisis pause*: once a concern or urgent turn is stored, `crisis: reach-outs held` is logged (the stored key keeps its wording), and the plan, nudge and own-reason gates hold for 24 hours (`core/crisis.py` `crisis_paused`).
 
 The crisis line is one constant, `core/crisis.py` `LINE`: 988 (call or text, in the US) by default, until where they live is known.
 

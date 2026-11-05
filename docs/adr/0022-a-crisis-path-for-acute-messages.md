@@ -111,7 +111,7 @@ plan in the past only is concern, not urgent. A split joke allows one light chec
 message is the sheet's `## Crisis message` section (`characters.py`) or `messages/crisis-line`,
 sent once an hour at most (`turn/crisis.py`, `ThenSend` in `core/turn/ack.py`, `io/telegram.py`).
 The scene rule and the method check are in `turn/crisis.py`; the reach-out hold is `core/crisis.py`
-`reach_held`, read by the reach, open-loop and nudge gates. The line is `core/crisis.py` `LINE`.
+`crisis_paused` (was `reach_held`), read by the reach, open-loop and nudge gates. The line is `core/crisis.py` `LINE`.
 Fixtures: `evals/fixtures/crisis/messages.json`, checked with `companion crisis --check --cap`.
 
 ## Rejected

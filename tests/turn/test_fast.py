@@ -229,7 +229,9 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     sent = talker.seen[0].card
     assert "Likes climbing" not in talker.seen[0].messages[-1].content
     assert "Likes climbing" in sent
-    assert "Has asthma" not in sent  # no listening judgement reads as casual: held beliefs stay out
+    assert (
+        "Has asthma" not in sent
+    )  # no listening judgement reads as casual: guarded memories stay out
     store.close()
     db = tmp_path / "rel.sqlite"
     [turn_id] = _turn_ids(db)
@@ -238,7 +240,8 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     kinds = {d.belief_id: d.kind for d in report.decisions if d.belief_id}
     assert kinds == {"b1": DecisionKind.SURFACE}
     assert any(
-        d.reason == "card: 1 held beliefs left out, the turn is casual" for d in report.decisions
+        d.reason == "card: 1 guarded memories left out, the turn is casual"
+        for d in report.decisions
     )
 
 

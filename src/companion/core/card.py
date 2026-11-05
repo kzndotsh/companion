@@ -1,7 +1,7 @@
 """The state card: what the companion carries into every turn about the person.
 
 Beliefs are split two ways. By sensitivity: ordinary ones are usable in conversation, sensitive ones
-are held, so the companion knows them and does not ask again but does not raise them unprompted.
+are guarded, so the companion knows them and does not ask again but does not raise them unprompted.
 By freshness (see `freshness.py`): aging ones are marked as possibly changed, and stale ones leave
 the main card. A few stale ordinary ones go in a separate "may be out of date" block so the
 companion can check naturally. Stale sensitive ones are left out entirely.
@@ -20,7 +20,7 @@ from companion.core.quoted import wants_context
 from companion.core.types import Belief, BeliefId, BeliefKind, Sensitivity
 from companion.core.vectors import Vector, dot
 
-HOLD_AT = Sensitivity.DELICATE
+GUARDED_AT = Sensitivity.DELICATE
 MAX_ITEMS = 15
 MAX_OLDER = 3
 # A one-day moment of daily life (a spill, a meal, a long shower: an event the memory map labels
@@ -37,7 +37,7 @@ RULES = frozenset({BeliefKind.BOUNDARY, BeliefKind.PROMISE})  # always first, wh
 # moment, not to the same kinds every turn: on 150 audited turns blind judges preferred that list
 # 131 to 8 (evals/CHANGELOG.md, 2026-11-02).
 FOCUS_SAME = 0.90  # a memory this close to one already chosen says the same thing
-FOCUS_HELD = 0.40  # a held memory only this close, and only when they are sharing
+FOCUS_GUARDED = 0.40  # a guarded memory only this close, and only when they are sharing
 FOCUS_PERSONAL = 0.35  # a mildly personal one (private) only this close
 KIND_ORDER = {
     kind: i
@@ -74,7 +74,7 @@ class Focus:
 @dataclass(frozen=True, slots=True)
 class Card:
     usable: tuple[Belief, ...]
-    held: tuple[Belief, ...]
+    guarded: tuple[Belief, ...]
     older: tuple[Belief, ...]
     dropped: tuple[Belief, ...]
     aged: Mapping[BeliefId, Aged]
@@ -86,7 +86,7 @@ class Card:
 
     @property
     def empty(self) -> bool:
-        return not (self.usable or self.held or self.older or self.views)
+        return not (self.usable or self.guarded or self.older or self.views)
 
 
 def build_card(  # noqa: PLR0913
@@ -96,15 +96,15 @@ def build_card(  # noqa: PLR0913
     max_items: int = MAX_ITEMS,
     views: Sequence[Belief] = (),
     *,
-    show_held: bool = True,
+    show_guarded: bool = True,
     everyday: Collection[BeliefId] = (),
     contexts: Mapping[BeliefId, str] | None = None,
     focus: Focus | None = None,
 ) -> Card:
     """`support` is each belief's freshest evidence time, falling back to valid_from.
 
-    With `show_held` off (a casual turn) sensitive beliefs are left out entirely and their places go
-    to ordinary ones: in view, a model links them to unrelated banter and raises them unasked.
+    With `show_guarded` off (a casual turn) sensitive beliefs are left out entirely and their places
+    go to ordinary ones: in view, a model links them to unrelated banter and raises them unasked.
     With a `focus` the rest of the card is the memories closest to the moment, not the newest of
     each kind (`_focused`)."""
     aged = {
@@ -122,7 +122,7 @@ def build_card(  # noqa: PLR0913
         or day_over(b, now)
     ]
     current = [b for b in beliefs if aged[b.id].status is not Freshness.STALE and b not in faded]
-    kept_back = [] if show_held else [b for b in current if b.sensitivity >= HOLD_AT]
+    kept_back = [] if show_guarded else [b for b in current if b.sensitivity >= GUARDED_AT]
     current = [b for b in current if b not in kept_back]
     stale = sorted(
         (b for b in beliefs if aged[b.id].status is Freshness.STALE),
@@ -142,13 +142,13 @@ def build_card(  # noqa: PLR0913
     else:  # a place nothing close enough fills stays empty
         rest = [b for b in current if b not in rules]
         room = max_items - len(rules)
-        ranked = [*rules, *_focused(rest, focus, room, sharing=show_held)][:max_items]
+        ranked = [*rules, *_focused(rest, focus, room, sharing=show_guarded)][:max_items]
         crowded = [b for b in by_kind if b not in ranked]
-    older_pool = [b for b in stale if b.sensitivity < HOLD_AT]
+    older_pool = [b for b in stale if b.sensitivity < GUARDED_AT]
     older = tuple(older_pool[:MAX_OLDER])
     return Card(
-        usable=tuple(b for b in ranked if b.sensitivity < HOLD_AT),
-        held=tuple(b for b in ranked if b.sensitivity >= HOLD_AT),
+        usable=tuple(b for b in ranked if b.sensitivity < GUARDED_AT),
+        guarded=tuple(b for b in ranked if b.sensitivity >= GUARDED_AT),
         older=older,
         dropped=tuple(b for b in [*stale, *faded] if b not in older),
         aged=aged,
@@ -161,9 +161,9 @@ def build_card(  # noqa: PLR0913
 
 
 def _focused(beliefs: Sequence[Belief], focus: Focus, room: int, *, sharing: bool) -> list[Belief]:
-    """The closest memories first, at most `room`: a held one only when they are sharing and it is
-    close, a mildly personal one only when it is close, and none that says what one already chosen
-    says. A memory with no vector is not ranked."""
+    """The closest memories first, at most `room`: a guarded one only when they are sharing and it
+    is close, a mildly personal one only when it is close, and none that says what one already
+    chosen says. A memory with no vector is not ranked."""
     chosen: list[Belief] = []
     for b in sorted(
         (b for b in beliefs if b.id in focus.closeness and b.id in focus.vectors),
@@ -172,7 +172,7 @@ def _focused(beliefs: Sequence[Belief], focus: Focus, room: int, *, sharing: boo
         if len(chosen) >= room:
             break
         near = focus.closeness[b.id]
-        if b.sensitivity >= HOLD_AT and (not sharing or near < FOCUS_HELD):
+        if b.sensitivity >= GUARDED_AT and (not sharing or near < FOCUS_GUARDED):
             continue
         if b.sensitivity == Sensitivity.PRIVATE and near < FOCUS_PERSONAL:
             continue
@@ -251,10 +251,10 @@ def render(card: Card, tz: tzinfo = UTC) -> str:
             + "\n".join(_line(b, card) for b in card.usable)
             + "]"
         )
-    if card.held:
+    if card.guarded:
         parts.append(
             "[Also known, but only touch it if they bring it up:\n"
-            + "\n".join(_line(b, card) for b in card.held)
+            + "\n".join(_line(b, card) for b in card.guarded)
             + "]"
         )
     if card.older:

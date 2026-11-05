@@ -50,7 +50,7 @@ On every turn, a memory card is built from the current memories (`core/card.py`)
 system block. It holds up to 15 memories. Their boundaries and its promises come first. With
 `COMPANION_FOCUS=on` (the default) the other places go to the memories closest to the moment: their
 message, and the reply before it with it, embedded once a turn and compared with each memory's stored
-vector (`features/focus/`). A memory that says what one already chosen says is skipped, a held memory
+vector (`features/focus/`). A memory that says what one already chosen says is skipped, a guarded memory
 needs them sharing and a close match, a mildly personal one a close match, and a place nothing fills
 stays empty. If the look-up is off, fails or takes over 2 seconds, the card is built the old way: up to
 8 memories mentioned in the last 12 hours, newest first, then the rest by kind (tells, traits, states,

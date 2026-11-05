@@ -57,7 +57,7 @@ def rebuilt(
                 support,
                 at,
                 max_items=card_size,
-                show_held="[Also known" in base.card,
+                show_guarded="[Also known" in base.card,
                 everyday=everyday,
             )
             request = replace(request, card=swap_memory(base.card, render(card)))
