@@ -35,14 +35,14 @@ tables, and checked three times against the character sheet and the stories alre
 canon (ADR 0025, `src/companion/features/history/README.md`). It never reads or changes what is stored
 about the user, and in step 1 nothing it keeps reaches the talker.
 
-After every pass, unless `COMPANION_SCENE_MEMORY` is `off`, the scene memory step places memories that
+After every pass, unless `COMPANION_INTIMATE_MEMORY` is `off`, the scene memory step places memories that
 have no lane yet in one, everyday or intimate, with an intimate one's stance (into, curious, a hard or
 soft limit, style, aftercare). Each batch is read three times and a memory is intimate only when all
 three agree; a floor in code keeps out anything that touches age or minors, anything from a turn the
 minor check held, crisis-level memories, what they said while sharing something heavy, and any limit not
 in their own plain words. The same step reads each ended pretend scene for how they tend to play, and a
 pattern counts once quoted from two separate scenes (ADR 0026,
-`src/companion/features/scene_memory/README.md`).
+`src/companion/features/intimate/README.md`).
 
 ## How memory reaches the model
 
@@ -71,10 +71,11 @@ more), and with the focus on, only when they are close to the moment. The memori
 message but are not on the card can still reach the model through the relevance look-up
 (`src/companion/features/relevance/README.md`).
 
-With `COMPANION_SCENE_MEMORY=on`, a turn the roleplay talker answers gets the scene card instead: their
-limits, the intimate memories and patterns nearest the moment, perhaps one thing they are curious about,
-and what they are called. Every other turn leaves the intimate lane off the card and out of the
-relevance look-up. In `shadow`, the default, both are logged and the card is as above (ADR 0026).
+With `COMPANION_INTIMATE_MEMORY=on`, the default since 2026-11-05, a turn the roleplay talker answers gets
+the roleplay card instead: the intimate memories and patterns nearest the moment and perhaps one thing they
+are curious about, with their limits, what they are called and what they said about their own body sent
+after the history. Every other turn leaves the intimate lane off the card and out of the relevance
+look-up. In `shadow` both are logged and the card is as above (ADR 0026).
 
 ## How memory tidies itself
 

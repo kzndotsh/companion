@@ -35,11 +35,11 @@ from companion.core.types import (
 )
 from companion.core.vectors import Embedder
 from companion.features.history.run import pass_step
+from companion.features.intimate.run import pass_step as scene_step
 from companion.features.nudges.run import tick_nudge
 from companion.features.reach.logic import Kind, dial
 from companion.features.reach.run import Reacher, holds, tick_reach
 from companion.features.reminders.run import deliver_due
-from companion.features.scene_memory.run import pass_step as scene_step
 from companion.features.threads.run import Ticker, drafter, tick
 from companion.features.upkeep.reread.run import SameCheck
 from companion.io import discord
@@ -470,7 +470,7 @@ async def run(data_dir: Path) -> None:
             crisis=s.position("crisis"),
             now=s.position("now"),
             history=s.position("history"),
-            scene_memory=s.position("scene"),
+            intimate_memory=s.position("intimate memory"),
             promises=s.position("promises"),
             serious_message=character.serious if character is not None else "",
         )
@@ -484,7 +484,7 @@ async def run(data_dir: Path) -> None:
             step
             for step in (
                 pass_step(s.position("history"), character.sheet if character is not None else ""),
-                scene_step(s.position("scene")),
+                scene_step(s.position("intimate memory")),
             )
             if step is not None
         ]

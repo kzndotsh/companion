@@ -103,7 +103,7 @@ outcomes are in the plan above and in the cards.
 | no date | the two talkers (D1; no outcome recorded at 2026-10-29) | `companion flags`, `companion favorites` | whether the roleplay talker helps and where the boundary hurts |
 | no date | the move picker for bland replies (one measurement, not built) | `docs/inbox/2026-10-25-bland-replies-design-space.md`, `evals/CHANGELOG.md` | build it or not (decision 13) |
 | 2026-11-08 | threads' learned pace (ADR 0023); what they said is coming (ADR 0024) | the decision log; `companion now` | the labels read right; the pace beats the day's cap |
-| 2026-11-09 | its own history (ADR 0025); the intimate memory lane (ADR 0026) | `companion history`, `companion scene`, the decision log | canon rulings and scene cards read right |
+| 2026-11-09 | its own history (ADR 0025) | `companion history`, the decision log | canon rulings read right |
 | 2026-11-10 | its own reach-outs, brainstorm and pick (ADR 0021) | `companion initiative` | going live, and at what dial |
 | 2026-11-17 | promises and the per-reply check (J12, LR5) | `companion promises`, the decision log | whether the check redraws live |
 
@@ -173,7 +173,7 @@ fixes. Earlier, 2026-10-25: a long reach-out draft is kept whole, never cut or d
    (the ADR's rollout says `normal` first; the settled default is `warm`).
 4. **Plan reach-outs and nudges:** nothing to judge at the review of 2026-11-03 (no plan drafted, one
    nudge). A new review date, or remove the two sources. Going live still needs A6, J27 and J35.
-5. **Threads' pace, what is coming, its own history, the intimate lane:** graduate or remove at their
+5. **Threads' pace, what is coming, its own history:** graduate or remove at their
    reviews of 2026-11-08 and 2026-11-09.
 6. **Location (R18):** how it learns where they are, for the crisis line, the calendar and the time zone.
 7. **Pacing (T2):** evidence-based, the user dial ("quick", "natural", "slow burn"), or both? What is
@@ -668,6 +668,9 @@ Each card says what would bring it back.
 Shipped and measured. Newest first. Commit ids are in `git log`.
 
 **2026-11-05**
+- [x] The intimate memory lane live (ADR 0026), review pulled forward from 2026-11-09: 109 roleplay cards
+      read right; the limits and basics now follow the history and the basics include what they said
+      about their own body (assumed body 21 to 12 of 36 draws on three turns).
 - [x] The hook (J48, shadow) removed at its review: 4 reads in 13 days, no would-ask, the check of memory
       wrong 3 times in 4; `features/curiosity/hook` deleted, its prompts kept and marked unused.
 
@@ -708,7 +711,7 @@ Shipped and measured. Newest first. Commit ids are in `git log`.
       instead, which catches 12 of the 21 proposals judged to need a fix (8747a95). Still proposals only.
 - [x] Every new boundary is a question in `memory review`: a lasting rule, or retire it as meant for that
       moment (c6a09e8). Three old ones retired by the owner.
-- [x] The scene card (shadow) shows the 6 entries nearest the moment, not 3: best of 3/6/9/12 on 69 logged
+- [x] The roleplay card (shadow) shows the 6 entries nearest the moment, not 3: best of 3/6/9/12 on 69 logged
       scene turns by three blind judges (9f07179). Judged as lists, not replies.
 
 **2026-10-29**

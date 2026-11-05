@@ -14,7 +14,7 @@ from datetime import datetime
 from companion.core.turn.floor import MINOR_KEY
 from companion.core.types import BeliefId, RelationshipId, Severity, UtteranceId
 from companion.core.vectors import Vector
-from companion.features.scene_memory.logic import (
+from companion.features.intimate.logic import (
     Everyday,
     Excluded,
     Intimate,
@@ -48,8 +48,8 @@ def _place(row: sqlite3.Row) -> Place:
 
 
 @dataclass(frozen=True, slots=True)
-class SceneMemory:
-    """One relationship file's scene lane, behind the store's handle (`Store.scene_memory`)."""
+class IntimateMemory:
+    """One relationship file's scene lane, behind the store's handle (`Store.intimate_memory`)."""
 
     conn: sqlite3.Connection
 

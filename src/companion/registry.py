@@ -12,6 +12,7 @@ from companion.features.curiosity.map.run import KNOWING
 from companion.features.episodes.run import EPISODES
 from companion.features.focus.run import FOCUS
 from companion.features.history.run import HISTORY
+from companion.features.intimate.run import SCENE
 from companion.features.lore.run import LORE
 from companion.features.marks.run import MARKS
 from companion.features.mood.run import MOOD
@@ -20,7 +21,6 @@ from companion.features.now.run import NOW
 from companion.features.promises.run import PROMISE_CHECK
 from companion.features.relevance.run import RELEVANCE
 from companion.features.reminders.run import REMINDERS
-from companion.features.scene_memory.run import SCENE
 from companion.features.threads.run import OPENLOOPS
 from companion.features.topics.run import TOPICS
 from companion.features.upkeep.context.run import CONTEXT

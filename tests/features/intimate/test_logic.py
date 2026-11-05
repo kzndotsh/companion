@@ -17,7 +17,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.scene_memory.logic import (
+from companion.features.intimate.logic import (
     KNOWN_NOTE,
     LIMITS_NOTE,
     NEAREST,
@@ -42,8 +42,8 @@ from companion.features.scene_memory.logic import (
     pattern_entry,
     refuse,
     render_pinned,
-    render_scene,
-    scene_card,
+    render_roleplay_card,
+    roleplay_card,
     scenes,
     screen,
     touches_age,
@@ -254,13 +254,13 @@ SCORES = {"into1": 0.2, "style": 0.9, "care": 0.5, "into2": 0.7, "cur1": 0.95, "
 
 
 def test_the_scene_card_pins_limits_and_basics_and_shows_the_nearest_then_one_offer() -> None:
-    card = scene_card(ENTRIES, SCORES, ["The user's name is Sam."], may_offer=True)
+    card = roleplay_card(ENTRIES, SCORES, ["The user's name is Sam."], may_offer=True)
     assert [e.id for e in card.limits] == ["hard", "soft"]
     ranked = ["style", "into2", "care", "into1"]  # every known entry, nearest first
     assert [e.id for e, _ in card.nearest] == ranked[:NEAREST]
     assert card.offer is not None
     assert card.offer.id == "cur1"
-    text, pinned = render_scene(card), render_pinned(card)
+    text, pinned = render_roleplay_card(card), render_pinned(card)
     heads = [n.text.split("\n")[0] for n in (KNOWN_NOTE, OFFER_NOTE)]
     assert [text.index(h) for h in heads] == sorted(text.index(h) for h in heads)
     assert pinned.index(LIMITS_NOTE.text.split("\n")[0]) < pinned.index("The user's name is Sam.")
@@ -277,15 +277,15 @@ def test_a_memory_about_their_own_body_is_a_basic() -> None:
 
 
 def test_a_limit_is_pinned_even_with_no_look_up_and_nothing_else_is_shown() -> None:
-    card = scene_card(ENTRIES, {}, [], may_offer=True)
+    card = roleplay_card(ENTRIES, {}, [], may_offer=True)
     assert [e.id for e in card.limits] == ["hard", "soft"]
     assert card.nearest == ()
     assert card.offer is None
 
 
 def test_no_offer_unless_it_may_and_never_one_that_was_pushed_back() -> None:
-    assert scene_card(ENTRIES, SCORES, [], may_offer=False).offer is None
-    cooled_one = scene_card(ENTRIES, SCORES, [], may_offer=True, cooled={"cur1"})
+    assert roleplay_card(ENTRIES, SCORES, [], may_offer=False).offer is None
+    cooled_one = roleplay_card(ENTRIES, SCORES, [], may_offer=True, cooled={"cur1"})
     assert cooled_one.offer is not None
     assert cooled_one.offer.id == "cur2"
 
@@ -294,7 +294,7 @@ def test_a_curious_pattern_read_from_how_they_played_is_never_offered() -> None:
     played = Entry(
         "pat", "In scenes, the user tends to ask for more", Stance.CURIOUS, ("q",), scenes=3
     )
-    card = scene_card((played,), {"pat": 0.9}, [], may_offer=True)
+    card = roleplay_card((played,), {"pat": 0.9}, [], may_offer=True)
     assert card.offer is None
 
 

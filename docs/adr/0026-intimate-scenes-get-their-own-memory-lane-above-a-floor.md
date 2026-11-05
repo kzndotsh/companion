@@ -1,7 +1,8 @@
 # 0026. Intimate scenes get their own memory lane, above a floor in code
 
-**Status:** proposed 2026-10-26. Built in shadow (`COMPANION_SCENE_MEMORY`, `shadow` by default). It is
-read at the review of 2026-11-09 (`core/shadows.py`), which decides whether `on` becomes the default.
+**Status:** proposed 2026-10-26. Built in shadow (`COMPANION_SCENE_MEMORY`). Accepted and live (`on` by
+default) 2026-11-05, at a review pulled forward from 2026-11-09: 109 logged scene cards read right, and a
+flag showed a scene needs what they said about their own body (see "Live" at the end).
 
 **Context.** Intimate talk goes to the roleplay talker under the floor of ADR 0017. On those turns the
 roleplay talker gets the same memory card as any other turn: fifteen everyday memories ranked by kind
@@ -77,3 +78,12 @@ one night's play.
 **Reverses if.** The review finds the logged scene cards wrong often enough (a limit missing, an entry
 that does not fit, anything past the floor), or a measured scene fixture shows the scene card loses
 care or continuity against today's card.
+
+**Live 2026-11-05.** The review read the 109 scene cards logged since 2026-10-27: the limit was pinned
+every time, the nearest entries fit their moments, one gentle offer. A flag the same day showed the
+roleplay talker assuming a body the user does not have, with their own words about it in memory but on no
+card. Two changes before going live: the basics include memories in which they describe their own body (a
+word list in code, never a model; the age floor applies), and the limits and basics are sent after the
+history with a heading that asks to keep to them (`notes/scene-basics` v2). On three recorded turns, 12
+draws each, the assumed body fell from 21 to 12 of 36 and their own rose from 1 to 12 (`evals/CHANGELOG.md`,
+2026-11-05).

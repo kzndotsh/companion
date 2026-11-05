@@ -453,7 +453,7 @@ def refuse(p: Proposed, labels: Mapping[str, Utterance]) -> str | None:
 
 
 @dataclass(frozen=True, slots=True)
-class SceneCard:
+class RoleplayCard:
     limits: tuple[Entry, ...]
     nearest: tuple[tuple[Entry, float], ...]
     offer: Entry | None
@@ -464,14 +464,14 @@ class SceneCard:
         return not (self.limits or self.nearest or self.offer or self.basics)
 
 
-def scene_card(
+def roleplay_card(
     entries: Sequence[Entry],
     scores: Mapping[str, float],
     basics: Sequence[str],
     *,
     may_offer: bool,
     cooled: Collection[str] = (),
-) -> SceneCard:
+) -> RoleplayCard:
     """Every limit, hard first; then the entries nearest the moment that say what they are into, how
     they like it to go and what they want after; then, when it may, the one curious item nearest
     the moment that was not pushed back lately; then the basics. An entry with no score is never
@@ -485,13 +485,13 @@ def scene_card(
         e for e, _ in scored if e.stance is Stance.CURIOUS and not e.pattern and e.id not in cooled
     ]
     offer = curious[0] if may_offer and curious else None
-    return SceneCard(limits, nearest, offer, tuple(basics))
+    return RoleplayCard(limits, nearest, offer, tuple(basics))
 
 
 _LIMIT_WORDS = {Stance.HARD_LIMIT: "hard limit", Stance.SOFT_LIMIT: "soft limit"}
 
 
-def render_pinned(card: SceneCard) -> str:
+def render_pinned(card: RoleplayCard) -> str:
     """What every scene card pins, their limits and the basics, as bracketed blocks sent after the
     history: on the card a fact about their body changed no reply in 12, after the history it was
     used in 8 of 12 (2026-11-05)."""
@@ -504,7 +504,7 @@ def render_pinned(card: SceneCard) -> str:
     return "\n".join(parts)
 
 
-def render_scene(card: SceneCard) -> str:
+def render_roleplay_card(card: RoleplayCard) -> str:
     """The rest of the scene card, what they are into and the one offer, for the system block."""
     parts: list[str] = []
     if card.nearest:

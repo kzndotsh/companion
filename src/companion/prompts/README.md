@@ -133,7 +133,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/occasion-us` | note | after the history: a month, a hundred days, six months or a year since they first talked; a light, warm nod (`features/calendar`) | v1 |
 | `notes/occasion-theirs` | note | after the history on a casual turn: today is a date of theirs read from memory (a birthday, an anniversary, someone's of theirs); mark it warmly, never say it was remembered or looked up (`features/calendar`, R19) | v1 |
 | `notes/now-soon` | note | after the history while something they said is coming is still open: how long ago they said it, and that it has not happened unless they say so (`features/now`, ADR 0024) | v1 |
-| `notes/scene-limits` | note | on a scene turn, in place of the memory card: their hard and soft limits from their own words, pinned first (ADR 0026, `COMPANION_SCENE_MEMORY=on`) | v1 |
+| `notes/scene-limits` | note | on a scene turn, in place of the memory card: their hard and soft limits from their own words, pinned first (ADR 0026, `COMPANION_INTIMATE_MEMORY=on`) | v1 |
 | `notes/scene-known` | note | on a scene turn: the intimate memories and patterns nearest the moment, at most six (ADR 0026) | v1 |
 | `notes/scene-offer` | note | on a scene turn: one item they said they are curious about, which it may invite once if the moment fits (ADR 0026) | v1 |
 | `notes/scene-basics` | note | on a scene turn, after the history with the limits: what they are called and what they said about their own body, kept to (ADR 0026) | v2 |

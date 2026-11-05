@@ -109,7 +109,7 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
     some are stored at a low sensitivity, and one was picked for a weekday morning (2026-11-03)."""
     kinds = store.view_kinds(rel)
     keep = (BeliefKind.THREAD, BeliefKind.PREFERENCE)
-    intimate = store.scene_memory().intimate(rel)
+    intimate = store.intimate_memory().intimate(rel)
     return Pool(
         memories=[
             (str(b.id), b.claim, b.sensitivity)
@@ -183,7 +183,7 @@ def context(
     ):
         said = []
     keep = (BeliefKind.THREAD, BeliefKind.PREFERENCE, BeliefKind.TRAIT)
-    intimate = store.scene_memory().intimate(rel)
+    intimate = store.intimate_memory().intimate(rel)
     theirs = sorted(
         (
             b

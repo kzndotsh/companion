@@ -264,8 +264,9 @@ _Avoid_: scene lane
 **Lane**:
 Whether a memory is everyday or intimate.
 
-**Scene card**:
-The card a turn the roleplay talker answers gets instead of the memory card: their limits, nearby intimate memories, one curious item and their name.
+**Roleplay card**:
+What a turn the roleplay talker answers gets instead of the memory card: nearby intimate memories and one curious item in the system block; their limits and the basics (their name, what they said about their own body) after the history, with the scene reminder.
+_Avoid_: scene card
 
 **Limit**:
 Something they said they do not want in intimate play, hard or soft, taken only from their own plain words.
@@ -749,7 +750,7 @@ Whole turns run against judges that fail, stall or answer junk, which must still
 
 **Card**:
 One item on the work board, with a letter prefix and a number.
-_Avoid_: task, ticket. Say "memory card" or "scene card" for the others.
+_Avoid_: task, ticket. Say "memory card" or "roleplay card" for the others.
 
 **Board section**:
 Where a card sits on the board: Doing, Waiting, Todo, Backlog (with Parked inside), Done or Canceled.
@@ -770,7 +771,7 @@ A numbered record of a decision once made, with its reason.
 
 These words are used in more than one sense across the repo. Say which one you mean.
 
-- **Card**: the memory card, the scene card, or a board card.
+- **Card**: the memory card, the roleplay card, or a board card.
 - **History**: the chat window the talker reads, or the companion's own history.
 - **Held / hold**: a held memory, a held turn, a reach-out the gate held, or the owner's "hold" meaning do nothing yet.
 - **Severity, sensitivity, crisis level**: three separate scales. Severity is a message's seriousness, sensitivity a memory's, and crisis level what the crisis path decided.

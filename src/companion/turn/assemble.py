@@ -35,7 +35,7 @@ from companion.core.types import (
 )
 from companion.core.views import ViewState, card_views
 from companion.features.focus.run import FOCUS
-from companion.features.scene_memory.run import SCENE, scene_lane
+from companion.features.intimate.run import SCENE, intimate_lane
 from companion.kit.current import Heard, Turn, decide, mark
 from companion.kit.features import Lookups, Moment
 from companion.kit.record import Recorder
@@ -196,7 +196,7 @@ def assemble(  # noqa: PLR0913
             {"closeness": {b: round(focus.closeness.get(b, 0.0), 3) for b in shown_ids}},
             reason=f"card: {len(shown_ids)} memories, after the rules the closest to the moment",
         )
-    lane = scene_lane(c, t, looked.found.get(SCENE.name), roleplay=roleplay, card=card)
+    lane = intimate_lane(c, t, looked.found.get(SCENE.name), roleplay=roleplay, card=card)
     if lane.text is not None:  # a scene turn: the scene card, and no everyday memories
         card, shown = card_of([], ()), [lane.text] if lane.text else []
     else:

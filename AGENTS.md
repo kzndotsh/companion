@@ -35,7 +35,7 @@ just logs         # follow data/logs/companion.log: every stage, judge, model an
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
 just inbox some idea   # jot an idea into docs/inbox/
-uv run companion flags | favorites | spend | beliefs | initiative | prompts | mood | address | map | backup | calendar | shadows | crisis | now | scene
+uv run companion flags | favorites | spend | beliefs | initiative | prompts | mood | address | map | backup | calendar | shadows | crisis | now | intimate
 uv run companion memory review | group   # questions for the owner (conflicts, new boundaries), merge proposals
 uv run companion promises | lore | history   # shadow lists, its own tastes and its own past
 uv run companion retire ID --reason "..." | merge ID ID --claim "..."   # close one memory, or merge by hand
@@ -82,7 +82,6 @@ together.
 | How often it brings a thread up, learned from how they met the last ones (ADR 0023) | always shadow for now | the decision log | 2026-11-08 |
 | What they said is coming, kept until it happens, and the note that says so (ADR 0024) | `COMPANION_NOW` | `companion now` | 2026-11-08 |
 | Its own history: stories of its past it made up in chat, checked against the sheet and kept as canon, and the ones it would show (ADR 0025) | `COMPANION_HISTORY` | `companion history`, the decision log | 2026-11-09 |
-| A separate memory lane for intimate scenes: memories placed by lane, patterns from scenes, and the scene card it would send (ADR 0026) | `COMPANION_SCENE_MEMORY` | `companion scene`, the decision log | 2026-11-09 |
 
 ## Rules we learned the hard way
 

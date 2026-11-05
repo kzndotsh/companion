@@ -32,12 +32,12 @@ from companion.features.crisis import cli as crisis
 from companion.features.curiosity.map import cli as knowing
 from companion.features.episodes import cli as episodes
 from companion.features.history import cli as history
+from companion.features.intimate import cli as scene
 from companion.features.lore import cli as lore
 from companion.features.mood import cli as mood
 from companion.features.now import cli as now_cli
 from companion.features.promises import cli as promises
 from companion.features.reminders import cli as reminders
-from companion.features.scene_memory import cli as scene
 from companion.features.upkeep.context import cli as context
 from companion.features.upkeep.merging import cli as merging
 from companion.features.upkeep.sort import cli as worth
@@ -79,7 +79,7 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     lr.add_argument("--relabel", action="store_true", help="label every view again (model calls)")
     _db_args(lr)
     _db_args(add("history", help="the stories of its own past and their canon standing (shadow)"))
-    _db_args(add("scene", help="the intimate scene lane by stance, and what is kept out (shadow)"))
+    _db_args(add("intimate", help="the intimate memory lane by stance, and what is kept out"))
     pr = add("promises", help="the promises it made in its own replies (shadow), newest first")
     pr.add_argument("--not", dest="wrong", metavar="ID", help="mark one as not a promise")
     pr.add_argument("--retire", metavar="ID", help="retire one")
@@ -337,7 +337,7 @@ def _history(a: argparse.Namespace) -> int:
     return _out(history.run(*_target(a)))
 
 
-def _scene(a: argparse.Namespace) -> int:
+def _intimate(a: argparse.Namespace) -> int:
     return _out(scene.run(*_target(a)))
 
 
@@ -437,7 +437,7 @@ HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
     "episodes": _episodes,
     "lore": _lore,
     "history": _history,
-    "scene": _scene,
+    "intimate": _intimate,
     "map": _map,
     "backup": _backup,
     "address": _address,

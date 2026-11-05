@@ -42,6 +42,7 @@ from companion.features.audits.invented.logic import Statement
 from companion.features.calendar import store as calendar
 from companion.features.episodes import store as episodes
 from companion.features.history.store import Stories
+from companion.features.intimate.store import IntimateMemory
 from companion.features.lore.logic import Kind as ViewKind
 from companion.features.lore.logic import Labelled as ViewLabel
 from companion.features.mood import store as mood
@@ -53,7 +54,6 @@ from companion.features.promises.store import Recorded as RecordedPromise
 from companion.features.reach import store as reach
 from companion.features.reminders import store as reminders
 from companion.features.reminders.logic import Reminder, Series, Standing
-from companion.features.scene_memory.store import SceneMemory
 from companion.features.threads import store as open_loops
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.store import ReachOut
@@ -428,9 +428,9 @@ class Store:
         """Its own history's stories (ADR 0025)."""
         return Stories(self._conn)
 
-    def scene_memory(self) -> SceneMemory:
+    def intimate_memory(self) -> IntimateMemory:
         """The intimate scene lane (ADR 0026)."""
-        return SceneMemory(self._conn)
+        return IntimateMemory(self._conn)
 
     def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
         promises.add(self._conn, p, model=model, prompt=prompt, at=at)

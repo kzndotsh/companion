@@ -24,15 +24,15 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.relevance.logic import LIVE
-from companion.features.scene_memory.logic import (
+from companion.features.intimate.logic import (
     Everyday,
     Intimate,
     Place,
     Stance,
 )
-from companion.features.scene_memory.run import CARD, LEFT_OFF, OFFERED, Scored, entries
-from companion.features.scene_memory.store import By
+from companion.features.intimate.run import CARD, LEFT_OFF, OFFERED, Scored, entries
+from companion.features.intimate.store import By
+from companion.features.relevance.logic import LIVE
 from companion.kit.current import Turn
 from companion.kit.features import Lookups
 from companion.kit.record import Recorder
@@ -93,7 +93,7 @@ def store(tmp_path: Path) -> Store:
         )
     by_claim = {b.claim: b.id for b in s.user_beliefs(REL)}
     by = By("fake", "system/scene-lane@v1", NOW - timedelta(hours=1))
-    s.scene_memory().place({by_claim[c]: p for c, p in PLACES.items()}, by)
+    s.intimate_memory().place({by_claim[c]: p for c, p in PLACES.items()}, by)
     return s
 
 
@@ -101,7 +101,7 @@ TURN = TurnId("t-now")
 
 
 def _runtime(store: Store, mode: str) -> Runtime:
-    return Runtime(store, Talker(), PREFIX, REL, roleplay_talker=Talker(), scene_memory=mode)
+    return Runtime(store, Talker(), PREFIX, REL, roleplay_talker=Talker(), intimate_memory=mode)
 
 
 def _brush(store: Store, *, declines: bool | None, turn: TurnId = TURN, at: datetime = NOW) -> None:
@@ -230,7 +230,7 @@ async def test_on_the_relevance_look_up_never_searches_the_intimate_lane(store: 
         embedder=Embedder(),
         embed_model="fake-embed",
         relevance="on",
-        scene_memory="on",
+        intimate_memory="on",
     )
     await handle(runtime, SESSION, "what a day", "test", NOW)
     [live] = [d.detail for d in store.decisions_with_key(REL, LIVE)]

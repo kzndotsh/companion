@@ -1,8 +1,8 @@
-# Scene memory (ADR 0026)
+# Intimate memory lane (ADR 0026)
 
 A separate memory lane for intimate scenes. Memories about sex and intimate play are kept apart from everyday ones: a scene turn gets its own card (their limits, what they are into nearest the moment, perhaps one thing they are curious about, and what they are called), and every other turn leaves the intimate lane out.
 
-**Status:** shadow. `COMPANION_SCENE_MEMORY`: `shadow` (default), `on`, `off`. In `shadow` the memory pass places memories and reads scenes, and each turn logs the scene card it would send and the intimate memories it would leave off the everyday card; the request is unchanged. `on` sends the scene card on a turn the roleplay talker answers and leaves the intimate lane off every other turn's card and the relevance look-up. `off` reads nothing, logs nothing and changes nothing. Review by 2026-11-09 (`core/shadows.py`).
+**Status:** live since 2026-11-05 (ADR 0026, review pulled forward from 2026-11-09). `COMPANION_INTIMATE_MEMORY` (was `COMPANION_SCENE_MEMORY`): `on` (default), `shadow`, `off`. `on` sends the roleplay card on a turn the roleplay talker answers and leaves the intimate lane off every other turn's card and the relevance look-up. In `shadow` the memory pass places memories and reads scenes, and each turn logs the roleplay card it would send and the intimate memories it would leave off the everyday card; the request is unchanged. `off` reads nothing, logs nothing and changes nothing.
 
 ## How it works
 
@@ -11,11 +11,11 @@ A separate memory lane for intimate scenes. Memories about sex and intimate play
 2. A scene turn keeps the basics (what they are called, and how they want to be referred to, which is pinned on every turn) and no other everyday memory.
 3. It may bring up something they said they are curious about, not only what they are into. Never a limit.
 
-**Placing memories** (`label_lanes` in `run.py`, run by the memory pass when the switch is not `off`). Each pass takes up to 15 memories (`BATCH`; in batches of 60 borderline ones flipped with what sat around them) that may be stated as true (`is_assertable`) and have no place yet, or whose place is a doubt reached under an older version of the prompt (read once more), and sends them to `system/scene-lane` three times (`read_times`, spend `scene memory`). Each read gives each memory a lane, everyday or intimate, and an intimate one a stance: `into`, `curious`, `hard_limit`, `soft_limit`, `style` or `aftercare`. Code turns the three reads into a place (`agree` in `logic.py`): every read must give the same lane, and an intimate one takes the stance most reads gave; a limit needs every read to give that same limit. A split lane, a stance with no majority, or a read that left the memory out is `excluded` as doubt. A limit is then asked again, three times, by `system/scene-limit-check`: do their own words say they do not want it, or want it only under a condition. Any no or failed read keeps it out as doubt, since a limit is pinned to every scene card. A failed or unreadable read places nothing, and the batch waits for the next pass.
+**Placing memories** (`label_lanes` in `run.py`, run by the memory pass when the switch is not `off`). Each pass takes up to 15 memories (`BATCH`; in batches of 60 borderline ones flipped with what sat around them) that may be stated as true (`is_assertable`) and have no place yet, or whose place is a doubt reached under an older version of the prompt (read once more), and sends them to `system/scene-lane` three times (`read_times`, spend `scene memory`). Each read gives each memory a lane, everyday or intimate, and an intimate one a stance: `into`, `curious`, `hard_limit`, `soft_limit`, `style` or `aftercare`. Code turns the three reads into a place (`agree` in `logic.py`): every read must give the same lane, and an intimate one takes the stance most reads gave; a limit needs every read to give that same limit. A split lane, a stance with no majority, or a read that left the memory out is `excluded` as doubt. A limit is then asked again, three times, by `system/scene-limit-check`: do their own words say they do not want it, or want it only under a condition. Any no or failed read keeps it out as doubt, since a limit is pinned to every roleplay card. A failed or unreadable read places nothing, and the batch waits for the next pass.
 
 **The floor** (`screen` in `logic.py`), over the agreed place, in code, whatever the reads said. An everyday memory stays everyday. An intimate or doubtful one is kept out of scenes:
 
-| Reason | When | Shown by `companion scene` |
+| Reason | When | Shown by `companion intimate` |
 |---|---|---|
 | `floor` | its claim or a quote touches age, minors, school or an age-regression headspace (`touches_age`, a conservative word check), or it came from a turn the minor check held (a `minor check` decision with `minor` true) | the id only |
 | `crisis` | sensitivity 3 | the claim and the reason |
@@ -23,7 +23,7 @@ A separate memory lane for intimate scenes. Memories about sex and intimate play
 | `not_their_words` | a limit whose memory is not stated, real-frame and their own words | the claim and the reason |
 | `doubt` | the three reads did not agree | the claim and the reason |
 
-The age check is deliberately broad: it also matches a number under 18 that is not part of a date or a time, and the word "little" on its own, so a memory such as "likes it a little rough" is kept out too. A false match only costs a scene entry. The floor is applied when a memory is placed and again every time a scene card is built, over every turn its quotes came from, so a later confirmation from a held turn is caught. Only the newest place counts (`scene_lanes`, append-only).
+The age check is deliberately broad: it also matches a number under 18 that is not part of a date or a time, and the word "little" on its own, so a memory such as "likes it a little rough" is kept out too. A false match only costs a scene entry. The floor is applied when a memory is placed and again every time a roleplay card is built, over every turn its quotes came from, so a later confirmation from a held turn is caught. Only the newest place counts (`scene_lanes`, append-only).
 
 **Patterns from scenes** (`read_scenes` in `run.py`). It keeps its own bookmark (`scene_reads`). Each pass reads up to 400 messages past it (`READ`) and cuts them into scenes as `core/frames.py` does: a scene starts at a message of theirs in play and holds the replies after it, and ends at a message of theirs out of play or after a two-hour gap (`scenes`). Up to 3 ended scenes a pass (`SCENES`, `closed`) are read, oldest first:
 - A scene with any turn the minor check held is never read; `scene memory: a scene left unread by the floor` is logged with no text.
@@ -33,7 +33,7 @@ The age check is deliberately broad: it also matches a number under 18 that is n
 
 A pattern becomes an entry only once its quotes come from two separate scenes (`MIN_SCENES`, `pattern_entry`). A failed or unreadable read leaves the bookmark before that scene, so it is read again next pass. A batch that ends mid-scene leaves that scene for later, so one long scene never counts as two.
 
-**The scene card** (`scene_lane` in `run.py`, called by `turn/assemble.py`). On a turn the roleplay talker answers (a pretend scene, or intimate talk the operator lets it answer; never a turn the floor held or one where they pushed back), code builds:
+**The roleplay card** (`scene_lane` in `run.py`, called by `turn/assemble.py`). On a turn the roleplay talker answers (a pretend scene, or intimate talk the operator lets it answer; never a turn the floor held or one where they pushed back), code builds:
 1. every current limit, hard first, then soft (`notes/scene-limits`);
 2. at most 6 entries nearest the moment that say what they are into, how they like it to go, or what they want after (`NEAREST`, `notes/scene-known`);
 3. at most one curious item, the nearest one, which it may invite once (`notes/scene-offer`);
@@ -55,8 +55,8 @@ What they are into and the offer go in the system block in place of the memory c
 |---|---|
 | `logic.py` | pure: the lanes, stances and reasons (`Lane`, `Stance`, `Why`, `Place`), the floor (`touches_age`, `screen`), the lane prompt, parse and agreement (`lane_prompt`, `parse_lanes`, `agree`), scenes and patterns (`scenes`, `closed`, `Pattern`, `pattern_prompt`, `parse_patterns`, `refuse`, `pattern_entry`), the card (`Entry`, `scene_card`, `render_scene`) and the cooling (`cooled`) |
 | `run.py` | effects: the pass step (`label_lanes`, `read_scenes`, `pass_step`), the entries (`entries`), the look-up (`nearest_for_turn`), the turn's lane (`scene_lane`), and `SCENE` |
-| `store.py` | its tables behind `Store.scene_memory()` (`SceneMemory`): places, patterns and their quotes and retires, vectors, the bookmark, and the floor's facts about a message's turn (`facts`) |
-| `cli.py` | `companion scene`, and retiring a pattern (`retire_pattern`, used by `companion retire`) |
+| `store.py` | its tables behind `Store.intimate_memory()` (`IntimateMemory`): places, patterns and their quotes and retires, vectors, the bookmark, and the floor's facts about a message's turn (`facts`) |
+| `cli.py` | `companion intimate`, and retiring a pattern (`retire_pattern`, used by `companion retire`) |
 
 The tables are in `store/sqlite/migrations/0037_scene_memory.sql`.
 
@@ -65,20 +65,20 @@ The tables are in `store/sqlite/migrations/0037_scene_memory.sql`.
 - `system/scene-lane`: each memory's lane, everyday or intimate, and an intimate one's stance.
 - `system/scene-limit-check`: whether their own words set a limit the lane reads gave; every read must say yes.
 - `system/scene-pattern`: how they tend to play intimate scenes, from one ended scene, quoted from their own messages.
-- `notes/scene-limits`: the scene card's limits, hard and soft.
+- `notes/scene-limits`: the roleplay card's limits, hard and soft.
 - `notes/scene-known`: the entries nearest the moment.
 - `notes/scene-offer`: the one curious item it may invite.
 - `notes/scene-basics`: what they are called.
 
 ## Commands
 
-- `uv run companion scene`: the intimate lane by stance with quotes and how many quotes or scenes each has, the patterns seen in one scene so far, what is kept out of scenes with the reason (only the id for the floor), and the retired patterns.
+- `uv run companion intimate`: the intimate lane by stance with quotes and how many quotes or scenes each has, the patterns seen in one scene so far, what is kept out of scenes with the reason (only the id for the floor), and the retired patterns.
 - `uv run companion retire ID`: retires a memory by id prefix as before, or a pattern when no current memory or story has that prefix.
 
 ## Measured
 
-Nothing yet. The owner's session measures the two judges on made-up fixtures and the scene card's notes on replies before the review, and the review reads the logged scene cards by eye.
+Nothing yet. The owner's session measures the two judges on made-up fixtures and the roleplay card's notes on replies before the review, and the review reads the logged roleplay cards by eye.
 
 ## Tests
 
-`tests/features/scene_memory/`, the turn in `tests/turn/test_scene_memory_turn.py`, and the switch in `tests/test_startup_line.py`.
+`tests/features/intimate/`, the turn in `tests/turn/test_intimate_turn.py`, and the switch in `tests/test_startup_line.py`.

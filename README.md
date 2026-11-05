@@ -182,8 +182,8 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
 
 We often try new behaviour in shadow first: it works out and logs what it would do, but changes
 nothing in the chat until a review shows it reads right. Right now that includes reaching out first,
-its promises and the check on each reply, what they said is coming, its own history, the memory lane
-for intimate scenes and the pace for bringing threads up. The full list, with
+its promises and the check on each reply, what they said is coming, its own history and the pace for
+bringing threads up. The full list, with
 each one's setting and review date, is in [AGENTS.md](AGENTS.md#what-runs-in-shadow).
 
 ## Quick start
@@ -267,7 +267,7 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 | `COMPANION_CALENDAR` | `on` | one note after the history on a casual turn about the day: a US public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years (`features/calendar`); `off` stops it |
 | `COMPANION_NOW` | `shadow` | what they said is coming, kept until it happens (ADR 0024): `on` sends one line after the history while it is open ("about 2 minutes ago they said dinner is coming soon; it has not happened unless they say so"), `shadow` logs the line and sends nothing, `off` stops the note; the reader also runs while reaching out is on, for nudges |
 | `COMPANION_HISTORY` | `shadow` | its own history (ADR 0025): after each memory pass, the small details of its own past it made up in chat are captured and checked against the character sheet and the stories already kept; beside an ordinary turn the canon stories nearest their message are logged. Nothing is shown yet, so `on` acts as `shadow` until step 2; `off` reads and logs nothing |
-| `COMPANION_SCENE_MEMORY` | `shadow` | a separate memory lane for intimate scenes (ADR 0026): after each memory pass, memories are placed everyday or intimate (read three times, under a floor in code) and ended scenes are read for how they play; `on` sends the scene card (their limits, the entries nearest the moment, perhaps one curious item, their name) instead of the memory card on a turn the roleplay talker answers, and leaves the intimate lane off every other turn; `shadow` logs both and sends the card as before; `off` reads and logs nothing |
+| `COMPANION_INTIMATE_MEMORY` | `on` | a separate memory lane for intimate scenes (ADR 0026), live since 2026-11-05: after each memory pass, memories are placed everyday or intimate (read three times, under a floor in code) and ended scenes are read for how they play; `on` sends the roleplay card (the entries nearest the moment and perhaps one curious item in the system block; their limits, their name and what they said about their own body after the history) instead of the memory card on a turn the roleplay talker answers, and leaves the intimate lane off every other turn; `shadow` logs both and sends the card as before; `off` reads and logs nothing |
 | `COMPANION_FOCUS` | `on` | rank the memory card by closeness to the moment (their message and the reply before it), after their boundaries and its promises; `off` builds it by kind and recency as before |
 | `COMPANION_LORE` | `on` | show it its own tastes nearest their message on ordinary turns (ADR 0020); `shadow` only logs, `off` skips it |
 

@@ -9,7 +9,7 @@ from companion.core.freshness import status, when_phrase
 from companion.core.types import RelationshipId
 from companion.core.views import ViewMode, gates, is_settled, overstated, parse_mode
 from companion.features.history.cli import retire_story
-from companion.features.scene_memory.cli import retire_pattern
+from companion.features.intimate.cli import retire_pattern
 from companion.kit.curate import approve, close_duplicates, merge, retire
 from companion.memory.calibrate import report, reviewed_views
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store

@@ -35,6 +35,7 @@ RENAMED = {
     "COMPANION_JUDGE_MODELS": "COMPANION_JUDGE_ROUTES",
     "COMPANION_LOOP_NOTES": "COMPANION_HEDGED_PLANS",
     "COMPANION_CONSOLIDATE": "COMPANION_REREAD",
+    "COMPANION_SCENE_MEMORY": "COMPANION_INTIMATE_MEMORY",
     "COMPANION_RESAMPLE": "COMPANION_REDRAW",
 }
 
@@ -85,7 +86,7 @@ SWITCHES: tuple[Switch, ...] = (
     Switch("COMPANION_CALENDAR", "calendar", ("on", "off")),
     Switch("COMPANION_NOW", "now", ("shadow", "on", "off")),
     Switch("COMPANION_HISTORY", "history", ("shadow", "on", "off")),
-    Switch("COMPANION_SCENE_MEMORY", "scene", ("shadow", "on", "off")),
+    Switch("COMPANION_INTIMATE_MEMORY", "intimate memory", ("on", "shadow", "off")),
 )
 _BY_LABEL = {s.label: s for s in SWITCHES}
 

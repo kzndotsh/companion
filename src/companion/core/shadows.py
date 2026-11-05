@@ -77,15 +77,6 @@ SHADOWS: tuple[Shadow, ...] = (
         "canon rulings that read right to the owner (nothing big or contradicting kept, the same"
         " story linked, not kept twice) and would-shows that fit the moment",
     ),
-    Shadow(
-        "a separate memory lane for intimate scenes: memories placed by lane, patterns from"
-        " scenes, and the scene card it would send (ADR 0026)",
-        "scene",
-        "companion scene, the decision log (scene memory: the scene card)",
-        date(2026, 11, 9),
-        "logged scene cards that read right to the owner: limits pinned, the nearest fit the"
-        " scene, nothing everyday, nothing past the floor",
-    ),
 )
 
 

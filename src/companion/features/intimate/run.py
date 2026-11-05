@@ -34,7 +34,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.vectors import Vector, dot
-from companion.features.scene_memory.logic import (
+from companion.features.intimate.logic import (
     BATCH,
     COOL,
     LANE,
@@ -54,8 +54,8 @@ from companion.features.scene_memory.logic import (
     Pattern,
     Place,
     Quote,
+    RoleplayCard,
     Scene,
-    SceneCard,
     Stance,
     Why,
     agree,
@@ -71,13 +71,13 @@ from companion.features.scene_memory.logic import (
     pattern_prompt,
     refuse,
     render_pinned,
-    render_scene,
-    scene_card,
+    render_roleplay_card,
+    roleplay_card,
     scenes,
     screen,
     touches_age,
 )
-from companion.features.scene_memory.store import By
+from companion.features.intimate.store import By
 from companion.kit.current import Heard, Turn, decide
 from companion.kit.features import Feature
 from companion.kit.reads import read_times
@@ -138,7 +138,7 @@ async def label_lanes(
 ) -> Spent:
     """Place one batch of memories that have no lane yet, each read three times. A failed read
     places nothing: the batch waits for the next pass, never placed from fewer reads."""
-    sm = store.scene_memory()
+    sm = store.intimate_memory()
     have = sm.places(rel)
     again = sm.doubted_before(rel, LANE.ref)  # a doubt under an older prompt is read again once
     todo = [
@@ -207,7 +207,7 @@ async def read_scenes(
 ) -> Spent:
     """Note how they play from the scenes that ended past the bookmark, oldest first, up to SCENES a
     pass. The bookmark moves to just before the first scene left for later."""
-    sm = store.scene_memory()
+    sm = store.intimate_memory()
     batch = store.utterances_after(rel, sm.cursor(rel), READ)
     if not batch:
         return Spent()
@@ -237,7 +237,7 @@ async def _read_scene(
 ) -> float | None:
     """Read one ended scene for patterns: their cost, or None when the read failed. A scene with a
     turn the minor check held is never read."""
-    sm = store.scene_memory()
+    sm = store.intimate_memory()
     theirs = [u.id for u in scene.messages if u.speaker is Speaker.USER]
     held, _ = sm.facts(rel, theirs)
     record = _pass_recorder(store, rel, now)
@@ -308,7 +308,7 @@ def pass_step(mode: str) -> Step | None:
 def entries(store: Store, rel: RelationshipId) -> tuple[Entry, ...]:
     """What a scene card may show: the memories placed intimate that still pass the floor, and the
     patterns seen in enough scenes. The floor is read again here, over every turn they came from."""
-    sm = store.scene_memory()
+    sm = store.intimate_memory()
     places = sm.places(rel)
     beliefs = [
         b
@@ -339,7 +339,7 @@ async def _vectors(
     c: Runtime, embedder: Embedder, found: Sequence[Entry], said: str, now: datetime
 ) -> tuple[Vector, dict[str, Vector]] | None:
     """The moment's vector and every entry's, embedding the missing ones in the same call."""
-    store, model, sm = c.store, c.embed_model, c.store.scene_memory()
+    store, model, sm = c.store, c.embed_model, c.store.intimate_memory()
     have: dict[str, Vector] = {**store.belief_embeddings(c.rel, model), **sm.vectors(c.rel, model)}
     missing = [e for e in found if e.id not in have]
     try:
@@ -367,7 +367,7 @@ async def nearest_for_turn(
     lets the roleplay talker answer), how near each entry is to the moment: their message with the
     reply before it."""
     intimate = c.route_intimate and heard is not None and heard[0].intimate
-    if c.scene_memory == "off" or c.embedder is None or c.roleplay_talker is None:
+    if c.intimate_memory == "off" or c.embedder is None or c.roleplay_talker is None:
         return None
     if in_scene is not Frame.PLAY and not intimate:
         return None
@@ -384,7 +384,7 @@ async def nearest_for_turn(
 
 
 @dataclass(frozen=True, slots=True)
-class SceneLane:
+class IntimateLane:
     """What the scene lane does to this turn's request."""
 
     hidden: frozenset[BeliefId] = frozenset()  # left off the everyday card
@@ -418,7 +418,7 @@ def _cooled(c: Runtime, t: Turn) -> frozenset[str]:
     return cooled(offers, reads, t.now)
 
 
-def _card_detail(card: SceneCard, text: str, *, sent: bool, scored: bool) -> dict[str, Json]:
+def _card_detail(card: RoleplayCard, text: str, *, sent: bool, scored: bool) -> dict[str, Json]:
     return {
         "limits": [e.id for e in card.limits],
         "nearest": [{"id": e.id, "score": round(s, 3)} for e, s in card.nearest],
@@ -430,21 +430,21 @@ def _card_detail(card: SceneCard, text: str, *, sent: bool, scored: bool) -> dic
     }
 
 
-def scene_lane(
+def intimate_lane(
     c: Runtime,
     t: Turn,
     found: object,
     *,
     roleplay: bool,
     card: Card,
-) -> SceneLane:
+) -> IntimateLane:
     """On a turn the roleplay talker answers: the scene card, logged, and sent when on. On any other
     turn: the intimate memories the everyday card holds, logged, and left off when on."""
-    if c.scene_memory == "off":
-        return SceneLane()
-    live = c.scene_memory == "on"
+    if c.intimate_memory == "off":
+        return IntimateLane()
+    live = c.intimate_memory == "on"
     if not roleplay:
-        hidden = c.store.scene_memory().intimate(c.rel)
+        hidden = c.store.intimate_memory().intimate(c.rel)
         on_card = hidden & {b.id for b in (*card.usable, *card.held, *card.older)}
         if on_card:
             decide(
@@ -454,10 +454,10 @@ def scene_lane(
                 {"beliefs": [str(b) for b in sorted(on_card)], "sent": not live},
                 reason=f"{LEFT_OFF}: {len(on_card)}" + ("" if live else " (shadow: still sent)"),
             )
-        return SceneLane(hidden=hidden if live else frozenset())
+        return IntimateLane(hidden=hidden if live else frozenset())
     scored = found if isinstance(found, Scored) else None
     may = _may_offer(c, t)
-    made = scene_card(
+    made = roleplay_card(
         scored.entries if scored is not None else entries(c.store, c.rel),
         scored.scores if scored is not None else {},
         [
@@ -470,7 +470,7 @@ def scene_lane(
         may_offer=may,
         cooled=_cooled(c, t) if may else (),
     )
-    text, pinned = render_scene(made), render_pinned(made)
+    text, pinned = render_roleplay_card(made), render_pinned(made)
     decide(
         c,
         t,
@@ -484,8 +484,8 @@ def scene_lane(
     )
     offer = made.offer
     if not live or offer is None:
-        return SceneLane(text=text if live else None, pinned=pinned if live else "")
-    return SceneLane(
+        return IntimateLane(text=text if live else None, pinned=pinned if live else "")
+    return IntimateLane(
         text=text, pinned=pinned, after=(lambda: decide(c, t, OFFERED, {"entry": offer.id}),)
     )
 

@@ -11,7 +11,7 @@ from pathlib import Path
 from companion.core.clock import utc_now
 from companion.core.frames import is_assertable
 from companion.core.types import Belief, BeliefId, RelationshipId, UtteranceId
-from companion.features.scene_memory.logic import (
+from companion.features.intimate.logic import (
     WHY_TEXT,
     Everyday,
     Excluded,
@@ -24,7 +24,7 @@ from companion.features.scene_memory.logic import (
     screen,
     touches_age,
 )
-from companion.features.scene_memory.run import facts_of
+from companion.features.intimate.run import facts_of
 from companion.store.sqlite.store import Store
 
 type Marks = tuple[frozenset[UtteranceId], frozenset[UtteranceId]]  # held, heavy
@@ -95,7 +95,7 @@ def run(db: Path, relationship: str) -> str:
     rel = RelationshipId(relationship)
     store = Store(db)
     try:
-        sm = store.scene_memory()
+        sm = store.intimate_memory()
         places = sm.places(rel)
         beliefs = [b for b in store.user_beliefs(rel) if is_assertable(b) and b.id in places]
         patterns = sm.patterns(rel)
@@ -120,7 +120,7 @@ def retire_pattern(store: Store, rel: RelationshipId, id_prefix: str, reason: st
     caller can say so."""
     matches = [
         p
-        for p in store.scene_memory().patterns(rel)
+        for p in store.intimate_memory().patterns(rel)
         if p.id.startswith(id_prefix) and not p.retired
     ]
     if not matches:
@@ -128,5 +128,5 @@ def retire_pattern(store: Store, rel: RelationshipId, id_prefix: str, reason: st
     if len(matches) > 1:
         msg = f"{len(matches)} patterns start with {id_prefix!r}; need exactly one"
         raise ValueError(msg)
-    store.scene_memory().retire(matches[0].id, reason, utc_now())
+    store.intimate_memory().retire(matches[0].id, reason, utc_now())
     return f"retired  {matches[0].id[:8]}"

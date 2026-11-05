@@ -120,7 +120,7 @@ def _runtime(store: Store, judge: Chaos | None, talker: Talker) -> Runtime:
         relevance="on",
         episodes="on",
         crisis="on",
-        scene_memory="on",
+        intimate_memory="on",
     )
 
 
