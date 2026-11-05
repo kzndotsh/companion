@@ -29,16 +29,17 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Feature | What it does | Status | More |
 |---|---|---|---|
 | Right length | Keeps replies to a short message short, instead of three times longer | live | `docs/dev/turn.md` |
-| Just a reaction | A short "ok" after something it said can get an emoji reaction instead of a reply | live | `docs/dev/turn.md` |
-| Reacts and replies | Now and then reacts to a message with a fitting emoji as well as answering it | live | `docs/dev/turn.md` |
+| Just a reaction | A short "ok" after something it said can get an emoji reaction instead of a reply. A short message with a stretched word ("fineee") or a crisis word always gets a reply | live | `features/reactions` |
+| Reacts and replies | Now and then reacts to a message with a fitting emoji as well as answering it | live | `features/reactions` |
 | Mood | Has a mood (cozy, tender, playful) that lasts across hours and shows in how it writes, never stated | live | `features/mood` |
-| Breaks its habits | Notices openers and phrases it keeps repeating, and stops copying your emoji back | live | `features/moves` |
+| Breaks its habits | Notices openers, phrases and bits it keeps repeating, and stops copying your emoji back. What you are both talking about, or a name or a title, never counts as a habit | live | `features/moves` |
 | Moves on | When a small topic has run its course, it moves the chat along | live | `features/topics` |
 | Plays along with a guess | "You know what time it is?" gets a playful guess from what it knows about you | live | `features/curiosity/guess` |
 | Doesn't interview you | After three replies in a row that asked a question, the next one asks none | live | `docs/dev/turn.md` |
 | Question game | When you say "ask me anything", it keeps asking | live | `docs/dev/turn.md` |
-| Its own emoticons | Uses emoticons and kaomoji of its own now and then, not only yours | live | `features/marks` |
+| Its own emoticons | Uses emoticons and kaomoji of its own now and then on playful messages, not only yours | live | `features/marks` |
 | Quality checks | Catches em dashes, unasked AI disclaimers, stock phrases, tacked-on jokes and empty praise, and writes the reply again. It never edits a reply | live | `docs/dev/turn.md` |
+| Holding back quietly | When it holds back from something, a reply that says so out loud is written again | live | `docs/dev/turn.md` |
 | Feels typed | Waits a little before sending, like someone typing | live | `docs/dev/delivery.md` |
 | Several messages | Sometimes sends a long reply as two or three messages | live | `docs/dev/delivery.md` |
 
@@ -63,7 +64,7 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Finds the right memory | Searches all its memories for ones that bear on what you just said | live | `features/relevance` |
 | "Do you remember?" | When you ask it to remember or say it forgot, it searches everything you've told it | live | `docs/dev/turn.md` |
 | Times together | Remembers what you two did, for "last night" or coming back after a while | live | `features/episodes` |
-| Intimate memories apart | Keeps intimate memories separate: the roleplay talker sees them, everyday chat never does | live | `features/intimate` |
+| Intimate memories apart | Keeps intimate memories separate: the roleplay talker sees them, with your limits and what you have told it about your body, and everyday chat never does | live | `features/intimate` |
 | Where it came from | Keeps a short note with each memory on what you were talking about | live | `features/upkeep/context` |
 | Sorting | Tells facts about your life apart from comments about the bot and one-day moments, which fade | live | `features/upkeep/sort` |
 | Tidying | Rereads week-old memories each night and checks each new one against what it already knows | live | `features/upkeep/reread` |
@@ -88,7 +89,7 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Reminders | Reminds you, checks in or says good morning when you ask, once or every day | live | `features/reminders` |
 | What's coming | Remembers "dinner's almost ready" until it happens, so it doesn't jump ahead | shadow | `features/now` |
 | Writes first about a plan | Messages you first when a plan of yours is due | shadow | `features/threads` |
-| Writes first for its own reasons | Messages you first because something reminded it of you, it's your usual time, or it missed you | shadow | `features/reach` |
+| Writes first for its own reasons | Messages you first because something reminded it of you, it's your usual time, or it missed you. It thinks of a few ideas and picks one, at a share of chats you set, and waits after a hard moment | shadow | `features/reach` |
 | Teases when you're gone long | One light tease when you said you'd be quick and were gone much longer | shadow | `features/nudges` |
 | Learns your pace | Learns how often to bring things up from how you reacted before | shadow | ADR 0023 |
 
@@ -99,13 +100,13 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Its own views | Remembers what it has said it thinks, and only settled views shape later replies | live | `README.md` |
 | Its own tastes | Keeps its favourites the same from day to day instead of inventing new ones | live | `features/lore` |
 | Its own past | Remembers stories about its past it told you, so it tells the same past every time | shadow | `features/history` |
-| Keeps its promises | Remembers promises it made, like dropping a word you dislike, and checks it keeps them | shadow | `features/promises` |
+| Keeps its promises | Remembers promises it made, lasting ones like dropping a word you dislike and ones for one moment, and checks every reply against them | shadow | `features/promises` |
 
 ## Safety
 
 | Feature | What it does | Status | More |
 |---|---|---|---|
-| Crisis care | Notices a message that may mean real danger, steps out of any scene, and sends a crisis line when it's urgent. A joke stays a joke | live | `features/crisis` |
+| Crisis care | Notices a message that may mean real danger, steps out of any scene, and asks you directly and warmly, naming a crisis line or someone you trust, once in a hard stretch; after that it stays with you and gently encourages real help. When it's urgent it also sends a fixed message with the line. It never gives methods and doesn't message you first for a day after. A joke stays a joke | live | `features/crisis` |
 | Age floor | Never goes intimate when anything suggests someone under 18. Built into code, no setting changes it | live | `docs/dev/turn.md` |
 | Daily spend limit | Stops for the day when model costs hit the cap, and tells you once | live | `docs/dev/turn.md` |
 
@@ -120,5 +121,6 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Spending | Shows what the models cost, by purpose | tool | `README.md` |
 | Callbacks check | Scores whether replies brought up old memories on their own, and whether it fit | tool | `features/audits/callbacks` |
 | Made-up facts check | Measures how often a reply says something about you that it has no reason to know | tool | `features/audits/invented` |
+| Feature lists | `companion now`, `history`, `promises`, `intimate`, `crisis` and `shadows` show what each one holds or would do; `companion --help` lists every command | tool | `README.md` |
 | Replay | Rebuilds any past reply and shows exactly what the model saw | tool | `docs/dev/evals.md` |
 | Tests | Tries new prompts and models on saved chats, with fair judges and a spend cap | tool | `docs/dev/evals.md` |

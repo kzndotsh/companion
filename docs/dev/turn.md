@@ -18,8 +18,8 @@ nothing paid runs, and they are told once that day (`messages/spend-cap`).
 
 1. **Listen** (`listen.py`). Side by side, the instead judge decides whether the message needs a reply
    at all or only a reaction emoji, and the listening judge reads how serious it is (the listening
-   read, below). Only a short message after a statement of its own is asked about
-   (`features/reactions/logic.py` `is_candidate`); one with a stretched word
+   read, below). Only a short message, with no question mark, that follows a statement of its own
+   and does not follow a serious message of theirs is asked about (`features/reactions/logic.py` `is_candidate`); one with a stretched word
    ("fineee", "yesss") always gets a reply, since it hands a bit back.
 2. **Route** (`route.py`). It chooses which talker answers: the everyday model or the roleplay model.
 3. **Look** (`notes.py`). Every feature that looks something up before the reply does so here, side
@@ -59,7 +59,7 @@ stated, the most sensitive included since they asked, by a small model that read
 the topic and the last six messages of the conversation, both sides; what it finds rides that turn's
 system block (`core/recall.py`).
 
-Memories marked sensitive are on the card only on turns rated 1 or more, and with `COMPANION_FOCUS=on`
+Guarded memories (delicate or grave) are on the card only on turns rated 1 or more, and with `COMPANION_FOCUS=on`
 only when close to the moment; the rest of the card is the memories closest to it (`docs/dev/memory.md`). A turn that is ordinary,
 real (not a scene) and not a goodbye counts as casual (`kit/current.py`, `is_casual`), and many
 features only act on casual turns. With `COMPANION_CRISIS=on`, a turn the crisis path reads as a risk
@@ -155,7 +155,7 @@ The notes are chosen by code from models' labels, never written by a model (ADR 
 fixed order (`ORDER` in `turn/notes.py`), and the order is checked when the bot starts. A few lines
 go after the history instead, as a system message, because there they change behaviour and in the
 system block they did not (measured twice). These are the owned-it note, the question-game and question-run notes,
-the character's scene reminder, the crisis notes, the offer of an emoticon of its own and the calendar's note. Whatever is sent after the history is logged with
+the character's scene reminder, the crisis notes, the offer of an emoticon of its own (on a playful casual message only, spaced) and the calendar's note. Whatever is sent after the history is logged with
 the turn, so a replay rebuilds it.
 
 When they use reply on a message, Discord or Telegram sends the message they replied to along with

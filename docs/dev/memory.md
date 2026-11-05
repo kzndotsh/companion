@@ -59,7 +59,7 @@ separate block, marked as possibly out of date.
 
 A memory is never deleted (ADR 0002, 0008). It ages instead, measured from the last time it was
 mentioned (`core/freshness.py`): a state goes stale after 14 days, a thread or a promise after 30, a
-trait or a preference after a year, and an event never does. Past half that time the card says it may
+trait, a preference, a boundary or a tell after a year, and an event never does. Past half that time the card says it may
 have changed. A stale memory leaves the card but stays in memory. A one-day
 moment of daily life, and a personal event on a given date, leave the card a week after they were
 last mentioned. A memory bound to the day it names (a plan for that day, having just woken up,

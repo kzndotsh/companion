@@ -68,7 +68,7 @@ The tables are in `store/sqlite/migrations/0037_scene_memory.sql`.
 - `notes/scene-limits`: the roleplay card's limits, hard and soft.
 - `notes/scene-known`: the entries nearest the moment.
 - `notes/scene-offer`: the one curious item it may invite.
-- `notes/scene-basics`: what they are called.
+- `notes/scene-basics`: what they are called and what they said about their own body, with a heading that asks to keep to them.
 
 ## Commands
 
@@ -77,7 +77,8 @@ The tables are in `store/sqlite/migrations/0037_scene_memory.sql`.
 
 ## Measured
 
-Nothing yet. The owner's session measures the two judges on made-up fixtures and the roleplay card's notes on replies before the review, and the review reads the logged roleplay cards by eye.
+- 2026-11-05, at the review that made it live: 109 logged roleplay cards read by eye (the limit pinned each time, the nearest fit their moments, one gentle offer). On three recorded scene turns, 12 draws each, with the basics after the history under their heading, the assumed body fell from 21 to 12 of 36 and their own rose from 1 to 12 (`evals/CHANGELOG.md`).
+- The two judges (`system/scene-lane`, `system/scene-pattern`) are not measured beyond that review.
 
 ## Tests
 

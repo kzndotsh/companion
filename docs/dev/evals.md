@@ -21,7 +21,7 @@ A fixture is one moment in a conversation and a way to tell whether the reply to
 is a JSON file with an `id`, a plain `description` of what it tests, `checks`, and either a script or
 a recorded turn.
 
-**Public fixtures** (`evals/fixtures/`, 110 today) are scripts: a short invented `history`, the
+**Public fixtures** (`evals/fixtures/`, 113 today) are scripts: a short invented `history`, the
 person's last message (`user`), and optionally a `memory` block, a `clock` line, `labels` and `lore`.
 They need nothing else, so anyone can run them, and they are committed. Each one targets a *class* of
 failure (agreeing with a sweeping claim, copying their emoticon, soothing something they have not
@@ -29,7 +29,7 @@ resolved, a quip bolted onto a vent), written so it is not about any one person.
 listening judge's reading of the last message (severity, stance and flags); every public fixture now
 carries the reading the live judge itself gives it, so a sample is read the way a real turn would be.
 
-**Local fixtures** (`evals/local/`, about 75, git-ignored) point at a real turn in your database by
+**Local fixtures** (`evals/local/`, about 100, git-ignored) point at a real turn in your database by
 its id and hold no conversation text. They replay exactly what the bot sent on a turn you flagged, so
 a failure that only happens with your real history (a long chat, a running bit, a particular memory)
 can be checked again. Their ids end in `-local`. Retired ones sit in `evals/local/archive/`, which the
@@ -55,7 +55,7 @@ as what fails ("honest, hedged knowledge is fine").
 ## How a sample is made
 
 A sample is what the person would actually have received, made by the turn's own code
-(`evals/sample.py`). For a script, the history is stored in a throwaway conversation, the turn's own
+(`src/companion/evals/sample.py`). For a script, the history is stored in a throwaway conversation, the turn's own
 notes are chosen for that moment, the request is laid out exactly as a live turn's is, and the reply
 then goes through the same checks and redraws as a live reply (an em dash, an unasked disclaimer,
 markdown, the joke and canned-reaction judge). For a recorded turn, the logged request is replayed and
@@ -103,9 +103,9 @@ script over the database: how often a reply comes after three questions in a row
 word runs through an evening's replies, how often the canned-reaction redraw fired live (1 in 58).
 These set thresholds from your own data instead of a guess.
 
-**Live judge suites** (`tests/live/`, 12 files) test each small judge against written examples with
+**Live judge suites** (`tests/live/`, 13 files) test each small judge against written examples with
 expected answers: listening, reply-or-react, empathy, guesses, reminders, repair, topic-spent, memory
-conflicts and the memory rules. They cost cents and are skipped in `just check`. They run on any
+conflicts, the memory rules, the now read, how a thread was met and open-loop repeats. They cost cents and are skipped in `just check`. They run on any
 model with `COMPANION_LIVE_JUDGE_MODEL`, which is how the judge bake-off of 2026-10-25 compared
 Haiku, GPT-6 Luna and DeepSeek on every graded judge. Turn the fallback model off when comparing
 models, or a refusal hides behind the fallback's answer.
@@ -178,7 +178,8 @@ own turn (a who-it-is answer, a know-the-news answer), and neither needed a new 
 Replay a flagged turn 12 to 30 times and count before building anything.
 
 **Measure the need before building.** Counting over the ledger or a quick prototype stopped at least
-five features: searching older messages on a recall cue (mostly off-topic, the answer usually in
+six features: the basics question that waited for their words (4 reads in 13 days, none would have
+asked; removed 2026-11-05), searching older messages on a recall cue (mostly off-topic, the answer usually in
 view), fetching memories by a mentioned name (two real misses in six days), a support check on new
 memories, a card half filled by closeness, and afterthought check-ins (almost none in three days).
 
@@ -229,6 +230,8 @@ a measurement changes one. Patterns across many results are in "What the record 
 | A judge, not a word check, keeps its promises | 32 edge cases: judge 30, word check 13 | `evals/CHANGELOG.md` (2026-11-03) |
 | Reaching out by brainstorm and pick beats one draft | blind 3.57 against 2.00 on a replay of the shadow days, one judge, indicative | `evals/CHANGELOG.md` (2026-11-03) |
 | A name in their message is already on the card | 33 of 35 probe names held by the closeness card, so fetch on mention was removed | `docs/inbox/2026-11-03-promises-and-names-reviews.md` |
+| Its own mark is offered on playful turns only, spaced | a mark ended 55% of replies it was offered on against 3% without; offers fell from 130 to 73 of 406 casual turns replayed | `src/companion/prompts/CHANGELOG.md` (2026-11-05) |
+| A stretched word gets a reply, not only an emoji | the instead judge read "fineee" as an acknowledgement in 12 of 12 replays | `evals/CHANGELOG.md` (2026-11-05) |
 | The canned-reaction judge over-fires | precision 35 to 55% against relabelled answers, not the 88% first measured; live it redrew 1 of 58 turns; redraw against first draw a toss-up (21 to 13 Haiku, 9 to 13 Sonnet) | `evals/CHANGELOG.md` (2026-10-25, 2026-10-31) |
 | A health note makes it point to a doctor | medication fixture 0/20 to 19/20 | `evals/CHANGELOG.md` |
 | A plain note makes it notice the day | Halloween named 0/12 with the date alone, 12/12 with a note; every day 6/6 with the direct wording | `evals/CHANGELOG.md` (2026-10-25) |

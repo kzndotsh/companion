@@ -5,6 +5,9 @@ that would send a message unprompted runs in shadow for now: it drafts and recor
 sent, and sends nothing. `uv run companion initiative` shows what it would have done, and
 `uv run companion shadows` shows when each part is due for review.
 
+Reaching out for its own reasons first brainstorms a few short texts from the moment, the last chat and
+what it knows, and a judge picks one or none (`system/reach-ideas`, `system/reach-pick`).
+
 ## Two ways to bring something up
 
 A plan of theirs that is due can be offered to the talker as a note on a casual turn, so the
@@ -51,7 +54,9 @@ is in `src/companion/features/reach/README.md`.
 "Usual" is learned from when they write, not fixed. From the last two weeks of their messages, code
 works out their pauses between conversations (a new one starts after two hours of quiet), the hours
 they write, and the hours they almost never write. Before there is history it uses a baseline of a
-12-hour pause and waking hours from 9 AM to 10 PM. The baseline gives way to their own numbers as it
+12-hour pause, waking hours from 9 AM to 10 PM and quiet hours from 11 PM to 8 AM. Those night hours
+stay quiet unless they started a conversation in that hour on three days; a chat that began in the
+evening and ran past midnight does not count (`core/rhythm.py`). The baseline gives way to their own numbers as it
 sees more conversations, fully from twenty, so a few odd days early on cannot swing it. Someone who
 works nights gets quiet hours in the day. Missing them never starts before eight hours, whatever the
 data says. The numbers, and how much of them is still the baseline, go with every decision and are
@@ -86,6 +91,8 @@ every reach-out, which since ADR 0023 all ask the same gate (`features/reach/gat
 - never within a day of a turn the crisis path read as a concern or a risk and acted on: the plan,
   nudge and own-reason gates all hold (the crisis pause, `core/crisis.py` `crisis_paused`, ADR 0022). In shadow the crisis
   path only logs, and nothing holds
+- never within 12 hours of a message of theirs the listening read found serious or acute: a light text
+  out of the blue then reads as not having listened (`AFTER_HEAVY` in `features/reach/gate.py`)
 - never counting streaks or optimising how often they write
 
 Since 2026-10-25 every reach-out waits on this one gate (ADR 0023): its own reasons, plan check-ins and
@@ -97,7 +104,8 @@ counted as sent, and not drafted again.
 
 ## Related
 
-The promises the companion makes in its own replies are read in the same batch as open loops, in
+The promises the companion makes in its own replies are read in the same batch as open loops, and each
+reply is checked against the ones in force (the promise check), both in
 shadow (`src/companion/features/promises/README.md`). Reminders, check-ins and greetings they ask for,
 once or repeating ("tell me good morning every day"), are a separate, live feature
 (`src/companion/features/reminders/README.md`), checked every minute rather than on the 15-minute

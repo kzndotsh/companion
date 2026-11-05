@@ -21,7 +21,7 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 **The gate.** When a kind applies, a pure gate (`gate.py`) holds it for the first of these, in order, with a reason written from the numbers:
 
 1. the dial is `off`
-2. a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `reach_held`, ADR 0022; the hold is logged only once `COMPANION_CRISIS` is on, so in shadow it changes nothing)
+2. the crisis pause: a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `crisis_paused`, ADR 0022; the pause is logged only once `COMPANION_CRISIS` is on)
 3. one of their quiet hours (learned)
 4. a pretend scene in progress
 5. a message of theirs read as heavy (listening severity 2 or more) in the last 12 hours (`AFTER_HEAVY`): a light text out of the blue right after a heavy chat reads as not having listened

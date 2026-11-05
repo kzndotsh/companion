@@ -115,8 +115,12 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
   history says to ask none this time but still leave them something to answer.
 - **Keeps a question game going.** When they ask it to keep asking them things ("ask me anything"), a
   note after the history asks it for the next question, outside scenes and serious turns.
-- **Has emoticons of its own.** On casual turns code offers it one of its own marks and kaomoji; when
-  their message has one, the note names that one as theirs, so it stops copying it.
+- **Has emoticons of its own.** On playful casual turns (a laugh, an emoji, a stretched word), now and
+  then, code offers it one of its own marks and kaomoji; when their message has one, the note names that
+  one as theirs, so it stops copying it.
+- **Reacts with an emoji.** A short "ok" can get a reaction instead of a reply, and a warm or funny
+  message now and then gets one beside the reply. A short message with a stretched word ("fineee") or a
+  crisis word always gets a reply (`features/reactions`).
 - **Reacts like a person to small vents.** A short reaction, with varied size examples drawn per turn so
   it does not say the same line every time.
 - **Keeps its promises** (shadow). Promises it makes in its own replies ("i'll stop calling it
@@ -145,8 +149,9 @@ It is reached through Telegram or Discord, one at a time (`COMPANION_PLATFORM`),
   the clock line copied from its own notes, the stock "X, especially when" or "X, even when" line, the stage
   direction "a beat", markdown that shows raw in a chat, and on ordinary turns a joke bolted onto an
   ordinary message or a canned reaction that could sit under any message) is drawn once more, twice
-  if an em dash survives, and so is an empty reply.
-  Nothing is ever edited.
+  if an em dash survives, and so is an empty reply. On a turn the floor holds, a reply that says out
+  loud it is holding back is drawn once more, and kept only if the new one does not and passes the
+  intimate check. All of these run in one order, the reply gate. Nothing is ever edited.
 - **Never goes silent.** If the talker errors, or has not answered in ten seconds, a fallback model
   answers too and the first reply wins.
 - **Judges per model.** The judges share one small model, with a second for calls it refuses; a judge
@@ -247,7 +252,7 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 </details>
 
 <details>
-<summary><b>Behaviour</b> (15): what it does on each turn</summary>
+<summary><b>Behaviour</b> (19): what it does on each turn</summary>
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -261,7 +266,7 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 | `COMPANION_SPLIT` | on | long plain replies are sometimes sent as two or three messages; `off` stops it |
 | `COMPANION_RELEVANCE` | `on` | memories that bear on their message, picked when one is near and shown to it (ADR 0018); `shadow` only logs, `off` stops it |
 | `COMPANION_EPISODES` | `on` | what the two of them did recently, shown when they point at a time or come back after a gap (J12); `shadow` only logs, `off` stops it |
-| `COMPANION_MARKS` | `on` | one of its own emoticons offered after the history on casual turns: always when their message has one, else about one in four; never theirs or a recent one (`features/marks`); `off` stops it |
+| `COMPANION_MARKS` | `on` | one of its own emoticons offered after the history on casual turns: always when their message has one (named as theirs); otherwise only on a playful message (a laugh, an emoji, a stretched word), about half the time, and never while one of its last 3 replies has one; never theirs or a recent one (`features/marks`); `off` stops it |
 | `COMPANION_HEDGED_PLANS` | `loose` | a hedged plan of theirs ("may watch a movie tonight") becomes a note-only loop, asked once when they next write and never a reach-out (`features/threads`); `off` keeps only firm plans |
 | `COMPANION_REMINDERS` | on | reminders and check-ins they ask for, one-off, sent when due (J50); `off` stops reading and sending them |
 | `COMPANION_CALENDAR` | `on` | one note after the history on a casual turn about the day: a US public or cultural day, the lead-up to a big one, or the relationship's month, hundred days or years (`features/calendar`); `off` stops it |
@@ -274,7 +279,7 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 </details>
 
 <details>
-<summary><b>Shadow features</b> (5): what logs before it goes live</summary>
+<summary><b>Reaching out, promises, the re-read and the crisis path</b> (5)</summary>
 
 | Variable | Default | What it does |
 |---|---|---|
@@ -355,6 +360,9 @@ uv run companion approve <id>   # let one of its own views reach the card
 uv run companion lore           # its own tastes (lore); --label labels new views, --relabel all of them
 uv run companion promises       # the promises it made; --not ID if one is not a promise, --retire ID
 uv run companion reminders      # the reminders they asked for and what became of each; --cancel ID
+uv run companion now            # what they said is coming: the labels, what is open, the notes
+uv run companion history        # the stories of its own past and their canon standing
+uv run companion intimate       # the intimate memory lane by stance, and what is kept out
 uv run companion calendar       # the occasions in the next 30 days, lead-ups included, and what was offered lately
 uv run companion retire <id> --reason "..."      # close one memory
 uv run companion merge <id> <id> --claim "..."   # merge memories that say one thing, keeping every quote
@@ -447,10 +455,11 @@ from the logs by value.
 
 | Where | What |
 |---|---|
+| [docs/user/features.md](docs/user/features.md) | every feature in plain words, with its status |
 | [AGENTS.md](AGENTS.md) | the working rules for anyone, human or agent, changing this repo |
-| [docs/dev/turn.md](docs/dev/turn.md), [delivery.md](docs/dev/delivery.md), [initiative.md](docs/dev/initiative.md), [memory.md](docs/dev/memory.md) | how a reply is made, how delivery on Telegram and Discord works, plans and reach-outs, and memory over time |
+| [docs/dev/turn.md](docs/dev/turn.md), [delivery.md](docs/dev/delivery.md), [initiative.md](docs/dev/initiative.md), [memory.md](docs/dev/memory.md), [evals.md](docs/dev/evals.md) | how a reply is made, how delivery on Telegram and Discord works, plans and reach-outs, memory over time, and how we measure |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files, prompts, setting and what was measured |
-| [TODO.md](TODO.md) | the work board and the plan: where we are, measured facts, what comes next |
+| [TODO.md](TODO.md) | the work board and the plan: the live setup, what comes next, the decisions waiting |
 | [docs/adr/](docs/adr) | decisions and their reasons |
 | [docs/inbox/](docs/inbox) | ideas that are not yet tasks |
 | `docs/research/` | audits and studies (local only, not committed) |

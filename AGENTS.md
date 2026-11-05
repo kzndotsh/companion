@@ -14,6 +14,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 | Where | What |
 |---|---|
 | `GLOSSARY.md` | the project's words, one meaning each, with the ones to avoid and the words that mean more than one thing |
+| `docs/user/features.md` | every feature in plain words, with its status: the user's guide |
 | `TODO.md` | the work board and the plan: the live setup in a few lines, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here. It holds no feature descriptions (README), no measured numbers (`docs/dev/evals.md`) and no dated log outside Done |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files and setting: read it before changing the feature |
 | `docs/dev/turn.md`, `docs/dev/delivery.md`, `docs/dev/initiative.md`, `docs/dev/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
@@ -157,7 +158,7 @@ together.
 - Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the three
   allowed fallbacks, no file over 600 lines (a file listed in `CAPS` may be over it and may only shrink;
   none is listed today, and when one shrinks, lower its cap), and no more than 64 `noqa` comments in
-  `src` (today's count; a new one replaces an old one).
+  `src` (the cap; 60 today; a new one replaces an old one).
 - Every feature in shadow has a row in `core/shadows.py` with a review date and what it is judged on
   (`companion shadows` lists them, overdue first); a test fails when a setting defaults to shadow without
   one. At its review it graduates or is removed, and its row goes.
