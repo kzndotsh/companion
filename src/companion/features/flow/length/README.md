@@ -37,7 +37,7 @@ None. `companion replay` shows the note a turn got.
 
 ## Measured
 
-- 2026-10-23, 370 real turns: limits ran 5 to 20 words, but replies sat near 15 to 20 whatever the
+- 2026-10-23, 370 recorded turns: limits ran 5 to 20 words, but replies sat near 15 to 20 whatever the
   limit, and about two thirds went over it (TODO T16).
 
 ## Tests

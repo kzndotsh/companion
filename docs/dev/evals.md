@@ -11,7 +11,7 @@ The bot changes in small steps, and most changes are to what the model reads: a 
 a judge's prompt, where a line sits. A model's reply varies from draw to draw, so one good reply
 proves nothing and one bad reply is not a bug report. The project's rule is **measure before
 switching**, and say what was measured and what is a guess. Most work starts from a `/flag` or a
-`/fav` in real chat, becomes a fixture or a replay that shows the problem happening, and ends with a
+`/fav` in chat, becomes a fixture or a replay that shows the problem happening, and ends with a
 before-and-after number. A change that moves nothing is not shipped. Many entries in the changelog
 are exactly that: a reasonable idea that measured as noise.
 
@@ -27,9 +27,9 @@ They need nothing else, so anyone can run them, and they are committed. Each one
 failure (agreeing with a sweeping claim, copying their emoticon, soothing something they have not
 resolved, a quip bolted onto a vent), written so it is not about any one person. `labels` is the
 listening judge's reading of the last message (severity, stance and flags); every public fixture now
-carries the reading the live judge itself gives it, so a sample is read the way a real turn would be.
+carries the reading the live judge itself gives it, so a sample is read the way the turn itself would be.
 
-**Local fixtures** (`evals/local/`, about 100, git-ignored) point at a real turn in your database by
+**Local fixtures** (`evals/local/`, about 100, git-ignored) point at a recorded turn in your database by
 its id and hold no conversation text. They replay exactly what the bot sent on a turn you flagged, so
 a failure that only happens with your real history (a long chat, a running bit, a particular memory)
 can be checked again. Their ids end in `-local`. Retired ones sit in `evals/local/archive/`, which the
@@ -37,7 +37,7 @@ loader skips. Because they replay your private chat, they are never sent to free
 models, only to the models the bot already uses.
 
 **Why both.** A scripted fixture can pass where the real turn fails: one "no bold markdown" script
-passed 12/12 while the same failure happened 16/16 on the real turn with its long history. And a real
+passed 12/12 while the same failure happened 16/16 on the recorded turn with its long history. And a recorded
 turn can mislead the other way: replaying real scenes flattered whichever model had written the
 earlier replies in that history. So a real failure is kept as a local fixture, and where possible a
 general script is written too, so the finding can be rerun by anyone.
@@ -90,15 +90,15 @@ good, suspect the grader before the talker.
 
 The runner covers whole replies to fixtures. Most of this week's work used four other methods.
 
-**Replaying real turns with one thing changed.** A short script in the session scratchpad rebuilds a
+**Replaying recorded turns with one thing changed.** A short script in the session scratchpad rebuilds a
 flagged turn's exact request (`store/sqlite/replay.py` `replay_file`), changes one thing (a note, the
 card, a reminder's wording, the talker), and draws 12 to 30 replies each way. It counts what matters
 by code (does the reply ask a question, name Halloween, copy their ":3", say the meal they named), or
-hands the pairs to blind judges. This is how most of this week's notes were decided: the
+hands the pairs to blind reviewers. This is how most of this week's notes were decided: the
 question-game note (0/12 to 12/12 asking the next question), today's memories first on the card
 (0/12 to 12/12 naming the meal), the emoticon note (14/40 to 4/40 copying theirs).
 
-**Counting over the ledger.** Many questions are about rates in real chat, answered by a read-only
+**Counting over the ledger.** Many questions are about rates in recorded chat, answered by a read-only
 script over the database: how often a reply comes after three questions in a row (11%), how often a
 word runs through an evening's replies, how often the canned-reaction redraw fired live (1 in 58).
 These set thresholds from your own data instead of a guess.
@@ -111,20 +111,20 @@ Haiku, GPT-6 Luna and DeepSeek on every graded judge. Turn the fallback model of
 models, or a refusal hides behind the fallback's answer.
 
 **Shadow logs.** A feature in shadow records what it would have done (AGENTS.md lists them); its
-review reads those decisions against real chat before it goes live.
+review reads those decisions against recorded chat before it goes live.
 
 ## Judging with Claude subagents
 
 For questions a code count cannot answer (which reply would a friend rather get, is this draft needy,
-did it escalate past what they said), replies are judged blind by Claude subagents. This costs
+did it escalate past what they said), replies are read blind by Claude subagents, the reviewers. This costs
 nothing on the OpenRouter account, and the subagents are different models from the talker under test.
 
 The method:
 
 1. Draw the two arms (say, with and without a note) on the same turns.
 2. Write a blind file: each item has the context, their message, and the two replies as A and B in a
-   random order, with a separate key file saying which is which. The judges never see the key.
-3. Brief each judge with the criterion in plain words, what counts and what does not, and the output
+   random order, with a separate key file saying which is which. The reviewers never see the key.
+3. Brief each reviewer with the criterion in plain words, what counts and what does not, and the output
    format, and give it the project's rules (read-only, no filesystem-wide searches).
 4. Use at least two different models (Haiku and Sonnet, sometimes Opus), so one model's taste does not
    decide.
@@ -202,7 +202,7 @@ checks. Each became a refusal or a shared code path, not a reminder. Two records
 the fact (which prompt a run used, a count of fixture labels): write the exact command and
 configuration into the entry when the run is made.
 
-**Graders can reward the bug.** Fixture judges rewarded the word "heavy" that the serious note had
+**Graders can reward the bug.** Fixture graders rewarded the word "heavy" that the serious note had
 handed the model, the empathy grader failed a good question on every model, and the canned-reaction
 labels were half too loose. When a score rises, read whether the replies got better or just matched
 the grader.
@@ -217,7 +217,7 @@ a measurement changes one. Patterns across many results are in "What the record 
 |---|---|---|
 | Luna leads everyday chat | 59/64 on the public fixtures, DeepSeek 49/64 | `src/companion/prompts/CHANGELOG.md` |
 | DeepSeek keeps a scene going | 76% of escalating turns, Luna 52% | `src/companion/prompts/CHANGELOG.md` |
-| Pretend scenes stay with the roleplay talker | the everyday talker preferred 13/56 and 11/56 by blind judges, stepped out of the scene in about 17 | `evals/CHANGELOG.md` (2026-10-24) |
+| Pretend scenes stay with the roleplay talker | the everyday talker preferred 13/56 and 11/56 by blind reviewers, stepped out of the scene in about 17 | `evals/CHANGELOG.md` (2026-10-24) |
 | Warm turns stay on Luna | DeepSeek 73/96 against Luna 90/96 on warm public fixtures | `evals/CHANGELOG.md` (2026-10-23) |
 | The scene reminder caused the escalation | went past their level 19/30 with the old reminder, 6/30 with "only as far as they take it" | `evals/CHANGELOG.md` (2026-10-24) |
 | Notes in the user's message leak into replies | 7 to 8 of 48, now 1 of 48 in the system block | `src/companion/prompts/CHANGELOG.md`, assembly |
@@ -225,10 +225,10 @@ a measurement changes one. Patterns across many results are in "What the record 
 | Diagnosing a small mishap (v25 made it worse than v22) | pancakes fixture 9/30, v26 30/30 | `evals/CHANGELOG.md` |
 | The listening judge labels severity correctly | 59 of 60, and no serious message read as trivial | `evals/CHANGELOG.md` |
 | Haiku stays the judge model | bake-off across Haiku, Luna and DeepSeek on every graded judge: most gaps within noise; Luna and DeepSeek broke memory rules, Haiku's provider refused 7 crisis reads | `evals/CHANGELOG.md` (2026-10-25) |
-| The crisis risk judge tells a risk from a joke | 40 public cases: no genuine risk missed, no joke raised; 39 of 40 exact after the level fix, 38 of 40 after the 2026-11-04 fixes; in 370 real turns the real risk read right, four concern turns too high | `evals/CHANGELOG.md` (2026-10-25, 2026-11-04) |
+| The crisis risk judge tells a risk from a joke | 40 public cases: no genuine risk missed, no joke raised; 39 of 40 exact after the level fix, 38 of 40 after the 2026-11-04 fixes; in 370 recorded turns the genuine risk read right, four concern turns too high | `evals/CHANGELOG.md` (2026-10-25, 2026-11-04) |
 | Asking and naming the line once per hard stretch | a later turn with the stay note 12/12 against 0/12 with the concern note sent again | `evals/CHANGELOG.md` (2026-11-04) |
 | A judge, not a word check, keeps its promises | 32 edge cases: judge 30, word check 13 | `evals/CHANGELOG.md` (2026-11-03) |
-| Reaching out by brainstorm and pick beats one draft | blind 3.57 against 2.00 on a replay of the shadow days, one judge, indicative | `evals/CHANGELOG.md` (2026-11-03) |
+| Reaching out by brainstorm and pick beats one draft | blind 3.57 against 2.00 on a replay of the shadow days, one reviewer, indicative | `evals/CHANGELOG.md` (2026-11-03) |
 | A name in their message is already on the card | 33 of 35 probe names held by the closeness card, so fetch on mention was removed | [issue #36](https://github.com/kzndotsh/companion/issues/36) |
 | Its own mark is offered on playful turns only, spaced | a mark ended 55% of replies it was offered on against 3% without; offers fell from 130 to 73 of 406 casual turns replayed | `src/companion/prompts/CHANGELOG.md` (2026-11-05) |
 | A stretched word gets a reply, not only an emoji | the instead judge read "fineee" as an acknowledgement in 12 of 12 replays | `evals/CHANGELOG.md` (2026-11-05) |
@@ -236,10 +236,10 @@ a measurement changes one. Patterns across many results are in "What the record 
 | A health note makes it point to a doctor | medication fixture 0/20 to 19/20 | `evals/CHANGELOG.md` |
 | A plain note makes it notice the day | Halloween named 0/12 with the date alone, 12/12 with a note; every day 6/6 with the direct wording | `evals/CHANGELOG.md` (2026-10-25) |
 | What they said today comes first on the card | a meal named three hours earlier: forgotten 12/12 to named 12/12 | `evals/CHANGELOG.md` (2026-10-25) |
-| A card ranked by the moment beats one ranked by kind | 131 to 8 (11 ties) on 150 audited turns, blind judges on the lists | `evals/CHANGELOG.md` (2026-11-02) |
+| A card ranked by the moment beats one ranked by kind | 131 to 8 (11 ties) on 150 audited turns, blind reviewers on the lists | `evals/CHANGELOG.md` (2026-11-02) |
 | The ack judge needs 8 messages of context | a curt thanks after a hurt: emoji only 12/12 with 4, a reply 11/12 with 8 | `evals/CHANGELOG.md` (2026-11-02) |
 | Notes after the history steer a run of questions | question-run: 14/30 to 0/30, judged no worse; question-game: 12/12 against 0 and 2 of 12 | `evals/CHANGELOG.md` (2026-10-24, 25) |
-| Naming their emoticon as theirs stops most copying | 14/40 to 4/40 on 20 real turns | `evals/CHANGELOG.md` (2026-10-24) |
+| Naming their emoticon as theirs stops most copying | 14/40 to 4/40 on 20 recorded turns | `evals/CHANGELOG.md` (2026-10-24) |
 | Cheesy quips on a real flagged turn were not copied from the history | shorter history did not help; a per-turn note took it from 16/30 to 29/30 | `evals/CHANGELOG.md` |
 | A shorter history window loses what is beyond it | 12/12 in view, 0/12 out; the card updates only after 90 s quiet | `evals/CHANGELOG.md` |
 | Placement and dividers do not fix a running bit | habit note after the history 20/64 against 19/64; dividers after a pause 4/30 against 1/30 | `evals/CHANGELOG.md` (2026-10-24, 25) |
@@ -313,7 +313,7 @@ committed.
 | Where | What |
 |---|---|
 | `evals/fixtures/` | the public scripted fixtures, and `crisis/` |
-| `evals/local/` | fixtures that replay your real turns (git-ignored) |
+| `evals/local/` | fixtures that replay your recorded turns (git-ignored) |
 | `evals/results/` | every reply and verdict of a run (git-ignored) |
 | `evals/CHANGELOG.md` | every measurement, newest last |
 | `evals/README.md` | the runner's reference: switches, checks, statistics |

@@ -6,7 +6,7 @@ A score for whether a reply brought up a memory on its own, and whether that lan
 
 ## How it works
 
-Users value the companion bringing up something minor from days ago, unprompted, correctly and at a fitting moment. A wrong callback hurts more than a missed one, so the report puts precision first. Word overlap cannot find callbacks (on 570 real turns it found 6, all false matches), so a judge reads each reply.
+Users value the companion bringing up something minor from days ago, unprompted, correctly and at a fitting moment. A wrong callback hurts more than a missed one, so the report puts precision first. Word overlap cannot find callbacks (on 570 recorded turns it found 6, all false matches), so a judge reads each reply.
 
 The command looks at turns since a start time (`--days`, default 7) that have a stored card and a reply and no verdict yet. For each, oldest first, it takes the memories the card held (`core/card.py` `memories_from_card`) and labels them `m1`, `m2` and so on. A turn whose card has no memories is skipped. The judge is given the last 7 stored messages up to and including theirs, the labelled memories and the reply.
 
@@ -35,7 +35,7 @@ The report shows replies checked, callbacks found, and how many landed, were wro
 
 ## Measured
 
-- 2026-10-18: first reading on 338 real replies for $0.05. Judge v1 found 6 callbacks. By eye 2 were genuine and landed, 1 wrong and 1 forced, and 2 loose links counted as landed, so v2 requires a specific detail. Fixture traps 12/12 each. A clear opening was taken 4/20 (`evals/CHANGELOG.md`).
+- 2026-10-18: first reading on 338 recorded replies for $0.05. Judge v1 found 6 callbacks. By eye 2 were genuine and landed, 1 wrong and 1 forced, and 2 loose links counted as landed, so v2 requires a specific detail. Fixture traps 12/12 each. A clear opening was taken 4/20 (`evals/CHANGELOG.md`).
 
 ## Tests
 

@@ -83,7 +83,7 @@ only three reads all saying it is a joke, a lyric, a scene or a what-if stand do
   light check after the history at most once a day (`notes/crisis-light`).
 - **Concern** (a literal risk with no plan or means and nothing taken, having the thoughts now
   included, or every read failed on a cue word or an acute read): `notes/crisis-concern` after the
-  history, no length cap, and the turn is not casual. A later concern turn of the same stretch (under
+  history, no length limit, and the turn is not casual. A later concern turn of the same stretch (under
   two hours since the last risk turn) gets `notes/crisis-stay` instead, so the direct question and the
   line come once. Every read failing on a serious read alone is none with one light check.
 - **Urgent** (a plan or a means or something taken, unless it is all in the past, or self-harm

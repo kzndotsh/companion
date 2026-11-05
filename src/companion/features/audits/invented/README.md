@@ -13,7 +13,7 @@ Measures how often a reply states something about the person that neither the co
 - A failed call skips the turn and it is left for next time. The run checks the spend before each turn and stops at the cap with a log line. Spend is tagged `invented`.
 - Each verdict is stored once per turn in `invented_checks`, with the judge's model and the prompt as `name@version`, append-only.
 
-**The rate.** `report` in `logic.py` prints how many replies were checked, how many said something about them, and how many have a statement with support `none`, plus up to 8 examples. These are candidates, not the rate: on real replies the cheap judge was right about one time in twelve, since most flags were questions, reactions, compliments or the companion's own wishes. The rate is what a stronger reader confirms from `--dump`, which writes each flagged reply with the messages before it, its card and the quotes. That review is a Claude judge run by hand, not code.
+**The rate.** `report` in `logic.py` prints how many replies were checked, how many said something about them, and how many have a statement with support `none`, plus up to 8 examples. These are candidates, not the rate: on recorded replies the cheap judge was right about one time in twelve, since most flags were questions, reactions, compliments or the companion's own wishes. The rate is what a stronger reader confirms from `--dump`, which writes each flagged reply with the messages before it, its card and the quotes. That review is a Claude judge run by hand, not code.
 
 ## Files
 

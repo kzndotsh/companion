@@ -153,11 +153,11 @@ The rhythm of the chat: when to move on from a topic, how long to answer, and wh
 ## Judging
 
 **Judge**:
-A small model asked one narrow question about some text, whose answer is logged with its prompt's name and version. A judge never writes the reply.
-_Avoid_: classifier, reader
+A small model in the running companion asked one narrow question about some text, whose answer is logged with its prompt's name and version. A judge never writes the reply.
+_Avoid_: classifier, reader; grader (an eval's scorer); reviewer (a Claude check run by hand)
 
 **Read**:
-One answer from a judge, with its model and cost, or nothing when it failed.
+One answer from a judge, with its model and cost, or nothing when it failed. The listening read is one; three reads are three answers to the same question.
 _Avoid_: reading, verdict
 
 **Three reads**:
@@ -185,6 +185,7 @@ How much typed energy a message has (stretched words, exclamation marks, emoji),
 
 **Severity**:
 How serious a message is, in four levels (0 to 3): trivial, everyday, serious, acute.
+_Avoid_: sensitivity (a memory's scale), crisis level (the crisis path's)
 
 **Reply gate**:
 The ordered checks a drafted reply passes before it goes out; the first that fails is the logged reason, and a failed check has the reply drawn again.
@@ -352,7 +353,8 @@ Whether a memory is fresh, aging or stale, from the age of its newest quote.
 A memory past its freshness, shown as possibly out of date and kept.
 
 **Sensitivity**:
-How delicate a memory is, in four levels (0 to 3): ordinary, private, delicate, grave. A sensitive memory is held.
+How delicate a memory is, in four levels (0 to 3): ordinary, private, delicate, grave. A delicate or grave memory is guarded.
+_Avoid_: severity (a message's scale)
 
 **Guarded memory**:
 A delicate or grave memory the companion knows but raises only when they are sharing something themselves.
@@ -712,7 +714,8 @@ The owner marking a reply they loved.
 _Avoid_: fav (except as the command), favourite
 
 **Spend cap**:
-A dollar limit: per day for the running companion, or per run for an eval.
+A dollar limit: per day for the running companion, or per run for an eval. A cap is always money.
+_Avoid_: cap for a count of something (one mention a day, a file's lines); that is a limit
 
 **Spend tag**:
 The purpose each paid model call is counted under.
@@ -730,10 +733,22 @@ _Avoid_: snapshot
 One shipped text of a prompt, never edited after it ships; a change is the next version.
 
 **Eval**:
-A run of fixtures under variants, with replies scored and a spend cap stated first.
+A run of fixtures under variants, with replies scored by a grader and a spend cap stated first.
+
+**Grader**:
+The model an eval scores a reply with, against one written criterion (a fixture's `judge` check, `system/judge`).
+_Avoid_: judge (the running companion's)
+
+**Reviewer**:
+A Claude model run by hand to read replies blind, or to confirm a candidate an audit found.
+_Avoid_: judge
+
+**Recorded**:
+Taken from the chat as it happened (a recorded turn, recorded chat), as opposed to an invented script.
+_Avoid_: real (that is the frame)
 
 **Fixture**:
-One eval case: an invented script, or a recorded real turn kept private.
+One eval case: an invented script, or a recorded turn kept private.
 
 **Script fixture**:
 An invented short conversation anyone can run, kept public.
@@ -774,7 +789,7 @@ Opt-in tests that call real models to check a judge on written examples.
 A difference the statistics cannot tell from chance, so not a finding.
 
 **Replay**:
-Rebuilding a recorded turn's exact request, to look at it or draw from it again.
+Rebuilding a recorded turn's exact request, to look at it or draw from it again: once with the `replay` command, many times in an eval.
 
 **Chaos test**:
 Whole turns run against judges that fail, stall or answer junk, which must still end cleanly.
@@ -807,19 +822,11 @@ These words are used in more than one sense across the repo. Say which one you m
 - **Card**: the memory card, the roleplay card, or (in older docs) a board card, now an issue.
 - **History**: the chat window the talker reads, or the companion's own history.
 - **Held / hold**: a held turn (the floor's word), a reach-out the gate held (to become deferred at the reach review), or the owner's "hold" meaning do nothing yet.
-- **Severity, sensitivity, crisis level**: three separate scales. Severity is a message's seriousness, sensitivity a memory's, and crisis level what the crisis path decided.
-- **Judge**: a judge in the running companion, a grader in evals, or a Claude reviewer run by hand.
-- **Read**: a judge's answer, the listening read, or three reads.
-- **Reaction**: an emoji instead of a reply, or an emoji alongside one.
 - **Stance**: what they are doing in a message (listening read), a kind of view, or an intimate memory's stance.
 - **Thread**: a memory kind, or something the companion may bring up.
 - **Promise**: a memory kind, or the companion's own promise.
 - **Loop**: an old name for a thread, or for the memory pass ("slow loop") and the reply path ("fast loop"), or a timer tick.
-- **Mode**: the /mode command, or the views setting (Views mode). A setting's value is its position.
 - **Pace**: the typing pause before a reply, or the learned wait between threads.
-- **Cap**: the daily spend cap, an eval's spend cap, or a limit on how many of something a day.
-- **Replay**: rebuilding one turn, or rerunning recorded turns in an eval.
-- **Real**: the real frame, or real chat as opposed to invented fixtures.
 - **Now**: the present moment, or the Now feature for what is coming.
 - **Kind**: a memory kind, a thread kind, a view kind, a reminder kind or a flag kind. Name which.
 - **State**: a memory kind (a passing state of theirs), a thread's state, a mood state, or a reminder series' state.

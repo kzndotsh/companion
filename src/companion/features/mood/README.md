@@ -8,9 +8,9 @@ A mood that carries across hours and into the next day: cozy, tender or playful.
 
 **Effects, not a stored mood.** Each message of theirs can add effects to one state each. An effect has an amount, a half-life and a time, and is kept in an append-only table (`mood_effects`, written with the version of the numbers, `PARAMS_VERSION`). The mood is worked out from the effects when it is read, never stored, so it fades with nothing running, survives a restart and replays exactly. Only what they did can move it. There is no source for silence, a goodbye, a gap, a failed call, an undelivered reply or the spend cap. No model writes a number.
 
-**What adds what.** Each source has a state, a half-life and a cap:
+**What adds what.** Each source has a state, a half-life and the most it can add:
 
-| Source | State | Half-life | Cap | What triggers it |
+| Source | State | Half-life | At most | What triggers it |
 |---|---|---|---|---|
 | `chat_span` | cozy | 4 h | 0.5 | 15 minutes or more chatted today (amount is minutes / 120) |
 | `long_chat` | cozy | 24 h | 0.15 | an hour or more chatted today, a little warmth into the next day |

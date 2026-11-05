@@ -22,7 +22,7 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
   - a `turn`: an id of a turn in your local database, replayed exactly. These hold only an opaque id
     and a generic description, never the conversation, and need your database. They live in
     `evals/local/`, which is **gitignored**, and are for private regression checks on your own
-    real conversations. Their ids end in `-local` so the two sets never mix up in a table.
+    recorded conversations. Their ids end in `-local` so the two sets never mix up in a table.
 - **A sample is what the person would receive**, made by the turn's own code (`evals/sample.py`). A
   script's history is stored in a throwaway conversation, a minute apart, and the turn's own notes
   are chosen for that moment (`turn/notes.py`) and laid out as a live request (`Layout` in
@@ -60,7 +60,7 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
   first user message) and adds a hidden coding-assistant prompt, so it is a rough second opinion, never
   a measurement of the live talker. `@<model>:free` uses OpenRouter's free models (20 a minute, 1,000 a
   day on this account; some are blocked by the account's privacy guardrail). Either kind runs one call
-  at a time. Public fixtures only: real turns are not sent to these providers. Judging stays on the
+  at a time. Public fixtures only: recorded turns are not sent to these providers. Judging stays on the
   usual paid judge. Details, which models work and what the gateway changes: `evals/free-models.md`.
 - Checks are either deterministic (`max_words`, `regex`, `not_regex`) or model-graded. `judge` answers
   `pass`, `fail` or `unclear` for one criterion; `epitome` scores a reply 0 to 2 on reaction,
@@ -93,7 +93,7 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
 - Three samples per cell is a smoke test, not evidence. Differences of one or two samples between
   variants are noise. Do not act on fewer than about 12 samples per cell, and use 30 on a signal
   that matters.
-- The judge is a model (Haiku, `JUDGE_MODEL` in `cli/eval.py`; `system/judge` and
+- The grader is a model (Haiku, `JUDGE_MODEL` in `cli/eval.py`; `system/judge` and
   `system/judge-empathy`) and can be wrong. On the first run it agreed with a human reading on 23 of
   24 judged replies. Read the replies (`--show`) for anything that decides a change.
 - Fixtures marked as measuring "the talker alone" test the model without the live loop's other
@@ -130,7 +130,7 @@ error that names the closest id.
 
 
 For a general failure class, write a script in `evals/fixtures/` with an invented conversation. To
-capture something from real use, flag the turn with `/flag`, find its id (`uv run companion flags`),
+capture something from your own chat, flag the turn with `/flag`, find its id (`uv run companion flags`),
 and add a JSON file in `evals/local/`. Prefer writing the script version too, so the finding is
 reproducible by others. Write the
 criterion so that a stranger could grade a reply from it alone.

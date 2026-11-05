@@ -2,7 +2,7 @@
 
 What they said is coming, kept until it happens. When they say dinner is coming soon and keep chatting, the reply should not ask how the food tasted two minutes later. The talker cannot tell from the history which announced thing has happened, so code keeps that state and tells it.
 
-**Status:** shadow (review by 2026-11-08, judged on labels that read right on real messages and notes that would have stopped a time skip). Switch: `COMPANION_NOW` (`shadow` default, `on`, `off`). The reader also runs while reaching out is on, because nudges read its labels.
+**Status:** shadow (review by 2026-11-08, judged on labels that read right on recorded messages and notes that would have stopped a time skip). Switch: `COMPANION_NOW` (`shadow` default, `on`, `off`). The reader also runs while reaching out is on, because nudges read its labels.
 
 ## How it works
 

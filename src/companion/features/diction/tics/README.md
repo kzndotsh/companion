@@ -40,7 +40,7 @@ None.
 
 - 2026-10-17: a check reading only its own replies could not have fired on restating, which was rare (5 of 71 replies) (`evals/CHANGELOG.md`).
 - 2026-10-24: moving the habit note after the history made no difference to a running bit (extends 19/64 in the block, 20/64 after, p = 0.85). Not shipped (`evals/CHANGELOG.md`).
-- 2026-10-25: a code count of single pet words (a flagged word ran through 7 of 38 replies), tuned on 301 real turns since 2026-10-20 to name a word on about one casual turn in five (at first one in two, mostly scene and topic words). Its effect on replies is not measured (`evals/CHANGELOG.md`).
+- 2026-10-25: a code count of single pet words (a flagged word ran through 7 of 38 replies), tuned on 301 recorded turns since 2026-10-20 to name a word on about one casual turn in five (at first one in two, mostly scene and topic words). Its effect on replies is not measured (`evals/CHANGELOG.md`).
 
 ## Tests
 

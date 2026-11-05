@@ -449,7 +449,7 @@ start and once a day. Every prompt, and how a request is put together, is in
 Everything private lives in `data/`, which is never committed: the database (every message, memory,
 flag and decision), the logs, private character sheets and the backups. Snapshots are taken at every
 start and once a day; the newest 7 daily and 7 others are kept, and each is checked before it counts.
-Real turns used as test fixtures live in `evals/local/`, also never committed. Secrets are scrubbed
+Recorded turns used as test fixtures live in `evals/local/`, also never committed. Secrets are scrubbed
 from the logs by value.
 
 ## Where to read more

@@ -22,7 +22,7 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
 | `src/companion/prompts/` | every prompt the bot sends, as versioned text: `system/` (the persona and the judges' prompts), `notes/` (lines added to the talker's system block each turn), `messages/`. `README.md` lists them, `manifest.toml` says which version is current |
 | `src/companion/prompts/CHANGELOG.md` | every version of every prompt and every change to how a request is assembled, with the reason |
-| `docs/dev/evals.md` | how we measure: fixtures, samples, variants, replays, blind Claude judges, costs, reading a result; what the record shows, and the numbers behind today's choices (add a row when a measurement changes one) |
+| `docs/dev/evals.md` | how we measure: fixtures, samples, variants, replays, blind Claude reviewers, costs, reading a result; what the record shows, and the numbers behind today's choices (add a row when a measurement changes one) |
 | `evals/README.md`, `evals/CHANGELOG.md` | how the eval runner works, and what it has measured |
 | `evals/fixtures/` | public scripted fixtures. `evals/local/` is private, not committed |
 
@@ -40,7 +40,7 @@ uv run companion memory review | group   # questions for the owner (conflicts, n
 uv run companion promises | lore | history   # shadow lists, its own tastes and its own past
 uv run companion retire ID --reason "..." | merge ID ID --claim "..."   # close one memory, or merge by hand
 uv run companion reminders [--cancel ID]   # the reminders they asked for and what became of each
-uv run companion audit callbacks | invented --days 7 --cap 0.2 --dump F.json   # callbacks to memories; made-up facts candidates, confirm with a Claude judge
+uv run companion audit callbacks | invented --days 7 --cap 0.2 --dump F.json   # callbacks to memories; made-up facts candidates, confirm with a Claude reviewer
 uv run companion replay <turn_id> [--show-prompt]   # rebuild a turn; --show-prompt prints everything it sent
 uv run companion eval --variants v41.md@openai/gpt-6-luna --samples 12 --cap 0.2
 ```
@@ -114,11 +114,11 @@ together.
 - A prompt change, or a code change that alters what the model is sent, goes in
   `src/companion/prompts/CHANGELOG.md`. Shipping a persona is changing `system/persona` in
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
-- Persona text and public fixtures are general. Nothing in them is about one person. Real turns
+- Persona text and public fixtures are general. Nothing in them is about one person. Recorded turns
   live in `evals/local/`. Issues and docs stay generic and self-contained: issues are public.
 - A line for the system block is a note source, named in `ORDER` in `turn/notes.py` in the order it is sent:
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
-  use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in
+  use up a limit or mark a plan asked, which run only once the turn is stored. Add a note there, not in
   `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. A note
   that asks them something says so on its offer (`Offer(asks=True)`, read by `asking` in
   `kit/features.py`), so the question-run note and the calendar stay out that turn. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
@@ -160,8 +160,8 @@ together.
   match by how their reason begins.
 - Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the three
   allowed fallbacks, no file over 600 lines (a file listed in `CAPS` may be over it and may only shrink;
-  none is listed today, and when one shrinks, lower its cap), and no more than 64 `noqa` comments in
-  `src` (the cap; 60 today; a new one replaces an old one).
+  none is listed today, and when one shrinks, lower its limit), and no more than 64 `noqa` comments in
+  `src` (the limit; 60 today; a new one replaces an old one).
 - Every feature in shadow has a row in `core/shadows.py` with a review date and what it is judged on
   (`companion shadows` lists them, overdue first); a test fails when a setting defaults to shadow without
   one. At its review it graduates or is removed, and its row goes.
@@ -177,12 +177,12 @@ together.
   experiments to cents.
 - Do not act on fewer than about 12 samples per cell, and use 30 on a signal that matters. Two
   five-sample gaps in a row were noise. Say when a difference is within noise.
-- A scripted fixture can pass where the real turn fails. Keep the real turn as a local fixture.
+- A scripted fixture can pass where the recorded turn fails. Keep the recorded turn as a local fixture.
 - A flag can be a rare draw. Replay the flagged turn 12 to 30 times and count before building a fix.
 - Never quote a line you want in a prompt or note: the model copies it. Describe the behaviour. A
   note that only says "don't" seldom works; name the thing and give another way. The record behind
   these is "What the record shows" in `docs/dev/evals.md`.
-- A judge is a model: check a few of its verdicts by eye. Use a different model from the one under
+- A judge or a grader is a model: check a few of its verdicts by eye. Use a different model from the one under
   test where you can.
 - Scratch scripts for one-off experiments go in the session scratchpad, not the repo. Write the
   result and how to rerun it in `evals/CHANGELOG.md`.
