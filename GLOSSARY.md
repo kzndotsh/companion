@@ -183,8 +183,14 @@ How much typed energy a message has (stretched words, exclamation marks, emoji),
 **Severity**:
 How serious a message is, in four levels (0 to 3): trivial, everyday, serious, acute.
 
+**Reply gate**:
+The ordered checks a drafted reply passes before it goes out; the first that fails is the logged reason, and a failed check has the reply drawn again.
+
+**Check**:
+One question inside a gate, answered by code or by a judge. The floor is not a check: it is only the fixed rule no setting moves.
+
 **Reply check**:
-A check on a drafted reply before it goes out, in code or by a judge.
+A check in the reply gate, on a drafted reply before it goes out, in code or by a judge.
 _Avoid_: recheck
 
 **Redraw**:

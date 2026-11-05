@@ -6,7 +6,7 @@ conversation, the turn's notes are chosen for that moment (`turn/notes.py`) and 
 out by `Layout` (`turn/assemble.py`). The fixture gives the readings a judge would (`labels`,
 `lore`); every other judge fails and every other look-up finds nothing, which the turn reads as no
 note. A recorded turn replays the request it logged. Either way the reply then passes the turn's
-reply checks and their redraws (`turn/talk.py`), with the quip judge asked for real, unless the
+reply checks and their redraws (`turn/gate.py`), with the quip judge asked for real, unless the
 variant is raw.
 """
 
@@ -49,8 +49,8 @@ from companion.kit.record import Recorder
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.assemble import Layout
+from companion.turn.gate import checked
 from companion.turn.notes import Notes, notes_for
-from companion.turn.talk import checked
 
 REL = RelationshipId("eval")
 SESSION = SessionId("eval")

@@ -1,20 +1,33 @@
-"""Draw one fresh reply when the first fails a check (J45, J47).
+"""The reply gate: the checks a reply passes before it is sent, in the pure part (J45, J47).
 
-Some habits do not move with wording: a joke bolted onto an ordinary message (about 45% on real
-flagged turns whatever the persona says) and an em dash the persona forbids. So after the reply is
-written, cheap checks read it, and when one fails code asks the same model once more and sends the
-second reply whatever it is. Nothing is edited: code only chooses which whole reply goes out
-("never rewrite what the model said"), and the discarded one is kept in the decision detail.
+A gate is the ordered checks at one door, and the first that fails is the logged reason. The order
+and the effects (asking the quip judge, drawing again, logging) are in `turn/gate.py`; this module
+holds what each check is. Some habits do not move with wording: a joke bolted onto an ordinary
+message (about 45% on real flagged turns whatever the persona says) and an em dash the persona
+forbids. So after the reply is written, cheap checks read it, and when one fails code asks the same
+model once more and sends the second reply whatever it is. Nothing is edited: code only chooses
+which whole reply goes out ("never rewrite what the model said"), and the discarded one is kept in
+the decision detail.
 
 Ordinary turns get every check. A serious turn and a scene get only the code checks: the joke judge
 is for ordinary chat, while an em dash or a stock line is as wrong in a hard moment as a light one.
+On a turn the floor held, the reply must also not read as intimate (the intimate check, in
+`core/turn/floor.py`) and must not announce the hold (`announces_limit`, here).
+
+The quip judge reads whether a reply bolted a joke onto its reaction, or leans on a canned generic
+reaction ("that sounds so good", "X is always the best part"): about one reply in six had such a
+line, and on 200 hand-labelled replies the judge was right 88% of the times it said so (2026-10-24,
+`evals/CHANGELOG.md`). A small model labels the reply, and code decides to draw one fresh reply
+instead (ADR 0014).
 """
 
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 
-from companion.core.types import Severity
+from companion.core.types import Json, Severity
+from companion.prompts import get
 
 EM_DASH = "—"
 DASHED = "an em dash"  # the reason a reply with one fails
@@ -92,3 +105,50 @@ def code_checks(reply: str, said: str = "", *, scene: bool = False) -> list[str]
     if not scene and _MARKDOWN.search(reply):
         failed.append(MARKDOWN)
     return failed
+
+
+# The quip judge (`system/quip`).
+
+QUIP_PROMPT = get("system/quip")
+
+QUIP_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"added_joke": {"type": "boolean"}, "generic": {"type": "boolean"}},
+    "required": ["added_joke", "generic"],
+}
+
+
+@dataclass(frozen=True, slots=True)
+class QuipVerdict:
+    joke: bool  # a joke bolted onto an ordinary message
+    generic: bool  # a canned reaction that could sit under many messages
+
+
+def quip_prompt(their_text: str, reply: str) -> str:
+    return f"USER: {their_text}\nCOMPANION: {reply}"
+
+
+def parse_quip(data: Json) -> QuipVerdict | None:
+    if not isinstance(data, dict):
+        return None
+    joke, generic = data.get("added_joke"), data.get("generic")
+    if not isinstance(joke, bool) or not isinstance(generic, bool):
+        return None
+    return QuipVerdict(joke, generic)
+
+
+# A reply on a held turn that says it is holding back: the hold note asks it never to, and on six
+# held turns it still did in 9 of 36 draws, and rewording the note did not help (2026-11-05). Clear
+# announcements only; a soft steer ("let's keep it gentle") is what a person might say too.
+_ANNOUNCES = re.compile(
+    r"\bnot real\b|\bpretend\b|\bnon-?sexual\b"
+    r"|\b(?:can'?t|won'?t|cannot) (?:keep )?(?:doing|going|do)\b"
+    r"|\bexplicit version\b|\btoo far\b|\bboundar(?:y|ies)\b|\blimits?\b"
+    r"|\bkeep (?:it|this|things) (?:pg|clean|innocent)\b",
+    re.IGNORECASE,
+)
+
+
+def announces_limit(text: str) -> bool:
+    """Whether a reply on a held turn says out loud that it is holding back."""
+    return _ANNOUNCES.search(text) is not None

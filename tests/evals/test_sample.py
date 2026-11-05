@@ -11,7 +11,7 @@ import pytest
 
 from companion.core.extractor import Extraction
 from companion.core.prompt.request import Message, TalkerRequest
-from companion.core.recheck import DASHED, QUIP
+from companion.core.reply_gate import DASHED, QUIP
 from companion.core.talker import Reply
 from companion.core.turn.ownup import NOTE as OWNED_NOTE
 from companion.core.turn.questions import NOTE as QUESTION_NOTE

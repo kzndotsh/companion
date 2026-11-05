@@ -122,7 +122,7 @@ together.
 - A turn runs in stages, one module each: `turn/listen.py` (a reaction instead of a reply, the listening
   read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the
   request), `turn/crisis.py` (a risk read sets a scene aside and adds the fixed crisis-line message),
-  `turn/talk.py` (the talker and the reply checks), `turn/beside.py` (shadow tasks) and
+  `turn/talk.py` (the talker), `turn/gate.py` (the reply gate: the checks before a reply is sent, their order and redraws; the checks themselves are in `core/reply_gate.py`), `turn/beside.py` (shadow tasks) and
   `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(runtime, ...)`;
   the `Runtime` it runs with is plain data in `kit/runtime.py`): change a stage in its module.
 - A feature declares its parts as a `Feature` in its own module (`kit/features.py`): a look-up before the

@@ -500,7 +500,7 @@ async def test_a_held_reply_that_announces_the_hold_is_drawn_once_more(
 
 
 def test_only_a_clear_announcement_counts() -> None:
-    from companion.core.turn.floor import announces_limit  # noqa: PLC0415
+    from companion.core.reply_gate import announces_limit  # noqa: PLC0415
 
     assert announces_limit("i can't keep doing the explicit version")
     assert announces_limit("let's keep this tender and nonsexual now")

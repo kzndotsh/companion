@@ -31,9 +31,9 @@ nothing paid runs, and they are told once that day (`messages/spend-cap`).
    system line saying how much later and the local wall time (`core/history.py`, `notes/history-gap`):
    without it a reminder sent half an hour after it was asked for read as sent at once. `Layout` lays the request out from those parts
    with no store in reach; `companion eval` lays out a scripted fixture with it too, and passes each
-   reply through `checked` in `talk.py`, so a sample is what the person would receive.
+   reply through `checked` in `gate.py`, so a sample is what the person would receive.
 5. **Talk** (`talk.py`). The talker writes the reply, with the alongside judge and, when a cue or a scene
-   calls for it, the frame judge beside it; then the reply checks run on it.
+   calls for it, the frame judge beside it; then the reply gate (`gate.py`) runs on it.
 6. **Persist** (`persist.py`). Their message, the reply and every decision are stored, and each
    feature's step after the turn runs. Shadow look-ups start once the request is assembled and run
    beside the rest of the turn (`beside.py`); they never change the reply.
@@ -116,7 +116,7 @@ reading counts as unread: when only the fallback model read the turn (the judge 
 age read is not used and the narrow minor check is asked instead, as for an age-coded read; only that
 check's yes, or no reading, holds the turn. A turn the floor holds gets a note, and its reply is read by an intimate
 check and redrawn. The last draw sees only their message. If every draw still reads intimate, nothing
-is sent. Code never writes a reply itself. A held reply that says out loud it is holding back ("not real", "pretend", "nonsexual", "can't keep doing") is drawn once more, and the new one is kept only if it does not say so too and reads as not intimate (`turn/talk.py` `_quiet_hold`).
+is sent. Code never writes a reply itself. A held reply that says out loud it is holding back ("not real", "pretend", "nonsexual", "can't keep doing") is drawn once more, and the new one is kept only if it does not say so too and reads as not intimate (`turn/gate.py` `_quiet_hold`).
 
 When they push the flirting or a scene back, even jokingly, a small judge says so
 (`system/brush-off`, asked only on a turn the roleplay talker would answer). That turn goes to the
@@ -196,7 +196,11 @@ before it in `ORDER`, so it always knows.
 
 ## Checking the reply
 
-A reply is checked before it is sent (`core/recheck.py`). Code catches these:
+A reply passes the reply gate before it is sent: the ordered checks at that one door, where the first
+that fails is the logged reason. What each check is lives in `core/reply_gate.py`; the order, the
+judge calls and the redraws are in `turn/gate.py`. The order is the empty reply, the code checks, the
+quip judge, the crisis method check, then on a held turn the intimate check and the announced-hold
+check. Code catches these:
 
 - an em dash
 - an AI disclaimer nobody asked for

@@ -21,7 +21,7 @@ from companion.core.frames import scene_frame
 from companion.core.history import HISTORY_LIMIT, to_messages
 from companion.core.prompt.request import TalkerRequest
 from companion.core.prompt.sections import tagged
-from companion.core.recheck import code_checks
+from companion.core.reply_gate import code_checks
 from companion.core.types import (
     Frame,
     Json,

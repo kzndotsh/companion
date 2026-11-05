@@ -33,7 +33,7 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
   conversation has the live bot's defaults (the emoticon offer on, mood in shadow, a redraw when
   a reply fails a check). A recorded turn
   replays the request it logged. Then every reply passes the turn's reply checks and their redraws
-  (`turn/talk.py`: the em dash, an unasked disclaimer, a copied clock line, the stock lines,
+  (`turn/gate.py`: the em dash, an unasked disclaimer, a copied clock line, the stock lines,
   markdown, an empty reply, and the quip judge, which is asked for real on the eval's judge model,
   Haiku, `JUDGE_MODEL` in `cli/eval.py`). The table's replies
   (`--show`) and the saved results say what made a sample draw again. As live, a turn with no

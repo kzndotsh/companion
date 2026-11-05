@@ -156,7 +156,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/relevance` | system | picks up to three memories that bear on their message, from the nearest by embedding; live above a closeness gate | v1 |
 | `system/openloops` | system | open-loop extraction, `features/threads/logic.py` | v4 |
 | `system/openloops-draft` | system | the follow-up draft, `features/threads/run.py` | v2 |
-| `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, or leans on a canned generic reaction, `core/turn/quip.py` | v3 |
+| `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, or leans on a canned generic reaction, `core/reply_gate.py` | v3 |
 | `system/react` | system | the alongside judge, `features/reactions/logic.py` | v2 |
 | `system/recall` | system | the recall look-up, `core/recall.py` | v2 |
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |

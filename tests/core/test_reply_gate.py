@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.recheck import code_checks
+from companion.core.reply_gate import code_checks
 
 DISCLAIMER = "an AI disclaimer nobody asked for"
 
@@ -70,7 +70,7 @@ def test_a_beat_as_a_stage_direction_is_caught_but_not_a_beat_in_music() -> None
 
 
 def test_markdown_titles_and_bold_are_caught_but_not_actions_or_scenes() -> None:
-    from companion.core.recheck import MARKDOWN, code_checks  # noqa: PLC0415
+    from companion.core.reply_gate import MARKDOWN, code_checks  # noqa: PLC0415
 
     assert MARKDOWN in code_checks("mostly *Thor* and *The Avengers*")
     assert MARKDOWN in code_checks("that's **so** good")
