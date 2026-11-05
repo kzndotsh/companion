@@ -421,3 +421,42 @@ async def test_a_failing_shadow_look_up_is_logged(caplog: pytest.LogCaptureFixtu
     beside(boom())
     await asyncio.sleep(0.05)
     assert "shadow look-up failed" in caplog.text
+
+
+async def test_intimate_talk_stays_under_way_past_one_held_turn(store: Store) -> None:
+    everyday, scene = Talker("everyday"), Talker("scene")
+    judge = Judge(intimate=True, explicit=True)
+    runtime = Runtime(
+        store, everyday, PREFIX, REL, judge=judge, roleplay_talker=scene, route_intimate=True
+    )
+    await handle(runtime, SESSION, "take it off", "test", NOW)
+    assert len(scene.seen) == 1
+    judge.age_coded, judge.minor = True, True
+    await handle(runtime, SESSION, "held one", "test", NOW + timedelta(minutes=1))
+    assert len(scene.seen) == 1  # the floor holds this one
+    judge.age_coded, judge.minor, judge.explicit = False, None, False
+    await handle(runtime, SESSION, "keep going", "test", NOW + timedelta(minutes=2))
+    assert len(scene.seen) == 2  # still under way, not starting again
+
+
+async def test_a_read_only_the_fallback_model_gave_goes_to_the_minor_check(store: Store) -> None:
+    class FallbackListening(Judge):
+        async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
+            got = await super().extract(system, user, schema)
+            props = schema["properties"]
+            if isinstance(props, dict) and "age_coded" in props:
+                return Extraction(got.data, got.model + FALLBACK, 0.0, 1)
+            return got
+
+    everyday, scene = Talker("everyday"), Talker("scene")
+    runtime = Runtime(
+        store,
+        everyday,
+        PREFIX,
+        REL,
+        judge=FallbackListening(intimate=True, explicit=True, minor=False),
+        roleplay_talker=scene,
+        route_intimate=True,
+    )
+    await handle(runtime, SESSION, "take it off", "test", NOW)
+    assert len(scene.seen) == 1  # the minor check said no, so the turn is not held

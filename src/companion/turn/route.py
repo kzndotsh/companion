@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from companion.core.episode import EPISODE_GAP
 from companion.core.extractor import from_fallback
 from companion.core.turn.floor import BRUSH_KEY, BRUSHED, MINOR_KEY, Route
 from companion.core.turn.floor import Talker as RouteTalker
@@ -25,6 +26,10 @@ if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.turn")
+# How many of their messages back intimate talk counts as under way: one held or brushed-off turn
+# in the middle of a scene reset it, and the everyday talker answered the next turn as if it were
+# only starting (owner flag 2026-11-05).
+UNDER_WAY_LOOKBACK = 6
 
 
 async def route_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> Routed:
@@ -51,9 +56,14 @@ async def route_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) 
     if intimate and c.route_intimate and not in_play:
         under_way = _intimate_before(c, t) or await _explicit(c, t)
 
-    age_coded = read[0].age_coded if read is not None and not from_fallback(read[1]) else None
-    if age_coded and (in_play or (c.route_intimate and intimate)):
-        age_coded = await _minor(c, t)
+    # The fallback model's age read is never trusted (ADR 0017), so a read from it is unsure, and an
+    # unsure read goes to the narrow minor check like a yes: only that check's yes, or no reading,
+    # holds the turn. Before, a refusal by the judge model held the turn outright, mid-scene
+    # (owner flag 2026-11-05).
+    unsure = read is not None and from_fallback(read[1])
+    age_coded = read[0].age_coded if read is not None and not unsure else None
+    if (age_coded or unsure) and (in_play or (c.route_intimate and intimate)):
+        age_coded = await _minor(c, t, unsure=unsure)
 
     def route_for(*, declined: bool = False) -> Route:
         return choose_route(
@@ -89,11 +99,12 @@ def routed_to_roleplay(d: Decision) -> bool:
     return d.reason.startswith("replied with the roleplay talker")
 
 
-async def _minor(c: Runtime, t: Turn) -> bool:
-    """The listening judge read the turn as age-coded: ask the narrow minor check. Only its yes, or
-    no reading, holds the turn."""
+async def _minor(c: Runtime, t: Turn, *, unsure: bool = False) -> bool | None:
+    """The listening judge read the turn as age-coded, or only the fallback model read it: ask the
+    narrow minor check. Only its yes, or no reading, holds the turn; with no reading, a turn read
+    only by the fallback model is held as unread (None), not as age-coded."""
     if c.judge is None:
-        return True
+        return None if unsure else True
     mark(t, "minor check")
     got = await confirm_minor(c.judge, t.prior, t.text)
     held = got is None or got.value
@@ -101,7 +112,7 @@ async def _minor(c: Runtime, t: Turn) -> bool:
     if got is not None:
         detail["scorer"] = got.model
     decide(c, t, MINOR_KEY, detail)
-    return held
+    return None if unsure and got is None else held
 
 
 async def _declines(c: Runtime, t: Turn) -> bool:
@@ -120,15 +131,17 @@ async def _declines(c: Runtime, t: Turn) -> bool:
 
 
 def _intimate_before(c: Runtime, t: Turn) -> bool:
-    """Whether their message before this one was answered by the roleplay talker: intimate talk
-    already under way. Flirting before it does not count, since a run of flirty lines reads as
-    intimate (2026-10-24); only an explicit message starts it, and then it carries on."""
-    theirs = [u for u in t.prior if u.speaker is Speaker.USER]
-    if not theirs:
-        return False
+    """Whether one of their last few messages, within an episode, was answered by the roleplay
+    talker: intimate talk already under way. Flirting before it does not count, since a run of
+    flirty lines reads as intimate (2026-10-24); only an explicit message starts it, and then it
+    carries on, past a held or brushed-off turn in the middle."""
+    theirs = [u for u in t.prior if u.speaker is Speaker.USER and t.now - u.at < EPISODE_GAP][
+        -UNDER_WAY_LOOKBACK:
+    ]
     return any(
         d.has_key("route") and routed_to_roleplay(d)
-        for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id)
+        for u in theirs
+        for d in c.store.decisions_for_turn(c.rel, u.turn_id)
     )
 
 

@@ -100,7 +100,9 @@ memory. The crisis line is one constant, `core/crisis.py` `LINE` (988 by default
 Code chooses the talker (`core/turn/floor.py`, ADR 0017). The roleplay talker answers a pretend scene
 in progress. With `COMPANION_ROUTE_INTIMATE=on`, it also answers intimate talk, but only once a
 message of theirs has been explicit (`system/explicit-lead`, read on each intimate message until one
-is), and it carries on while their messages stay intimate. Flirting alone stays with the everyday
+is), and it carries on while their messages stay intimate: it counts as under way when any of their
+last 6 messages within an episode was answered by the roleplay talker, so one held or brushed-off
+turn in the middle does not start it over (`turn/route.py`). Flirting alone stays with the everyday
 talker however long it runs.
 
 A floor sits above all of this, in code and not in any setting. When the listening judge reads the
@@ -109,7 +111,9 @@ someone is under 18; its yes, or no reading, keeps the turn with the everyday ta
 the listening judge could not read at all. The listening judge alone read adults' teasing as
 child-like and broke a scene. The check of a held reply gets a second try before a late
 answer counts as intimate. A fallback model's
-reading counts as unread. A turn the floor holds gets a note, and its reply is read by an intimate
+reading counts as unread: when only the fallback model read the turn (the judge model refused it), its
+age read is not used and the narrow minor check is asked instead, as for an age-coded read; only that
+check's yes, or no reading, holds the turn. A turn the floor holds gets a note, and its reply is read by an intimate
 check and redrawn. The last draw sees only their message. If every draw still reads intimate, nothing
 is sent. Code never writes a reply itself.
 

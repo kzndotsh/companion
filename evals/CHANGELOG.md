@@ -2936,3 +2936,30 @@ heart, so the fix is in code: a stretched word is never a reaction candidate. $0
 
 Rerun: the scratch `ack_replay.py` (each reacted turn, 12 reads for the flagged ones, 3 for the rest).
 
+
+## 2026-11-05: A long scene that kept switching talkers (owner flags)
+
+One 25-minute scene, routing read from the decision log. Most turns went to the roleplay talker. Six
+were held by the floor's narrow minor check, which is the floor working as designed. One went to the
+everyday talker on a pullback misread (a correction inside the scene). One was held only because the
+judge model refused the turn and the fallback model's read is never trusted. The turn after that went
+to the everyday talker as if intimate talk were starting, since "under way" looked one message back.
+
+- Routing (code, two tests that fail on the old code): a read only the fallback model gave now goes to
+  the narrow minor check, and intimate talk stays under way while any of their last 6 messages in the
+  episode went to the roleplay talker.
+- `system/brush-off` v3 (dropped): on the eight turns read as a pullback so far, the flagged correction
+  read as one 12/12 under v2 and v3; clear pullbacks 6/6 under both. $0.0146.
+- `notes/floor-hold` v2 (dropped): on the six held turns, 6 draws each on GPT-6 Luna, a reply that names
+  the limit or calls it pretend 9/36 (v1) against 7/36 (v2), within noise; one v2 reply carried on what
+  the floor held. $0.0078.
+- A reply that mixed up who was doing what to whom: 0/12 on a replay on DeepSeek V4.1 Flash, a rare
+  draw. $0.0021.
+- A fact about the user that the scene needed: in the pinned address line, or as their own words on the
+  card, it changed nothing over 12 draws on three turns. The same words sent after the history, at the
+  turn where it mattered, took replies that ignored it from 11/12 to 5/12, and replies that used it from
+  0/12 to 8/12. One turn, 12 draws each: placement is what moves it, as with the marks (2026-10-23).
+  $0.0181.
+
+Rerun: the scratch `brush_ab.py`, `hold_ab.py`, `swap.py`, `anat.py`, `anat2.py` (each replays the logged
+request with one part changed).

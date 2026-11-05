@@ -140,7 +140,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/ack` | system | the ack judge, `core/turn/ack.py` | v2 |
 | `system/callback-judge` | system | the callback check, `features/audits/callbacks/logic.py`, `companion audit callbacks` | v2 |
 | `system/character-frame` | system | the lines between the persona and a character sheet, `companion/characters.py` | v1 |
-| `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v8 |
+| `system/extract` | system | beliefs about the user, `core/beliefs/extract.py` | v10 |
 | `system/frames` | system | the frame judge, `core/frames.py` | v2 |
 | `system/habits` | system | the habit finder, `features/moves/logic.py` | v3 |
 | `system/minor-check` | system | asked again when the listening judge reads a routed turn as age-coded: does the text say or imply someone is under 18; only a yes, or no reading, holds the turn (ADR 0017) | v2 |

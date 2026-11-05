@@ -73,7 +73,7 @@
 "system/ack" = "v2"
 "system/callback-judge" = "v2"
 "system/character-frame" = "v1"
-"system/extract" = "v8"
+"system/extract" = "v10"
 "system/frames" = "v2"
 "system/habits" = "v3"
 "system/minor-check" = "v2"
