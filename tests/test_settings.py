@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
 import pytest
 
+from companion.daemon import load_dotenv
 from companion.settings import RENAMED, ROLEPLAY_MODEL, SWITCHES, Settings, Switch
 
 
@@ -96,3 +98,26 @@ def test_every_switch_the_code_asks_for_exists() -> None:
     }
     assert asked
     assert {(name, m) for name, m in asked if m not in labels} == set()
+
+
+def test_env_example_names_every_setting_with_its_default() -> None:
+    lines = Path(".env.example").read_text().splitlines()
+    named = {
+        m.group(1): m.group(2) for line in lines if (m := re.match(r"#?\s*([A-Z_]+)=(\S*)", line))
+    }
+    readme = set(re.findall(r"^\| `([A-Z_]+)` \|", Path("README.md").read_text(), re.MULTILINE))
+    assert readme - named.keys() == set()
+    for sw in SWITCHES:
+        assert named[sw.env] == sw.values[0], sw.env
+    assert not named.keys() & RENAMED.keys()
+
+
+def test_dotenv_drops_a_trailing_comment_but_keeps_a_quoted_value(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    env = tmp_path / ".env"
+    env.write_text("A=on   # on | off\nB=\nC='x # y'\nD=a#b\n# E=1\n")
+    for k in "ABCDE":
+        monkeypatch.delenv(k, raising=False)
+    load_dotenv(env)
+    assert [os.environ.get(k) for k in "ABCDE"] == ["on", "", "x # y", "a#b", None]

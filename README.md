@@ -199,7 +199,8 @@ You need Python 3.12+, [uv](https://docs.astral.sh/uv/) and [just](https://just.
 just sync
 ```
 
-Create a `.env` in the repo root:
+Copy `.env.example` to `.env` in the repo root (`cp .env.example .env`). It lists every setting
+with its default, commented out. Fill in at least:
 
 ```bash
 TELEGRAM_BOT_TOKEN=...      # from BotFather
