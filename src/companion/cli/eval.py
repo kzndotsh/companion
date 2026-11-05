@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import difflib
 import os
+import shutil
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -127,11 +129,16 @@ def _select(fixtures: list[Fixture], only: list[str]) -> list[Fixture] | str:
 
 
 def describe(fixtures: list[Fixture]) -> str:
-    lines = [
-        f"{f.id:34} {'script' if f.script else 'local turn':10} {len(f.checks)} checks"
-        f"  {f.description}"
-        for f in fixtures
-    ]
+    """One fixture per entry: its id, kind and checks on one line, its description wrapped under."""
+    if not fixtures:
+        return "no fixtures\n"
+    width = min(shutil.get_terminal_size().columns, 100)
+    id_w = max(len(f.id) for f in fixtures)
+    lines: list[str] = []
+    for f in fixtures:
+        kind = "script" if f.script else "local turn"
+        lines.append(f"{f.id:<{id_w}}  {kind:<10}  {len(f.checks)} checks")
+        lines.extend(f"    {part}" for part in textwrap.wrap(f.description, width - 4))
     return "\n".join(lines) + "\n"
 
 

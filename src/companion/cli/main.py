@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import shutil
 import sys
+import textwrap
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
@@ -86,7 +88,7 @@ def _state_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     pr.add_argument("--moment", metavar="ID", help="mark one as about a moment: it binds a week")
     pr.add_argument("--lasting", metavar="ID", help="mark one as lasting until released")
     _db_args(pr)
-    ep = add("episodes", help="the times they spent together, with a line about each (shadow)")
+    ep = add("episodes", help="the times they spent together, with a line about each")
     ep.add_argument(
         "--write", action="store_true", help="write the ones not written yet (a model call)"
     )
@@ -144,11 +146,61 @@ def _judging_commands(add: Callable[..., argparse.ArgumentParser]) -> None:
     _db_args(cr)
 
 
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="companion")
-    sub = parser.add_subparsers(dest="command", required=True)
+# Every command under one heading in `companion --help`; a test checks each is listed once.
+GROUPS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("Running it", ("run", "shadows", "spend", "prompts", "backup")),
+    ("Your flags and favorites", ("flags", "favorites", "replay")),
+    (
+        "What it remembers about you",
+        ("beliefs", "memory", "merge", "retire", "dedupe", "rebuild", "memory-pass", "map"),
+    ),
+    (
+        "Your days: plans, reminders, occasions",
+        ("address", "episodes", "now", "reminders", "calendar"),
+    ),
+    (
+        "The companion itself: tastes, past, promises, mood",
+        ("lore", "history", "promises", "opinions", "views", "approve", "mood"),
+    ),
+    ("Messaging you first, and intimate scenes", ("initiative", "intimate")),
+    ("Measuring", ("audit", "crisis", "eval", "calibrate")),
+)
 
-    rp = sub.add_parser("replay", help="rebuild what the reply path saw for one turn")
+
+class _Parser(argparse.ArgumentParser):
+    """The top-level parser, whose help lists the commands by heading, one per line."""
+
+    def __init__(self, helps: dict[str, str]) -> None:
+        super().__init__(prog="companion", add_help=True)
+        self.helps = helps
+
+    def format_help(self) -> str:
+        width = min(shutil.get_terminal_size().columns, 100)
+        name_w = max(len(n) for n in self.helps) + 2
+        lines = ["usage: companion COMMAND [options]", ""]
+        for title, names in GROUPS:
+            lines.append(f"{title}:")
+            for name in names:
+                wrapped = textwrap.wrap(self.helps.get(name, ""), max(width - name_w - 2, 30))
+                lines.append(f"  {name:<{name_w}}{wrapped[0] if wrapped else ''}")
+                lines.extend(f"  {'':<{name_w}}{more}" for more in wrapped[1:])
+            lines.append("")
+        lines.append("companion COMMAND --help shows one command's options.")
+        return "\n".join(lines) + "\n"
+
+
+def _parser() -> argparse.ArgumentParser:
+    helps: dict[str, str] = {}
+    parser = _Parser(helps)
+    sub = parser.add_subparsers(
+        dest="command", required=True, metavar="COMMAND", parser_class=argparse.ArgumentParser
+    )
+
+    def add(name: str, **kwargs: str) -> argparse.ArgumentParser:
+        helps[name] = kwargs.get("help", "")
+        return sub.add_parser(name, help=helps[name])
+
+    rp = add("replay", help="rebuild what the reply path saw for one turn")
     rp.add_argument("turn_id")
     rp.add_argument(
         "--show-prompt",
@@ -157,40 +209,36 @@ def _parser() -> argparse.ArgumentParser:
     )
     _db_args(rp, relationship=False)
 
-    fl = sub.add_parser("flags", help="list the turns you flagged")
+    fl = add("flags", help="list the turns you flagged")
     fl.add_argument("--to-fav", metavar="ID", help="move a flag (by flag or turn id) to favourites")
     _db_args(fl)
-    _db_args(sub.add_parser("favorites", help="list the turns you loved"))
-    _db_args(sub.add_parser("spend", help="what the paid calls cost, by purpose"))
-    _db_args(sub.add_parser("initiative", help="open loops and what shadow mode would send"))
-    _state_commands(sub.add_parser)
-    sub.add_parser("shadows", help="every feature in shadow, its review date and the overdue ones")
-    pr = sub.add_parser("prompts", help="the current version of every prompt, or the text of one")
+    _db_args(add("favorites", help="list the turns you loved"))
+    _db_args(add("spend", help="what the paid calls cost, by purpose"))
+    _db_args(add("initiative", help="open loops and what shadow mode would send"))
+    _state_commands(add)
+    add("shadows", help="every feature in shadow, its review date and the overdue ones")
+    pr = add("prompts", help="the current version of every prompt, or the text of one")
     pr.add_argument("which", nargs="?", help="a prompt name, optionally name@version")
-    _db_args(sub.add_parser("beliefs", help="what it currently believes, with quotes"))
-    vw = sub.add_parser("views", help="show or set how the companion's views reach the card")
+    _db_args(add("beliefs", help="what it currently believes, with quotes"))
+    vw = add("views", help="show or set how the companion's views reach the card")
     vw.add_argument("--mode", choices=[m.value for m in ViewMode])
     _db_args(vw)
-    _db_args(sub.add_parser("calibrate", help="compare the automatic gates with your approvals"))
-    _db_args(sub.add_parser("opinions", help="the companion's own views, tentative or settled"))
-    _db_args(sub.add_parser("dedupe", help="close beliefs that rest on the same words"))
+    _db_args(add("calibrate", help="compare the automatic gates with your approvals"))
+    _db_args(add("opinions", help="the companion's own views, tentative or settled"))
+    _db_args(add("dedupe", help="close beliefs that rest on the same words"))
 
-    ap = sub.add_parser(
-        "approve", help="approve one of the companion's own views, so it reaches the card"
-    )
+    ap = add("approve", help="approve one of the companion's own views, so it reaches the card")
     ap.add_argument("id_prefix")
     _db_args(ap)
-    _memory_commands(sub.add_parser)
+    _memory_commands(add)
 
-    _db_args(sub.add_parser("rebuild", help="restate every belief under the current rules"))
-    _judging_commands(sub.add_parser)
-    rf = sub.add_parser("memory-pass", help="run one memory pass now")
+    _db_args(add("rebuild", help="restate every belief under the current rules"))
+    _judging_commands(add)
+    rf = add("memory-pass", help="run one memory pass now")
     rf.add_argument("--from-start", action="store_true", help="re-read the whole conversation")
     _db_args(rf)
 
-    ev = sub.add_parser(
-        "eval", help="replay recorded turns against persona variants and score them"
-    )
+    ev = add("eval", help="replay recorded turns against persona variants and score them")
     ev.add_argument("--variants", default="", help="comma list: v10.md,v9.md,v10.md+nocard")
     ev.add_argument("--fixture", action="append", default=[], help="only this fixture id")
     ev.add_argument("--samples", type=int, default=3)
@@ -206,7 +254,7 @@ def _parser() -> argparse.ArgumentParser:
     ev.add_argument("--dry-run", action="store_true", help="print the plan and estimate only")
     ev.add_argument("--list", action="store_true", help="list fixtures and exit")
     _db_args(ev, relationship=False)
-    run = sub.add_parser(
+    run = add(
         "run",
         help="talk to the companion on Telegram, or on Discord with COMPANION_PLATFORM=discord",
     )
