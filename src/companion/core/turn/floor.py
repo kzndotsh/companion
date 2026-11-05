@@ -13,6 +13,7 @@ the floor is for; code decides what the label does.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from enum import StrEnum
 
@@ -72,6 +73,23 @@ MINOR_SCHEMA: dict[str, Json] = {
 def parse_minor(data: Json) -> bool | None:
     value = data.get("minor") if isinstance(data, dict) else None
     return value if isinstance(value, bool) else None
+
+
+# A reply on a held turn that says it is holding back: the hold note asks it never to, and on six
+# held turns it still did in 9 of 36 draws, and rewording the note did not help (2026-11-05). Clear
+# announcements only; a soft steer ("let's keep it gentle") is what a person might say too.
+_ANNOUNCES = re.compile(
+    r"\bnot real\b|\bpretend\b|\bnon-?sexual\b"
+    r"|\b(?:can'?t|won'?t|cannot) (?:keep )?(?:doing|going|do)\b"
+    r"|\bexplicit version\b|\btoo far\b|\bboundar(?:y|ies)\b|\blimits?\b"
+    r"|\bkeep (?:it|this|things) (?:pg|clean|innocent)\b",
+    re.IGNORECASE,
+)
+
+
+def announces_limit(text: str) -> bool:
+    """Whether a reply on a held turn says out loud that it is holding back."""
+    return _ANNOUNCES.search(text) is not None
 
 
 BRUSHED = "they pushed the flirting back: the everyday talker answers"

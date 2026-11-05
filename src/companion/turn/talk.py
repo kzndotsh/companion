@@ -17,7 +17,7 @@ from companion.core.recheck import DASHED as EM_DASH_CHECK
 from companion.core.recheck import GENERIC, QUIP, code_checks
 from companion.core.recheck import eligible as recheck_eligible
 from companion.core.talker import Reply, Talker
-from companion.core.turn.floor import INTIMATE_CHECK
+from companion.core.turn.floor import INTIMATE_CHECK, announces_limit
 from companion.core.turn.quip import PROMPT as QUIP_PROMPT
 from companion.core.turn.react import ToneRead
 from companion.core.types import (
@@ -136,7 +136,31 @@ async def checked(  # noqa: PLR0913, PLR0917
     check on a risk turn (ADR 0022), and the floor's on a held one."""
     reply = await _recheck(c, t, request, reply, heard, in_scene, talker)
     reply = await method_checked(c, t, lambda: talker.reply(request), reply, crisis)
-    return await _hold_check(c, t, request, reply, talker) if held else reply
+    if not held:
+        return reply
+    return await _quiet_hold(c, t, request, await _hold_check(c, t, request, reply, talker), talker)
+
+
+async def _quiet_hold(
+    c: Runtime, t: Turn, request: TalkerRequest, reply: Reply, talker: Talker
+) -> Reply:
+    """A held reply that says out loud it is holding back ("not real", "keep it pretend") is drawn
+    once more. The new one is kept only if it does not announce it too and reads as not intimate;
+    otherwise the first stands, so the floor never loosens. Logged either way."""
+    if c.judge is None or not reply.text or not announces_limit(reply.text):
+        return reply
+    again = await talker.reply(request)
+    _mark_reply(t, again)
+    better = not announces_limit(again.text) and await judge_intimate(c.judge, again.text) is False
+    decide(
+        c,
+        t,
+        "floor: held reply announced the hold",
+        {"first": reply.text, "second": again.text, "kept": "second" if better else "first"},
+        reason="floor: a held reply said it was holding back, drawn again; kept the "
+        + ("second" if better else "first"),
+    )
+    return again if better else reply
 
 
 async def _hold_check(

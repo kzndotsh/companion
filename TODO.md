@@ -73,7 +73,7 @@ Each item ends with the thing that tells us it is done. The cards are below; the
    2026-11-10, land at hours they start conversations, none needy, and the owner says whether it goes live
    (outcome recording, A6, first).
 7. **Plan reach-outs and nudges** (R1, R1b). Reviewed 2026-11-03: nothing to judge (no plan drafted, one
-   nudge in ten days). *Done when:* the owner picks a new review date or removes them (decision 4). Going
+   nudge in ten days); given until 2026-11-24. *Done when:* their would-sends read right at that review. Going
    live also needs A6, J27 and J35.
 8. **The crisis path** (ADR 0022, R16): live since 2026-11-04. *Done when:* a week of real chat shows the
    stay note holding over a long hard stretch (it does not push help on every message) and no false alarm
@@ -99,11 +99,11 @@ outcomes are in the plan above and in the cards.
 
 | Date | What | Read with | Decides |
 |---|---|---|---|
-| overdue | plan reach-outs and nudges (R1, R1b; reviewed 2026-11-03, nothing to judge) | `companion initiative` | a new date or removal (decision 4) |
 | no date | the two talkers (D1; no outcome recorded at 2026-10-29) | `companion flags`, `companion favorites` | whether the roleplay talker helps and where the boundary hurts |
 | no date | the move picker for bland replies (one measurement, not built) | `docs/inbox/2026-10-25-bland-replies-design-space.md`, `evals/CHANGELOG.md` | build it or not (decision 13) |
 | 2026-11-08 | threads' learned pace (ADR 0023); what they said is coming (ADR 0024) | the decision log; `companion now` | the labels read right; the pace beats the day's cap |
 | 2026-11-09 | its own history (ADR 0025) | `companion history`, the decision log | canon rulings read right |
+| 2026-11-24 | plan reach-outs and nudges (R1, R1b; nothing to judge at 2026-11-03, given more time) | `companion initiative` | going live (after A6, J27, J35) or removed |
 | 2026-11-10 | its own reach-outs, brainstorm and pick (ADR 0021) | `companion initiative` | going live, and at what dial |
 | 2026-11-17 | promises and the per-reply check (J12, LR5) | `companion promises`, the decision log | whether the check redraws live |
 
@@ -172,7 +172,8 @@ fixes. Earlier, 2026-10-25: a long reach-out draft is kept whole, never cut or d
 3. **Going live with its own reach-outs (ADR 0021):** after the review of 2026-11-10, and at which dial
    (the ADR's rollout says `normal` first; the settled default is `warm`).
 4. **Plan reach-outs and nudges:** nothing to judge at the review of 2026-11-03 (no plan drafted, one
-   nudge). A new review date, or remove the two sources. Going live still needs A6, J27 and J35.
+   nudge); the owner gave them until 2026-11-24 (decided 2026-11-05). Going live still needs A6, J27 and
+   J35.
 5. **Threads' pace, what is coming, its own history:** graduate or remove at their
    reviews of 2026-11-08 and 2026-11-09.
 6. **Location (R18):** how it learns where they are, for the crisis line, the calendar and the time zone.

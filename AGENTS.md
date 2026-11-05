@@ -75,8 +75,8 @@ together.
 
 | Feature | Setting | Read it with | Review by |
 |---|---|---|---|
-| Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
-| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-03 |
+| Reaching out first about a due plan | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-24 |
+| One light nudge after they stepped away ("shower time") and stayed gone much longer | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-24 |
 | Reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021), at the share `COMPANION_REACH` sets | `COMPANION_INITIATIVE` | `companion initiative` | 2026-11-10 |
 | The promises it made in its own replies, and each reply checked against them (J12) | `COMPANION_PROMISES` | `companion promises`, the decision log | 2026-11-17 |
 | How often it brings a thread up, learned from how they met the last ones (ADR 0023) | always shadow for now | the decision log | 2026-11-08 |

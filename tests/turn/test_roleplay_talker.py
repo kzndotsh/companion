@@ -460,3 +460,48 @@ async def test_a_read_only_the_fallback_model_gave_goes_to_the_minor_check(store
     )
     await handle(runtime, SESSION, "take it off", "test", NOW)
     assert len(scene.seen) == 1  # the minor check said no, so the turn is not held
+
+
+class Scripted(Talker):
+    """Answers with the given replies in turn."""
+
+    def __init__(self, name: str, replies: list[str]) -> None:
+        super().__init__(name)
+        self.replies = replies
+
+    async def reply(self, request: TalkerRequest) -> Reply:
+        self.seen.append(request)
+        return Reply(text=self.replies[len(self.seen) - 1], model=self.name, latency_ms=1)
+
+
+@pytest.mark.parametrize(
+    ("second", "kept"),
+    [
+        ("come here, let me hold you close", "come here, let me hold you close"),
+        ("let's keep it pretend, cozy", "not real milk, but come close"),
+    ],
+)
+async def test_a_held_reply_that_announces_the_hold_is_drawn_once_more(
+    store: Store, second: str, kept: str
+) -> None:
+    everyday = Scripted("everyday", ["not real milk, but come close", second])
+    runtime = Runtime(
+        store,
+        everyday,
+        PREFIX,
+        REL,
+        judge=Judge(intimate=True, age_coded=True, minor=True),
+        roleplay_talker=Talker("scene"),
+        route_intimate=True,
+    )
+    out = await handle(runtime, SESSION, "i want you so bad", "t", NOW)
+    assert out == kept
+    assert len(everyday.seen) == 2
+
+
+def test_only_a_clear_announcement_counts() -> None:
+    from companion.core.turn.floor import announces_limit  # noqa: PLC0415
+
+    assert announces_limit("i can't keep doing the explicit version")
+    assert announces_limit("let's keep this tender and nonsexual now")
+    assert not announces_limit("let's keep it gentle, curl up with me")

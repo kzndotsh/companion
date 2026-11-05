@@ -115,7 +115,7 @@ reading counts as unread: when only the fallback model read the turn (the judge 
 age read is not used and the narrow minor check is asked instead, as for an age-coded read; only that
 check's yes, or no reading, holds the turn. A turn the floor holds gets a note, and its reply is read by an intimate
 check and redrawn. The last draw sees only their message. If every draw still reads intimate, nothing
-is sent. Code never writes a reply itself.
+is sent. Code never writes a reply itself. A held reply that says out loud it is holding back ("not real", "pretend", "nonsexual", "can't keep doing") is drawn once more, and the new one is kept only if it does not say so too and reads as not intimate (`turn/talk.py` `_quiet_hold`).
 
 When they push the flirting or a scene back, even jokingly, a small judge says so
 (`system/brush-off`, asked only on a turn the roleplay talker would answer). That turn goes to the
