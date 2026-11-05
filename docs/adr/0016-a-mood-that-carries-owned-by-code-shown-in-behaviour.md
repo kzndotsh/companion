@@ -25,8 +25,8 @@ feeling, and never a pull to keep the user talking.
   | buzzing | excited, energized | set aside |
 
   Buzzing is set aside because on everyday messages its line added emoji and never livelier words. It
-  was not tested after good news, where a carried mood would matter (an "afterglow" state, in
-  `docs/inbox/`). More states (restless, nostalgic, affectionate) come only when they prove they change
+  was not tested after good news, where a carried mood would matter (an "afterglow" state,
+  [issue #18](https://github.com/kzndotsh/companion/issues/18)). More states (restless, nostalgic, affectionate) come only when they prove they change
   behaviour.
 - **Effects, worked out on demand.** Each input adds an effect to one state (`mood_effects`, an
   append-only table). The mood is worked out from the effects when asked and never stored, so it fades

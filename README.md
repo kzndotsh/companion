@@ -413,7 +413,7 @@ companion/
 │   └── registry.py       the list of features
 ├── tests/                automatic tests, run before every commit
 ├── evals/                test conversations, and what was measured
-├── docs/                 how things work, decisions (adr/) and ideas (inbox/)
+├── docs/                 how things work and decisions (adr/)
 ├── scripts/              small helpers, like the one behind `just restart`
 └── data/                 your private data: database, logs, backups. Never committed
 ```
@@ -460,9 +460,8 @@ from the logs by value.
 | [AGENTS.md](AGENTS.md) | the working rules for anyone, human or agent, changing this repo |
 | [docs/dev/turn.md](docs/dev/turn.md), [delivery.md](docs/dev/delivery.md), [initiative.md](docs/dev/initiative.md), [memory.md](docs/dev/memory.md), [evals.md](docs/dev/evals.md) | how a reply is made, how delivery on Telegram and Discord works, plans and reach-outs, memory over time, and how we measure |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files, prompts, setting and what was measured |
-| [TODO.md](TODO.md) | the work board and the plan: the live setup, what comes next, the decisions waiting |
+| [Issues](https://github.com/kzndotsh/companion/issues) | the work and ideas; the pinned [Plan](https://github.com/kzndotsh/companion/issues/183) says what comes next and which decisions wait |
 | [docs/adr/](docs/adr) | decisions and their reasons |
-| [docs/inbox/](docs/inbox) | ideas that are not yet tasks |
 | `docs/research/` | audits and studies (local only, not committed) |
 | [src/companion/prompts/](src/companion/prompts/README.md) | every prompt, and how a request is assembled |
 | [prompts/CHANGELOG.md](src/companion/prompts/CHANGELOG.md) | every prompt version, with the flag or measurement behind it |

@@ -1,4 +1,4 @@
-"""The days worth a word, chosen by code (`docs/inbox/2026-10-25-a-calendar-of-occasions.md`).
+"""The days worth a word, chosen by code (issue #28).
 
 Public and cultural days come from the `holidays` library for one region; a few cultural days are
 also written here, used only when the library lacks them. The relationship's dates come from the day

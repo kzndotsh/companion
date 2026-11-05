@@ -15,11 +15,10 @@ project: the bot runs on the owner's machine, and the repo is pushed to a GitHub
 |---|---|
 | `GLOSSARY.md` | the project's words, one meaning each, with the ones to avoid and the words that mean more than one thing |
 | `docs/user/features.md` | every feature in plain words, with its status: the user's guide |
-| `TODO.md` | the work board and the plan: the live setup in a few lines, Now, Next and Later, the decisions waiting on the owner, then the cards (Doing, Waiting, Todo, Backlog with Parked, Done, Canceled). Pull work from here. It holds no feature descriptions (README), no measured numbers (`docs/dev/evals.md`) and no dated log outside Done |
+| GitHub issues on `kzndotsh/companion` | the work: one issue per item, labelled by state (`docs/agents/triage-labels.md`). The pinned Plan issue (#183) is the order: Now, Next, Later and the decisions waiting on the owner (`needs-info`). Pull work from there. The repo is public, so issues are too |
 | `src/companion/features/<name>/README.md` | how each feature works, with its files and setting: read it before changing the feature |
 | `docs/dev/turn.md`, `docs/dev/delivery.md`, `docs/dev/initiative.md`, `docs/dev/memory.md` | how the reply path, delivery on Telegram and Discord, plans and reach-outs, and memory over time work, for what is not a feature folder |
 | `docs/adr/` | decisions, once made, with the reason |
-| `docs/inbox/` | ideas and questions that are not yet anything. Nothing there is a task |
 | `docs/research/` | audits and studies. Read-only background. Local only: git-ignored, not committed |
 | `src/companion/prompts/` | every prompt the bot sends, as versioned text: `system/` (the persona and the judges' prompts), `notes/` (lines added to the talker's system block each turn), `messages/`. `README.md` lists them, `manifest.toml` says which version is current |
 | `src/companion/prompts/CHANGELOG.md` | every version of every prompt and every change to how a request is assembled, with the reason |
@@ -35,7 +34,7 @@ just run          # start the bot (uv run companion run)
 just logs         # follow data/logs/companion.log: every stage, judge, model and Telegram or Discord call
 just restart      # stop the running bot, wait for it to exit, start the new one here
 just commit "feat(x): msg" path...   # commit only the named files; refuses dirs, secrets, attribution
-just inbox some idea   # jot an idea into docs/inbox/
+just inbox some idea   # jot an idea as a GitHub issue labelled needs-triage
 uv run companion flags | favorites | spend | beliefs | initiative | prompts | mood | address | map | backup | calendar | shadows | crisis | now | intimate
 uv run companion memory review | group   # questions for the owner (conflicts, new boundaries), merge proposals
 uv run companion promises | lore | history   # shadow lists, its own tastes and its own past
@@ -66,6 +65,10 @@ values and `Runtime`, `Feature`, `ask`, `reads`, `record`, `curate`, `embed`, `b
 - **Nothing enters memory without a quote, a speaker and a frame** (ADR 0001, 0010). The ledger
   never deletes (ADR 0002): retire, close or mark, never remove.
 - **Measure before switching** a model or a persona. Say what is measured and what is a guess.
+- **Not doing:** forking or depending on any audited project (none is a base we would trust); hand
+  approval as the end-user product (it stays an override only); a model that has to be told not to
+  recite (fix where the data sits instead); more models for their own sake (a model is tested when a
+  flag or a measurement points at a gap).
 
 ## What runs in shadow
 
@@ -112,7 +115,7 @@ together.
   `src/companion/prompts/CHANGELOG.md`. Shipping a persona is changing `system/persona` in
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.
 - Persona text and public fixtures are general. Nothing in them is about one person. Real turns
-  live in `evals/local/`. Inbox notes and docs stay generic and self-contained.
+  live in `evals/local/`. Issues and docs stay generic and self-contained: issues are public.
 - A line for the system block is a note source, named in `ORDER` in `turn/notes.py` in the order it is sent:
   it reads the turn (`Moment`) and what earlier sources offered, and returns its lines plus any writes that
   use up a cap or mark a plan asked, which run only once the turn is stored. Add a note there, not in

@@ -68,7 +68,7 @@ Settledness alone as the test (consistency is not consideration).
 
 **Since:** the gates and modes are as built (`core/views.py`: two days, `preference` only, at most 8
 views carried). The calibration threshold has not yet been reached; the gates stay a card on the board
-(TODO.md, "calibrating the view gates").
+(R8, [issue #72](https://github.com/kzndotsh/companion/issues/72)).
 
 **Reverses if.** Calibration shows the gates reject too many views the user wanted, or admit too many
 they did not. The gates change, not the idea.

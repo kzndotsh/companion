@@ -32,7 +32,7 @@ distinctions keep honesty simple: what it knows, what it has not done, what it c
   experience, and no longer fails honest, hedged knowledge. A new fixture covers knowing about versus
   having used something.
 - Earlier `agree-and-invent` results used the old criterion and are not comparable with later ones.
-- Authored tastes and lore (TODO.md cards R14 and R3) sit on top of this. They give it opinions and a
+- Authored tastes and lore (cards R14 and R3; R14 is [issue #154](https://github.com/kzndotsh/companion/issues/154)) sit on top of this. They give it opinions and a
   history of its own, not knowledge. A persona that is a particular person may still have gaps ("not
   my world"); that belongs to its core, not to a global rule.
 - Since: a character sheet may give an authored past, and the AI-honesty rule holds over it: it says

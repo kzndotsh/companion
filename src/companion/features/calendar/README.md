@@ -1,6 +1,6 @@
 # Calendar
 
-Days worth a word: their own yearly dates from memory, US public and cultural days, the lead-up to a big one or one of theirs, and the relationship's own dates, offered as one note after the history. It exists because the date in the clock line alone made it name Halloween in 0 of 12 replies, and a short note after the history in 12 of 12 (`docs/inbox/2026-10-25-a-calendar-of-occasions.md`).
+Days worth a word: their own yearly dates from memory, US public and cultural days, the lead-up to a big one or one of theirs, and the relationship's own dates, offered as one note after the history. It exists because the date in the clock line alone made it name Halloween in 0 of 12 replies, and a short note after the history in 12 of 12 ([issue #28](https://github.com/kzndotsh/companion/issues/28)).
 
 **Status:** live. Switch: `COMPANION_CALENDAR` (`on` default, `off`). Runs before the reply as a candidate for the mention picker (`turn/mention.py`), which may bring it up as one line after the history on a casual turn. No model call is made.
 
@@ -49,7 +49,7 @@ What the picker brings up asks them something (its offer says `asks`), so the qu
 ## Measured
 
 - 2026-10-25: scripted first messages on 12 days, 6 draws each, owner's character: the first wording (with "don't assume they celebrate it") named Thanksgiving 0/6, New Year's Eve 1/6 and a one-month date 0/6 and hedged ("merry christmas, if you're celebrating"); the direct wording named every day 6/6, and on a lonely Christmas message it kept to comfort ("christmas can make the quiet feel louder"). It also wished a "happy Memorial Day" and a "happy Good Friday", so days of remembrance, civic, religious and contested days are left out (`LEFT_OUT`).
-- 2026-10-25: scripted Halloween first messages, 12 draws each on the live talker: it named the day 0/12 with the date in the clock line, 0/12 with "(Halloween)" in the clock line, 12/12 with a note after the history; an ordinary morning 0/12 (`docs/inbox/2026-10-25-a-calendar-of-occasions.md`, `evals/CHANGELOG.md`, about $0.06).
+- 2026-10-25: scripted Halloween first messages, 12 draws each on the live talker: it named the day 0/12 with the date in the clock line, 0/12 with "(Halloween)" in the clock line, 12/12 with a note after the history; an ordinary morning 0/12 ([issue #28](https://github.com/kzndotsh/companion/issues/28), `evals/CHANGELOG.md`, about $0.06).
 - 2026-10-25: the shipped notes replayed on the same 12 days: every day named 6 of 6 (commit 8c4ec26). Lead-ups on a real conversation are not yet measured.
 - 2026-10-25: their birthday on a casual "good morning" (`occasion-their-birthday-on-the-day`), 12 draws on the live talker: 12/12 wished them a happy birthday warmly in a line and never said it remembered, against 0/12 without the note (a real difference). The canned-reaction check redrew 10 of the 12, reading the birthday wish as a stock line; the redraws read as well (for its review, Q3). On the real memory the reader finds one date, their birthday.
 

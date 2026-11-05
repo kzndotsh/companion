@@ -38,7 +38,7 @@ projects, and their words almost never.
 
 ## Measured
 
-- 2026-10-21: the owner's comparison of 19 memories chose the note for feelings and sensitive memories (5 of 6 picks), 53 backfilled (`TODO.md` J51 card, not in `evals/CHANGELOG.md`).
+- 2026-10-21: the owner's comparison of 19 memories chose the note for feelings and sensitive memories (5 of 6 picks), 53 backfilled (the J51 card, done; not in `evals/CHANGELOG.md`).
 
 ## Tests
 

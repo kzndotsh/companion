@@ -229,7 +229,7 @@ a measurement changes one. Patterns across many results are in "What the record 
 | Asking and naming the line once per hard stretch | a later turn with the stay note 12/12 against 0/12 with the concern note sent again | `evals/CHANGELOG.md` (2026-11-04) |
 | A judge, not a word check, keeps its promises | 32 edge cases: judge 30, word check 13 | `evals/CHANGELOG.md` (2026-11-03) |
 | Reaching out by brainstorm and pick beats one draft | blind 3.57 against 2.00 on a replay of the shadow days, one judge, indicative | `evals/CHANGELOG.md` (2026-11-03) |
-| A name in their message is already on the card | 33 of 35 probe names held by the closeness card, so fetch on mention was removed | `docs/inbox/2026-11-03-promises-and-names-reviews.md` |
+| A name in their message is already on the card | 33 of 35 probe names held by the closeness card, so fetch on mention was removed | [issue #36](https://github.com/kzndotsh/companion/issues/36) |
 | Its own mark is offered on playful turns only, spaced | a mark ended 55% of replies it was offered on against 3% without; offers fell from 130 to 73 of 406 casual turns replayed | `src/companion/prompts/CHANGELOG.md` (2026-11-05) |
 | A stretched word gets a reply, not only an emoji | the instead judge read "fineee" as an acknowledgement in 12 of 12 replays | `evals/CHANGELOG.md` (2026-11-05) |
 | The canned-reaction judge over-fires | precision 35 to 55% against relabelled answers, not the 88% first measured; live it redrew 1 of 58 turns; redraw against first draw a toss-up (21 to 13 Haiku, 9 to 13 Sonnet) | `evals/CHANGELOG.md` (2026-10-25, 2026-10-31) |

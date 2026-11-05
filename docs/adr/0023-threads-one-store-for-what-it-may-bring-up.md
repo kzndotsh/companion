@@ -9,7 +9,7 @@ one picker for what it brings up (`turn/mention.py`): plans and the calendar's d
 the new one ranks higher; the pace and how they met it cover every source and the check-in. Calendar
 occasions stay computed, not stored as threads: storing them needed a table rebuild and quotes for
 public days that nobody said. Asked for by the owner after the brainstorm in
-`docs/inbox/2026-10-25-natural-reasons-to-talk.md`, which approved four new hooks: the interrupted
+[issue #30](https://github.com/kzndotsh/companion/issues/30), which approved four new hooks: the interrupted
 story, weekly rhythms, a topic gone quiet, and milestones and pending outcomes.
 
 ## Context

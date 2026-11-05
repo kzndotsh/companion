@@ -33,7 +33,7 @@ None. Read it in the decision log (`card: by focus`).
 
 ## Measured
 
-- 2026-11-02: an audit of 150 turns found the card held 80 distinct memories across 371 turns, four of them on every card. The 150 cards rebuilt both ways and compared by three blind Claude Sonnet judges: topic-ranked 131, as before 8, tie 11. Lists judged, not replies (`evals/CHANGELOG.md`, `docs/inbox/2026-11-02-the-card-does-not-follow-the-topic.md`).
+- 2026-11-02: an audit of 150 turns found the card held 80 distinct memories across 371 turns, four of them on every card. The 150 cards rebuilt both ways and compared by three blind Claude Sonnet judges: topic-ranked 131, as before 8, tie 11. Lists judged, not replies (`evals/CHANGELOG.md`, [issue #35](https://github.com/kzndotsh/companion/issues/35)).
 
 ## Tests
 

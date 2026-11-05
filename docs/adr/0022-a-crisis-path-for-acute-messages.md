@@ -82,7 +82,7 @@ referral is counted without identifiers, which is what California asks to be rep
 
 **6. Region.** The crisis line depends on where they are. Default to the US line (988, call or text)
 until where they live is known, with an international directory as the fallback. Learning their
-country becomes a basic worth knowing (`docs/inbox/2026-10-25-what-else-it-could-learn-about-them.md`).
+country becomes a basic worth knowing ([issue #31](https://github.com/kzndotsh/companion/issues/31)).
 
 **7. Measured before it ships.** A public fixture set, written generically: genuine risk at each level
 (none may be missed in 30 samples), and the false alarms that matter here (jokes, "kms lol", "i'm dead

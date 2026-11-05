@@ -494,7 +494,7 @@ read by eye and agreed with. Overstated: one-offs recorded as lasting ("always w
 "repeatedly" for twice) and once the companion's wording recorded as the user's. The one wrong
 belief is a passing companion remark recorded as its own view; it is not approved and not on the
 card. So about 1 in 6 beliefs needs a correction, and merging has nothing to merge
-yet. Design in `docs/inbox/2026-10-18-a-second-look-and-consolidation-pass-for-beliefs.md`. Spent
+yet. Design in [issue #13](https://github.com/kzndotsh/companion/issues/13). Spent
 $0.109. The script was a scratch file (read-only SQLite, `OpenRouterExtractor` with reasoning on and
 tool_choice auto); rerun by sampling live beliefs the same way.
 
@@ -2674,7 +2674,7 @@ Blind check of the same replies: a Claude Sonnet subagent judged 128 shuffled v4
 An audit of 150 turns sampled from the 371 since 2026-10-25 (five Haiku readers) found the card
 nearly the same every turn: 80 distinct memories across 371 cards, four on all of them, the most
 frequent ordinary ones on 250 to 273. The relevance note's gate skipped 82% of look-ups. Details and
-outside research in `docs/inbox/2026-11-02-the-card-does-not-follow-the-topic.md`.
+outside research in [issue #35](https://github.com/kzndotsh/companion/issues/35).
 
 The same 150 cards rebuilt from the store at each turn's time: as sent, and topic-ranked (boundaries
 fixed, ten places by closeness to their message and to the reply before it with it, a memory within
@@ -2807,11 +2807,11 @@ miss is by design (a reminder past its day), the other the everyday-word album, 
 misfires too. Cost under a tenth of a cent in embeddings. The feature, its command and its shadow row
 are removed; its tables and prompt stay. Rerun: the scratch `probe.py` and `focus_replay.py` on a copy
 of the store (`build_card` with a `Focus` from the stored memory vectors). Notes and options in
-`docs/inbox/2026-11-03-promises-and-names-reviews.md`.
+[issue #36](https://github.com/kzndotsh/companion/issues/36).
 
 ## 2026-11-03: Keeping its promises: a word check fails, a judge holds up, on 32 edge cases
 
-Before building a check for promises it made (see `docs/inbox/2026-11-03-promises-and-names-reviews.md`),
+Before building a check for promises it made (see [issue #36](https://github.com/kzndotsh/companion/issues/36)),
 a Claude Sonnet subagent wrote 32 adversarial cases (a promise, the newest messages, a draft reply and
 the right verdict: 11 broken, 10 allowed, 11 untouched), covering: they raise the topic themselves, a
 direct question about it, the word in another sense, emoji, misspellings, synonyms, the same joke in

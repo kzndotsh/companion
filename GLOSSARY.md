@@ -781,15 +781,12 @@ Whole turns run against judges that fail, stall or answer junk, which must still
 
 ## Planning
 
-**Card**:
-One item on the work board, with a letter prefix and a number.
-_Avoid_: task, ticket. Say "memory card" or "roleplay card" for the others.
-
-**Board section**:
-Where a card sits on the board: Doing, Waiting, Todo, Backlog (with Parked inside), Done or Canceled.
+**Issue**:
+One item of work or one idea, a GitHub issue on `kzndotsh/companion`. Its state is a triage label: `needs-triage`, `needs-info`, `ready-for-agent` or `ready-for-human`; a parked one is closed as not planned. The pinned Plan issue gives the order.
+_Avoid_: task. Items from the old board were called cards (a board card).
 
 **Card prefix**:
-The letter on a card that says where it came from, such as J for the research walk-through or T for ready work.
+The letter at the start of an issue moved from the old board, saying where it came from: `H` housekeeping, `T` ready work, `G` the greenfield design (2026-10-15), `R` the roadmap and inbox notes, `J` the research walk-through (2026-10-18), `LR` its own lore (ADR 0020), `A` the audit synthesis (2026-10-17), `D` and `Q` questions settled by watching or by the logs.
 
 **Research**:
 Audits and studies kept locally as read-only background, never committed.
@@ -798,7 +795,7 @@ Audits and studies kept locally as read-only background, never committed.
 A measurement of replies already sent, run by the owner under a spend cap, that never changes a chat. Not the same as a research audit.
 
 **Inbox**:
-Ideas and questions that are not yet anything.
+Ideas and questions that are not yet anything: issues labelled `needs-triage` (`just inbox`). Before 2026-11-05 they were files in `docs/inbox/`.
 
 **ADR**:
 A numbered record of a decision once made, with its reason.
@@ -807,7 +804,7 @@ A numbered record of a decision once made, with its reason.
 
 These words are used in more than one sense across the repo. Say which one you mean.
 
-- **Card**: the memory card, the roleplay card, or a board card.
+- **Card**: the memory card, the roleplay card, or (in older docs) a board card, now an issue.
 - **History**: the chat window the talker reads, or the companion's own history.
 - **Held / hold**: a held turn (the floor's word), a reach-out the gate held (to become deferred at the reach review), or the owner's "hold" meaning do nothing yet.
 - **Severity, sensitivity, crisis level**: three separate scales. Severity is a message's seriousness, sensitivity a memory's, and crisis level what the crisis path decided.
