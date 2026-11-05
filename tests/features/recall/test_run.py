@@ -23,7 +23,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.vectors import Embedded, unit
-from companion.features.relevance.logic import SHADOW
+from companion.features.recall.logic import SHADOW
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -136,7 +136,7 @@ async def test_memories_are_embedded_once(store: Store) -> None:
 
 
 async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Store) -> None:
-    from companion.features.relevance.logic import LIVE  # noqa: PLC0415
+    from companion.features.recall.logic import LIVE  # noqa: PLC0415
 
     talker = Talker()
     runtime = Runtime(
@@ -159,7 +159,7 @@ async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Stor
 
 
 async def test_with_listening_switched_off_the_live_look_up_does_not_run(store: Store) -> None:
-    from companion.features.relevance.logic import LIVE  # noqa: PLC0415
+    from companion.features.recall.logic import LIVE  # noqa: PLC0415
 
     runtime = Runtime(
         store,

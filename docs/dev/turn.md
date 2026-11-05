@@ -57,7 +57,7 @@ The same read also labels a message that is rude to the companion (one note for 
 turn) and a request to remember something. A recall request is looked up across every memory they
 stated, the most sensitive included since they asked, by a small model that reads the read's guess at
 the topic and the last six messages of the conversation, both sides; what it finds rides that turn's
-system block (`core/recall.py`).
+system block (`features/recall`, the asked trigger).
 
 Guarded memories (delicate or grave) are on the card only on turns rated 1 or more, and with `COMPANION_FOCUS=on`
 only when close to the moment; the rest of the card is the memories closest to it (`docs/dev/memory.md`). A turn that is ordinary,

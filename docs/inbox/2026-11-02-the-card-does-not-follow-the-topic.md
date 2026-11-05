@@ -17,7 +17,7 @@ From the store, the same 371 turns:
   The four memories of kind `boundary` were on every card. The most frequent ordinary memories were on
   250 to 273 cards each, whatever the topic. `card: N current beliefs crowded out` said 110 to 215 each
   turn.
-- The relevance note's gate (0.42, `features/relevance/logic.py`) skipped the pick on 218 of 266
+- The relevance note's gate (0.42, `features/recall/logic.py`) skipped the pick on 218 of 266
   look-ups (82%). Memories that bore on the message often scored 0.30 to 0.40. It does not run on a
   turn the roleplay talker answers.
 - One fact is often stored several times: three wordings of one film habit, five of one event, eight

@@ -368,7 +368,7 @@ _Avoid_: state card, memory block
 How close each memory is to the moment, used to choose most of the memory card.
 
 **Recall**:
-The look-up when they ask it to remember something or say it forgot.
+The memories a reply gets beyond the card, by trigger: when they ask it to remember something or say it forgot (the asked trigger), and when a memory bears on what they just said (relevant memories).
 
 **Relevant memories**:
 A few memories that bear on what they just said, found by meaning and picked by a small model.

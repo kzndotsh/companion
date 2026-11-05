@@ -7,13 +7,11 @@ import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from companion.core.frames import (
     scene_note,
 )
-from companion.core.recall import PROMPT as RECALL_PROMPT
-from companion.core.recall import RECENT, recall_note
 from companion.core.turn.context import inputs_hash
 from companion.core.turn.floor import BRUSH_NOTE, HOLD_NOTE
 from companion.core.turn.listening import PROMPT as LISTEN_PROMPT
@@ -30,14 +28,13 @@ from companion.core.types import (
     severity_from,
 )
 from companion.kit.features import Feature, Lookups, Moment, Offer, Offered
-from companion.kit.recall import Context, Recalled, look_up
 from companion.prompts import get
 from companion.registry import FEATURES
 from companion.turn.mention import mention_note
 
 if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
-from companion.kit.current import Heard, Turn, decide, mark
+from companion.kit.current import Heard, Turn, decide
 
 log = logging.getLogger("companion.turn")
 HOW_ARE_YOU_NOTE = get("notes/check-in")
@@ -54,8 +51,9 @@ async def look(
     this turn and the reply goes ahead. Before, they ran one after another and their limits stacked
     past 15 s (architecture audit, 2026-10-23)."""
     jobs: dict[str, Awaitable[object]] = {
-        "recall": _recall(c, t, heard or read),
-        **{f.name: f.look(c, t, in_scene, heard) for f in FEATURES if f.look is not None},
+        f.name: f.look(c, t, in_scene, (heard or read) if f.scene_read else heard)
+        for f in FEATURES
+        if f.look is not None
     }
     tasks = {name: asyncio.ensure_future(job) for name, job in jobs.items()}
     _, late = await asyncio.wait(tasks.values(), timeout=LOOK_SECONDS)
@@ -69,10 +67,7 @@ async def look(
             log.warning("look-up %s failed; left out: %r", name, task.exception())
         else:
             got[name] = task.result()
-    return Lookups(
-        recalled=cast("Recalled | None", got.get("recall")),
-        found={f.name: got[f.name] for f in FEATURES if f.name in got},
-    )
+    return Lookups(found={f.name: got[f.name] for f in FEATURES if f.name in got})
 
 
 def _listening_note(c: Runtime, t: Turn, heard: Heard | None) -> str | None:
@@ -101,38 +96,6 @@ def _listening_note(c: Runtime, t: Turn, heard: Heard | None) -> str | None:
         reason=render_listening(judged, note),
     )
     return note
-
-
-async def _recall(c: Runtime, t: Turn, heard: Heard | None) -> Recalled | None:
-    """When they asked it to remember something, look it up across all of memory and log it."""
-    if c.judge is None or heard is None or not heard[0].recall or not heard[0].topic:
-        return None
-    mark(t, f"recall look-up: {heard[0].topic!r}")
-    said = [f"{'they' if u.speaker is Speaker.USER else 'you'}: {u.text}" for u in t.prior]
-    recalled = await look_up(
-        c.judge,
-        c.store.user_beliefs(c.rel),
-        heard[0].topic,
-        Context(c.store.last_support(c.rel), t.now, [*said[-(RECENT - 1) :], f"they: {t.text}"]),
-    )
-    found = recalled.picked if recalled is not None else ()
-    reason = f"recall: they asked about {heard[0].topic!r}; " + (
-        f"{len(found)} found" if recalled is not None else "the look-up failed"
-    )
-    decide(
-        c,
-        t,
-        "recall",
-        {
-            "topic": heard[0].topic,
-            "picked": [b.id for b in found],
-            "searched": recalled.searched if recalled is not None else 0,
-            "scorer": recalled.model if recalled is not None else "",
-            "prompt": RECALL_PROMPT.ref,
-        },
-        reason=reason,
-    )
-    return recalled
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,18 +152,6 @@ def _owned(m: Moment, so_far: Offered) -> Offer:
     replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]
     note = owned_note(replies, repairing=bool(so_far["repair"].lines))
     return Offer(tail=(note,) if note else ())
-
-
-def _recalled(m: Moment, _: Offered) -> Offer:
-    recalled = m.looked.recalled
-    if recalled is None:
-        return Offer()
-    # In a scene an empty look-up adds nothing: what they mean is most likely in the story itself,
-    # in view, and "memory holds nothing" would make it deny something it can see.
-    if m.in_scene is not Frame.REAL and not recalled.picked:
-        return Offer()
-    note = recall_note(recalled.picked)
-    return Offer((note,) if note else ())
 
 
 def _severity(detail: dict[str, Json] | None) -> int:
@@ -260,7 +211,6 @@ _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "rude": _rude,
     "repair": _repair,
     "owned": _owned,
-    "recall": _recalled,
     "how-are-you": _how_are_you,
     "hold": _hold,
     "brush-off": _brush,

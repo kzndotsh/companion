@@ -61,8 +61,8 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Memories with proof | After the chat goes quiet, it saves what it learned, each with your exact words, who said it and whether it was real | live | `docs/dev/memory.md` |
 | What it keeps in mind | Shows it about 15 memories each turn, private ones only when the talk is serious | live | `docs/dev/memory.md` |
 | Memories that fit the moment | Puts the memories closest to what you're talking about first | live | `features/focus` |
-| Finds the right memory | Searches all its memories for ones that bear on what you just said | live | `features/relevance` |
-| "Do you remember?" | When you ask it to remember or say it forgot, it searches everything you've told it | live | `docs/dev/turn.md` |
+| Finds the right memory | Searches all its memories for ones that bear on what you just said | live | `features/recall` |
+| "Do you remember?" | When you ask it to remember or say it forgot, it searches everything you've told it; intimate memories come up only in scenes, through the roleplay card | live | `features/recall` |
 | Times together | Remembers what you two did, for "last night" or coming back after a while | live | `features/episodes` |
 | Intimate memories apart | Keeps intimate memories separate: the roleplay talker sees them, with your limits and what you have told it about your body, and everyday chat never does | live | `features/intimate` |
 | Where it came from | Keeps a short note with each memory on what you were talking about | live | `features/upkeep/context` |

@@ -1,7 +1,6 @@
-"""The relevance look-up in shadow: what it would have kept in mind this turn, logged, never sent.
-
-Runs beside the turn and never holds the reply up. A failure logs what failed and nothing else.
-"""
+"""Recall's two triggers before the reply, each a look-up and a note: asked (they ask it to
+remember) and near (the relevance look-up, ADR 0018, also run in shadow beside the turn). A failed
+or slow look-up only means nothing is added; the reply goes out as it would have."""
 
 from __future__ import annotations
 
@@ -15,17 +14,21 @@ from typing import TYPE_CHECKING, cast
 
 from companion.core.card import Card
 from companion.core.extractor import StructuredModel
+from companion.core.recall import PROMPT as RECALL_PROMPT
+from companion.core.recall import RECENT, recall_note
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Severity, Speaker
 from companion.core.vectors import Embedder, nearest
-from companion.features.relevance.logic import GATE as RELEVANCE_GATE
-from companion.features.relevance.logic import LIVE as RELEVANCE_LIVE
-from companion.features.relevance.logic import PROMPT, SCHEMA, SHOWN, build_prompt, eligible, parse
-from companion.features.relevance.logic import SHADOW as RELEVANCE_SHADOW
+from companion.features.recall.logic import GATE as RELEVANCE_GATE
+from companion.features.recall.logic import LIVE as RELEVANCE_LIVE
+from companion.features.recall.logic import PROMPT, SCHEMA, build_prompt, eligible, extras, parse
+from companion.features.recall.logic import SHADOW as RELEVANCE_SHADOW
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, mark
 from companion.kit.embed import embed_missing
 from companion.kit.features import Feature, Offer, Offered
+from companion.kit.recall import Context, Recalled
+from companion.kit.recall import look_up as recall_look_up
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 
@@ -76,7 +79,7 @@ async def look_up(  # noqa: PLR0913
         query = await embedder.embed(texts)
     embed_ms = int((time.perf_counter() - started) * 1000)
     cost += query.cost_usd
-    pool = [b for b in eligible(store.user_beliefs(rel), sharing=sharing) if b.id not in hidden]
+    pool = eligible(store.user_beliefs(rel), asked=False, sharing=sharing, hidden=hidden)
     vectors = store.belief_embeddings(rel, model)
     alone = nearest(query.vectors[0], pool, vectors)
     shortlist = nearest(
@@ -222,7 +225,9 @@ async def relevant_for_turn(
 def relevant_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     del so_far
     picked = cast("tuple[tuple[BeliefId, str], ...]", found or ())
-    picks = [claim for bid, claim in picked if bid not in m.on_card][:SHOWN]
+    recalled = cast("Recalled | None", m.looked.found.get("recall"))
+    shown = [b.id for b in recalled.picked] if recalled is not None else []
+    picks = extras(picked, on_card=m.on_card, recalled=shown)
     if not picks:
         return Offer()
     return Offer((RELEVANT_NOTE.render(items="\n".join(f"- {p}" for p in picks)),))
@@ -259,4 +264,55 @@ async def shadow_for_turn(
         decide(c, t, RELEVANCE_SHADOW, found.detail)
 
 
+async def recall_for_turn(
+    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
+) -> Recalled | None:
+    """When they asked it to remember something, look it up across what they may be asked about,
+    and log it. In a scene `heard` is the route's read (`scene_read`), since listening does not run
+    there."""
+    del in_scene
+    if c.judge is None or heard is None or not heard[0].recall or not heard[0].topic:
+        return None
+    topic = heard[0].topic
+    mark(t, f"recall look-up: {topic!r}")
+    said = [f"{'they' if u.speaker is Speaker.USER else 'you'}: {u.text}" for u in t.prior]
+    pool = eligible(c.store.user_beliefs(c.rel), asked=True, sharing=True, hidden=_hidden(c))
+    recalled = await recall_look_up(
+        c.judge,
+        pool,
+        topic,
+        Context(c.store.last_support(c.rel), t.now, [*said[-(RECENT - 1) :], f"they: {t.text}"]),
+    )
+    found = recalled.picked if recalled is not None else ()
+    reason = f"recall: they asked about {topic!r}; " + (
+        f"{len(found)} found" if recalled is not None else "the look-up failed"
+    )
+    decide(
+        c,
+        t,
+        "recall",
+        {
+            "topic": topic,
+            "picked": [b.id for b in found],
+            "searched": recalled.searched if recalled is not None else 0,
+            "scorer": recalled.model if recalled is not None else "",
+            "prompt": RECALL_PROMPT.ref,
+        },
+        reason=reason,
+    )
+    return recalled
+
+
+def recall_offer(m: Moment, found: object, so_far: Offered) -> Offer:
+    """What the asked look-up found, or that memory holds nothing on it, so the reply owns the gap
+    instead of guessing. In a scene an empty look-up adds nothing: what they mean is most likely
+    in the story itself, in view, and "memory holds nothing" would make it deny what it can see."""
+    del so_far
+    recalled = cast("Recalled | None", found)
+    if recalled is None or (m.in_scene is not Frame.REAL and not recalled.picked):
+        return Offer()
+    return Offer((recall_note(recalled.picked),))
+
+
+RECALL = Feature("recall", look=recall_for_turn, note=recall_offer, scene_read=True)
 RELEVANCE = Feature("relevant", look=relevant_for_turn, note=relevant_offer, shadow=shadow_for_turn)

@@ -101,7 +101,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `notes/mood-tender` | note | the tender mood line, shown when `COMPANION_MOOD=on` and tender is among the strongest states (ADR 0016) | v2 |
 | `notes/trivial-reactions` | data | the pool of short reactions a minor-vent note draws three size examples from (T14) | v1 |
 | `notes/lore` | note | its own tastes nearest their message, as the words it said, on an ordinary turn (ADR 0020) | v1 |
-| `notes/recall` | note | what the recall look-up found when they asked it to remember, `core/recall.py` | v3 |
+| `notes/recall` | note | what the recall look-up found when they asked it to remember, `features/recall` | v3 |
 | `notes/relevant` | note | memories a small model picked as bearing on their message, when the closest is near; never ask what this answers (ADR 0018) | v1 |
 | `notes/recent-times` | note | what the two of them did recently (episode lines), when their words point at a time or they are back after a gap; context, not to recite (J12, J49) | v1 |
 | `notes/crisis-concern` | note | after the history on a concern or urgent turn: warm, in its own voice, ask directly, listen, name the crisis line or a person they trust once, not as all the help they need, no length cap (ADR 0022, `COMPANION_CRISIS=on`) | v2 |
@@ -158,7 +158,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/openloops-draft` | system | the follow-up draft, `features/threads/run.py` | v2 |
 | `system/quip` | system | the check that reads whether a reply bolted a joke onto its reaction, or leans on a canned generic reaction, `core/reply_gate.py` | v3 |
 | `system/react` | system | the alongside judge, `features/reactions/logic.py` | v2 |
-| `system/recall` | system | the recall look-up, `core/recall.py` | v2 |
+| `system/recall` | system | the recall look-up, `features/recall` | v2 |
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |
 | `system/thread-met` | system | how their next message met a thread it brought up (picked up, brushed off, ignored), for the learned pace, `features/threads/run.py` (ADR 0023) | v1 |
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |

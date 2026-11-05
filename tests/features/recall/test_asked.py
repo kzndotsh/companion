@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -27,6 +27,8 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.features.intimate.logic import Intimate, Stance
+from companion.features.intimate.store import By
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -115,9 +117,9 @@ def store(tmp_path: Path) -> Store:
     return s
 
 
-async def _ask(store: Store, judge: Judge) -> Talker:
+async def _ask(store: Store, judge: Judge, intimate_memory: str = "off") -> Talker:
     talker = Talker()
-    runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
+    runtime = Runtime(store, talker, PREFIX, REL, judge=judge, intimate_memory=intimate_memory)
     await handle(runtime, SESSION, "come on, you know this one", "test", NOW)
     return talker
 
@@ -191,3 +193,16 @@ def test_the_recall_list_can_say_when_each_was_said() -> None:
     prompt = build_prompt("what i ate", {}, {}, "Saturday 24 October 2026")
     assert prompt.startswith("Today is Saturday 24 October 2026.")
     assert not build_prompt("what i ate", {}).startswith("Today")
+
+
+async def test_the_intimate_lane_is_never_looked_up_on_an_everyday_turn(store: Store) -> None:
+    # One rule for both triggers (ADR 0026): before, an asked look-up showed a memory the card had
+    # just left off as intimate (2 everyday turns of 17 asked, 2026-11-05).
+    store.insert_belief(_belief("b2", "The user likes it slow.", "burger"))
+    by = By("fake", "system/scene-lane@v1", NOW - timedelta(hours=1))
+    store.intimate_memory().place({BeliefId("b2"): Intimate(Stance.INTO)}, by)
+    judge = Judge(["r1", "r2"])
+    talker = await _ask(store, judge, intimate_memory="on")
+    [asked] = judge.asked
+    assert "slow" not in asked
+    assert "slow" not in talker.seen[0].card

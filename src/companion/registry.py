@@ -22,7 +22,7 @@ from companion.features.mood.run import MOOD
 from companion.features.moves.run import MOVES
 from companion.features.now.run import NOW
 from companion.features.promises.run import PROMISE_CHECK
-from companion.features.relevance.run import RELEVANCE
+from companion.features.recall.run import RECALL, RELEVANCE
 from companion.features.reminders.run import REMINDERS
 from companion.features.threads.run import OPENLOOPS
 from companion.features.upkeep.context.run import CONTEXT
@@ -37,6 +37,7 @@ FEATURES: tuple[Feature, ...] = (
     MOOD,
     CONTEXT,
     WORTH,
+    RECALL,
     RELEVANCE,
     FOCUS,
     EPISODES,

@@ -69,7 +69,7 @@ zone (`day_over` in `core/card.py`); it stays in memory, and the decision log sa
 Memories marked sensitive are shown only on turns where they are sharing something (severity 1 or
 more), and with the focus on, only when they are close to the moment. The memories the card has no room for are logged once per turn. Memories that bear on the
 message but are not on the card can still reach the model through the relevance look-up
-(`src/companion/features/relevance/README.md`).
+and, when they ask it to remember, the asked look-up (`src/companion/features/recall/README.md`).
 
 With `COMPANION_INTIMATE_MEMORY=on`, the default since 2026-11-05, a turn the roleplay talker answers gets
 the roleplay card instead: the intimate memories and patterns nearest the moment and perhaps one thing they

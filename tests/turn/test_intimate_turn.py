@@ -32,7 +32,7 @@ from companion.features.intimate.logic import (
 )
 from companion.features.intimate.run import CARD, LEFT_OFF, OFFERED, Scored, entries
 from companion.features.intimate.store import By
-from companion.features.relevance.logic import LIVE
+from companion.features.recall.logic import LIVE
 from companion.kit.current import Turn
 from companion.kit.features import Lookups
 from companion.kit.record import Recorder
@@ -40,7 +40,7 @@ from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.assemble import Assembled, assemble
 from companion.turn.fast import handle
-from tests.features.relevance.test_run import Embedder, Picker
+from tests.features.recall.test_run import Embedder, Picker
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Talker
 
 NAME = "The user's name is Sam."

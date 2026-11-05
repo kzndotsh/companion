@@ -10,8 +10,8 @@ from companion.core.vectors import Embedded
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
-from tests.features.relevance.test_run import Embedder
-from tests.features.relevance.test_run import _belief as belief_in  # pyright: ignore[reportPrivateUsage]
+from tests.features.recall.test_run import Embedder
+from tests.features.recall.test_run import _belief as belief_in  # pyright: ignore[reportPrivateUsage]
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, SESSION, Judge, Talker
 
 

@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Protocol
 
 from companion.core.types import Belief, BeliefId, Frame, Utterance
 from companion.kit.current import Heard, Turn, is_casual
-from companion.kit.recall import Recalled
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -84,13 +83,14 @@ class Feature:
     shadow: Shadow | None = None
     after_turn: AfterTurn | None = None
     mention: Mention | None = None  # what it would bring up on its own this turn (ADR 0023)
+    # Its look-up gets the route's read in a scene, where the listening judge does not run.
+    scene_read: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class Lookups:
-    """What a reply waits for besides the judges: a recall, whether a topic is spent, a guess."""
+    """What a reply waits for besides the judges: what each feature's look-up found."""
 
-    recalled: Recalled | None = None
     found: Mapping[str, object] = field(default_factory=dict[str, object])  # by feature name
 
 
