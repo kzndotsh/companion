@@ -67,8 +67,8 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Where it came from | Keeps a short note with each memory on what you were talking about | live | `features/upkeep/context` |
 | Sorting | Tells facts about your life apart from comments about the bot and one-day moments, which fade | live | `features/upkeep/sort` |
 | Tidying | Rereads week-old memories each night and checks each new one against what it already knows | live | `features/upkeep/reread` |
-| Asks before replacing | When a new memory may contradict an old one, it asks you instead of choosing | live | `features/upkeep/reread` |
-| Merging | Suggests joining memories that say the same thing; nothing merges without you | live | `features/upkeep/merging` |
+| Asks before replacing | When a new memory may contradict an old one, it keeps both and leaves the choice to you in `companion memory review` | live | `features/upkeep/reread` |
+| Merging | Suggests joining memories that say the same thing, in `companion memory review`; nothing merges without you | live | `features/upkeep/merging` |
 | Backups | Saves a checked copy of everything at each start and once a day | live | `docs/dev/memory.md` |
 
 ## Getting to know you
