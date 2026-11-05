@@ -20,7 +20,7 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Notices pauses | Sees where long gaps fell in the chat, so it reads timing right | live | `docs/dev/turn.md` |
 | Right length | Keeps replies to a short message short, instead of three times longer | live | `docs/dev/turn.md` |
 | Just a reaction | A short "ok" after something it said can get an emoji reaction instead of a reply | live | `docs/dev/turn.md` |
-| Reacts and replies | Now and then hearts a sweet message as well as answering it | live | `docs/dev/turn.md` |
+| Reacts and replies | Now and then reacts to a message with a fitting emoji as well as answering it | live | `docs/dev/turn.md` |
 | Listens | Works out how serious a message is, so a vent gets heard instead of fixed | live | `docs/dev/turn.md` |
 | Small vents | A small complaint gets a short, natural reaction, not a speech | live | `README.md` |
 | Cools down when you're rude | A rude message gets a cooler reply that turn | live | `docs/dev/turn.md` |
