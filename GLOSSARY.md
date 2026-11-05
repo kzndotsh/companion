@@ -61,7 +61,7 @@ The talker is always called with its reasoning switched off, because reasoning m
 One message of theirs and everything done to answer it, from reading it to storing the reply.
 
 **Stage**:
-One step of a turn: hear, route, look, assemble, crisis, talk, beside, persist.
+One step of a turn: listen, route, look, assemble, crisis, talk, beside, persist.
 
 **Route**:
 Which talker answers a turn, chosen by code, and why.
@@ -75,10 +75,10 @@ A message saying they are leaving; never casual, and never a pull to stay.
 
 **Reaction**:
 An emoji sent instead of a reply, for a message that needs no words.
-_Avoid_: ack (for the result; the ack judge is the judge that picks it)
+_Avoid_: ack (for the result; the instead judge is the judge that picks it)
 
 **React alongside**:
-An emoji put on their message as well as a normal reply.
+An emoji put on their message as well as a normal reply, picked by the alongside judge.
 
 **Split reply**:
 A long plain reply sent as two or three messages, stored and read as one.
@@ -168,11 +168,14 @@ A model step that proposes memories, views, plans or stories from messages, for 
 The first judge's labels on each message: severity, what they are doing, and flags such as rude, recall, intimate or age-coded.
 _Avoid_: hear (for the labels)
 
-**Ack judge**:
+**Instead judge**:
 The judge that decides a message needs only a reaction, not a reply.
 
+**Alongside judge**:
+The judge that decides a reply also gets a reaction, and reads the message's tone.
+
 **Tone**:
-The reaction judge's read of a message: funny, sweet, impressive, exciting, sad or plain.
+The alongside judge's read of a message: funny, sweet, impressive, exciting, sad or plain.
 
 **Energy**:
 How much typed energy a message has (stretched words, exclamation marks, emoji), counted by code.

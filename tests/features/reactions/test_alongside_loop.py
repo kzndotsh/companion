@@ -9,7 +9,7 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.turn.ack import ReactAndReply, Reaction
+from companion.core.turn.reply import ReactAndReply, Reaction
 from companion.core.types import Json, RelationshipId, SessionId
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store

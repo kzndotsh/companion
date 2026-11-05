@@ -23,7 +23,7 @@ from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
-from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
+from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import (
     Favorite,
     FavoriteId,

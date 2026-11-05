@@ -27,8 +27,8 @@ import aiohttp
 import discord
 from discord import app_commands
 
-from companion.core.turn.ack import ReactAndReply, Reaction
 from companion.core.turn.quoted import Quoted
+from companion.core.turn.reply import ReactAndReply, Reaction
 from companion.core.types import Speaker
 from companion.io.delivery import Commands, DeliveryError, Incoming
 

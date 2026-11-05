@@ -109,7 +109,7 @@ chooses the level (`combine`, `level_for`): every read failed is concern, and a 
 plan in the past only is concern, not urgent. A split joke allows one light check
 (`notes/crisis-light`) at most once a day. The concern note is `notes/crisis-concern`; the urgent
 message is the sheet's `## Crisis message` section (`characters.py`) or `messages/crisis-line`,
-sent once an hour at most (`turn/crisis.py`, `ThenSend` in `core/turn/ack.py`, `io/telegram.py`).
+sent once an hour at most (`turn/crisis.py`, `ThenSend` in `core/turn/reply.py`, `io/telegram.py`).
 The scene rule and the method check are in `turn/crisis.py`; the reach-out hold is `core/crisis.py`
 `crisis_paused` (was `reach_held`), read by the reach, open-loop and nudge gates. The line is `core/crisis.py` `LINE`.
 Fixtures: `evals/fixtures/crisis/messages.json`, checked with `companion crisis --check --cap`.

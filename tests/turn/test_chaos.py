@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import FALLBACK, Extraction
-from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
+from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, Speaker, TurnId
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store

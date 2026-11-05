@@ -11,11 +11,12 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.turn.ack import REACT_THRESHOLD, ReactAndReply, Reaction, ThenSend
+from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, RelationshipId, SessionId, TurnId
+from companion.features.reactions import run as ack_loop
+from companion.features.reactions.logic import INSTEAD_THRESHOLD
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
-from companion.turn import ack as ack_loop
 from companion.turn.fast import handle
 
 REL = RelationshipId("rel")
@@ -107,7 +108,7 @@ async def test_a_reaction_logs_the_scorer_and_scores_but_creates_no_turn_request
     assert d.detail is not None
     assert d.detail["scorer"] == "judge-model"
     assert d.detail["scores"] == {"kind": "ack", "confidence": 0.95}
-    assert d.detail["threshold"] == REACT_THRESHOLD
+    assert d.detail["threshold"] == INSTEAD_THRESHOLD
     assert store.latest_turn(REL) != _last_user_turn(store)
 
 
@@ -144,7 +145,7 @@ async def test_a_failing_judge_means_a_normal_reply(store: Store) -> None:
 
 
 async def test_a_slow_judge_is_abandoned(store: Store, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(ack_loop, "ACK", replace(ack_loop.ACK, timeout=0.05))
+    monkeypatch.setattr(ack_loop, "INSTEAD", replace(ack_loop.INSTEAD, timeout=0.05))
     talker, out = await _two_turns(store, Judge(_verdict("ack", 0.99), delay=1.0))
     assert out == "a normal reply"
     assert talker.calls == 2

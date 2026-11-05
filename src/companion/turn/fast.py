@@ -12,12 +12,8 @@ from companion.core.frames import (
     scene_frame,
 )
 from companion.core.history import HISTORY_LIMIT
-from companion.core.turn.ack import (
-    ReactAndReply,
-    Reaction,
-    ThenSend,
-)
 from companion.core.turn.quoted import Quoted
+from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import (
     Frame,
     SessionId,
@@ -31,7 +27,7 @@ from companion.kit.spendcap import NOTICE, first_notice_today, over_cap
 from companion.turn.assemble import assemble
 from companion.turn.beside import shadows
 from companion.turn.crisis import off_scene, reading_of, then_line
-from companion.turn.hear import listen
+from companion.turn.listen import listen
 from companion.turn.notes import look
 from companion.turn.persist import (
     TheirMessage,

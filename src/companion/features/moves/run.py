@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
-from companion.core.turn.ack import inputs_hash
+from companion.core.turn.context import inputs_hash
 from companion.core.turn.habits import habit_note
 from companion.core.types import Json, Utterance
 from companion.features.moves.logic import (

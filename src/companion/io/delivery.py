@@ -15,8 +15,8 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol
 
-from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.core.turn.quoted import Quoted
+from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.io.pace import hold_seconds, read_seconds
 from companion.io.split import fit, split_reply
 from companion.io.stop import cancel_when, next_message

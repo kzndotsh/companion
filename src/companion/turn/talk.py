@@ -19,18 +19,18 @@ from companion.core.recheck import eligible as recheck_eligible
 from companion.core.talker import Reply, Talker
 from companion.core.turn.floor import INTIMATE_CHECK, announces_limit
 from companion.core.turn.quip import PROMPT as QUIP_PROMPT
-from companion.core.turn.react import ToneRead
 from companion.core.types import (
     Frame,
     Json,
     Severity,
 )
+from companion.features.reactions.logic import ToneRead
+from companion.features.reactions.run import judge_alongside
 from companion.kit.current import Heard, Turn, decide, mark
 from companion.turn.crisis import method_checked
 from companion.turn.floor import judge_intimate
 from companion.turn.frames import judge_frame
 from companion.turn.quip import judge_quip
-from companion.turn.react import judge_reaction
 from companion.turn.values import Answered, Routed, stop
 
 if TYPE_CHECKING:
@@ -56,7 +56,7 @@ def start_beside(
         if needs_judge(t.text, t.prior, t.now)
         else None
     )
-    return talk, framing, asyncio.ensure_future(judge_reaction(c.judge, t.prior, t.text))
+    return talk, framing, asyncio.ensure_future(judge_alongside(c.judge, t.prior, t.text))
 
 
 async def _redraw_empty(c: Runtime, t: Turn, request: TalkerRequest, talker: Talker) -> Reply:

@@ -11,6 +11,7 @@ import re
 from companion.core.turn.habits import EMOJI, EMOTICON
 
 _STRETCHED = re.compile(r"\b\w*([a-z])\1{2,}\w*\b", re.IGNORECASE)
+_STRETCHED_END = re.compile(r"([a-z])\1{2,}\b", re.IGNORECASE)
 _EXCLAIM = re.compile(r"!+")
 _LOW = re.compile(
     r"(?<![\w/:])(?:[:;=][-']?[(\[/\\|]|:'\(|T_T|D:)"
@@ -35,3 +36,10 @@ def texting_energy(text: str) -> int:
         len(EMOTICON.findall(text)),
     )
     return sum(min(n, _CAP) for n in kinds)
+
+
+def stretched(text: str) -> bool:
+    """Whether a word in it ends on a letter held three times or more ("fineee", "yesss"): a playful
+    answer handed back mid-bit, which the instead judge's prompt already says is not an ack, yet it
+    read "fineee" as one at 0.70 or more in 12 of 12 reads (owner flag of 2026-11-05)."""
+    return _STRETCHED_END.search(text) is not None

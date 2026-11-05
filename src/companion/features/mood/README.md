@@ -14,8 +14,8 @@ A mood that carries across hours and into the next day: cozy, tender or playful.
 |---|---|---|---|---|
 | `chat_span` | cozy | 4 h | 0.5 | 15 minutes or more chatted today (amount is minutes / 120) |
 | `long_chat` | cozy | 24 h | 0.15 | an hour or more chatted today, a little warmth into the next day |
-| `tone_sweet` | cozy | 3 h | 0.3 | the react judge read their previous message as sweet |
-| `tone_funny` | playful | 2 h | 0.4 | the react judge read their previous message as funny |
+| `tone_sweet` | cozy | 3 h | 0.3 | the alongside judge read their previous message as sweet |
+| `tone_funny` | playful | 2 h | 0.4 | the alongside judge read their previous message as funny |
 | `energy` | playful | 2 h | 0.3 | typing energy 2 or more on a message rated not serious at all (0.1 per point) |
 | `serious` | tender | 12 h | 0.8 | the listening judge rated the message 2 or 3 |
 | `eased` | tender | 12 h | 0.2 | takes away from tender: play after something hard, added each time they joke again |

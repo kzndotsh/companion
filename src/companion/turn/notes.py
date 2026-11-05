@@ -14,9 +14,7 @@ from companion.core.frames import (
 )
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import RECENT, recall_note
-from companion.core.turn.ack import (
-    inputs_hash,
-)
+from companion.core.turn.context import inputs_hash
 from companion.core.turn.floor import BRUSH_NOTE, HOLD_NOTE
 from companion.core.turn.game import game_note
 from companion.core.turn.length import LengthTarget, length_target

@@ -22,14 +22,7 @@ from companion.core.frames import resolve as frame_resolve
 from companion.core.prompt.request import request_sha256
 from companion.core.replay import TurnRecord
 from companion.core.talker import Reply
-from companion.core.turn.ack import (
-    ReactAndReply,
-    Reaction,
-    inputs_hash,
-)
-from companion.core.turn.react import PROMPT as REACT_PROMPT
-from companion.core.turn.react import ToneRead
-from companion.core.turn.react import decide as decide_reaction
+from companion.core.turn.reply import ReactAndReply, Reaction
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -39,10 +32,11 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.views import why
+from companion.features.reactions.logic import ToneRead
+from companion.features.reactions.run import react_alongside
 from companion.kit.beside import beside
 from companion.kit.current import Turn, decide, mark, recorder
 from companion.registry import FEATURES
-from companion.store.sqlite.decisions import REACTED
 from companion.turn.assemble import Assembled, CardLog
 from companion.turn.frames import inputs_hash as frames_inputs_hash
 from companion.turn.frames import schema_hash as frames_schema_hash
@@ -99,33 +93,10 @@ async def their_message(c: Runtime, t: Turn, platform: str) -> AsyncGenerator[Th
         raise
 
 
-def _react_alongside(
-    c: Runtime, t: Turn, felt: tuple[ToneRead, str, str] | None
-) -> Reaction | None:
-    """A reaction to send with the reply, if the message calls for one. Logs the judgement."""
-    if felt is None:
-        return None
-    judged, model, prompt = felt
-    decision = decide_reaction(judged, c.store.turns_since_reaction(c.rel))
-    decide(
-        c,
-        t,
-        REACTED if decision.reaction is not None else "react: none",
-        {
-            "scorer": model,
-            "prompt": REACT_PROMPT.ref,
-            "inputs_hash": inputs_hash(prompt),
-            "scores": {"tone": judged.tone, "confidence": judged.confidence},
-        },
-        reason=decision.reason,
-    )
-    return decision.reaction
-
-
 def with_reaction(
     c: Runtime, t: Turn, felt: tuple[ToneRead, str, str] | None, sent: str
 ) -> str | ReactAndReply:
-    reacted = _react_alongside(c, t, felt)
+    reacted = react_alongside(c, t, felt)
     mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to the chat")
     return ReactAndReply(reacted, sent) if reacted is not None else sent
 

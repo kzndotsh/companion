@@ -119,7 +119,7 @@ together.
   that asks them something says so on its offer (`Offer(asks=True)`, read by `asking` in
   `kit/features.py`), so the question-run note and the calendar stay out that turn. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
   failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `turn/beside.py` runs each beside the turn and logs a failure.
-- A turn runs in stages, one module each: `turn/hear.py` (a reaction instead of a reply, the listening
+- A turn runs in stages, one module each: `turn/listen.py` (a reaction instead of a reply, the listening
   read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the
   request), `turn/crisis.py` (a risk read sets a scene aside and adds the fixed crisis-line message),
   `turn/talk.py` (the talker and the reply checks), `turn/beside.py` (shadow tasks) and

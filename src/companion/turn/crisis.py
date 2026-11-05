@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.crisis import CrisisLevel, Reading
 from companion.core.talker import Reply
-from companion.core.turn.ack import ReactAndReply, ThenSend
+from companion.core.turn.reply import ReactAndReply, ThenSend
 from companion.core.types import Frame, Speaker, Utterance, UtteranceId
 from companion.features.crisis.logic import line_message, method_words
 from companion.features.crisis.run import (

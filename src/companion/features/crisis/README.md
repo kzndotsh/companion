@@ -28,7 +28,7 @@ For the kind, the most serious any counted read gave wins (substance taken, then
 - *Urgent*: the same note, and code sends a separate fixed message after the reply (`turn/crisis.py` `then_line`): the character sheet's `## Crisis message` section with `$line` filled in, else `messages/crisis-line`. It is stored as the companion's message, logged as `crisis: line sent` with where its text came from, and not sent again within an hour. Never written by a model; the reply is never edited. Delivery sends it after the reply, and sends it even if the reply could not be delivered.
 - *Scenes*: a concern or urgent turn in a scene, or on the roleplay talker, goes to the everyday talker as a real turn (`crisis: scene`).
 - *Method check*: on a concern or urgent turn, a reply naming means or methods in a how-to way (a lethal dose, a number of pills or milligrams, "the easiest way to", a noose, and the like, unless their own message said it) is drawn once more and the redraw goes out (`crisis: method check`, with the first kept).
-- *Never a reaction alone*: a short message with a cue word always gets a reply, never only an emoji (`turn/hear.py`).
+- *Never a reaction alone*: a short message with a cue word always gets a reply, never only an emoji (`turn/listen.py`).
 - *The crisis pause*: once a concern or urgent turn is stored, `crisis: reach-outs held` is logged (the stored key keeps its wording), and the plan, nudge and own-reason gates hold for 24 hours (`core/crisis.py` `crisis_paused`).
 
 The crisis line is one constant, `core/crisis.py` `LINE`: 988 (call or text, in the US) by default, until where they live is known.

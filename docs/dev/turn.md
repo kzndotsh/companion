@@ -16,9 +16,10 @@ A turn runs in stages, one module each under `src/companion/turn/`, driven by `h
 `fast.py`. Before any of them, at the daily spend cap (`COMPANION_DAILY_CAP_USD`) their message is kept,
 nothing paid runs, and they are told once that day (`messages/spend-cap`).
 
-1. **Hear** (`hear.py`). Side by side, it decides whether the message needs a reply at all or only a
-   reaction emoji, and reads how serious it is (the listening read, below). Only a short message after
-   a statement of its own is asked about (`core/turn/ack.py` `is_candidate`); one with a stretched word
+1. **Listen** (`listen.py`). Side by side, the instead judge decides whether the message needs a reply
+   at all or only a reaction emoji, and the listening judge reads how serious it is (the listening
+   read, below). Only a short message after a statement of its own is asked about
+   (`features/reactions/logic.py` `is_candidate`); one with a stretched word
    ("fineee", "yesss") always gets a reply, since it hands a bit back.
 2. **Route** (`route.py`). It chooses which talker answers: the everyday model or the roleplay model.
 3. **Look** (`notes.py`). Every feature that looks something up before the reply does so here, side
@@ -31,7 +32,7 @@ nothing paid runs, and they are told once that day (`messages/spend-cap`).
    without it a reminder sent half an hour after it was asked for read as sent at once. `Layout` lays the request out from those parts
    with no store in reach; `companion eval` lays out a scripted fixture with it too, and passes each
    reply through `checked` in `talk.py`, so a sample is what the person would receive.
-5. **Talk** (`talk.py`). The talker writes the reply, with a reaction judge and, when a cue or a scene
+5. **Talk** (`talk.py`). The talker writes the reply, with the alongside judge and, when a cue or a scene
    calls for it, the frame judge beside it; then the reply checks run on it.
 6. **Persist** (`persist.py`). Their message, the reply and every decision are stored, and each
    feature's step after the turn runs. Shadow look-ups start once the request is assembled and run

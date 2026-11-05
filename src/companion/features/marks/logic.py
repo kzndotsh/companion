@@ -15,7 +15,7 @@ import re
 from collections.abc import Sequence
 from importlib.resources import files
 
-from companion.core.turn.ack import stretched
+from companion.core.turn.energy import stretched
 from companion.core.turn.habits import EMOJI, EMOTICON
 from companion.prompts import get
 

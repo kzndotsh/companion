@@ -36,7 +36,7 @@ class State(StrEnum):
 class Source(StrEnum):
     CHAT_SPAN = "chat_span"  # minutes chatted today
     LONG_CHAT = "long_chat"  # a long chat leaves a little warmth into the next day
-    TONE_SWEET = "tone_sweet"  # the react judge read their last message as sweet
+    TONE_SWEET = "tone_sweet"  # the alongside judge read their last message as sweet
     TONE_FUNNY = "tone_funny"  # ... or as funny
     ENERGY = "energy"  # typed with energy, on a message that is not serious
     SERIOUS = "serious"  # the listening judge rated it serious
@@ -235,7 +235,7 @@ def _held_by(mood: Mood, state: State) -> str:
 @dataclass(frozen=True, slots=True)
 class Said:
     """One message from them, with what the judges logged about it: the listening severity (None
-    when it was not read) and the react judge's tone (None when not judged)."""
+    when it was not read) and the alongside judge's tone (None when not judged)."""
 
     turn: TurnId
     at: datetime

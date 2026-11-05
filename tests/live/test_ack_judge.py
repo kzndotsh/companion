@@ -1,4 +1,4 @@
-"""Does the ack judge react only when a reply would be unwelcome, on invented chats?
+"""Does the instead judge react only when a reply would be unwelcome, on invented chats?
 
 Run on purpose: `uv run pytest -m live tests/live/test_ack_judge.py -s`. Costs about a cent.
 A reaction ends the thread, so it is right only when the person is closing or confirming. Someone
@@ -15,7 +15,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.turn.ack import SCHEMA, SYSTEM, build_prompt, parse, reaction_for
+from companion.core.turn.context import build_prompt
 from companion.core.types import (
     Frame,
     RelationshipId,
@@ -26,6 +26,12 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.daemon import load_dotenv
+from companion.features.reactions.logic import (
+    INSTEAD_SCHEMA,
+    INSTEAD_SYSTEM,
+    parse_instead,
+    reaction_instead,
+)
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 
@@ -139,7 +145,9 @@ async def test_the_judge_reacts_only_when_closing(case: _Case) -> None:
     async with httpx.AsyncClient(timeout=60) as client:
         extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)
         for _ in range(10):
-            judged = parse((await extractor.extract(SYSTEM, prompt, SCHEMA)).data)
-            reacted += judged is not None and reaction_for(judged) is not None
+            judged = parse_instead(
+                (await extractor.extract(INSTEAD_SYSTEM, prompt, INSTEAD_SCHEMA)).data
+            )
+            reacted += judged is not None and reaction_instead(judged) is not None
     print(f"\n{name}: reacted {reacted}/10")  # noqa: T201
     assert reacted >= 8 if only_react else reacted == 0

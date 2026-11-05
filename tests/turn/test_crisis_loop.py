@@ -14,7 +14,7 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
-from companion.core.turn.ack import Reaction, ThenSend
+from companion.core.turn.reply import Reaction, ThenSend
 from companion.core.types import (
     Frame,
     Json,

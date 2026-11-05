@@ -10,9 +10,9 @@ from typing import Any
 from companion.core.crisis import Reading
 from companion.core.frames import Judgement as FrameJudgement
 from companion.core.talker import Reply, Talker
-from companion.core.turn.ack import Reaction
-from companion.core.turn.react import ToneRead
+from companion.core.turn.reply import Reaction
 from companion.core.types import Frame
+from companion.features.reactions.logic import ToneRead
 from companion.kit.current import Heard
 
 

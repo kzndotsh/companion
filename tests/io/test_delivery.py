@@ -4,8 +4,8 @@ import asyncio
 
 import pytest
 
-from companion.core.turn.ack import ReactAndReply, Reaction, ThenSend
 from companion.core.turn.quoted import Quoted
+from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Speaker
 from companion.io.delivery import Delivery, Hooks, Incoming, Reply
 from tests.io.fake import Fake, msg
