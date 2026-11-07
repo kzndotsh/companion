@@ -91,10 +91,22 @@ log = logging.getLogger("companion.initiative")
 HISTORY = 5000  # messages read back, enough for two weeks
 EPISODE_DAYS = timedelta(days=7)
 IDEAS_JUDGE = Judge(
-    "initiative", IDEAS, IDEAS_SCHEMA, read_ideas, timeout=30.0, unread="no reach-out this time"
+    "reach-ideas",
+    IDEAS,
+    IDEAS_SCHEMA,
+    read_ideas,
+    timeout=30.0,
+    unread="no reach-out this time",
+    spend="initiative",
 )
 PICK_JUDGE = Judge(
-    "initiative", PICK, PICK_SCHEMA, read_pick, timeout=20.0, unread="no reach-out this time"
+    "reach-pick",
+    PICK,
+    PICK_SCHEMA,
+    read_pick,
+    timeout=20.0,
+    unread="no reach-out this time",
+    spend="initiative",
 )
 LANDED_JUDGE = Judge(
     "reach-landed", LANDED, LANDED_SCHEMA, parse_landed, timeout=10.0, unread="not read"

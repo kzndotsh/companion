@@ -90,6 +90,12 @@ def read_claim(data: Json) -> str | None:
     return " ".join(claim.split()) if isinstance(claim, str) and claim.strip() else None
 
 
+def read_wording(data: Json) -> str | None:
+    """The merged wording, empty when the writer said to keep them apart or gave none, None when
+    the answer was not an object."""
+    return read_claim(data) or "" if isinstance(data, dict) else None
+
+
 def merged_kind(members: Sequence[Belief]) -> BeliefKind:
     """A merge that holds a passing state keeps fading like one; otherwise the first member's."""
     kinds = [b.kind for b in members]

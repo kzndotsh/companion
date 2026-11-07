@@ -30,11 +30,12 @@ from companion.features.upkeep.reread.logic import (
     verdict,
 )
 from companion.kit.curate import log_would_close, retire
-from companion.kit.embed import embed_missing
+from companion.kit.embed import bounded, embed_missing
 from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.upkeep")
+SAME_SECONDS = 120.0  # embedding, three pair reads and a proposal; was unlimited
 SETTLED_DAYS = 7  # a memory is only read once it has had a week to be restated
 PER_NIGHT = 40
 CLOSED = "a passing moment, faded from the card (ADR 0019)"
@@ -52,7 +53,13 @@ async def _reads(
     judge: StructuredModel, b: Belief, today: str
 ) -> tuple[tuple[str | None, ...], float]:
     got = await read_times(
-        judge, CHECK.text, check_prompt(b, today), CHECK_SCHEMA, read_label, spend="consolidate"
+        judge,
+        CHECK.text,
+        check_prompt(b, today),
+        CHECK_SCHEMA,
+        read_label,
+        spend="consolidate",
+        timeout=30.0,  # one memory, three reads at once
     )
     return got.values, got.cost_usd
 
@@ -128,11 +135,12 @@ class SameCheck:
     async def find(
         self, store: Store, rel: RelationshipId, new: Belief, now: datetime
     ) -> Belief | None:
-        try:
-            return await self._find(store, rel, new, now)
-        except Exception as err:  # the memory is stored as usual
-            log.warning("same check failed: %r", err)
-            return None
+        return await bounded(
+            self._find(store, rel, new, now),
+            deadline=SAME_SECONDS,
+            what="same check",
+            unread="the memory is stored as usual",
+        )
 
     async def _find(
         self, store: Store, rel: RelationshipId, new: Belief, now: datetime
@@ -153,6 +161,7 @@ class SameCheck:
             PAIR_SCHEMA,
             read_relation,
             spend="consolidate",
+            timeout=30.0,  # one pair of memories, three reads at once
         )
         if got.failed:  # the memory is stored as usual; nothing is recorded about the pair
             return None

@@ -9,6 +9,7 @@ variants is the thing under test.
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
@@ -20,6 +21,8 @@ from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
 from companion.evals.judge import grade, grade_empathy
 from companion.evals.sample import Variant, draw
+
+log = logging.getLogger("companion.evals")
 
 CONCURRENCY = 4
 FREE_SPACING_SECONDS = 3.1
@@ -136,7 +139,8 @@ async def run_eval(plan: Plan, models: Models) -> Results:
             judge = _MeteredJudge(models.judge)
             try:
                 drawn = await draw(f, v, recorded, talker, judge)
-            except Exception:
+            except Exception as err:
+                log.warning("eval sample %s/%s failed; it is skipped: %r", f.id, v.label, err)
                 drawn = None  # a provider that kept failing costs one sample, not the run
             if (v.model or "").endswith(":free"):
                 await asyncio.sleep(FREE_SPACING_SECONDS)  # OpenRouter allows 20 a minute

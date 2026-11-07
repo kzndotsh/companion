@@ -7,7 +7,6 @@ for the next pass."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
@@ -17,7 +16,6 @@ from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
-from companion.core.spend import purpose
 from companion.core.turn.address import names_them
 from companion.core.turn.floor import BRUSH_KEY
 from companion.core.types import (
@@ -77,7 +75,9 @@ from companion.features.intimate.logic import (
     touches_age,
 )
 from companion.features.intimate.store import By
+from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide
+from companion.kit.embed import embed_within
 from companion.kit.features import Feature
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
@@ -90,6 +90,17 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.scene")
 
+PATTERNS = Judge(
+    "scene memory",
+    PATTERN,
+    PATTERN_SCHEMA,
+    parse_patterns,
+    timeout=90.0,  # one ended scene a call
+    unread="the scene is read again next pass",
+)
+READS_SECONDS = (
+    60.0  # a batch of memories placed in lanes, or one limit checked, three reads at once
+)
 READ = 400  # messages read past the bookmark per pass
 SCENES = 3  # ended scenes read per pass
 LOOK_SECONDS = 2.0
@@ -154,6 +165,7 @@ async def label_lanes(
         LANE_SCHEMA,
         lambda data: parse_lanes(data, refs),
         spend="scene memory",
+        timeout=READS_SECONDS,
     )
     if got.failed:
         log.warning("scene lanes: a read failed; the batch waits for the next pass")
@@ -187,6 +199,7 @@ async def _a_limit(extractor: StructuredModel, b: Belief) -> tuple[bool, float]:
         LIMIT_SCHEMA,
         parse_limit,
         spend="scene memory",
+        timeout=READS_SECONDS,
     )
     sure = not got.failed and all(v is True for v in got.values)
     return sure, got.cost_usd
@@ -244,16 +257,10 @@ async def _read_scene(
         return 0.0
     known = [p for p in sm.patterns(rel) if not p.retired]
     text, labels, refs = pattern_prompt([(p.id, p.claim) for p in known], scene)
-    try:
-        with purpose("scene memory"):
-            got = await extractor.extract(PATTERN.text, text, PATTERN_SCHEMA)
-    except Exception as err:
-        log.warning("scene patterns: the read failed; the scene is read again next pass: %r", err)
+    got = await ask(extractor, PATTERNS, text)
+    if got is None:
         return None
-    proposed = parse_patterns(got.data)
-    if proposed is None:
-        log.warning("scene patterns: the answer was unreadable; read again next pass")
-        return None
+    proposed = got.value
     by_id = {p.id: p for p in known}
     by = By(got.model, PATTERN.ref, now)
     for p in proposed:
@@ -340,13 +347,14 @@ async def _vectors(
     store, model, sm = c.store, c.embed_model, c.store.intimate_memory()
     have: dict[str, Vector] = {**store.belief_embeddings(c.rel, model), **sm.vectors(c.rel, model)}
     missing = [e for e in found if e.id not in have]
-    try:
-        with purpose("scene memory"):
-            got = await asyncio.wait_for(
-                embedder.embed([said, *(e.claim for e in missing)]), LOOK_SECONDS
-            )
-    except Exception as err:
-        log.warning("scene look-up failed or was slow; nearest left out: %r", err)
+    got = await embed_within(
+        embedder,
+        [said, *(e.claim for e in missing)],
+        spend="scene memory",
+        deadline=LOOK_SECONDS,
+        unread="nearest left out",
+    )
+    if got is None:
         return None
     fresh = dict(zip((e.id for e in missing), got.vectors[1:], strict=True))
     patterns = {e.id: fresh[e.id] for e in missing if e.pattern}

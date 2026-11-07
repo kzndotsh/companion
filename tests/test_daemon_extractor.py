@@ -63,7 +63,14 @@ async def test_other_judges_stay_on_haiku_with_deepseek_behind_it() -> None:
     routes = Settings.from_env({}).judge_routes
     async with _openrouter(asked, frozenset({JUDGE_MODEL})) as client:
         got = await read_times(
-            compose.extractor(client, S, routes), "s", "u", {}, lambda d: d, spend="worth", times=1
+            compose.extractor(client, S, routes),
+            "s",
+            "u",
+            {},
+            lambda d: d,
+            spend="worth",
+            times=1,
+            timeout=5.0,
         )
     assert asked == [JUDGE_MODEL, JUDGE_STANDBY]
     assert got.model == JUDGE_STANDBY + FALLBACK

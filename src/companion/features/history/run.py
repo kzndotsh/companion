@@ -6,7 +6,6 @@ pass."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import uuid
 from collections.abc import Awaitable, Callable
@@ -18,7 +17,6 @@ from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
 from companion.core.history import HISTORY_LIMIT
-from companion.core.spend import purpose
 from companion.core.types import (
     Frame,
     Json,
@@ -45,7 +43,9 @@ from companion.features.history.logic import (
     to_story,
 )
 from companion.features.history.store import By
+from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, is_casual
+from companion.kit.embed import embed_within
 from companion.kit.features import Feature
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
@@ -62,6 +62,15 @@ CONTEXT = 4  # messages before a batch shown for context
 BATCHES = 3  # batches read per pass, so a long backlog is read over several passes
 CHECKS = 10  # waiting stories checked per pass
 LOOK_SECONDS = 2.0
+CAPTURER = Judge(
+    "history",
+    CAPTURE,
+    CAPTURE_SCHEMA,
+    parse_capture,
+    timeout=120.0,  # a batch of 40 messages a call
+    unread="the batch is read again next pass",
+)
+CANON_SECONDS = 60.0  # one story against the sheet and the canon, read three times at once
 
 CAPTURED = "history: a story of its own past recorded"
 DROPPED = "history: a story dropped"
@@ -95,18 +104,10 @@ async def _capture(
         stories.read_upto(rel, upto, now)
         return 0, 0.0
     window = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
-    try:
-        with purpose("history"):
-            got = await extractor.extract(
-                CAPTURE.text, build_user_prompt(window, own, {}, local_zone()), CAPTURE_SCHEMA
-            )
-    except Exception as err:
-        log.warning("history capture failed; the batch is read again next pass: %r", err)
+    got = await ask(extractor, CAPTURER, build_user_prompt(window, own, {}, local_zone()))
+    if got is None:
         return None
-    proposed = parse_capture(got.data)
-    if proposed is None:
-        log.warning("history capture answer was unreadable; the batch is read again next pass")
-        return None
+    proposed = got.value
     known = {(r.story.utterance_id, r.story.quote.lower()) for r in stories.recorded(rel)}
     kept = 0
     for p in proposed:
@@ -152,6 +153,7 @@ async def _check(
         CANON_SCHEMA,
         lambda data: parse_canon(data, refs),
         spend="history",
+        timeout=CANON_SECONDS,
     )
     ruling = rule(got.values, {s.id: s.claim for s in canon})
     if ruling is None:
@@ -228,13 +230,14 @@ async def nearest_stories(
         return []
     have = stories.vectors(rel, model)
     missing = [r.story for r in canon if r.story.id not in have]
-    try:
-        with purpose("history"):
-            got = await asyncio.wait_for(
-                embedder.embed([said, *(s.claim for s in missing)]), LOOK_SECONDS
-            )
-    except Exception as err:
-        log.warning("history look-up failed or was slow: %r", err)
+    got = await embed_within(
+        embedder,
+        [said, *(s.claim for s in missing)],
+        spend="history",
+        deadline=LOOK_SECONDS,
+        unread="its stories are not looked up",
+    )
+    if got is None:
         return None
     if missing:
         fresh = dict(zip((s.id for s in missing), got.vectors[1:], strict=True))

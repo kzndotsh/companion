@@ -41,7 +41,15 @@ class Labelled:
 
 
 async def _reads(extractor: StructuredModel, prompt: str) -> tuple[tuple[str | None, ...], float]:
-    got = await read_times(extractor, PROMPT.text, prompt, SCHEMA, read, spend="worth")
+    got = await read_times(
+        extractor,
+        PROMPT.text,
+        prompt,
+        SCHEMA,
+        read,
+        spend="worth",
+        timeout=60.0,  # a batch of memories, three reads at once
+    )
     return got.values, got.cost_usd
 
 

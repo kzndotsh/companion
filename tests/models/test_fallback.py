@@ -150,7 +150,9 @@ def _judge(name: str, *, trust_fallback: bool = True) -> Judge[bool]:
 async def test_a_named_judge_reads_on_its_own_model_first() -> None:
     shared, own = _Named("shared/model"), _Named("own/model")
     routed = ByJudge(shared, {"risk": RefusalFallback(own, _Named("first/model"))})
-    got = await read_times(routed, "s", "u", {}, _parse_declines, spend="risk", times=3)
+    got = await read_times(
+        routed, "s", "u", {}, _parse_declines, spend="risk", times=3, timeout=5.0
+    )
     assert got.model == "own/model"
     assert (own.calls, shared.calls) == (3, 0)
 

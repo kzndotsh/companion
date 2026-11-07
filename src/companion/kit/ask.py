@@ -1,10 +1,19 @@
 """One way to ask a judge (architecture audit, 2026-10-23).
 
-A judge is declared once, as a `Judge`: its prompt, its schema, how its answer is parsed, how long
-it may take, whether a fallback model's reading counts, and what a failure means for the feature.
-`ask` runs it: the cost tag, the time limit, the log line and the parse live here and nowhere else.
+A judge is declared once, as a `Judge`, at module level: its prompt, its schema, how its answer is
+parsed, how long it may take, whether a fallback model's reading counts, and what a failure means
+for the feature. `ask` runs it: the cost tag, the time limit, the log line and the parse live here
+and nowhere else (`attempt` is the one call, which `kit/reads.py` uses for its repeated reads).
 It returns a `Read` with the value, the model, the cost and the prompt's `name@version`, or None
 when nothing usable came back; the caller says what None means in one line.
+
+A judge's name is unique across the code (`tests/kit/test_judge_names.py`): it is the log's name
+and what `COMPANION_JUDGE_ROUTES` routes by. Its spend purpose is the name unless `spend` says
+otherwise, so judges of one family can share a line in `companion spend`.
+
+An answer that can only be checked against what the caller showed (the labels it numbered) is read
+in two steps: the judge's parse is `whole_answer`, which keeps the object, and the caller finishes
+the reading with what it showed.
 """
 
 from __future__ import annotations
@@ -36,6 +45,31 @@ class Judge[T]:
     # and the slow one keeps running: the first answer wins. None: the next try waits for the
     # last to fail or time out.
     hedge: float | None = None
+    spend: str | None = None  # the spend purpose when it is not the name (a family of judges)
+
+    @property
+    def call(self) -> Call:
+        return Call(self.name, self.prompt.text, self.schema, self.timeout, self.spend)
+
+
+class ReadFailed(Exception):
+    """`ask_or_raise`: the judge answered but not usably, and its step fails as a whole."""
+
+
+@dataclass(frozen=True, slots=True)
+class Call:
+    """What one call to the model needs to be tagged and timed: a judge's, or a repeated read's."""
+
+    name: str  # the judge's name, for routing
+    system: str
+    schema: dict[str, Json]
+    timeout: float  # seconds
+    spend: str | None = None  # the spend purpose when it is not the name
+
+
+def whole_answer(data: Json) -> Json | None:
+    """The parse of a judge whose answer the caller finishes reading: any object, else unread."""
+    return data if isinstance(data, dict) else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,12 +78,39 @@ class Read[T]:
     model: str
     cost_usd: float
     ref: str  # the prompt's name@version, for the decision it feeds
+    latency_ms: int = 0
+
+
+async def attempt(extractor: StructuredModel, call: Call, user: str) -> Extraction:
+    """One call: tagged for spend and routing, and given up on after its time limit. Raises when
+    the call fails or runs out of time; `ask` and `read_times` say what that means."""
+    with purpose(call.spend or call.name), judging(call.name):
+        return await asyncio.wait_for(
+            extractor.extract(call.system, user, call.schema), call.timeout
+        )
 
 
 async def ask[T](extractor: StructuredModel, judge: Judge[T], user: str) -> Read[T] | None:
     """Ask the judge once. None when the call failed, ran past its time, came from the fallback
     model where that is not trusted, or could not be parsed, each logged with what it means."""
-    got = await _first_answer(extractor, judge, user)
+    return await _ask(extractor, judge, user, [])
+
+
+async def ask_or_raise[T](extractor: StructuredModel, judge: Judge[T], user: str) -> Read[T]:
+    """`ask` for a step that fails as a whole when its judge is not read, as the memory pass does:
+    the call's own error is raised (so a dropped connection is retried by whoever retries those),
+    or `ReadFailed` when the call answered but the answer was not usable."""
+    failed: list[BaseException] = []
+    got = await _ask(extractor, judge, user, failed)
+    if got is None:
+        raise failed[-1] if failed else ReadFailed(judge.name)
+    return got
+
+
+async def _ask[T](
+    extractor: StructuredModel, judge: Judge[T], user: str, failed: list[BaseException]
+) -> Read[T] | None:
+    got = await _first_answer(extractor, judge, user, failed)
     if got is None:
         log.warning("%s judge could not be read; %s", judge.name, judge.unread)
         return None
@@ -63,24 +124,19 @@ async def ask[T](extractor: StructuredModel, judge: Judge[T], user: str) -> Read
         log.warning("%s judge gave an unreadable answer; %s", judge.name, judge.unread)
         return None
     log.debug("%s judge: %r, $%.5f, %dms", judge.name, value, got.cost_usd, got.latency_ms)
-    return Read(value, got.model, got.cost_usd, judge.prompt.ref)
+    return Read(value, got.model, got.cost_usd, judge.prompt.ref, got.latency_ms)
 
 
 async def _first_answer[T](
-    extractor: StructuredModel, judge: Judge[T], user: str
+    extractor: StructuredModel, judge: Judge[T], user: str, failed: list[BaseException]
 ) -> Extraction | None:
     """The first try to answer within its time. A try starts at the beginning, when one fails, and,
     with a hedge, when the running ones have gone that long without answering; whatever is still
     running when one answers is cancelled."""
     running: dict[asyncio.Task[Extraction], int] = {}  # each try and its number
 
-    async def one() -> Extraction:
-        with purpose(judge.name), judging(judge.name):
-            call = extractor.extract(judge.prompt.text, user, judge.schema)
-            return await asyncio.wait_for(call, judge.timeout)
-
     def start() -> None:
-        task = asyncio.ensure_future(one())
+        task = asyncio.ensure_future(attempt(extractor, judge.call, user))
         task.add_done_callback(
             lambda t: t.cancelled() or t.exception()
         )  # a late failure stays quiet
@@ -95,10 +151,11 @@ async def _first_answer[T](
                 running, timeout=hedge, return_when=asyncio.FIRST_COMPLETED
             )
             for task in done:
-                attempt = running.pop(task)
+                number = running.pop(task)
                 if (err := task.exception()) is None:
                     return task.result()
-                log.warning("%s judge failed or timed out (try %d): %r", judge.name, attempt, err)
+                failed.append(err)
+                log.warning("%s judge failed or timed out (try %d): %r", judge.name, number, err)
             if started[0] < judge.attempts and (not done or not running):
                 start()
         return None

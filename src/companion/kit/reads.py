@@ -12,9 +12,9 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from companion.core.extractor import StructuredModel, judging
-from companion.core.spend import purpose
+from companion.core.extractor import StructuredModel
 from companion.core.types import Json
+from companion.kit.ask import Call, attempt
 from companion.lib.vote import READS
 
 log = logging.getLogger("companion.reads")
@@ -41,17 +41,18 @@ async def read_times[T](  # noqa: PLR0913
     *,
     spend: str,
     times: int = READS,
-    timeout: float | None = None,
+    timeout: float,
 ) -> Reads[T]:
-    """The same question asked `times` times at once; with a timeout, a read slower than that many
-    seconds is a None read. `spend` also names the judge for `COMPANION_JUDGE_ROUTES`."""
+    """The same question asked `times` times at once; a read slower than `timeout` seconds is a
+    None read. `spend` also names the judge for `COMPANION_JUDGE_ROUTES`. Each read is one
+    `attempt`, the call `ask` makes."""
+    call = Call(spend, system, schema, timeout)
 
     async def one() -> tuple[T | None, float, str]:
         try:
-            with purpose(spend), judging(spend):
-                got = await asyncio.wait_for(extractor.extract(system, user, schema), timeout)
+            got = await attempt(extractor, call, user)
         except Exception as err:
-            log.warning("%s read failed: %r", spend, err)
+            log.warning("%s read failed or timed out; it counts as no read: %r", spend, err)
             return None, 0.0, ""
         return parse(got.data), got.cost_usd, got.model
 

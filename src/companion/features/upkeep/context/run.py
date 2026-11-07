@@ -9,13 +9,21 @@ from datetime import UTC, datetime
 
 from companion.core.extractor import StructuredModel
 from companion.core.quoted import AFTER, BEFORE, build_prompt, wants_context
-from companion.core.spend import purpose
 from companion.core.types import RelationshipId
 from companion.features.upkeep.context.logic import PROMPT, SCHEMA, parse
+from companion.kit.ask import Judge, ask
 from companion.kit.features import Feature
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.context")
+WRITER = Judge(
+    "context",
+    PROMPT,
+    SCHEMA,
+    parse,
+    timeout=30.0,  # one memory and the messages around it
+    unread="no context for this memory yet",
+)
 FAR = datetime(9999, 1, 1, tzinfo=UTC)
 WHOLE = 100_000
 
@@ -41,16 +49,11 @@ async def write_missing(
         if i is None:
             continue
         around = history[max(0, i - BEFORE) : i + 1 + AFTER]
-        try:
-            with purpose("context"):
-                got = await extractor.extract(PROMPT.text, build_prompt(b, around), SCHEMA)
-        except Exception as err:
-            log.warning("memory context failed: %r", err)
+        got = await ask(extractor, WRITER, build_prompt(b, around))
+        if got is None:
             continue
         cost += got.cost_usd
-        context = parse(got.data)
-        if context is None:
-            continue
+        context = got.value
         store.add_belief_context(rel, b.id, context, prompt=PROMPT.ref, at=now)
         written += 1
     log.debug("memory context: %d written, $%.4f", written, cost)

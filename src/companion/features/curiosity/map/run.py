@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
-from companion.core.spend import purpose
 from companion.core.types import Json, RelationshipId
 from companion.features.curiosity.map.logic import (
     ASKED,
@@ -21,6 +20,7 @@ from companion.features.curiosity.map.logic import (
     parse_labels,
     pick_gap,
 )
+from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.current import decide
 from companion.kit.features import Feature, Offer, Offered, asking
 from companion.store.sqlite.store import Store
@@ -29,6 +29,15 @@ if TYPE_CHECKING:
     from companion.kit.features import Moment
 
 log = logging.getLogger("companion.knowing")
+# The labels are only good for the refs the prompt numbered, so the caller finishes the reading.
+LABELLER = Judge(
+    "knowing",
+    LABEL_PROMPT,
+    LABEL_SCHEMA,
+    whole_answer,
+    timeout=60.0,  # one batch of memories a call
+    unread="nothing labelled; tried again next pass",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,13 +64,10 @@ async def label_new(
         if not todo:
             break
         text, refs = label_prompt(todo)
-        try:
-            with purpose("knowing"):
-                result = await extractor.extract(LABEL_PROMPT.text, text, LABEL_SCHEMA)
-        except Exception as err:
-            log.warning("memory labels failed: %r", err)
+        result = await ask(extractor, LABELLER, text)
+        if result is None:
             break
-        found = parse_labels(result.data, refs)
+        found = parse_labels(result.value, refs)
         cost += result.cost_usd
         if not found:
             break

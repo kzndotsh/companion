@@ -6,7 +6,7 @@ import pytest
 
 from companion.core.extractor import FALLBACK, Extraction
 from companion.core.types import Json
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ReadFailed, ask, ask_or_raise
 from companion.prompts import get
 
 PROMPT = get("system/brush-off")
@@ -134,3 +134,15 @@ async def test_a_hedged_judge_takes_the_first_try_if_it_lands_first() -> None:
     got = await ask(Model({"declines": True}), hedged, "x")
     assert got is not None
     assert got.model == "first"
+
+
+async def test_a_step_that_fails_as_a_whole_gets_the_calls_own_error() -> None:
+    with pytest.raises(RuntimeError, match="down"):
+        await ask_or_raise(Fake({"declines": True}, fail=True), _judge(), "x")
+
+
+async def test_a_step_that_fails_as_a_whole_is_told_when_the_answer_was_unusable() -> None:
+    with pytest.raises(ReadFailed):
+        await ask_or_raise(Fake({"nope": 1}), _judge(), "x")
+    got = await ask_or_raise(Fake({"declines": False}), _judge(), "x")
+    assert got.value is False

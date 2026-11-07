@@ -6,15 +6,33 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.beliefs import views_implicated as impl
-from companion.core.beliefs.views_conflict import SCHEMA, SYSTEM, build_prompt, parse
+from companion.core.beliefs.views_conflict import PROMPT, SCHEMA, build_prompt, parse
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
 from companion.core.types import Belief, BeliefKind, DecisionKind, Json, RelationshipId, TurnId
 from companion.core.views import AUTO_KINDS, is_settled
+from companion.kit.ask import Judge, ask, ask_or_raise, whole_answer
 from companion.store.sqlite.store import Store
 
 WANT_KINDS = frozenset({BeliefKind.PREFERENCE, BeliefKind.BOUNDARY})
+# Both read against the labels the caller numbered, so the caller finishes the reading.
+CONFLICTS = Judge(
+    "view-conflicts",
+    PROMPT,
+    SCHEMA,
+    whole_answer,
+    timeout=60.0,  # every unchecked view against what they want
+    unread="the views stay unchecked and the memory pass fails, to read the batch again",
+)
+IMPLICATED = Judge(
+    "view-implicated",
+    impl.PROMPT,
+    impl.SCHEMA,
+    whole_answer,
+    timeout=30.0,  # one flagged turn
+    unread="no view is closed",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,8 +73,8 @@ async def check_views(
         )
     }
     views = {f"v{i}": b for i, b in enumerate(pending, start=1)}
-    result = await extractor.extract(SYSTEM, build_prompt(views, wants), SCHEMA)
-    parsed = parse(result.data)
+    result = await ask_or_raise(extractor, CONFLICTS, build_prompt(views, wants))
+    parsed = parse(result.value)
     conflicts = 0
     for label, belief in views.items():
         check = parsed.get(label)
@@ -91,13 +109,12 @@ async def views_implicated(
     if not carried or user is None or reply is None:
         return []
     labelled = {f"v{i}": b for i, b in enumerate(carried, start=1)}
-    try:
-        result = await extractor.extract(
-            impl.SYSTEM, impl.build_prompt(user.text, reply.text, note, labelled), impl.SCHEMA
-        )
-    except Exception:
+    result = await ask(
+        extractor, IMPLICATED, impl.build_prompt(user.text, reply.text, note, labelled)
+    )
+    if result is None:
         return []  # no judgement means no closure
-    parsed = impl.parse(result.data, set(labelled))
+    parsed = impl.parse(result.value, set(labelled))
     if parsed is None or parsed.confidence < impl.MIN_CONFIDENCE:
         return []
     return [labelled[label] for label in sorted(parsed.labels)]

@@ -3,14 +3,12 @@ and from the CLI. A failed call labels nothing and is tried again next pass."""
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from companion.core.extractor import StructuredModel
-from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Frame, RelationshipId
 from companion.core.vectors import Embedder, nearest
 from companion.features.lore.logic import (
@@ -26,6 +24,7 @@ from companion.features.lore.logic import (
     prompt,
 )
 from companion.kit.current import Heard, Turn, decide, is_casual
+from companion.kit.embed import embed_within
 from companion.kit.features import Feature, Offer, Offered
 from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
@@ -72,6 +71,7 @@ async def label_views(  # noqa: PLR0913
             SCHEMA,
             lambda data, shown=refs: parse(data, shown),
             spend="lore",
+            timeout=60.0,  # a batch of views, three reads at once
         )
         cost += got.cost_usd
         if got.failed:  # the batch is labelled again next time, never from fewer reads
@@ -110,13 +110,14 @@ async def nearest_tastes(  # noqa: PLR0913, PLR0917
         return Nearest((), 0.0)
     have = store.belief_embeddings(rel, model)
     missing = [b for b in tastes if b.id not in have]
-    try:
-        with purpose("lore"):
-            got = await asyncio.wait_for(
-                embedder.embed([said, *(b.claim for b in missing)]), LOOK_SECONDS
-            )
-    except Exception as err:
-        log.warning("lore look-up failed or was slow; no tastes shown: %r", err)
+    got = await embed_within(
+        embedder,
+        [said, *(b.claim for b in missing)],
+        spend="lore",
+        deadline=LOOK_SECONDS,
+        unread="no tastes shown",
+    )
+    if got is None:
         return None
     if missing:
         fresh = dict(zip((b.id for b in missing), got.vectors[1:], strict=True))

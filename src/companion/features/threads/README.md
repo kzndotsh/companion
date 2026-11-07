@@ -75,7 +75,7 @@ A hold is logged once per loop and per kind of hold as `held, would otherwise re
 ## Prompts
 
 - `system/openloops`: reads loops and which waiting loops are settled. A failed call keeps the batch for another try. A malformed answer is ignored.
-- `system/openloops-draft`: writes the shadow check-in. A failure gives an empty draft.
+- `system/openloops-draft`: writes the shadow check-in (judge `check-in-draft`, 30 s, spend `initiative`; schema and reading shared with the nudge draft in `core/reachout.py`). A failure gives an empty draft. The loop reader is the judge `loops` (120 s).
 - `notes/loop-follow-up`: asks how it went, in the system block when a follow-up is due.
 - `notes/loop-celebrate`: marks their occasion on the day.
 - `notes/loop-encourage`: a word of cheering on the day.

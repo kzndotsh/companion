@@ -18,8 +18,7 @@ from typing import TYPE_CHECKING
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
-from companion.core.reachout import Held, checked, draft_text
-from companion.core.spend import purpose
+from companion.core.reachout import DRAFT_SCHEMA, Held, checked, draft_text, parse_draft
 from companion.core.turn.mentions import MentionCandidate, Rank
 from companion.core.types import (
     DecisionKind,
@@ -35,7 +34,6 @@ from companion.features.threads.gate import Verdict, evaluate
 from companion.features.threads.logic import (
     PROMPT,
     SCHEMA,
-    SYSTEM,
     Making,
     Thread,
     ThreadKind,
@@ -53,6 +51,7 @@ from companion.features.threads.logic import (
     to_resolution,
 )
 from companion.features.threads.store import ReachOut
+from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.features import Feature
 from companion.kit.record import Recorder
 from companion.prompts import get
@@ -62,6 +61,14 @@ if TYPE_CHECKING:
     from companion.kit.features import Moment
 
 log = logging.getLogger("companion.initiative")
+LOOPS = Judge(
+    "loops",
+    PROMPT,
+    SCHEMA,
+    whole_answer,  # `extract_open_loops` reads the items: a bad one is dropped, not the batch
+    timeout=120.0,  # a batch of messages a call
+    unread="the batch is kept for another try",
+)
 Draft = Callable[[Thread], Awaitable[str]]
 Log = Callable[[str, dict[str, Json]], None]
 
@@ -95,13 +102,10 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
     now, tz = when
     labels = loop_labels(store.open_loops(rel))
     prompt = build_user_prompt(window, targets, {}, tz) + render_open_loops(labels)
-    try:
-        with purpose("loops"):
-            result = await extractor.extract(SYSTEM, prompt, SCHEMA)
-    except Exception:
-        log.warning("open-loop extraction failed; the batch is kept for another try", exc_info=True)
+    result = await ask(extractor, LOOPS, prompt)
+    if result is None:
         return None
-    raw = parse(result.data)
+    raw = parse(result.value)
     if raw is None:
         note("open loops: the answer was malformed and was ignored", {"model": result.model})
         return LoopCounts(cost_usd=result.cost_usd)
@@ -137,7 +141,7 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
                     "prompt": PROMPT.ref,
                 },
             )
-    resolved = _close_resolved(store, result.data, labels, window, now, note)
+    resolved = _close_resolved(store, result.value, labels, window, now, note)
     log.debug(
         "open loops: %d proposed, %d stored, %d rejected, %d resolved",
         len(raw),
@@ -252,12 +256,15 @@ async def tick(  # noqa: PLR0913, PLR0917
 
 
 DRAFT_PROMPT = get("system/openloops-draft")
-DRAFT_SYSTEM = DRAFT_PROMPT.text
-DRAFT_SCHEMA: dict[str, Json] = {
-    "type": "object",
-    "properties": {"message": {"type": "string"}},
-    "required": ["message"],
-}
+CHECK_IN = Judge(
+    "check-in-draft",
+    DRAFT_PROMPT,
+    DRAFT_SCHEMA,
+    parse_draft,
+    timeout=30.0,  # one short message
+    unread="an empty draft: the check-in is dropped and that loop is not drafted again",
+    spend="initiative",  # every reach-out's drafting is one line in `companion spend`
+)
 
 
 def drafter(extractor: StructuredModel) -> Draft:
@@ -265,14 +272,8 @@ def drafter(extractor: StructuredModel) -> Draft:
 
     async def draft(loop: Thread) -> str:
         prompt = f"They said: {loop.quote!r}\nThe thing: {loop.claim}\nKind: {loop.kind}"
-        try:
-            with purpose("initiative"):
-                result = await extractor.extract(DRAFT_SYSTEM, prompt, DRAFT_SCHEMA)
-        except Exception:
-            log.warning("could not draft the check-in", exc_info=True)
-            return ""
-        message = result.data.get("message") if isinstance(result.data, dict) else None
-        return draft_text(message) if isinstance(message, str) else ""
+        got = await ask(extractor, CHECK_IN, prompt)
+        return "" if got is None else draft_text(got.value)
 
     return draft
 

@@ -1,5 +1,6 @@
 """What every reach-out shares, whatever prompted it: a hold from the shared gate (`Held`, ADR
-0023), how a draft is tidied, and the check that drops a needy one. Pure."""
+0023), the answer a drafting judge gives and how a draft is tidied, and the check that drops a
+needy one. Pure."""
 
 from __future__ import annotations
 
@@ -7,6 +8,8 @@ import json
 import re
 from dataclasses import dataclass
 from typing import cast
+
+from companion.core.types import Json
 
 # The key of a nudge it would send (features/nudges), read by any reach-out that counts its own.
 WOULD_NUDGE = "nudge (shadow): would send"
@@ -19,6 +22,20 @@ class Held:
 
     what: str
     why: str
+
+
+# What every drafting judge is asked for and answers: one message.
+DRAFT_SCHEMA: dict[str, Json] = {
+    "type": "object",
+    "properties": {"message": {"type": "string"}},
+    "required": ["message"],
+}
+
+
+def parse_draft(data: Json) -> str | None:
+    """The message a drafting judge wrote, as it wrote it; None for an answer without one."""
+    message = data.get("message") if isinstance(data, dict) else None
+    return message if isinstance(message, str) else None
 
 
 def draft_text(message: str) -> str:

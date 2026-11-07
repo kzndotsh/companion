@@ -145,12 +145,16 @@ together.
   its parts may import each other. import-linter keeps a feature's logic pure, keeps features from importing
   each other, and lets only a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests
   mirror the folder (`tests/features/<name>/`).
-- Ask a judge through `kit/ask.py`: declare it once as a `Judge` (prompt, schema, parse, time limit, what a
+- Ask a judge through `kit/ask.py`: declare it once, at module level, as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries, and optionally a hedge: a second try started while a slow one still runs, first answer wins) and call `ask`, which returns a `Read`
-  (value, model, cost, `name@version`) or None. No new `asyncio.wait_for` around an `extract` call.
+  (value, model, cost, `name@version`) or None; `ask_or_raise` is for a step that fails as a whole (the memory pass). A judge's name is unique (`tests/kit/test_judge_names.py`): it is the log's name and the
+  `COMPANION_JUDGE_ROUTES` key; its spend purpose is the name unless `spend` says another (the floor's three judges, the reach-out drafters and the name and pronoun captures each have a name and share one spend line). An answer
+  only the caller can check (the labels it numbered) is parsed with `whole_answer` and finished by the caller; never build a `Judge` per call. Nothing calls `extract` outside `kit/ask.py` (a test checks it), and every
+  call has a time limit.
 - Ask a small model the same question several times with `kit/reads.py` `read_times` (each failed or
-  unreadable read is None) and count agreement with `lib/vote.py` (`READS`, `unanimous`); a
+  unreadable read is None; one `attempt`, the call `ask` makes) and count agreement with `lib/vote.py` (`READS`, `unanimous`); a
   feature states what a failed read means for it (no agreement, or try the batch again later).
+- Bound an embedding look-up with `kit/embed.py` (`embed_within` for one call, `bounded` for a look-up that embeds and more): it logs the failure with what it means and gives None. No new `asyncio.wait_for` around an `embed` call.
 - Judges share one model (Haiku, DeepSeek on a refusal) unless `COMPANION_JUDGE_ROUTES` names the judge
   (by its `Judge` name or `read_times` `spend`); then it reads on that model first and Haiku second
   (`models/fallback.py` `ByJudge`; by default the crisis judge reads on DeepSeek). Route a judge there, never by choosing a model in a feature.

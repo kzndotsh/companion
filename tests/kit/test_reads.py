@@ -32,7 +32,7 @@ def _label(data: Json) -> str | None:
 
 
 async def test_every_read_answers() -> None:
-    got = await read_times(Flaky(A, A, A), "s", "u", {}, _label, spend="t")
+    got = await read_times(Flaky(A, A, A), "s", "u", {}, _label, spend="t", timeout=5.0)
     assert got.values == ("a", "a", "a")
     assert not got.failed
     assert round(got.cost_usd, 2) == 0.03
@@ -40,7 +40,9 @@ async def test_every_read_answers() -> None:
 
 
 async def test_a_failed_call_or_an_unreadable_answer_is_a_none_read() -> None:
-    got = await read_times(Flaky(A, RuntimeError("down"), NOPE), "s", "u", {}, _label, spend="t")
+    got = await read_times(
+        Flaky(A, RuntimeError("down"), NOPE), "s", "u", {}, _label, spend="t", timeout=5.0
+    )
     assert got.values == ("a", None, None)
     assert got.failed
     assert round(got.cost_usd, 2) == 0.02  # the unreadable answer was still paid for

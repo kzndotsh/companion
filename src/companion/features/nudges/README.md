@@ -8,6 +8,8 @@ A light nudge when they step away and stay gone much longer than they said, the 
 
 **Reading a time away.** A time away is a `leaving` label from the reader of what is happening with them now (`features/now/README.md`, ADR 0024): beside any real turn that is not serious, a small model labels their message (`soon`, `leaving`, `back`, `done`), with the minutes; the newest `leaving` in the last six hours is the time away (`aways` in `logic.py`). Until 2026-10-25 nudges had their own reader (`system/away`, retired), which also told a brief time away from one they said they would come back from; the two were treated alike, so the label is now only `leaving`.
 
+**The draft judge** is `nudge-draft` (30 s; spend `initiative`). Its schema and reading are shared with the open-loop check-in drafter in `core/reachout.py` (`DRAFT_SCHEMA`, `parse_draft`). A call that fails or gives no message drops the draft.
+
 **The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` (`daemon.py`) looks at their newest recorded time away. It is skipped on a tick when a plan check-in would go. It holds, with a reason, for the first of these:
 
 - no time away is recorded

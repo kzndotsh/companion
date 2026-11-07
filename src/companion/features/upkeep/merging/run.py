@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 
 from companion.core.extractor import StructuredModel
-from companion.core.spend import purpose
 from companion.core.types import Belief, RelationshipId
 from companion.features.upkeep.merging.logic import (
     GROUP,
@@ -22,14 +21,25 @@ from companion.features.upkeep.merging.logic import (
     agreed,
     kept_wording,
     listing,
-    read_claim,
     read_groups,
+    read_wording,
     unsupported,
 )
+from companion.kit.ask import Judge, ask
 from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.merging")
+WORDING = Judge(
+    "consolidate-wording",  # not "consolidate": that routes the grouping reads
+    WRITE,
+    WRITE_SCHEMA,
+    read_wording,
+    timeout=30.0,  # a few memories a call
+    unread="no proposal for this group this time",
+    spend="consolidate",
+)
+GROUP_SECONDS = 60.0  # one list of memories grouped, three reads at once
 RECENT_DAYS = 2  # the nightly run groups what was recorded in the last two days
 
 
@@ -49,18 +59,16 @@ async def _group_reads(
         GROUP_SCHEMA,
         lambda data: read_groups(data, len(beliefs)),
         spend="consolidate",
+        timeout=GROUP_SECONDS,
     )
     return agreed(got.values), got.cost_usd
 
 
 async def _wording(judge: StructuredModel, members: Sequence[Belief]) -> tuple[str | None, float]:
-    try:
-        with purpose("consolidate"):
-            got = await judge.extract(WRITE.text, listing(members), WRITE_SCHEMA)
-    except Exception as err:
-        log.warning("merged wording failed: %r", err)
+    got = await ask(judge, WORDING, listing(members))
+    if got is None:
         return None, 0.0
-    claim = read_claim(got.data)
+    claim = got.value or None  # empty: keep them apart
     wrong = [] if claim is None else unsupported(claim, members)
     if wrong:
         log.info("merged wording %r not in their words (%s); keeping a member's own", claim, wrong)

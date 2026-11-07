@@ -24,7 +24,7 @@ from companion.kit.ask import Judge, Read, ask
 
 TIMEOUT_SECONDS = 3.0
 INTIMATE = Judge(
-    "floor",
+    "floor-intimate",
     INTIMATE_CHECK,
     INTIMATE_SCHEMA,
     parse_intimate,
@@ -32,9 +32,10 @@ INTIMATE = Judge(
     unread="treated as intimate",
     trust_fallback=False,  # the floor never relies on the fallback model (ADR 0017)
     attempts=2,  # one late read threw away a good reply on a scene turn (2026-10-26)
+    spend="floor",
 )
 MINOR = Judge(
-    "floor",
+    "floor-minor",
     MINOR_CHECK,
     MINOR_SCHEMA,
     parse_minor,
@@ -42,6 +43,7 @@ MINOR = Judge(
     unread="treated as a minor: the turn stays held",
     trust_fallback=False,
     attempts=2,
+    spend="floor",
 )
 
 
@@ -53,12 +55,13 @@ async def judge_intimate(extractor: StructuredModel, reply: str) -> bool | None:
 
 ROUTE_SECONDS = 4.0  # a slow read routes the turn as it would have gone
 EXPLICIT = Judge(
-    "floor",
+    "floor-explicit",
     EXPLICIT_LEAD,
     EXPLICIT_SCHEMA,
     parse_explicit,
     timeout=ROUTE_SECONDS,
     unread="not explicit: intimacy starts on the everyday talker",
+    spend="floor",
 )
 DECLINES = Judge(
     "route",

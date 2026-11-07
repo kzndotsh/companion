@@ -17,11 +17,20 @@ from companion.features.audits.callbacks.logic import (
     label,
     parse,
 )
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ask, whole_answer
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.callbacks")
 TIMEOUT_SECONDS = 30.0  # a command, not a turn: no reply waits on it
+# The memories it names are checked against the ones shown, so the caller finishes the reading.
+CHECK = Judge(
+    "callbacks",
+    PROMPT,
+    SCHEMA,
+    whole_answer,
+    timeout=TIMEOUT_SECONDS,
+    unread="the turn is left for the next run",
+)
 
 
 async def check_new(
@@ -36,18 +45,11 @@ async def check_new(
         labelled = label(memories_from_card(turn.card))
         if not labelled:
             continue
-        judge = Judge(
-            "callbacks",
-            PROMPT,
-            SCHEMA,
-            lambda data, labelled=labelled: parse(data, labelled),
-            timeout=TIMEOUT_SECONDS,
-            unread="the turn is left for the next run",
-        )
-        got = await ask(extractor, judge, build_prompt(turn.recent, labelled, turn.reply))
-        if got is None:
+        got = await ask(extractor, CHECK, build_prompt(turn.recent, labelled, turn.reply))
+        check = None if got is None else parse(got.value, labelled)
+        if got is None or check is None:  # no callback it can name is left for the next run
             continue
         spent += got.cost_usd
-        store.add_callback_check(rel, turn.turn_id, got.value, got.model, got.ref, utc_now())
+        store.add_callback_check(rel, turn.turn_id, check, got.model, got.ref, utc_now())
         judged += 1
     return judged, spent

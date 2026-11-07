@@ -20,10 +20,19 @@ from companion.core.recall import (
     parse,
 )
 from companion.core.types import Belief, BeliefId
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ask, whole_answer
 
 log = logging.getLogger("companion.recall")
 TIMEOUT_SECONDS = 3.0
+# Only the beliefs shown can be picked, so `look_up` finishes the reading.
+RECALL = Judge(
+    "recall",
+    PROMPT,
+    SCHEMA,
+    whole_answer,
+    timeout=TIMEOUT_SECONDS,
+    unread="nothing added",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,15 +72,7 @@ async def look_up(
     recent = context.recent if context is not None else ()
     if not labelled:
         return Recalled(topic, (), 0, "")
-    judge = Judge(
-        "recall",
-        PROMPT,
-        SCHEMA,
-        lambda data: parse(data, labelled),
-        timeout=TIMEOUT_SECONDS,
-        unread="nothing added",
-    )
-    got = await ask(extractor, judge, build_prompt(topic, labelled, when, today, recent))
+    got = await ask(extractor, RECALL, build_prompt(topic, labelled, when, today, recent))
     if got is None:
         return None
-    return Recalled(topic, tuple(got.value), len(labelled), got.model)
+    return Recalled(topic, tuple(parse(got.value, labelled)), len(labelled), got.model)

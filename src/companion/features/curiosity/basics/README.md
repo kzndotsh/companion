@@ -50,7 +50,7 @@ The owner's setting is already set, so for the owner nothing changes: no pronoun
 | File | What |
 |---|---|
 | `logic.py` | pure: when to ask the name or the pronouns, the notes, reading each from their answer, the belief a name becomes (`ASK_EVERY`, `MAX_NAME_WORDS`, `MAX_PRONOUN_CHARS`) |
-| `run.py` | effects: the note (`basics_offer`), the captures once the turn is stored (`capture_name`, `capture_pronouns`, `judge_name`, `judge_pronouns`), the `Feature` (`BASICS`) |
+| `run.py` | effects (the capture judges are `basics-name` and `basics-pronouns`, spend `basics`): the note (`basics_offer`), the captures once the turn is stored (`capture_name`, `capture_pronouns`, `judge_name`, `judge_pronouns`), the `Feature` (`BASICS`) |
 
 ## Prompts
 

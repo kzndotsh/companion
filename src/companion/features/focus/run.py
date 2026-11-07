@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -12,7 +11,7 @@ from companion.core.types import Frame, Speaker
 from companion.core.vectors import unit
 from companion.features.focus.logic import LOOK_SECONDS, closeness, moment_texts
 from companion.kit.current import Heard, Turn, mark
-from companion.kit.embed import embed_missing
+from companion.kit.embed import bounded, embed_missing
 from companion.kit.features import Feature
 
 if TYPE_CHECKING:
@@ -38,10 +37,10 @@ async def focus_for_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | No
         vectors = c.store.belief_embeddings(c.rel, c.embed_model)
         return Focus(closeness([unit(q) for q in got.vectors], vectors), vectors)
 
-    try:
-        found = await asyncio.wait_for(look(), LOOK_SECONDS)
-    except Exception as err:
-        log.warning("focus look-up failed or timed out; the card is built as before: %r", err)
+    found = await bounded(
+        look(), deadline=LOOK_SECONDS, what="focus look-up", unread="the card is built as before"
+    )
+    if found is None:
         return None
     mark(t, f"focus: {len(found.closeness)} memories scored")
     return found

@@ -4,7 +4,6 @@ or slow look-up only means nothing is added; the reply goes out as it would have
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 from collections.abc import Sequence
@@ -23,9 +22,9 @@ from companion.features.recall.logic import GATE as RELEVANCE_GATE
 from companion.features.recall.logic import LIVE as RELEVANCE_LIVE
 from companion.features.recall.logic import PROMPT, SCHEMA, build_prompt, eligible, extras, parse
 from companion.features.recall.logic import SHADOW as RELEVANCE_SHADOW
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.current import Heard, Turn, decide, mark
-from companion.kit.embed import embed_missing
+from companion.kit.embed import bounded, embed_missing
 from companion.kit.features import Feature, Offer, Offered
 from companion.kit.recall import Context, Recalled
 from companion.kit.recall import look_up as recall_look_up
@@ -38,6 +37,15 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.relevance")
 TIMEOUT_SECONDS = 10.0
+# Only the memories offered can be picked, so `look_up` finishes the reading.
+PICKER = Judge(
+    "relevance",
+    PROMPT,
+    SCHEMA,
+    whole_answer,
+    timeout=TIMEOUT_SECONDS,
+    unread="no memories picked this turn; the nearest are still logged",
+)
 LOGGED_NEAREST = 3  # nearest memories written to the decision, for reading the look-up later
 
 
@@ -92,18 +100,10 @@ async def look_up(  # noqa: PLR0913
     pick_cost, pick_model = 0.0, ""
     if not gated:
         offered = [b for b, _ in shortlist]
-        picker = Judge(
-            "relevance",
-            PROMPT,
-            SCHEMA,
-            lambda data: parse(data, offered),
-            timeout=TIMEOUT_SECONDS,
-            unread="no memories picked this turn; the nearest are still logged",
-        )
-        got = await ask(judge, picker, build_prompt(last_reply, said, offered))
+        got = await ask(judge, PICKER, build_prompt(last_reply, said, offered))
         pick_failed = got is None
         if got is not None:
-            picked = got.value
+            picked = parse(got.value, offered)
             pick_cost, pick_model = got.cost_usd, got.model
     detail: dict[str, Json] = {
         "nearest": [_row(b, on_card, s) for b, s in alone[:LOGGED_NEAREST]],
@@ -149,27 +149,25 @@ async def shadow(  # noqa: PLR0913
     hidden: frozenset[BeliefId] = frozenset(),
 ) -> Lookup | None:
     """The look-up with a time limit; None when it failed or ran out of time."""
-    try:
-        return await asyncio.wait_for(
-            look_up(
-                store,
-                embedder,
-                judge,
-                rel,
-                model=model,
-                said=said,
-                last_reply=last_reply,
-                sharing=sharing,
-                on_card=set(on_card),
-                now=now,
-                gate=gate,
-                hidden=hidden,
-            ),
-            timeout,
-        )
-    except Exception as err:
-        log.warning("relevance look-up failed or timed out: %r", err)
-        return None
+    return await bounded(
+        look_up(
+            store,
+            embedder,
+            judge,
+            rel,
+            model=model,
+            said=said,
+            last_reply=last_reply,
+            sharing=sharing,
+            on_card=set(on_card),
+            now=now,
+            gate=gate,
+            hidden=hidden,
+        ),
+        deadline=timeout,
+        what="relevance look-up",
+        unread="nothing is added",
+    )
 
 
 def _hidden(c: Runtime) -> frozenset[BeliefId]:

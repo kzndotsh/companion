@@ -56,7 +56,7 @@ the open-loop extractor and the follow-up draft, the reach-out draft, the callba
 judges' model refuses goes to a fallback model, whose answers the floor never relies on. A judge named
 in `COMPANION_JUDGE_ROUTES` reads on that model first and the shared judge model second (by default
 the risk judge, on DeepSeek V4.1 Flash; `models/fallback.py` `ByJudge`). Each logs
-`name@version` in its decision.
+`name@version` in its decision. Each judge has a unique name in the code, which is the key for routes; a family that shares one spend line (`floor`, `initiative`, `basics`, `consolidate`) names its members apart.
 
 To see exactly what a past turn sent: `uv run companion replay <turn_id> --show-prompt`. How the
 assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.

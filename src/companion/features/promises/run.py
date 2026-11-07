@@ -57,6 +57,7 @@ async def read_promises(  # noqa: PLR0913, PLR0917
         SCHEMA,
         parse,
         spend="promises",
+        timeout=90.0,  # a batch of the companion's messages, three reads at once
     )
     reads = [r for r in got.values if r is not None]
     if len(reads) < READS:

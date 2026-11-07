@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import cast
@@ -17,6 +18,8 @@ from companion.core.prompt.request import Message
 from companion.core.types import Json
 from companion.evals.checks import Verdict
 from companion.prompts import get
+
+log = logging.getLogger("companion.evals")
 
 PROMPT = get("system/judge")
 SYSTEM = PROMPT.text
@@ -95,7 +98,8 @@ async def grade(
     """An unparseable or failed judgement is unclear, never a pass or a fail."""
     try:
         result = await extractor.extract(SYSTEM, build_prompt(excerpt, reply, criterion), SCHEMA)
-    except Exception:
+    except Exception as err:
+        log.warning("eval grader failed; the sample counts as unclear: %r", err)
         return Graded("unclear", 0.0, 0.0)
     parsed = parse(result.data)
     if parsed is None:
@@ -139,6 +143,7 @@ async def grade_empathy(
     prompt = "\n".join(["Conversation (end):", *lines, "", f"Reply to grade: {reply}"])
     try:
         result = await extractor.extract(EMPATHY_SYSTEM, prompt, EMPATHY_SCHEMA)
-    except Exception:
+    except Exception as err:
+        log.warning("eval empathy grader failed; the sample counts as unclear: %r", err)
         return Graded("unclear", 0.0, 0.0)
     return Graded(empathy_verdict(result.data), 1.0, result.cost_usd)

@@ -26,7 +26,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from companion.core.extractor import StructuredModel
-from companion.core.spend import purpose
 from companion.core.types import RelationshipId, TurnId
 from companion.features.episodes.logic import (
     PROMPT,
@@ -41,9 +40,18 @@ from companion.features.episodes.logic import (
     transcript,
 )
 from companion.features.episodes.store import Episode
+from companion.kit.ask import Judge, ask
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.episodes")
+WRITER = Judge(
+    "episodes",
+    PROMPT,
+    SCHEMA,
+    parse,
+    timeout=60.0,  # one ended episode's messages a call
+    unread="the episode is written next time",
+)
 FAR = datetime(9999, 1, 1, tzinfo=UTC)
 WHOLE = 1_000_000
 
@@ -82,18 +90,11 @@ async def write_closed(
         seen.add(found)
         if s.said[0].id in have or now - s.said[-1].at < EPISODE_GAP:
             continue
-        try:
-            with purpose("episodes"):
-                got = await extractor.extract(
-                    PROMPT.text, f"{facts(s, found)}\n\nMessages:\n{transcript(s)}", SCHEMA
-                )
-        except Exception as err:
-            log.warning("episode line failed; it is written next time: %r", err)
+        got = await ask(extractor, WRITER, f"{facts(s, found)}\n\nMessages:\n{transcript(s)}")
+        if got is None:
             continue
         cost += got.cost_usd
-        gist = parse(got.data)
-        if gist is None:
-            continue
+        gist = got.value
         store.add_episode(
             rel,
             Episode(

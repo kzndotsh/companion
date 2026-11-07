@@ -17,20 +17,12 @@ from datetime import datetime, timedelta
 
 from companion.core.reachout import Held
 from companion.core.turn.now import Phase, Said
-from companion.core.types import Json
 from companion.prompts import get
 
 DRAFT = get("system/nudge-draft")
 MIN_WAIT = timedelta(hours=1)
 GONE = timedelta(hours=6)
 PER_DAY = 2
-
-
-DRAFT_SCHEMA: dict[str, Json] = {
-    "type": "object",
-    "properties": {"message": {"type": "string"}},
-    "required": ["message"],
-}
 
 
 @dataclass(frozen=True, slots=True)

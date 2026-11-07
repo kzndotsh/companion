@@ -20,7 +20,6 @@ from companion.core.beliefs.extract import (
 )
 from companion.core.beliefs.extract import (
     SCHEMA,
-    SYSTEM,
     MemoryCandidate,
     Rejection,
     Skip,
@@ -34,7 +33,6 @@ from companion.core.beliefs.extract import (
 )
 from companion.core.beliefs.self_extract import PROMPT as SELF_PROMPT
 from companion.core.beliefs.self_extract import SCHEMA as SELF_SCHEMA
-from companion.core.beliefs.self_extract import SYSTEM as SELF_SYSTEM
 from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
@@ -56,7 +54,8 @@ from companion.features.promises.run import read_promises
 from companion.features.threads.run import Reading, catch_up_loops
 from companion.features.upkeep.reread.logic import ASK_RULE
 from companion.features.upkeep.reread.run import SameCheck
-from companion.kit.embed import embed_missing
+from companion.kit.ask import Judge, ask_or_raise
+from companion.kit.embed import bounded, embed_missing
 from companion.kit.record import Recorder
 from companion.memory.views import WANT_KINDS, check_views
 from companion.registry import FEATURES
@@ -64,6 +63,7 @@ from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.memory")
 BATCH = 40
+EMBED_SECONDS = 60.0  # embedding what the pass stored; was unlimited
 CONTEXT = 4
 
 
@@ -176,35 +176,43 @@ async def memory_pass(  # noqa: PLR0913
 class _Spec:
     """What differs between reading the user's words and reading the companion's own."""
 
-    system: str
-    schema: dict[str, Json]
-    parse: Callable[[Json], tuple[list[MemoryCandidate], list[Rejection]]]
+    judge: Judge[tuple[list[MemoryCandidate], list[Rejection]]]
     make: Callable[
         [MemoryCandidate, Mapping[str, Utterance], RelationshipId, datetime, Callable[[], str]],
         Belief | Rejection,
     ]
     speaker: Speaker
     accepted_reason: str
-    prompt_ref: str
 
 
-USER_SPEC = _Spec(
-    SYSTEM,
+# A pass's read is the whole batch: it was unlimited before, and two minutes is generous for one.
+USER_JUDGE = Judge(
+    "memory",
+    USER_PROMPT,
     SCHEMA,
     parse,
+    timeout=120.0,
+    unread="the batch is not recorded and is read again",
+)
+SELF_JUDGE = Judge(
+    "memory-views",
+    SELF_PROMPT,
+    SELF_SCHEMA,
+    parse_views,
+    timeout=120.0,
+    unread="the batch is not recorded and is read again",
+)
+USER_SPEC = _Spec(
+    USER_JUDGE,
     to_belief,
     Speaker.USER,
     "accepted: quote verified verbatim in a user message",
-    USER_PROMPT.ref,
 )
 SELF_SPEC = _Spec(
-    SELF_SYSTEM,
-    SELF_SCHEMA,
-    parse_views,
+    SELF_JUDGE,
     to_view,
     Speaker.COMPANION,
     "accepted: a view the companion expressed, quote verified in its own message",
-    SELF_PROMPT.ref,
 )
 
 
@@ -259,12 +267,12 @@ async def _extract_pass(
 ) -> _Counts:
     store, extractor, run, window, tz = ctx.store, ctx.extractor, ctx.run, ctx.window, ctx.tz
     labelled = known_index(known)
-    result = await extractor.extract(
-        spec.system,
+    result = await ask_or_raise(
+        extractor,
+        spec.judge,
         build_user_prompt(window, {u.id for u in targets}, labelled, tz, rejected or ()),
-        spec.schema,
     )
-    candidates, rejections = spec.parse(result.data)
+    candidates, rejections = result.value
     n_candidates = len(candidates) + len(rejections)
     seen = {normalise(b.claim) for b in known}
     accepted = already_known = restated = 0
@@ -286,7 +294,7 @@ async def _extract_pass(
                         "claim": outcome.belief.claim,
                         "quote": outcome.evidence.quote,
                         "model": result.model,
-                        "prompt": spec.prompt_ref,
+                        "prompt": result.ref,
                     },
                 )
             continue
@@ -318,7 +326,7 @@ async def _extract_pass(
                 "claim": made.claim,
                 "quote": c.quote,
                 "model": result.model,
-                "prompt": spec.prompt_ref,
+                "prompt": result.ref,
             },
         )
     for r in rejections:
@@ -447,8 +455,10 @@ async def _embed_new(
     """Embed the memories this pass stored, so no turn's look-up has to. A failure is logged and
     left for the next pass, or the next look-up, to do."""
     embedder, model = embed
-    try:
-        return await embed_missing(store, embedder, rel, model, now)
-    except Exception as err:
-        log.warning("embedding new memories after the pass failed: %r", err)
-        return 0.0
+    cost = await bounded(
+        embed_missing(store, embedder, rel, model, now),
+        deadline=EMBED_SECONDS,
+        what="embedding new memories after the pass",
+        unread="left for the next pass or look-up",
+    )
+    return cost or 0.0

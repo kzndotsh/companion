@@ -30,37 +30,40 @@ from companion.kit.features import Feature, Moment, Offer, Offered
 
 if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ask, whole_answer
 
 TIMEOUT_SECONDS = 3.0
+# What they gave only counts if it is in what they wrote, so the callers finish the reading.
+NAME = Judge(
+    "basics-name",
+    NAME_CAPTURE,
+    NAME_SCHEMA,
+    whole_answer,
+    timeout=TIMEOUT_SECONDS,
+    unread="no name stored",
+    spend="basics",
+)
+PRONOUNS = Judge(
+    "basics-pronouns",
+    PRONOUN_CAPTURE,
+    PRONOUN_SCHEMA,
+    whole_answer,
+    timeout=TIMEOUT_SECONDS,
+    unread="nothing set",
+    spend="basics",
+)
 
 
 async def judge_name(extractor: StructuredModel, asked: str, said: str) -> str | None:
     """The name they gave in reply, or None."""
-    judge = Judge(
-        "basics",
-        NAME_CAPTURE,
-        NAME_SCHEMA,
-        lambda data: parse_name(data, said),
-        timeout=TIMEOUT_SECONDS,
-        unread="no name stored",
-    )
-    got = await ask(extractor, judge, f"COMPANION: {asked}\nUSER: {said}")
-    return None if got is None else got.value
+    got = await ask(extractor, NAME, f"COMPANION: {asked}\nUSER: {said}")
+    return None if got is None else parse_name(got.value, said)
 
 
 async def judge_pronouns(extractor: StructuredModel, asked: str, said: str) -> str | None:
     """The pronouns they gave in reply, or None."""
-    judge = Judge(
-        "basics",
-        PRONOUN_CAPTURE,
-        PRONOUN_SCHEMA,
-        lambda data: parse_pronouns(data, said),
-        timeout=TIMEOUT_SECONDS,
-        unread="nothing set",
-    )
-    got = await ask(extractor, judge, f"COMPANION: {asked}\nUSER: {said}")
-    return None if got is None else got.value
+    got = await ask(extractor, PRONOUNS, f"COMPANION: {asked}\nUSER: {said}")
+    return None if got is None else parse_pronouns(got.value, said)
 
 
 def _address_set(c: Runtime) -> bool:

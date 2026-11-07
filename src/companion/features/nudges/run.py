@@ -10,8 +10,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.clock import local_midnight
 from companion.core.extractor import StructuredModel
-from companion.core.reachout import WOULD_NUDGE, Held, checked
-from companion.core.spend import purpose
+from companion.core.reachout import DRAFT_SCHEMA, WOULD_NUDGE, Held, checked, parse_draft
 from companion.core.turn.now import KEY as NOW_KEY
 from companion.core.turn.now import from_decisions
 from companion.core.types import (
@@ -23,7 +22,6 @@ from companion.core.types import (
 )
 from companion.features.nudges.logic import (
     DRAFT,
-    DRAFT_SCHEMA,
     GONE,
     Look,
     aways,
@@ -31,6 +29,7 @@ from companion.features.nudges.logic import (
     due,
     newest,
 )
+from companion.kit.ask import Judge, ask
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
@@ -38,6 +37,15 @@ if TYPE_CHECKING:
     pass
 
 log = logging.getLogger("companion.nudges")
+DRAFTER = Judge(
+    "nudge-draft",
+    DRAFT,
+    DRAFT_SCHEMA,
+    parse_draft,
+    timeout=30.0,  # one short message
+    unread="the nudge is dropped and that time away is not tried again",
+    spend="initiative",  # every reach-out's drafting is one line in `companion spend`
+)
 NUDGE_DROPPED = "nudge (shadow): draft dropped, not sent"
 
 
@@ -77,14 +85,11 @@ async def tick_nudge(
         return None
     text, dropped = "", "no drafter"
     if extractor is not None:
-        try:
-            with purpose("initiative"):
-                got = await extractor.extract(DRAFT.text, draft_prompt(away, now), DRAFT_SCHEMA)
-            message = got.data.get("message") if isinstance(got.data, dict) else None
-            text, dropped = checked(message) if isinstance(message, str) else ("", "no message")
-        except Exception:
-            log.warning("could not draft the nudge", exc_info=True)
-            dropped = "the draft call failed"
+        got = await ask(extractor, DRAFTER, draft_prompt(away, now))
+        if got is None:
+            dropped = "the draft call failed or had no message"
+        else:
+            text, dropped = checked(got.value)
     if not text:
         _record(store, rel, now).decide(
             NUDGE_DROPPED,
