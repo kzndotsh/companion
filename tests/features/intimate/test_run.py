@@ -186,6 +186,7 @@ async def test_three_reads_place_a_memory_by_lane_with_the_stance_most_of_them_g
         split.id: Intimate(Stance.CURIOUS),
         work.id: Everyday(),
     }
+    assert store.intimate_lane(REL) == {into.id, split.id}  # the core read other features use
     logged = {d.reason for d in store.decisions_with_key(REL, PLACED)}
     assert logged == {"scene memory: intimate, into", "scene memory: intimate, curious"}
 

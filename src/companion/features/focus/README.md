@@ -6,7 +6,7 @@ Ranks the memory card by what the moment is about. Without it the card held the 
 
 ## How it works
 
-The look-up (`focus_for_turn`, the feature's `look`) embeds their message alone and together with the companion's last reply (`moment_texts`), after filling any memory with no vector yet (`kit/embed.py`). Each memory's closeness is its best cosine score against either (`closeness`). It returns a `Focus` (the scores and the vectors, `core/card.py`), which the assemble stage hands to `build_card`. The whole look-up has a 2 second limit (`LOOK_SECONDS`); a slow or failed one logs a warning and the card is built the old way.
+The look-up (`focus_for_turn`, the feature's `look`) embeds their message alone and together with the companion's last reply (`moment_texts`), after filling any memory with no vector yet (`kit/embed.py`). Each memory's closeness is its best cosine score against either (`closeness`). It returns a `Focus` (the scores and the vectors, `core/card.py`), which the assemble stage hands to `build_card`. The whole look-up has a 2 second limit (`LOOK_SECONDS`, `kit/embed.py`); a slow or failed one logs a warning and the card is built the old way.
 
 With a focus, the card keeps their boundaries and its promises first, then fills the other places (15 in all) with the closest memories (`_focused` in `core/card.py`):
 - a memory within 0.90 of one already chosen is skipped (`FOCUS_SAME`), so one fact stored in several wordings takes one place;

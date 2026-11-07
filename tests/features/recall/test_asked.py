@@ -8,7 +8,7 @@ import pytest
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
-from companion.core.recall import candidates, parse, recall_note
+from companion.core.recall import candidates, parse
 from companion.core.talker import Reply
 from companion.core.types import (
     Belief,
@@ -28,6 +28,7 @@ from companion.core.types import (
 )
 from companion.features.intimate.logic import Intimate, Stance
 from companion.features.intimate.store import By, IntimateMemory
+from companion.features.recall.logic import recall_note
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.runtime import make_runtime

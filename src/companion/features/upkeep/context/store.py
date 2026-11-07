@@ -1,4 +1,5 @@
-"""What they were talking about when each memory was said (J51). Append-only."""
+"""What they were talking about when each memory was said (J51). Append-only. Reading them is
+`Store.belief_contexts`."""
 
 from __future__ import annotations
 
@@ -31,10 +32,3 @@ class BeliefContexts:
                 " VALUES (?,?,?,?,?)",
                 (rel, belief_id, context, prompt, iso(at)),
             )
-
-    def latest(self, rel: RelationshipId) -> dict[BeliefId, str]:
-        rows = self.conn.execute(
-            "SELECT belief_id, context FROM belief_context WHERE relationship_id = ? ORDER BY id",
-            (rel,),
-        ).fetchall()
-        return {BeliefId(str(r["belief_id"])): str(r["context"]) for r in rows}

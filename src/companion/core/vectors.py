@@ -34,6 +34,9 @@ def dot(a: Vector, b: Vector) -> float:
     return sum(x * y for x, y in zip(a, b, strict=True))
 
 
+NEAR_AT = 0.3  # a story or a taste less like their message than this is not shown
+
+
 def nearest(
     query: Vector, beliefs: Sequence[Belief], vectors: Mapping[BeliefId, Vector], k: int = SHORTLIST
 ) -> list[tuple[Belief, float]]:

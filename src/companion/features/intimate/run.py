@@ -77,7 +77,7 @@ from companion.features.intimate.logic import (
 from companion.features.intimate.store import By, IntimateMemory
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide
-from companion.kit.embed import embed_within
+from companion.kit.embed import embed_query, embedder_in
 from companion.kit.features import CardLane, Feature, Lookups, Passing
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
@@ -103,7 +103,6 @@ READS_SECONDS = (
 )
 READ = 400  # messages read past the bookmark per pass
 SCENES = 3  # ended scenes read per pass
-LOOK_SECONDS = 2.0
 
 PLACED = "scene memory: a memory placed"
 NOTED = "scene memory: a pattern noted"
@@ -291,7 +290,7 @@ type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitab
 
 
 def pass_step(mode: Mode) -> Step | None:
-    """The step the memory pass runs for `COMPANION_SCENE_MEMORY`, or None when it is off."""
+    """The step the memory pass runs for `COMPANION_INTIMATE_MEMORY`, or None when it is off."""
     if mode is Mode.OFF:
         return None
 
@@ -341,24 +340,23 @@ async def _vectors(
     """The moment's vector and every entry's, embedding the missing ones in the same call."""
     store, model, sm = c.store, c.embed_model, c.store.part(IntimateMemory)
     have: dict[str, Vector] = {**store.belief_embeddings(c.rel, model), **sm.vectors(c.rel, model)}
-    missing = [e for e in found if e.id not in have]
-    got = await embed_within(
+    missing = [(e, e.claim) for e in found if e.id not in have]
+    got = await embed_query(
         embedder,
-        [said, *(e.claim for e in missing)],
+        said,
+        [(e.id, text) for e, text in missing],
         spend="scene memory",
-        deadline=LOOK_SECONDS,
         unread="nearest left out",
     )
     if got is None:
         return None
-    fresh = dict(zip((e.id for e in missing), got.vectors[1:], strict=True))
-    patterns = {e.id: fresh[e.id] for e in missing if e.pattern}
+    patterns = {e.id: got.fresh[e.id] for e, _ in missing if e.pattern}
     if patterns:
         sm.add_vectors(patterns, model, now)
-    told = {BeliefId(e.id): fresh[e.id] for e in missing if not e.pattern}
+    told = {BeliefId(e.id): got.fresh[e.id] for e, _ in missing if not e.pattern}
     if told:
         store.add_belief_embeddings(c.rel, told, model, now)
-    return got.vectors[0], {**have, **fresh}
+    return got.query, {**have, **got.fresh}
 
 
 async def nearest_for_turn(
@@ -368,11 +366,8 @@ async def nearest_for_turn(
     lets the roleplay talker answer), how near each entry is to the moment: their message with the
     reply before it."""
     intimate = c.on(switch.ROUTE_INTIMATE) and heard is not None and heard.read.intimate
-    if (
-        c.mode(switch.INTIMATE_MEMORY) is Mode.OFF
-        or c.embedder is None
-        or c.roleplay_talker is None
-    ):
+    embedder = embedder_in(c, switch.INTIMATE_MEMORY, Mode.SHADOW, Mode.ON)
+    if embedder is None or c.roleplay_talker is None:
         return None
     if in_scene is not Frame.PLAY and not intimate:
         return None
@@ -381,7 +376,7 @@ async def nearest_for_turn(
         return Scored((), {})
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
     moment = f"{replies[-1]}\n{t.text}" if replies else t.text
-    got = await _vectors(c, c.embedder, found, moment, t.now)
+    got = await _vectors(c, embedder, found, moment, t.now)
     if got is None:
         return None
     query, vectors = got
@@ -432,7 +427,7 @@ def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card:
         return CardLane()
     live = c.mode(switch.INTIMATE_MEMORY) is Mode.ON
     if not roleplay:
-        hidden = c.store.part(IntimateMemory).intimate(c.rel)
+        hidden = c.store.intimate_lane(c.rel)
         on_card = hidden & {b.id for b in (*card.usable, *card.guarded, *card.older)}
         if on_card:
             decide(

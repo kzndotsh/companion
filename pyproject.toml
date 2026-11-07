@@ -125,15 +125,8 @@ name = "no feature imports another; shared things go through core or the turn"
 type = "independence"
 modules = ["companion.features.*"]
 # The registry lists every feature by design; a feature reaching it does not depend on the others.
-# The rest are one feature reading another's tables, each through the other's store class (a
-# feature owns its storage; `Store.part(cls)` hands it out). They stay named here so each is seen:
-# the reach pool draws on three features' tables, and recall hides the intimate lane's memories.
 ignore_imports = [
     "companion.registry -> companion.features.**",
-    "companion.features.reach.run -> companion.features.episodes.store",
-    "companion.features.reach.run -> companion.features.intimate.store",
-    "companion.features.reach.run -> companion.features.lore.store",
-    "companion.features.recall.run -> companion.features.intimate.store",
 ]
 
 [[tool.importlinter.contracts]]
@@ -142,9 +135,6 @@ name = "a turn stage reaches a feature only through the parts it declares in kit
 type = "forbidden"
 source_modules = ["companion.turn"]
 forbidden_modules = ["companion.features"]
-# The card shows what a feature's batch wrote about each memory; the stage reads that table through
-# its store class, which no `Feature` part carries.
-ignore_imports = ["companion.turn.assemble -> companion.features.upkeep.context.store"]
 allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]

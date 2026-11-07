@@ -53,10 +53,10 @@ def test_heavy_wins_then_scene_then_everyday_and_firsts_are_named_once() -> None
 
 
 def test_a_line_longer_than_a_summary_is_not_kept() -> None:
-    from companion.features.episodes.logic import MAX_WORDS, parse  # noqa: PLC0415
+    from companion.features.episodes.logic import GIST_MAX_WORDS, parse  # noqa: PLC0415
 
     assert parse({"gist": " A cozy  evening. "}) == "A cozy evening."
-    assert parse({"gist": "word " * (MAX_WORDS + 1)}) is None
+    assert parse({"gist": "word " * (GIST_MAX_WORDS + 1)}) is None
     assert parse({"gist": ""}) is None
 
 

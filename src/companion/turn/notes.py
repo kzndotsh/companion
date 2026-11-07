@@ -44,23 +44,23 @@ log = logging.getLogger("companion.turn")
 HOW_ARE_YOU_NOTE = get("notes/check-in")
 HOW_ARE_YOU_GAP = timedelta(hours=3)  # away at least this long since their last message
 HEAVY_WINDOW = timedelta(hours=12)  # serious messages this close before it make it a heavy talk
-LOOK_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
+LOOKS_TOGETHER_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
 
 
 async def look(
     c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, read: Heard | None
 ) -> Lookups:
-    """Every look-up the reply waits for, run side by side under one deadline (LOOK_SECONDS). Each
-    has its own limit too; one still running at the deadline, or one that raised, gives nothing
-    this turn and the reply goes ahead. Before, they ran one after another and their limits stacked
-    past 15 s (architecture audit, 2026-10-23)."""
+    """Every look-up the reply waits for, run side by side under one deadline
+    (LOOKS_TOGETHER_SECONDS). Each has its own limit too; one still running at the deadline, or one
+    that raised, gives nothing this turn and the reply goes ahead. Before, they ran one after
+    another and their limits stacked past 15 s (architecture audit, 2026-10-23)."""
     jobs: dict[str, Awaitable[object]] = {
         f.name: f.look(c, t, in_scene, (heard or read) if f.scene_read else heard)
         for f in FEATURES
         if f.look is not None
     }
     tasks = {name: asyncio.ensure_future(job) for name, job in jobs.items()}
-    _, late = await asyncio.wait(tasks.values(), timeout=LOOK_SECONDS)
+    _, late = await asyncio.wait(tasks.values(), timeout=LOOKS_TOGETHER_SECONDS)
     for task in late:
         task.cancel()
     got: dict[str, object] = {}

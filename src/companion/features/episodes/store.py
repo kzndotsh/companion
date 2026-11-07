@@ -1,31 +1,14 @@
-"""The times they spent together (J12). Append-only."""
+"""The times they spent together (J12). Append-only. Reading them is `Store.episodes`."""
 
 from __future__ import annotations
 
 import json
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
 
-from companion.core.types import RelationshipId, Severity, UtteranceId
-from companion.lib.sqlite.db import iso, parse_iso, write_tx
-
-
-@dataclass(frozen=True, slots=True)
-class Episode:
-    id: str
-    first_id: UtteranceId
-    last_id: UtteranceId
-    start_at: datetime
-    end_at: datetime
-    messages: int
-    kind: str
-    scene_share: float
-    top_severity: Severity
-    firsts: tuple[str, ...]
-    gist: str
-    prompt: str
-    at: datetime
+from companion.core.episode import Episode
+from companion.core.types import RelationshipId
+from companion.lib.sqlite.db import iso, write_tx
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,30 +40,3 @@ class Episodes:
                     iso(e.at),
                 ),
             )
-
-    def all_(self, rel: RelationshipId) -> list[Episode]:
-        """The newest gist for each episode, oldest episode first."""
-        rows = self.conn.execute(
-            "SELECT * FROM episodes e WHERE relationship_id = ?"
-            " AND at = (SELECT MAX(at) FROM episodes WHERE relationship_id = e.relationship_id"
-            " AND first_id = e.first_id) ORDER BY start_at",
-            (rel,),
-        ).fetchall()
-        return [
-            Episode(
-                str(r["id"]),
-                UtteranceId(str(r["first_id"])),
-                UtteranceId(str(r["last_id"])),
-                parse_iso(str(r["start_at"])),
-                parse_iso(str(r["end_at"])),
-                int(r["messages"]),
-                str(r["kind"]),
-                float(r["scene_share"]),
-                Severity(int(r["top_severity"])),
-                tuple(str(x) for x in json.loads(str(r["firsts"]))),
-                str(r["gist"]),
-                str(r["prompt"]),
-                parse_iso(str(r["at"])),
-            )
-            for r in rows
-        ]

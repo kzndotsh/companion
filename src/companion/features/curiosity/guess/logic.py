@@ -18,7 +18,7 @@ from companion.prompts import get
 
 JUDGE = get("system/guess-invite")
 NOTE = get("notes/guess")
-SHORT_WORDS = 10
+SHORT_QUESTION_WORDS = 10
 CONTEXT = 6
 MAX_OFFERED = 3
 INVITED = "guess: they invited a guess"
@@ -31,7 +31,7 @@ SCHEMA: dict[str, Json] = {
 
 def likely(said: str) -> bool:
     """Whether to ask the judge at all: a short question. Most turns are not, and make no call."""
-    return "?" in said and len(said.split()) <= SHORT_WORDS
+    return "?" in said and len(said.split()) <= SHORT_QUESTION_WORDS
 
 
 def judge_prompt(prior: Sequence[Utterance], said: str) -> str:

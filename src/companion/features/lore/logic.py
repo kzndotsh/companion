@@ -11,24 +11,15 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from enum import StrEnum
 
 from companion.core.types import Belief, BeliefId, Json
+from companion.core.views import ViewKind
 from companion.prompts import get
 
 PROMPT = get("system/lore-label")
 _NOTE = get("notes/lore")
 SHOWN = 2  # at most this many of its tastes a turn
-GATE = 0.3  # a taste less like their message than this is not shown
 BATCH = 60
-
-
-class Kind(StrEnum):
-    TASTE = "taste"
-    STANCE = "stance"
-    RULE = "rule"
-    SELF = "self"
-    LIVED = "lived"
 
 
 SCHEMA: dict[str, Json] = {
@@ -40,7 +31,7 @@ SCHEMA: dict[str, Json] = {
                 "type": "object",
                 "properties": {
                     "ref": {"type": "string"},
-                    "kind": {"type": "string", "enum": [k.value for k in Kind]},
+                    "kind": {"type": "string", "enum": [k.value for k in ViewKind]},
                 },
                 "required": ["ref", "kind"],
             },
@@ -53,7 +44,7 @@ SCHEMA: dict[str, Json] = {
 @dataclass(frozen=True, slots=True)
 class Labelled:
     belief_id: BeliefId
-    kind: Kind
+    kind: ViewKind
 
 
 def prompt(views: Iterable[Belief]) -> tuple[str, dict[str, BeliefId]]:
@@ -78,9 +69,9 @@ def parse(data: Json, refs: Mapping[str, BeliefId]) -> list[Labelled] | None:
             continue
         bid = refs.get(str(item.get("ref", "")).strip("[] "))
         kind = item.get("kind")
-        if bid is None or bid in out or kind not in set(Kind):
+        if bid is None or bid in out or kind not in set(ViewKind):
             continue
-        out[bid] = Labelled(bid, Kind(str(kind)))
+        out[bid] = Labelled(bid, ViewKind(str(kind)))
     return list(out.values())
 
 
@@ -92,17 +83,17 @@ def agreed(reads: Sequence[Sequence[Labelled] | None], shown: Iterable[BeliefId]
         kinds = [
             next((x.kind for x in r if x.belief_id == bid), None) if r else None for r in reads
         ]
-        if kinds and all(k is Kind.TASTE for k in kinds):
-            out.append(Labelled(bid, Kind.TASTE))
+        if kinds and all(k is ViewKind.TASTE for k in kinds):
+            out.append(Labelled(bid, ViewKind.TASTE))
             continue
-        other = Counter(k for k in kinds if k is not None and k is not Kind.TASTE)
-        out.append(Labelled(bid, other.most_common(1)[0][0] if other else Kind.STANCE))
+        other = Counter(k for k in kinds if k is not None and k is not ViewKind.TASTE)
+        out.append(Labelled(bid, other.most_common(1)[0][0] if other else ViewKind.STANCE))
     return out
 
 
-def lore(views: Iterable[Belief], labels: Mapping[BeliefId, Kind]) -> list[Belief]:
+def lore(views: Iterable[Belief], labels: Mapping[BeliefId, ViewKind]) -> list[Belief]:
     """Its lore: the views labelled a taste. A lived claim never is (A22)."""
-    return [b for b in views if labels.get(b.id) is Kind.TASTE]
+    return [b for b in views if labels.get(b.id) is ViewKind.TASTE]
 
 
 def lore_note(tastes: Iterable[str]) -> str | None:

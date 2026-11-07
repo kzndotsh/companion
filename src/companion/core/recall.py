@@ -21,20 +21,17 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from companion.core.frames import is_assertable
-from companion.core.types import Belief, Json, Sensitivity
+from companion.core.types import Belief, BeliefId, Json, Sensitivity
 from companion.prompts import get
 
 PROMPT = get("system/recall")
 SYSTEM = PROMPT.text
-_NOTE = get("notes/recall")
-_EMPTY = get("notes/recall-empty")
 MAX_PICKS = 5
 # What a look-up may find. Unprompted, up to a guarded memory and never a crisis-level one; the
 # near and asked look-ups share these two limits.
 MAX_SENSITIVITY = Sensitivity.DELICATE
 # When they ask it to remember, anything they said may be found.
 ASKED_SENSITIVITY = Sensitivity.GRAVE
-RECENT = 6  # messages of the conversation the look-up reads when they asked, theirs last
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -43,13 +40,26 @@ SCHEMA: dict[str, Json] = {
 }
 
 
+def usable(
+    beliefs: Sequence[Belief],
+    max_sensitivity: Sensitivity,
+    hidden: frozenset[BeliefId] = frozenset(),
+) -> list[Belief]:
+    """What either trigger may find: stated for real, up to `max_sensitivity`, and never a `hidden`
+    memory."""
+    return [
+        b
+        for b in beliefs
+        if is_assertable(b) and b.sensitivity <= max_sensitivity and b.id not in hidden
+    ]
+
+
 def candidates(
     beliefs: Sequence[Belief], max_sensitivity: Sensitivity = MAX_SENSITIVITY
 ) -> dict[str, Belief]:
     """Short labels (r1, r2, ...) for the beliefs it may look up: stated for real and, unless they
     asked, not crisis."""
-    usable = [b for b in beliefs if is_assertable(b) and b.sensitivity <= max_sensitivity]
-    return {f"r{i}": b for i, b in enumerate(usable, start=1)}
+    return {f"r{i}": b for i, b in enumerate(usable(beliefs, max_sensitivity), start=1)}
 
 
 def build_prompt(
@@ -75,20 +85,17 @@ def build_prompt(
     )
 
 
-def parse(data: Json, labelled: Mapping[str, Belief]) -> list[Belief]:
-    """The beliefs picked, in order, only from labels that were shown, at most five."""
+def picked(data: Json, labelled: Mapping[str, Belief], limit: int) -> list[Belief]:
+    """The beliefs a judge picked, in order, only from labels that were shown, at most `limit`."""
     raw = data.get("labels") if isinstance(data, dict) else None
-    picked: list[Belief] = []
+    chosen: list[Belief] = []
     for label in raw if isinstance(raw, list) else []:
         b = labelled.get(str(label).strip().strip("[]").strip())  # the list shows "[r12]"
-        if b is not None and b not in picked:
-            picked.append(b)
-    return picked[:MAX_PICKS]
+        if b is not None and b not in chosen:
+            chosen.append(b)
+    return chosen[:limit]
 
 
-def recall_note(picked: Sequence[Belief]) -> str:
-    """The block for the system block. When nothing was found it says so, so the reply owns the
-    gap instead of guessing (J30)."""
-    if not picked:
-        return _EMPTY.text
-    return _NOTE.render(items="\n".join(f"- {b.claim}" for b in picked))
+def parse(data: Json, labelled: Mapping[str, Belief]) -> list[Belief]:
+    """The beliefs picked, in order, only from labels that were shown, at most five."""
+    return picked(data, labelled, MAX_PICKS)

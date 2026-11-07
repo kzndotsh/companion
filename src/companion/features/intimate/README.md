@@ -41,7 +41,7 @@ A pattern becomes an entry only once its quotes come from two separate scenes (`
 
 What they are into and the offer go in the system block in place of the memory card (ADR 0012), with none of the everyday card and none of its own views. The limits and the basics are sent after the history, after the scene reminder (`render_pinned`): on the card, a fact about their body changed almost no reply; after the history with the heading, the assumed body fell from 21 to 12 of 36 draws and their own rose from 1 to 12 (three recorded turns, 2026-11-05, owner flag). How they want to be referred to stays pinned, as on every turn.
 
-"Nearest" comes from the look-up before the reply (`nearest_for_turn`, the feature's `look`): on a turn in a pretend scene, or an intimate turn the operator lets the roleplay talker answer, it embeds the reply before their message with their message, plus any entry with no vector yet in the same call, under 2 seconds (`LOOK_SECONDS`), and scores every entry by cosine. New vectors are kept (`belief_embeddings` for memories, `scene_vectors` for patterns). A slow or failed look-up leaves only the limits and the basics.
+"Nearest" comes from the look-up before the reply (`nearest_for_turn`, the feature's `look`): on a turn in a pretend scene, or an intimate turn the operator lets the roleplay talker answer, it embeds the reply before their message with their message, plus any entry with no vector yet in the same call, under 2 seconds (`LOOK_SECONDS`, `kit/embed.py`), and scores every entry by cosine. New vectors are kept (`belief_embeddings` for memories, `scene_vectors` for patterns). A slow or failed look-up leaves only the limits and the basics.
 
 **The curious item** is offered only when this turn's brush-off read answered and said no (a `brush-off` decision with `declines` false and a scorer), and never an item offered in the last 3 days (`COOL`) whose next brush-off read, on a later turn, said they pushed back (`cooled`). With `on`, each offer is logged once the turn is stored (`scene memory: a curious item offered`), which is what the next check reads.
 
@@ -53,9 +53,9 @@ What they are into and the offer go in the system block in place of the memory c
 
 | File | What |
 |---|---|
-| `logic.py` | pure: the lanes, stances and reasons (`Lane`, `Stance`, `Why`, `Place`), the floor (`touches_age`, `screen`), the lane prompt, parse and agreement (`lane_prompt`, `parse_lanes`, `agree`), scenes and patterns (`scenes`, `closed`, `Pattern`, `pattern_prompt`, `parse_patterns`, `refuse`, `pattern_entry`), the card (`Entry`, `scene_card`, `render_scene`) and the cooling (`cooled`) |
+| `logic.py` | pure: the lanes, stances and reasons (`Stance`, `Why`, `Place`; the `Lane` enum is in `core/lane.py`), the floor (`touches_age`, `screen`), the lane prompt, parse and agreement (`lane_prompt`, `parse_lanes`, `agree`), scenes and patterns (`scenes`, `closed`, `Pattern`, `pattern_prompt`, `parse_patterns`, `refuse`, `pattern_entry`), the card (`Entry`, `scene_card`, `render_scene`) and the cooling (`cooled`) |
 | `run.py` | effects: the pass step (`label_lanes`, `read_scenes`, `pass_step`), the entries (`entries`), the look-up (`nearest_for_turn`), the turn's lane (`scene_lane`), and `SCENE` |
-| `store.py` | its tables behind `Store.part(IntimateMemory)`: places, patterns and their quotes and retires, vectors, the bookmark, and the floor's facts about a message's turn (`facts`) |
+| `store.py` | its tables behind `Store.part(IntimateMemory)` (which memories are in the intimate lane is read through `Store.intimate_lane`, `Lane` is in `core/lane.py`, so reach and recall leave them out without importing this feature): places, patterns and their quotes and retires, vectors, the bookmark, and the floor's facts about a message's turn (`facts`) |
 | `cli.py` | `companion intimate`, and retiring a pattern (`retire_pattern`, used by `companion retire`) |
 
 The tables are in `store/sqlite/migrations/0037_scene_memory.sql`.

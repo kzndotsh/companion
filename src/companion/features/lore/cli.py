@@ -11,7 +11,6 @@ from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
 from companion.features.lore.logic import lore
 from companion.features.lore.run import label_views
-from companion.features.lore.store import ViewKinds
 from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
@@ -20,7 +19,7 @@ def run(db: Path, relationship: str) -> str:
     rel = RelationshipId(relationship)
     with Store(db) as store:
         views = store.self_beliefs(rel)
-        kinds = store.part(ViewKinds).kinds(rel)
+        kinds = store.view_kinds(rel)
     tastes = lore(views, kinds)
     lines = [f'{b.id[:8]}  {b.claim}\n    "{b.evidence[0].quote}"' for b in reversed(tastes)]
     counts = Counter(kinds[b.id] for b in views if b.id in kinds)

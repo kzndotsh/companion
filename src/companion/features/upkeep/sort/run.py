@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
@@ -29,8 +29,6 @@ from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.worth")
-FAR = datetime(9999, 1, 1, tzinfo=UTC)
-WHOLE = 100_000
 DROPPED = "a remark about the bot, not their life (three reads agreed)"
 EXPIRED = "a routine moment, a week on"
 
@@ -71,7 +69,7 @@ async def label(  # noqa: PLR0913
     todo: list[Belief] = [b for b in store.user_beliefs(rel) if b.id not in done][:limit]
     if not todo:
         return Labelled()
-    history = store.history_before(rel, FAR, WHOLE)
+    history = store.whole_history(rel)
     where = {u.id: i for i, u in enumerate(history)}
     dropped = questions = 0
     cost = 0.0

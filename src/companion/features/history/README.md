@@ -34,15 +34,15 @@ One objecting read keeps a story out of canon. When reads object differently, th
 **Append-only.** Stories, events, vectors and the bookmark are never updated or deleted (ADR 0002). A story's standing is its newest event. `companion retire ID` adds a `retired` event with the owner's reason, so a retired story leaves canon and stays listed.
 
 **Showing it, in shadow** (`stories_beside`, the feature's `shadow` look-up, run beside the turn after the reply). Only on an ordinary turn (`is_casual`: not serious, not in a scene, not a goodbye), with an embedder.
-- `nearest_stories` embeds their message, plus any canon story with no stored vector in the same call, under 2 seconds (`LOOK_SECONDS`). It stores the new vectors (`story_vectors`). A slow or failed call logs a warning and nothing else.
-- It takes the nearest canon stories by cosine score, at most 2 (`SHOWN`), and drops any below 0.3 (`GATE`), as lore does.
+- `nearest_stories` embeds their message, plus any canon story with no stored vector in the same call, under 2 seconds (`LOOK_SECONDS`, `kit/embed.py`). It stores the new vectors (`story_vectors`). A slow or failed call logs a warning and nothing else.
+- It takes the nearest canon stories by cosine score, at most 2 (`SHOWN`), and drops any below 0.3 (`NEAR_AT`, `core/vectors.py`), as lore does.
 - It logs `history: its canon stories nearest their message (shadow)` with each story's id, score and claim; how many times it was told (the first telling and each kept as evidence); when it was last told; and whether a telling is still among the 40 messages the talker reads (`in_view`). The reason counts the ones told before and out of view, which a step 2 note could mark as told before so it is not told as new. Nothing is sent.
 
 ## Files
 
 | File | What |
 |---|---|
-| `logic.py` | pure: the kinds (`Place`, `Verdict`, `Standing`), a story and its record (`Story`, `Recorded`), the capture parse and its rules (`parse_capture`, `to_story`), the canon prompt, parse and ruling (`canon_prompt`, `parse_canon`, `rule`), the nearest stories (`nearest`), `SHOWN`, `GATE` |
+| `logic.py` | pure: the kinds (`Place`, `Verdict`, `Standing`), a story and its record (`Story`, `Recorded`), the capture parse and its rules (`parse_capture`, `to_story`), the canon prompt, parse and ruling (`canon_prompt`, `parse_canon`, `rule`), the nearest stories (`nearest`), `SHOWN` |
 | `run.py` | effects: capture and the canon check after a memory pass (`read_history`, `pass_step`), the look-up beside a turn (`nearest_stories`, `stories_beside`), and `HISTORY` |
 | `store.py` | its tables behind `Store.part(Stories)`: stories, events, vectors and the bookmark |
 | `cli.py` | `companion history`, and retiring a story (`retire_story`, used by `companion retire`) |

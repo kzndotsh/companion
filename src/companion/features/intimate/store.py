@@ -11,6 +11,7 @@ from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
+from companion.core.lane import Lane
 from companion.core.turn.floor import MINOR_KEY
 from companion.core.turn.listening import LISTENING_KEY
 from companion.core.types import HEAVY_AT, BeliefId, RelationshipId, UtteranceId
@@ -19,7 +20,6 @@ from companion.features.intimate.logic import (
     Everyday,
     Excluded,
     Intimate,
-    Lane,
     Pattern,
     Place,
     Quote,
@@ -92,10 +92,6 @@ class IntimateMemory:
         return frozenset(
             BeliefId(b) for b, (why, p) in newest.items() if why == Why.DOUBT.value and p != prompt
         )
-
-    def intimate(self, rel: RelationshipId) -> frozenset[BeliefId]:
-        """The memories whose place is the intimate lane: never shown outside a scene when on."""
-        return frozenset(b for b, p in self.places(rel).items() if isinstance(p, Intimate))
 
     def facts(
         self, rel: RelationshipId, utterances: Collection[UtteranceId]

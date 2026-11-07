@@ -47,7 +47,7 @@ from companion.features.history.logic import (
 from companion.features.history.store import By, Stories
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, is_casual
-from companion.kit.embed import embed_within
+from companion.kit.embed import embed_query, embedder_in
 from companion.kit.features import Feature, Passing
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
@@ -61,7 +61,6 @@ log = logging.getLogger("companion.history")
 
 BATCHES = 3  # batches read per pass, so a long backlog is read over several passes
 CHECKS = 10  # waiting stories checked per pass
-LOOK_SECONDS = 2.0
 CAPTURER = Judge(
     "history",
     CAPTURE,
@@ -231,21 +230,20 @@ async def nearest_stories(
     if not canon:
         return []
     have = stories.vectors(rel, model)
-    missing = [r.story for r in canon if r.story.id not in have]
-    got = await embed_within(
+    missing = [(r.story.id, r.story.claim) for r in canon if r.story.id not in have]
+    got = await embed_query(
         embedder,
-        [said, *(s.claim for s in missing)],
+        said,
+        missing,
         spend="history",
-        deadline=LOOK_SECONDS,
         unread="its stories are not looked up",
     )
     if got is None:
         return None
-    if missing:
-        fresh = dict(zip((s.id for s in missing), got.vectors[1:], strict=True))
-        stories.add_vectors(fresh, model, now)
-        have = {**have, **fresh}
-    return nearest(got.vectors[0], canon, have)
+    if got.fresh:
+        stories.add_vectors(got.fresh, model, now)
+        have = {**have, **got.fresh}
+    return nearest(got.query, canon, have)
 
 
 async def stories_beside(
@@ -254,13 +252,10 @@ async def stories_beside(
     """Log the canon stories it would show on an ordinary turn, and whether each was told already
     and is still in the messages the talker reads. Shows nothing (step 1)."""
     del card
-    if (
-        c.mode(switch.HISTORY) is Mode.OFF
-        or c.embedder is None
-        or not is_casual(t, in_scene, heard)
-    ):
+    embedder = embedder_in(c, switch.HISTORY, Mode.SHADOW, Mode.ON)
+    if embedder is None or not is_casual(t, in_scene, heard):
         return
-    found = await nearest_stories(c.store, (c.embedder, c.embed_model), c.rel, t.text, t.now)
+    found = await nearest_stories(c.store, (embedder, c.embed_model), c.rel, t.text, t.now)
     if not found:
         return
     in_view: set[UtteranceId] = {u.id for u in c.store.history_before(c.rel, t.now, HISTORY_LIMIT)}

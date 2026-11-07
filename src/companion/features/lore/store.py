@@ -1,4 +1,5 @@
-"""The kind of each of the companion's views (ADR 0020). Append-only; the newest label wins."""
+"""The kind of each of the companion's views (ADR 0020). Append-only; the newest label wins.
+Reading them is `Store.view_kinds`."""
 
 from __future__ import annotations
 
@@ -7,8 +8,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.types import BeliefId, RelationshipId
-from companion.features.lore.logic import Kind, Labelled
+from companion.core.types import RelationshipId
+from companion.features.lore.logic import Labelled
 from companion.lib.sqlite.db import iso, write_tx
 
 
@@ -33,9 +34,3 @@ class ViewKinds:
                 " VALUES (?, ?, ?, ?, ?, ?)",
                 [(rel, x.belief_id, x.kind, model, prompt, iso(at)) for x in labels],
             )
-
-    def kinds(self, rel: RelationshipId) -> dict[BeliefId, Kind]:
-        rows = self.conn.execute(
-            "SELECT belief_id, kind FROM view_kinds WHERE relationship_id = ? ORDER BY id", (rel,)
-        ).fetchall()
-        return {BeliefId(str(r["belief_id"])): Kind(str(r["kind"])) for r in rows}

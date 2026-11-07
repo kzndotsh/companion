@@ -8,10 +8,11 @@ import dataclasses
 import logging
 import sqlite3
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Protocol
 
+from companion.core.episode import Episode
 from companion.core.ids import new_id
 from companion.core.memory_pass import PassRun
 from companion.core.prompt.prefix import Prefix
@@ -38,23 +39,29 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.vectors import Vector
-from companion.core.views import ViewState, parse_mode
+from companion.core.views import ViewKind, ViewState, parse_mode
 from companion.store.sqlite import (
+    belief_context,
     beliefs,
     decisions,
     embeddings,
+    episodes,
     favorites,
     flags,
     labels,
+    lanes,
     ledger,
     memory_pass,
     reach_outs,
     settings,
     turns,
+    view_kinds,
 )
 from companion.store.sqlite.db import open_db
 
 VIEWS_MODE_KEY = "views.mode"
+FAR = datetime(9999, 1, 1, tzinfo=UTC)  # after every message
+WHOLE = 1_000_000  # more messages than a file will hold
 
 
 log = logging.getLogger("companion.store")
@@ -143,6 +150,10 @@ class Store:
 
     def history_before(self, rel: RelationshipId, before: datetime, limit: int) -> list[Utterance]:
         return ledger.history_before(self._conn, rel, before, limit)
+
+    def whole_history(self, rel: RelationshipId) -> list[Utterance]:
+        """Every message, oldest first."""
+        return ledger.history_before(self._conn, rel, FAR, WHOLE)
 
     def save_prefix(self, p: Prefix) -> None:
         turns.save_prefix(self._conn, p)
@@ -255,6 +266,19 @@ class Store:
 
     def belief_labels(self, rel: RelationshipId) -> dict[BeliefId, Label]:
         return labels.latest(self._conn, rel)
+
+    def belief_contexts(self, rel: RelationshipId) -> dict[BeliefId, str]:
+        return belief_context.latest(self._conn, rel)
+
+    def episodes(self, rel: RelationshipId) -> list[Episode]:
+        return episodes.all_(self._conn, rel)
+
+    def view_kinds(self, rel: RelationshipId) -> dict[BeliefId, ViewKind]:
+        return view_kinds.latest(self._conn, rel)
+
+    def intimate_lane(self, rel: RelationshipId) -> frozenset[BeliefId]:
+        """The memories the scene lane placed as intimate; a caller says when it leaves them out."""
+        return lanes.intimate(self._conn, rel)
 
     def add_belief_embeddings(
         self, rel: RelationshipId, vectors: Mapping[BeliefId, Vector], model: str, at: datetime

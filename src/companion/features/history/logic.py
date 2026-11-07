@@ -19,13 +19,12 @@ from typing import NewType
 
 from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
 from companion.core.types import Frame, Json, RelationshipId, Speaker, Utterance, UtteranceId
-from companion.core.vectors import Vector, dot
+from companion.core.vectors import NEAR_AT, Vector, dot
 from companion.prompts import get
 
 CAPTURE = get("system/history-capture")
 CANON = get("system/history-canon")
 SHOWN = 2  # at most this many stories it would show a turn
-GATE = 0.3  # a story less like their message than this is not shown
 
 StoryId = NewType("StoryId", str)
 
@@ -144,10 +143,10 @@ class Recorded:
 def nearest(
     query: Vector, canon: Sequence[Recorded], vectors: Mapping[StoryId, Vector]
 ) -> list[tuple[Recorded, float]]:
-    """The canon stories closest to the query, at most SHOWN and none below GATE, closest first. A
-    story with no vector yet is left out."""
+    """The canon stories closest to the query, at most SHOWN and none below NEAR_AT, closest first.
+    A story with no vector yet is left out."""
     scored = [(r, dot(query, vectors[r.story.id])) for r in canon if r.story.id in vectors]
-    return [x for x in sorted(scored, key=lambda x: -x[1])[:SHOWN] if x[1] >= GATE]
+    return [x for x in sorted(scored, key=lambda x: -x[1])[:SHOWN] if x[1] >= NEAR_AT]
 
 
 def parse_capture(data: Json) -> list[Proposed] | None:

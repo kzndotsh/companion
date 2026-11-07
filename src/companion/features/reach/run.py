@@ -30,9 +30,6 @@ from companion.core.types import (
     Speaker,
     Subject,
 )
-from companion.features.episodes.store import Episodes
-from companion.features.intimate.store import IntimateMemory
-from companion.features.lore.store import ViewKinds
 from companion.features.reach.gate import (
     AFTER_HEAVY,
     Situation,
@@ -132,9 +129,9 @@ class Reacher:
 def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
     """What a thought could be about. Never a memory the scene lane placed as intimate (ADR 0026):
     some are stored at a low sensitivity, and one was picked for a weekday morning (2026-11-03)."""
-    kinds = store.part(ViewKinds).kinds(rel)
+    kinds = store.view_kinds(rel)
     keep = (BeliefKind.THREAD, BeliefKind.PREFERENCE)
-    intimate = store.part(IntimateMemory).intimate(rel)
+    intimate = store.intimate_lane(rel)
     return Pool(
         memories=[
             (str(b.id), b.claim, b.sensitivity)
@@ -151,7 +148,7 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
         ],
         episodes=[
             (e.id, e.gist)
-            for e in store.part(Episodes).all_(rel)
+            for e in store.episodes(rel)
             if e.kind == "everyday" and e.top_severity < HEAVY_AT and now - e.end_at <= EPISODE_DAYS
         ],
     )
@@ -210,7 +207,7 @@ def context(
     ):
         said = []
     keep = (BeliefKind.THREAD, BeliefKind.PREFERENCE, BeliefKind.TRAIT)
-    intimate = store.part(IntimateMemory).intimate(rel)
+    intimate = store.intimate_lane(rel)
     theirs = sorted(
         (
             b

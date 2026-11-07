@@ -7,8 +7,6 @@ from collections.abc import Mapping, Sequence
 from companion.core.types import BeliefId
 from companion.core.vectors import Vector, dot
 
-LOOK_SECONDS = 2.0  # a slow look-up only means the card is built as before this turn
-
 
 def moment_texts(said: str, last_reply: str | None) -> list[str]:
     """Their message alone, and with the reply before it: a short message ("lol", "booop") means

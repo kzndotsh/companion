@@ -15,19 +15,26 @@ from companion.core import switch
 from companion.core.card import Card
 from companion.core.extractor import StructuredModel
 from companion.core.recall import PROMPT as RECALL_PROMPT
-from companion.core.recall import RECENT, recall_note
 from companion.core.spend import purpose
 from companion.core.switch import Mode
 from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Severity, Speaker
 from companion.core.vectors import Embedder, nearest
-from companion.features.intimate.store import IntimateMemory
 from companion.features.recall.logic import GATE as RELEVANCE_GATE
 from companion.features.recall.logic import LIVE as RELEVANCE_LIVE
-from companion.features.recall.logic import PROMPT, SCHEMA, build_prompt, eligible, extras, parse
+from companion.features.recall.logic import (
+    PROMPT,
+    RECENT,
+    SCHEMA,
+    build_prompt,
+    eligible,
+    extras,
+    parse,
+    recall_note,
+)
 from companion.features.recall.logic import SHADOW as RELEVANCE_SHADOW
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.current import Heard, Turn, decide, mark
-from companion.kit.embed import bounded, embed_missing
+from companion.kit.embed import bounded, embed_missing, embedder_in
 from companion.kit.features import Feature, Offer, Offered
 from companion.kit.recall import Context, Recalled
 from companion.kit.recall import look_up as recall_look_up
@@ -176,9 +183,7 @@ async def shadow(  # noqa: PLR0913
 def _hidden(c: Runtime) -> frozenset[BeliefId]:
     """The intimate lane, left out of the look-up when the scene memory is on (ADR 0026)."""
     return (
-        c.store.part(IntimateMemory).intimate(c.rel)
-        if c.mode(switch.INTIMATE_MEMORY) is Mode.ON
-        else frozenset()
+        c.store.intimate_lane(c.rel) if c.mode(switch.INTIMATE_MEMORY) is Mode.ON else frozenset()
     )
 
 
@@ -193,7 +198,8 @@ async def relevant_for_turn(
     asked only when the closest memory is near (GATE), outside a scene. Logged either way. With no
     listening read because the judge failed it still runs, as a turn that is not sharing, so nothing
     held is offered; with listening switched off it does not run, as before."""
-    if c.mode(switch.RELEVANCE) is not Mode.ON or c.embedder is None or c.judge is None:
+    embedder = embedder_in(c, switch.RELEVANCE, Mode.ON)
+    if embedder is None or c.judge is None:
         return ()
     if heard is None and not c.on(switch.LISTEN):
         return ()
@@ -203,7 +209,7 @@ async def relevant_for_turn(
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
     found = await shadow(
         c.store,
-        c.embedder,
+        embedder,
         c.judge,
         c.rel,
         model=c.embed_model,
@@ -243,9 +249,9 @@ async def shadow_for_turn(
 ) -> None:
     """With the look-up in shadow: what it would have kept in mind on an ordinary message, logged
     beside the turn; it never holds up or changes the reply."""
+    embedder = embedder_in(c, switch.RELEVANCE, Mode.SHADOW)
     if (
-        c.mode(switch.RELEVANCE) is not Mode.SHADOW
-        or c.embedder is None
+        embedder is None
         or c.judge is None
         or (heard is None and not c.on(switch.LISTEN))
         or in_scene is not Frame.REAL
@@ -254,7 +260,7 @@ async def shadow_for_turn(
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
     found = await shadow(
         c.store,
-        c.embedder,
+        embedder,
         c.judge,
         c.rel,
         model=c.embed_model,

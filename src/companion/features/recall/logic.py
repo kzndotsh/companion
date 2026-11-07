@@ -4,8 +4,9 @@ The card holds fifteen memories a turn out of well over a hundred, so most of wh
 reaches a reply on its own. Two triggers bring more:
 
 - asked: they ask it to remember, or say it forgot. A small model reads the topic, the last few
-  messages and every memory they may be asked about, and points at the ones meant (`core/recall.py`,
-  `kit/recall.py`, which the guess shares).
+  messages and every memory they may be asked about, and points at the ones meant. The prompt,
+  parse and judge are shared with the guess, so they sit below the features (`core/recall.py`,
+  `kit/recall.py`); the note and the rule for what each trigger may find are here.
 - near: an embedding of their message finds the nearest memories, and a small model picks at most
   three of those, or none (ADR 0018).
 
@@ -15,8 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from companion.core.frames import is_assertable
-from companion.core.recall import ASKED_SENSITIVITY, MAX_SENSITIVITY
+from companion.core.recall import ASKED_SENSITIVITY, MAX_SENSITIVITY, SCHEMA, picked, usable
 from companion.core.types import Belief, BeliefId, Json, Sensitivity
 from companion.prompts import get
 
@@ -26,12 +26,9 @@ LIVE = "relevance: what it was shown"
 GATE = 0.42  # live: the small model picks only when the closest memory is this near (1 turn in 5)
 SHOWN = 2  # live: at most this many picks reach the talker, none already on the card
 MAX_PICKS = 3
-
-SCHEMA: dict[str, Json] = {
-    "type": "object",
-    "properties": {"labels": {"type": "array", "items": {"type": "string"}}},
-    "required": ["labels"],
-}
+RECENT = 6  # messages of the conversation the asked look-up reads, theirs last
+_NOTE = get("notes/recall")
+_EMPTY = get("notes/recall-empty")
 
 
 def eligible(
@@ -46,7 +43,7 @@ def eligible(
     since they asked for it. Otherwise never crisis-level, and held (sensitive) memories only when
     they share something, the same rule as the card."""
     top = ASKED_SENSITIVITY if asked else MAX_SENSITIVITY if sharing else Sensitivity.PRIVATE
-    return [b for b in beliefs if is_assertable(b) and b.sensitivity <= top and b.id not in hidden]
+    return usable(beliefs, top, hidden)
 
 
 def extras(
@@ -71,22 +68,26 @@ def build_prompt(last_reply: str | None, said: str, shortlist: Sequence[Belief])
 def parse(data: Json, shortlist: Sequence[Belief]) -> list[Belief]:
     """The memories picked, in order, only from labels that were shown, at most three."""
     labelled = {f"r{i}": b for i, b in enumerate(shortlist, start=1)}
-    raw = data.get("labels") if isinstance(data, dict) else None
-    picked: list[Belief] = []
-    for label in raw if isinstance(raw, list) else []:
-        b = labelled.get(str(label).strip().strip("[]").strip())
-        if b is not None and b not in picked:
-            picked.append(b)
-    return picked[:MAX_PICKS]
+    return picked(data, labelled, MAX_PICKS)
+
+
+def recall_note(found: Sequence[Belief]) -> str:
+    """The block for the system block. When nothing was found it says so, so the reply owns the
+    gap instead of guessing (J30)."""
+    if not found:
+        return _EMPTY.text
+    return _NOTE.render(items="\n".join(f"- {b.claim}" for b in found))
 
 
 __all__ = [
     "MAX_PICKS",
     "PROMPT",
+    "RECENT",
     "SCHEMA",
     "SHADOW",
     "build_prompt",
     "eligible",
     "extras",
     "parse",
+    "recall_note",
 ]

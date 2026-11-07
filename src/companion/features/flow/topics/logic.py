@@ -23,7 +23,7 @@ SCHEMA: dict[str, Json] = {
     "properties": {"spent": {"type": "boolean"}},
     "required": ["spent"],
 }
-SHORT_WORDS = 5
+SHORT_ANSWER_WORDS = 5
 CONTEXT = 8
 NOTE = get("notes/topic-spent")
 MOVES = {
@@ -41,7 +41,7 @@ def likely(prior: Sequence[Utterance], said: str) -> bool:
     companion asked something. Most turns are not, and make no call."""
     replies = [u.text for u in prior if u.speaker is Speaker.COMPANION]
     return (
-        len(said.split()) <= SHORT_WORDS
+        len(said.split()) <= SHORT_ANSWER_WORDS
         and "?" not in said
         and bool(replies)
         and "?" in replies[-1]

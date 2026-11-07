@@ -8,15 +8,22 @@ from __future__ import annotations
 import asyncio
 import logging
 from collections.abc import Awaitable, Sequence
+from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from companion.core.spend import purpose
+from companion.core.switch import Mode, Switch
 from companion.core.types import RelationshipId
-from companion.core.vectors import Embedded, Embedder
+from companion.core.vectors import Embedded, Embedder, Vector
 from companion.store.sqlite.store import Store
+
+if TYPE_CHECKING:
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.embed")
 EMBED_BATCH = 100
+LOOK_SECONDS = 2.0  # a slow embedding look-up only leaves its part out of this turn
 
 
 async def bounded[T](work: Awaitable[T], *, deadline: float, what: str, unread: str) -> T | None:
@@ -40,6 +47,45 @@ async def embed_within(
             return await embedder.embed(texts)
 
     return await bounded(embed(), deadline=deadline, what=f"{spend} look-up", unread=unread)
+
+
+def embedder_in(c: Runtime, row: Switch, *modes: Mode) -> Embedder | None:
+    """The turn's embedder, only while the switch stands in one of `modes` and there is an embedder:
+    the guard every embedding look-up starts with."""
+    return c.embedder if c.mode(row) in modes else None
+
+
+@dataclass(frozen=True, slots=True)
+class Queried[K]:
+    """Their message as a vector, the vectors of texts that had none yet (by key) and the cost."""
+
+    query: Vector
+    fresh: dict[K, Vector]
+    cost_usd: float
+
+
+async def embed_query[K](  # noqa: PLR0913
+    embedder: Embedder,
+    said: str,
+    missing: Sequence[tuple[K, str]],
+    *,
+    spend: str,
+    unread: str,
+    deadline: float = LOOK_SECONDS,
+) -> Queried[K] | None:
+    """What a nearest look-up embeds in one call: the moment's text, then every text with no vector
+    yet, each keyed. The caller keeps the fresh vectors in its own table. None as `embed_within`."""
+    got = await embed_within(
+        embedder,
+        [said, *(text for _, text in missing)],
+        spend=spend,
+        deadline=deadline,
+        unread=unread,
+    )
+    if got is None:
+        return None
+    fresh = dict(zip((key for key, _ in missing), got.vectors[1:], strict=True))
+    return Queried(got.vectors[0], fresh, got.cost_usd)
 
 
 async def embed_missing(

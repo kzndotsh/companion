@@ -3,7 +3,6 @@ yet). Run nightly and by `companion episodes --write`."""
 
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING, cast
 
 from companion.core import switch
@@ -27,8 +26,9 @@ if TYPE_CHECKING:
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
+from companion.core.episode import Episode
 from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId, TurnId
 from companion.features.episodes.logic import (
@@ -43,12 +43,12 @@ from companion.features.episodes.logic import (
     top_severity,
     transcript,
 )
-from companion.features.episodes.store import Episode
 from companion.kit.ask import Judge, ask
+from companion.kit.embed import bounded
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.episodes")
-WRITER = Judge(
+GIST_WRITER = Judge(
     "episodes",
     PROMPT,
     SCHEMA,
@@ -56,8 +56,6 @@ WRITER = Judge(
     timeout=60.0,  # one ended episode's messages a call
     unread="the episode is written next time",
 )
-FAR = datetime(9999, 1, 1, tzinfo=UTC)
-WHOLE = 1_000_000
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,8 +77,8 @@ async def write_closed(
     store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
 ) -> Written:
     """A record for every episode that has ended (no message for EPISODE_GAP) and has none yet."""
-    said = store.history_before(rel, FAR, WHOLE)
-    done = store.part(Episodes).all_(rel)
+    said = store.whole_history(rel)
+    done = store.episodes(rel)
     have = {e.first_id for e in done if e.prompt == PROMPT.ref}  # older prompts are written again
     seen = {Kind(e.kind) for e in done}
     severity = _severities(store, rel)
@@ -91,7 +89,7 @@ async def write_closed(
         seen.add(found)
         if s.said[0].id in have or now - s.said[-1].at < EPISODE_GAP:
             continue
-        got = await ask(extractor, WRITER, f"{facts(s, found)}\n\nMessages:\n{transcript(s)}")
+        got = await ask(extractor, GIST_WRITER, f"{facts(s, found)}\n\nMessages:\n{transcript(s)}")
         if got is None:
             continue
         cost += got.cost_usd
@@ -138,11 +136,13 @@ async def recent_for_turn(
     if not (pointed or back):
         return ()
     mark(t, "recent times")
-    try:
-        await asyncio.wait_for(write_closed(c.store, c.judge, c.rel, t.now), EPISODE_SECONDS)
-    except Exception as err:  # what is already recorded is still shown
-        log.warning("writing episodes before the reply failed: %r", err)
-    ends = [(e.start_at, e.end_at, e.gist) for e in c.store.part(Episodes).all_(c.rel)]
+    await bounded(  # what is already recorded is still shown
+        write_closed(c.store, c.judge, c.rel, t.now),
+        deadline=EPISODE_SECONDS,
+        what="writing episodes before the reply",
+        unread="what is already recorded is shown",
+    )
+    ends = [(e.start_at, e.end_at, e.gist) for e in c.store.episodes(c.rel)]
     told = recent_times(ends, t.text, last, t.now, zone)
     if told:
         detail: dict[str, Json] = {

@@ -6,7 +6,8 @@ from pathlib import Path
 
 from companion.core.types import Belief, Subject, Utterance
 from companion.core.vectors import Embedded, unit
-from companion.features.lore.logic import Kind, Labelled
+from companion.core.views import ViewKind
+from companion.features.lore.logic import Labelled
 from companion.features.lore.run import nearest_tastes
 from companion.features.lore.store import ViewKinds
 from companion.store.sqlite.store import Store
@@ -33,9 +34,9 @@ def test_only_tastes_near_their_message_are_found_and_vectors_are_kept(
     store = Store(tmp_path / "rel.sqlite")
     store.append_utterance(utterance(uid="u1"))
     views = {
-        "m": ("likes music with piano", Kind.TASTE),
-        "r": ("likes rain at night", Kind.TASTE),
-        "a": ("gives music advice", Kind.STANCE),
+        "m": ("likes music with piano", ViewKind.TASTE),
+        "r": ("likes rain at night", ViewKind.TASTE),
+        "a": ("gives music advice", ViewKind.STANCE),
     }
     for bid, (claim, _) in views.items():
         store.insert_belief(belief(bid=bid, subject=Subject.SELF, claim=claim, utterance_id="u1"))

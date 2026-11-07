@@ -28,6 +28,18 @@ from enum import StrEnum
 from companion.core.types import Belief, BeliefId, BeliefKind, Subject
 
 SETTLED_DAYS = 2
+
+
+class ViewKind(StrEnum):
+    """What a view of its own is about, as a small model labels it (ADR 0020)."""
+
+    TASTE = "taste"
+    STANCE = "stance"
+    RULE = "rule"
+    SELF = "self"
+    LIVED = "lived"
+
+
 MAX_VIEWS = 8
 AUTO_KINDS = frozenset({BeliefKind.PREFERENCE})
 # How it softens a view when it says it. A claim that keeps any of these, or "can", "may", "often"

@@ -131,12 +131,12 @@ def facts(s: Span, found: Kind) -> str:
     )
 
 
-MAX_WORDS = 35  # a longer line is not a summary; it is not stored
+GIST_MAX_WORDS = 35  # a longer line is not a summary; it is not stored
 
 
 def parse(data: Json) -> str | None:
     raw = data.get("gist") if isinstance(data, dict) else None
-    if not isinstance(raw, str) or not raw.strip() or len(raw.split()) > MAX_WORDS:
+    if not isinstance(raw, str) or not raw.strip() or len(raw.split()) > GIST_MAX_WORDS:
         return None
     return " ".join(raw.split())
 

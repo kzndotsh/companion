@@ -18,8 +18,8 @@ Each batch is read three times (`READS`, `kit/reads.py` `read_times`). A view is
 **What lore is.** Only a `taste` is lore (`lore` in `logic.py`). A `lived` claim is never lore and never counted (A22).
 
 **Showing it** (`tastes_for_turn`, the look-up, and `lore_offer`, the note). Only on an ordinary turn, which is `is_casual`: a listening read exists, severity 0, not in a pretend scene, and not a goodbye. The switch must not be `off` and an embedder must exist.
-- `nearest_tastes` embeds their message, plus any taste with no stored vector in the same call, under a 2 second limit (`LOOK_SECONDS`). A slow or failed call shows no tastes this turn and logs a warning.
-- It takes the nearest tastes by cosine score, at most 2 (`SHOWN`), and drops any below 0.3 (`GATE`).
+- `nearest_tastes` embeds their message, plus any taste with no stored vector in the same call, under a 2 second limit (`LOOK_SECONDS`, `kit/embed.py`). A slow or failed call shows no tastes this turn and logs a warning.
+- It takes the nearest tastes by cosine score, at most 2 (`SHOWN`), and drops any below 0.3 (`NEAR_AT`, `core/vectors.py`).
 - The note shows each as the words it said, `you said: "..."`, using the view's first quote, in the system block through `notes/lore`. It says these are its own, to keep to them if it comes up, and not to bring them up just to mention them.
 - The decision "lore: its own tastes nearest their message" is logged with the view ids, scores and claims. In shadow its reason adds "(shadow)" and nothing is sent.
 
@@ -29,12 +29,12 @@ It does not check new tastes against old ones yet. A taste the owner thinks wron
 
 | File | What |
 |---|---|
-| `logic.py` | pure: the kinds (`Kind`), the prompt and parse (`prompt`, `parse`), what counts as agreed (`agreed`), which views are lore (`lore`), the note (`lore_note`), `SHOWN`, `GATE`, `BATCH` |
-| `run.py` | effects: labelling (`label_views`), the nearest tastes (`nearest_tastes`, `LOOK_SECONDS`), the look-up and note as `LORE` |
+| `logic.py` | pure: the kinds (`ViewKind`, in `core/views.py`), the prompt and parse (`prompt`, `parse`), what counts as agreed (`agreed`), which views are lore (`lore`), the note (`lore_note`), `SHOWN`, `BATCH` |
+| `run.py` | effects: labelling (`label_views`), the nearest tastes (`nearest_tastes`), the look-up and note as `LORE` |
 | `cli.py` | `companion lore`: list its tastes and how its views are sorted, with `--label` and `--relabel` (`label_now`) |
-| `store.py` | its table, `view_kinds`, behind `Store.part(ViewKinds)`: the kind of each view, newest label wins (the table is in `store/sqlite/migrations/0024_view_kinds.sql`) |
+| `store.py` | its table, `view_kinds`, behind `Store.part(ViewKinds)` for writing; the kind of each view, newest label wins, is read with `Store.view_kinds` (the table is in `store/sqlite/migrations/0024_view_kinds.sql`) |
 
-The views themselves (`self_beliefs`) are core storage, in `store/sqlite/store.py`. The reach feature reads the kinds too (its pool of tastes).
+The views themselves (`self_beliefs`) are core storage, in `store/sqlite/store.py`. The reach feature reads the kinds too (its pool of tastes), through `Store.view_kinds`.
 
 ## Prompts
 

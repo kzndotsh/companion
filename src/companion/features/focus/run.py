@@ -11,9 +11,9 @@ from companion.core.spend import purpose
 from companion.core.switch import Mode
 from companion.core.types import Frame, Speaker
 from companion.core.vectors import unit
-from companion.features.focus.logic import LOOK_SECONDS, closeness, moment_texts
+from companion.features.focus.logic import closeness, moment_texts
 from companion.kit.current import Heard, Turn, mark
-from companion.kit.embed import bounded, embed_missing
+from companion.kit.embed import LOOK_SECONDS, bounded, embed_missing, embedder_in
 from companion.kit.features import Feature
 
 if TYPE_CHECKING:
@@ -27,9 +27,9 @@ async def focus_for_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | No
     off, there is no embedder, or the look-up failed or ran past `LOOK_SECONDS`: the card is then
     built as before."""
     del in_scene, heard
-    if c.mode(switch.FOCUS) is not Mode.ON or c.embedder is None:
+    embedder = embedder_in(c, switch.FOCUS, Mode.ON)
+    if embedder is None:
         return None
-    embedder = c.embedder
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
 
     async def look() -> Focus:

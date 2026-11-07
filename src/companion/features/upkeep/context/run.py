@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 
 from companion.core.extractor import StructuredModel
 from companion.core.quoted import AFTER, BEFORE, build_prompt, wants_context
@@ -17,7 +17,7 @@ from companion.kit.features import Feature
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.context")
-WRITER = Judge(
+CONTEXT_WRITER = Judge(
     "context",
     PROMPT,
     SCHEMA,
@@ -25,8 +25,6 @@ WRITER = Judge(
     timeout=30.0,  # one memory and the messages around it
     unread="no context for this memory yet",
 )
-FAR = datetime(9999, 1, 1, tzinfo=UTC)
-WHOLE = 100_000
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,11 +36,11 @@ class Written:
 async def write_missing(
     store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime, *, limit: int = 20
 ) -> Written:
-    have = store.part(BeliefContexts).latest(rel)
+    have = store.belief_contexts(rel)
     todo = [b for b in store.user_beliefs(rel) if wants_context(b) and b.id not in have][:limit]
     if not todo:
         return Written()
-    history = store.history_before(rel, FAR, WHOLE)
+    history = store.whole_history(rel)
     where = {u.id: i for i, u in enumerate(history)}
     written, cost = 0, 0.0
     for b in todo:
@@ -50,7 +48,7 @@ async def write_missing(
         if i is None:
             continue
         around = history[max(0, i - BEFORE) : i + 1 + AFTER]
-        got = await ask(extractor, WRITER, build_prompt(b, around))
+        got = await ask(extractor, CONTEXT_WRITER, build_prompt(b, around))
         if got is None:
             continue
         cost += got.cost_usd

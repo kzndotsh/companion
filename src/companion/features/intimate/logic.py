@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 
 from companion.core.episode import EPISODE_GAP
+from companion.core.lane import Lane
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -69,12 +70,6 @@ NEAREST = 6  # entries nearest the moment on a scene card, besides the limits (3
 MIN_SCENES = 2  # a pattern is an entry only once seen in this many separate scenes
 COOL = timedelta(days=3)  # a curious item they pushed back is not offered again this soon
 CRISIS = Sensitivity.GRAVE  # the top sensitivity: never in a scene
-
-
-class Lane(StrEnum):
-    EVERYDAY = "everyday"
-    INTIMATE = "intimate"
-    EXCLUDED = "excluded"
 
 
 class Stance(StrEnum):

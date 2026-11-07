@@ -40,7 +40,6 @@ from companion.core.types import (
     Utterance,
 )
 from companion.core.views import card_views, why
-from companion.features.upkeep.context.store import BeliefContexts
 from companion.kit.current import Turn, decide, mark, recorder
 from companion.kit.features import CardLane, Lookups, Moment
 from companion.kit.record import Recorder
@@ -178,7 +177,7 @@ def assemble(c: Runtime, t: Turn, routed: Routed, looked: Lookups) -> Assembled:
     assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
     sharing = heard is not None and heard.read.severity >= Severity.EVERYDAY
     labels = store.belief_labels(c.rel)
-    support, contexts = store.last_support(c.rel), store.part(BeliefContexts).latest(c.rel)
+    support, contexts = store.last_support(c.rel), store.belief_contexts(c.rel)
     focus = looked.find(Focus)
 
     def card_of(beliefs: Sequence[Belief], shown_views: Sequence[Belief]) -> Card:

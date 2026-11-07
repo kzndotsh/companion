@@ -13,7 +13,7 @@ from companion.core.types import Json
 from companion.prompts import get
 
 PROMPT = get("system/memory-context")
-MAX_WORDS = 25
+CONTEXT_MAX_WORDS = 25
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -28,6 +28,6 @@ def parse(data: Json) -> str | None:
     if not isinstance(raw, str):
         return None
     text = " ".join(raw.split()).rstrip(".")
-    if not text or len(text.split()) > MAX_WORDS:
+    if not text or len(text.split()) > CONTEXT_MAX_WORDS:
         return None
     return text[0].lower() + text[1:]

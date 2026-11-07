@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from collections.abc import Sequence
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
-from companion.core.types import Json, RelationshipId
+from companion.core.types import Belief, Json, RelationshipId
 from companion.features.curiosity.map.logic import (
     ASKED,
     LABEL_BATCH,
@@ -21,6 +21,7 @@ from companion.features.curiosity.map.logic import (
     pick_gap,
 )
 from companion.kit.ask import Judge, ask, whole_answer
+from companion.kit.batches import Batch, Swept, label_in_batches
 from companion.kit.current import decide
 from companion.kit.features import Feature, Offer, Offered, asking
 from companion.store.sqlite.store import Store
@@ -40,13 +41,6 @@ LABELLER = Judge(
 )
 
 
-@dataclass(frozen=True, slots=True)
-class Labelled:
-    labelled: int = 0
-    left: int = 0
-    cost_usd: float = 0.0
-
-
 async def label_new(
     store: Store,
     extractor: StructuredModel,
@@ -54,29 +48,32 @@ async def label_new(
     now: datetime,
     *,
     batches: int = 1,
-) -> Labelled:
+) -> Swept:
     """Label up to `batches` batches of current memories that have none. A failed call labels
     nothing and is tried again next pass."""
-    done = cost = 0
-    for _ in range(batches):
+
+    def todo() -> list[Belief]:
         have = store.belief_labels(rel)
-        todo = [b for b in store.user_beliefs(rel) if b.id not in have][:LABEL_BATCH]
-        if not todo:
-            break
-        text, refs = label_prompt(todo)
+        return [b for b in store.user_beliefs(rel) if b.id not in have][:LABEL_BATCH]
+
+    async def label(memories: Sequence[Belief]) -> Batch:
+        text, refs = label_prompt(memories)
         result = await ask(extractor, LABELLER, text)
         if result is None:
-            break
+            return Batch(stop=True)
         found = parse_labels(result.value, refs)
-        cost += result.cost_usd
         if not found:
-            break
+            return Batch(cost_usd=result.cost_usd, stop=True)
         store.add_belief_labels(rel, found, result.model, LABEL_PROMPT.ref, now)
-        done += len(found)
-    have = store.belief_labels(rel)
-    left = sum(b.id not in have for b in store.user_beliefs(rel))
-    log.debug("memory labels: %d labelled, %d left, $%.4f", done, left, cost)
-    return Labelled(done, left, cost)
+        return Batch(len(found), result.cost_usd)
+
+    def left() -> int:
+        have = store.belief_labels(rel)
+        return sum(b.id not in have for b in store.user_beliefs(rel))
+
+    return await label_in_batches(
+        "memory labels", batches=batches, todo=todo, label=label, left=left
+    )
 
 
 def map_offer(m: Moment, found: object, so_far: Offered) -> Offer:
