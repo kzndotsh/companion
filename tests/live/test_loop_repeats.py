@@ -27,6 +27,7 @@ from companion.core.types import (
 )
 from companion.features.threads.logic import Thread
 from companion.features.threads.run import extract_open_loops
+from companion.features.threads.store import Threads
 from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from companion.store.sqlite.store import Store
@@ -102,7 +103,7 @@ def _chat(store: Store, lines: tuple[tuple[Speaker, str], ...], start: datetime)
 def _open(store: Store, claim: str) -> None:
     said = _chat(store, ((U, claim),), T0 - timedelta(days=1))[0]
     when = T0 + timedelta(days=2)
-    store.add_open_loop(
+    store.part(Threads).add_loop(
         Thread("old", REL, claim, claim, said.id, when, Sensitivity.ORDINARY, said.at)
     )
 
@@ -122,7 +123,7 @@ async def test_repeats_become_one_thread_and_different_plans_stay_apart(tmp_path
                 if existing is not None:
                     _open(store, existing)
                 chat = _chat(store, lines, T0)
-                before = len(store.open_loops(REL))
+                before = len(store.part(Threads).loops(REL))
                 targets = {u.id for u in chat if u.speaker is U}
                 when = (T0 + timedelta(minutes=10), UTC)
                 await extract_open_loops(
@@ -135,7 +136,7 @@ async def test_repeats_become_one_thread_and_different_plans_stay_apart(tmp_path
                     lambda r, d: None,
                     loose=True,  # as the bot runs (COMPANION_HEDGED_PLANS=loose)
                 )
-                made = len(store.open_loops(REL)) - before
+                made = len(store.part(Threads).loops(REL)) - before
                 total += 1
                 if made == want:
                     right += 1

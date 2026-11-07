@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 from companion.core.extractor import StructuredModel
 from companion.core.quoted import AFTER, BEFORE, build_prompt
 from companion.core.types import Belief, RelationshipId
+from companion.features.upkeep.reread.store import MemoryChecks
 from companion.features.upkeep.sort.logic import (
     PROMPT,
     ROUTINE_DAYS,
@@ -64,7 +65,7 @@ async def label(  # noqa: PLR0913
 ) -> Labelled:
     """Label the memories not yet labelled. One recorded since `act_since` (a new memory) is acted
     on: an agreed remark about the bot is retired at once. One kept before becomes a question."""
-    done = store.checked_memories(rel, WORTH_NAMES)
+    done = store.part(MemoryChecks).checked(rel, WORTH_NAMES)
     todo: list[Belief] = [b for b in store.user_beliefs(rel) if b.id not in done][:limit]
     if not todo:
         return Labelled()
@@ -80,7 +81,7 @@ async def label(  # noqa: PLR0913
         found = verdict(reads)
         act = act_since is not None and b.recorded_at >= act_since
         stored = found if act else to_ask(found)
-        store.add_memory_check(rel, b.id, None, reads, stored, prompt=PROMPT.ref, at=now)
+        store.part(MemoryChecks).add(rel, b.id, None, reads, stored, prompt=PROMPT.ref, at=now)
         if act and found == Label.ABOUT_THE_BOT:
             retire(store, rel, b.id, DROPPED, now)
             dropped += 1
@@ -93,7 +94,7 @@ def expire_routine(store: Store, rel: RelationshipId, now: datetime) -> int:
     """Retire routine moments a week after they were last mentioned."""
     routine = {
         c.belief_id
-        for c in store.unanswered_checks(rel, [Label.ROUTINE.value])
+        for c in store.part(MemoryChecks).unanswered(rel, [Label.ROUTINE.value])
         if c.other_id is None
     }
     support = store.last_support(rel)

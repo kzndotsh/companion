@@ -15,4 +15,4 @@ Everything done to a memory after it is written, feeding one review queue for th
 - `sort/` (its nightly half): retiring routine moments after their week.
 
 The parts may use each other; nothing outside upkeep imports a part except the registry, the memory
-side and the store facade, as for any feature.
+side, as for any feature.

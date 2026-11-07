@@ -22,7 +22,7 @@ The report shows replies checked, callbacks found, and how many landed, were wro
 |---|---|
 | `logic.py` | pure: the judge prompt (`PROMPT`), the schema, `Check` and whether it landed, the prompt text, parsing a verdict, the report |
 | `run.py` | effects: judging unchecked turns within a spend cap, each turn once (`check_new`) |
-| `store.py` | its queries: unchecked turns, adding a verdict, verdicts since a time (table in `store/sqlite/migrations/0014_callback_checks.sql`) |
+| `store.py` | its queries as `CallbackChecks` (`Store.part(CallbackChecks)`): unchecked turns, adding a verdict, verdicts since a time (table in `store/sqlite/migrations/0014_callback_checks.sql`) |
 | `cli.py` | `companion audit callbacks`: judge recent replies within a cap, then print the report (`judge_now`) |
 
 ## Prompts

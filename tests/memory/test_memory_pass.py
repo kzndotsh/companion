@@ -17,7 +17,9 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.vectors import Embedded, unit
+from companion.features.upkeep.merging.store import MergeProposals
 from companion.features.upkeep.reread.run import SameCheck
+from companion.features.upkeep.reread.store import MemoryChecks
 from companion.memory.memory_pass import memory_pass
 from companion.store.sqlite.store import Store
 
@@ -294,7 +296,7 @@ async def test_a_new_memory_to_merge_with_an_old_one_is_kept_and_proposed_at_onc
     ex = FakeExtractor({"beliefs": [_belief("m2", "green tea always", "Always drinks green tea")]})
     await memory_pass(store, ex, REL, T0 + timedelta(hours=2), same=same)
     assert len(store.current_beliefs(REL)) == 2  # nothing merges without the owner
-    proposals = store.merge_proposals(REL)
+    proposals = store.part(MergeProposals).all_(REL)
     assert len(proposals) == proposed
     if proposed:
         assert proposals[0].claim == "Drinks green tea, always"
@@ -366,7 +368,7 @@ async def test_a_new_boundary_is_a_question_for_the_owner(store: Store) -> None:
         ),
         REL,
     )
-    [check] = store.unanswered_checks(REL, [ASK_RULE])
+    [check] = store.part(MemoryChecks).unanswered(REL, [ASK_RULE])
     asked = {b.id: b.claim for b in store.current_beliefs(REL)}
     assert asked[check.belief_id] == "Asked to pause"
     assert check.other_id is None

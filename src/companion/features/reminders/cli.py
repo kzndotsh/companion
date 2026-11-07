@@ -11,6 +11,7 @@ from companion.core.types import RelationshipId
 from companion.features.reminders.logic import Reminder, ReminderState, Series, Standing
 from companion.features.reminders.run import stop
 from companion.features.reminders.series import every_words
+from companion.features.reminders.store import Reminders
 from companion.store.sqlite.store import Store
 
 
@@ -24,11 +25,13 @@ def _next(s: Series, every: list[Reminder]) -> str:
 def _cancel(store: Store, rel: RelationshipId, prefix: str) -> str:
     pending = [
         r
-        for r in store.reminders(rel)
+        for r in store.part(Reminders).all_(rel)
         if r.state is ReminderState.PENDING and r.id.startswith(prefix)
     ]
     live = [
-        s for s in store.series(rel) if s.state is not Standing.STOPPED and s.id.startswith(prefix)
+        s
+        for s in store.part(Reminders).all_series(rel)
+        if s.state is not Standing.STOPPED and s.id.startswith(prefix)
     ]
     if len(pending) + len(live) != 1:
         found = len(pending) + len(live)
@@ -36,7 +39,7 @@ def _cancel(store: Store, rel: RelationshipId, prefix: str) -> str:
     if live:
         stop(store, live[0], "the owner stopped it", utc_now())
         return f"stopped: {live[0].thing}, {every_words(live[0].repeat)}\n"
-    store.reminder_event(
+    store.part(Reminders).event(
         pending[0].id, ReminderState.CANCELLED, "the owner cancelled it", utc_now()
     )
     return f"cancelled: {pending[0].thing}\n"
@@ -48,7 +51,7 @@ def run(db: Path, relationship: str, *, cancel: str | None = None) -> str:
     try:
         if cancel:
             return _cancel(store, rel, cancel)
-        every, series = store.reminders(rel), store.series(rel)
+        every, series = store.part(Reminders).all_(rel), store.part(Reminders).all_series(rel)
         if not every and not series:
             return "no reminders\n"
         lines = [

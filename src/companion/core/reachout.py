@@ -7,10 +7,26 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import cast
 
-from companion.core.types import Json
+from companion.core.types import Json, RelationshipId
+
+
+@dataclass(frozen=True, slots=True)
+class ReachOut:
+    """A reach-out about a plan, kept in `reach_outs`: written by threads, read with every other
+    kind (the reach feature's pacing, `companion initiative`)."""
+
+    id: str
+    relationship_id: RelationshipId
+    loop_id: str
+    mode: str  # "shadow" (drafted, never sent) or "live"
+    draft: str
+    reason: str
+    at: datetime
+
 
 # The key of a nudge it would send (features/nudges), read by any reach-out that counts its own.
 WOULD_NUDGE = "nudge (shadow): would send"

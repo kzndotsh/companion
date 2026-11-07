@@ -140,11 +140,21 @@ together.
   decision key in `KEYS` there (checked when the module loads). `FEATURES` in `registry.py` is the list of what is
   registered, in the order the after-steps run.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
-  (pure), `run.py` (effects and its `Feature`), `store.py` (its queries), `cli.py`, `README.md` (how it
-  works). A group of close features (`upkeep/`, `curiosity/`, `flow/`, `diction/`) holds one such folder per part and a README naming them;
+  (pure), `run.py` (effects and its `Feature`), `store.py` (its queries, as a class bound to the
+  connection), `cli.py`, `README.md` (how it works). A group of close features (`upkeep/`, `curiosity/`, `flow/`, `diction/`) holds one such folder per part and a README naming them;
   its parts may import each other. import-linter keeps a feature's logic pure, keeps features from importing
   each other, and lets only a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests
   mirror the folder (`tests/features/<name>/`).
+- A feature owns its tables. Its `store.py` holds one class built from the connection (`Stories`,
+  `Threads`), and the feature reaches it with `store.part(Threads)` on the `Store`
+  (`store/sqlite/store.py`), which names no feature: it is the connection, the ledger and the tables
+  the whole system reads (utterances, beliefs, decisions, turns, flags, favorites, spend, labels,
+  embeddings, settings, sent and received messages, the reach-outs about a plan). A table one feature
+  uses goes in that feature's `store.py`, never in `Store`. A feature that must read another
+  feature's tables imports its store class and is named in the `features-are-independent`
+  `ignore_imports` in `pyproject.toml`, with the reason; where a concept is read across the system,
+  move it down to `store/sqlite/` instead. Every table is append-only by trigger or is named, with
+  why, in `tests/store/test_append_only.py`.
 - Ask a judge through `kit/ask.py`: declare it once, at module level, as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries, and optionally a hedge: a second try started while a slow one still runs, first answer wins) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None; `ask_or_raise` is for a step that fails as a whole (the memory pass). A judge's name is unique (`tests/kit/test_judge_names.py`): it is the log's name and the

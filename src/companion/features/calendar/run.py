@@ -23,6 +23,7 @@ from companion.features.calendar.logic import (
     their_dates,
     when,
 )
+from companion.features.calendar.store import Calendar
 from companion.kit.features import Feature, Moment
 from companion.store.sqlite.store import Store
 
@@ -63,9 +64,11 @@ def calendar_candidate(m: Moment, found: object) -> MentionCandidate | None:
     zone = local_zone()
     local = t.now.astimezone(zone)
     today = local.date()
-    first = c.store.first_message_at(c.rel)
+    first = c.store.part(Calendar).first_message(c.rel)
     since = datetime.combine(today - LOOKBACK, time.min, tzinfo=zone)
-    offered = {str(d.get("occasion")) for _, d in c.store.calendar_offered(c.rel, since)}
+    offered = {
+        str(d.get("occasion")) for _, d in c.store.part(Calendar).offered_since(c.rel, since)
+    }
     met = first.astimezone(zone).date() if first else None
     o = pick(occasions(today, REGION, met, theirs(c.store, c.rel)), offered)
     if o is None:

@@ -44,7 +44,7 @@ One objecting read keeps a story out of canon. When reads object differently, th
 |---|---|
 | `logic.py` | pure: the kinds (`Place`, `Verdict`, `Standing`), a story and its record (`Story`, `Recorded`), the capture parse and its rules (`parse_capture`, `to_story`), the canon prompt, parse and ruling (`canon_prompt`, `parse_canon`, `rule`), the nearest stories (`nearest`), `SHOWN`, `GATE` |
 | `run.py` | effects: capture and the canon check after a memory pass (`read_history`, `pass_step`), the look-up beside a turn (`nearest_stories`, `stories_beside`), and `HISTORY` |
-| `store.py` | its tables behind `Store.stories()` (`Stories`): stories, events, vectors and the bookmark |
+| `store.py` | its tables behind `Store.part(Stories)`: stories, events, vectors and the bookmark |
 | `cli.py` | `companion history`, and retiring a story (`retire_story`, used by `companion retire`) |
 
 The tables are in `store/sqlite/migrations/0036_history.sql`.

@@ -32,7 +32,7 @@ What the picker brings up asks them something (its offer says `asks`), so the qu
 |---|---|
 | `logic.py` | pure: the occasions for a day (`occasions`), their dates from memory (`yearly`, `their_dates`, `Dated`), the relationship's dates (`together`, `add_months`), the pick (`pick`), the note text (`note`), `REGION`, `OFFERED` |
 | `run.py` | effects: their dates read from memory (`theirs`), the occasion as a candidate for the picker with its rank (`calendar_candidate`, `rank`, `CALENDAR`) |
-| `store.py` | its queries: the time of their first message, and the occasions offered since a time |
+| `store.py` | its queries as `Calendar` (`Store.part(Calendar)`): the time of their first message, and the occasions offered since a time |
 | `cli.py` | `companion calendar` |
 
 ## Prompts

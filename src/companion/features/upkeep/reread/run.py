@@ -29,6 +29,7 @@ from companion.features.upkeep.reread.logic import (
     same_as,
     verdict,
 )
+from companion.features.upkeep.reread.store import MemoryChecks
 from companion.kit.curate import log_would_close, retire
 from companion.kit.embed import bounded, embed_missing
 from companion.kit.reads import read_times
@@ -74,7 +75,7 @@ async def nightly(  # noqa: PLR0913
     mode: str,
 ) -> Night:
     # A new version reads every memory again.
-    checked = store.checked_memories(rel, CHECK_NAMES, CHECK.version)
+    checked = store.part(MemoryChecks).checked(rel, CHECK_NAMES, CHECK.version)
     support = store.last_support(rel)
     labels = store.belief_labels(rel)
     everyday = everyday_ids(labels)
@@ -94,7 +95,7 @@ async def nightly(  # noqa: PLR0913
         reads, spent = await _reads(judge, b, today)
         cost += spent
         found = verdict(reads)
-        store.add_memory_check(rel, b.id, None, reads, found, prompt=CHECK.ref, at=now)
+        store.part(MemoryChecks).add(rel, b.id, None, reads, found, prompt=CHECK.ref, at=now)
         last = support.get(b.id, b.valid_from)
         plan = plan_for(b, found, faded=b.id in everyday and faded(b, last, now))
         if plan.close:
@@ -165,7 +166,7 @@ class SameCheck:
             return None
         reads = got.values
         found = verdict(reads)
-        store.add_memory_check(rel, older.id, new.id, reads, found, prompt=PAIR.ref, at=now)
+        store.part(MemoryChecks).add(rel, older.id, new.id, reads, found, prompt=PAIR.ref, at=now)
         if found == Relation.MERGE and self.mode == "on":  # both are kept; the owner may join them
             await propose_group(store, self.judge, rel, [older, new], now)
         return older if same_as(found) else None

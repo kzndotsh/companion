@@ -20,6 +20,7 @@ from companion.core.types import (
 )
 from companion.features.reach.logic import DROPPED, HELD, WOULD_SEND, Kind
 from companion.features.reach.run import Reacher, tick_reach
+from companion.features.reach.store import Reaches
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -107,7 +108,7 @@ async def test_no_paid_call_is_made_unless_every_check_passes(store: Store) -> N
     assert await tick_reach(store, REL, (night, UTC), Reacher(Dial.WARM, drafter)) is None
     assert await tick_reach(store, REL, WHEN, Reacher(Dial.OFF, drafter)) is None
     assert drafter.calls == 0
-    assert store.own_reach_outs(REL) == []
+    assert store.part(Reaches).since(REL) == []
 
 
 async def test_a_plan_or_a_nudge_this_tick_goes_first(store: Store) -> None:
@@ -122,7 +123,7 @@ async def test_a_needy_draft_is_dropped_and_recorded(store: Store) -> None:
     drafter = Drafter("you've been quiet all day, everything okay?")
     reacher = Reacher(Dial.WARM, drafter)
     assert await tick_reach(store, REL, WHEN, reacher) is None
-    rows = store.own_reach_outs(REL)
+    rows = store.part(Reaches).since(REL)
     assert [(r.mode, r.draft) for r in rows] == [("dropped", "")]
     why = "how long they have been gone"
     assert rows[0].detail["screened_out"] == [{"message": drafter.message, "why": why}]
@@ -157,7 +158,7 @@ async def test_nothing_goes_when_the_judge_picks_none_and_it_waits_six_hours(sto
     drafter = Drafter("how's the bread coming along?", pick=0)
     reacher = Reacher(Dial.WARM, drafter)
     assert await tick_reach(store, REL, WHEN, reacher) is None
-    rows = store.own_reach_outs(REL)
+    rows = store.part(Reaches).since(REL)
     assert [(r.mode, r.detail["dropped"]) for r in rows] == [
         ("dropped", "the judge sent none: fits")
     ]
@@ -169,7 +170,7 @@ async def test_a_text_about_the_two_of_them_is_dropped(store: Store) -> None:
     _said(store, NOW - timedelta(hours=13))
     drafter = Drafter("no label needed on whatever this is, i just like it")
     assert await tick_reach(store, REL, WHEN, Reacher(Dial.WARM, drafter)) is None
-    (row,) = store.own_reach_outs(REL)
+    (row,) = store.part(Reaches).since(REL)
     assert row.detail["screened_out"] == [
         {"message": drafter.message, "why": "about the relationship itself"}
     ]

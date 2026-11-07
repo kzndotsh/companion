@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.reachout import Dial
+from companion.core.reachout import Dial, ReachOut
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -31,7 +31,7 @@ from companion.features.threads.run import (
     extract_open_loops,
     tick,
 )
-from companion.features.threads.store import ReachOut
+from companion.features.threads.store import Threads
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -123,7 +123,7 @@ async def test_a_loop_is_recorded_with_its_quote_and_a_follow_up_time(store: Sto
     u = _said(store)
     stored, rejected, notes = await _extract(store, u, {"loops": [_item()]})
     assert (stored, rejected) == (1, 0)
-    loop = store.open_loops(REL)[0]
+    loop = store.part(Threads).loops(REL)[0]
     assert loop.claim == "vet visit"
     assert loop.quote == "going to the vet tomorrow"
     assert loop.follow_up_at == datetime(2026, 10, 14, 10, 0, tzinfo=UTC)
@@ -152,12 +152,12 @@ async def test_a_malformed_answer_or_a_failing_model_records_nothing_and_does_no
         store, Boom(), REL, {"m1": u}, {u.id}, (SAID, UTC), lambda reason, detail: None
     )
     assert counts is None  # a failed call says so, so the batch can be read again
-    assert store.open_loops(REL) == []
+    assert store.part(Threads).loops(REL) == []
 
 
 async def _recorded(store: Store) -> Thread:
     await _extract(store, _said(store), {"loops": [_item()]})
-    return store.open_loops(REL)[0]
+    return store.part(Threads).loops(REL)[0]
 
 
 async def _draft(loop: Thread) -> str:
@@ -182,7 +182,7 @@ async def test_a_shadow_tick_records_the_draft_and_marks_the_loop_asked_without_
     assert reach[0].mode == "shadow"
     assert reach[0].draft == "how did the vet visit go?"
     assert reach[0].loop_id == loop.id
-    assert store.open_loops(REL)[0].state is ThreadState.ASKED
+    assert store.part(Threads).loops(REL)[0].state is ThreadState.ASKED
     initiated = store.decisions_with_key(REL, "shadow, would send")
     assert len(initiated) == 1
     assert initiated[0].kind is DecisionKind.INITIATE
@@ -210,7 +210,7 @@ async def test_a_hold_is_recorded_once_with_its_reason_not_every_tick(store: Sto
     assert held[0].kind is DecisionKind.DO_NOTHING
     assert "quiet hours" in held[0].reason
     assert store.reach_outs(REL) == []
-    assert store.open_loops(REL)[0].state is ThreadState.OPEN  # held, so still waiting
+    assert store.part(Threads).loops(REL)[0].state is ThreadState.OPEN  # held, so still waiting
 
 
 async def test_a_loop_past_its_horizon_expires_and_is_never_sent(store: Store) -> None:
@@ -218,7 +218,7 @@ async def test_a_loop_past_its_horizon_expires_and_is_never_sent(store: Store) -
     far = LATER + timedelta(days=10)
     verdict = await _tick(store, far)
     assert not verdict.send
-    assert store.open_loops(REL)[0].state is ThreadState.EXPIRED
+    assert store.part(Threads).loops(REL)[0].state is ThreadState.EXPIRED
     assert store.reach_outs(REL) == []
 
 
@@ -247,7 +247,7 @@ async def test_a_loop_they_settle_themselves_is_closed_and_never_asked_about(sto
     assert counts is not None
     assert counts.resolved == 1
     assert "[L1] vet visit" in model.prompts[0]
-    assert store.open_loops(REL)[0].state is ThreadState.RESOLVED
+    assert store.part(Threads).loops(REL)[0].state is ThreadState.RESOLVED
     assert any("they brought it up themselves" in n for n in notes)
     verdict = await _tick(store, LATER)
     assert not verdict.send
@@ -315,18 +315,22 @@ async def test_a_failed_loop_pass_keeps_its_place_and_the_plan_is_read_next_time
     _said(store)
     model = Flaky(fails=1)
     await _catch_up(store, model)
-    assert store.open_loops(REL) == []
-    assert store.loop_cursor(REL) is None  # the bookmark did not move past the failed batch
+    assert store.part(Threads).loops(REL) == []
+    assert (
+        store.part(Threads).loop_cursor(REL) is None
+    )  # the bookmark did not move past the failed batch
     await _catch_up(store, model)
-    assert [lp.claim for lp in store.open_loops(REL)] == ["vet visit"]
-    assert store.loop_cursor(REL) is not None
+    assert [lp.claim for lp in store.part(Threads).loops(REL)] == ["vet visit"]
+    assert store.part(Threads).loop_cursor(REL) is not None
 
 
 async def test_a_batch_that_keeps_failing_is_let_go_after_three_tries(store: Store) -> None:
     _said(store)
     model = Flaky(fails=99)
     notes = [n for _ in range(3) for n in await _catch_up(store, model)]
-    assert store.loop_cursor(REL) is not None  # let go, so plans never block on one batch
+    assert (
+        store.part(Threads).loop_cursor(REL) is not None
+    )  # let go, so plans never block on one batch
     assert any("gave up on a batch after 3 failed tries" in n for n in notes)
     calls = model.calls
     await _catch_up(store, model)
@@ -346,4 +350,4 @@ async def test_a_needy_check_in_draft_is_dropped_once_and_the_plan_stays_open(st
     assert len(calls) == 1
     assert store.reach_outs(REL) == []
     assert len(store.decisions_with_key(REL, DRAFT_DROPPED)) == 1
-    assert store.open_loops(REL)[0].state is ThreadState.OPEN
+    assert store.part(Threads).loops(REL)[0].state is ThreadState.OPEN

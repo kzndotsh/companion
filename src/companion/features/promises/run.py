@@ -26,6 +26,7 @@ from companion.features.promises.logic import (
     read_check,
     to_promise,
 )
+from companion.features.promises.store import Promises
 from companion.kit.ask import Judge, ask
 from companion.kit.beside import beside
 from companion.kit.current import Turn, decide
@@ -67,7 +68,10 @@ async def read_promises(  # noqa: PLR0913, PLR0917
     for p in disputed:
         note("promise dropped: the reads did not agree", {"quote": p.quote, "claim": p.claim})
     rel = next(iter(window.values())).relationship_id
-    known = {(r.promise.utterance_id, r.promise.quote.lower()) for r in store.promises(rel)}
+    known = {
+        (r.promise.utterance_id, r.promise.quote.lower())
+        for r in store.part(Promises).recorded(rel)
+    }
     for p in proposed:
         outcome = to_promise(p, window, uuid.uuid4().hex)
         if isinstance(outcome, str):
@@ -75,7 +79,7 @@ async def read_promises(  # noqa: PLR0913, PLR0917
             continue
         if (outcome.utterance_id, outcome.quote.lower()) in known:
             continue
-        store.add_promise(outcome, model=got.model, prompt=PROMPT.ref, at=now)
+        store.part(Promises).add(outcome, model=got.model, prompt=PROMPT.ref, at=now)
         known.add((outcome.utterance_id, outcome.quote.lower()))
         note(
             "promise recorded from its own words (shadow)",
@@ -110,7 +114,9 @@ async def check_reply(c: Runtime, t: Turn, said: Utterance, sent: str | None) ->
 
 async def _check(c: Runtime, t: Turn, sent: str) -> None:
     current = [
-        r.promise for r in c.store.promises(c.rel) if r.mark is None and in_force(r.promise, t.now)
+        r.promise
+        for r in c.store.part(Promises).recorded(c.rel)
+        if r.mark is None and in_force(r.promise, t.now)
     ]
     if not current or c.judge is None:
         return

@@ -14,6 +14,7 @@ from companion.features.reach.gate import Hold
 from companion.features.reach.logic import HELD, PACED, TARGET
 from companion.features.reach.outcome import OUTCOME, summary
 from companion.features.reach.run import Reacher, situation
+from companion.features.reach.store import Reaches
 from companion.store.sqlite.store import Store
 
 
@@ -25,7 +26,7 @@ def _dial(store: Store, rel: RelationshipId, fallback: Dial) -> Dial:
     """The dial the bot last ran with, from its newest record; the setting here when none."""
     held = store.decisions_with_key(rel, HELD)
     newest = [(d.at, (d.detail or {}).get("dial")) for d in held]
-    newest += [(o.at, o.detail.get("dial")) for o in store.own_reach_outs(rel)]
+    newest += [(o.at, o.detail.get("dial")) for o in store.part(Reaches).since(rel)]
     found = max(newest, key=lambda n: n[0], default=(None, None))[1]
     return dial(found, fallback)
 
@@ -57,7 +58,7 @@ def lines(
         "",
         "its own reach-outs (would have sent)",
     ]
-    own = store.own_reach_outs(rel)
+    own = store.part(Reaches).since(rel)
     out += [
         f"  {o.at.astimezone(tz):%m-%d %H:%M}  {o.kind:16} {o.draft}"
         for o in own

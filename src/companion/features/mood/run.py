@@ -20,6 +20,7 @@ from companion.features.mood.logic import (
 )
 from companion.features.mood.logic import line as mood_line
 from companion.features.mood.logic import reason as mood_reason
+from companion.features.mood.store import MoodEffects
 from companion.kit.current import Heard, Turn, decide
 from companion.kit.features import Feature, Moment, Offer, Offered
 
@@ -37,11 +38,11 @@ def _mood(
     zone = local_zone()
     severity = heard[0].severity if heard is not None else None
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
-    earlier = c.store.said_since(c.rel, theirs[-1].at)[:1] if theirs else []
+    earlier = c.store.part(MoodEffects).said_since(c.rel, theirs[-1].at)[:1] if theirs else []
     minutes = chat_minutes([u.at for u in t.prior], t.now, zone)
     said = Said(t.turn, t.now, t.text, severity, None)
     added = effects_for(inputs_for(said, earlier[0].tone if earlier else None, minutes))
-    stored = c.store.mood_effects_since(c.rel, t.now - MOOD_WINDOW)
+    stored = c.store.part(MoodEffects).since(c.rel, t.now - MOOD_WINDOW)
     before, after = mood_at(stored, t.now, zone), mood_at([*stored, *added], t.now, zone)
     held = held_because(severity=severity, text=t.text, in_scene=in_scene is not Frame.REAL)
     shown, why = mood_line(after, held=held), mood_reason(after, held=held)
@@ -66,7 +67,7 @@ def mood_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     del found, so_far
     shown, added = _mood(m.c, m.t, m.in_scene, m.heard)
     c = m.c
-    after = (lambda: c.store.add_mood_effects(c.rel, added),) if added else ()
+    after = (lambda: c.store.part(MoodEffects).add(c.rel, added),) if added else ()
     return Offer((shown,) if shown else (), after)
 
 

@@ -8,6 +8,7 @@ import pytest
 from companion.core.types import Json
 from companion.features.reminders.logic import Kind, Standing
 from companion.features.reminders.run import CANCELLED, SET
+from companion.features.reminders.store import Reminders
 from companion.store.sqlite.store import Store
 from tests.features.reminders.test_run import Reminding, ask_slots, reasons, say
 from tests.turn.test_mood_loop import NOW, REL
@@ -30,13 +31,13 @@ async def test_a_daily_reminder_sets_a_series_and_its_first_one(store: Store) ->
     card = await say(store, judge, "remind me every night at 8pm to take my meds")
     assert "remind them about take my meds, every day at 8:00 pm" in card
     assert "the first one is tonight at 8:00 pm" in card
-    [series] = store.series(REL)
+    [series] = store.part(Reminders).all_series(REL)
     assert (series.kind, series.state, series.repeat.rule) == (
         Kind.REMINDER,
         Standing.ACTIVE,
         "daily",
     )
-    [first] = store.reminders(REL)
+    [first] = store.part(Reminders).all_(REL)
     assert (first.series_id, first.seq, first.state) == (series.id, 1, "pending")
     assert first.due_at == datetime(2026, 10, 20, 0, 0, tzinfo=UTC)
     assert SET in reasons(store)
@@ -46,7 +47,7 @@ async def test_a_weekly_one_falls_on_its_day(store: Store) -> None:
     slots = ask_slots(repeats=True, every="friday", thing="the bins", hour=7, ampm="am")
     card = await say(store, Reminding(slots), "remind me every friday at 7am about the bins")
     assert "every Friday at 7:00 am" in card
-    [first] = store.reminders(REL)
+    [first] = store.part(Reminders).all_(REL)
     assert first.local_wall == "2026-10-23 07:00"
 
 
@@ -56,7 +57,7 @@ async def test_a_morning_greeting_with_no_time_says_when_they_start_their_day(st
     assert "around when they usually start their day" in card
     assert "the first one is tomorrow morning" in card
     assert "9:00" not in card
-    [first] = store.reminders(REL)
+    [first] = store.part(Reminders).all_(REL)
     assert first.local_wall == "2026-10-20 09:00"  # under three days of messages: nine
 
 
@@ -65,7 +66,7 @@ async def test_a_repeating_reminder_with_no_time_asks_what_time(store: Store) ->
         store, Reminding(_every_day(thing="stretch")), "remind me every day to stretch"
     )
     assert "but what time" in card
-    assert store.series(REL) == []
+    assert store.part(Reminders).all_series(REL) == []
 
 
 async def test_a_cancel_naming_a_series_stops_it_and_its_pending_one(store: Store) -> None:
@@ -83,9 +84,9 @@ async def test_a_cancel_naming_a_series_stops_it_and_its_pending_one(store: Stor
     gone = Reminding(ask_slots(ask="cancel", thing="the daily meds reminder"))
     card = await say(store, gone, "cancel the daily meds reminder", NOW + timedelta(minutes=2))
     assert "remind them about take my meds every day" in card
-    [series] = store.series(REL)
+    [series] = store.part(Reminders).all_series(REL)
     assert series.state is Standing.STOPPED
-    assert {r.thing: r.state for r in store.reminders(REL)} == {
+    assert {r.thing: r.state for r in store.part(Reminders).all_(REL)} == {
         "take my meds": "cancelled",
         "call mum": "pending",
     }
@@ -97,5 +98,5 @@ async def test_stop_saying_good_morning_stops_the_greeting(store: Store) -> None
     await say(store, Reminding(slots), "say good morning to me every day")
     gone = Reminding(ask_slots(ask="cancel", kind="greeting", thing="saying good morning"))
     await say(store, gone, "you can stop saying good morning", NOW + timedelta(minutes=2))
-    assert [s.state for s in store.series(REL)] == [Standing.STOPPED]
-    assert [r.state for r in store.reminders(REL)] == ["cancelled"]
+    assert [s.state for s in store.part(Reminders).all_series(REL)] == [Standing.STOPPED]
+    assert [r.state for r in store.part(Reminders).all_(REL)] == ["cancelled"]

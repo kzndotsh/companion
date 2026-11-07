@@ -44,7 +44,7 @@ The lines describe behaviour, never name the mood word, and say never to describ
 |---|---|
 | `logic.py` | pure: the states, what each message adds, how effects fade, the line and its reason, the replay (`RULES`, `PARAMS_VERSION`) |
 | `run.py` | effects: the note and the effects written once the turn is stored (`MOOD`, `mood_offer`) |
-| `store.py` | its queries (the tables are in `store/sqlite/migrations/0015_mood_effects.sql`) |
+| `store.py` | its queries as `MoodEffects` (`Store.part(MoodEffects)`) (the tables are in `store/sqlite/migrations/0015_mood_effects.sql`) |
 | `cli.py` | `companion mood`, `--replay DAYS` |
 
 ## Prompts

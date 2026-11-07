@@ -52,7 +52,7 @@ It asks instead of guessing for a bare "at 8" when both are still ahead, "next f
 | `logic.py` | pure: the rows (a reminder, a series), reading the parts of when, working out the time, the notes and the send instruction |
 | `series.py` | pure: repeating ones, when the next falls, a learned time, when a greeting is skipped, when a series pauses, the repeat note |
 | `run.py` | effects: the turn's look-up and note, acting on a read, starting and stopping a series, sending when due, bringing each series up to date (`REMINDERS`, `deliver_due`, `schedule`, `stop`) |
-| `store.py` | its queries (the tables are in `store/sqlite/migrations/0026_reminders.sql` and `0035_series.sql`) |
+| `store.py` | its queries as `Reminders` (`Store.part(Reminders)`) (the tables are in `store/sqlite/migrations/0026_reminders.sql` and `0035_series.sql`) |
 | `cli.py` | `companion reminders`, `--cancel ID` |
 
 ## Prompts

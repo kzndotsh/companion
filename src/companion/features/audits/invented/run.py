@@ -10,6 +10,7 @@ from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId, TurnId
 from companion.features.audits.invented.logic import PROMPT, SCHEMA, build_prompt, parse
+from companion.features.audits.invented.store import InventedChecks
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.store.sqlite.store import Store
 
@@ -31,7 +32,7 @@ async def check_new(
     """Judge the turns not judged yet, oldest first, until the cap. Returns (judged, spent)."""
     judged, spent = 0, 0.0
     seen: set[TurnId] = set()
-    for turn in store.invented_unchecked(rel, since):
+    for turn in store.part(InventedChecks).unchecked(rel, since):
         if spent >= cap_usd:
             log.info("made-up facts check stopped at the $%.2f cap", cap_usd)
             break
@@ -46,7 +47,7 @@ async def check_new(
         statements = parse(result.value, turn.reply)
         if statements is None:
             continue
-        store.add_invented_check(
+        store.part(InventedChecks).add(
             rel, turn.turn_id, statements, judge=result.model, prompt=PROMPT.ref, at=utc_now()
         )
         judged += 1

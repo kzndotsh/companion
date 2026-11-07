@@ -28,6 +28,9 @@ from companion.core.types import (
     Speaker,
     Subject,
 )
+from companion.features.episodes.store import Episodes
+from companion.features.intimate.store import IntimateMemory
+from companion.features.lore.store import ViewKinds
 from companion.features.reach.gate import (
     AFTER_HEAVY,
     Situation,
@@ -78,7 +81,7 @@ from companion.features.reach.outcome import (
     parse_landed,
     stopped,
 )
-from companion.features.reach.store import Own
+from companion.features.reach.store import Own, Reaches
 from companion.kit.ask import Judge, ask
 from companion.kit.record import Recorder
 from companion.kit.spendcap import over_cap
@@ -125,9 +128,9 @@ class Reacher:
 def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
     """What a thought could be about. Never a memory the scene lane placed as intimate (ADR 0026):
     some are stored at a low sensitivity, and one was picked for a weekday morning (2026-11-03)."""
-    kinds = store.view_kinds(rel)
+    kinds = store.part(ViewKinds).kinds(rel)
     keep = (BeliefKind.THREAD, BeliefKind.PREFERENCE)
-    intimate = store.intimate_memory().intimate(rel)
+    intimate = store.part(IntimateMemory).intimate(rel)
     return Pool(
         memories=[
             (str(b.id), b.claim, b.sensitivity)
@@ -144,7 +147,7 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
         ],
         episodes=[
             (e.id, e.gist)
-            for e in store.episodes(rel)
+            for e in store.part(Episodes).all_(rel)
             if e.kind == "everyday" and e.top_severity < HEAVY_AT and now - e.end_at <= EPISODE_DAYS
         ],
     )
@@ -153,7 +156,7 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
 def _sent(store: Store, rel: RelationshipId, start: datetime) -> tuple[list[Sent], list[Own]]:
     """Every reach-out of any kind it sent (or would have, in shadow), oldest first, and its own
     rows, dropped drafts included."""
-    own = store.own_reach_outs(rel, start)
+    own = store.part(Reaches).since(rel, start)
     nudges = [
         Sent(str(d.id), Kind.AWAY, False, str((d.detail or {}).get("draft") or ""), d.at)
         for d in store.decisions_with_key(rel, WOULD_NUDGE, start)
@@ -203,7 +206,7 @@ def context(
     ):
         said = []
     keep = (BeliefKind.THREAD, BeliefKind.PREFERENCE, BeliefKind.TRAIT)
-    intimate = store.intimate_memory().intimate(rel)
+    intimate = store.part(IntimateMemory).intimate(rel)
     theirs = sorted(
         (
             b
@@ -218,7 +221,7 @@ def context(
         reverse=True,
     )
     pool = _pool(store, rel, now)
-    own = store.own_reach_outs(rel, now - WINDOW)
+    own = store.part(Reaches).since(rel, now - WINDOW)
     return Context(
         local=now.astimezone(tz),
         kind=kind,
@@ -392,7 +395,7 @@ async def _draft(
         detail,
         now,
     )
-    store.add_own_reach_out(row)
+    store.part(Reaches).add(row)
     if idea is None:
         Recorder.fresh(store, rel, now).decide(
             DROPPED, detail, reason=f"{DROPPED} ({kind}): {dropped}", kind=DecisionKind.DO_NOTHING

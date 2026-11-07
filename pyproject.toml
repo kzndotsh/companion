@@ -124,15 +124,16 @@ id = "features-are-independent"
 name = "no feature imports another; shared things go through core or the turn"
 type = "independence"
 modules = ["companion.features.*"]
-# The hubs that know features by design. The store facade and its tables may use a feature's
-# queries and its pure types (the rows it stores), never its effects or command; the registry lists
-# every feature. A feature reaching a hub does not make it depend on the others.
+# The registry lists every feature by design; a feature reaching it does not depend on the others.
+# The rest are one feature reading another's tables, each through the other's store class (a
+# feature owns its storage; `Store.part(cls)` hands it out). They stay named here so each is seen:
+# the reach pool draws on three features' tables, and recall hides the intimate lane's memories.
 ignore_imports = [
-    "companion.store.sqlite.** -> companion.features.*.store",
-    "companion.store.sqlite.** -> companion.features.*.*.store",
-    "companion.store.sqlite.** -> companion.features.*.logic",
-    "companion.store.sqlite.** -> companion.features.*.*.logic",
     "companion.registry -> companion.features.**",
+    "companion.features.reach.run -> companion.features.episodes.store",
+    "companion.features.reach.run -> companion.features.intimate.store",
+    "companion.features.reach.run -> companion.features.lore.store",
+    "companion.features.recall.run -> companion.features.intimate.store",
 ]
 
 [[tool.importlinter.contracts]]
@@ -140,8 +141,7 @@ id = "direction"
 name = "imports point down: turn and memory, the registry, features, kit, core, lib"
 type = "layers"
 # The turn's stages and the memory side run features, so they sit above them; what a feature uses
-# (the turn's values, Feature, the judge runner, curate) sits below. The store facade knows every
-# feature's queries and types by design, so a chain through it is not a feature being imported.
+# (the turn's values, Feature, the judge runner, curate) sits below.
 layers = [
     "companion.turn | companion.memory",
     "companion.registry",
@@ -149,12 +149,6 @@ layers = [
     "companion.kit",
     "companion.core",
     "companion.lib",
-]
-ignore_imports = [
-    "companion.store.sqlite.** -> companion.features.*.store",
-    "companion.store.sqlite.** -> companion.features.*.*.store",
-    "companion.store.sqlite.** -> companion.features.*.logic",
-    "companion.store.sqlite.** -> companion.features.*.*.logic",
 ]
 
 [[tool.importlinter.contracts]]

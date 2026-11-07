@@ -9,7 +9,7 @@ from pathlib import Path
 from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
 from companion.features.history.logic import Recorded, Ruling, Standing
-from companion.features.history.store import By
+from companion.features.history.store import By, Stories
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
@@ -40,7 +40,7 @@ _SECTIONS = (
 def run(db: Path, relationship: str) -> str:
     store = Store(db)
     try:
-        stories = store.stories().recorded(RelationshipId(relationship))
+        stories = store.part(Stories).recorded(RelationshipId(relationship))
     finally:
         store.close()
     if not stories:
@@ -58,7 +58,7 @@ def retire_story(store: Store, rel: RelationshipId, id_prefix: str, reason: str)
     story matches, so the caller can say so."""
     matches = [
         r
-        for r in store.stories().recorded(rel)
+        for r in store.part(Stories).recorded(rel)
         if r.story.id.startswith(id_prefix) and r.standing is not Standing.RETIRED
     ]
     if not matches:
@@ -68,7 +68,7 @@ def retire_story(store: Store, rel: RelationshipId, id_prefix: str, reason: str)
         raise ValueError(msg)
     story = matches[0].story
     now = utc_now()
-    store.stories().rule(
+    store.part(Stories).rule(
         story.id, Ruling(Standing.RETIRED, None, None, reason), By("owner", "", now)
     )
     source = store.get_utterance(story.utterance_id)

@@ -71,6 +71,7 @@ from companion.features.reminders.series import (
     skip_reason,
     tend,
 )
+from companion.features.reminders.store import Reminders
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, mark
 from companion.kit.features import Feature, Offer, Offered
@@ -131,14 +132,16 @@ def _reminder(c: Runtime, w: Wanted, due: datetime, tz: tzinfo, now: datetime) -
 def schedule(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> Step:
     """Bring a series up to date: record a pause or a resume, and make its next occurrence when the
     one before has ended. Safe to run any number of times: the store keeps one of each number."""
-    occurrences = [r for r in c.store.reminders(c.rel) if r.series_id == series.id]
-    step = tend(series, occurrences, c.store.their_times(c.rel, now - LOOK_BACK), now, tz)
+    occurrences = [r for r in c.store.part(Reminders).all_(c.rel) if r.series_id == series.id]
+    step = tend(
+        series, occurrences, c.store.part(Reminders).their_times(c.rel, now - LOOK_BACK), now, tz
+    )
     if step.state is not None:
-        c.store.series_event(series.id, step.state, step.reason, now)
+        c.store.part(Reminders).series_event(series.id, step.state, step.reason, now)
     if step.due is None:
         return step
     wanted = Wanted(series.kind, series.thing, series.quote, series.turn_id)
-    made = c.store.add_occurrence(
+    made = c.store.part(Reminders).add_occurrence(
         replace(_reminder(c, wanted, step.due, tz, now), series_id=series.id, seq=step.seq)
     )
     return step if made else replace(step, due=None)
@@ -147,20 +150,20 @@ def schedule(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> Step:
 def stop(store: Store, series: Series, reason: str, now: datetime) -> None:
     """Stop a series and drop its pending occurrence. Stopped first, so a tick in between makes no
     next one."""
-    store.series_event(series.id, Standing.STOPPED, reason, now)
-    for r in store.reminders(series.relationship_id):
+    store.part(Reminders).series_event(series.id, Standing.STOPPED, reason, now)
+    for r in store.part(Reminders).all_(series.relationship_id):
         if r.series_id == series.id and r.state is ReminderState.PENDING:
-            store.reminder_event(r.id, ReminderState.CANCELLED, reason, now)
+            store.part(Reminders).event(r.id, ReminderState.CANCELLED, reason, now)
 
 
 def _cancel(c: Runtime, s: Slots, now: datetime) -> Read | None:
     """Drop the pending one-offs and stop the series their words name (or the only one)."""
     pending = [
         r
-        for r in c.store.reminders(c.rel)
+        for r in c.store.part(Reminders).all_(c.rel)
         if r.state is ReminderState.PENDING and r.series_id is None
     ]
-    live = [x for x in c.store.series(c.rel) if x.state is not Standing.STOPPED]
+    live = [x for x in c.store.part(Reminders).all_series(c.rel) if x.state is not Standing.STOPPED]
     hit = set(
         matching([(r.id, r.thing) for r in pending] + [(x.id, x.thing) for x in live], s.thing)
     )
@@ -169,7 +172,7 @@ def _cancel(c: Runtime, s: Slots, now: datetime) -> Read | None:
     dropped = [r for r in pending if r.id in hit]
     stopped = [x for x in live if x.id in hit]
     for r in dropped:
-        c.store.reminder_event(r.id, ReminderState.CANCELLED, "they asked to drop it", now)
+        c.store.part(Reminders).event(r.id, ReminderState.CANCELLED, "they asked to drop it", now)
     for x in stopped:
         stop(c.store, x, "they asked to stop it", now)
     what = [asked_for(r.kind, r.thing) for r in dropped] + [
@@ -183,7 +186,7 @@ def _cancel(c: Runtime, s: Slots, now: datetime) -> Read | None:
 
 
 def _started(c: Runtime, series: Series, planned: Planned, now: datetime, tz: tzinfo) -> Read:
-    c.store.add_series(series)
+    c.store.part(Reminders).add_series(series)
     due = schedule(c, series, now, tz).due or now  # a new series always has a first one
     first = first_words(planned.repeat, due, now, tz)
     return Read(
@@ -227,7 +230,7 @@ def act(  # noqa: PLR0913, PLR0917
             ask_note(s.kind, s.thing, when.unclear), ASKED, {"why": when.unclear}, asks=True
         )
     r = _reminder(c, Wanted(s.kind, s.thing, said, turn), when.at, tz, now)
-    c.store.add_reminder(r)
+    c.store.part(Reminders).add(r)
     told = spoken(when.at, now, tz, loose=when.loose)
     return Read(
         set_note(s.kind, s.thing, told, defaulted=when.defaulted),
@@ -286,23 +289,23 @@ async def deliver_due(
     One that fell due while the bot was not running and is now more than GRACE late is let go; a
     greeting they already wrote first is skipped; one held by a scene waits for the scene to end.
     Then every series is brought up to date. Returns how many went out."""
-    held = c.store.reminders(c.rel)
+    held = c.store.part(Reminders).all_(c.rel)
     for r in held:
         if r.state is ReminderState.CLAIMED and r.state_at is not None and now - r.state_at > STUCK:
             why = "claimed and never finished, cut off mid-send; whether it arrived is unknown"
-            c.store.reminder_event(
+            c.store.part(Reminders).event(
                 r.id, ReminderState.EXPIRED, why + ", so it is not sent again", now
             )
             detail_stuck: dict[str, Json] = {"reminder": r.id, "series": r.series_id}
             log_decision(c, TurnId(uuid.uuid4().hex), STUCK_GONE, now, detail_stuck)
     due = [r for r in held if r.state is ReminderState.PENDING and r.due_at <= now]
-    every, zone = {x.id: x for x in c.store.series(c.rel)}, local_zone()
-    theirs = c.store.their_times(c.rel, now - LOOK_BACK)
+    every, zone = {x.id: x for x in c.store.part(Reminders).all_series(c.rel)}, local_zone()
+    theirs = c.store.part(Reminders).their_times(c.rel, now - LOOK_BACK)
     sent = 0
     for r in due:
         turn = TurnId(uuid.uuid4().hex)
         if r.due_at < started and now - r.due_at > GRACE:
-            c.store.reminder_event(
+            c.store.part(Reminders).event(
                 r.id, ReminderState.EXPIRED, "the bot was not running when it was due", now
             )
             log_decision(
@@ -316,8 +319,8 @@ async def deliver_due(
         series = every.get(r.series_id or "")
         why = None if series is None else skip_reason(series, r.due_at, theirs, now, zone)
         if why is not None:
-            if c.store.claim_reminder(r.id, now):
-                c.store.reminder_event(r.id, ReminderState.SKIPPED, why, now)
+            if c.store.part(Reminders).claim(r.id, now):
+                c.store.part(Reminders).event(r.id, ReminderState.SKIPPED, why, now)
                 detail: dict[str, Json] = {"reminder": r.id, "series": r.series_id, "why": why}
                 log_decision(c, turn, SKIPPED, now, detail)
             continue
@@ -325,14 +328,14 @@ async def deliver_due(
         if scene_frame(prior, now) is not Frame.REAL:
             log.debug("reminder %s held: a scene is in progress", r.id[:8])
             continue
-        if not c.store.claim_reminder(r.id, now):
+        if not c.store.part(Reminders).claim(r.id, now):
             continue
         text, by = await _write(c, r, prior, now)
         try:
             await send(text)
         except Exception:
             log.warning("a reminder could not be sent; it will be tried again", exc_info=True)
-            c.store.reminder_event(
+            c.store.part(Reminders).event(
                 r.id, ReminderState.PENDING, "sending failed, tried again next time", now
             )
             continue
@@ -349,7 +352,7 @@ async def deliver_due(
             )
         )
         late = now - r.due_at > LATE
-        c.store.reminder_event(
+        c.store.part(Reminders).event(
             r.id, ReminderState.LATE if late else ReminderState.SENT, f"sent by {by}", now
         )
         log_decision(
@@ -361,7 +364,9 @@ async def deliver_due(
         )
         log.info("reminder %s sent%s: %s", r.id[:8], " late" if late else "", text)
         sent += 1
-    for series in c.store.series(c.rel):  # read again: a turn may have stopped one while it sent
+    for series in c.store.part(Reminders).all_series(
+        c.rel
+    ):  # read again: a turn may have stopped one while it sent
         if series.state is not Standing.STOPPED:
             _tend(c, series, now, zone)
     return sent

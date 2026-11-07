@@ -11,6 +11,7 @@ from companion.core.extractor import StructuredModel
 from companion.core.quoted import AFTER, BEFORE, build_prompt, wants_context
 from companion.core.types import RelationshipId
 from companion.features.upkeep.context.logic import PROMPT, SCHEMA, parse
+from companion.features.upkeep.context.store import BeliefContexts
 from companion.kit.ask import Judge, ask
 from companion.kit.features import Feature
 from companion.store.sqlite.store import Store
@@ -37,7 +38,7 @@ class Written:
 async def write_missing(
     store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime, *, limit: int = 20
 ) -> Written:
-    have = store.belief_contexts(rel)
+    have = store.part(BeliefContexts).latest(rel)
     todo = [b for b in store.user_beliefs(rel) if wants_context(b) and b.id not in have][:limit]
     if not todo:
         return Written()
@@ -54,7 +55,7 @@ async def write_missing(
             continue
         cost += got.cost_usd
         context = got.value
-        store.add_belief_context(rel, b.id, context, prompt=PROMPT.ref, at=now)
+        store.part(BeliefContexts).add(rel, b.id, context, prompt=PROMPT.ref, at=now)
         written += 1
     log.debug("memory context: %d written, $%.4f", written, cost)
     return Written(written, cost)

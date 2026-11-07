@@ -41,7 +41,7 @@ It never shows a promise to the talker and never enforces one.
 |---|---|
 | `logic.py` | pure: the prompt, the schema, `parse`, and `to_promise` (which promises code keeps), the `Promise` type and its `Kind`; the check's input and answer (`check_input`, `read_check`, `Check`) |
 | `run.py` | effects: reading its own messages in a batch (`read_promises`), and the check on each reply (`check_reply`, `PROMISE_CHECK`) |
-| `store.py` | its queries: `promises`, `promise_marks` and `promise_scopes`, append-only (tables in `store/sqlite/migrations/0022_promises.sql` and `0039_promise_scopes.sql`) |
+| `store.py` | its queries as `Promises` (`Store.part(Promises)`): `promises`, `promise_marks` and `promise_scopes`, append-only (tables in `store/sqlite/migrations/0022_promises.sql` and `0039_promise_scopes.sql`) |
 | `cli.py` | `companion promises`, `--not`, `--retire`, `--moment`, `--lasting` (`run`) |
 
 ## Prompts

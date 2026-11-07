@@ -31,7 +31,7 @@ from companion.features.intimate.logic import (
     Stance,
 )
 from companion.features.intimate.run import CARD, LEFT_OFF, OFFERED, Scored, entries
-from companion.features.intimate.store import By
+from companion.features.intimate.store import By, IntimateMemory
 from companion.features.recall.logic import LIVE
 from companion.kit.current import Turn
 from companion.kit.features import Lookups
@@ -93,7 +93,7 @@ def store(tmp_path: Path) -> Store:
         )
     by_claim = {b.claim: b.id for b in s.user_beliefs(REL)}
     by = By("fake", "system/scene-lane@v1", NOW - timedelta(hours=1))
-    s.intimate_memory().place({by_claim[c]: p for c, p in PLACES.items()}, by)
+    s.part(IntimateMemory).place({by_claim[c]: p for c, p in PLACES.items()}, by)
     return s
 
 

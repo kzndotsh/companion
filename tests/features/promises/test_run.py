@@ -20,7 +20,9 @@ from companion.features.promises.logic import (
     to_promise,
 )
 from companion.features.promises.run import read_promises
+from companion.features.promises.store import Promises
 from companion.features.threads.run import Reading, catch_up_loops
+from companion.features.threads.store import Threads
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 
@@ -123,17 +125,17 @@ async def test_its_promise_is_recorded_once_and_a_failed_read_is_tried_again(
 ) -> None:
     model = Reads(fails=2)  # the loop read and the promise read both fail the first time
     await _catch_up(store, model)
-    assert store.promises(REL) == []
-    assert store.loop_cursor(REL) is None
+    assert store.part(Promises).recorded(REL) == []
+    assert store.part(Threads).loop_cursor(REL) is None
     await _catch_up(store, model)
-    assert [r.promise.avoid for r in store.promises(REL)] == ["buddy"]
+    assert [r.promise.avoid for r in store.part(Promises).recorded(REL)] == ["buddy"]
     await _catch_up(store, Reads())
-    assert len(store.promises(REL)) == 1
+    assert len(store.part(Promises).recorded(REL)) == 1
 
 
 async def test_off_reads_no_promises(store: Store) -> None:
     await _catch_up(store, Reads(), promises=False)
-    assert store.promises(REL) == []
+    assert store.part(Promises).recorded(REL) == []
 
 
 async def test_the_owner_can_mark_one_not_a_promise_and_it_leaves_the_list(
@@ -143,10 +145,10 @@ async def test_the_owner_can_mark_one_not_a_promise_and_it_leaves_the_list(
     store.close()
     db = tmp_path / "rel.sqlite"
     assert "avoid 'buddy'" in run(db, REL)
-    pid = Store(db).promises(REL)[0].promise.id
+    pid = Store(db).part(Promises).recorded(REL)[0].promise.id
     assert run(db, REL, wrong=pid[:6]).startswith("marked not a promise")
     assert run(db, REL) == "no promises recorded\n"
-    assert Store(db).promises(REL)[0].mark == "not_a_promise"
+    assert Store(db).part(Promises).recorded(REL)[0].mark == "not_a_promise"
 
 
 def test_a_promise_counts_only_when_every_read_found_it_and_checkable_only_if_all_said_so() -> None:
@@ -200,7 +202,7 @@ async def test_the_owner_can_relabel_how_long_one_lasts(store: Store, tmp_path: 
     store.close()
     db = tmp_path / "rel.sqlite"
     assert "lasting" in run(db, REL)
-    (only,) = Store(db).promises(REL)
+    (only,) = Store(db).part(Promises).recorded(REL)
     assert run(db, REL, moment=only.promise.id[:6]).startswith("now moment:")
     assert "moment   avoid 'buddy'  (its moment has passed)" in run(db, REL)  # said weeks ago
-    assert Store(db).promises(REL)[0].promise.scope is Scope.MOMENT
+    assert Store(db).part(Promises).recorded(REL)[0].promise.scope is Scope.MOMENT

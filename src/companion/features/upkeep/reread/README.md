@@ -35,7 +35,7 @@ Spend is tagged `consolidate`.
 |---|---|
 | `logic.py` | pure: the prompts (`CHECK`, `PAIR`), the labels (`Label`, `Relation`), `verdict` (what counts as agreed), `plan_for` (close, ask or nothing) |
 | `run.py` | effects: the nightly check (`nightly`, `SETTLED_DAYS`, `PER_NIGHT`) and the write-time pair check (`SameCheck`, `GATE`) |
-| `store.py` | its queries: `memory_checks` and `memory_answers`, append-only (tables in `store/sqlite/migrations/`) |
+| `store.py` | its queries as `MemoryChecks` (`Store.part(MemoryChecks)`): `memory_checks` and `memory_answers`, append-only (tables in `store/sqlite/migrations/`) |
 
 ## Prompts
 

@@ -27,7 +27,7 @@ Spend is tagged `consolidate`, which is also the name `COMPANION_JUDGE_ROUTES` u
 |---|---|
 | `logic.py` | pure: the prompts (`GROUP`, `WRITE`), `listing`, `read_groups`, `agreed` (what counts as a group), `read_claim`, `merged_kind`, the wording check (`unsupported`) and its fallback (`kept_wording`) |
 | `run.py` | effects: `propose`, `repick`, the last two days each night (`recent`, `RECENT_DAYS`), the whole store (`everything`) |
-| `store.py` | its queries: `merge_proposals` and `merge_answers`, append-only (tables in `store/sqlite/migrations/`) |
+| `store.py` | its queries as `MergeProposals` (`Store.part(MergeProposals)`): `merge_proposals` and `merge_answers`, append-only (tables in `store/sqlite/migrations/`) |
 | `cli.py` | `companion memory group` (`group_now`) |
 
 ## Prompts

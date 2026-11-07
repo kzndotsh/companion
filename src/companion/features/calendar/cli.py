@@ -10,6 +10,7 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.types import RelationshipId
 from companion.features.calendar.logic import REGION, How, occasions, when
 from companion.features.calendar.run import theirs
+from companion.features.calendar.store import Calendar
 from companion.store.sqlite.store import Store
 
 DAYS = 30
@@ -22,9 +23,9 @@ def run(db: Path, relationship: str, *, now: datetime | None = None) -> str:
     local = (now or utc_now()).astimezone(zone)
     today = local.date()
     try:
-        first = store.first_message_at(rel)
+        first = store.part(Calendar).first_message(rel)
         since = datetime.combine(today - timedelta(days=DAYS), time.min, tzinfo=zone)
-        offered = store.calendar_offered(rel, since)
+        offered = store.part(Calendar).offered_since(rel, since)
         dates = theirs(store, rel)
     finally:
         store.close()

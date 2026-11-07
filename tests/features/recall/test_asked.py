@@ -27,7 +27,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.intimate.logic import Intimate, Stance
-from companion.features.intimate.store import By
+from companion.features.intimate.store import By, IntimateMemory
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.runtime import make_runtime
@@ -197,7 +197,7 @@ async def test_the_intimate_lane_is_never_looked_up_on_an_everyday_turn(store: S
     # just left off as intimate (2 everyday turns of 17 asked, 2026-11-05).
     store.insert_belief(_belief("b2", "The user likes it slow.", "burger"))
     by = By("fake", "system/scene-lane@v1", NOW - timedelta(hours=1))
-    store.intimate_memory().place({BeliefId("b2"): Intimate(Stance.INTO)}, by)
+    store.part(IntimateMemory).place({BeliefId("b2"): Intimate(Stance.INTO)}, by)
     judge = Judge(["r1", "r2"])
     talker = await _ask(store, judge, intimate_memory="on")
     [asked] = judge.asked

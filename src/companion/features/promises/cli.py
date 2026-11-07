@@ -10,6 +10,7 @@ from pathlib import Path
 from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
 from companion.features.promises.logic import Scope, in_force
+from companion.features.promises.store import Promises
 from companion.store.sqlite.store import Store
 
 SHOWN = 30
@@ -27,20 +28,20 @@ def run(  # noqa: PLR0913
     store = Store(db)
     rel = RelationshipId(relationship)
     try:
-        current = [r for r in store.promises(rel) if r.mark is None]
+        current = [r for r in store.part(Promises).recorded(rel) if r.mark is None]
         if moment or lasting:
             prefix, scope = (moment, Scope.MOMENT) if moment else (lasting, Scope.LASTING)
             found = [r for r in current if r.promise.id.startswith(str(prefix))]
             if len(found) != 1:
                 return f"{len(found)} current promises start with {prefix!r}; need exactly one\n"
-            store.set_promise_scope(found[0].promise.id, scope, "owner", utc_now())
+            store.part(Promises).set_scope(found[0].promise.id, scope, "owner", utc_now())
             return f"now {scope}: {found[0].promise.quote}\n"
         if wrong or retire:
             prefix, mark = (wrong, "not_a_promise") if wrong else (retire, "retired")
             found = [r for r in current if r.promise.id.startswith(str(prefix))]
             if len(found) != 1:
                 return f"{len(found)} current promises start with {prefix!r}; need exactly one\n"
-            store.mark_promise(found[0].promise.id, mark, "the owner said so", utc_now())
+            store.part(Promises).mark(found[0].promise.id, mark, "the owner said so", utc_now())
             return f"marked {mark.replace('_', ' ')}: {found[0].promise.quote}\n"
         if not current:
             return "no promises recorded\n"

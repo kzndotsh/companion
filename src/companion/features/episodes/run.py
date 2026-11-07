@@ -14,6 +14,7 @@ from companion.features.episodes.logic import GAP_BACK, Told, period
 from companion.features.episodes.logic import NOTE as EPISODES_NOTE
 from companion.features.episodes.logic import note as episodes_note
 from companion.features.episodes.logic import recent as recent_times
+from companion.features.episodes.store import Episodes
 from companion.kit.current import Heard, Turn, decide, mark
 from companion.kit.features import Feature, Offer, Offered
 
@@ -77,7 +78,7 @@ async def write_closed(
 ) -> Written:
     """A record for every episode that has ended (no message for EPISODE_GAP) and has none yet."""
     said = store.history_before(rel, FAR, WHOLE)
-    done = store.episodes(rel)
+    done = store.part(Episodes).all_(rel)
     have = {e.first_id for e in done if e.prompt == PROMPT.ref}  # older prompts are written again
     seen = {Kind(e.kind) for e in done}
     severity = _severities(store, rel)
@@ -93,7 +94,7 @@ async def write_closed(
             continue
         cost += got.cost_usd
         gist = got.value
-        store.add_episode(
+        store.part(Episodes).add(
             rel,
             Episode(
                 uuid.uuid4().hex,
@@ -139,7 +140,7 @@ async def recent_for_turn(
         await asyncio.wait_for(write_closed(c.store, c.judge, c.rel, t.now), EPISODE_SECONDS)
     except Exception as err:  # what is already recorded is still shown
         log.warning("writing episodes before the reply failed: %r", err)
-    ends = [(e.start_at, e.end_at, e.gist) for e in c.store.episodes(c.rel)]
+    ends = [(e.start_at, e.end_at, e.gist) for e in c.store.part(Episodes).all_(c.rel)]
     told = recent_times(ends, t.text, last, t.now, zone)
     if told:
         detail: dict[str, Json] = {

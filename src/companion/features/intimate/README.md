@@ -55,7 +55,7 @@ What they are into and the offer go in the system block in place of the memory c
 |---|---|
 | `logic.py` | pure: the lanes, stances and reasons (`Lane`, `Stance`, `Why`, `Place`), the floor (`touches_age`, `screen`), the lane prompt, parse and agreement (`lane_prompt`, `parse_lanes`, `agree`), scenes and patterns (`scenes`, `closed`, `Pattern`, `pattern_prompt`, `parse_patterns`, `refuse`, `pattern_entry`), the card (`Entry`, `scene_card`, `render_scene`) and the cooling (`cooled`) |
 | `run.py` | effects: the pass step (`label_lanes`, `read_scenes`, `pass_step`), the entries (`entries`), the look-up (`nearest_for_turn`), the turn's lane (`scene_lane`), and `SCENE` |
-| `store.py` | its tables behind `Store.intimate_memory()` (`IntimateMemory`): places, patterns and their quotes and retires, vectors, the bookmark, and the floor's facts about a message's turn (`facts`) |
+| `store.py` | its tables behind `Store.part(IntimateMemory)`: places, patterns and their quotes and retires, vectors, the bookmark, and the floor's facts about a message's turn (`facts`) |
 | `cli.py` | `companion intimate`, and retiring a pattern (`retire_pattern`, used by `companion retire`) |
 
 The tables are in `store/sqlite/migrations/0037_scene_memory.sql`.

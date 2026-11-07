@@ -11,6 +11,7 @@ from pathlib import Path
 from companion.core.clock import local_zone, utc_now
 from companion.core.types import RelationshipId
 from companion.features.mood.logic import WINDOW, Mood, Replayed, mood_at, reason, replay
+from companion.features.mood.store import MoodEffects
 from companion.store.sqlite.store import Store
 
 
@@ -20,10 +21,12 @@ def run(db: Path, relationship: str, replay_days: int | None, now: datetime | No
     rel = RelationshipId(relationship)
     try:
         if replay_days is None:
-            return _now(mood_at(store.mood_effects_since(rel, now - WINDOW), now, local_zone()))
+            return _now(
+                mood_at(store.part(MoodEffects).since(rel, now - WINDOW), now, local_zone())
+            )
         start = now - timedelta(days=replay_days)
-        said = store.said_since(rel, start)
-        times = store.times_since(rel, start - timedelta(days=1))
+        said = store.part(MoodEffects).said_since(rel, start)
+        times = store.part(MoodEffects).times_since(rel, start - timedelta(days=1))
     finally:
         store.close()
     return _replayed(replay(said, times, local_zone()), replay_days)

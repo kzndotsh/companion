@@ -17,6 +17,7 @@ from companion.features.audits.callbacks.logic import (
     label,
     parse,
 )
+from companion.features.audits.callbacks.store import CallbackChecks
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.store.sqlite.store import Store
 
@@ -38,7 +39,7 @@ async def check_new(
 ) -> tuple[int, float]:
     """Judge the turns not judged yet, oldest first, until the cap. Returns (judged, spent)."""
     judged, spent = 0, 0.0
-    for turn in store.callbacks_unchecked(rel, since):
+    for turn in store.part(CallbackChecks).unchecked(rel, since):
         if spent >= cap_usd:
             log.info("callback check stopped at the $%.2f cap", cap_usd)
             break
@@ -50,6 +51,6 @@ async def check_new(
         if got is None or check is None:  # no callback it can name is left for the next run
             continue
         spent += got.cost_usd
-        store.add_callback_check(rel, turn.turn_id, check, got.model, got.ref, utc_now())
+        store.part(CallbackChecks).add(rel, turn.turn_id, check, got.model, got.ref, utc_now())
         judged += 1
     return judged, spent

@@ -29,7 +29,7 @@ Nothing in an episode line is ever shown to them. The log is append-only and a l
 |---|---|
 | `logic.py` | pure: cutting into episodes (`cut`, `Span`, `SWITCH`), kind and firsts, the writer's input (`transcript`, `facts`) and parse (`parse`, `MAX_WORDS`), which time their words point at (`period`, `when_said`), which lines to show (`recent`, `note`) |
 | `run.py` | effects: writing the lines (`write_closed`), the look-up before the reply (`recent_for_turn`, `EPISODE_SECONDS`) and its note, as `EPISODES` |
-| `store.py` | its queries: the `episodes` table, append-only, newest line per episode (tables in `store/sqlite/migrations/`) |
+| `store.py` | its queries as `Episodes` (`Store.part(Episodes)`): the `episodes` table, append-only, newest line per episode (tables in `store/sqlite/migrations/`) |
 | `cli.py` | `companion episodes`: list the lines, and `--write` to write new ones |
 
 ## Prompts

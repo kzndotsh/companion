@@ -9,6 +9,7 @@ import pytest
 from companion.core.extractor import Extraction
 from companion.core.types import Belief, BeliefKind, Depth, Domain, Json, Label, Utterance
 from companion.features.upkeep.reread.run import nightly
+from companion.features.upkeep.reread.store import MemoryChecks
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 
@@ -73,7 +74,9 @@ async def test_out_of_date_is_a_question_and_a_young_memory_waits(
     assert (await nightly(store, judge, REL, T0 + timedelta(days=3), UTC, mode="on")).checked == 0
     night = await nightly(store, judge, REL, LATER, UTC, mode="on")
     assert (night.closed, night.questions) == (0, 1)
-    assert [c.belief_id for c in store.unanswered_checks(REL, ["out_of_date"])] == ["spill"]
+    assert [c.belief_id for c in store.part(MemoryChecks).unanswered(REL, ["out_of_date"])] == [
+        "spill"
+    ]
 
 
 async def test_a_new_version_of_the_check_reads_every_memory_again(

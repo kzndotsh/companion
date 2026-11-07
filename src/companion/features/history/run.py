@@ -42,7 +42,7 @@ from companion.features.history.logic import (
     rule,
     to_story,
 )
-from companion.features.history.store import By
+from companion.features.history.store import By, Stories
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, is_casual
 from companion.kit.embed import embed_within
@@ -92,7 +92,7 @@ async def _capture(
 ) -> tuple[int, float] | None:
     """Read one batch of messages past the bookmark: the stories kept and the cost, or None when
     nothing is left or the read failed (the bookmark stays, so it is read again)."""
-    stories = store.stories()
+    stories = store.part(Stories)
     batch = store.utterances_after(rel, stories.cursor(rel), BATCH)
     if not batch:
         return None
@@ -139,7 +139,7 @@ async def _check(
 ) -> tuple[bool, float]:
     """Read one waiting story against the sheet and the canon three times and record its standing.
     False when a read failed: nothing is recorded and it waits for the next pass."""
-    stories = store.stories()
+    stories = store.part(Stories)
     canon = [
         r.story for r in stories.recorded(waiting.relationship_id) if r.standing is Standing.CANON
     ]
@@ -188,7 +188,9 @@ async def read_history(
         captured, cost = captured + got[0], cost + got[1]
     ruled = 0
     for _ in range(CHECKS):
-        waiting = next((r.story for r in store.stories().recorded(rel) if r.standing is None), None)
+        waiting = next(
+            (r.story for r in store.part(Stories).recorded(rel) if r.standing is None), None
+        )
         if waiting is None:
             break
         done, spent = await _check(store, extractor, waiting, sheet, now)
@@ -222,7 +224,7 @@ async def nearest_stories(
     """Its canon stories nearest their message, embedding any with no vector yet in the same call.
     None when the call failed or was slow."""
     embedder, model = embed
-    stories = store.stories()
+    stories = store.part(Stories)
     canon = [r for r in stories.recorded(rel) if r.standing is Standing.CANON]
     if not canon:
         return []

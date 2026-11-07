@@ -25,6 +25,7 @@ from companion.features.upkeep.merging.logic import (
     read_wording,
     unsupported,
 )
+from companion.features.upkeep.merging.store import MergeProposals
 from companion.kit.ask import Judge, ask
 from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
@@ -81,7 +82,7 @@ async def repick(
 ) -> Proposed:
     """Propose again, alone, the members the owner said belong together."""
     current = {b.id: b for b in store.user_beliefs(rel)}
-    proposals = store.merge_proposals(rel)
+    proposals = store.part(MergeProposals).all_(rel)
     asked = {frozenset(p.members) for p in proposals}
     made, cost = 0, 0.0
     for p in proposals:
@@ -94,7 +95,7 @@ async def repick(
         claim, spent = await _wording(judge, members)
         cost += spent
         if claim is not None:
-            store.add_merge_proposal(rel, ids, claim, prompt=WRITE.ref, at=now)
+            store.part(MergeProposals).add(rel, ids, claim, prompt=WRITE.ref, at=now)
             asked.add(frozenset(ids))
             made += 1
     return Proposed(made, cost)
@@ -129,12 +130,12 @@ async def propose_group(
     before or the writer says to keep them apart. Used by the grouping and by the write-time check
     when every read calls a new memory one to merge with an existing one (`reread/`)."""
     ids = frozenset(b.id for b in members)
-    if len(ids) < 2 or ids in {frozenset(p.members) for p in store.merge_proposals(rel)}:
+    if len(ids) < 2 or ids in {frozenset(p.members) for p in store.part(MergeProposals).all_(rel)}:
         return Proposed()
     claim, cost = await _wording(judge, members)
     if claim is None:
         return Proposed(0, cost)
-    store.add_merge_proposal(rel, [b.id for b in members], claim, prompt=GROUP.ref, at=now)
+    store.part(MergeProposals).add(rel, [b.id for b in members], claim, prompt=GROUP.ref, at=now)
     return Proposed(1, cost)
 
 

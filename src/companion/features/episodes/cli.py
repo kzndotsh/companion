@@ -8,6 +8,7 @@ from pathlib import Path
 from companion.core.clock import local_zone, utc_now
 from companion.core.types import RelationshipId
 from companion.features.episodes.run import write_closed
+from companion.features.episodes.store import Episodes
 from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
@@ -15,7 +16,7 @@ from companion.store.sqlite.store import Store
 def run(db: Path, relationship: str) -> str:
     store = Store(db)
     try:
-        found = store.episodes(RelationshipId(relationship))
+        found = store.part(Episodes).all_(RelationshipId(relationship))
     finally:
         store.close()
     if not found:

@@ -7,6 +7,7 @@ from pathlib import Path
 from companion.core.extractor import Extraction
 from companion.core.types import Json, Utterance
 from companion.features.episodes.run import write_closed
+from companion.features.episodes.store import Episodes
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 
@@ -32,9 +33,9 @@ async def test_only_finished_episodes_are_written_and_never_twice(
     writer = Writer()
     done = await write_closed(store, writer, REL, T0 + timedelta(hours=5, minutes=10))
     assert done.written == 1  # the second stretch is still going
-    [e] = store.episodes(REL)
+    [e] = store.part(Episodes).all_(REL)
     assert (e.first_id, e.gist, e.kind) == ("u1", "They talked a while; it ended warm.", "everyday")
     later = await write_closed(store, writer, REL, T0 + timedelta(hours=9))
     assert later.written == 1
-    assert len(store.episodes(REL)) == 2
+    assert len(store.part(Episodes).all_(REL)) == 2
     assert (await write_closed(store, writer, REL, T0 + timedelta(hours=10))).written == 0

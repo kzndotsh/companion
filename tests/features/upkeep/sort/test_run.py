@@ -6,6 +6,7 @@ from pathlib import Path
 
 from companion.core.extractor import Extraction
 from companion.core.types import Belief, Json, Utterance
+from companion.features.upkeep.reread.store import MemoryChecks
 from companion.features.upkeep.sort.run import expire_routine, label
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
@@ -58,7 +59,8 @@ async def test_memories_kept_before_the_rule_become_questions_and_stay(
     assert (done.dropped, done.questions) == (0, 2)
     assert len(store.user_beliefs(REL)) == 3
     assert {
-        c.verdict for c in store.unanswered_checks(REL, ["ask_about_the_bot", "ask_routine"])
+        c.verdict
+        for c in store.part(MemoryChecks).unanswered(REL, ["ask_about_the_bot", "ask_routine"])
     } == {
         "ask_about_the_bot",
         "ask_routine",

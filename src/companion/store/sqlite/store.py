@@ -1,4 +1,6 @@
-"""One relationship's file, behind a handle so callers never touch sqlite3."""
+"""One relationship's file, behind a handle so callers never touch sqlite3: the ledger and the
+tables the whole system reads. A feature's own tables are a class in its `store.py`, reached with
+`part`."""
 
 from __future__ import annotations
 
@@ -9,9 +11,11 @@ import uuid
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
+from typing import Protocol
 
 from companion.core.memory_pass import PassRun
 from companion.core.prompt.prefix import Prefix
+from companion.core.reachout import ReachOut
 from companion.core.replay import TurnRecord
 from companion.core.spend import SpendEvent
 from companion.core.types import (
@@ -35,31 +39,6 @@ from companion.core.types import (
 )
 from companion.core.vectors import Vector
 from companion.core.views import ViewState, parse_mode
-from companion.features.audits.callbacks import store as callbacks
-from companion.features.audits.callbacks.logic import Check
-from companion.features.audits.invented import store as invented
-from companion.features.audits.invented.logic import Statement
-from companion.features.calendar import store as calendar
-from companion.features.episodes import store as episodes
-from companion.features.history.store import Stories
-from companion.features.intimate.store import IntimateMemory
-from companion.features.lore.logic import Kind as ViewKind
-from companion.features.lore.logic import Labelled as ViewLabel
-from companion.features.mood import store as mood
-from companion.features.mood.logic import Effect, Said
-from companion.features.promises import store as promises
-from companion.features.promises.logic import Promise
-from companion.features.promises.logic import Scope as PromiseScope
-from companion.features.promises.store import Recorded as RecordedPromise
-from companion.features.reach import store as reach
-from companion.features.reminders import store as reminders
-from companion.features.reminders.logic import Reminder, ReminderState, Series, Standing
-from companion.features.threads import store as open_loops
-from companion.features.threads.logic import Thread, ThreadState
-from companion.features.threads.store import ReachOut
-from companion.features.upkeep.context import store as contexts
-from companion.features.upkeep.merging import store as merges
-from companion.features.upkeep.reread import store as memory_checks
 from companion.store.sqlite import (
     beliefs,
     decisions,
@@ -69,9 +48,9 @@ from companion.store.sqlite import (
     labels,
     ledger,
     memory_pass,
+    reach_outs,
     settings,
     turns,
-    view_kinds,
 )
 from companion.store.sqlite.db import open_db
 
@@ -79,6 +58,12 @@ VIEWS_MODE_KEY = "views.mode"
 
 
 log = logging.getLogger("companion.store")
+
+
+class Part(Protocol):
+    """A feature's own queries, built from the connection: a class in its `store.py`."""
+
+    def __init__(self, conn: sqlite3.Connection) -> None: ...
 
 
 class Store:
@@ -89,6 +74,11 @@ class Store:
     def close(self) -> None:
         self._conn.close()
 
+    def part[P: Part](self, cls: type[P]) -> P:
+        """A feature's queries over this file: `store.part(Stories)`. The store holds the ledger
+        and the tables the whole system reads; each feature's tables are its own class."""
+        return cls(self._conn)
+
     def append_utterance(self, u: Utterance) -> None:
         ledger.append_utterance(self._conn, u)
 
@@ -98,19 +88,12 @@ class Store:
         """Leave a reply the user never received out of what the model reads, and log it."""
         marked = ledger.mark_undelivered(self._conn, rel, text, reason, now)
         if marked is not None:
-            decisions.append_decision(
-                self._conn,
-                Decision(
-                    DecisionId(uuid.uuid4().hex),
-                    rel,
-                    marked.turn_id,
-                    TraceId(marked.turn_id),
-                    DecisionKind.POLICY,
-                    "reply not delivered, so it is left out of what the model reads",
-                    now,
-                    detail={"utterance_id": marked.id, "cause": reason},
-                    key="reply not delivered",
-                ),
+            self._policy(
+                marked,
+                "reply not delivered, so it is left out of what the model reads",
+                "reply not delivered",
+                {"utterance_id": marked.id, "cause": reason},
+                now,
             )
         return marked
 
@@ -125,21 +108,32 @@ class Store:
             return None
         seen = dataclasses.replace(marked, id=UtteranceId(uuid.uuid4().hex), text=delivered)
         ledger.append_utterance(self._conn, seen)
+        self._policy(
+            marked,
+            "reply partly delivered, so the model reads only the part that arrived",
+            "reply partly delivered",
+            {"utterance_id": marked.id, "kept_as": seen.id, "cause": reason},
+            now,
+        )
+        return seen
+
+    def _policy(
+        self, about: Utterance, reason: str, key: str, detail: dict[str, Json], at: datetime
+    ) -> None:
         decisions.append_decision(
             self._conn,
             Decision(
                 DecisionId(uuid.uuid4().hex),
-                rel,
-                marked.turn_id,
-                TraceId(marked.turn_id),
+                about.relationship_id,
+                about.turn_id,
+                TraceId(about.turn_id),
                 DecisionKind.POLICY,
-                "reply partly delivered, so the model reads only the part that arrived",
-                now,
-                detail={"utterance_id": marked.id, "kept_as": seen.id, "cause": reason},
-                key="reply partly delivered",
+                reason,
+                at,
+                detail=detail,
+                key=key,
             ),
         )
-        return seen
 
     def history_before(self, rel: RelationshipId, before: datetime, limit: int) -> list[Utterance]:
         return ledger.history_before(self._conn, rel, before, limit)
@@ -233,63 +227,12 @@ class Store:
     def record_spend(self, rel: RelationshipId, event: SpendEvent, at: datetime) -> None:
         settings.record_spend(self._conn, rel, event, at)
 
-    def add_open_loop(self, loop: Thread) -> None:
-        open_loops.add_loop(self._conn, loop)
-        log.debug("open loop recorded: %s (follow up %s)", loop.claim, loop.follow_up_at)
-
-    def open_loop_event(self, loop_id: str, state: ThreadState, reason: str, at: datetime) -> None:
-        open_loops.add_event(self._conn, loop_id, state, reason, at)
-
-    def loop_events_with_reason(self, rel: RelationshipId, reason: str) -> dict[str, int]:
-        return open_loops.events_with_reason(self._conn, rel, reason)
-
-    def record_loop_run(
-        self,
-        rel: RelationshipId,
-        upto: tuple[datetime, UtteranceId],
-        *,
-        ok: bool,
-        reason: str,
-        at: datetime,
-    ) -> None:
-        open_loops.record_loop_run(self._conn, rel, upto, ok=ok, reason=reason, at=at)
-
-    def loop_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
-        return open_loops.loop_cursor(self._conn, rel)
-
-    def loop_failed_tries(self, rel: RelationshipId, upto_id: UtteranceId) -> int:
-        return open_loops.failed_tries(self._conn, rel, upto_id)
-
-    def open_loops(self, rel: RelationshipId) -> list[Thread]:
-        return open_loops.loops(self._conn, rel)
-
     def add_reach_out(self, r: ReachOut) -> None:
-        open_loops.add_reach_out(self._conn, r)
+        reach_outs.add(self._conn, r)
 
     def reach_outs(self, rel: RelationshipId, since: datetime | None = None) -> list[ReachOut]:
-        return open_loops.reach_outs_since(self._conn, rel, since)
-
-    def add_own_reach_out(self, r: reach.Own) -> None:
-        reach.add(self._conn, r)
-
-    def own_reach_outs(self, rel: RelationshipId, since: datetime | None = None) -> list[reach.Own]:
-        return reach.since(self._conn, rel, since)
-
-    def callbacks_unchecked(
-        self, rel: RelationshipId, since: datetime
-    ) -> list[callbacks.Unchecked]:
-        return callbacks.unchecked(self._conn, rel, since)
-
-    def add_callback_check(  # noqa: PLR0913, PLR0917
-        self,
-        rel: RelationshipId,
-        turn: TurnId,
-        check: Check,
-        judge: str,
-        prompt: str,
-        at: datetime,
-    ) -> None:
-        callbacks.add(self._conn, rel, turn, check, judge, prompt, at)
+        """The reach-outs about a plan. Its own reach-outs are `part(Reaches)`."""
+        return reach_outs.since(self._conn, rel, since)
 
     def reply_text(self, rel: RelationshipId, turn: TurnId) -> str:
         row = self._conn.execute(
@@ -298,153 +241,6 @@ class Store:
             (rel, turn),
         ).fetchone()
         return str(row["text"]) if row else ""
-
-    def add_memory_check(  # noqa: PLR0913
-        self,
-        rel: RelationshipId,
-        belief_id: BeliefId,
-        other_id: BeliefId | None,
-        reads: Sequence[str | None],
-        verdict: str,
-        *,
-        prompt: str,
-        at: datetime,
-    ) -> int:
-        return memory_checks.add(
-            self._conn, rel, belief_id, other_id, reads=reads, verdict=verdict, prompt=prompt, at=at
-        )
-
-    def checked_memories(
-        self, rel: RelationshipId, names: Sequence[str], version: str | None = None
-    ) -> set[BeliefId]:
-        return memory_checks.checked(self._conn, rel, names, version)
-
-    def unanswered_checks(
-        self, rel: RelationshipId, verdicts: Sequence[str]
-    ) -> list[memory_checks.MemoryCheck]:
-        return memory_checks.unanswered(self._conn, rel, verdicts)
-
-    def answer_check(self, check_id: int, said: str, at: datetime) -> None:
-        memory_checks.answer(self._conn, check_id, said, at)
-
-    def add_merge_proposal(
-        self,
-        rel: RelationshipId,
-        members: Sequence[BeliefId],
-        claim: str,
-        *,
-        prompt: str,
-        at: datetime,
-    ) -> int:
-        return merges.add(self._conn, rel, members, claim, prompt, at)
-
-    def add_belief_context(
-        self, rel: RelationshipId, belief_id: BeliefId, context: str, *, prompt: str, at: datetime
-    ) -> None:
-        contexts.add(self._conn, rel, belief_id, context, prompt, at)
-
-    def belief_contexts(self, rel: RelationshipId) -> dict[BeliefId, str]:
-        return contexts.latest(self._conn, rel)
-
-    def add_episode(self, rel: RelationshipId, e: episodes.Episode) -> None:
-        episodes.add(self._conn, rel, e)
-
-    def episodes(self, rel: RelationshipId) -> list[episodes.Episode]:
-        return episodes.all_(self._conn, rel)
-
-    def merge_proposals(self, rel: RelationshipId) -> list[merges.Proposal]:
-        return merges.all_(self._conn, rel)
-
-    def answer_merge(self, proposal_id: int, said: str, at: datetime) -> None:
-        merges.answer(self._conn, proposal_id, said, at)
-
-    def add_view_kinds(
-        self,
-        rel: RelationshipId,
-        labels: Sequence[ViewLabel],
-        *,
-        model: str,
-        prompt: str,
-        at: datetime,
-    ) -> None:
-        view_kinds.add(self._conn, rel, labels, model=model, prompt=prompt, at=at)
-
-    def view_kinds(self, rel: RelationshipId) -> dict[BeliefId, ViewKind]:
-        return view_kinds.kinds(self._conn, rel)
-
-    def invented_unchecked(self, rel: RelationshipId, since: datetime) -> list[invented.Unchecked]:
-        return invented.unchecked(self._conn, rel, since)
-
-    def add_invented_check(  # noqa: PLR0913
-        self,
-        rel: RelationshipId,
-        turn: TurnId,
-        statements: list[Statement],
-        *,
-        judge: str,
-        prompt: str,
-        at: datetime,
-    ) -> None:
-        invented.add(self._conn, rel, turn, statements, judge=judge, prompt=prompt, at=at)
-
-    def invented_candidates(self, rel: RelationshipId, start: datetime) -> list[dict[str, object]]:
-        return invented.candidates(self._conn, rel, start)
-
-    def invented_since(
-        self, rel: RelationshipId, start: datetime
-    ) -> list[tuple[str, list[Statement]]]:
-        return invented.since(self._conn, rel, start)
-
-    def add_reminder(self, r: Reminder) -> None:
-        reminders.add(self._conn, r)
-
-    def reminder_event(
-        self, reminder_id: str, state: ReminderState, reason: str, at: datetime
-    ) -> None:
-        reminders.event(self._conn, reminder_id, state, reason, at)
-
-    def claim_reminder(self, reminder_id: str, at: datetime) -> bool:
-        return reminders.claim(self._conn, reminder_id, at)
-
-    def reminders(self, rel: RelationshipId) -> list[Reminder]:
-        return reminders.all_(self._conn, rel)
-
-    def add_occurrence(self, r: Reminder) -> bool:
-        return reminders.add_occurrence(self._conn, r)
-
-    def add_series(self, s: Series) -> None:
-        reminders.add_series(self._conn, s)
-
-    def series_event(self, series_id: str, state: Standing, reason: str, at: datetime) -> None:
-        reminders.series_event(self._conn, series_id, state, reason, at)
-
-    def series(self, rel: RelationshipId) -> list[Series]:
-        return reminders.all_series(self._conn, rel)
-
-    def their_times(self, rel: RelationshipId, since: datetime) -> list[datetime]:
-        return reminders.their_times(self._conn, rel, since)
-
-    def stories(self) -> Stories:
-        """Its own history's stories (ADR 0025)."""
-        return Stories(self._conn)
-
-    def intimate_memory(self) -> IntimateMemory:
-        """The intimate scene lane (ADR 0026)."""
-        return IntimateMemory(self._conn)
-
-    def add_promise(self, p: Promise, *, model: str, prompt: str, at: datetime) -> None:
-        promises.add(self._conn, p, model=model, prompt=prompt, at=at)
-
-    def mark_promise(self, promise_id: str, mark: str, reason: str, at: datetime) -> None:
-        promises.mark(self._conn, promise_id, mark, reason, at)
-
-    def set_promise_scope(
-        self, promise_id: str, scope: PromiseScope, by: str, at: datetime
-    ) -> None:
-        promises.set_scope(self._conn, promise_id, scope, by, at)
-
-    def promises(self, rel: RelationshipId) -> list[RecordedPromise]:
-        return promises.recorded(self._conn, rel)
 
     def add_belief_labels(
         self, rel: RelationshipId, found: Sequence[Label], model: str, prompt: str, at: datetime
@@ -462,23 +258,6 @@ class Store:
     def belief_embeddings(self, rel: RelationshipId, model: str) -> dict[BeliefId, Vector]:
         return embeddings.latest(self._conn, rel, model)
 
-    def add_mood_effects(self, rel: RelationshipId, effects: Sequence[Effect]) -> None:
-        mood.add(self._conn, rel, effects)
-
-    def mood_effects_since(self, rel: RelationshipId, start: datetime) -> list[Effect]:
-        return mood.since(self._conn, rel, start)
-
-    def said_since(self, rel: RelationshipId, start: datetime) -> list[Said]:
-        return mood.said_since(self._conn, rel, start)
-
-    def times_since(self, rel: RelationshipId, start: datetime) -> list[datetime]:
-        return mood.times_since(self._conn, rel, start)
-
-    def callback_checks_since(
-        self, rel: RelationshipId, start: datetime
-    ) -> list[tuple[TurnId, Check]]:
-        return callbacks.since(self._conn, rel, start)
-
     def spend_since(
         self, rel: RelationshipId, since: datetime
     ) -> list[tuple[str, str, int, float]]:
@@ -486,14 +265,6 @@ class Store:
 
     def turns_since_reaction(self, rel: RelationshipId) -> int | None:
         return decisions.turns_since_reaction(self._conn, rel)
-
-    def first_message_at(self, rel: RelationshipId) -> datetime | None:
-        return calendar.first_message(self._conn, rel)
-
-    def calendar_offered(
-        self, rel: RelationshipId, since: datetime
-    ) -> list[tuple[datetime, dict[str, Json]]]:
-        return calendar.offered_since(self._conn, rel, since)
 
     def decided_since(self, rel: RelationshipId, reason: str, since: datetime) -> bool:
         return decisions.decided_since(self._conn, rel, reason, since)

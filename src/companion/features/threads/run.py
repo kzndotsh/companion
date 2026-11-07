@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
-from companion.core.reachout import DRAFT_SCHEMA, Held, checked, draft_text, parse_draft
+from companion.core.reachout import DRAFT_SCHEMA, Held, ReachOut, checked, draft_text, parse_draft
 from companion.core.turn.mentions import MentionCandidate, Rank
 from companion.core.types import (
     DecisionKind,
@@ -47,7 +47,7 @@ from companion.features.threads.logic import (
     to_loop,
     to_resolution,
 )
-from companion.features.threads.store import ReachOut
+from companion.features.threads.store import Threads
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.features import Feature
 from companion.kit.record import Recorder, new_id
@@ -93,7 +93,7 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
     """Record the open loops in the targeted messages, and close the ones they settle. None when
     the call itself failed, so the caller can keep the batch for another try."""
     now, tz = when
-    labels = loop_labels(store.open_loops(rel))
+    labels = loop_labels(store.part(Threads).loops(rel))
     prompt = build_user_prompt(window, targets, {}, tz) + render_open_loops(labels)
     result = await ask(extractor, LOOPS, prompt)
     if result is None:
@@ -102,7 +102,7 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
     if raw is None:
         note("open loops: the answer was malformed and was ignored", {"model": result.model})
         return LoopCounts(cost_usd=result.cost_usd)
-    known = {normalise(lp.claim) for lp in store.open_loops(rel)}
+    known = {normalise(lp.claim) for lp in store.part(Threads).loops(rel)}
     made = Making(rel, now, tz, new_id, loose=loose)
     stored = rejected = 0
     earlier: dict[str, str] = {}
@@ -120,7 +120,7 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
             rejected += 1
             note("open loop rejected: already recorded", {"claim": outcome.claim})
         else:
-            store.add_open_loop(outcome)
+            store.part(Threads).add_loop(outcome)
             known.add(normalise(outcome.claim))
             stored += 1
             note(
@@ -164,7 +164,9 @@ def _close_resolved(  # noqa: PLR0913, PLR0917
         if loop.id in closed:
             continue
         closed.add(loop.id)
-        store.open_loop_event(loop.id, ThreadState.RESOLVED, f"they brought it up: {quote!r}", now)
+        store.part(Threads).add_event(
+            loop.id, ThreadState.RESOLVED, f"they brought it up: {quote!r}", now
+        )
         note(
             f"open loop closed, they brought it up themselves: {loop.claim}",
             {"loop_id": loop.id, "quote": quote, "prompt": PROMPT.ref},
@@ -201,10 +203,10 @@ async def tick(  # noqa: PLR0913, PLR0917
     dropped = {
         str((d.detail or {}).get("loop_id")) for d in store.decisions_with_key(rel, DRAFT_DROPPED)
     }
-    loops = [lp for lp in store.open_loops(rel) if lp.id not in dropped]
+    loops = [lp for lp in store.part(Threads).loops(rel) if lp.id not in dropped]
     verdict = evaluate(loops, now, tz, held.why if held else None)
     for lp in verdict.expired:
-        store.open_loop_event(lp.id, ThreadState.EXPIRED, "past its follow-up horizon", now)
+        store.part(Threads).add_event(lp.id, ThreadState.EXPIRED, "past its follow-up horizon", now)
         Recorder.fresh(store, rel, now).decide(
             "open loop expired", {"loop_id": lp.id}, reason=f"open loop expired: {lp.claim}"
         )
@@ -235,7 +237,9 @@ async def tick(  # noqa: PLR0913, PLR0917
     store.add_reach_out(
         ReachOut(new_id(), rel, verdict.loop.id, "shadow", text, verdict.reason, now)
     )
-    store.open_loop_event(verdict.loop.id, ThreadState.ASKED, "shadow reach-out, not sent", now)
+    store.part(Threads).add_event(
+        verdict.loop.id, ThreadState.ASKED, "shadow reach-out, not sent", now
+    )
     detail["draft"] = text
     Recorder.fresh(store, rel, now).decide(
         "shadow, would send",
@@ -314,7 +318,7 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
     now = when[0]
     total = LoopCounts()
     for _ in range(reading.batches):
-        batch = store.utterances_after(rel, store.loop_cursor(rel), reading.batch)
+        batch = store.utterances_after(rel, store.part(Threads).loop_cursor(rel), reading.batch)
         if not batch:
             break
         upto = (batch[-1].at, batch[-1].id)
@@ -322,7 +326,9 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
         mine = {u.id for u in batch if u.speaker is Speaker.COMPANION}
         own: set[UtteranceId] = mine if reading.promises is not None else set()
         if not targets and not own:
-            store.record_loop_run(rel, upto, ok=True, reason="none of their messages", at=now)
+            store.part(Threads).record_loop_run(
+                rel, upto, ok=True, reason="none of their messages", at=now
+            )
             continue
         window = index_window([*store.history_before(rel, batch[0].at, reading.context), *batch])
         counts = (
@@ -338,16 +344,18 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
             else 0.0
         )
         if counts is not None and spent is not None:
-            store.record_loop_run(rel, upto, ok=True, reason="read", at=now)
+            store.part(Threads).record_loop_run(rel, upto, ok=True, reason="read", at=now)
             total = _add(total, replace(counts, cost_usd=counts.cost_usd + spent))
             continue
-        tries = store.loop_failed_tries(rel, upto[1]) + 1
+        tries = store.part(Threads).failed_tries(rel, upto[1]) + 1
         if tries >= MAX_TRIES:
             reason = f"open loops: gave up on a batch after {tries} failed tries"
-            store.record_loop_run(rel, upto, ok=True, reason=reason, at=now)
+            store.part(Threads).record_loop_run(rel, upto, ok=True, reason=reason, at=now)
             note(reason, {"messages": len(batch), "upto": upto[1]})
             continue
-        store.record_loop_run(rel, upto, ok=False, reason=f"failed try {tries}", at=now)
+        store.part(Threads).record_loop_run(
+            rel, upto, ok=False, reason=f"failed try {tries}", at=now
+        )
         break
     return total
 
@@ -376,8 +384,8 @@ def loop_candidate(m: Moment, found: object) -> MentionCandidate | None:
     never also a reach-out."""
     del found
     c, t = m.c, m.t
-    offers = c.store.loop_events_with_reason(c.rel, LOOP_OFFERED)
-    loop = pick_note(c.store.open_loops(c.rel), offers, t.now, local_zone())
+    offers = c.store.part(Threads).events_with_reason(c.rel, LOOP_OFFERED)
+    loop = pick_note(c.store.part(Threads).loops(c.rel), offers, t.now, local_zone())
     note = loop_note(loop) if loop is not None else ""
     if loop is None or not note:
         return None
@@ -389,7 +397,7 @@ def loop_candidate(m: Moment, found: object) -> MentionCandidate | None:
         "note": loop_note_ref(loop),
     }
     asked = functools.partial(
-        c.store.open_loop_event, loop.id, ThreadState.ASKED, LOOP_OFFERED, t.now
+        c.store.part(Threads).add_event, loop.id, ThreadState.ASKED, LOOP_OFFERED, t.now
     )
     return MentionCandidate(
         _RANK[loop.kind], note, False, LOOP_OFFERED, loop.claim, detail, write=asked

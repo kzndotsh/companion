@@ -23,6 +23,7 @@ from companion.features.lore.logic import (
     parse,
     prompt,
 )
+from companion.features.lore.store import ViewKinds
 from companion.kit.current import Heard, Turn, decide, is_casual
 from companion.kit.embed import embed_within
 from companion.kit.features import Feature, Offer, Offered
@@ -58,7 +59,7 @@ async def label_views(  # noqa: PLR0913
     cost = 0.0
     redo = {b.id for b in store.self_beliefs(rel)} if again else set[BeliefId]()
     for _ in range(batches):
-        have = store.view_kinds(rel)
+        have = store.part(ViewKinds).kinds(rel)
         todo = [b for b in store.self_beliefs(rel) if b.id in redo or b.id not in have][:BATCH]
         if not todo:
             break
@@ -78,9 +79,9 @@ async def label_views(  # noqa: PLR0913
             log.warning("view kinds: a read failed; the batch waits for the next pass")
             break
         found = agreed(got.values, refs.values())
-        store.add_view_kinds(rel, found, model=got.model, prompt=PROMPT.ref, at=now)
+        store.part(ViewKinds).add(rel, found, model=got.model, prompt=PROMPT.ref, at=now)
         done += len(found)
-    have = store.view_kinds(rel)
+    have = store.part(ViewKinds).kinds(rel)
     left = sum(b.id not in have for b in store.self_beliefs(rel))
     log.debug("view kinds: %d labelled, %d left, $%.4f", done, left, cost)
     return KindsRead(done, left, cost)
@@ -105,7 +106,7 @@ async def nearest_tastes(  # noqa: PLR0913, PLR0917
 ) -> Nearest | None:
     """Its tastes nearest their message, at most SHOWN and none below GATE, embedding any taste that
     has no vector yet in the same call. None when the call failed or was slow."""
-    tastes = lore(store.self_beliefs(rel), store.view_kinds(rel))
+    tastes = lore(store.self_beliefs(rel), store.part(ViewKinds).kinds(rel))
     if not tastes:
         return Nearest((), 0.0)
     have = store.belief_embeddings(rel, model)

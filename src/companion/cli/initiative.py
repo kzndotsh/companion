@@ -16,6 +16,7 @@ from companion.core.types import RelationshipId
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.run import resume as resume_reach
 from companion.features.threads.run import HELD
+from companion.features.threads.store import Threads
 from companion.settings import REACH, Settings
 from companion.store.sqlite.store import Store
 
@@ -25,7 +26,7 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
     store = Store(db)
     rel = RelationshipId(relationship)
     try:
-        loops = store.open_loops(rel)
+        loops = store.part(Threads).loops(rel)
         reach = store.reach_outs(rel)
         held = store.decisions_with_key(rel, HELD)
         said = from_decisions(store.decisions_with_key(rel, NOW_KEY))

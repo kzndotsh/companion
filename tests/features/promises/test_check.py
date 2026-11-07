@@ -20,6 +20,7 @@ from companion.core.types import (
 )
 from companion.features.promises.logic import Check, Kind, Promise, Scope, check_input, read_check
 from companion.features.promises.run import KEPT, WOULD_REDRAW, WOULD_RETIRE
+from companion.features.promises.store import Promises
 from companion.kit.beside import settled
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -76,7 +77,7 @@ def store(tmp_path: Path) -> Store:
         "coffee",
         said.at,
     )
-    s.add_promise(promise, model="m", prompt="system/promise-read@v1", at=said.at)
+    s.part(Promises).add(promise, model="m", prompt="system/promise-read@v1", at=said.at)
     return s
 
 
@@ -108,7 +109,9 @@ async def test_a_released_promise_is_logged_as_one_it_would_retire(store: Store)
     await _turn(store, Judge({"broken": "none", "released": ["p1"], "why": "they asked"}))
     (retire,) = store.decisions_with_key(REL, WOULD_RETIRE)
     assert (retire.detail or {}).get("promise_id") == "p-coffee"
-    assert [r.mark for r in store.promises(REL)] == [None]  # shadow: nothing is retired
+    assert [r.mark for r in store.part(Promises).recorded(REL)] == [
+        None
+    ]  # shadow: nothing is retired
 
 
 async def test_off_or_no_promises_or_an_unreadable_answer_logs_nothing(store: Store) -> None:
@@ -144,8 +147,8 @@ def test_the_input_labels_each_promise_and_ends_with_the_reply() -> None:
 
 
 async def test_a_moment_promise_is_not_checked_once_its_week_is_over(store: Store) -> None:
-    (only,) = store.promises(REL)
-    store.set_promise_scope(only.promise.id, Scope.MOMENT, "owner", NOW)
+    (only,) = store.part(Promises).recorded(REL)
+    store.part(Promises).set_scope(only.promise.id, Scope.MOMENT, "owner", NOW)
     judge = Judge({"broken": "p1", "released": [], "why": "x"})
     later = make_runtime(store, Talker(), PREFIX, REL, judge=judge, promises="shadow")
     await handle(later, "morning", "test", NOW + timedelta(days=7))

@@ -25,7 +25,7 @@ projects, and their words almost never.
 |---|---|
 | `logic.py` | pure: reading and limiting the note (`MAX_WORDS`) |
 | `run.py` | effects: writing the notes (`write_missing`), the `Feature` (`CONTEXT`) |
-| `store.py` | its queries (the tables are in `store/sqlite/migrations/`) |
+| `store.py` | its queries as `BeliefContexts` (`Store.part(BeliefContexts)`) (the tables are in `store/sqlite/migrations/`) |
 | `cli.py` | `companion memory context`: write the notes every memory wants (`write_now`) |
 
 ## Prompts

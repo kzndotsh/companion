@@ -12,9 +12,9 @@ from companion.core.clock import utc_now
 from companion.core.sensitivity import GUARDED_AT
 from companion.core.types import Belief, BeliefId, RelationshipId
 from companion.features.upkeep.merging.logic import NOTE, PICK, merged_kind
-from companion.features.upkeep.merging.store import Proposal
+from companion.features.upkeep.merging.store import MergeProposals, Proposal
 from companion.features.upkeep.reread.logic import ASK_RULE, Label, Relation
-from companion.features.upkeep.reread.store import MemoryCheck
+from companion.features.upkeep.reread.store import MemoryCheck, MemoryChecks
 from companion.features.upkeep.sort.logic import ASK_ABOUT_THE_BOT, ASK_ROUTINE
 from companion.features.upkeep.sort.logic import ASKED as WORTH_ASKED
 from companion.features.upkeep.sort.logic import Label as Worth
@@ -51,16 +51,18 @@ def _pending(
 ) -> list[MemoryCheck | Proposal]:
     """Merges first, then the checks. A conflict between two memories that a pending merge would
     join is held back: pieces of one moment read as a contradiction when apart."""
-    merges = [p for p in store.merge_proposals(rel) if _open(p)]
+    merges = [p for p in store.part(MergeProposals).all_(rel) if _open(p)]
     joined = [set(p.members) for p in merges]
     singles = [
-        c for c in store.unanswered_checks(rel, [*ASKED, *WORTH_ASKED]) if c.other_id is None
+        c
+        for c in store.part(MemoryChecks).unanswered(rel, [*ASKED, *WORTH_ASKED])
+        if c.other_id is None
     ]
     # a passing moment is asked about only when sensitive; the rest close on their own
     singles = [c for c in singles if c.verdict != Label.PASSING or _held(current, c.belief_id)]
     pairs = [
         c
-        for c in store.unanswered_checks(rel, list(CONFLICT))
+        for c in store.part(MemoryChecks).unanswered(rel, list(CONFLICT))
         if c.other_id is not None and not any({c.belief_id, c.other_id} <= j for j in joined)
     ]
     return [*merges, *sorted(singles + pairs, key=lambda c: c.id)]
@@ -98,19 +100,19 @@ def _merge_answer(  # noqa: PLR0911, PLR0913
     """Act on one answer to a merge question; None when it was skipped or not understood."""
     members = [current[m] for m in p.members]
     if choice == "a":
-        store.answer_merge(p.id, "apart", now)
+        store.part(MergeProposals).answer(p.id, "apart", now)
         return f"kept apart  {len(members)} memories"
     if choice == "n":
         why = " ".join(ask("  why? ").split())
         if not why:
             return None
-        store.answer_merge(p.id, NOTE + why, now)
+        store.part(MergeProposals).answer(p.id, NOTE + why, now)
         return f"noted      {why}"
     if choice == "p":
         which = picked(ask("  which belong together (for example 1 2 4)? "), len(members))
         if which is None:
             return None
-        store.answer_merge(p.id, PICK + " ".join(str(n + 1) for n in which), now)
+        store.part(MergeProposals).answer(p.id, PICK + " ".join(str(n + 1) for n in which), now)
         return "picked     a new wording for those is proposed at the next grouping"
     if choice == "w":
         claim = " ".join(ask("  your wording: ").split())
@@ -125,14 +127,14 @@ def _merge_answer(  # noqa: PLR0911, PLR0913
             kind=merged_kind(members),
             why="worded by the owner",
         )
-        store.answer_merge(p.id, "worded", now)
+        store.part(MergeProposals).answer(p.id, "worded", now)
         return done
     if choice != "m":
         return None
     done = merge(
         store, rel, list(p.members), p.claim, now, kind=merged_kind(members), why="the owner agreed"
     )
-    store.answer_merge(p.id, "merged", now)
+    store.part(MergeProposals).answer(p.id, "merged", now)
     return done
 
 
@@ -170,21 +172,21 @@ def _answer(  # noqa: PLR0913
     if check.other_id is None:
         if choice == "r":
             retire(store, rel, first.id, f"{why}; the owner said retire", now)
-            store.answer_check(check.id, "retire", now)
+            store.part(MemoryChecks).answer(check.id, "retire", now)
             return f"retired  {first.claim}"
         if choice == "k":
-            store.answer_check(check.id, "keep", now)
+            store.part(MemoryChecks).answer(check.id, "keep", now)
             return f"kept     {first.claim}"
         return None
     second = current[check.other_id]
     if choice == "b":
-        store.answer_check(check.id, "both", now)
+        store.part(MemoryChecks).answer(check.id, "both", now)
         return f"kept both  {first.claim}\n           {second.claim}"
     if choice not in ("1", "2"):
         return None
     keep, drop = (first, second) if choice == "1" else (second, first)
     retire(store, rel, drop.id, f"{why}; the owner kept {keep.id[:8]}", now)
-    store.answer_check(check.id, f"keep {choice}", now)
+    store.part(MemoryChecks).answer(check.id, f"keep {choice}", now)
     return f"kept     {keep.claim}\nretired  {drop.claim}"
 
 
@@ -209,9 +211,9 @@ def review(
             question = _merge_question(item, current) if is_merge else _question(item, current)
             if question is None:
                 if isinstance(item, Proposal):
-                    store.answer_merge(item.id, "gone", now)
+                    store.part(MergeProposals).answer(item.id, "gone", now)
                 else:
-                    store.answer_check(item.id, "gone", now)
+                    store.part(MemoryChecks).answer(item.id, "gone", now)
                 answered += 1
                 continue
             choice = ask(question).strip().lower()[:1]

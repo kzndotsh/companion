@@ -10,6 +10,7 @@ from companion.core.types import TurnId
 from companion.features.reminders import cli
 from companion.features.reminders.logic import Kind, Part, Repeat, Series, Standing
 from companion.features.reminders.run import schedule
+from companion.features.reminders.store import Reminders
 from companion.store.sqlite.store import Store
 from tests.features.reminders.test_run import Writer
 from tests.runtime import make_runtime
@@ -29,7 +30,7 @@ def db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         ("bbbb2222", Kind.REMINDER, "take my meds", Repeat(4, time(20))),
     ):
         s = Series(sid, REL, kind, thing, "q", repeat, "America/New_York", TurnId("t"), SET_AT)
-        store.add_series(s)
+        store.part(Reminders).add_series(s)
         schedule(make_runtime(store, Writer(), PREFIX, REL), s, SET_AT, TZ)
     store.close()
     return path
@@ -48,9 +49,9 @@ def test_cancel_by_a_series_prefix_stops_it_and_its_pending_one(db: Path) -> Non
     assert cli.run(db, REL, cancel="bbbb") == "stopped: take my meds, every Friday at 8:00 pm\n"
     store = Store(db)
     try:
-        states = {s.id: s.state for s in store.series(REL)}
+        states = {s.id: s.state for s in store.part(Reminders).all_series(REL)}
         assert states == {"aaaa1111": Standing.ACTIVE, "bbbb2222": Standing.STOPPED}
-        assert {r.thing: r.state for r in store.reminders(REL)} == {
+        assert {r.thing: r.state for r in store.part(Reminders).all_(REL)} == {
             "good morning": "pending",
             "take my meds": "cancelled",
         }

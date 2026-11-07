@@ -8,6 +8,7 @@ from companion.core.types import Belief, Subject, Utterance
 from companion.core.vectors import Embedded, unit
 from companion.features.lore.logic import Kind, Labelled
 from companion.features.lore.run import nearest_tastes
+from companion.features.lore.store import ViewKinds
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 
@@ -38,7 +39,7 @@ def test_only_tastes_near_their_message_are_found_and_vectors_are_kept(
     }
     for bid, (claim, _) in views.items():
         store.insert_belief(belief(bid=bid, subject=Subject.SELF, claim=claim, utterance_id="u1"))
-    store.add_view_kinds(
+    store.part(ViewKinds).add(
         REL,
         [Labelled(belief(bid=b).id, k) for b, (_, k) in views.items()],
         model="m",

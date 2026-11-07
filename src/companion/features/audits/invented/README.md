@@ -21,7 +21,7 @@ Measures how often a reply states something about the person that neither the co
 |---|---|
 | `logic.py` | pure: the judge's prompt and schema (`PROMPT`, `SCHEMA`), `build_prompt`, `parse` (which statements count), `invented`, `report` |
 | `run.py` | effects: judging new replies within a spend cap, each turn once (`check_new`) |
-| `store.py` | its queries: `invented_checks` (tables in `store/sqlite/migrations/0025_invented_checks.sql`), `RECENT` |
+| `store.py` | its queries as `InventedChecks` (`Store.part(InventedChecks)`): `invented_checks` (tables in `store/sqlite/migrations/0025_invented_checks.sql`), `RECENT` |
 | `cli.py` | `companion audit invented`: judge recent replies within a cap, then print the report (`judge_now`) |
 
 ## Prompts

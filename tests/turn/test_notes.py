@@ -13,7 +13,7 @@ from companion.core.turn.quoted import Quoted
 from companion.core.types import Severity, Speaker
 from companion.features.curiosity.basics.logic import ASKED as ASKED_NAME
 from companion.features.episodes.run import EPISODES_SHOWN
-from companion.features.episodes.store import Episode
+from companion.features.episodes.store import Episode, Episodes
 from companion.features.flow.questions.logic import GAME_NOTE, RUN
 from companion.features.flow.questions.logic import RUN_NOTE as QUESTION_NOTE
 from companion.features.reminders.run import ASKED, SET, Read, reminder_offer
@@ -193,7 +193,7 @@ async def test_recent_times_reach_the_talker_only_when_on_and_the_log_says_which
     await handle(make_runtime(store, Talker(), PREFIX, REL, judge=Judge()), "hey", "t", NOW)
     [first, last] = store.history_before(REL, NOW + timedelta(hours=1), 4)
     gist = "A quiet chat that ended warm."
-    store.add_episode(
+    store.part(Episodes).add(
         REL,
         Episode(
             "e1",

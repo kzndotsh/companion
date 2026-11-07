@@ -18,6 +18,7 @@ from companion.core.recall import RECENT, recall_note
 from companion.core.spend import purpose
 from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Severity, Speaker
 from companion.core.vectors import Embedder, nearest
+from companion.features.intimate.store import IntimateMemory
 from companion.features.recall.logic import GATE as RELEVANCE_GATE
 from companion.features.recall.logic import LIVE as RELEVANCE_LIVE
 from companion.features.recall.logic import PROMPT, SCHEMA, build_prompt, eligible, extras, parse
@@ -172,7 +173,9 @@ async def shadow(  # noqa: PLR0913
 
 def _hidden(c: Runtime) -> frozenset[BeliefId]:
     """The intimate lane, left out of the look-up when the scene memory is on (ADR 0026)."""
-    return c.store.intimate_memory().intimate(c.rel) if c.intimate_memory == "on" else frozenset()
+    return (
+        c.store.part(IntimateMemory).intimate(c.rel) if c.intimate_memory == "on" else frozenset()
+    )
 
 
 RELEVANT_NOTE = get("notes/relevant")

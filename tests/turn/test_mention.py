@@ -20,6 +20,7 @@ from companion.core.types import (
 from companion.features.calendar.logic import OFFERED
 from companion.features.threads.logic import Thread, ThreadKind
 from companion.features.threads.run import LOOP_OFFERED
+from companion.features.threads.store import Threads
 from companion.kit.current import Turn
 from companion.kit.features import Lookups, Moment, Offer
 from companion.kit.record import Recorder
@@ -56,7 +57,7 @@ def _turn(store: Store, minutes: int) -> tuple[str, ...]:
 def _thread(store: Store, kind: ThreadKind, due_hours: int = 0) -> None:
     said = store.history_before(REL, HALLOWEEN, 1)[0]
     due = HALLOWEEN - timedelta(hours=due_hours)
-    store.add_open_loop(
+    store.part(Threads).add_loop(
         Thread(
             kind.value,
             REL,

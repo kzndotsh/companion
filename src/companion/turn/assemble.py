@@ -42,6 +42,7 @@ from companion.core.types import (
 from companion.core.views import ViewState, card_views
 from companion.features.focus.run import FOCUS
 from companion.features.intimate.run import SCENE, intimate_lane
+from companion.features.upkeep.context.store import BeliefContexts
 from companion.kit.current import Heard, Turn, decide, mark
 from companion.kit.features import Lookups, Moment
 from companion.kit.record import Recorder
@@ -173,7 +174,7 @@ def assemble(  # noqa: PLR0913
     assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
     sharing = heard is not None and heard[0].severity >= Severity.EVERYDAY
     labels = store.belief_labels(c.rel)
-    support, contexts = store.last_support(c.rel), store.belief_contexts(c.rel)
+    support, contexts = store.last_support(c.rel), store.part(BeliefContexts).latest(c.rel)
     found = looked.found.get(FOCUS.name)
     focus = found if isinstance(found, Focus) else None
 

@@ -46,6 +46,7 @@ from companion.features.intimate.run import (
     pass_step,
     read_scenes,
 )
+from companion.features.intimate.store import IntimateMemory
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
@@ -179,7 +180,7 @@ async def test_three_reads_place_a_memory_by_lane_with_the_stance_most_of_them_g
     )
     await label_lanes(store, judge, REL, LATER)
     assert judge.calls == ["lane"] * 3
-    assert store.intimate_memory().places(REL) == {
+    assert store.part(IntimateMemory).places(REL) == {
         into.id: Intimate(Stance.INTO),
         split.id: Intimate(Stance.CURIOUS),
         work.id: Everyday(),
@@ -191,7 +192,7 @@ async def test_three_reads_place_a_memory_by_lane_with_the_stance_most_of_them_g
 async def test_a_failed_read_places_nothing_and_the_batch_waits(store: Store) -> None:
     _told(store, "likes slow kissing", "i love slow kissing")
     await label_lanes(store, Judge(fail=True), REL, LATER)
-    assert store.intimate_memory().places(REL) == {}
+    assert store.part(IntimateMemory).places(REL) == {}
 
 
 async def test_the_floor_keeps_out_a_held_turn_and_heavy_sharing_whatever_the_reads_say(
@@ -205,7 +206,7 @@ async def test_the_floor_keeps_out_a_held_turn_and_heavy_sharing_whatever_the_re
         {held.claim: _agreed("intimate", "into"), heavy.claim: _agreed("intimate", "aftercare")}
     )
     await label_lanes(store, judge, REL, LATER)
-    assert store.intimate_memory().places(REL) == {
+    assert store.part(IntimateMemory).places(REL) == {
         held.id: Excluded(Why.FLOOR),
         heavy.id: Excluded(Why.LISTENING),
     }
@@ -217,7 +218,7 @@ async def test_a_limit_read_into_an_inferred_memory_is_not_their_words(store: St
     inferred = _told(store, "seems not to want pain", "ouch haha", provenance=Provenance.INFERRED)
     limit = _agreed("intimate", "hard_limit")
     await label_lanes(store, Judge({stated.claim: limit, inferred.claim: limit}), REL, LATER)
-    assert store.intimate_memory().places(REL) == {
+    assert store.part(IntimateMemory).places(REL) == {
         stated.id: Intimate(Stance.HARD_LIMIT),
         inferred.id: Excluded(Why.NOT_THEIR_WORDS),
     }
@@ -231,7 +232,7 @@ async def test_a_limit_the_narrow_check_does_not_confirm_is_kept_out_as_doubt(
     limit = _agreed("intimate", "soft_limit")
     judge = Judge({wish.claim: limit}, not_limits=frozenset({wish.claim}))
     await label_lanes(store, judge, REL, LATER)
-    assert store.intimate_memory().places(REL) == {wish.id: Excluded(Why.DOUBT)}
+    assert store.part(IntimateMemory).places(REL) == {wish.id: Excluded(Why.DOUBT)}
     assert judge.calls.count("limit") == 3
 
 
@@ -250,13 +251,13 @@ async def test_a_pattern_reaches_the_lane_only_once_seen_in_two_separate_scenes(
 ) -> None:
     _scene(store, 10, "*steps closer* slower please", "*smiles*")
     await read_scenes(store, Judge(plays=PLAYS), REL, LATER)
-    [pattern] = store.intimate_memory().patterns(REL)
+    [pattern] = store.part(IntimateMemory).patterns(REL)
     assert pattern.scenes == 1
     assert entries(store, REL) == ()
     assert "patterns seen in one scene so far" in listing(tmp_path / "rel.sqlite", REL)
     _scene(store, 300, "*laughs* slower please, again")
     await read_scenes(store, Judge(plays=PLAYS), REL, LATER)
-    [pattern] = store.intimate_memory().patterns(REL)
+    [pattern] = store.part(IntimateMemory).patterns(REL)
     assert pattern.scenes == 2
     [entry] = entries(store, REL)
     assert (entry.claim, entry.stance, entry.scenes) == (SLOW, Stance.STYLE, 2)
@@ -270,7 +271,7 @@ async def test_a_limit_is_never_taken_from_play(store: Store) -> None:
     _scene(store, 10, "*grins* tie my hands")
     _scene(store, 300, "*grins* tie my hands")
     await read_scenes(store, Judge(plays=PLAYS), REL, LATER)
-    assert store.intimate_memory().patterns(REL) == []
+    assert store.part(IntimateMemory).patterns(REL) == []
 
 
 async def test_a_scene_with_a_turn_the_minor_check_held_is_never_read(store: Store) -> None:
@@ -280,7 +281,7 @@ async def test_a_scene_with_a_turn_the_minor_check_held_is_never_read(store: Sto
     judge = Judge(plays=PLAYS)
     await read_scenes(store, judge, REL, LATER)
     assert judge.calls == []
-    assert store.intimate_memory().patterns(REL) == []
+    assert store.part(IntimateMemory).patterns(REL) == []
     [unread] = store.decisions_with_key(REL, UNREAD)
     assert "slower" not in str(unread.detail)
 
@@ -288,9 +289,9 @@ async def test_a_scene_with_a_turn_the_minor_check_held_is_never_read(store: Sto
 async def test_a_failed_scene_read_leaves_the_bookmark_for_the_next_pass(store: Store) -> None:
     _scene(store, 10, "*steps closer* slower please")
     await read_scenes(store, Judge(fail=True), REL, LATER)
-    assert store.intimate_memory().cursor(REL) is None
+    assert store.part(IntimateMemory).cursor(REL) is None
     await read_scenes(store, Judge(plays=PLAYS), REL, LATER)
-    assert len(store.intimate_memory().patterns(REL)) == 1
+    assert len(store.part(IntimateMemory).patterns(REL)) == 1
 
 
 async def test_a_scene_still_going_waits(store: Store) -> None:
@@ -298,7 +299,7 @@ async def test_a_scene_still_going_waits(store: Store) -> None:
     judge = Judge(plays=PLAYS)
     await read_scenes(store, judge, REL, T0 + timedelta(minutes=30))
     assert judge.calls == []
-    assert store.intimate_memory().cursor(REL) is None
+    assert store.part(IntimateMemory).cursor(REL) is None
 
 
 async def test_the_listing_shows_only_the_id_of_what_the_floor_kept_out(
@@ -332,7 +333,7 @@ async def test_retire_works_for_a_pattern_and_it_leaves_the_lane(
     _scene(store, 10, "*steps closer* slower please")
     _scene(store, 300, "*steps closer* slower please")
     await read_scenes(store, Judge(plays=PLAYS), REL, LATER)
-    [pattern] = store.intimate_memory().patterns(REL)
+    [pattern] = store.part(IntimateMemory).patterns(REL)
     out = retire_one(tmp_path / "rel.sqlite", REL, pattern.id[:8], "the owner does not want it")
     assert out.startswith("retired")
     assert entries(store, REL) == ()
@@ -345,7 +346,7 @@ async def test_switch_off_has_no_pass_step(store: Store) -> None:
     step = pass_step("shadow")
     assert step is not None
     await step(store, Judge({"likes slow kissing": _agreed("intimate", "into")}), REL, LATER)
-    assert len(store.intimate_memory().places(REL)) == 1
+    assert len(store.part(IntimateMemory).places(REL)) == 1
 
 
 async def test_a_scene_cut_by_the_end_of_a_full_batch_waits_to_be_read_whole(
@@ -358,4 +359,4 @@ async def test_a_scene_cut_by_the_end_of_a_full_batch_waits_to_be_read_whole(
     judge = Judge(plays=PLAYS)
     await read_scenes(store, judge, REL, LATER)
     assert judge.calls == []
-    assert store.intimate_memory().cursor(REL) == (first.at, first.id)
+    assert store.part(IntimateMemory).cursor(REL) == (first.at, first.id)

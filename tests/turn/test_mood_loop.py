@@ -27,6 +27,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.mood.logic import Source, State, effect
+from companion.features.mood.store import MoodEffects
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.runtime import make_runtime
@@ -104,17 +105,17 @@ def _mood_reasons(store: Store) -> list[str]:
 
 
 async def test_in_shadow_the_mood_is_logged_and_stored_but_never_shown(store: Store) -> None:
-    store.add_mood_effects(REL, [effect(Source.TONE_FUNNY, 0.4, NOW, TurnId("t0"))])
+    store.part(MoodEffects).add(REL, [effect(Source.TONE_FUNNY, 0.4, NOW, TurnId("t0"))])
     talker = await _say(store, Judge(), "shadow", "haha nooo!! 😂", NOW + timedelta(minutes=1))
     assert PLAYFUL not in talker.seen[0].card
     [reason] = _mood_reasons(store)
     assert reason.startswith("mood: playful") and reason.endswith("[shadow]")
-    sources = {e.source for e in store.mood_effects_since(REL, NOW)}
+    sources = {e.source for e in store.part(MoodEffects).since(REL, NOW)}
     assert Source.ENERGY in sources
 
 
 async def test_when_on_the_strongest_state_reaches_the_system_block(store: Store) -> None:
-    store.add_mood_effects(REL, [effect(Source.TONE_FUNNY, 0.4, NOW, TurnId("t0"))])
+    store.part(MoodEffects).add(REL, [effect(Source.TONE_FUNNY, 0.4, NOW, TurnId("t0"))])
     talker = await _say(store, Judge(), "on", at=NOW + timedelta(minutes=1))
     assert PLAYFUL in talker.seen[0].card
     assert PLAYFUL not in talker.seen[0].messages[-1].content
@@ -123,7 +124,7 @@ async def test_when_on_the_strongest_state_reaches_the_system_block(store: Store
 async def test_a_serious_turn_shows_no_mood_and_the_next_one_is_tender(store: Store) -> None:
     first = await _say(store, Judge(severity=2), "on", "my dad is in the hospital")
     assert TENDER not in first.seen[0].card
-    assert [e.state for e in store.mood_effects_since(REL, NOW)] == [State.TENDER]
+    assert [e.state for e in store.part(MoodEffects).since(REL, NOW)] == [State.TENDER]
     second = await _say(store, Judge(), "on", "made pasta", NOW + timedelta(hours=2))
     assert TENDER in second.seen[0].card
 
@@ -132,29 +133,29 @@ async def test_a_turn_that_fails_adds_nothing_to_the_mood(store: Store) -> None:
     runtime = make_runtime(store, Talker(fail=True), PREFIX, REL, judge=Judge(), mood="on")
     with pytest.raises(RuntimeError):
         await handle(runtime, "haha yesss!! 😂", "test", NOW)
-    assert store.mood_effects_since(REL, NOW - timedelta(days=1)) == []
+    assert store.part(MoodEffects).since(REL, NOW - timedelta(days=1)) == []
 
 
 async def test_without_a_listening_judgement_nothing_is_added(store: Store) -> None:
     await _say(store, Judge(listening=False), "on", "haha yesss!! 😂")
-    assert store.mood_effects_since(REL, NOW - timedelta(days=1)) == []
+    assert store.part(MoodEffects).since(REL, NOW - timedelta(days=1)) == []
 
 
 async def test_off_works_nothing_out_and_logs_nothing(store: Store) -> None:
     await _say(store, Judge(), "off", "haha yesss!! 😂")
-    assert store.mood_effects_since(REL, NOW - timedelta(days=1)) == []
+    assert store.part(MoodEffects).since(REL, NOW - timedelta(days=1)) == []
     assert _mood_reasons(store) == []
 
 
 async def test_their_previous_message_tone_moves_the_next_turn(store: Store) -> None:
     await _say(store, Judge(tone="funny"), "shadow", "you're ridiculous")
     await _say(store, Judge(), "shadow", "anyway", NOW + timedelta(minutes=2))
-    sources = [e.source for e in store.mood_effects_since(REL, NOW)]
+    sources = [e.source for e in store.part(MoodEffects).since(REL, NOW)]
     assert Source.TONE_FUNNY in sources
 
 
 async def test_a_goodbye_never_carries_the_mood_line(store: Store) -> None:
-    store.add_mood_effects(REL, [effect(Source.TONE_FUNNY, 0.4, NOW, TurnId("t0"))])
+    store.part(MoodEffects).add(REL, [effect(Source.TONE_FUNNY, 0.4, NOW, TurnId("t0"))])
     talker = await _say(store, Judge(), "on", "ok gotta go, ttyl", NOW + timedelta(minutes=1))
     assert PLAYFUL not in talker.seen[0].card
     assert _mood_reasons(store) == ["mood: held, they are leaving [on]"]

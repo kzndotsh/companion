@@ -5,6 +5,7 @@ from pathlib import Path
 
 from companion.core.types import DecisionKind, Json, Utterance
 from companion.features.mood import store as mood_store
+from companion.features.mood.store import MoodEffects
 from companion.store.sqlite import decisions
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
@@ -38,5 +39,5 @@ def test_the_judges_reads_are_found_by_key_whatever_their_prompt_is_called(
     _judged(store, renamed, "reacted ", {"prompt": "system/tone@v9", "scores": {"tone": "funny"}})
     _judged(store, old, None, {"prompt": "system/listening@v3", "labels": {"severity": 1}})
     _judged(store, old, None, {"prompt": "system/react@v2", "scores": {"tone": "sweet"}})
-    got = [(s.severity, s.tone) for s in store.said_since(REL, T0)]
+    got = [(s.severity, s.tone) for s in store.part(MoodEffects).said_since(REL, T0)]
     assert got == [(2, "funny"), (1, "sweet")]

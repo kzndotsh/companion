@@ -24,6 +24,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.audits.callbacks.run import check_new
+from companion.features.audits.callbacks.store import CallbackChecks
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.runtime import make_runtime
@@ -93,6 +94,6 @@ async def test_each_reply_is_judged_once_and_the_verdict_is_kept(tmp_path: Path)
     assert await check_new(store, judge, REL, NOW - timedelta(days=1), 1.0) == (1, 0.001)
     assert await check_new(store, judge, REL, NOW - timedelta(days=1), 1.0) == (0, 0.0)
     assert judge.calls == 1
-    [(_, check)] = store.callback_checks_since(REL, NOW - timedelta(days=1))
+    [(_, check)] = store.part(CallbackChecks).since(REL, NOW - timedelta(days=1))
     assert check.landed
     assert check.memories == ("The user dreads a call with their landlord.",)

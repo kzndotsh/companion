@@ -53,6 +53,7 @@ from companion.features.promises.run import read_promises
 from companion.features.threads.run import Reading, catch_up_loops
 from companion.features.upkeep.reread.logic import ASK_RULE
 from companion.features.upkeep.reread.run import SameCheck
+from companion.features.upkeep.reread.store import MemoryChecks
 from companion.kit.ask import Judge, ask_or_raise
 from companion.kit.embed import bounded, embed_missing
 from companion.kit.record import Recorder, new_id
@@ -309,7 +310,7 @@ async def _extract_pass(
         stored.append(made)
         accepted += 1
         if spec is USER_SPEC and made.kind is BeliefKind.BOUNDARY:
-            store.add_memory_check(
+            store.part(MemoryChecks).add(
                 run.rel, made.id, None, [], ASK_RULE, prompt="code: a new boundary", at=run.now
             )
         run.log(

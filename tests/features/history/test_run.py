@@ -20,6 +20,7 @@ from companion.features.history.run import (
     read_history,
     stories_beside,
 )
+from companion.features.history.store import Stories
 from companion.kit.current import Turn
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
@@ -110,7 +111,7 @@ async def _pass(store: Store, judge: Judge) -> None:
 
 
 def _standings(store: Store) -> list[tuple[str, Standing | None]]:
-    return [(r.story.quote, r.standing) for r in store.stories().recorded(REL)]
+    return [(r.story.quote, r.standing) for r in store.part(Stories).recorded(REL)]
 
 
 async def test_a_passing_self_fact_in_a_scene_is_captured_and_a_scene_event_is_not(
@@ -121,7 +122,7 @@ async def test_a_passing_self_fact_in_a_scene_is_captured_and_a_scene_event_is_n
     store.append_utterance(utterance(text=scene, speaker=Speaker.COMPANION, frame=Frame.PLAY))
     judge = Judge([(PEBBLE, "its_past"), ("the dragon flees", "scene")], _by_story)
     await _pass(store, judge)
-    stories = store.stories().recorded(REL)
+    stories = store.part(Stories).recorded(REL)
     assert [(r.story.quote, r.story.frame) for r in stories] == [(PEBBLE, Frame.PLAY)]
     assert len(store.decisions_with_key(REL, CAPTURED)) == 1
     dropped = store.decisions_with_key(REL, DROPPED)
@@ -135,13 +136,13 @@ async def test_the_same_story_twice_becomes_evidence_of_the_first_not_a_second_s
 ) -> None:
     first, again = _said(store, utterance, PEBBLE, PEBBLE)
     await _pass(store, Judge([(PEBBLE, "its_past")], _fits_then_same))
-    stories = store.stories().recorded(REL)
+    stories = store.part(Stories).recorded(REL)
     assert [r.standing for r in stories] == [Standing.CANON, Standing.EVIDENCE]
     kept, told_again = stories
     assert told_again.of == kept.story.id
     assert kept.told == (first.id, again.id)
     await _pass(store, Judge([(PEBBLE, "its_past")], _fits_then_same))
-    assert len(store.stories().recorded(REL)) == 2  # nothing read twice
+    assert len(store.part(Stories).recorded(REL)) == 2  # nothing read twice
 
 
 async def test_a_contradicting_or_too_big_story_is_never_canon_and_keeps_its_reason(
@@ -151,7 +152,7 @@ async def test_a_contradicting_or_too_big_story_is_never_canon_and_keeps_its_rea
     await _pass(
         store, Judge([(PEBBLE, "its_past"), (MOCHI, "its_past"), (BREAKUP, "its_past")], _by_story)
     )
-    stories = {r.story.quote: r for r in store.stories().recorded(REL)}
+    stories = {r.story.quote: r for r in store.part(Stories).recorded(REL)}
     assert [q for q, r in stories.items() if r.standing is Standing.CANON] == [PEBBLE]
     assert stories[MOCHI].standing is Standing.NOT_CANON
     assert stories[MOCHI].reason.startswith(f"contradicts {stories[PEBBLE].story.id[:8]}")
@@ -234,8 +235,8 @@ async def test_retire_works_for_a_story_and_it_leaves_canon(
 ) -> None:
     _said(store, utterance, PEBBLE)
     await _pass(store, Judge([(PEBBLE, "its_past")], _by_story))
-    story = store.stories().recorded(REL)[0].story
+    story = store.part(Stories).recorded(REL)[0].story
     out = retire_one(tmp_path / "rel.sqlite", REL, story.id[:8], "the owner does not want it")
     assert out.startswith("retired")
     assert _standings(store) == [(PEBBLE, Standing.RETIRED)]
-    assert store.stories().recorded(REL)[0].reason == "the owner does not want it"
+    assert store.part(Stories).recorded(REL)[0].reason == "the owner does not want it"

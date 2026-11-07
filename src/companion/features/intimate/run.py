@@ -72,7 +72,7 @@ from companion.features.intimate.logic import (
     screen,
     touches_age,
 )
-from companion.features.intimate.store import By
+from companion.features.intimate.store import By, IntimateMemory
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide
 from companion.kit.embed import embed_within
@@ -140,7 +140,7 @@ async def label_lanes(
 ) -> Spent:
     """Place one batch of memories that have no lane yet, each read three times. A failed read
     places nothing: the batch waits for the next pass, never placed from fewer reads."""
-    sm = store.intimate_memory()
+    sm = store.part(IntimateMemory)
     have = sm.places(rel)
     again = sm.doubted_before(rel, LANE.ref)  # a doubt under an older prompt is read again once
     todo = [
@@ -211,7 +211,7 @@ async def read_scenes(
 ) -> Spent:
     """Note how they play from the scenes that ended past the bookmark, oldest first, up to SCENES a
     pass. The bookmark moves to just before the first scene left for later."""
-    sm = store.intimate_memory()
+    sm = store.part(IntimateMemory)
     batch = store.utterances_after(rel, sm.cursor(rel), READ)
     if not batch:
         return Spent()
@@ -241,7 +241,7 @@ async def _read_scene(
 ) -> float | None:
     """Read one ended scene for patterns: their cost, or None when the read failed. A scene with a
     turn the minor check held is never read."""
-    sm = store.intimate_memory()
+    sm = store.part(IntimateMemory)
     theirs = [u.id for u in scene.messages if u.speaker is Speaker.USER]
     held, _ = sm.facts(rel, theirs)
     record = Recorder.fresh(store, rel, now)
@@ -306,7 +306,7 @@ def pass_step(mode: str) -> Step | None:
 def entries(store: Store, rel: RelationshipId) -> tuple[Entry, ...]:
     """What a scene card may show: the memories placed intimate that still pass the floor, and the
     patterns seen in enough scenes. The floor is read again here, over every turn they came from."""
-    sm = store.intimate_memory()
+    sm = store.part(IntimateMemory)
     places = sm.places(rel)
     beliefs = [
         b
@@ -337,7 +337,7 @@ async def _vectors(
     c: Runtime, embedder: Embedder, found: Sequence[Entry], said: str, now: datetime
 ) -> tuple[Vector, dict[str, Vector]] | None:
     """The moment's vector and every entry's, embedding the missing ones in the same call."""
-    store, model, sm = c.store, c.embed_model, c.store.intimate_memory()
+    store, model, sm = c.store, c.embed_model, c.store.part(IntimateMemory)
     have: dict[str, Vector] = {**store.belief_embeddings(c.rel, model), **sm.vectors(c.rel, model)}
     missing = [e for e in found if e.id not in have]
     got = await embed_within(
@@ -443,7 +443,7 @@ def intimate_lane(
         return IntimateLane()
     live = c.intimate_memory == "on"
     if not roleplay:
-        hidden = c.store.intimate_memory().intimate(c.rel)
+        hidden = c.store.part(IntimateMemory).intimate(c.rel)
         on_card = hidden & {b.id for b in (*card.usable, *card.guarded, *card.older)}
         if on_card:
             decide(

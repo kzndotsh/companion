@@ -27,7 +27,7 @@ from companion.features.reach.run import (
     situation,
     tick_reach,
 )
-from companion.features.reach.store import Own
+from companion.features.reach.store import Own, Reaches
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -54,7 +54,7 @@ def store(tmp_path: Path) -> Store:
 
 
 def _reach_out(store: Store, mode: str, rid: str = "r1", at: datetime = SENT_AT) -> None:
-    store.add_own_reach_out(Own(rid, REL, Kind.THOUGHT.value, "", "saw a cat", mode, {}, at))
+    store.part(Reaches).add(Own(rid, REL, Kind.THOUGHT.value, "", "saw a cat", mode, {}, at))
 
 
 def _said(store: Store, at: datetime, text: str, uid: str = "u1") -> None:

@@ -11,6 +11,7 @@ from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
 from companion.features.lore.logic import lore
 from companion.features.lore.run import label_views
+from companion.features.lore.store import ViewKinds
 from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
@@ -20,7 +21,7 @@ def run(db: Path, relationship: str) -> str:
     rel = RelationshipId(relationship)
     try:
         views = store.self_beliefs(rel)
-        kinds = store.view_kinds(rel)
+        kinds = store.part(ViewKinds).kinds(rel)
     finally:
         store.close()
     tastes = lore(views, kinds)

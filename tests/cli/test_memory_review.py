@@ -7,6 +7,8 @@ from tests.conftest import REL, T0
 
 from companion.cli.memory import review
 from companion.core.types import Belief, Utterance
+from companion.features.upkeep.merging.store import MergeProposals
+from companion.features.upkeep.reread.store import MemoryChecks
 from companion.store.sqlite.store import Store
 
 
@@ -23,7 +25,7 @@ def _store(
         ("burger", "i always eat burgers", "overstated"),
     ):
         store.insert_belief(belief(bid=bid, utterance_id="u1", quote=quote, claim=f"claim {bid}"))
-        store.add_memory_check(
+        store.part(MemoryChecks).add(
             REL, belief(bid=bid).id, None, [verdict] * 3, verdict, prompt="p", at=T0
         )
     store.close()
@@ -50,7 +52,7 @@ def _pairs(
     store.append_utterance(utterance(text="my dog is a pom. no wait, a papillon mix", uid="u1"))
     for bid, quote in (("pom", "my dog is a pom"), ("mix", "a papillon mix")):
         store.insert_belief(belief(bid=bid, utterance_id="u1", quote=quote, claim=f"dog {bid}"))
-    store.add_memory_check(
+    store.part(MemoryChecks).add(
         REL,
         belief(bid="pom").id,
         belief(bid="mix").id,
@@ -81,7 +83,7 @@ def test_keeping_both_of_a_pair_retires_nothing(
     db = _pairs(tmp_path, utterance, belief)
     review(db, REL, ask=lambda _: "b")
     assert sorted(b.id for b in Store(db).user_beliefs(REL)) == ["mix", "pom"]
-    assert Store(db).unanswered_checks(REL, ["replaces"]) == []
+    assert Store(db).part(MemoryChecks).unanswered(REL, ["replaces"]) == []
 
 
 def test_a_pair_whose_memory_has_closed_is_not_asked(
@@ -101,7 +103,7 @@ def test_skip_and_quit_leave_the_question_for_later(
     db = _store(tmp_path, utterance, belief)
     answers = iter(["s", "q"])
     review(db, REL, ask=lambda _: next(answers))
-    assert len(Store(db).unanswered_checks(REL, ["out_of_date", "overstated"])) == 2
+    assert len(Store(db).part(MemoryChecks).unanswered(REL, ["out_of_date", "overstated"])) == 2
 
 
 def _merge_proposal(
@@ -121,10 +123,12 @@ def _merge_proposal(
             belief(bid=bid, utterance_id="u1", quote=quote, claim=f"checkup {bid}", kind=kind)
         )
     ids = [belief(bid=b).id for b in ("visit", "virtual", "done")]
-    store.add_memory_check(
+    store.part(MemoryChecks).add(
         REL, ids[0], ids[1], ["contradicts"] * 3, "contradicts", prompt="p", at=T0
     )
-    store.add_merge_proposal(REL, ids, "Had a virtual checkup and it is done.", prompt="g", at=T0)
+    store.part(MergeProposals).add(
+        REL, ids, "Had a virtual checkup and it is done.", prompt="g", at=T0
+    )
     store.close()
     return path
 
@@ -154,7 +158,7 @@ def test_keeping_a_merge_apart_changes_nothing_and_is_not_asked_again(
     out = review(db, REL, ask=lambda _: next(answers))
     assert "kept apart  3 memories" in out
     assert len(Store(db).user_beliefs(REL)) == 3
-    assert [p.answer for p in Store(db).merge_proposals(REL)] == ["apart"]
+    assert [p.answer for p in Store(db).part(MergeProposals).all_(REL)] == ["apart"]
 
 
 def test_it_asks_every_question_unless_capped(
@@ -172,7 +176,7 @@ def test_a_note_is_kept_and_the_merge_is_asked_again_with_it(
     answers = iter(["n", "too vague", "s"])
     asked: list[str] = []
     review(db, REL, ask=lambda q: asked.append(q) or next(answers))
-    assert [p.answer for p in Store(db).merge_proposals(REL)] == ["note: too vague"]
+    assert [p.answer for p in Store(db).part(MergeProposals).all_(REL)] == ["note: too vague"]
     review(db, REL, ask=lambda q: asked.append(q) or "s")
     assert "your note: too vague" in asked[-1]
 
@@ -194,7 +198,7 @@ def test_a_pick_is_recorded_and_changes_nothing_yet(
     db = _merge_proposal(tmp_path, utterance, belief)
     answers = iter(["p", "1 2"])
     review(db, REL, ask=lambda _: next(answers))
-    assert [p.answer for p in Store(db).merge_proposals(REL)] == ["pick 1 2"]
+    assert [p.answer for p in Store(db).part(MergeProposals).all_(REL)] == ["pick 1 2"]
     assert len(Store(db).user_beliefs(REL)) == 3
 
 
@@ -213,7 +217,7 @@ def test_a_memory_labelled_about_the_bot_is_asked_and_retired_on_yes(
     store = Store(path)
     store.append_utterance(utterance(text="added a feature", uid="u1"))
     store.insert_belief(belief(bid="bot", utterance_id="u1", quote="added a feature", claim="x"))
-    store.add_memory_check(
+    store.part(MemoryChecks).add(
         REL,
         belief(bid="bot").id,
         None,
@@ -240,7 +244,7 @@ def test_a_new_rule_is_asked_and_retiring_it_ends_it(
     store.insert_belief(
         belief(bid="rule", utterance_id="u1", quote="pause till tomorrow", claim="Asked to pause")
     )
-    store.add_memory_check(REL, belief(bid="rule").id, None, [], ASK_RULE, prompt="p", at=T0)
+    store.part(MemoryChecks).add(REL, belief(bid="rule").id, None, [], ASK_RULE, prompt="p", at=T0)
     store.close()
     asked: list[str] = []
     out = review(path, REL, ask=lambda q: asked.append(q) or "r")

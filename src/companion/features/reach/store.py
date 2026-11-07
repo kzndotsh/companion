@@ -24,42 +24,48 @@ class Own:
     at: datetime
 
 
-def add(conn: sqlite3.Connection, r: Own) -> None:
-    with write_tx(conn):
-        conn.execute(
-            "INSERT INTO own_reach_outs (id, relationship_id, kind, thing, draft, mode, detail, at)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                r.id,
-                r.relationship_id,
-                r.kind,
-                r.thing,
-                r.draft,
-                r.mode,
-                json.dumps(r.detail, sort_keys=True),
-                iso(r.at),
-            ),
-        )
+@dataclass(frozen=True, slots=True)
+class Reaches:
+    """One relationship file's own reach-outs, behind the store's handle (`Store.part`)."""
 
+    conn: sqlite3.Connection
 
-def since(conn: sqlite3.Connection, rel: RelationshipId, start: datetime | None) -> list[Own]:
-    rows = conn.execute(
-        "SELECT * FROM own_reach_outs WHERE relationship_id = ? AND at >= ? ORDER BY at, id",
-        (rel, iso(start) if start else ""),
-    ).fetchall()
-    out: list[Own] = []
-    for r in rows:
-        loaded: Json = json.loads(str(r["detail"]))
-        out.append(
-            Own(
-                str(r["id"]),
-                RelationshipId(str(r["relationship_id"])),
-                str(r["kind"]),
-                str(r["thing"]),
-                str(r["draft"]),
-                str(r["mode"]),
-                loaded if isinstance(loaded, dict) else {},
-                parse_iso(str(r["at"])),
+    def add(self, r: Own) -> None:
+        with write_tx(self.conn):
+            self.conn.execute(
+                "INSERT INTO own_reach_outs"
+                " (id, relationship_id, kind, thing, draft, mode, detail, at)"
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    r.id,
+                    r.relationship_id,
+                    r.kind,
+                    r.thing,
+                    r.draft,
+                    r.mode,
+                    json.dumps(r.detail, sort_keys=True),
+                    iso(r.at),
+                ),
             )
-        )
-    return out
+
+    def since(self, rel: RelationshipId, start: datetime | None = None) -> list[Own]:
+        rows = self.conn.execute(
+            "SELECT * FROM own_reach_outs WHERE relationship_id = ? AND at >= ? ORDER BY at, id",
+            (rel, iso(start) if start else ""),
+        ).fetchall()
+        out: list[Own] = []
+        for r in rows:
+            loaded: Json = json.loads(str(r["detail"]))
+            out.append(
+                Own(
+                    str(r["id"]),
+                    RelationshipId(str(r["relationship_id"])),
+                    str(r["kind"]),
+                    str(r["thing"]),
+                    str(r["draft"]),
+                    str(r["mode"]),
+                    loaded if isinstance(loaded, dict) else {},
+                    parse_iso(str(r["at"])),
+                )
+            )
+        return out

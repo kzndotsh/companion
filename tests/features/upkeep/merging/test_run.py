@@ -6,6 +6,7 @@ from pathlib import Path
 from companion.core.extractor import Extraction
 from companion.core.types import Belief, Json, Utterance
 from companion.features.upkeep.merging.run import propose
+from companion.features.upkeep.merging.store import MergeProposals
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 
@@ -49,7 +50,7 @@ async def test_an_agreed_group_becomes_one_proposal_and_is_not_proposed_twice(
 ) -> None:
     store, made = _store(tmp_path, utterance, belief)
     assert (await propose(store, Grouper(), REL, made, T0)).groups == 1
-    [p] = store.merge_proposals(REL)
+    [p] = store.part(MergeProposals).all_(REL)
     assert (p.members, p.claim, p.answer) == ((made[0].id, made[1].id), "Has two dogs.", None)
     assert (await propose(store, Grouper(), REL, made, T0)).groups == 0
     assert len(store.user_beliefs(REL)) == 3  # nothing merges without the owner
@@ -60,7 +61,7 @@ async def test_keep_apart_from_the_writer_proposes_nothing(
 ) -> None:
     store, made = _store(tmp_path, utterance, belief)
     assert (await propose(store, Grouper(apart=True), REL, made, T0)).groups == 0
-    assert store.merge_proposals(REL) == []
+    assert store.part(MergeProposals).all_(REL) == []
 
 
 async def test_a_pick_is_proposed_again_alone_with_new_wording(
@@ -69,10 +70,12 @@ async def test_a_pick_is_proposed_again_alone_with_new_wording(
     from companion.features.upkeep.merging.run import repick  # noqa: PLC0415
 
     store, made = _store(tmp_path, utterance, belief)
-    first = store.add_merge_proposal(REL, [b.id for b in made], "all three", prompt="g", at=T0)
-    store.answer_merge(first, "pick 1 2", T0)
+    first = store.part(MergeProposals).add(
+        REL, [b.id for b in made], "all three", prompt="g", at=T0
+    )
+    store.part(MergeProposals).answer(first, "pick 1 2", T0)
     assert (await repick(store, Grouper(), REL, T0)).groups == 1
-    assert store.merge_proposals(REL)[-1].members == (made[0].id, made[1].id)
+    assert store.part(MergeProposals).all_(REL)[-1].members == (made[0].id, made[1].id)
     assert (await repick(store, Grouper(), REL, T0)).groups == 0
 
 
@@ -81,5 +84,5 @@ async def test_a_wording_with_a_name_never_said_keeps_a_members_own_sentence(
 ) -> None:
     store, made = _store(tmp_path, utterance, belief)
     await propose(store, Grouper(claim="Has two dogs, Rex and Max."), REL, made, T0)
-    [p] = store.merge_proposals(REL)
+    [p] = store.part(MergeProposals).all_(REL)
     assert p.claim in {"Has a dog named Rex.", "Has a dog named Bo."}

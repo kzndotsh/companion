@@ -17,6 +17,7 @@ from companion.features.reminders.run import (
     schedule,
     stop,
 )
+from companion.features.reminders.store import Reminders
 from companion.store.sqlite.store import Store
 from tests.features.reminders.test_run import Writer
 from tests.runtime import make_runtime
@@ -48,7 +49,7 @@ def _series(store: Store, kind: Kind = Kind.GREETING, repeat: Repeat | None = No
         TurnId("t0"),
         SET_AT,
     )
-    store.add_series(s)
+    store.part(Reminders).add_series(s)
     schedule(make_runtime(store, Writer(), PREFIX, REL), s, SET_AT, TZ)
     return s
 
@@ -80,7 +81,7 @@ async def _tick(store: Store, now: datetime, talker: Writer | None = None) -> li
 
 
 def _states(store: Store) -> list[tuple[str, str]]:
-    return [(r.local_wall, r.state) for r in store.reminders(REL)]
+    return [(r.local_wall, r.state) for r in store.part(Reminders).all_(REL)]
 
 
 async def test_a_greeting_goes_in_its_own_voice_and_the_next_day_is_made(store: Store) -> None:
@@ -113,16 +114,16 @@ async def test_three_unanswered_greetings_pause_it_and_their_next_message_resume
     s = _series(store)
     for day in (20, 21, 22):
         assert await _tick(store, _at(day, 9, 0)) == ["morning you ☀️"]
-    assert [x.state for x in store.series(REL)] == [Standing.PAUSED]
+    assert [x.state for x in store.part(Reminders).all_series(REL)] == [Standing.PAUSED]
     assert [state for _, state in _states(store)] == ["sent", "sent", "sent"]
     assert await _tick(store, _at(23, 9, 0)) == []
     assert store.decisions_with_key(REL, PAUSED)
     _they_wrote(store, _at(23, 12, 0))
     assert await _tick(store, _at(23, 12, 1)) == []
-    assert [x.state for x in store.series(REL)] == [Standing.ACTIVE]
+    assert [x.state for x in store.part(Reminders).all_series(REL)] == [Standing.ACTIVE]
     assert _states(store)[-1] == ("2026-10-24 09:00", "pending")
     assert store.decisions_with_key(REL, RESUMED)
-    assert store.series(REL)[0].id == s.id
+    assert store.part(Reminders).all_series(REL)[0].id == s.id
 
 
 async def test_one_pending_occurrence_however_often_the_scheduler_runs(store: Store) -> None:
@@ -160,8 +161,8 @@ async def test_one_cut_off_mid_send_is_let_go_not_resent_and_its_series_goes_on(
     store: Store,
 ) -> None:
     _series(store, Kind.REMINDER, Repeat(None, time(8, 30)))
-    [first] = store.reminders(REL)
-    assert store.claim_reminder(first.id, _at(20, 8, 30))  # a crash right after the claim
+    [first] = store.part(Reminders).all_(REL)
+    assert store.part(Reminders).claim(first.id, _at(20, 8, 30))  # a crash right after the claim
     assert await _tick(store, _at(20, 8, 35)) == []
     assert _states(store) == [("2026-10-20 08:30", "claimed")]
     assert await _tick(store, _at(20, 8, 45)) == []
