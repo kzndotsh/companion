@@ -25,8 +25,6 @@ from companion.prompts import get
 
 IDEAS = get("system/reach-ideas")
 PICK = get("system/reach-pick")
-WOULD_SEND = "reach out (shadow): would send"
-HELD = "reach out: held"
 DROPPED = "reach out: draft dropped"
 PACED = "reach out: dial stepped down"
 THOUGHT_EVERY = timedelta(hours=24)  # at most one thought a day

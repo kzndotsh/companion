@@ -10,7 +10,7 @@ from companion.core.frames import scene_frame
 from companion.core.history import HISTORY_LIMIT
 from companion.core.types import Frame, RelationshipId
 from companion.store.sqlite.store import Store
-from companion.turn.route import routed_to_roleplay
+from companion.turn.route import route_because, routed_to_roleplay
 
 
 def mode_report(
@@ -22,7 +22,7 @@ def mode_report(
         return "no replies yet"
     routes = [d for d in store.decisions_for_turn(rel, turn) if d.has_key("route")]
     if routes and routed_to_roleplay(routes[-1]):
-        why = routes[-1].reason.partition(": ")[2] or "routed there"
+        why = route_because(routes[-1])
         last = f"last reply: the roleplay talker ({roleplay}), because {why}"
     else:
         last = f"last reply: the everyday talker ({everyday})"

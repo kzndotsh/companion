@@ -29,12 +29,15 @@ class Talker(StrEnum):
 class Route:
     talker: Talker
     reason: str | None  # logged when it is not the plain everyday choice
-
-    @property
-    def held(self) -> bool:
-        """The turn would have gone to the roleplay talker and the floor kept it on the everyday
-        one, so its reply is checked before it is sent."""
-        return self.talker is Talker.EVERYDAY and self.reason not in (None, STARTING, BRUSHED)
+    held: bool = False
+    """The turn would have gone to the roleplay talker and the floor kept it on the everyday one,
+    so its reply is checked before it is sent."""
+    brushed: bool = (
+        False  # they pushed the flirting or the scene back, so the everyday talker answers
+    )
+    because: str | None = (
+        None  # what sent a turn to the roleplay talker, kept in the route's detail
+    )
 
 
 INTIMATE_CHECK = get("system/intimate-check")
@@ -120,21 +123,24 @@ def choose(  # noqa: PLR0911, PLR0913  (one rule per route, kept in one place)
         return Route(Talker.EVERYDAY, None)
     if judged_age_coded:
         return Route(
-            Talker.EVERYDAY, "floor: kept on the everyday talker, the judge read age-coded content"
+            Talker.EVERYDAY,
+            "floor: kept on the everyday talker, the judge read age-coded content",
+            held=True,
         )
     if judged_age_coded is None:
         return Route(
-            Talker.EVERYDAY, "kept on the everyday talker: the judge could not read the turn"
+            Talker.EVERYDAY,
+            "kept on the everyday talker: the judge could not read the turn",
+            held=True,
         )
     if declined:
-        return Route(Talker.EVERYDAY, BRUSHED)
+        return Route(Talker.EVERYDAY, BRUSHED, brushed=True)
     if in_play:
-        return Route(
-            Talker.ROLEPLAY, "replied with the roleplay talker: a pretend scene is in progress"
-        )
+        return _roleplay("a pretend scene is in progress")
     if not under_way:
         return Route(Talker.EVERYDAY, STARTING)
-    return Route(
-        Talker.ROLEPLAY,
-        "replied with the roleplay talker: intimate talk, which the operator allows",
-    )
+    return _roleplay("intimate talk, which the operator allows")
+
+
+def _roleplay(because: str) -> Route:
+    return Route(Talker.ROLEPLAY, f"replied with the roleplay talker: {because}", because=because)

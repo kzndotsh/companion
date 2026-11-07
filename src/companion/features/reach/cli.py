@@ -7,11 +7,11 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime, tzinfo
 
-from companion.core.reachout import Dial, dial
+from companion.core.reachout import OWN_HELD, Dial, dial
 from companion.core.rhythm import BASE_PAUSE_HOURS, FLOOR_HOURS, WINDOW
 from companion.core.types import RelationshipId
 from companion.features.reach.gate import Hold
-from companion.features.reach.logic import HELD, PACED, TARGET
+from companion.features.reach.logic import PACED, TARGET
 from companion.features.reach.outcome import OUTCOME, summary
 from companion.features.reach.run import Reacher, situation
 from companion.features.reach.store import Reaches
@@ -24,7 +24,7 @@ def _hours(hours: frozenset[int]) -> str:
 
 def _dial(store: Store, rel: RelationshipId, fallback: Dial) -> Dial:
     """The dial the bot last ran with, from its newest record; the setting here when none."""
-    held = store.decisions_with_key(rel, HELD)
+    held = store.decisions_with_key(rel, OWN_HELD)
     newest = [(d.at, (d.detail or {}).get("dial")) for d in held]
     newest += [(o.at, o.detail.get("dial")) for o in store.part(Reaches).since(rel)]
     found = max(newest, key=lambda n: n[0], default=(None, None))[1]
@@ -70,7 +70,7 @@ def lines(
         f"  {o.at.astimezone(tz):%m-%d %H:%M}  {o.kind:16} {o.detail.get('drafted') or '(none)'}"
         for o in dropped
     ] or ["  none"]
-    held = store.decisions_with_key(rel, HELD)
+    held = store.decisions_with_key(rel, OWN_HELD)
     counts = Counter(str((d.detail or {}).get("hold", "")) for d in held)
     out += ["", "holds by reason (each counted once while it lasted)"]
     out += [f"  {counts[h.value]:4}  {h.value}" for h in Hold if counts[h.value]] or ["  none"]

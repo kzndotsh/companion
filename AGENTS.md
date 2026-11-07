@@ -171,9 +171,14 @@ together.
 - Record a decision through `kit/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
   `decide(c, t, ...)` from `kit/current.py`), never by building `Decision(...)` by hand. Code that looks a past decision up
   matches its key (`decided_since`, `Decision.has_key`), never its reason text; decisions from before keys
-  match by how their reason begins.
-- Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the three
-  allowed fallbacks, no file over 600 lines (a file listed in `CAPS` may be over it and may only shrink;
+  match by how their reason begins. Anything else a look-up needs to tell apart is a typed field in
+  the detail (a belief closure's `mechanical`, a route's `talker` and `because`) or a field on the
+  value (`Route.held`, `Route.brushed`), never a part of the reason. A key shared by readers is named
+  once in one module (the reach-out keys are in `core/reachout.py`: `PLAN_HELD`, `OWN_HELD`,
+  `PLAN_WOULD_SEND`, `OWN_WOULD_SEND`, `WOULD_NUDGE`); the stored strings never change. A loop event
+  has a `key` column the same way (migration 0040).
+- Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the
+  allowed fallbacks for rows written before a key or field existed (listed there with the date each began), no file over 600 lines (a file listed in `CAPS` may be over it and may only shrink;
   none is listed today, and when one shrinks, lower its limit), and no more than 64 `noqa` comments in
   `src` (the limit; 60 today; a new one replaces an old one).
 - Every feature in shadow has a row in `core/shadows.py` with a review date and what it is judged on

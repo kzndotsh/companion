@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.episode import EPISODE_GAP
 from companion.core.extractor import from_fallback
-from companion.core.turn.floor import BRUSH_KEY, BRUSHED, MINOR_KEY, Route
+from companion.core.turn.floor import BRUSH_KEY, MINOR_KEY, Route
 from companion.core.turn.floor import Talker as RouteTalker
 from companion.core.turn.floor import choose as choose_route
 from companion.core.types import (
@@ -79,13 +79,16 @@ async def route_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) 
     if route.talker is RouteTalker.ROLEPLAY and await _declines(c, t):
         route = route_for(declined=True)
     if route.reason is not None:
-        decide(c, t, "route", {"talker": route.talker.value}, reason=route.reason)
+        detail: dict[str, Json] = {"talker": route.talker.value}
+        if route.because is not None:
+            detail["because"] = route.because
+        decide(c, t, "route", detail, reason=route.reason)
     talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
     return Routed(
         talker,
         held=route.held,
         read=read,
-        brushed=route.reason == BRUSHED,
+        brushed=route.brushed,
         heard=heard,
         in_scene=in_scene,
     )
@@ -97,6 +100,14 @@ def routed_to_roleplay(d: Decision) -> bool:
     if isinstance(d.detail, dict) and "talker" in d.detail:
         return d.detail["talker"] == RouteTalker.ROLEPLAY.value
     return d.reason.startswith("replied with the roleplay talker")
+
+
+def route_because(d: Decision) -> str:
+    """What sent the turn to the roleplay talker, from the route decision's detail; one logged
+    before that was kept has it after the first colon of its reason."""
+    if isinstance(d.detail, dict) and isinstance(d.detail.get("because"), str):
+        return str(d.detail["because"])
+    return d.reason.partition(": ")[2] or "routed there"
 
 
 async def _minor(c: Runtime, t: Turn, *, unsure: bool = False) -> bool | None:

@@ -582,3 +582,38 @@ async def test_a_view_closed_because_a_flag_implicated_it_counts_as_rejected(
     hit = await views_implicated(store, Routed(implications=[_implication(["v1"])]), REL, turn, "x")
     retire_implicated_views(store, hit)
     assert [b.id for b in store.rejected_views(REL)] == ["idea"]
+
+
+async def test_a_closure_logged_before_it_said_who_made_it_is_read_by_its_reason(
+    store: Store,
+) -> None:
+    from companion.core.types import (  # noqa: PLC0415
+        Decision,
+        DecisionId,
+        DecisionKind,
+        TraceId,
+        TurnId,
+    )
+
+    _two_day_view(store, "keep")
+    quote = "short replies read as more human"
+    store.insert_belief(_own_view("dupe", "u1", quote, "short replies read as human"))
+    store.insert_belief(_own_view("user", "u1", quote, "short replies feel human"))
+    for belief, reason in (
+        ("dupe", "closed belief: duplicate of keep (same words)"),
+        ("user", "closed belief: near-duplicate of an approved view"),
+    ):
+        store.append_decision(
+            Decision(
+                DecisionId(f"d-{belief}"),
+                REL,
+                TurnId("t"),
+                TraceId("t"),
+                DecisionKind.POLICY,
+                reason,
+                T0,
+                detail={"belief_id": belief},
+            )
+        )
+        store.close_belief(BeliefId(belief), T0)
+    assert [b.id for b in store.rejected_views(REL)] == ["user"]

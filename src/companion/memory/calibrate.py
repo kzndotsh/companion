@@ -13,9 +13,6 @@ from companion.core.types import Belief, RelationshipId
 from companion.core.views import Gates, gates
 from companion.store.sqlite.store import Store
 
-# Closures the code makes itself, written with these exact prefixes by `curate`. A user reason
-# that merely contains the words, such as "near-duplicate of an approved view", is a real decision.
-MECHANICAL = ("closed belief: duplicate of", "closed belief: replaced by a rebuild")
 ENOUGH_TO_TRUST = 20
 TRUST_PRECISION = 0.9
 
@@ -30,13 +27,13 @@ class Reviewed:
 
 def reviewed_views(store: Store, rel: RelationshipId) -> list[Reviewed]:
     approved = store.approved_views(rel)
-    closures = store.closure_reasons(rel)
+    closures = store.closures(rel)
     days = store.evidence_days(rel, include_closed=True)
     checks = store.view_checks(rel)
     out: list[Reviewed] = []
     for b in store.self_beliefs_all(rel):
-        reason = closures.get(b.id, "")
-        rejected = bool(reason) and not reason.startswith(MECHANICAL)
+        closure = closures.get(b.id)
+        rejected = closure is not None and not closure.mechanical
         if rejected:
             verdict = "retired"
         elif b.id in approved:

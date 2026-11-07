@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.reachout import Dial
+from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, Dial
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -18,7 +18,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.reach.logic import DROPPED, HELD, WOULD_SEND, Kind
+from companion.features.reach.logic import DROPPED, Kind
 from companion.features.reach.run import Reacher, tick_reach
 from companion.features.reach.store import Reaches
 from companion.store.sqlite.store import Store
@@ -90,13 +90,13 @@ async def test_a_shadow_tick_records_a_would_send_and_sends_nothing(store: Store
     assert (row.kind, row.mode, row.draft) == (Kind.MISSING, "shadow", drafter.message)
     assert row.detail["dial"] == "warm"
     assert isinstance(row.detail["rhythm"], dict)
-    assert _keys(store, DecisionKind.INITIATE, WOULD_SEND) == 1
+    assert _keys(store, DecisionKind.INITIATE, OWN_WOULD_SEND) == 1
     assert _companion_messages(store) == 0  # nothing was sent or stored as said
     # The next tick: they have not written since, so it waits for them, without a paid call.
     again = await tick_reach(store, REL, (NOW + timedelta(hours=6), UTC), reacher)
     assert again is None
     assert drafter.calls == 1
-    held = store.decisions_with_key(REL, HELD)
+    held = store.decisions_with_key(REL, OWN_HELD)
     assert [(d.detail or {}).get("hold") for d in held] == ["the last one is unanswered"]
 
 
@@ -128,7 +128,7 @@ async def test_a_needy_draft_is_dropped_and_recorded(store: Store) -> None:
     why = "how long they have been gone"
     assert rows[0].detail["screened_out"] == [{"message": drafter.message, "why": why}]
     assert _keys(store, DecisionKind.DO_NOTHING, DROPPED) == 1
-    assert _keys(store, DecisionKind.INITIATE, WOULD_SEND) == 0
+    assert _keys(store, DecisionKind.INITIATE, OWN_WOULD_SEND) == 0
     # A dropped draft is not tried again within six hours.
     assert await tick_reach(store, REL, (NOW + timedelta(hours=1), UTC), reacher) is None
     assert drafter.calls == 1
@@ -187,7 +187,7 @@ async def test_it_holds_for_twelve_hours_after_a_heavy_message(store: Store) -> 
     drafter = Drafter("how's the bread coming along?")
     assert await tick_reach(store, REL, WHEN, Reacher(Dial.WARM, drafter)) is None
     assert drafter.calls == 0
-    (held,) = store.decisions_with_key(REL, HELD)
+    (held,) = store.decisions_with_key(REL, OWN_HELD)
     assert (held.detail or {}).get("hold") == "a heavy chat lately"
 
 

@@ -28,8 +28,15 @@ class ReachOut:
     at: datetime
 
 
-# The key of a nudge it would send (features/nudges), read by any reach-out that counts its own.
-WOULD_NUDGE = "nudge (shadow): would send"
+# The decision keys of the three kinds of reach-out, each named here once because readers (the
+# pacing, `companion initiative`) mean all of them. The strings are stored in the decision log, so
+# they stay as they are. A hold is a reach-out the gate held back; a would-send is a shadow one.
+PLAN_HELD = "held, would otherwise reach out"  # about a plan (features/threads)
+OWN_HELD = "reach out: held"  # for its own reasons (features/reach)
+HELD_KEYS = (PLAN_HELD, OWN_HELD)
+PLAN_WOULD_SEND = "shadow, would send"
+OWN_WOULD_SEND = "reach out (shadow): would send"
+WOULD_NUDGE = "nudge (shadow): would send"  # after they stepped away (features/nudges)
 
 
 class Dial(StrEnum):

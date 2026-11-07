@@ -12,6 +12,7 @@ from companion.core.types import (
     Belief,
     BeliefId,
     BeliefKind,
+    Json,
     RelationshipId,
 )
 from companion.core.views import overstated
@@ -20,24 +21,28 @@ from companion.store.sqlite.decisions import CLOSED
 from companion.store.sqlite.store import Store
 
 
-def close(store: Store, b: Belief, reason: str, now: datetime) -> None:
-    _log(store, b, CLOSED, now, f"closed belief: {reason}")
+def close(store: Store, b: Belief, reason: str, now: datetime, *, mechanical: bool = False) -> None:
+    """Close a belief. `mechanical` marks a closure the code makes itself (a duplicate, a rebuild),
+    which is not the user's verdict on the view."""
+    detail: dict[str, Json] = {"belief_id": b.id, "claim": b.claim, "mechanical": mechanical}
+    _recorder(store, b, now).decide(CLOSED, detail, reason=f"closed belief: {reason}")
     store.close_belief(b.id, now)
 
 
 def log_would_close(store: Store, b: Belief, reason: str, now: datetime) -> None:
     """In shadow: what would have been closed, and why. Nothing changes."""
-    _log(store, b, "would close belief (shadow)", now, f"would close belief (shadow): {reason}")
+    key = "would close belief (shadow)"
+    _recorder(store, b, now).decide(
+        key, {"belief_id": b.id, "claim": b.claim}, reason=f"{key}: {reason}"
+    )
 
 
-def _log(store: Store, b: Belief, key: str, now: datetime, reason: str) -> None:
+def _recorder(store: Store, b: Belief, now: datetime) -> Recorder:
     source = store.get_utterance(b.evidence[0].utterance_id)
     if source is None:
         msg = f"belief {b.id} cites an utterance missing from the ledger"
         raise ValueError(msg)
-    Recorder.on_turn(store, b.relationship_id, source.turn_id, now).decide(
-        key, {"belief_id": b.id, "claim": b.claim}, reason=reason
-    )
+    return Recorder.on_turn(store, b.relationship_id, source.turn_id, now)
 
 
 def close_duplicates(store: Store, rel: RelationshipId, now: datetime | None = None) -> list[str]:
@@ -45,7 +50,7 @@ def close_duplicates(store: Store, rel: RelationshipId, now: datetime | None = N
     report: list[str] = []
     for keep, drop in duplicate_groups(store.current_beliefs(rel)):
         for b in drop:
-            close(store, b, f"duplicate of {keep.id[:8]} (same words)", now)
+            close(store, b, f"duplicate of {keep.id[:8]} (same words)", now, mechanical=True)
             report.append(f"closed  {b.claim}\n  kept  {keep.claim}")
     return report
 

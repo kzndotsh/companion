@@ -14,7 +14,7 @@ from datetime import datetime, timedelta, tzinfo
 from companion.core.crisis import crisis_paused
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
-from companion.core.reachout import WOULD_NUDGE, Dial, Held
+from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, WOULD_NUDGE, Dial, Held
 from companion.core.rhythm import WINDOW, kept_hour, learn
 from companion.core.sensitivity import GUARDED_AT
 from companion.core.turn.listening import LISTENING_KEY, logged_intimate, logged_severity
@@ -42,7 +42,6 @@ from companion.features.reach.gate import (
 )
 from companion.features.reach.logic import (
     DROPPED,
-    HELD,
     IDEAS,
     IDEAS_SCHEMA,
     LINES,
@@ -50,7 +49,6 @@ from companion.features.reach.logic import (
     PICK,
     PICK_SCHEMA,
     THING_REUSE,
-    WOULD_SEND,
     Context,
     Idea,
     Kind,
@@ -332,9 +330,9 @@ async def tick_reach(
         if reacher.last_hold != (pick.kind, held[0]):
             reacher.last_hold = (pick.kind, held[0])
             Recorder.fresh(store, rel, now).decide(
-                HELD,
+                OWN_HELD,
                 {**detail, "kind": pick.kind.value, "hold": held[0].value},
-                reason=f"{HELD}, would otherwise reach out ({pick.kind}): {held[1]}",
+                reason=f"{OWN_HELD}, would otherwise reach out ({pick.kind}): {held[1]}",
                 kind=DecisionKind.DO_NOTHING,
             )
         log.debug("reach held (%s): %s", pick.kind, held[1])
@@ -403,7 +401,10 @@ async def _draft(
         log.info("reach: nothing sent (%s): %s", kind, dropped)
         return None
     Recorder.fresh(store, rel, now).decide(
-        WOULD_SEND, detail, reason=f"{WOULD_SEND} ({kind}): {why}", kind=DecisionKind.INITIATE
+        OWN_WOULD_SEND,
+        detail,
+        reason=f"{OWN_WOULD_SEND} ({kind}): {why}",
+        kind=DecisionKind.INITIATE,
     )
     log.info("reach shadow: would send %r (%s, %s)", idea.message, kind, idea.angle)
     return row

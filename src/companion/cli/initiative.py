@@ -9,13 +9,12 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
-from companion.core.reachout import WOULD_NUDGE, dial
+from companion.core.reachout import HELD_KEYS, WOULD_NUDGE, dial
 from companion.core.turn.now import KEY as NOW_KEY
 from companion.core.turn.now import Phase, from_decisions
 from companion.core.types import RelationshipId
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.run import resume as resume_reach
-from companion.features.threads.run import HELD
 from companion.features.threads.store import Threads
 from companion.settings import REACH, Settings
 from companion.store.sqlite.store import Store
@@ -28,7 +27,10 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
     try:
         loops = store.part(Threads).loops(rel)
         reach = store.reach_outs(rel)
-        held = store.decisions_with_key(rel, HELD)
+        held = sorted(
+            (d for key in HELD_KEYS for d in store.decisions_with_key(rel, key)),
+            key=lambda d: d.at,
+        )
         said = from_decisions(store.decisions_with_key(rel, NOW_KEY))
         away = [s for s in said if s.label.phase is Phase.LEAVING]
         nudges = store.decisions_with_key(rel, WOULD_NUDGE)
@@ -50,7 +52,7 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
     out += [f"  {r.at:%m-%d %H:%M}  {r.draft or '(no draft)'}  [{r.reason}]" for r in reach] or [
         "  none yet"
     ]
-    out += ["", "held (due, but something was in the way)"]
+    out += ["", "held (due, but something was in the way: a plan or its own reasons)"]
     out += [f"  {d.at:%m-%d %H:%M}  {d.reason}" for d in held] or ["  none"]
     out += ["", f"stepped away ({len(away)} read), and the nudges it would have sent (shadow)"]
     out += [

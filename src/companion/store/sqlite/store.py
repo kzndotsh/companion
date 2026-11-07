@@ -322,9 +322,9 @@ class Store:
             support=self.last_support(rel),
         )
 
-    def closure_reasons(self, rel: RelationshipId) -> dict[BeliefId, str]:
-        """Why each closed belief was closed, from the decision log (newest reason wins)."""
-        return decisions.closure_reasons(self._conn, rel)
+    def closures(self, rel: RelationshipId) -> dict[BeliefId, decisions.Closure]:
+        """Why each closed belief was closed, from the decision log (newest closure wins)."""
+        return decisions.closures(self._conn, rel)
 
     def user_utterance(self, rel: RelationshipId, turn: TurnId) -> Utterance | None:
         return ledger.user_utterance(self._conn, rel, turn)
@@ -334,14 +334,11 @@ class Store:
 
     def rejected_views(self, rel: RelationshipId) -> list[Belief]:
         """Views the user (or a flag) retired. Mechanical closures, like dedupe, do not count."""
-        reasons = decisions.closure_reasons(self._conn, rel)
-        mechanical = ("closed belief: duplicate of", "closed belief: replaced by a rebuild")
+        closed = decisions.closures(self._conn, rel)
         return [
             b
             for b in beliefs.all_beliefs(self._conn, rel, Subject.SELF)
-            if b.valid_until is not None
-            and (r := reasons.get(b.id, ""))
-            and not r.startswith(mechanical)
+            if b.valid_until is not None and (c := closed.get(b.id)) and not c.mechanical
         ]
 
 

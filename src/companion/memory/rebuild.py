@@ -32,5 +32,11 @@ async def rebuild(
         start = result.upto
     now = utc_now()
     for b in old:
-        close(store, b, "replaced by a rebuild under improved extraction rules", now)
+        close(
+            store,
+            b,
+            "replaced by a rebuild under improved extraction rules",
+            now,
+            mechanical=True,
+        )
     return f"rebuilt: {added} beliefs added, {len(old)} replaced"

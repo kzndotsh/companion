@@ -101,13 +101,14 @@ def test_a_loop_must_point_at_a_real_message(conn: sqlite3.Connection) -> None:
         Threads(conn).add_loop(ghost)
 
 
-def test_note_only_reads_back_and_events_are_counted_by_reason(
+def test_note_only_reads_back_and_events_are_counted_by_key(
     conn: sqlite3.Connection, utterance: Callable[..., Utterance]
 ) -> None:
     base = _loop(conn, utterance)
     Threads(conn).add_loop(replace(base, id="l2", note_only=True))
     assert [lp.note_only for lp in Threads(conn).loops(REL)] == [False, True]
-    Threads(conn).add_event("l2", ThreadState.ASKED, "offered", T0)
-    Threads(conn).add_event("l2", ThreadState.ASKED, "offered", T0)
+    Threads(conn).add_event("l2", ThreadState.ASKED, "offered", T0, key="offered")
+    Threads(conn).add_event("l2", ThreadState.ASKED, "offered", T0)  # from before keys
+    Threads(conn).add_event("l2", ThreadState.ASKED, "other words", T0, key="something else")
     Threads(conn).add_event("l1", ThreadState.ASKED, "shadow reach-out", T0)
-    assert Threads(conn).events_with_reason(REL, "offered") == {"l2": 2}
+    assert Threads(conn).events_with_key(REL, "offered") == {"l2": 2}

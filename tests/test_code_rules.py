@@ -10,14 +10,23 @@ SRC = Path(__file__).resolve().parents[1] / "src" / "companion"
 
 # Matching a logged reason's text is how look-ups broke before decisions had keys. These are the
 # only places allowed: the key fallback itself, a route decision from before its detail was kept,
-# and belief closure reasons, which have no keys.
+# and a belief closure from before its detail said who made it.
 REASON_MATCH = re.compile(
-    r"reason\.(startswith|endswith|find|index)\(|\breason\s*(==|!=)"
-    r"|\bin\s+[\w.]*\breason\b|re\.(match|search|fullmatch)\([^)\n]*\breason\b"
+    r"reason[\"\])]*\.(startswith|endswith|find|index|partition|rpartition|split|"
+    r"removeprefix)\("
+    r"|\breason\s*(==|!=)|\bin\s+[\w.]*\breason\b|\.reason\s+(not\s+)?in\b"
+    r"|re\.(match|search|fullmatch)\([^)\n]*\breason\b|\b\w+\.reason\s*=\s*\?"
 )
-# turn/route.py has two: the old-decision fallback, and `route.reason == BRUSHED`, which compares
-# the floor's own answer as it is returned, not a logged decision.
-REASON_ALLOWED = {"core/types.py": 1, "turn/route.py": 2, "memory/calibrate.py": 1}
+# core/types.py: `Decision.has_key`'s fallback. turn/route.py: `routed_to_roleplay` and
+# `route_because`, for a route logged before its detail was kept (2026-10).
+# store/sqlite/decisions.py: a closure logged before `mechanical` was in its detail (2026-11-07).
+# features/threads/store.py: a loop event from before events had a key (0040, 2026-11-07).
+REASON_ALLOWED = {
+    "core/types.py": 1,
+    "turn/route.py": 2,
+    "store/sqlite/decisions.py": 1,
+    "features/threads/store.py": 1,
+}
 
 # No new god files: a file over DEFAULT_CAP lines is split. The big ones may only shrink.
 DEFAULT_CAP = 600

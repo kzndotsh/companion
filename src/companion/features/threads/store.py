@@ -45,20 +45,26 @@ class Threads:
                 (loop.id, "recorded from their own words", iso(loop.created_at)),
             )
 
-    def add_event(self, loop_id: str, state: ThreadState, reason: str, at: datetime) -> None:
+    def add_event(
+        self, loop_id: str, state: ThreadState, reason: str, at: datetime, *, key: str | None = None
+    ) -> None:
+        """An event on a loop. A `key` marks a kind of event that code counts later."""
         with write_tx(self.conn):
             self.conn.execute(
-                "INSERT INTO open_loop_events (loop_id, state, reason, at) VALUES (?, ?, ?, ?)",
-                (loop_id, state, reason, iso(at)),
+                "INSERT INTO open_loop_events (loop_id, state, reason, at, key)"
+                " VALUES (?, ?, ?, ?, ?)",
+                (loop_id, state, reason, iso(at), key),
             )
 
-    def events_with_reason(self, rel: RelationshipId, reason: str) -> dict[str, int]:
-        """How many events with this exact reason each loop has."""
+    def events_with_key(self, rel: RelationshipId, key: str) -> dict[str, int]:
+        """How many events of this key each loop has. An event written before keys existed, with
+        no key, matches when its reason is the key."""
         rows = self.conn.execute(
             "SELECT e.loop_id, COUNT(*) AS n FROM open_loop_events e"
             " JOIN open_loops l ON l.id = e.loop_id"
-            " WHERE l.relationship_id = ? AND e.reason = ? GROUP BY e.loop_id",
-            (rel, reason),
+            " WHERE l.relationship_id = ? AND (e.key = ? OR (e.key IS NULL AND e.reason = ?))"
+            " GROUP BY e.loop_id",
+            (rel, key, key),
         ).fetchall()
         return {str(r["loop_id"]): int(r["n"]) for r in rows}
 

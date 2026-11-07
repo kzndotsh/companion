@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.reachout import Dial, ReachOut
+from companion.core.reachout import PLAN_HELD, PLAN_WOULD_SEND, Dial, ReachOut
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -22,7 +22,6 @@ from companion.features.threads.gate import Verdict
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.run import (
     DRAFT_DROPPED,
-    HELD,
     Draft,
     Reading,
     Ticker,
@@ -183,7 +182,7 @@ async def test_a_shadow_tick_records_the_draft_and_marks_the_loop_asked_without_
     assert reach[0].draft == "how did the vet visit go?"
     assert reach[0].loop_id == loop.id
     assert store.part(Threads).loops(REL)[0].state is ThreadState.ASKED
-    initiated = store.decisions_with_key(REL, "shadow, would send")
+    initiated = store.decisions_with_key(REL, PLAN_WOULD_SEND)
     assert len(initiated) == 1
     assert initiated[0].kind is DecisionKind.INITIATE
     assert initiated[0].reason.startswith("shadow, would send: due ")
@@ -205,7 +204,7 @@ async def test_a_hold_is_recorded_once_with_its_reason_not_every_tick(store: Sto
     for minutes in (0, 15, 30):
         v = await _tick(store, night + timedelta(minutes=minutes), ticker=ticker)
         assert not v.send
-    held = store.decisions_with_key(REL, HELD)
+    held = store.decisions_with_key(REL, PLAN_HELD)
     assert len(held) == 1
     assert held[0].kind is DecisionKind.DO_NOTHING
     assert "quiet hours" in held[0].reason

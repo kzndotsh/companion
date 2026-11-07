@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.types import (
@@ -126,17 +127,37 @@ def decisions_for_belief(conn: sqlite3.Connection, belief_id: BeliefId) -> list[
     return [_decision(r) for r in rows]
 
 
-def closure_reasons(
-    conn: sqlite3.Connection, relationship_id: RelationshipId
-) -> dict[BeliefId, str]:
+# Closures the code makes itself, logged before the detail said so, began with these. A user's
+# reason that merely contains the words, such as "near-duplicate of an approved view", is real.
+OLD_MECHANICAL = ("closed belief: duplicate of", "closed belief: replaced by a rebuild")
+
+
+@dataclass(frozen=True, slots=True)
+class Closure:
+    reason: str
+    mechanical: bool  # the code closed it (a duplicate, a rebuild), not the user or a flag
+
+
+def closures(conn: sqlite3.Connection, relationship_id: RelationshipId) -> dict[BeliefId, Closure]:
+    """Why each closed belief was closed, newest closure winning. Whether the code did it is in the
+    closure's detail; one logged before that was kept is read by how its reason began."""
     rows = conn.execute(
-        "SELECT json_extract(detail, '$.belief_id') AS bid, reason FROM decisions"
+        "SELECT json_extract(detail, '$.belief_id') AS bid, reason,"
+        " json_extract(detail, '$.mechanical') AS mechanical FROM decisions"
         " WHERE relationship_id = ? AND bid IS NOT NULL"
         " AND (key = ? OR (key IS NULL AND substr(reason, 1, length(?)) = ?))"
         " ORDER BY at, id",
         (relationship_id, *_keyed(CLOSED)),
     ).fetchall()
-    return {BeliefId(str(r["bid"])): str(r["reason"]) for r in rows}
+    return {
+        BeliefId(str(r["bid"])): Closure(
+            str(r["reason"]),
+            bool(r["mechanical"])
+            if r["mechanical"] is not None
+            else str(r["reason"]).startswith(OLD_MECHANICAL),
+        )
+        for r in rows
+    }
 
 
 def decided_since(

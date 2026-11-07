@@ -17,7 +17,16 @@ from typing import TYPE_CHECKING
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
-from companion.core.reachout import DRAFT_SCHEMA, Held, ReachOut, checked, draft_text, parse_draft
+from companion.core.reachout import (
+    DRAFT_SCHEMA,
+    PLAN_HELD,
+    PLAN_WOULD_SEND,
+    Held,
+    ReachOut,
+    checked,
+    draft_text,
+    parse_draft,
+)
 from companion.core.turn.mentions import MentionCandidate, Rank
 from companion.core.types import (
     DecisionKind,
@@ -182,7 +191,6 @@ class Ticker:
     seen: set[tuple[str, str]] = field(default_factory=set[tuple[str, str]])
 
 
-HELD = "held, would otherwise reach out"  # the key of a reach-out the gate held back
 DRAFT_DROPPED = "open loop: the check-in draft was dropped, not sent"
 
 
@@ -220,7 +228,7 @@ async def tick(  # noqa: PLR0913, PLR0917
             ticker.seen.add(key)
             reason = f"held, would otherwise reach out about {verdict.loop.claim}: {verdict.reason}"
             Recorder.fresh(store, rel, now).decide(
-                HELD, detail, reason=reason, kind=DecisionKind.DO_NOTHING
+                PLAN_HELD, detail, reason=reason, kind=DecisionKind.DO_NOTHING
             )
             log.info("initiative held: %s (%s)", verdict.loop.claim, verdict.reason)
         return verdict
@@ -242,7 +250,7 @@ async def tick(  # noqa: PLR0913, PLR0917
     )
     detail["draft"] = text
     Recorder.fresh(store, rel, now).decide(
-        "shadow, would send",
+        PLAN_WOULD_SEND,
         detail,
         reason=f"shadow, would send: {verdict.reason}",
         kind=DecisionKind.INITIATE,
@@ -384,7 +392,7 @@ def loop_candidate(m: Moment, found: object) -> MentionCandidate | None:
     never also a reach-out."""
     del found
     c, t = m.c, m.t
-    offers = c.store.part(Threads).events_with_reason(c.rel, LOOP_OFFERED)
+    offers = c.store.part(Threads).events_with_key(c.rel, LOOP_OFFERED)
     loop = pick_note(c.store.part(Threads).loops(c.rel), offers, t.now, local_zone())
     note = loop_note(loop) if loop is not None else ""
     if loop is None or not note:
@@ -397,7 +405,12 @@ def loop_candidate(m: Moment, found: object) -> MentionCandidate | None:
         "note": loop_note_ref(loop),
     }
     asked = functools.partial(
-        c.store.part(Threads).add_event, loop.id, ThreadState.ASKED, LOOP_OFFERED, t.now
+        c.store.part(Threads).add_event,
+        loop.id,
+        ThreadState.ASKED,
+        LOOP_OFFERED,
+        t.now,
+        key=LOOP_OFFERED,
     )
     return MentionCandidate(
         _RANK[loop.kind], note, False, LOOP_OFFERED, loop.claim, detail, write=asked
