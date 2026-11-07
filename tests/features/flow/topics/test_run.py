@@ -11,9 +11,9 @@ from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.curiosity.basics.logic import name_belief
 from companion.features.flow.topics.logic import SPENT
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
@@ -60,7 +60,7 @@ async def _say(
     store: Store, at: datetime, text: str = "honey mustard", judge: Spent | None = None
 ) -> str:
     talker = Asker()
-    runtime = Runtime(store, talker, PREFIX, REL, judge=judge or Spent())
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=judge or Spent())
     await handle(runtime, text, "t", at)
     return talker.seen[0].card
 

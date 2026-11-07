@@ -10,9 +10,9 @@ from companion.core.types import TurnId
 from companion.features.reminders import cli
 from companion.features.reminders.logic import Kind, Part, Repeat, Series, Standing
 from companion.features.reminders.run import schedule
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.features.reminders.test_run import Writer
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import PREFIX, REL
 
 TZ = ZoneInfo("America/New_York")
@@ -30,7 +30,7 @@ def db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     ):
         s = Series(sid, REL, kind, thing, "q", repeat, "America/New_York", TurnId("t"), SET_AT)
         store.add_series(s)
-        schedule(Runtime(store, Writer(), PREFIX, REL), s, SET_AT, TZ)
+        schedule(make_runtime(store, Writer(), PREFIX, REL), s, SET_AT, TZ)
     store.close()
     return path
 

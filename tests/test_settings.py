@@ -6,17 +6,32 @@ from pathlib import Path
 
 import pytest
 
+from companion import settings
 from companion.lib.dotenv import load_dotenv
-from companion.settings import RENAMED, ROLEPLAY_MODEL, SWITCHES, Settings, Switch
+from companion.settings import (
+    INITIATIVE,
+    PLATFORM,
+    RENAMED,
+    ROLEPLAY_MODEL,
+    ROUTE_INTIMATE,
+    SWITCHES,
+    Settings,
+    Switch,
+)
 
 
 def test_every_switch_reads_on_and_off_the_same_way() -> None:
     for word in ("off", "0", "no", "FALSE"):
         s = Settings.from_env({sw.env: word for sw in SWITCHES})
-        assert all(not s.on(sw.label) for sw in SWITCHES if "off" in sw.values), word
+        assert all(not s.on(sw) for sw in SWITCHES if "off" in sw.values), word
     on = Settings.from_env({sw.env: "yes" for sw in SWITCHES})
-    assert on.position("intimate") == "on"
-    assert on.position("initiative") == "shadow"  # it has no live mode: anything but off is shadow
+    assert on.position(ROUTE_INTIMATE) == "on"
+    assert on.position(INITIATIVE) == "shadow"  # it has no live mode: anything but off is shadow
+
+
+def test_every_named_switch_is_in_the_table() -> None:
+    named = [v for v in vars(settings).values() if isinstance(v, Switch)]
+    assert sorted(s.env for s in named) == sorted(s.env for s in SWITCHES)
 
 
 @pytest.mark.parametrize(
@@ -24,7 +39,7 @@ def test_every_switch_reads_on_and_off_the_same_way() -> None:
     [("", "telegram"), ("Discord", "discord"), ("off", "telegram"), ("on", "telegram")],
 )
 def test_the_platform_is_telegram_unless_discord_is_named(raw: str, platform: str) -> None:
-    assert Settings.from_env({"COMPANION_PLATFORM": raw}).position("platform") == platform
+    assert Settings.from_env({"COMPANION_PLATFORM": raw}).position(PLATFORM) == platform
 
 
 def test_unset_is_the_default() -> None:
@@ -84,20 +99,6 @@ def test_a_renamed_setting_still_set_stops_the_bot_with_its_new_name(old: str, n
 def test_every_switch_has_its_own_label() -> None:
     labels = [s.label for s in SWITCHES]
     assert len(labels) == len(set(labels))
-
-
-def test_every_switch_the_code_asks_for_exists() -> None:
-    """A label is a string, so a renamed switch only fails when the line runs (the memory pass asked
-    for one by its old name and failed every time)."""
-    labels = {s.label for s in SWITCHES}
-    src = Path(__file__).parents[1] / "src" / "companion"
-    asked = {
-        (f.name, m)
-        for f in src.rglob("*.py")
-        for m in re.findall(r"\.(?:on|position)\(\"([^\"]+)\"\)", f.read_text())
-    }
-    assert asked
-    assert {(name, m) for name, m in asked if m not in labels} == set()
 
 
 def test_env_example_names_every_setting_with_its_default() -> None:

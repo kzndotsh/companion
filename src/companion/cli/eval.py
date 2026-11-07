@@ -12,6 +12,7 @@ from pathlib import Path
 import httpx
 
 from companion import characters, prompts
+from companion.compose import extractor
 from companion.core.clock import utc_now
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
@@ -32,7 +33,7 @@ from companion.evals.variants import Place, parse_spec
 from companion.models.credits import charged_since, credits
 from companion.models.kiro import PREFIX as KIRO
 from companion.models.kiro import KiroTalker
-from companion.models.openrouter import DEFAULT_MODEL, OpenRouterExtractor, OpenRouterTalker
+from companion.models.openrouter import DEFAULT_MODEL, OpenRouterTalker
 from companion.settings import Settings
 from companion.store.sqlite.replay import replay_file
 
@@ -222,7 +223,7 @@ async def run(a: EvalArgs) -> str:
                 reasoning_effort=effort,
             )
 
-        models = Models(talker_for, OpenRouterExtractor(key, client, s.judge_model))
+        models = Models(talker_for, extractor(client, s, s.judge_routes))
         plan = Plan(fixtures, requests, variants, samples, cap, rebuilt_requests)
         results = await run_eval(plan, models)
         if before is not None:

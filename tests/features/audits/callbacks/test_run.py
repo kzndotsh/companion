@@ -24,9 +24,9 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.audits.callbacks.run import check_new
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 NOW = datetime(2026, 10, 18, 17, 0, tzinfo=UTC)
@@ -87,7 +87,7 @@ async def test_each_reply_is_judged_once_and_the_verdict_is_kept(tmp_path: Path)
             sensitivity=Sensitivity.ORDINARY,
         )
     )
-    runtime = Runtime(store, Talker(), PREFIX, REL)
+    runtime = make_runtime(store, Talker(), PREFIX, REL)
     await handle(runtime, "ugh long day", "test", NOW)
     judge = Judge()
     assert await check_new(store, judge, REL, NOW - timedelta(days=1), 1.0) == (1, 0.001)

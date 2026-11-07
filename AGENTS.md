@@ -128,7 +128,7 @@ together.
   request), `turn/crisis.py` (a risk read sets a scene aside and adds the fixed crisis-line message),
   `turn/talk.py` (the talker), `turn/gate.py` (the reply gate: the checks before a reply is sent, their order and redraws; the checks themselves are in `core/reply_gate.py`), `turn/beside.py` (shadow tasks) and
   `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(runtime, ...)`;
-  the `Runtime` it runs with is plain data in `kit/runtime.py`): change a stage in its module.
+  the `Runtime` it runs with is plain data in `kit/runtime.py`, built only by `compose.runtime` from `Settings`, so it has no switch defaults of its own; tests get one from `tests/runtime.py`): change a stage in its module.
 - A feature declares its parts as a `Feature` in its own module (`kit/features.py`): a look-up before the
   reply, a note, steps after a memory pass, a look-up in shadow beside the turn, and a step once the
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
@@ -192,7 +192,7 @@ together.
 - Settings are environment variables in `.env`, listed with their defaults in `README.md`. They are read
   once into `companion/settings.py` (`Settings`, one row per switch in `SWITCHES`); the startup block
   (`startup_lines` in `daemon.py`: prompts, models, limits, then the switches as live, shadow, off and
-  dials) is printed from it. A new switch is one row there.
+  dials) is printed from it. A new switch is a named row there (`MOOD = Switch(...)`, listed in `SWITCHES`) and a field on `Runtime` set in `compose.runtime`; its uses name the row (`s.position(MOOD)`), never its label. `companion/compose.py` is the one place the models, spend sink and `Runtime` are built, for the bot, the one-off commands and the evals.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`lib/logs.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.

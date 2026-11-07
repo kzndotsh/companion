@@ -15,9 +15,9 @@ from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, RelationshipId, TurnId
 from companion.features.reactions import run as ack_loop
 from companion.features.reactions.logic import INSTEAD_THRESHOLD
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 PREFIX = build_prefix("You are steady and warm. " * 200)
@@ -73,7 +73,7 @@ async def _two_turns(
     store: Store, judge: Judge | None, first: str = "no rush, tell me later.", second: str = "okie"
 ) -> tuple[Talker, str | Reaction | ReactAndReply | ThenSend]:
     talker = Talker(first, "a normal reply")
-    runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=judge)
     await handle(runtime, "too much to explain rn", "test", NOW)
     out = await handle(runtime, second, "test", NOW + timedelta(seconds=30))
     return talker, out

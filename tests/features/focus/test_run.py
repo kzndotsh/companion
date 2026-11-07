@@ -7,11 +7,11 @@ from pathlib import Path
 import pytest
 
 from companion.core.vectors import Embedded
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from tests.features.recall.test_run import Embedder
 from tests.features.recall.test_run import _belief as belief_in  # pyright: ignore[reportPrivateUsage]
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
@@ -30,7 +30,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, embedder: object, text: str, focus: str = "on") -> Talker:
     talker = Talker()
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         talker,
         PREFIX,

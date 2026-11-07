@@ -12,10 +12,10 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Frame, Json, RelationshipId, Speaker
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn import frames as frames_loop
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 PREFIX = build_prefix("You are steady and warm. " * 200)
@@ -72,7 +72,7 @@ def _frames(store: Store) -> list[tuple[str, Frame]]:
 async def test_an_ordinary_message_is_stored_real_and_never_asks_the_judge(store: Store) -> None:
     judge = Judge()
     await handle(
-        Runtime(store, Talker("hey"), PREFIX, REL, judge=judge),
+        make_runtime(store, Talker("hey"), PREFIX, REL, judge=judge),
         "i got a haircut",
         "t",
         NOW,
@@ -86,7 +86,7 @@ async def test_a_pretend_message_is_stored_as_play_and_the_companion_plays_along
 ) -> None:
     judge = Judge(("play", 0.92))
     await handle(
-        Runtime(store, Talker("*slides a plate over*"), PREFIX, REL, judge=judge),
+        make_runtime(store, Talker("*slides a plate over*"), PREFIX, REL, judge=judge),
         "can't we pretend you cooked me lunch",
         "t",
         NOW,
@@ -100,7 +100,7 @@ async def test_a_pretend_message_is_stored_as_play_and_the_companion_plays_along
 async def test_a_low_confidence_judgement_stores_real(store: Store) -> None:
     judge = Judge(("play", 0.4))
     await handle(
-        Runtime(store, Talker("ok"), PREFIX, REL, judge=judge),
+        make_runtime(store, Talker("ok"), PREFIX, REL, judge=judge),
         "imagine that",
         "t",
         NOW,
@@ -113,7 +113,7 @@ async def test_a_scene_in_progress_adds_a_note_to_the_next_reply_without_waiting
 ) -> None:
     judge = Judge(("play", 0.9), ("play", 0.9))
     talker = Talker("*waves*", "*bows*")
-    runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=judge)
     await handle(runtime, "let's pretend you're a knight", "t", NOW)
     await handle(runtime, "and then what", "t", NOW + timedelta(seconds=30))
     assert "pretend scene" not in talker.seen[0].card
@@ -125,14 +125,14 @@ async def test_a_scene_in_progress_adds_a_note_to_the_next_reply_without_waiting
 async def test_stepping_out_ends_the_scene_and_the_companion_steps_out_too(store: Store) -> None:
     judge = Judge(("play", 0.9), ("ooc", 0.9))
     talker = Talker("*bows*", "sure, what's up")
-    runtime = Runtime(store, talker, PREFIX, REL, judge=judge)
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=judge)
     await handle(runtime, "let's pretend you're a knight", "t", NOW)
     await handle(runtime, "ok stop, seriously though", "t", NOW + timedelta(seconds=30))
     last_two = _frames(store)[-2:]
     assert [f for _, f in last_two] == [Frame.OOC, Frame.REAL]
     third = Talker("hello")
     await handle(
-        Runtime(store, third, PREFIX, REL, judge=judge),
+        make_runtime(store, third, PREFIX, REL, judge=judge),
         "anyway",
         "t",
         NOW + timedelta(minutes=1),
@@ -144,7 +144,7 @@ async def test_a_failing_or_slow_judge_stores_real_and_the_reply_still_goes(
     store: Store, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     out = await handle(
-        Runtime(store, Talker("ok"), PREFIX, REL, judge=Judge(fail=True)),
+        make_runtime(store, Talker("ok"), PREFIX, REL, judge=Judge(fail=True)),
         "let's pretend",
         "t",
         NOW,
@@ -152,7 +152,7 @@ async def test_a_failing_or_slow_judge_stores_real_and_the_reply_still_goes(
     assert out == "ok"
     monkeypatch.setattr(frames_loop, "FRAME", replace(frames_loop.FRAME, timeout=0.05))
     out = await handle(
-        Runtime(store, Talker("fine"), PREFIX, REL, judge=Judge(("play", 0.9), delay=1.0)),
+        make_runtime(store, Talker("fine"), PREFIX, REL, judge=Judge(("play", 0.9), delay=1.0)),
         "imagine that",
         "t",
         NOW + timedelta(minutes=5),
@@ -162,7 +162,7 @@ async def test_a_failing_or_slow_judge_stores_real_and_the_reply_still_goes(
 
 
 async def test_a_failed_reply_still_stores_the_users_message(store: Store) -> None:
-    runtime = Runtime(store, Talker(fail_on=1), PREFIX, REL, judge=Judge(("play", 0.9)))
+    runtime = make_runtime(store, Talker(fail_on=1), PREFIX, REL, judge=Judge(("play", 0.9)))
     with pytest.raises(RuntimeError):
         await handle(runtime, "let's pretend", "t", NOW)
     assert _frames(store) == [("let's pretend", Frame.REAL)]
@@ -172,7 +172,7 @@ async def test_every_frame_judgement_is_logged_with_a_reason_built_by_code(
     store: Store, tmp_path: Path
 ) -> None:
     await handle(
-        Runtime(store, Talker("*smiles*"), PREFIX, REL, judge=Judge(("play", 0.92))),
+        make_runtime(store, Talker("*smiles*"), PREFIX, REL, judge=Judge(("play", 0.92))),
         "let's pretend",
         "t",
         NOW,
@@ -195,7 +195,7 @@ async def test_replay_still_matches_when_a_scene_note_is_in_the_request(
     from companion.store.sqlite import replay as store_replay  # noqa: PLC0415
 
     judge = Judge(("play", 0.9), ("play", 0.9))
-    runtime = Runtime(store, Talker("*a*", "*b*"), PREFIX, REL, judge=judge)
+    runtime = make_runtime(store, Talker("*a*", "*b*"), PREFIX, REL, judge=judge)
     await handle(runtime, "let's pretend", "t", NOW)
     await handle(runtime, "and then", "t", NOW + timedelta(seconds=30))
     store.close()
@@ -249,7 +249,7 @@ async def test_a_played_belief_is_recorded_but_never_reaches_the_card(store: Sto
 
     store.insert_belief(believe("played", "The user is a dragon.", Provenance.PLAYED, Frame.PLAY))
     talker = Talker("hi")
-    await handle(Runtime(store, talker, PREFIX, REL), "hello", "t", NOW)
+    await handle(make_runtime(store, talker, PREFIX, REL), "hello", "t", NOW)
     assert "dragon" not in talker.seen[0].messages[-1].content
     assert len(store.user_beliefs(REL)) == 1  # kept as a record
 

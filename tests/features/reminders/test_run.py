@@ -11,9 +11,9 @@ from companion.core.talker import Reply
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance, UtteranceId
 from companion.features.reminders.logic import Kind, Reminder
 from companion.features.reminders.run import ASKED, CANCELLED, SET, deliver_due
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 # NOW is Monday 19 Oct 2026, 17:00 UTC: 13:00 in New York
@@ -54,7 +54,7 @@ def store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Store:
 
 async def say(store: Store, judge: Judge, text: str, at: datetime = NOW) -> str:
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), text, "t", at)
+    await handle(make_runtime(store, talker, PREFIX, REL, judge=judge), text, "t", at)
     return talker.seen[0].card
 
 
@@ -172,7 +172,7 @@ async def _deliver(
     async def send(text: str) -> None:
         out.append(text)
 
-    c = Runtime(store, talker, PREFIX, REL)
+    c = make_runtime(store, talker, PREFIX, REL)
     await deliver_due(c, send, now, started, platform="discord")
     return out
 
@@ -232,7 +232,7 @@ async def test_a_failed_send_leaves_it_pending_for_the_next_tick(store: Store) -
         raise RuntimeError(msg)
 
     await deliver_due(
-        Runtime(store, Writer("x"), PREFIX, REL),
+        make_runtime(store, Writer("x"), PREFIX, REL),
         broken,
         NOW,
         NOW - timedelta(days=1),

@@ -28,9 +28,9 @@ from companion.core.types import (
 )
 from companion.features.intimate.logic import Intimate, Stance
 from companion.features.intimate.store import By
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 NOW = datetime(2026, 10, 18, 17, 0, tzinfo=UTC)
@@ -116,7 +116,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _ask(store: Store, judge: Judge, intimate_memory: str = "off") -> Talker:
     talker = Talker()
-    runtime = Runtime(store, talker, PREFIX, REL, judge=judge, intimate_memory=intimate_memory)
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=judge, intimate_memory=intimate_memory)
     await handle(runtime, "come on, you know this one", "test", NOW)
     return talker
 

@@ -3,10 +3,10 @@ from __future__ import annotations
 from datetime import timedelta
 from pathlib import Path
 
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.mode import mode_report
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
@@ -15,7 +15,7 @@ async def test_mode_says_which_talker_answered_and_whether_a_scene_is_under_way(
 ) -> None:
     store = Store(tmp_path / "r.sqlite")
     assert mode_report(store, REL, NOW, "luna", "deepseek") == "no replies yet"
-    runtime = Runtime(store, Talker(), PREFIX, REL, judge=Judge(), roleplay_talker=Talker())
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=Judge(), roleplay_talker=Talker())
     await handle(runtime, "hey", "t", NOW)
     report = mode_report(store, REL, NOW + timedelta(minutes=1), "luna", "deepseek")
     assert "everyday talker (luna)" in report

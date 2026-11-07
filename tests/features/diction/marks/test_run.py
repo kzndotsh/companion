@@ -8,8 +8,8 @@ from companion.features.diction.marks.logic import MARKS
 from companion.features.diction.marks.run import mark_offer
 from companion.kit.current import Heard, Turn
 from companion.kit.features import Lookups, Moment
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 CALM: Heard = (
@@ -25,7 +25,7 @@ HEAVY: Heard = (
 
 
 def _offer(tmp_path: Path, text: str, heard: Heard, *, marks: bool = True) -> tuple[str, ...]:
-    runtime = Runtime(Store(tmp_path / "r.sqlite"), Talker(), PREFIX, REL, own_marks=marks)
+    runtime = make_runtime(Store(tmp_path / "r.sqlite"), Talker(), PREFIX, REL, own_marks=marks)
     t = Turn(TurnId("t1"), NOW, [], text)
     return mark_offer(Moment(runtime, t, Frame.REAL, heard, Lookups(), False, []), None, {}).tail
 

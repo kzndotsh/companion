@@ -23,11 +23,11 @@ from companion.features.threads.run import LOOP_OFFERED
 from companion.kit.current import Turn
 from companion.kit.features import Lookups, Moment, Offer
 from companion.kit.record import Recorder
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.mention import MET, mention_note, read_met
 from tests.features.calendar.test_run import CALM, HALLOWEEN, NOTE, QUIET, remember
 from tests.features.threads.test_note import Meets
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import PREFIX, REL, Talker
 
 BIRTHDAY = "The user's birthday is October 31."
@@ -45,7 +45,7 @@ def store(tmp_path: Path) -> Store:
 
 def _turn(store: Store, minutes: int) -> tuple[str, ...]:
     """One casual turn's mention, its writes run as if the turn were stored."""
-    runtime = Runtime(store, Talker(), PREFIX, REL, calendar=True)
+    runtime = make_runtime(store, Talker(), PREFIX, REL, calendar=True)
     t = Turn(TurnId(f"t{minutes}"), HALLOWEEN + timedelta(minutes=minutes), [], "hey")
     offer: Offer = mention_note(Moment(runtime, t, Frame.REAL, CALM, Lookups(), False, []), QUIET)
     for write in offer.after:
@@ -114,7 +114,7 @@ async def test_how_they_met_a_day_is_read_like_a_plan(store: Store) -> None:
         HALLOWEEN,
     )
     store.append_utterance(reply)
-    runtime = Runtime(store, Talker(), PREFIX, REL, judge=Meets())
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=Meets())
     then = HALLOWEEN + timedelta(minutes=2)
     t = Turn(TurnId("t1"), then, [reply], "yes!! a costume party")
     await read_met(runtime, t, reply, None)

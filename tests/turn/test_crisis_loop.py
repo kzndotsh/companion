@@ -30,6 +30,7 @@ from companion.kit.runtime import Runtime
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 PREFIX = build_prefix("You are steady and warm. " * 200)
@@ -115,7 +116,7 @@ def _runtime(
     roleplay_talker: Talker | None = None,
     serious_message: str = "",
 ) -> Runtime:
-    return Runtime(
+    return make_runtime(
         store,
         talker,
         PREFIX,

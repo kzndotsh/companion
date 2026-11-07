@@ -2983,3 +2983,14 @@ Rerun: the scratch `lane_ab.py` (the logged scene card of each turn, split as th
 
 From 2026-11-05 the judge that names its repeated moves logs and spends as `tics`; earlier rows say
 `habits`. Add the two when comparing its cost across the date (`features/diction/tics`).
+
+## 2026-11-07: Samples run on the live switch defaults
+
+Not a measurement: a change to what samples run with. `evals/sample.py` built its own `Runtime`, with
+mood in shadow and lore, focus, relevance, episodes, crisis, now, history, the intimate lane, promises,
+initiative and reminders off, while its docstring said it followed the live defaults. It now builds
+through `compose.runtime` from the live defaults, keeping two stated overrides: the calendar stays off
+(its note depends on the day the eval runs) and there is no daily cap (the eval has its own `--cap`). A
+sample's judges fail every read and its store is empty, so no request is expected to change; results
+before and after are comparable. The reply-check judge in `companion eval` is now the live judge with
+its standby and routes, so a refusal falls back as it does live.

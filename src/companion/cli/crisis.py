@@ -10,7 +10,7 @@ from pathlib import Path
 
 import httpx
 
-from companion.daemon import extractor
+from companion.compose import extractor
 from companion.features.crisis.cli import check, load_cases
 from companion.lib.vote import READS
 from companion.models.credits import credits

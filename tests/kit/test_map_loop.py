@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 from companion.core.turn.address import KEY as ADDRESS_KEY
@@ -19,7 +20,6 @@ from companion.core.types import (
 )
 from companion.features.curiosity.basics.logic import name_belief
 from companion.features.curiosity.map.logic import ASKED
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -47,7 +47,9 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, judge: Judge, text: str = "lol ok", at: datetime = NOW) -> Talker:
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL, judge=judge, mood="off"), text, "test", at)
+    await handle(
+        make_runtime(store, talker, PREFIX, REL, judge=judge, mood="off"), text, "test", at
+    )
     return talker
 
 

@@ -30,9 +30,9 @@ from companion.evals.sample import draw
 from companion.features.curiosity.basics.logic import ASKED as ASKED_NAME
 from companion.features.flow.questions.logic import RUN_NOTE as QUESTION_NOTE
 from companion.kit.record import Recorder
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 from tests.turn.test_chaos import Chaos
 from tests.turn.test_mood_loop import NOW, PREFIX, REL
 from tests.turn.test_recheck_loop import Judge as TurnJudge
@@ -113,7 +113,7 @@ async def _live(tmp_path: Path, f: Fixture, judge: Chaos | TurnJudge) -> TalkerR
         ASKED_NAME, at=NOW - timedelta(hours=1)
     )
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), f.script.user, "t", NOW)
+    await handle(make_runtime(store, talker, PREFIX, REL, judge=judge), f.script.user, "t", NOW)
     store.close()
     return talker.seen[0]
 

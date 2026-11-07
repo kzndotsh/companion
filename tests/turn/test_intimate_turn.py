@@ -41,6 +41,7 @@ from companion.store.sqlite.store import Store
 from companion.turn.assemble import Assembled, assemble
 from companion.turn.fast import handle
 from tests.features.recall.test_run import Embedder, Picker
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 NAME = "The user's name is Sam."
@@ -100,7 +101,9 @@ TURN = TurnId("t-now")
 
 
 def _runtime(store: Store, mode: str) -> Runtime:
-    return Runtime(store, Talker(), PREFIX, REL, roleplay_talker=Talker(), intimate_memory=mode)
+    return make_runtime(
+        store, Talker(), PREFIX, REL, roleplay_talker=Talker(), intimate_memory=mode
+    )
 
 
 def _brush(store: Store, *, declines: bool | None, turn: TurnId = TURN, at: datetime = NOW) -> None:
@@ -220,7 +223,7 @@ def test_with_no_look_up_a_scene_keeps_its_limits_and_basics(store: Store) -> No
 
 async def test_on_the_relevance_look_up_never_searches_the_intimate_lane(store: Store) -> None:
     talker = Talker()
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         talker,
         PREFIX,

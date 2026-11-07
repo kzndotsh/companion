@@ -17,7 +17,7 @@ from companion.features.reach import cli as own_reasons
 from companion.features.reach.logic import dial
 from companion.features.reach.run import resume as resume_reach
 from companion.features.threads.run import HELD
-from companion.settings import Settings
+from companion.settings import REACH, Settings
 from companion.store.sqlite.store import Store
 
 
@@ -36,7 +36,7 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
             store,
             rel,
             (now or utc_now(), local_zone()),
-            dial(Settings.from_env().position("reach")),
+            dial(Settings.from_env().position(REACH)),
         )
     finally:
         store.close()

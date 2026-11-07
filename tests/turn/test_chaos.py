@@ -22,6 +22,7 @@ from companion.core.types import Json, Speaker, TurnId
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 MESSAGES = (
@@ -107,7 +108,7 @@ async def _settled(runtime: Runtime) -> None:
 
 
 def _runtime(store: Store, judge: Chaos | None, talker: Talker) -> Runtime:
-    return Runtime(
+    return make_runtime(
         store,
         talker,
         PREFIX,

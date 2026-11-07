@@ -11,9 +11,9 @@ from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.turn.reply import ReactAndReply, Reaction
 from companion.core.types import Json, RelationshipId
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 PREFIX = build_prefix("You are steady and warm. " * 200)
@@ -51,7 +51,7 @@ def store(tmp_path: Path) -> Store:
 
 
 async def _say(store: Store, judge: Judge | None, texts: list[str]) -> list[object]:
-    runtime = Runtime(store, Talker(), PREFIX, REL, judge=judge)
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=judge)
     return [
         await handle(runtime, text, "test", NOW + timedelta(minutes=i))
         for i, text in enumerate(texts)

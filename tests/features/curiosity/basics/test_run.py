@@ -23,8 +23,8 @@ from companion.features.curiosity.basics.logic import ASK_NAME, ASK_PRONOUNS, AS
 from companion.features.curiosity.basics.run import basics_offer, capture_pronouns
 from companion.kit.current import Turn
 from companion.kit.features import Lookups, Moment, Offer
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 NAMED = "The user's name is Sam."
@@ -54,7 +54,7 @@ def _note(
     severity: Severity = Severity.TRIVIAL,
     asked_how: bool = False,
 ) -> tuple[str, ...]:
-    runtime = Runtime(store, Talker(), PREFIX, REL)
+    runtime = make_runtime(store, Talker(), PREFIX, REL)
     t = Turn(TurnId("t"), NOW, [], "just got home")
     heard = (ListeningRead(severity, "other", vague=False), "j", "")
     m = Moment(runtime, t, Frame.REAL, heard, Lookups(), False, beliefs)
@@ -102,7 +102,7 @@ async def _capture(store: Store, reader: Reader, asked: str, said: str) -> None:
             NOW - timedelta(minutes=1),
         )
     ]
-    runtime = Runtime(store, Talker(), PREFIX, REL, judge=reader)
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=reader)
     await capture_pronouns(runtime, Turn(TurnId("t1"), NOW, prior, said))
 
 

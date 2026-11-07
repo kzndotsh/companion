@@ -17,9 +17,9 @@ from companion.features.reminders.run import (
     schedule,
     stop,
 )
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from tests.features.reminders.test_run import Writer
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import PREFIX, REL
 
 TZ = ZoneInfo("America/New_York")
@@ -49,7 +49,7 @@ def _series(store: Store, kind: Kind = Kind.GREETING, repeat: Repeat | None = No
         SET_AT,
     )
     store.add_series(s)
-    schedule(Runtime(store, Writer(), PREFIX, REL), s, SET_AT, TZ)
+    schedule(make_runtime(store, Writer(), PREFIX, REL), s, SET_AT, TZ)
     return s
 
 
@@ -74,7 +74,7 @@ async def _tick(store: Store, now: datetime, talker: Writer | None = None) -> li
     async def send(text: str) -> None:
         out.append(text)
 
-    c = Runtime(store, talker or Writer("morning you ☀️"), PREFIX, REL)
+    c = make_runtime(store, talker or Writer("morning you ☀️"), PREFIX, REL)
     await deliver_due(c, send, now, SET_AT, platform="telegram")
     return out
 
@@ -127,7 +127,7 @@ async def test_three_unanswered_greetings_pause_it_and_their_next_message_resume
 
 async def test_one_pending_occurrence_however_often_the_scheduler_runs(store: Store) -> None:
     s = _series(store)
-    c = Runtime(store, Writer(), PREFIX, REL)
+    c = make_runtime(store, Writer(), PREFIX, REL)
     for _ in range(3):
         schedule(c, s, SET_AT + timedelta(minutes=1), TZ)
     await _tick(store, SET_AT + timedelta(minutes=2))
@@ -151,7 +151,7 @@ async def test_a_series_stopped_while_its_greeting_was_sending_makes_no_next_one
         del text
         stop(store, s, "they asked to stop it", _at(20, 9, 0))
 
-    c = Runtime(store, Writer("morning ☀️"), PREFIX, REL)
+    c = make_runtime(store, Writer("morning ☀️"), PREFIX, REL)
     await deliver_due(c, send, _at(20, 9, 0), SET_AT, platform="telegram")
     assert _states(store) == [("2026-10-20 09:00", "sent")]
 

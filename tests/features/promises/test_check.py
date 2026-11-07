@@ -21,9 +21,9 @@ from companion.core.types import (
 from companion.features.promises.logic import Check, Kind, Promise, Scope, check_input, read_check
 from companion.features.promises.run import KEPT, WOULD_REDRAW, WOULD_RETIRE
 from companion.kit.beside import settled
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 PREFIX = build_prefix("You are steady and warm. " * 200)
@@ -81,7 +81,7 @@ def store(tmp_path: Path) -> Store:
 
 
 async def _turn(store: Store, judge: Judge, *, promises: str = "shadow") -> list[str]:
-    runtime = Runtime(store, Talker(), PREFIX, REL, judge=judge, promises=promises)
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=judge, promises=promises)
     await handle(runtime, "how did my morning look to you", "test", NOW)
     await settled()
     return [d.reason for d in store.decisions_with_key(REL, WOULD_REDRAW)] + [
@@ -147,7 +147,7 @@ async def test_a_moment_promise_is_not_checked_once_its_week_is_over(store: Stor
     (only,) = store.promises(REL)
     store.set_promise_scope(only.promise.id, Scope.MOMENT, "owner", NOW)
     judge = Judge({"broken": "p1", "released": [], "why": "x"})
-    later = Runtime(store, Talker(), PREFIX, REL, judge=judge, promises="shadow")
+    later = make_runtime(store, Talker(), PREFIX, REL, judge=judge, promises="shadow")
     await handle(later, "morning", "test", NOW + timedelta(days=7))
     await settled()
     assert judge.checks == []

@@ -8,12 +8,12 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from tests.runtime import make_runtime
 
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import RelationshipId, Speaker
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 
@@ -47,7 +47,7 @@ def _said(store: Store) -> list[tuple[Speaker, str]]:
 async def test_a_failed_model_call_keeps_the_users_message_and_stores_nothing_from_the_error(
     store: Store,
 ) -> None:
-    runtime = Runtime(store, Flaky(RuntimeError("provider down: 503")), PREFIX, REL)
+    runtime = make_runtime(store, Flaky(RuntimeError("provider down: 503")), PREFIX, REL)
     with pytest.raises(RuntimeError):
         await handle(runtime, "are you there", "t", NOW)
     assert _said(store) == [(Speaker.USER, "are you there")]
@@ -56,7 +56,7 @@ async def test_a_failed_model_call_keeps_the_users_message_and_stores_nothing_fr
 
 async def test_the_next_turn_sees_the_unanswered_message_exactly_once(store: Store) -> None:
     talker = Flaky(RuntimeError("down"), "hi, sorry about that")
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     with pytest.raises(RuntimeError):
         await handle(runtime, "are you there", "t", NOW)
     await handle(runtime, "hello?", "t", NOW + timedelta(minutes=2))
@@ -67,12 +67,12 @@ async def test_the_next_turn_sees_the_unanswered_message_exactly_once(store: Sto
 
 
 async def test_an_empty_reply_stores_no_companion_message(store: Store) -> None:
-    runtime = Runtime(store, Flaky(""), PREFIX, REL)
+    runtime = make_runtime(store, Flaky(""), PREFIX, REL)
     await handle(runtime, "hey", "t", NOW)
     assert _said(store) == [(Speaker.USER, "hey")]
 
 
 async def test_one_message_makes_one_turn_and_one_reply(store: Store) -> None:
-    runtime = Runtime(store, Flaky("hi"), PREFIX, REL)
+    runtime = make_runtime(store, Flaky("hi"), PREFIX, REL)
     await handle(runtime, "hey", "t", NOW)
     assert _said(store) == [(Speaker.USER, "hey"), (Speaker.COMPANION, "hi")]

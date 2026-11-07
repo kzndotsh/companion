@@ -26,12 +26,12 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.kit.runtime import Runtime
 from companion.models.anthropic import AnthropicTalker
 from companion.models.openrouter import OpenRouterTalker
 from companion.store.sqlite import replay as store_replay
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 PREFIX = build_prefix("You are steady and warm. " * 200)
@@ -55,7 +55,7 @@ def store(tmp_path: Path) -> Store:
 
 async def test_turns_are_logged_and_replay_matches(store: Store, tmp_path: Path) -> None:
     talker = FakeTalker("hey", "couldn't sleep either?", "ha, fair")
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     for i, text in enumerate(["morning", "up early", "yeah"]):
         await handle(runtime, text, "test", NOW + timedelta(minutes=i))
     assert len(talker.seen[2].messages) == 5  # two earlier exchanges plus the new message
@@ -68,7 +68,7 @@ async def test_turns_are_logged_and_replay_matches(store: Store, tmp_path: Path)
 
 
 async def test_empty_model_reply_is_logged_not_sent(store: Store, tmp_path: Path) -> None:
-    runtime = Runtime(store, FakeTalker(""), PREFIX, REL)
+    runtime = make_runtime(store, FakeTalker(""), PREFIX, REL)
     assert await handle(runtime, "hello", "test", NOW) == ""
     store.close()
     report = store_replay.replay_file(
@@ -139,7 +139,7 @@ async def test_history_window_is_shared_by_live_and_replay(store: Store, tmp_pat
 
     turns = HISTORY_LIMIT  # enough that the window must have cut off the start
     talker = FakeTalker(*(f"r{i}" for i in range(turns)))
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     for i in range(turns):
         await handle(runtime, f"m{i}", "test", NOW + timedelta(minutes=i))
     assert len(talker.seen[-1].messages) == HISTORY_LIMIT + 1
@@ -150,7 +150,7 @@ async def test_history_window_is_shared_by_live_and_replay(store: Store, tmp_pat
 
 async def test_history_continues_across_sessions(store: Store) -> None:
     talker = FakeTalker("a", "b")
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     await handle(runtime, "first", "test", NOW)
     await handle(runtime, "second", "test", NOW + timedelta(days=1))
     got = [m.content.split("\n\n")[-1] for m in talker.seen[1].messages]
@@ -159,7 +159,7 @@ async def test_history_continues_across_sessions(store: Store) -> None:
 
 async def test_clock_line_names_the_gap(store: Store) -> None:
     talker = FakeTalker("a", "b")
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     await handle(runtime, "first", "test", NOW)
     await handle(runtime, "second", "test", NOW + timedelta(hours=5, minutes=1))
     assert "Their last message came 5 hours ago." in talker.seen[1].card
@@ -168,7 +168,7 @@ async def test_clock_line_names_the_gap(store: Store) -> None:
 
 async def test_the_gap_counts_from_their_last_message_not_the_companions(store: Store) -> None:
     talker = FakeTalker("a", "b")
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     await handle(runtime, "first", "test", NOW)
     later = Utterance(
         UtteranceId("late"),
@@ -220,7 +220,7 @@ async def test_beliefs_reach_the_request_and_each_placement_is_logged(
     store.insert_belief(believe("b1", "Likes climbing", "i like climbing", Sensitivity.ORDINARY))
     store.insert_belief(believe("b2", "Has asthma", "i have asthma", Sensitivity.DELICATE))
     talker = FakeTalker("nice")
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     await handle(runtime, "hey", "test", NOW)
     sent = talker.seen[0].card
     assert "Likes climbing" not in talker.seen[0].messages[-1].content
@@ -285,7 +285,7 @@ async def test_stale_beliefs_reach_the_model_as_older_and_every_placement_is_log
         believe("hush", "Feels very low", "pretty low", BeliefKind.STATE, Sensitivity.DELICATE)
     )
     talker = FakeTalker("hey")
-    await handle(Runtime(store, talker, PREFIX, REL), "hi", "test", NOW)
+    await handle(make_runtime(store, talker, PREFIX, REL), "hi", "test", NOW)
     sent = talker.seen[0].card
     main = sent.split("[Older")[0]
     assert "Likes climbing (mentioned 2 months ago)" in main
@@ -309,7 +309,7 @@ async def test_a_streak_of_the_same_opener_reaches_the_next_request_as_a_note(
     store: Store,
 ) -> None:
     talker = FakeTalker("Ha, one", "Ha, two", "Ha, three", "fine")
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     for i, text in enumerate(["a", "b", "c", "d"]):
         await handle(runtime, text, "test", NOW + timedelta(minutes=i))
     assert "began with" not in talker.seen[2].card
@@ -333,7 +333,7 @@ async def test_openrouter_does_not_pin_a_provider_for_other_makers() -> None:
 
 async def test_a_short_statement_gets_a_length_note_in_the_system_block(store: Store) -> None:
     talker = FakeTalker("a", "b", "c")
-    runtime = Runtime(store, talker, PREFIX, REL)
+    runtime = make_runtime(store, talker, PREFIX, REL)
     await handle(runtime, "just got home", "test", NOW)
     await handle(runtime, "what should i eat?", "test", NOW + timedelta(minutes=1))
     await handle(runtime, "ok", "test", NOW + timedelta(minutes=2))

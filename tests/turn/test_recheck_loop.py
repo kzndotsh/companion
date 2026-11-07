@@ -10,9 +10,9 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 NOW = datetime(2026, 10, 19, 17, 0, tzinfo=UTC)
@@ -70,7 +70,7 @@ def store(tmp_path: Path) -> Store:
 
 
 async def _say(store: Store, talker: Talker, judge: Judge, *, on: bool = True) -> str:
-    runtime = Runtime(store, talker, PREFIX, REL, judge=judge, redraw=on)
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=judge, redraw=on)
     sent = await handle(runtime, "kinda too crispy/hard", "test", NOW)
     assert isinstance(sent, str)
     return sent

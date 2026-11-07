@@ -14,8 +14,8 @@ from companion.features.now.run import SENT, SHADOW, now_note, read_now
 from companion.kit.current import Heard, Turn
 from companion.kit.features import Lookups, Moment
 from companion.kit.record import Recorder
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
 CALM: Heard = (
@@ -57,7 +57,7 @@ def _said(store: Store, phase: str, minutes_ago: int, what: str = "dinner is com
 
 
 def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str, ...], list[str]]:
-    runtime = Runtime(store, Talker(), PREFIX, REL, now=mode)
+    runtime = make_runtime(store, Talker(), PREFIX, REL, now=mode)
     t = Turn(TurnId("t"), NOW, [], "lol out of all the things")
     offer = now_note(Moment(runtime, t, frame, CALM, Lookups(), False, []), None, {})
     for write in offer.after:
@@ -67,7 +67,7 @@ def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str
 
 
 async def _read(store: Store, judge: Reads, heard: Heard | None, **kw: object) -> None:
-    runtime = Runtime(store, Talker(), PREFIX, REL, judge=judge, **kw)  # type: ignore[arg-type]
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=judge, **kw)  # type: ignore[arg-type]
     t = Turn(TurnId("t"), NOW, [], "getting dinner soon")
     await read_now(runtime, t, Frame.REAL, heard, Card((), (), (), (), {}, NOW))
 

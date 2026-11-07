@@ -6,14 +6,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
 
-from companion.core.spend import MeteredExtractor, SpendEvent
+from companion.compose import extractor, spend_sink
+from companion.core.spend import MeteredExtractor
 from companion.core.types import RelationshipId
-from companion.daemon import extractor
 from companion.kit.services import Services
 from companion.memory.memory_pass import memory_pass_from
 from companion.memory.rebuild import rebuild
@@ -28,9 +27,7 @@ async def _services(db: Path, relationship: str) -> AsyncGenerator[Services]:
     store = Store(db)
     rel = RelationshipId(relationship)
 
-    def sink(event: SpendEvent) -> None:
-        store.record_spend(rel, event, datetime.now(UTC))
-
+    sink = spend_sink(store, rel)
     try:
         async with httpx.AsyncClient() as client:
             yield Services(

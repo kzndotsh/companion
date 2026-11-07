@@ -24,9 +24,9 @@ from companion.core.types import (
 )
 from companion.core.vectors import Embedded, unit
 from companion.features.recall.logic import SHADOW
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
@@ -90,7 +90,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, embedder: Embedder, text: str) -> Talker:
     talker = Talker()
-    runtime = Runtime(
+    runtime = make_runtime(
         store, talker, PREFIX, REL, judge=Picker(), embedder=embedder, embed_model="fake-embed"
     )
     await handle(runtime, text, "test", NOW)
@@ -138,7 +138,7 @@ async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Stor
     from companion.features.recall.logic import LIVE  # noqa: PLC0415
 
     talker = Talker()
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         talker,
         PREFIX,
@@ -160,7 +160,7 @@ async def test_live_it_waits_for_the_pick_and_logs_what_it_was_shown(store: Stor
 async def test_with_listening_switched_off_the_live_look_up_does_not_run(store: Store) -> None:
     from companion.features.recall.logic import LIVE  # noqa: PLC0415
 
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         Talker(),
         PREFIX,
@@ -182,7 +182,7 @@ def test_a_pick_not_on_the_card_reaches_the_notes(store: Store) -> None:
     from companion.kit.features import Lookups, Moment  # noqa: PLC0415
     from companion.turn.notes import notes_for  # noqa: PLC0415
 
-    runtime = Runtime(store, Talker(), PREFIX, REL)
+    runtime = make_runtime(store, Talker(), PREFIX, REL)
     t = Turn(TurnId("t1"), NOW, [], "fries sound good")
     pick = ((BeliefId("food"), "The user likes fries."),)
     shown = notes_for(

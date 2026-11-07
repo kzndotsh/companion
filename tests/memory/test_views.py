@@ -27,13 +27,13 @@ from companion.core.types import (
 )
 from companion.core.views import card_views, is_settled
 from companion.kit.curate import retire_implicated_views
-from companion.kit.runtime import Runtime
 from companion.memory.memory_pass import memory_pass
 from companion.memory.rebuild import rebuild
 from companion.memory.views import check_views, views_implicated
 from companion.store.sqlite import replay as store_replay
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 T0 = datetime(2026, 10, 15, 12, 0, tzinfo=UTC)
@@ -259,7 +259,7 @@ async def test_only_approved_views_reach_the_model_and_the_placement_is_logged(
     store.close_belief(closed.id, T0 + timedelta(days=1))
     talker = _Talker()
     await handle(
-        Runtime(store, talker, PREFIX, REL),
+        make_runtime(store, talker, PREFIX, REL),
         "hi",
         "test",
         T0 + timedelta(days=3),
@@ -402,7 +402,7 @@ async def _carried_turn(store: Store) -> TurnId:
     await check_views(store, Routed(checks=[_verdict(False)]), REL)
     talker = _Talker()
     await handle(
-        Runtime(store, talker, PREFIX, REL),
+        make_runtime(store, talker, PREFIX, REL),
         "hi",
         "test",
         T0 + timedelta(days=3),
@@ -467,7 +467,7 @@ async def test_a_label_the_model_invents_is_ignored(store: Store) -> None:
 
 async def test_a_turn_that_carried_no_views_never_asks_the_model(store: Store) -> None:
     talker = _Talker()
-    await handle(Runtime(store, talker, PREFIX, REL), "hi", "test", T0)
+    await handle(make_runtime(store, talker, PREFIX, REL), "hi", "test", T0)
     turn = store.latest_turn(REL)
     assert turn is not None
     ex = Routed()

@@ -410,6 +410,7 @@ companion/
 │   ├── evals/            the eval runner
 │   ├── lib/              small general helpers
 │   ├── daemon.py         starts the bot
+│   ├── compose.py        builds the models, spend sink and runtime from the settings
 │   ├── settings.py       reads the settings
 │   └── registry.py       the list of features
 ├── tests/                automatic tests, run before every commit

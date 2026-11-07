@@ -22,11 +22,11 @@ from companion.core.types import (
 from companion.features.calendar.logic import DAY_NOTE, OFFERED, THEIRS_NOTE, US_NOTE
 from companion.kit.current import Turn
 from companion.kit.features import Lookups, Moment, Offer
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.mention import mention_note
 from tests.features.diction.marks.test_run import CALM, HEAVY
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import PREFIX, REL, Judge, Talker
 
 HALLOWEEN = datetime(2026, 10, 31, 16, 0, tzinfo=UTC)  # noon in New York
@@ -53,7 +53,7 @@ def _tail(
     so_far: dict[str, Offer] | None = None,
     on: bool = True,
 ) -> Offer:
-    runtime = Runtime(store, Talker(), PREFIX, REL, calendar=on)
+    runtime = make_runtime(store, Talker(), PREFIX, REL, calendar=on)
     t = Turn(TurnId("t1"), now, [], "hey, what's up")
     m = Moment(runtime, t, frame, heard, Lookups(), False, [])  # type: ignore[arg-type]
     return mention_note(m, so_far if so_far is not None else QUIET)
@@ -92,7 +92,7 @@ async def test_offered_once_a_day_and_logged_only_when_the_turn_is_stored(store:
     async def say(text: str, at: datetime, talker: Talker | None = None) -> Talker:
         talker = talker or Talker()
         await handle(
-            Runtime(store, talker, PREFIX, REL, judge=Judge(), calendar=True),
+            make_runtime(store, talker, PREFIX, REL, judge=Judge(), calendar=True),
             text,
             "t",
             at,

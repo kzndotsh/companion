@@ -5,6 +5,7 @@ import pytest
 from companion import daemon, prompts
 from companion.characters import parse
 from companion.core.types import RelationshipId
+from companion.models import openrouter
 from companion.settings import JUDGE_MODEL, ROLEPLAY_MODEL, SWITCHES
 
 
@@ -52,7 +53,7 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
             f"  prompts  persona {persona} (prefix abcdef012345), character none,"
             f" set {prompts.set_hash()}"
         ),
-        f"  everyday {daemon.openrouter.DEFAULT_MODEL}, standby {ROLEPLAY_MODEL}",
+        f"  everyday {openrouter.DEFAULT_MODEL}, standby {ROLEPLAY_MODEL}",
         f"  roleplay {ROLEPLAY_MODEL}",
         f"  judges   {JUDGE_MODEL} (crisis on deepseek/deepseek-v4.1-flash)",
         "  limits   daily cap $10.00, pace natural",

@@ -20,6 +20,7 @@ from dataclasses import dataclass, replace
 from datetime import timedelta
 from pathlib import Path
 
+from companion import compose
 from companion.core.clock import utc_now
 from companion.core.extractor import Extraction, StructuredModel
 from companion.core.history import HISTORY_LIMIT
@@ -46,6 +47,7 @@ from companion.kit.current import Heard, Turn
 from companion.kit.features import Lookups, Moment
 from companion.kit.record import Recorder
 from companion.kit.runtime import Runtime
+from companion.settings import Settings
 from companion.store.sqlite.store import Store
 from companion.turn.assemble import Layout
 from companion.turn.gate import checked
@@ -189,22 +191,23 @@ def script_request(c: Runtime, t: Turn, script: Script, v: Variant) -> TalkerReq
 
 @contextmanager
 def _scratch(talker: Talker, prefix: Prefix, *, roleplay: bool) -> Generator[Runtime]:
-    """A conversation over an empty store in a temporary directory, with the switches the live bot
-    defaults to; gone after the sample."""
+    """A conversation over an empty store in a temporary directory, with the live bot's defaults
+    for every switch (`Settings` with nothing set, not the owner's `.env`); gone after the sample.
+    Two differ on purpose: the calendar offers a note by the day it runs, which would make a sample
+    differ by date, and the daily cap is the eval's own (`--cap`)."""
     with tempfile.TemporaryDirectory() as tmp:
         store = Store(Path(tmp) / "eval.sqlite")
         try:
-            yield Runtime(
+            live = compose.runtime(
+                Settings.from_env({}),
                 store,
                 talker,
                 prefix,
                 REL,
                 judge=Unread(),
                 roleplay_talker=talker if roleplay else None,
-                redraw=True,
-                own_marks=True,
-                mood="shadow",
             )
+            yield replace(live, calendar=False, daily_cap_usd=None)
         finally:
             store.close()
 

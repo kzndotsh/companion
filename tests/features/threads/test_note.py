@@ -12,10 +12,10 @@ from companion.core.types import Frame, Json, Sensitivity, Speaker, TurnId, Utte
 from companion.features.curiosity.basics.logic import name_belief
 from companion.features.threads.logic import Thread, ThreadState
 from companion.kit.beside import settled
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.mention import MET, PACE_SOONER
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
@@ -52,7 +52,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, judge: Judge, at: datetime, text: str = "hey hey") -> str:
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), text, "test", at)
+    await handle(make_runtime(store, talker, PREFIX, REL, judge=judge), text, "test", at)
     await settled()
     return talker.seen[0].card
 
@@ -106,7 +106,7 @@ class SlowMeets(Meets):
 
 async def test_the_reply_does_not_wait_for_how_they_met_it(store: Store) -> None:
     await _say(store, Meets(), NOW)
-    runtime = Runtime(store, Talker(), PREFIX, REL, judge=SlowMeets())
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=SlowMeets())
     later = NOW + timedelta(minutes=1)
     await asyncio.wait_for(handle(runtime, "it went great", "test", later), timeout=0.15)
     assert _met(store) == []

@@ -19,11 +19,11 @@ from companion.features.flow.questions.logic import RUN_NOTE as QUESTION_NOTE
 from companion.features.reminders.run import ASKED, SET, Read, reminder_offer
 from companion.kit.current import Turn
 from companion.kit.features import Offer, asking
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.notes import SOURCES, Lookups, Moment, notes_for
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
@@ -33,20 +33,20 @@ def store(tmp_path: Path) -> Store:
 
 
 async def test_a_failed_turn_uses_up_no_cap(store: Store) -> None:
-    runtime = Runtime(store, Talker(fail=True), PREFIX, REL, judge=Judge())
+    runtime = make_runtime(store, Talker(fail=True), PREFIX, REL, judge=Judge())
     with pytest.raises(RuntimeError):
         await handle(runtime, "hey, long day", "t", NOW)
     assert not store.decided_since(REL, ASKED_NAME, NOW - timedelta(days=1))
     talker = Talker()
     later = NOW + timedelta(minutes=1)
-    await handle(Runtime(store, talker, PREFIX, REL, judge=Judge()), "hey", "t", later)
+    await handle(make_runtime(store, talker, PREFIX, REL, judge=Judge()), "hey", "t", later)
     assert "what they like to be called" in talker.seen[0].card
     assert store.decided_since(REL, ASKED_NAME, NOW)
 
 
 async def test_a_reply_to_one_of_its_messages_reaches_the_talker_quoted(store: Store) -> None:
     talker = Talker()
-    runtime = Runtime(store, talker, PREFIX, REL, judge=Judge())
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=Judge())
     await handle(runtime, "so cute", "t", NOW, quoted=Quoted("your call", Speaker.COMPANION))
     await handle(runtime, "and this", "t", NOW + timedelta(minutes=1))
     assert "> your call" in talker.seen[0].card
@@ -55,9 +55,9 @@ async def test_a_reply_to_one_of_its_messages_reaches_the_talker_quoted(store: S
 
 
 async def test_their_message_id_is_kept_with_its_turn_even_at_the_cap(store: Store) -> None:
-    runtime = Runtime(store, Talker(), PREFIX, REL, judge=Judge())
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=Judge())
     await handle(runtime, "hey", "discord", NOW, message_id="u1")
-    capped = Runtime(store, Talker(), PREFIX, REL, judge=Judge(), daily_cap_usd=0.0)
+    capped = make_runtime(store, Talker(), PREFIX, REL, judge=Judge(), daily_cap_usd=0.0)
     await handle(capped, "still there?", "discord", NOW, message_id="u2")
     first = store.turn_of_message(REL, "discord", "u1")
     second = store.turn_of_message(REL, "discord", "u2")
@@ -73,7 +73,7 @@ async def test_their_message_id_is_kept_with_its_turn_even_at_the_cap(store: Sto
 
 
 def test_notes_come_in_the_listed_order_and_writes_wait(store: Store) -> None:
-    runtime = Runtime(store, Talker(), PREFIX, REL)
+    runtime = make_runtime(store, Talker(), PREFIX, REL)
     t = Turn("t1", NOW, [], "hi")  # type: ignore[arg-type]
     from companion.core.types import Frame  # noqa: PLC0415
 
@@ -95,11 +95,11 @@ def test_notes_come_in_the_listed_order_and_writes_wait(store: Store) -> None:
 
 
 async def test_after_a_heavy_talk_and_a_gap_it_checks_in_once(store: Store) -> None:
-    heavy = Runtime(store, Talker(), PREFIX, REL, judge=Judge(severity=2))
+    heavy = make_runtime(store, Talker(), PREFIX, REL, judge=Judge(severity=2))
     await handle(heavy, "i can't stop crying tonight", "t", NOW)
     soon = Talker()
     await handle(
-        Runtime(store, soon, PREFIX, REL, judge=Judge()),
+        make_runtime(store, soon, PREFIX, REL, judge=Judge()),
         "hey",
         "t",
         NOW + timedelta(hours=1),
@@ -107,7 +107,7 @@ async def test_after_a_heavy_talk_and_a_gap_it_checks_in_once(store: Store) -> N
     assert "heavy for them" not in soon.seen[0].card  # back too soon: no check-in yet
     later = Talker()
     await handle(
-        Runtime(store, later, PREFIX, REL, judge=Judge()),
+        make_runtime(store, later, PREFIX, REL, judge=Judge()),
         "hi",
         "t",
         NOW + timedelta(hours=11),
@@ -116,7 +116,7 @@ async def test_after_a_heavy_talk_and_a_gap_it_checks_in_once(store: Store) -> N
     assert "what they like to be called" not in later.seen[0].card  # nothing else nudges
     again = Talker()
     await handle(
-        Runtime(store, again, PREFIX, REL, judge=Judge()),
+        make_runtime(store, again, PREFIX, REL, judge=Judge()),
         "morning",
         "t",
         NOW + timedelta(hours=16),
@@ -134,7 +134,7 @@ async def test_after_it_owns_a_slip_the_next_turn_says_enough_after_the_history(
     store: Store, tmp_path: Path
 ) -> None:
     await handle(
-        Runtime(store, _Owning(), PREFIX, REL, judge=Judge()),
+        make_runtime(store, _Owning(), PREFIX, REL, judge=Judge()),
         "he's the main character",
         "t",
         NOW,
@@ -142,7 +142,7 @@ async def test_after_it_owns_a_slip_the_next_turn_says_enough_after_the_history(
     later = NOW + timedelta(minutes=1)
     talker = Talker()
     await handle(
-        Runtime(store, talker, PREFIX, REL, judge=Judge()),
+        make_runtime(store, talker, PREFIX, REL, judge=Judge()),
         "this is a show about that",
         "t",
         later,
@@ -165,10 +165,10 @@ async def test_after_a_run_of_questions_the_next_turn_asks_none_unless_it_is_ser
     store: Store, severity: int, *, noted: bool
 ) -> None:
     for i in range(RUN):
-        runtime = Runtime(store, _Asking(), PREFIX, REL, judge=Judge())
+        runtime = make_runtime(store, _Asking(), PREFIX, REL, judge=Judge())
         await handle(runtime, f"hey {i}", "t", NOW + timedelta(minutes=i))
     talker = Talker()
-    runtime = Runtime(store, talker, PREFIX, REL, judge=Judge(severity=severity))
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=Judge(severity=severity))
     await handle(runtime, "a movie", "t", NOW + timedelta(minutes=RUN))
     assert (talker.seen[0].tail == QUESTION_NOTE.text) == noted
     assert QUESTION_NOTE.text not in talker.seen[0].card
@@ -178,10 +178,10 @@ async def test_in_a_game_of_questions_it_asks_the_next_one_and_no_run_note_stops
     store: Store,
 ) -> None:
     for i, said in enumerate(["hey", "ask me anything", "the locals, mostly"]):
-        runtime = Runtime(store, _Asking(), PREFIX, REL, judge=Judge())
+        runtime = make_runtime(store, _Asking(), PREFIX, REL, judge=Judge())
         await handle(runtime, said, "t", NOW + timedelta(minutes=i))
     talker = Talker()
-    runtime = Runtime(store, talker, PREFIX, REL, judge=Judge())
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=Judge())
     await handle(runtime, "what about you", "t", NOW + timedelta(minutes=3))
     assert talker.seen[0].tail == GAME_NOTE.text  # not the question-run note
 
@@ -190,7 +190,7 @@ async def test_in_a_game_of_questions_it_asks_the_next_one_and_no_run_note_stops
 async def test_recent_times_reach_the_talker_only_when_on_and_the_log_says_which(
     store: Store, mode: str
 ) -> None:
-    await handle(Runtime(store, Talker(), PREFIX, REL, judge=Judge()), "hey", "t", NOW)
+    await handle(make_runtime(store, Talker(), PREFIX, REL, judge=Judge()), "hey", "t", NOW)
     [first, last] = store.history_before(REL, NOW + timedelta(hours=1), 4)
     gist = "A quiet chat that ended warm."
     store.add_episode(
@@ -213,7 +213,7 @@ async def test_recent_times_reach_the_talker_only_when_on_and_the_log_says_which
     )
     later = NOW + timedelta(hours=5)
     talker = Talker()
-    runtime = Runtime(store, talker, PREFIX, REL, judge=Judge(), episodes=mode)
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=Judge(), episodes=mode)
     await handle(runtime, "hi again", "t", later)
     assert (gist in talker.seen[0].card) == (mode == "on")
     turn = store.history_before(REL, later + timedelta(minutes=1), 4)[-2].turn_id
@@ -251,7 +251,7 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
             Feature("reminder", look=hangs),
         ),
     )
-    runtime = Runtime(store, Talker(), PREFIX, REL)
+    runtime = make_runtime(store, Talker(), PREFIX, REL)
     t = Turn("t1", NOW, [], "hi")  # type: ignore[arg-type]
     from companion.core.types import Frame  # noqa: PLC0415
 
@@ -262,7 +262,7 @@ async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(
 
 
 def test_a_note_that_asks_says_so_and_a_reminder_set_does_not(store: Store) -> None:
-    runtime = Runtime(store, Talker(), PREFIX, REL)
+    runtime = make_runtime(store, Talker(), PREFIX, REL)
     t = Turn("t1", NOW, [], "hi")  # type: ignore[arg-type]
     from companion.core.types import Frame  # noqa: PLC0415
 

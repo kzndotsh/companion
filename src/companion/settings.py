@@ -65,34 +65,60 @@ class Switch:
         return self.values[0]
 
 
+# One name per switch: a use names the row itself, so a typo fails at import or type-check time and
+# a new switch is one row here, its place in SWITCHES and its uses.
+PLATFORM = Switch(
+    "COMPANION_PLATFORM", "platform", ("telegram", "discord")
+)  # which chat it runs on
+SPLIT = Switch("COMPANION_SPLIT", "split", ("on", "off"))
+LISTEN = Switch("COMPANION_LISTEN", "listen", ("on", "off"))
+INITIATIVE = Switch("COMPANION_INITIATIVE", "initiative", ("shadow", "off"))
+MOOD = Switch("COMPANION_MOOD", "mood", ("on", "shadow", "off"))
+REDRAW = Switch("COMPANION_REDRAW", "redraw", ("on", "off"))
+ROUTE_INTIMATE = Switch(
+    "COMPANION_ROUTE_INTIMATE", "intimate", ("off", "on"), {"on": "may route", "off": "stays"}
+)
+RELEVANCE = Switch("COMPANION_RELEVANCE", "relevance", ("on", "shadow", "off"))
+REREAD = Switch("COMPANION_REREAD", "re-read", ("on", "shadow", "off"))
+PROMISES = Switch("COMPANION_PROMISES", "promises", ("shadow", "off"))
+LORE = Switch("COMPANION_LORE", "lore", ("on", "shadow", "off"))
+FOCUS = Switch("COMPANION_FOCUS", "focus", ("on", "off"))
+REMINDERS = Switch("COMPANION_REMINDERS", "reminders", ("on", "off"))
+EPISODES = Switch("COMPANION_EPISODES", "episodes", ("on", "shadow", "off"))
+OWN_MARKS = Switch("COMPANION_OWN_MARKS", "own marks", ("on", "off"))
+HEDGED_PLANS = Switch("COMPANION_HEDGED_PLANS", "hedged plans", ("loose", "off"), {"off": "strict"})
+REACH = Switch("COMPANION_REACH", "reach", ("warm", "off", "rare", "light", "normal", "clingy"))
+CRISIS = Switch("COMPANION_CRISIS", "crisis", ("on", "shadow", "off"))
+CALENDAR = Switch("COMPANION_CALENDAR", "calendar", ("on", "off"))
+NOW = Switch("COMPANION_NOW", "now", ("shadow", "on", "off"))
+HISTORY = Switch("COMPANION_HISTORY", "history", ("shadow", "on", "off"))
+INTIMATE_MEMORY = Switch("COMPANION_INTIMATE_MEMORY", "intimate memory", ("on", "shadow", "off"))
+
 # In the order they appear on the startup block, within its rows.
 SWITCHES: tuple[Switch, ...] = (
-    Switch("COMPANION_PLATFORM", "platform", ("telegram", "discord")),  # which chat it runs on
-    Switch("COMPANION_SPLIT", "split", ("on", "off")),
-    Switch("COMPANION_LISTEN", "listen", ("on", "off")),
-    Switch("COMPANION_INITIATIVE", "initiative", ("shadow", "off")),
-    Switch("COMPANION_MOOD", "mood", ("on", "shadow", "off")),
-    Switch("COMPANION_REDRAW", "redraw", ("on", "off")),
-    Switch(
-        "COMPANION_ROUTE_INTIMATE", "intimate", ("off", "on"), {"on": "may route", "off": "stays"}
-    ),
-    Switch("COMPANION_RELEVANCE", "relevance", ("on", "shadow", "off")),
-    Switch("COMPANION_REREAD", "re-read", ("on", "shadow", "off")),
-    Switch("COMPANION_PROMISES", "promises", ("shadow", "off")),
-    Switch("COMPANION_LORE", "lore", ("on", "shadow", "off")),
-    Switch("COMPANION_FOCUS", "focus", ("on", "off")),
-    Switch("COMPANION_REMINDERS", "reminders", ("on", "off")),
-    Switch("COMPANION_EPISODES", "episodes", ("on", "shadow", "off")),
-    Switch("COMPANION_OWN_MARKS", "own marks", ("on", "off")),
-    Switch("COMPANION_HEDGED_PLANS", "hedged plans", ("loose", "off"), {"off": "strict"}),
-    Switch("COMPANION_REACH", "reach", ("warm", "off", "rare", "light", "normal", "clingy")),
-    Switch("COMPANION_CRISIS", "crisis", ("on", "shadow", "off")),
-    Switch("COMPANION_CALENDAR", "calendar", ("on", "off")),
-    Switch("COMPANION_NOW", "now", ("shadow", "on", "off")),
-    Switch("COMPANION_HISTORY", "history", ("shadow", "on", "off")),
-    Switch("COMPANION_INTIMATE_MEMORY", "intimate memory", ("on", "shadow", "off")),
+    PLATFORM,
+    SPLIT,
+    LISTEN,
+    INITIATIVE,
+    MOOD,
+    REDRAW,
+    ROUTE_INTIMATE,
+    RELEVANCE,
+    REREAD,
+    PROMISES,
+    LORE,
+    FOCUS,
+    REMINDERS,
+    EPISODES,
+    OWN_MARKS,
+    HEDGED_PLANS,
+    REACH,
+    CRISIS,
+    CALENDAR,
+    NOW,
+    HISTORY,
+    INTIMATE_MEMORY,
 )
-_BY_LABEL = {s.label: s for s in SWITCHES}
 
 
 def _daily_cap(raw: str) -> float | None:
@@ -178,13 +204,13 @@ class Settings:
             kiro_key=env.get("KIRO_GATEWAY_API_KEY") or env.get("PROXY_API_KEY", ""),
         )
 
-    def position(self, label: str) -> str:
+    def position(self, switch: Switch) -> str:
         """A switch's position: on, off or shadow, or the value it names."""
-        return self.switches[_BY_LABEL[label].label]
+        return self.switches[switch.label]
 
-    def on(self, label: str) -> bool:
+    def on(self, switch: Switch) -> bool:
         """Whether a switch is anything but off."""
-        return self.position(label) != "off"
+        return self.position(switch) != "off"
 
     @property
     def cap_text(self) -> str:

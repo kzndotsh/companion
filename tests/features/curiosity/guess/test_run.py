@@ -23,9 +23,9 @@ from companion.core.types import (
 )
 from companion.features.curiosity.basics.logic import name_belief
 from companion.features.curiosity.guess.logic import INVITED
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Judge, Talker
 
 
@@ -109,7 +109,7 @@ def store(tmp_path: Path) -> Store:
 
 async def _say(store: Store, judge: Guesser, text: str, at: datetime = NOW) -> str:
     talker = Talker()
-    await handle(Runtime(store, talker, PREFIX, REL, judge=judge), text, "t", at)
+    await handle(make_runtime(store, talker, PREFIX, REL, judge=judge), text, "t", at)
     return talker.seen[0].card
 
 

@@ -19,9 +19,9 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.curiosity.basics.logic import name_belief
-from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
+from tests.runtime import make_runtime
 
 REL = RelationshipId("rel")
 PREFIX = build_prefix("You are steady and warm. " * 200)
@@ -93,7 +93,9 @@ async def _chat(
     store: Store, texts: list[str], scene: Talker | None, judge: Judge | None = None
 ) -> Talker:
     everyday = Talker("everyday")
-    runtime = Runtime(store, everyday, PREFIX, REL, judge=judge or Judge(), roleplay_talker=scene)
+    runtime = make_runtime(
+        store, everyday, PREFIX, REL, judge=judge or Judge(), roleplay_talker=scene
+    )
     for i, text in enumerate(texts):
         await handle(runtime, text, "t", NOW + timedelta(minutes=i))
     return everyday
@@ -181,7 +183,7 @@ async def test_a_late_check_of_a_held_reply_is_asked_once_more_before_it_is_thro
             return await super().extract(system, user, schema)
 
     scene, everyday = Talker("scene"), Talker("everyday")
-    runtime = Runtime(
+    runtime = make_runtime(
         store, everyday, PREFIX, REL, judge=Late(), roleplay_talker=scene, route_intimate=True
     )
     await handle(runtime, "i want you so bad", "t", NOW)
@@ -196,7 +198,7 @@ async def test_intimate_talk_goes_to_the_roleplay_talker_only_when_allowed_and_a
     store: Store, *, allowed: bool, age_coded: bool, routed: bool
 ) -> None:
     scene, everyday = Talker("scene"), Talker("everyday")
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         everyday,
         PREFIX,
@@ -214,7 +216,7 @@ async def test_a_held_turn_gets_the_note_and_an_intimate_reply_three_times_sends
     store: Store, *, sexual: bool, sent: str | None
 ) -> None:
     scene, everyday = Talker("scene"), Talker("everyday")
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         everyday,
         PREFIX,
@@ -245,7 +247,7 @@ async def test_a_scene_reply_with_an_em_dash_is_drawn_once_more(store: Store) ->
             return Reply(text=text, model="scene", latency_ms=1)
 
     scene, everyday = Dashing(), Talker("everyday")
-    runtime = Runtime(
+    runtime = make_runtime(
         store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene, redraw=True
     )
     await handle(runtime, "let's pretend you're a knight", "t", NOW)
@@ -334,7 +336,7 @@ async def test_flirting_stays_with_the_everyday_talker_until_a_message_is_explic
     store: Store,
 ) -> None:
     everyday, scene = Talker("everyday"), Talker("scene")
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         everyday,
         PREFIX,
@@ -362,11 +364,11 @@ async def test_a_push_back_in_a_scene_is_answered_by_the_everyday_talker_with_a_
     from companion.core.turn.floor import BRUSH_NOTE  # noqa: PLC0415
 
     everyday, scene = Talker("everyday"), Talker("scene")
-    playing = Runtime(store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene)
+    playing = make_runtime(store, everyday, PREFIX, REL, judge=Judge(), roleplay_talker=scene)
     await handle(playing, "*waves at you from across the room*", "test", NOW)
     await handle(playing, "*sits down next to you*", "test", NOW + timedelta(minutes=1))
     assert len(scene.seen) == 1  # the scene is under way
-    pushed = Runtime(
+    pushed = make_runtime(
         store, everyday, PREFIX, REL, judge=Judge(declines=True), roleplay_talker=scene
     )
     await handle(pushed, "*bonk* behave, i'm starving", "test", NOW + timedelta(minutes=2))
@@ -422,7 +424,7 @@ async def test_a_failing_shadow_look_up_is_logged(caplog: pytest.LogCaptureFixtu
 async def test_intimate_talk_stays_under_way_past_one_held_turn(store: Store) -> None:
     everyday, scene = Talker("everyday"), Talker("scene")
     judge = Judge(intimate=True, explicit=True)
-    runtime = Runtime(
+    runtime = make_runtime(
         store, everyday, PREFIX, REL, judge=judge, roleplay_talker=scene, route_intimate=True
     )
     await handle(runtime, "take it off", "test", NOW)
@@ -445,7 +447,7 @@ async def test_a_read_only_the_fallback_model_gave_goes_to_the_minor_check(store
             return got
 
     everyday, scene = Talker("everyday"), Talker("scene")
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         everyday,
         PREFIX,
@@ -481,7 +483,7 @@ async def test_a_held_reply_that_announces_the_hold_is_drawn_once_more(
     store: Store, second: str, kept: str
 ) -> None:
     everyday = Scripted("everyday", ["not real milk, but come close", second])
-    runtime = Runtime(
+    runtime = make_runtime(
         store,
         everyday,
         PREFIX,

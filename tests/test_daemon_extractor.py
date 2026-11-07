@@ -1,4 +1,4 @@
-"""The judges' extractor as the daemon builds it, against a fake OpenRouter: which model each call
+"""The judges' extractor as `compose` builds it, against a fake OpenRouter: which model each call
 names on the wire, and which answered."""
 
 from __future__ import annotations
@@ -8,7 +8,7 @@ import json
 import httpx
 import pytest
 
-from companion import daemon
+from companion import compose
 from companion.core.extractor import FALLBACK
 from companion.core.types import Speaker
 from companion.features.crisis.run import read_risk
@@ -47,13 +47,13 @@ async def test_by_default_the_risk_judge_reads_on_deepseek_and_haiku_answers_a_r
     asked: list[str] = []
     routes = Settings.from_env({}).judge_routes
     async with _openrouter(asked, frozenset()) as client:
-        got = await read_risk(daemon.extractor(client, S, routes), [(Speaker.USER, "hi")], "ugh")
+        got = await read_risk(compose.extractor(client, S, routes), [(Speaker.USER, "hi")], "ugh")
     assert asked == [DEEPSEEK] * 3
     assert got.model == DEEPSEEK
     assert None not in got.values
     asked.clear()
     async with _openrouter(asked, frozenset({DEEPSEEK})) as client:
-        got = await read_risk(daemon.extractor(client, S, routes), [], "ugh")
+        got = await read_risk(compose.extractor(client, S, routes), [], "ugh")
     assert asked.count(JUDGE_MODEL) == 3
     assert got.model == JUDGE_MODEL + FALLBACK
 
@@ -63,7 +63,7 @@ async def test_other_judges_stay_on_haiku_with_deepseek_behind_it() -> None:
     routes = Settings.from_env({}).judge_routes
     async with _openrouter(asked, frozenset({JUDGE_MODEL})) as client:
         got = await read_times(
-            daemon.extractor(client, S, routes), "s", "u", {}, lambda d: d, spend="worth", times=1
+            compose.extractor(client, S, routes), "s", "u", {}, lambda d: d, spend="worth", times=1
         )
     assert asked == [JUDGE_MODEL, JUDGE_STANDBY]
     assert got.model == JUDGE_STANDBY + FALLBACK

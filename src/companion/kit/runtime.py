@@ -14,8 +14,11 @@ from companion.kit.tics import TicMemory
 from companion.store.sqlite.store import Store
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True, slots=True, kw_only=True)
 class Runtime:
+    """Built only by `compose.runtime`, so every switch has Settings' value: a field here has no
+    default of its own."""
+
     store: Store
     talker: Talker
     prefix: Prefix
@@ -23,32 +26,28 @@ class Runtime:
     judge: StructuredModel | None = None
     tics: TicMemory = field(default_factory=TicMemory)
     roleplay_talker: Talker | None = None  # replies while a pretend scene is in progress
-    daily_cap_usd: float | None = None  # nothing paid runs once today's spend reaches this
-    listen: bool = True  # ask how serious a message is before the reply
-    mood: str = "off"  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
-    redraw: bool = False  # draw one fresh reply when the first fails a check (core/reply_gate.py)
-    route_intimate: bool = False  # intimate talk may go to the roleplay talker (ADR 0017)
     roleplay_prefix: Prefix | None = (
         None  # the roleplay talker's system prompt, with the sheet's scene section
     )
     embedder: Embedder | None = None  # the relevance look-up runs in shadow when set
     embed_model: str = ""
-    lore: str = "off"  # on, shadow or off: its tastes nearest their message (ADR 0020)
-    focus: str = "off"  # on or off: the card ranked by closeness to the moment
     scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
-    relevance: str = "shadow"  # on (picks shown when a memory is near), shadow or off (ADR 0018)
-    reminders: bool = True  # reminders they ask for are read and set (J50)
-    initiative: bool = True  # reach-outs and the reads that only feed them (nudges' away read)
-    calendar: bool = (
-        False  # a note about the day: a holiday, a lead-up, their date (`features/calendar`)
-    )
-    own_marks: bool = False  # one of its own emoticons now and then (`features/diction/marks`)
-    episodes: str = "off"  # what they did together lately, when it bears: on, shadow or off (J12)
-    crisis: str = "off"  # the crisis path: on, shadow (reads and logs only) or off (ADR 0022)
-    now: str = (
-        "off"  # what they said is coming, kept until it happens: on, shadow or off (ADR 0024)
-    )
-    history: str = "off"  # its own history: shadow logs the stories it would show (ADR 0025)
-    intimate_memory: str = "off"  # the intimate memory lane: on, shadow or off (ADR 0026)
-    promises: str = "off"  # its promises: shadow checks each reply and logs what it would redraw
     serious_message: str = ""  # the sheet's `## Crisis message` section, sent by code
+    daily_cap_usd: float | None  # nothing paid runs once today's spend reaches this
+    listen: bool  # ask how serious a message is before the reply
+    mood: str  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
+    redraw: bool  # draw one fresh reply when the first fails a check (core/reply_gate.py)
+    route_intimate: bool  # intimate talk may go to the roleplay talker (ADR 0017)
+    lore: str  # on, shadow or off: its tastes nearest their message (ADR 0020)
+    focus: str  # on or off: the card ranked by closeness to the moment
+    relevance: str  # on (picks shown when a memory is near), shadow or off (ADR 0018)
+    reminders: bool  # reminders they ask for are read and set (J50)
+    initiative: bool  # reach-outs and the reads that only feed them (nudges' away read)
+    calendar: bool  # a note about the day: a holiday, a lead-up, their date (`features/calendar`)
+    own_marks: bool  # one of its own emoticons now and then (`features/diction/marks`)
+    episodes: str  # what they did together lately, when it bears: on, shadow or off (J12)
+    crisis: str  # the crisis path: on, shadow (reads and logs only) or off (ADR 0022)
+    now: str  # what they said is coming, kept until it happens: on, shadow or off (ADR 0024)
+    history: str  # its own history: shadow logs the stories it would show (ADR 0025)
+    intimate_memory: str  # the intimate memory lane: on, shadow or off (ADR 0026)
+    promises: str  # its promises: shadow checks each reply and logs what it would redraw
