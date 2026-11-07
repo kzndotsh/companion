@@ -133,3 +133,10 @@ async def test_no_invitation_no_question_or_a_serious_turn_gets_no_guess(store: 
     assert "inviting you to guess" not in await _say(
         store, Guesser(severity=2), "you know what day it is?"
     )
+
+
+async def test_a_question_that_invites_no_guess_is_not_logged_as_a_failed_read(
+    store: Store, caplog: pytest.LogCaptureFixture
+) -> None:
+    await _say(store, Guesser(invited=False), "what time is it?")
+    assert not [r for r in caplog.records if r.levelname == "WARNING" and "guess" in r.message]

@@ -10,6 +10,7 @@ question. Each one is logged with what was offered, so guesses can later be scor
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 from companion.core.sensitivity import GUARDED_AT
 from companion.core.turn.context import conversation_prompt
@@ -38,12 +39,25 @@ def judge_prompt(prior: Sequence[Utterance], said: str) -> str:
     return conversation_prompt(prior, said, last=CONTEXT)
 
 
-def parse(data: Json) -> str | None:
-    """What they invite a guess about, or None."""
-    if not isinstance(data, dict) or data.get("invited") is not True:
+@dataclass(frozen=True, slots=True)
+class Invitation:
+    """The judge's answer: what they invite a guess about, or None when they invite none."""
+
+    about: str | None
+
+
+def parse(data: Json) -> Invitation | None:
+    """The judge's answer, or None when it cannot be read. A no is an answer, not a failure."""
+    if not isinstance(data, dict) or not isinstance(invited := data.get("invited"), bool):
         return None
+    if not invited:
+        return Invitation(None)
     about = data.get("about")
-    return " ".join(about.split())[:80] if isinstance(about, str) and about.strip() else None
+    return (
+        Invitation(" ".join(about.split())[:80])
+        if isinstance(about, str) and about.strip()
+        else None
+    )
 
 
 def offerable(beliefs: Sequence[Belief]) -> list[Belief]:

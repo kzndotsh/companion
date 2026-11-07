@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from companion.core.types import Belief
-from companion.features.curiosity.guess.logic import likely, note, offerable, parse
+from companion.features.curiosity.guess.logic import Invitation, likely, note, offerable, parse
 
 
 def test_only_short_questions_reach_the_judge() -> None:
@@ -15,11 +15,15 @@ def test_only_short_questions_reach_the_judge() -> None:
 
 
 def test_an_invitation_names_what_to_guess() -> None:
-    assert (
-        parse({"invited": True, "about": "what it is time for them"}) == "what it is time for them"
+    assert parse({"invited": True, "about": "what it is time for them"}) == Invitation(
+        "what it is time for them"
     )
-    assert parse({"invited": False, "about": ""}) is None
+
+
+def test_no_invitation_is_an_answer_and_only_a_broken_one_is_unreadable() -> None:
+    assert parse({"invited": False, "about": ""}) == Invitation(None)
     assert parse({"invited": True, "about": " "}) is None
+    assert parse({"invited": "no", "about": ""}) is None
     assert parse("nope") is None
 
 

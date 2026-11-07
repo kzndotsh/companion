@@ -45,9 +45,9 @@ async def invited_guess(
     extractor: StructuredModel, prior: Sequence[Utterance], said: str, beliefs: Sequence[Belief]
 ) -> Invited | None:
     got = await ask(extractor, INVITE, judge_prompt(prior, said))
-    if got is None:
+    about = got.value.about if got is not None else None
+    if about is None:
         return None
-    about = got.value
     found = await look_up(extractor, offerable(beliefs), about)
     picked = found.picked[:MAX_OFFERED] if found is not None else ()
     return Invited(about, tuple(picked))
