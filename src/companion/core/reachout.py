@@ -7,12 +7,32 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import cast
 
 from companion.core.types import Json
 
 # The key of a nudge it would send (features/nudges), read by any reach-out that counts its own.
 WOULD_NUDGE = "nudge (shadow): would send"
+
+
+class Dial(StrEnum):
+    """COMPANION_REACH: the share of conversations it may start over the last two weeks."""
+
+    OFF = "off"
+    RARE = "rare"
+    LIGHT = "light"
+    NORMAL = "normal"
+    WARM = "warm"
+    CLINGY = "clingy"
+
+
+DEFAULT_DIAL = Dial.WARM
+
+
+def dial(value: object, fallback: Dial = DEFAULT_DIAL) -> Dial:
+    """The dial a setting or a record names; `fallback` for anything that is not one."""
+    return Dial(value) if isinstance(value, str) and value in set(Dial) else fallback
 
 
 @dataclass(frozen=True, slots=True)

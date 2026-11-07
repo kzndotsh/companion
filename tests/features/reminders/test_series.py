@@ -9,6 +9,7 @@ from companion.features.reminders.logic import (
     Kind,
     Part,
     Reminder,
+    ReminderState,
     Repeat,
     Series,
     Slots,
@@ -53,7 +54,7 @@ def _series(kind: Kind = Kind.GREETING, repeat: Repeat = MORNING, **kw: object) 
     )
 
 
-def _occ(seq: int, due: datetime, state: str, at: datetime | None = None) -> Reminder:
+def _occ(seq: int, due: datetime, state: ReminderState, at: datetime | None = None) -> Reminder:
     return Reminder(
         f"o{seq}",
         RelationshipId("r"),
@@ -150,7 +151,7 @@ def test_a_reminder_or_check_in_is_never_skipped() -> None:
 
 
 def test_three_greetings_sent_since_they_last_wrote_pause_and_their_message_resumes() -> None:
-    sent = [_occ(n, _local(22 + n, 9), "sent") for n in (1, 2, 3)]
+    sent = [_occ(n, _local(22 + n, 9), ReminderState.SENT) for n in (1, 2, 3)]
     theirs = _days((22, 20, 0))
     paused = tend(_series(), sent, theirs, NOW, TZ)
     assert (paused.state, paused.due) == (Standing.PAUSED, None)
@@ -164,20 +165,20 @@ def test_three_greetings_sent_since_they_last_wrote_pause_and_their_message_resu
 
 
 def test_a_reminder_series_never_pauses() -> None:
-    sent = [_occ(n, _local(22 + n, 9), "sent") for n in (1, 2, 3, 4)]
+    sent = [_occ(n, _local(22 + n, 9), ReminderState.SENT) for n in (1, 2, 3, 4)]
     step = tend(_series(Kind.REMINDER, DAILY_9), sent, [], NOW, TZ)
     assert step.state is None
     assert step.due == _local(27, 9)
 
 
 def test_tending_makes_nothing_while_one_is_pending_or_once_stopped() -> None:
-    pending = [_occ(1, _local(27, 9), "pending")]
+    pending = [_occ(1, _local(27, 9), ReminderState.PENDING)]
     assert tend(_series(), pending, [], NOW, TZ).due is None
-    assert tend(_series(), [_occ(1, _local(26, 9), "claimed")], [], NOW, TZ).due is None
+    assert tend(_series(), [_occ(1, _local(26, 9), ReminderState.CLAIMED)], [], NOW, TZ).due is None
     assert tend(_series(state=Standing.STOPPED), [], [], NOW, TZ).due is None
     first = tend(_series(Kind.REMINDER, DAILY_9), [], [], NOW, TZ)
     assert (first.seq, first.due) == (1, _local(27, 9))
-    after_skip = tend(_series(), [_occ(1, _local(26, 9), "skipped")], [], NOW, TZ)
+    after_skip = tend(_series(), [_occ(1, _local(26, 9), ReminderState.SKIPPED)], [], NOW, TZ)
     assert after_skip.seq == 2
 
 

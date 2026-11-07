@@ -8,17 +8,16 @@ import re
 from dataclasses import replace
 from pathlib import Path
 
-from companion.core.card import build_card, render
+from companion.core.card import GUARDED_HEADING, USER_HEADINGS, build_card, everyday_ids, render
 from companion.core.frames import is_assertable
 from companion.core.history import to_messages
 from companion.core.prompt.request import TalkerRequest
-from companion.core.types import Depth, Domain
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
 
 ALL = 10_000
 _MEMORY = re.compile(
-    r"^\[(?:What you remember|Also known|Older, and may be out of date).*?\]\n?",
+    rf"^\[(?:{'|'.join(map(re.escape, USER_HEADINGS))}).*?\]\n?",
     re.MULTILINE | re.DOTALL,
 )
 
@@ -47,18 +46,13 @@ def rebuilt(
             beliefs = [b for b in store.user_beliefs_as_of(rel, at) if is_assertable(b)]
             support = {bid: min(when, at) for bid, when in store.last_support(rel).items()}
             labels = store.belief_labels(rel)
-            everyday = {
-                bid
-                for bid, x in labels.items()
-                if x.domain is Domain.DAILY and x.depth is Depth.SURFACE
-            }
             card = build_card(
                 beliefs,
                 support,
                 at,
                 max_items=card_size,
-                show_guarded="[Also known" in base.card,
-                everyday=everyday,
+                show_guarded=f"[{GUARDED_HEADING}" in base.card,
+                everyday=everyday_ids(labels),
             )
             request = replace(request, card=swap_memory(base.card, render(card)))
         if history is not None:

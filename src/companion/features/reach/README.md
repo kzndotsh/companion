@@ -48,7 +48,7 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 
 | File | What |
 |---|---|
-| `logic.py` | pure: the dial and its targets, the kinds and their precedence, the seed thing, what the brainstorm and the pick see, and the screen (`Dial`, `Kind`, `consider`, `choose`, `pick_thing`, `Context`, `brief`, `screened`, `about_us`); the needy check is shared, in `core/reachout.py` |
+| `logic.py` | pure: the dial and its targets, the kinds and their precedence, the seed thing, what the brainstorm and the pick see, and the screen (`Kind`, `consider`, `choose`, `pick_thing`, `Context`, `brief`, `screened`, `about_us`); the needy check and the `Dial` (the COMPANION_REACH values and the one fallback for a bad one) are shared, in `core/reachout.py` |
 | `gate.py` | pure: the share of conversations it started, how its last was answered, the step down, and the holds in order (`hold`, `share`, `pace`) |
 | `run.py` | effects: reads the store, learns the rhythm, the tick, the context, and the brainstorm and pick (`tick_reach`, `Reacher`, `context`, `ideas`) |
 | `store.py` | its queries (the table is in `store/sqlite/migrations/0032_own_reach_outs.sql`) |

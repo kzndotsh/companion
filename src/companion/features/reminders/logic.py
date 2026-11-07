@@ -19,20 +19,34 @@ from datetime import date, datetime, time, timedelta, tzinfo
 from enum import StrEnum
 from random import Random
 
+from companion.core.dates import WEEKDAYS
 from companion.core.types import Json, RelationshipId, Speaker, TurnId, Utterance
 from companion.prompts import get
 
 PROMPT = get("system/reminder-read")
 FURTHEST = timedelta(days=60)
 A_FEW_DAYS = 3
-WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
-PARTS = {"morning": time(9), "afternoon": time(15), "evening": time(18), "night": time(20)}
+# The clock time a reminder that names only a part of the day goes out. Not the parts of the day
+# (core/daypart.py): "night" here is when an evening reminder is still useful.
+PART_TIMES = {"morning": time(9), "afternoon": time(15), "evening": time(18), "night": time(20)}
 # A check-in with no time lands at a time picked once between these, as a friend's would; the reply
 # names only the part of the day
 WINDOW = (time(16), time(20))
 SLOT = timedelta(minutes=5)
 SOON = timedelta(minutes=30)  # a check-in picked for today is at least this far off
 GRACE = timedelta(hours=2)  # a reminder this late still goes out, marked late; later it expires
+
+
+class ReminderState(StrEnum):
+    """What became of a reminder: its newest event. A claimed one is being sent."""
+
+    PENDING = "pending"
+    CLAIMED = "claimed"
+    SENT = "sent"
+    LATE = "late"  # sent, but past its time by more than it should have been
+    EXPIRED = "expired"
+    SKIPPED = "skipped"
+    CANCELLED = "cancelled"
 
 
 class Kind(StrEnum):
@@ -192,10 +206,10 @@ def clock_of(s: Slots, now: datetime, day: date) -> time | str | None:  # noqa: 
     read as the next one still to come, and asked about only when both the morning and the evening
     one are still ahead today."""
     if s.hour is None:
-        if s.part in PARTS:
-            return PARTS[s.part]
+        if s.part in PART_TIMES:
+            return PART_TIMES[s.part]
         if s.day == "tonight":
-            return PARTS["night"]
+            return PART_TIMES["night"]
         if s.kind is Kind.CHECK_IN:
             return None
         return "what time"
@@ -411,6 +425,16 @@ class Repeat:
 
 
 @dataclass(frozen=True, slots=True)
+class Wanted:
+    """What a reminder is for, before it has a time: its kind, the thing, their words and turn."""
+
+    kind: Kind
+    thing: str
+    quote: str
+    turn_id: TurnId
+
+
+@dataclass(frozen=True, slots=True)
 class Reminder:
     """One reminder: a one-off, or one occurrence of a series (`series_id`, its number `seq`).
     Its state is its newest event, which happened at `state_at`."""
@@ -425,7 +449,7 @@ class Reminder:
     zone: str
     turn_id: TurnId
     created_at: datetime
-    state: str = "pending"
+    state: ReminderState = ReminderState.PENDING
     series_id: str | None = None
     seq: int | None = None
     state_at: datetime | None = None

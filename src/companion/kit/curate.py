@@ -13,7 +13,6 @@ from companion.core.types import (
     BeliefId,
     BeliefKind,
     RelationshipId,
-    TraceId,
 )
 from companion.core.views import overstated
 from companion.kit.record import Recorder
@@ -36,7 +35,7 @@ def _log(store: Store, b: Belief, key: str, now: datetime, reason: str) -> None:
     if source is None:
         msg = f"belief {b.id} cites an utterance missing from the ledger"
         raise ValueError(msg)
-    Recorder(store, b.relationship_id, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
+    Recorder.on_turn(store, b.relationship_id, source.turn_id, now).decide(
         key, {"belief_id": b.id, "claim": b.claim}, reason=reason
     )
 
@@ -126,7 +125,7 @@ def approve(store: Store, rel: RelationshipId, id_prefix: str, now: datetime | N
         raise ValueError(msg)
     hedge = overstated(view)
     store.approve_view(view.id, now)
-    Recorder(store, rel, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
+    Recorder.on_turn(store, rel, source.turn_id, now).decide(
         "approved by the user: this view now reaches the card",
         {"belief_id": view.id, "claim": view.claim},
     )

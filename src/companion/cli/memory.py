@@ -9,10 +9,11 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.clock import utc_now
+from companion.core.sensitivity import GUARDED_AT
 from companion.core.types import Belief, BeliefId, RelationshipId
 from companion.features.upkeep.merging.logic import NOTE, PICK, merged_kind
 from companion.features.upkeep.merging.store import Proposal
-from companion.features.upkeep.reread.logic import ASK_RULE, HELD, Label, Relation
+from companion.features.upkeep.reread.logic import ASK_RULE, Label, Relation
 from companion.features.upkeep.reread.store import MemoryCheck
 from companion.features.upkeep.sort.logic import ASK_ABOUT_THE_BOT, ASK_ROUTINE
 from companion.features.upkeep.sort.logic import ASKED as WORTH_ASKED
@@ -37,7 +38,7 @@ WHY: dict[str, str] = {
 
 
 def _held(current: Mapping[BeliefId, Belief], bid: BeliefId) -> bool:
-    return bid in current and current[bid].sensitivity >= HELD
+    return bid in current and current[bid].sensitivity >= GUARDED_AT
 
 
 def _open(p: Proposal) -> bool:

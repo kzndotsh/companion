@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from string import Template
 
 from companion.core.crisis import LINE, CrisisLevel
-from companion.core.types import Json, Severity, Speaker, Utterance
+from companion.core.types import HEAVY_AT, Json, Severity, Speaker, Utterance
 from companion.prompts import get
 
 PROMPT = get("system/risk")
@@ -67,7 +67,7 @@ def cue_words(text: str) -> list[str]:
 def cued(severity: Severity | None, words: Sequence[str]) -> bool:
     """Whether the risk judge is asked: the listening judge read the message as serious or acute,
     or it has a cue word. Nothing else asks it."""
-    return (severity is not None and severity >= Severity.SERIOUS) or bool(words)
+    return (severity is not None and severity >= HEAVY_AT) or bool(words)
 
 
 def strong_cue(severity: Severity | None, words: Sequence[str]) -> bool:

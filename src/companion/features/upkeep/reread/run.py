@@ -8,10 +8,10 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 
-from companion.core.card import faded
+from companion.core.card import everyday_ids, faded
 from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
-from companion.core.types import Belief, Depth, Domain, RelationshipId
+from companion.core.types import Belief, RelationshipId
 from companion.core.vectors import Embedder, nearest
 from companion.features.upkeep.merging.run import propose_group
 from companion.features.upkeep.reread.logic import (
@@ -77,9 +77,7 @@ async def nightly(  # noqa: PLR0913
     checked = store.checked_memories(rel, CHECK_NAMES, CHECK.version)
     support = store.last_support(rel)
     labels = store.belief_labels(rel)
-    everyday = {
-        bid for bid, x in labels.items() if x.domain is Domain.DAILY and x.depth is Depth.SURFACE
-    }
+    everyday = everyday_ids(labels)
     due = sorted(
         (
             b

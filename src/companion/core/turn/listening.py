@@ -19,6 +19,7 @@ from companion.core.types import Json, Severity, severity_from
 from companion.lib.prompts import Prompt
 from companion.prompts import get
 
+LISTENING_KEY = "listening"  # the decision the listening note logs, labels in its detail
 STANCES = ("listening", "inviting", "other")
 OFFER_WINDOW = 4
 MAX_TOPIC_CHARS = 80
@@ -98,6 +99,33 @@ def parse(data: Json) -> ListeningRead | None:
         age_coded=age_coded is not False,  # missing or malformed counts as yes: doubt stays strict
         repair=data.get("repair") is True,
     )
+
+
+def listening_labels(j: ListeningRead) -> dict[str, Json]:
+    """The labels the listening decision keeps, read back by `logged_severity` and
+    `logged_intimate`."""
+    return {
+        "intimate": j.intimate,
+        "severity": j.severity,
+        "stance": j.stance,
+        "vague": j.vague,
+        "rude": j.rude,
+    }
+
+
+def _logged(detail: dict[str, Json] | None, name: str) -> Json:
+    labels = (detail or {}).get("labels")
+    return labels.get(name) if isinstance(labels, dict) else None
+
+
+def logged_severity(detail: dict[str, Json] | None) -> Severity | None:
+    """The severity a listening decision logged, or None when its detail has none."""
+    return severity_from(_logged(detail, "severity"))
+
+
+def logged_intimate(detail: dict[str, Json] | None) -> bool:
+    """Whether a listening decision logged the message as intimate."""
+    return _logged(detail, "intimate") is True
 
 
 def offered_recently(replies: Sequence[str]) -> bool:

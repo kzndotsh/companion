@@ -6,13 +6,13 @@ import sqlite3
 from collections.abc import Sequence
 from datetime import datetime
 
+from companion.core.turn.listening import LISTENING_KEY
 from companion.core.types import RelationshipId, Severity, TurnId
 from companion.features.mood.logic import PARAMS_VERSION, Effect, Said, Source, State
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 # The keys of the decisions that carry what the judges read: the listening read's severity, and the
 # tone read logged with a reaction or with none.
-LISTENED = "listening"
 REACTED = "reacted "
 NO_REACTION = "react: none"
 
@@ -78,7 +78,7 @@ def said_since(conn: sqlite3.Connection, rel: RelationshipId, start: datetime) -
         "   AND json_extract(d.detail, '$.prompt') LIKE 'system/react@%')) LIMIT 1) AS tone"
         " FROM utterances u WHERE u.relationship_id = ? AND u.speaker = 'user' AND u.at >= ?"
         " ORDER BY u.at",
-        (LISTENED, REACTED, NO_REACTION, rel, iso(start)),
+        (LISTENING_KEY, REACTED, NO_REACTION, rel, iso(start)),
     ).fetchall()
     return [
         Said(

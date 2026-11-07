@@ -20,6 +20,8 @@ from enum import StrEnum
 
 import holidays
 
+from companion.core.dates import month_day
+from companion.core.sensitivity import GUARDED_AT
 from companion.core.types import Sensitivity
 from companion.prompts import get
 
@@ -138,17 +140,6 @@ class Dated:
         return date(year, self.month, min(self.day, calendar.monthrange(year, self.month)[1]))
 
 
-_MONTHS = {
-    **{name.lower(): i for i, name in enumerate(calendar.month_name) if name},
-    **{name.lower(): i for i, name in enumerate(calendar.month_abbr) if name},
-    "sept": 9,
-}
-_MONTH = "|".join(sorted(_MONTHS, key=len, reverse=True))
-_DATE = re.compile(
-    rf"\b(?:(?P<m>{_MONTH})\.?\s+(?P<d>\d{{1,2}})(?:st|nd|rd|th)?"
-    rf"|(?P<d2>\d{{1,2}})(?:st|nd|rd|th)?\s+(?:of\s+)?(?P<m2>{_MONTH}))\b",
-    re.IGNORECASE,
-)
 _YEARLY = re.compile(r"\b(?:birthday|anniversary)\b|\bturns \d+\b", re.IGNORECASE)
 _WHOSE = re.compile(
     r"\b(?:the user's|their)\s+((?:[a-z][\w-]*\s+){0,2}?[\w-]+)'s\s+(birthday|anniversary)",
@@ -165,11 +156,10 @@ _HARD = re.compile(
 def yearly(claim: str) -> Dated | None:
     """The yearly date a memory names (a birthday or an anniversary on a month and a day), or None.
     Their own when no one else's is named; never one tied to a loss."""
-    found = _DATE.search(claim)
+    found = month_day(claim)
     if found is None or _YEARLY.search(claim) is None or _HARD.search(claim) is not None:
         return None
-    month = _MONTHS[(found["m"] or found["m2"]).lower()]
-    day = int(found["d"] or found["d2"])
+    month, day = found
     if not 1 <= day <= calendar.monthrange(2024, month)[1]:
         return None
     other = _WHOSE.search(claim)
@@ -179,14 +169,9 @@ def yearly(claim: str) -> Dated | None:
     return Dated(f"their {what}", month, day)
 
 
-SENSITIVE = (
-    Sensitivity.DELICATE
-)  # a memory this sensitive never gives a date: such a day is never marked on its own
-
-
 def their_dates(memories: Sequence[tuple[str, Sensitivity]]) -> tuple[Dated, ...]:
     """Their yearly dates from what memory holds, as (claim, sensitivity), each once."""
-    found = (yearly(claim) for claim, level in memories if level < SENSITIVE)
+    found = (yearly(claim) for claim, level in memories if level < GUARDED_AT)
     return tuple(dict.fromkeys(d for d in found if d is not None))
 
 

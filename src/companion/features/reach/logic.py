@@ -16,8 +16,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
-from companion.core.reachout import checked
-from companion.core.rhythm import Rhythm
+from companion.core.daypart import part_of_day
+from companion.core.reachout import Dial, checked
+from companion.core.rhythm import KEPT_DAYS, Rhythm
+from companion.core.sensitivity import GUARDED_AT
 from companion.core.types import Json, Sensitivity
 from companion.prompts import get
 
@@ -30,18 +32,6 @@ PACED = "reach out: dial stepped down"
 THOUGHT_EVERY = timedelta(hours=24)  # at most one thought a day
 KEPT_EVERY = timedelta(days=3)  # a time they keep, now and then
 THING_REUSE = timedelta(days=14)  # a thing is not brought up twice in two weeks
-SENSITIVE = Sensitivity.DELICATE  # memories at this sensitivity or above are never a thought
-
-
-class Dial(StrEnum):
-    """COMPANION_REACH: the share of conversations it may start over the last two weeks."""
-
-    OFF = "off"
-    RARE = "rare"
-    LIGHT = "light"
-    NORMAL = "normal"
-    WARM = "warm"
-    CLINGY = "clingy"
 
 
 LEVELS = tuple(Dial)
@@ -57,10 +47,6 @@ TARGET = {
 
 def step_down(d: Dial) -> Dial:
     return LEVELS[max(0, LEVELS.index(d) - 1)]
-
-
-def dial(value: str) -> Dial:
-    return Dial(value) if value in set(Dial) else Dial.WARM
 
 
 class Kind(StrEnum):
@@ -98,7 +84,7 @@ def pick_thing(pool: Pool, used: frozenset[str], seed: str) -> Thing | None:
     """One thing, the same for the same seed: never a sensitive memory, never one used lately, never
     one about the two of them (a taste of its own about the relationship was a seed, 2026-11-02)."""
     found = [
-        *(Thing("memory", i, c) for i, c, s in pool.memories if s < SENSITIVE),
+        *(Thing("memory", i, c) for i, c, s in pool.memories if s < GUARDED_AT),
         *(Thing("taste", i, c) for i, c in pool.tastes),
         *(Thing("episode", i, g) for i, g in pool.episodes),
     ]
@@ -137,6 +123,10 @@ def _ago(now: datetime, then: datetime | None, every: timedelta) -> bool:
     return then is not None and now - then < every
 
 
+def _hours(span: timedelta) -> str:
+    return f"{span.total_seconds() / 3600:.0f}"
+
+
 def consider(look: Look) -> list[Considered]:
     """Every kind, in precedence order, with whether it applies now and why, written by code."""
     r, local = look.rhythm, look.now.astimezone(look.tz)
@@ -150,18 +140,28 @@ def consider(look: Look) -> list[Considered]:
         Considered(Kind.AWAY, look.earlier is Kind.AWAY, "the nudge tick decides it"),
     ]
     if look.kept is None:
-        out.append(Considered(Kind.KEPT, False, "no hour they keep on most of the last 7 days"))
+        out.append(
+            Considered(Kind.KEPT, False, f"no hour they keep on most of the last {KEPT_DAYS} days")
+        )
     elif local.hour != look.kept:
         out.append(Considered(Kind.KEPT, False, f"the hour they keep is {look.kept}:00, not now"))
     elif _ago(look.now, look.last_kept, KEPT_EVERY):
-        out.append(Considered(Kind.KEPT, False, "said hi at their time in the last 3 days"))
+        out.append(
+            Considered(
+                Kind.KEPT, False, f"said hi at their time in the last {KEPT_EVERY.days} days"
+            )
+        )
     else:
         out.append(Considered(Kind.KEPT, True, f"they wrote around {look.kept}:00 most days"))
     half = r.pause / 2
     if look.thing is None:
         out.append(Considered(Kind.THOUGHT, False, "nothing fresh and not sensitive to bring up"))
     elif _ago(look.now, look.last_thought, THOUGHT_EVERY):
-        out.append(Considered(Kind.THOUGHT, False, "already had a thought in the last 24h"))
+        out.append(
+            Considered(
+                Kind.THOUGHT, False, f"already had a thought in the last {_hours(THOUGHT_EVERY)}h"
+            )
+        )
     elif pause is None or pause < half or not usual:
         why = f"{gone}, under {half:.1f}h" if usual else f"{local.hour}:00 is not a usual hour"
         out.append(Considered(Kind.THOUGHT, False, why))
@@ -276,14 +276,6 @@ _SEASON = (
 )
 
 
-def _part(hour: int) -> str:
-    if hour < 12:
-        return "morning"
-    if hour < 17:
-        return "afternoon"
-    return "evening" if hour < 22 else "late evening"
-
-
 def _block(title: str, items: Sequence[str]) -> list[str]:
     return [f"{title}:", *(f"- {i}" for i in items)] if items else [f"{title}: none"]
 
@@ -291,8 +283,9 @@ def _block(title: str, items: Sequence[str]) -> list[str]:
 def brief(c: Context) -> str:
     """The brainstorm's input, rendered by code."""
     when = c.local.strftime("%A %d %B")
+    part = part_of_day(c.local.hour).value
     out = [
-        f"Now: {when}, {_part(c.local.hour)} ({c.local:%H:%M}), {_SEASON[c.local.month - 1]}",
+        f"Now: {when}, {part} ({c.local:%H:%M}), {_SEASON[c.local.month - 1]}",
         f"Why now: {c.kind.value}",
         f"Came to mind (use it or not): {c.thing.text if c.thing else 'nothing in particular'}",
         "Their last chat with you, newest last:",

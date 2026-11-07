@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from companion.core.extractor import StructuredModel
 from companion.core.turn.context import build_prompt, inputs_hash
 from companion.core.turn.reply import Reaction
-from companion.core.types import Severity, Speaker, Utterance, severity_from
+from companion.core.types import HEAVY_AT, Speaker, Utterance, severity_from
 from companion.features.reactions.logic import (
     ALONGSIDE_PROMPT,
     ALONGSIDE_SCHEMA,
@@ -114,7 +114,7 @@ def _after_serious(c: Runtime, t: Turn) -> bool:
     for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
         labels = d.detail.get("labels") if d.detail else None
         severity = severity_from(labels.get("severity") if isinstance(labels, dict) else None)
-        if severity is not None and severity >= Severity.SERIOUS:
+        if severity is not None and severity >= HEAVY_AT:
             return True
     return False
 

@@ -14,6 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from companion.core.reachout import DEFAULT_DIAL, Dial
 from companion.io.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.models import anthropic, embeddings, openrouter
 
@@ -87,7 +88,11 @@ REMINDERS = Switch("COMPANION_REMINDERS", "reminders", ("on", "off"))
 EPISODES = Switch("COMPANION_EPISODES", "episodes", ("on", "shadow", "off"))
 OWN_MARKS = Switch("COMPANION_OWN_MARKS", "own marks", ("on", "off"))
 HEDGED_PLANS = Switch("COMPANION_HEDGED_PLANS", "hedged plans", ("loose", "off"), {"off": "strict"})
-REACH = Switch("COMPANION_REACH", "reach", ("warm", "off", "rare", "light", "normal", "clingy"))
+REACH = Switch(
+    "COMPANION_REACH",
+    "reach",
+    (DEFAULT_DIAL.value, *(d.value for d in Dial if d is not DEFAULT_DIAL)),
+)
 CRISIS = Switch("COMPANION_CRISIS", "crisis", ("on", "shadow", "off"))
 CALENDAR = Switch("COMPANION_CALENDAR", "calendar", ("on", "off"))
 NOW = Switch("COMPANION_NOW", "now", ("shadow", "on", "off"))

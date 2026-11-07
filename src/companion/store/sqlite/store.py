@@ -53,7 +53,7 @@ from companion.features.promises.logic import Scope as PromiseScope
 from companion.features.promises.store import Recorded as RecordedPromise
 from companion.features.reach import store as reach
 from companion.features.reminders import store as reminders
-from companion.features.reminders.logic import Reminder, Series, Standing
+from companion.features.reminders.logic import Reminder, ReminderState, Series, Standing
 from companion.features.threads import store as open_loops
 from companion.features.threads.logic import Thread, ThreadState
 from companion.features.threads.store import ReachOut
@@ -398,7 +398,9 @@ class Store:
     def add_reminder(self, r: Reminder) -> None:
         reminders.add(self._conn, r)
 
-    def reminder_event(self, reminder_id: str, state: str, reason: str, at: datetime) -> None:
+    def reminder_event(
+        self, reminder_id: str, state: ReminderState, reason: str, at: datetime
+    ) -> None:
         reminders.event(self._conn, reminder_id, state, reason, at)
 
     def claim_reminder(self, reminder_id: str, at: datetime) -> bool:

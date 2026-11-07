@@ -39,9 +39,11 @@ from companion.features.reminders.logic import (
     SCHEMA,
     Ask,
     Reminder,
+    ReminderState,
     Series,
     Slots,
     Standing,
+    Wanted,
     ask_note,
     asked_for,
     cancelled_note,
@@ -118,6 +120,14 @@ async def read_slots(
     return None if got is None else trusted(got.value, said)
 
 
+def _reminder(c: Runtime, w: Wanted, due: datetime, tz: tzinfo, now: datetime) -> Reminder:
+    """A new pending reminder, as a one-off; a series' occurrence adds its series and number."""
+    wall = due.astimezone(tz).strftime("%Y-%m-%d %H:%M")
+    return Reminder(
+        uuid.uuid4().hex, c.rel, w.kind, w.thing, w.quote, due, wall, str(tz), w.turn_id, now
+    )
+
+
 def schedule(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> Step:
     """Bring a series up to date: record a pause or a resume, and make its next occurrence when the
     one before has ended. Safe to run any number of times: the store keeps one of each number."""
@@ -127,21 +137,9 @@ def schedule(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> Step:
         c.store.series_event(series.id, step.state, step.reason, now)
     if step.due is None:
         return step
+    wanted = Wanted(series.kind, series.thing, series.quote, series.turn_id)
     made = c.store.add_occurrence(
-        Reminder(
-            uuid.uuid4().hex,
-            c.rel,
-            series.kind,
-            series.thing,
-            series.quote,
-            step.due,
-            step.due.astimezone(tz).strftime("%Y-%m-%d %H:%M"),
-            str(tz),
-            series.turn_id,
-            now,
-            series_id=series.id,
-            seq=step.seq,
-        )
+        replace(_reminder(c, wanted, step.due, tz, now), series_id=series.id, seq=step.seq)
     )
     return step if made else replace(step, due=None)
 
@@ -151,13 +149,17 @@ def stop(store: Store, series: Series, reason: str, now: datetime) -> None:
     next one."""
     store.series_event(series.id, Standing.STOPPED, reason, now)
     for r in store.reminders(series.relationship_id):
-        if r.series_id == series.id and r.state == "pending":
-            store.reminder_event(r.id, "cancelled", reason, now)
+        if r.series_id == series.id and r.state is ReminderState.PENDING:
+            store.reminder_event(r.id, ReminderState.CANCELLED, reason, now)
 
 
 def _cancel(c: Runtime, s: Slots, now: datetime) -> Read | None:
     """Drop the pending one-offs and stop the series their words name (or the only one)."""
-    pending = [r for r in c.store.reminders(c.rel) if r.state == "pending" and r.series_id is None]
+    pending = [
+        r
+        for r in c.store.reminders(c.rel)
+        if r.state is ReminderState.PENDING and r.series_id is None
+    ]
     live = [x for x in c.store.series(c.rel) if x.state is not Standing.STOPPED]
     hit = set(
         matching([(r.id, r.thing) for r in pending] + [(x.id, x.thing) for x in live], s.thing)
@@ -167,7 +169,7 @@ def _cancel(c: Runtime, s: Slots, now: datetime) -> Read | None:
     dropped = [r for r in pending if r.id in hit]
     stopped = [x for x in live if x.id in hit]
     for r in dropped:
-        c.store.reminder_event(r.id, "cancelled", "they asked to drop it", now)
+        c.store.reminder_event(r.id, ReminderState.CANCELLED, "they asked to drop it", now)
     for x in stopped:
         stop(c.store, x, "they asked to stop it", now)
     what = [asked_for(r.kind, r.thing) for r in dropped] + [
@@ -224,19 +226,7 @@ def act(  # noqa: PLR0913, PLR0917
         return Read(
             ask_note(s.kind, s.thing, when.unclear), ASKED, {"why": when.unclear}, asks=True
         )
-    local = when.at.astimezone(tz)
-    r = Reminder(
-        uuid.uuid4().hex,
-        c.rel,
-        s.kind,
-        s.thing,
-        said,
-        when.at,
-        local.strftime("%Y-%m-%d %H:%M"),
-        str(tz),
-        turn,
-        now,
-    )
+    r = _reminder(c, Wanted(s.kind, s.thing, said, turn), when.at, tz, now)
     c.store.add_reminder(r)
     told = spoken(when.at, now, tz, loose=when.loose)
     return Read(
@@ -298,19 +288,23 @@ async def deliver_due(
     Then every series is brought up to date. Returns how many went out."""
     held = c.store.reminders(c.rel)
     for r in held:
-        if r.state == "claimed" and r.state_at is not None and now - r.state_at > STUCK:
+        if r.state is ReminderState.CLAIMED and r.state_at is not None and now - r.state_at > STUCK:
             why = "claimed and never finished, cut off mid-send; whether it arrived is unknown"
-            c.store.reminder_event(r.id, "expired", why + ", so it is not sent again", now)
+            c.store.reminder_event(
+                r.id, ReminderState.EXPIRED, why + ", so it is not sent again", now
+            )
             detail_stuck: dict[str, Json] = {"reminder": r.id, "series": r.series_id}
             log_decision(c, TurnId(uuid.uuid4().hex), STUCK_GONE, now, detail_stuck)
-    due = [r for r in held if r.state == "pending" and r.due_at <= now]
+    due = [r for r in held if r.state is ReminderState.PENDING and r.due_at <= now]
     every, zone = {x.id: x for x in c.store.series(c.rel)}, local_zone()
     theirs = c.store.their_times(c.rel, now - LOOK_BACK)
     sent = 0
     for r in due:
         turn = TurnId(uuid.uuid4().hex)
         if r.due_at < started and now - r.due_at > GRACE:
-            c.store.reminder_event(r.id, "expired", "the bot was not running when it was due", now)
+            c.store.reminder_event(
+                r.id, ReminderState.EXPIRED, "the bot was not running when it was due", now
+            )
             log_decision(
                 c,
                 turn,
@@ -323,7 +317,7 @@ async def deliver_due(
         why = None if series is None else skip_reason(series, r.due_at, theirs, now, zone)
         if why is not None:
             if c.store.claim_reminder(r.id, now):
-                c.store.reminder_event(r.id, "skipped", why, now)
+                c.store.reminder_event(r.id, ReminderState.SKIPPED, why, now)
                 detail: dict[str, Json] = {"reminder": r.id, "series": r.series_id, "why": why}
                 log_decision(c, turn, SKIPPED, now, detail)
             continue
@@ -338,7 +332,9 @@ async def deliver_due(
             await send(text)
         except Exception:
             log.warning("a reminder could not be sent; it will be tried again", exc_info=True)
-            c.store.reminder_event(r.id, "pending", "sending failed, tried again next time", now)
+            c.store.reminder_event(
+                r.id, ReminderState.PENDING, "sending failed, tried again next time", now
+            )
             continue
         c.store.append_utterance(
             Utterance(
@@ -353,7 +349,9 @@ async def deliver_due(
             )
         )
         late = now - r.due_at > LATE
-        c.store.reminder_event(r.id, "late" if late else "sent", f"sent by {by}", now)
+        c.store.reminder_event(
+            r.id, ReminderState.LATE if late else ReminderState.SENT, f"sent by {by}", now
+        )
         log_decision(
             c,
             turn,

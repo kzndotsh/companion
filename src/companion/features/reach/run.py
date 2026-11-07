@@ -14,20 +14,19 @@ from datetime import datetime, timedelta, tzinfo
 from companion.core.crisis import crisis_paused
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
-from companion.core.reachout import WOULD_NUDGE, Held
+from companion.core.reachout import WOULD_NUDGE, Dial, Held
 from companion.core.rhythm import WINDOW, kept_hour, learn
+from companion.core.sensitivity import GUARDED_AT
+from companion.core.turn.listening import LISTENING_KEY, logged_intimate, logged_severity
 from companion.core.types import (
+    HEAVY_AT,
     BeliefKind,
     DecisionKind,
     Frame,
     Json,
     RelationshipId,
-    Severity,
     Speaker,
     Subject,
-    TraceId,
-    TurnId,
-    severity_from,
 )
 from companion.features.reach.gate import (
     AFTER_HEAVY,
@@ -47,11 +46,9 @@ from companion.features.reach.logic import (
     PACED,
     PICK,
     PICK_SCHEMA,
-    SENSITIVE,
     THING_REUSE,
     WOULD_SEND,
     Context,
-    Dial,
     Idea,
     Kind,
     Look,
@@ -111,7 +108,6 @@ PICK_JUDGE = Judge(
 LANDED_JUDGE = Judge(
     "reach-landed", LANDED, LANDED_SCHEMA, parse_landed, timeout=10.0, unread="not read"
 )
-HEAVY = Severity.SERIOUS  # a listening read at this severity or above is a heavy message
 
 
 @dataclass(slots=True)
@@ -124,11 +120,6 @@ class Reacher:
     cap: float | None = None  # the daily spend cap in dollars, None for none
     last_hold: tuple[str, str] | None = None
     paced: str | None = None
-
-
-def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
-    trace = uuid.uuid4().hex
-    return Recorder(store, rel, TurnId(trace), TraceId(trace), now)
 
 
 def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
@@ -149,12 +140,12 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
         tastes=[
             (str(b.id), b.claim)
             for b in store.self_beliefs(rel)
-            if kinds.get(b.id) == "taste" and b.sensitivity < SENSITIVE
+            if kinds.get(b.id) == "taste" and b.sensitivity < GUARDED_AT
         ],
         episodes=[
             (e.id, e.gist)
             for e in store.episodes(rel)
-            if e.kind == "everyday" and e.top_severity < HEAVY and now - e.end_at <= EPISODE_DAYS
+            if e.kind == "everyday" and e.top_severity < HEAVY_AT and now - e.end_at <= EPISODE_DAYS
         ],
     )
 
@@ -179,11 +170,8 @@ def _heavy_at(store: Store, rel: RelationshipId, now: datetime) -> datetime | No
     """Their newest message the listening read found heavy, in the window the gate holds for."""
     found = [
         d.at
-        for d in store.decisions_with_key(rel, "listening", now - AFTER_HEAVY)
-        if isinstance(labels := (d.detail or {}).get("labels"), dict)
-        and (sev := severity_from(labels.get("severity"))) is not None
-        and sev >= HEAVY
-        and d.at <= now
+        for d in store.decisions_with_key(rel, LISTENING_KEY, now - AFTER_HEAVY)
+        if (sev := logged_severity(d.detail)) is not None and sev >= HEAVY_AT and d.at <= now
     ]
     return max(found, default=None)
 
@@ -193,12 +181,9 @@ def _kept_out(store: Store, rel: RelationshipId, since: datetime, now: datetime)
     last lines are shown only when they are plain everyday talk: an intimate episode is not always
     a pretend frame, and lines skipping a scene reached back to a heavy disclosure (2026-11-03)."""
     return any(
-        isinstance(labels := (d.detail or {}).get("labels"), dict)
-        and (
-            labels.get("intimate") is True
-            or ((sev := severity_from(labels.get("severity"))) is not None and sev >= HEAVY)
-        )
-        for d in store.decisions_with_key(rel, "listening", since)
+        logged_intimate(d.detail)
+        or ((sev := logged_severity(d.detail)) is not None and sev >= HEAVY_AT)
+        for d in store.decisions_with_key(rel, LISTENING_KEY, since)
         if d.at <= now
     )
 
@@ -226,7 +211,7 @@ def context(
             if b.subject is Subject.USER
             and b.kind in keep
             and b.frame is Frame.REAL
-            and b.sensitivity < SENSITIVE
+            and b.sensitivity < GUARDED_AT
             and b.id not in intimate
         ),
         key=lambda b: b.valid_from,
@@ -330,7 +315,7 @@ async def tick_reach(
     considered = consider(replace(base, earlier=earlier))
     detail: dict[str, Json] = {**sit.detail(), "considered": [c.detail() for c in considered]}
     if sit.paced is not None and sit.paced != reacher.paced:
-        _record(store, rel, now).decide(
+        Recorder.fresh(store, rel, now).decide(
             PACED, detail, reason=f"{PACED}: {sit.paced}; until they start a conversation"
         )
     reacher.paced = sit.paced
@@ -343,7 +328,7 @@ async def tick_reach(
     if held is not None:
         if reacher.last_hold != (pick.kind, held[0]):
             reacher.last_hold = (pick.kind, held[0])
-            _record(store, rel, now).decide(
+            Recorder.fresh(store, rel, now).decide(
                 HELD,
                 {**detail, "kind": pick.kind.value, "hold": held[0].value},
                 reason=f"{HELD}, would otherwise reach out ({pick.kind}): {held[1]}",
@@ -409,12 +394,12 @@ async def _draft(
     )
     store.add_own_reach_out(row)
     if idea is None:
-        _record(store, rel, now).decide(
+        Recorder.fresh(store, rel, now).decide(
             DROPPED, detail, reason=f"{DROPPED} ({kind}): {dropped}", kind=DecisionKind.DO_NOTHING
         )
         log.info("reach: nothing sent (%s): %s", kind, dropped)
         return None
-    _record(store, rel, now).decide(
+    Recorder.fresh(store, rel, now).decide(
         WOULD_SEND, detail, reason=f"{WOULD_SEND} ({kind}): {why}", kind=DecisionKind.INITIATE
     )
     log.info("reach shadow: would send %r (%s, %s)", idea.message, kind, idea.angle)
@@ -455,11 +440,11 @@ async def record_outcomes(
             else f"answered after {a.after.total_seconds() / 3600:.1f}h in {a.words} words"
         )
         base = "" if sent.live else ", in shadow: when they came back on their own"
-        _record(store, rel, now).decide(
+        Recorder.fresh(store, rel, now).decide(
             OUTCOME, detail, reason=f"{OUTCOME} ({sent.kind}): {how}{base}"
         )
         if landed is Landed.STOP:
-            _record(store, rel, now).decide(
+            Recorder.fresh(store, rel, now).decide(
                 STOPPED,
                 {"reach_out": sent.id, "kind": sent.kind.value},
                 reason=f"{STOPPED}: they asked it not to message first; off until resumed",
@@ -475,7 +460,7 @@ def resume(store: Store, rel: RelationshipId, now: datetime) -> bool:
     stops = [d.at for d in store.decisions_with_key(rel, STOPPED)]
     if not stopped(stops, [d.at for d in store.decisions_with_key(rel, RESUMED)]):
         return False
-    _record(store, rel, now).decide(
+    Recorder.fresh(store, rel, now).decide(
         RESUMED, {}, reason=f"{RESUMED}: the owner turned it back on", kind=DecisionKind.POLICY
     )
     return True

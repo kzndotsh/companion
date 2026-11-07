@@ -9,12 +9,11 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
-from companion.core.reachout import WOULD_NUDGE
+from companion.core.reachout import WOULD_NUDGE, dial
 from companion.core.turn.now import KEY as NOW_KEY
 from companion.core.turn.now import Phase, from_decisions
 from companion.core.types import RelationshipId
 from companion.features.reach import cli as own_reasons
-from companion.features.reach.logic import dial
 from companion.features.reach.run import resume as resume_reach
 from companion.features.threads.run import HELD
 from companion.settings import REACH, Settings

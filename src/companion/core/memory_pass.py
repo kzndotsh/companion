@@ -7,6 +7,9 @@ from datetime import datetime
 
 from companion.core.types import RelationshipId, UtteranceId
 
+BATCH = 40  # messages a pass reads per call, and every reader that goes by the pass's batches
+CONTEXT = 4  # messages before a batch shown with it, for context
+
 
 @dataclass(frozen=True, slots=True)
 class PassRun:

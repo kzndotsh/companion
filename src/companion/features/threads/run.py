@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import functools
 import logging
-import uuid
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field, replace
 from datetime import datetime, tzinfo
@@ -25,8 +24,6 @@ from companion.core.types import (
     Json,
     RelationshipId,
     Speaker,
-    TraceId,
-    TurnId,
     Utterance,
     UtteranceId,
 )
@@ -53,7 +50,7 @@ from companion.features.threads.logic import (
 from companion.features.threads.store import ReachOut
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.features import Feature
-from companion.kit.record import Recorder
+from companion.kit.record import Recorder, new_id
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 
@@ -82,10 +79,6 @@ class LoopCounts:
     resolved: int = 0
 
 
-def _id() -> str:
-    return uuid.uuid4().hex
-
-
 async def extract_open_loops(  # noqa: PLR0913, PLR0917
     store: Store,
     extractor: StructuredModel,
@@ -110,7 +103,7 @@ async def extract_open_loops(  # noqa: PLR0913, PLR0917
         note("open loops: the answer was malformed and was ignored", {"model": result.model})
         return LoopCounts(cost_usd=result.cost_usd)
     known = {normalise(lp.claim) for lp in store.open_loops(rel)}
-    made = Making(rel, now, tz, _id, loose=loose)
+    made = Making(rel, now, tz, new_id, loose=loose)
     stored = rejected = 0
     earlier: dict[str, str] = {}
     for i, item in enumerate(raw, start=1):
@@ -191,11 +184,6 @@ HELD = "held, would otherwise reach out"  # the key of a reach-out the gate held
 DRAFT_DROPPED = "open loop: the check-in draft was dropped, not sent"
 
 
-def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
-    trace = _id()
-    return Recorder(store, rel, TurnId(trace), TraceId(trace), now)
-
-
 async def tick(  # noqa: PLR0913, PLR0917
     store: Store,
     rel: RelationshipId,
@@ -217,7 +205,7 @@ async def tick(  # noqa: PLR0913, PLR0917
     verdict = evaluate(loops, now, tz, held.why if held else None)
     for lp in verdict.expired:
         store.open_loop_event(lp.id, ThreadState.EXPIRED, "past its follow-up horizon", now)
-        _record(store, rel, now).decide(
+        Recorder.fresh(store, rel, now).decide(
             "open loop expired", {"loop_id": lp.id}, reason=f"open loop expired: {lp.claim}"
         )
     if verdict.loop is None:
@@ -229,7 +217,7 @@ async def tick(  # noqa: PLR0913, PLR0917
         if key not in ticker.seen:
             ticker.seen.add(key)
             reason = f"held, would otherwise reach out about {verdict.loop.claim}: {verdict.reason}"
-            _record(store, rel, now).decide(
+            Recorder.fresh(store, rel, now).decide(
                 HELD, detail, reason=reason, kind=DecisionKind.DO_NOTHING
             )
             log.info("initiative held: %s (%s)", verdict.loop.claim, verdict.reason)
@@ -237,15 +225,19 @@ async def tick(  # noqa: PLR0913, PLR0917
     text, why = checked(await draft(verdict.loop) if draft is not None else "")
     if not text:
         detail["why"] = why
-        _record(store, rel, now).decide(DRAFT_DROPPED, detail, reason=f"{DRAFT_DROPPED}: {why}")
+        Recorder.fresh(store, rel, now).decide(
+            DRAFT_DROPPED, detail, reason=f"{DRAFT_DROPPED}: {why}"
+        )
         log.info(
             "initiative: the check-in draft about %s was dropped (%s)", verdict.loop.claim, why
         )
         return Verdict(False, f"{DRAFT_DROPPED}: {why}", verdict.loop, verdict.expired)
-    store.add_reach_out(ReachOut(_id(), rel, verdict.loop.id, "shadow", text, verdict.reason, now))
+    store.add_reach_out(
+        ReachOut(new_id(), rel, verdict.loop.id, "shadow", text, verdict.reason, now)
+    )
     store.open_loop_event(verdict.loop.id, ThreadState.ASKED, "shadow reach-out, not sent", now)
     detail["draft"] = text
-    _record(store, rel, now).decide(
+    Recorder.fresh(store, rel, now).decide(
         "shadow, would send",
         detail,
         reason=f"shadow, would send: {verdict.reason}",

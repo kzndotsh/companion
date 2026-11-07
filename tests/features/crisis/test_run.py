@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 
 from companion.core.crisis import PAUSE_KEY, PAUSE_REASON
+from companion.core.reachout import Dial
 from companion.core.types import RelationshipId, TraceId, TurnId
-from companion.features.reach.logic import Dial
 from companion.features.reach.run import Reacher, holds
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store

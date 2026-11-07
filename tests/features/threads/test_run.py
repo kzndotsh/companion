@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
+from companion.core.reachout import Dial
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -16,7 +17,6 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.reach.logic import Dial
 from companion.features.reach.run import Reacher, holds
 from companion.features.threads.gate import Verdict
 from companion.features.threads.logic import Thread, ThreadState

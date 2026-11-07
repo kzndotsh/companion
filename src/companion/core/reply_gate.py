@@ -26,7 +26,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from companion.core.types import Json, Severity
+from companion.core.types import HEAVY_AT, Json, Severity
 from companion.prompts import get
 
 EM_DASH = "—"
@@ -37,12 +37,7 @@ GENERIC = "a canned generic reaction"
 
 def eligible(*, severity: Severity | None, in_scene: bool, reply: str) -> bool:
     """Ordinary turns the listening judge read: not serious, not a scene, not an empty reply."""
-    return (
-        severity is not None
-        and severity < Severity.SERIOUS
-        and not in_scene
-        and bool(reply.strip())
-    )
+    return severity is not None and severity < HEAVY_AT and not in_scene and bool(reply.strip())
 
 
 _DISCLAIMER = re.compile(

@@ -12,7 +12,8 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.turn.floor import MINOR_KEY
-from companion.core.types import BeliefId, RelationshipId, Severity, UtteranceId
+from companion.core.turn.listening import LISTENING_KEY
+from companion.core.types import HEAVY_AT, BeliefId, RelationshipId, UtteranceId
 from companion.core.vectors import Vector
 from companion.features.intimate.logic import (
     Everyday,
@@ -27,8 +28,6 @@ from companion.features.intimate.logic import (
     lane_of,
 )
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
-
-LISTENING_KEY = "listening"  # the listening judge's decision, with its labels in the detail
 
 
 @dataclass(frozen=True, slots=True)
@@ -113,7 +112,7 @@ class IntimateMemory:
             " ON d.relationship_id = u.relationship_id AND d.turn_id = u.turn_id"
             " WHERE u.relationship_id = ? AND u.id IN (SELECT value FROM json_each(?))"
             " GROUP BY u.id",
-            (MINOR_KEY, LISTENING_KEY, Severity.SERIOUS, rel, json.dumps(list(utterances))),
+            (MINOR_KEY, LISTENING_KEY, HEAVY_AT, rel, json.dumps(list(utterances))),
         ).fetchall()
         held = frozenset(UtteranceId(str(r["id"])) for r in rows if r["held"])
         heavy = frozenset(UtteranceId(str(r["id"])) for r in rows if r["heavy"])

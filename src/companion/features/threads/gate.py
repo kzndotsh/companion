@@ -11,11 +11,16 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime, tzinfo
 
-from companion.features.threads.logic import SENSITIVE, Thread, ThreadKind, ThreadState
-
-KEEPS = timedelta(days=2)  # a follow-up not reached out about by then expires
+from companion.core.sensitivity import GUARDED_AT
+from companion.features.threads.logic import (
+    FOLLOW_UP_KEEPS,
+    REACH_KEEPS,
+    Thread,
+    ThreadKind,
+    ThreadState,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -42,7 +47,8 @@ def evaluate(
             if lp not in expired
             and not lp.note_only
             and lp.follow_up_at <= now
-            and lp.sensitivity < SENSITIVE
+            and not _reach_over(lp, now)
+            and lp.sensitivity < GUARDED_AT
         ),
         key=lambda lp: lp.follow_up_at,
     )
@@ -55,8 +61,15 @@ def evaluate(
     return Verdict(True, f"due {since:.0f}h ago and nothing holds it: {pick.claim}", pick, expired)
 
 
+def _reach_over(loop: Thread, now: datetime) -> bool:
+    """A follow-up is reached out about for `REACH_KEEPS` after it falls due, then only the note
+    brings it up. A celebration or encouragement keeps its day, as `_past` says."""
+    return loop.kind is ThreadKind.FOLLOW_UP and now > loop.follow_up_at + REACH_KEEPS
+
+
 def _past(loop: Thread, now: datetime, tz: tzinfo) -> bool:
-    """A follow-up keeps for a couple of days; a celebration or encouragement for its day only."""
+    """Past its horizon: a follow-up after `FOLLOW_UP_KEEPS`; a celebration or
+    encouragement once its day is over."""
     if loop.kind is ThreadKind.FOLLOW_UP:
-        return now > loop.follow_up_at + KEEPS
+        return now > loop.follow_up_at + FOLLOW_UP_KEEPS
     return now.astimezone(tz).date() > loop.follow_up_at.astimezone(tz).date()

@@ -21,7 +21,7 @@ from companion.core.turn.now import (
     reader_input,
     soon_note,
 )
-from companion.core.types import Frame, Json, Severity
+from companion.core.types import HEAVY_AT, Frame, Json
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide
 from companion.kit.features import Feature, Moment, Offer, Offered
@@ -39,7 +39,7 @@ async def read_now(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, ca
     and "food's here" are exactly the messages to read. Nothing is logged for `none`. Runs while the
     note or reaching out is on, since nudges read the labels too."""
     del card
-    serious = heard is None or heard[0].severity >= Severity.SERIOUS
+    serious = heard is None or heard[0].severity >= HEAVY_AT
     wanted = c.now != "off" or c.initiative
     if not wanted or c.judge is None or serious or in_scene is not Frame.REAL:
         return

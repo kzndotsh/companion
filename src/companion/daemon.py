@@ -22,6 +22,7 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.flags import parse_flag
 from companion.core.prompt.prefix import build_prefix
+from companion.core.reachout import dial
 from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import (
     Favorite,
@@ -34,7 +35,7 @@ from companion.core.types import (
 from companion.features.history.run import pass_step
 from companion.features.intimate.run import pass_step as scene_step
 from companion.features.nudges.run import tick_nudge
-from companion.features.reach.logic import Kind, dial
+from companion.features.reach.logic import Kind
 from companion.features.reach.run import Reacher, holds, record_outcomes, tick_reach
 from companion.features.reminders.run import deliver_due
 from companion.features.threads.run import Ticker, drafter, tick

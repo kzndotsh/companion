@@ -7,9 +7,11 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime, tzinfo
 
+from companion.core.reachout import Dial, dial
+from companion.core.rhythm import BASE_PAUSE_HOURS, FLOOR_HOURS, WINDOW
 from companion.core.types import RelationshipId
 from companion.features.reach.gate import Hold
-from companion.features.reach.logic import HELD, PACED, TARGET, Dial
+from companion.features.reach.logic import HELD, PACED, TARGET
 from companion.features.reach.outcome import OUTCOME, summary
 from companion.features.reach.run import Reacher, situation
 from companion.store.sqlite.store import Store
@@ -25,7 +27,7 @@ def _dial(store: Store, rel: RelationshipId, fallback: Dial) -> Dial:
     newest = [(d.at, (d.detail or {}).get("dial")) for d in held]
     newest += [(o.at, o.detail.get("dial")) for o in store.own_reach_outs(rel)]
     found = max(newest, key=lambda n: n[0], default=(None, None))[1]
-    return Dial(found) if isinstance(found, str) and found in set(Dial) else fallback
+    return dial(found, fallback)
 
 
 def lines(
@@ -38,10 +40,13 @@ def lines(
     learned = "none yet" if r.learned_pause is None else f"{r.learned_pause:.1f}h"
     kept = look.kept
     weight = f"{r.weight:.0%} theirs and {1 - r.weight:.0%} baseline"
-    pause = f"their 75th percentile pause {learned}, baseline 12h, never under 8h"
+    pause = (
+        f"their 75th percentile pause {learned}, baseline {BASE_PAUSE_HOURS:.0f}h,"
+        f" never under {FLOOR_HOURS:.0f}h"
+    )
     out = [
         f"reaching out for its own reasons (shadow), COMPANION_REACH {dial.value}",
-        f"  their rhythm: {r.conversations} conversations in two weeks, {weight}",
+        f"  their rhythm: {r.conversations} conversations in the last {WINDOW.days} days, {weight}",
         f"  missing them after {r.pause:.1f}h ({pause})",
         f"  usual hours: {_hours(r.usual)}",
         f"  quiet hours: {_hours(r.quiet)}",

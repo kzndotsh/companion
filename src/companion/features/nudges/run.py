@@ -4,7 +4,6 @@ Nothing here sends a message."""
 from __future__ import annotations
 
 import logging
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -17,12 +16,11 @@ from companion.core.types import (
     DecisionKind,
     RelationshipId,
     Speaker,
-    TraceId,
-    TurnId,
 )
 from companion.features.nudges.logic import (
     DRAFT,
     GONE,
+    RECENT,
     Look,
     aways,
     draft_prompt,
@@ -49,13 +47,8 @@ DRAFTER = Judge(
 NUDGE_DROPPED = "nudge (shadow): draft dropped, not sent"
 
 
-def _record(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
-    trace = uuid.uuid4().hex
-    return Recorder(store, rel, TurnId(trace), TraceId(trace), now)
-
-
 def _look(store: Store, rel: RelationshipId, now: datetime) -> Look:
-    theirs = [u.at for u in store.history_before(rel, now, 40) if u.speaker is Speaker.USER]
+    theirs = [u.at for u in store.history_before(rel, now, RECENT) if u.speaker is Speaker.USER]
     sent = store.decisions_with_key(rel, WOULD_NUDGE)
     tried = [*sent, *store.decisions_with_key(rel, NUDGE_DROPPED)]
     nudged = frozenset(
@@ -91,14 +84,14 @@ async def tick_nudge(
         else:
             text, dropped = checked(got.value)
     if not text:
-        _record(store, rel, now).decide(
+        Recorder.fresh(store, rel, now).decide(
             NUDGE_DROPPED,
             {"turn": away.turn, "said": away.said, "why": dropped, "prompt": DRAFT.ref},
             reason=f"{NUDGE_DROPPED}: {dropped}",
         )
         log.info("nudge dropped: %s", dropped)
         return None
-    _record(store, rel, now).decide(
+    Recorder.fresh(store, rel, now).decide(
         WOULD_NUDGE,
         {
             "turn": away.turn,

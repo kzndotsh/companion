@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+from companion.core.daypart import DayPart, part_of_day
 from companion.core.types import Json, Speaker, Utterance
 from companion.lib.prompts import Prompt
 from companion.prompts import get
@@ -32,7 +33,6 @@ MOVES = {
 }
 EVERY_TURNS = 10  # at most once in this many of their messages
 SPENT = "topic: run its course, moving on"
-DAY_FROM, EVENING_FROM, NIGHT_FROM, NIGHT_UNTIL = 5, 17, 22, 5
 
 
 def likely(prior: Sequence[Utterance], said: str) -> bool:
@@ -64,9 +64,10 @@ def move_for(local_hour: int, *, loop_offered: bool) -> Prompt:
     clock, and late at night something of its own rather than another question."""
     if loop_offered:
         return MOVES["loop"]
-    if local_hour >= NIGHT_FROM or local_hour < NIGHT_UNTIL:
+    part = part_of_day(local_hour)
+    if part is DayPart.NIGHT:
         return MOVES["night"]
-    return MOVES["evening"] if local_hour >= EVENING_FROM else MOVES["day"]
+    return MOVES["evening"] if part is DayPart.EVENING else MOVES["day"]
 
 
 def asks(move: Prompt) -> bool:

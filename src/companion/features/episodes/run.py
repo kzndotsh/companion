@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING, cast
 
 from companion.core.clock import local_zone
 from companion.core.episode import EPISODE_GAP
-from companion.core.types import Frame, Json, Severity, Speaker, severity_from
+from companion.core.turn.listening import LISTENING_KEY, logged_severity
+from companion.core.types import Frame, Json, Severity, Speaker
 from companion.features.episodes.logic import GAP_BACK, Told, period
 from companion.features.episodes.logic import NOTE as EPISODES_NOTE
 from companion.features.episodes.logic import note as episodes_note
@@ -64,11 +65,8 @@ class Written:
 
 def _severities(store: Store, rel: RelationshipId) -> dict[TurnId, Severity]:
     out: dict[TurnId, Severity] = {}
-    for d in store.decisions_with_key(rel, "listening"):
-        if not d.detail:
-            continue
-        labels = d.detail.get("labels")
-        value = severity_from(labels.get("severity") if isinstance(labels, dict) else None)
+    for d in store.decisions_with_key(rel, LISTENING_KEY):
+        value = logged_severity(d.detail)
         if value is not None:
             out[d.turn_id] = value
     return out

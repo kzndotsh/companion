@@ -12,12 +12,14 @@ from dataclasses import dataclass, replace
 from datetime import date, datetime, time, timedelta, tzinfo
 from statistics import median
 
+from companion.core.dates import WEEKDAYS
+from companion.core.rhythm import WINDOW as LEARN_WINDOW
 from companion.features.reminders.logic import (
-    PARTS,
-    WEEKDAYS,
+    PART_TIMES,
     Kind,
     Part,
     Reminder,
+    ReminderState,
     Repeat,
     Series,
     Slots,
@@ -31,14 +33,24 @@ from companion.prompts import get
 REPEAT_NOTE = get("notes/reminder-repeat")
 HOW_OFTEN = "how often: it can repeat every day, or on one day each week"
 DAY_STARTS = time(4)  # their day runs from 4:00 to 4:00, so a 1 am message ends the day before
-LEARN_DAYS = 14
+LEARN_DAYS = LEARN_WINDOW.days  # the window their usual times are learned over (core/rhythm.py)
 LEARN_LEAST = 3  # fewer days than this with a message, and the usual time is the default below
+# The time a greeting goes out before their own pattern is learned. A goodnight is the last message
+# of the day, so it falls later than a reminder for "night" (PART_TIMES).
 USUAL = {Part.MORNING: time(9), Part.NIGHT: time(22)}
 ROUND_TO = 5  # minutes
 WROTE_LATELY = timedelta(hours=2)  # a greeting other than a morning one is skipped after this
 BACK_OFF = 3  # greetings sent since they last wrote, and the series pauses
-ENDED = frozenset({"sent", "late", "expired", "skipped", "cancelled"})
-SENT = frozenset({"sent", "late"})
+ENDED = frozenset(
+    {
+        ReminderState.SENT,
+        ReminderState.LATE,
+        ReminderState.EXPIRED,
+        ReminderState.SKIPPED,
+        ReminderState.CANCELLED,
+    }
+)
+SENT = frozenset({ReminderState.SENT, ReminderState.LATE})
 LOOK_BACK = timedelta(days=LEARN_DAYS + 1)  # how far back their messages are read
 
 
@@ -93,8 +105,8 @@ def repeat_of(s: Slots, now: datetime, tz: tzinfo) -> Planned | str:
     if s.hour is None:
         if part is not Part.OTHER:
             return Planned(Repeat(weekday, None, part))
-        if s.part in PARTS:
-            return Planned(Repeat(weekday, PARTS[s.part], part), defaulted=True)
+        if s.part in PART_TIMES:
+            return Planned(Repeat(weekday, PART_TIMES[s.part], part), defaulted=True)
         return "what time"
     if s.part == "unsaid" and part is not Part.OTHER:
         s = replace(s, part=part.value)

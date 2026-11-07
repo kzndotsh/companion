@@ -3,17 +3,16 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+from companion.core.reachout import Dial, dial
 from companion.core.rhythm import learn
 from companion.core.types import Sensitivity
 from companion.features.reach.logic import (
-    Dial,
     Kind,
     Look,
     Pool,
     Thing,
     choose,
     consider,
-    dial,
     pick_thing,
     step_down,
 )

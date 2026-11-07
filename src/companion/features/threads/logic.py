@@ -15,7 +15,9 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta, tzinfo
 from enum import StrEnum
 
-from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
+from companion.core.beliefs.verify import evidence_from, quote_in
+from companion.core.dates import WEEKDAYS, month_day
+from companion.core.sensitivity import GUARDED_AT
 from companion.core.types import (
     Frame,
     Json,
@@ -28,12 +30,12 @@ from companion.core.types import (
 )
 from companion.prompts import get
 
-SENSITIVE = Sensitivity.DELICATE
-FOLLOW_UP_HOUR = 10
+FOLLOW_UP_HOUR = 10  # the morning after, at this hour
 CELEBRATE_TIME = time(10)
-# A celebration falls due at 10:00 on its day; a message from before that day cannot settle it (a
-# birthday was once closed weeks early by an unrelated "all done").
-CELEBRATE_EARLY = timedelta(hours=10)
+# A celebration falls due at CELEBRATE_TIME on its day; a message from before that day cannot settle
+# it (a birthday was once closed weeks early by an unrelated "all done"). So the cut is the start of
+# the day, which is the due time less the time of day.
+CELEBRATE_EARLY = timedelta(hours=CELEBRATE_TIME.hour, minutes=CELEBRATE_TIME.minute)
 ENCOURAGE_TIME = time(8, 30)  # just after quiet hours, before most things start
 UNDATED_DAYS = 3
 MAX_PAST_DAYS = 3
@@ -42,9 +44,11 @@ SCALES = ("minutes", "hours", "days", "unknown")
 SAME_DAY_SCALES = ("minutes", "hours")
 NOTE_DELAY = timedelta(hours=3)  # a same-day plan is asked about when they write a few hours on
 NOTE_KEEPS = timedelta(days=3)  # a follow-up note is offered for this long after it falls due
+REACH_KEEPS = timedelta(days=2)  # a follow-up is reached out about for this long (2026-10-17 eval)
+# An open follow-up stays open for the longer of the two, so the note's last day is still offered.
+FOLLOW_UP_KEEPS = max(NOTE_KEEPS, REACH_KEEPS)
 MAX_OFFERS = 2  # offered as a note at most twice, then let go
 CERTAINTIES = ("firm", "maybe", "wish")
-_WEEKDAYS = ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
 # Whole words only: "now" must not match "know" or "snow", and "later this week" is not today.
 _SAME_DAY = re.compile(
     r"\b(?:today|tonight|this evening|this afternoon|this morning|now"
@@ -248,7 +252,7 @@ def to_resolution(
     source = index.get(raw.ref)
     if source is None or source.speaker is not Speaker.USER or source.frame is not Frame.REAL:
         return "not settled by something they said for real"
-    if not _holds(source, raw.quote):
+    if not quote_in(source, raw.quote):
         return "the quote is not in their message"
     if loop.kind is ThreadKind.CELEBRATE and source.at < loop.follow_up_at - CELEBRATE_EARLY:
         return "a celebration is not settled before its day"
@@ -261,33 +265,15 @@ def _days_until(weekday: int, said: datetime) -> int:
 
 
 _FIXED_OFFSETS = (("tomorrow", 1), ("next week", 7), ("next month", 30))
-_MONTHS = (
-    "january",
-    "february",
-    "march",
-    "april",
-    "may",
-    "june",
-    "july",
-    "august",
-    "september",
-    "october",
-    "november",
-    "december",
-)
-_DATE = re.compile(
-    r"\b(" + "|".join(m[:3] for m in _MONTHS) + r")[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?\b"
-)
 
 
 def _calendar_offset(when: str, said: datetime) -> int | None:
     """Days until a date written out ("december 4th"), the next time it comes round."""
-    m = _DATE.search(when)
-    if m is None:
+    found = month_day(when)
+    if found is None:
         return None
-    month = next(i for i, name in enumerate(_MONTHS, start=1) if name.startswith(m.group(1)))
     try:
-        date = said.date().replace(month=month, day=int(m.group(2)))
+        date = said.date().replace(month=found[0], day=found[1])
     except ValueError:
         return None
     if date < said.date():
@@ -305,7 +291,7 @@ def _event_offset(when: str, said: datetime) -> int | None:
     fixed = next((days for phrase, days in _FIXED_OFFSETS if phrase in when), None)
     if fixed is not None:
         return fixed
-    named = [*enumerate(_WEEKDAYS), (5, "weekend")]
+    named = [*enumerate(WEEKDAYS), (5, "weekend")]
     return next((_days_until(i, said) for i, name in named if name in when), None)
 
 
@@ -332,16 +318,8 @@ def _source(raw: RawLoop, index: Mapping[str, Utterance]) -> Utterance | None:
     cited = index.get(raw.ref)
     if cited is not None:
         return cited
-    holders = [u for u in index.values() if u.speaker is Speaker.USER and _holds(u, raw.quote)]
+    holders = [u for u in index.values() if u.speaker is Speaker.USER and quote_in(u, raw.quote)]
     return holders[0] if len(holders) == 1 else None
-
-
-def _holds(u: Utterance, quote: str) -> bool:
-    try:
-        evidence_from(u, quote)
-    except QuoteNotFoundError:
-        return False
-    return True
 
 
 @dataclass(frozen=True, slots=True)
@@ -361,7 +339,7 @@ def _why_not(
     now = made.now
     hedged_ok = made.loose and raw.certainty == "maybe"
     checks = (
-        (raw.sensitivity >= SENSITIVE, "sensitive, never raised on its own"),
+        (raw.sensitivity >= GUARDED_AT, "sensitive, never raised on its own"),
         (
             source is None,
             "cited message not found and no single message of theirs holds the quote",
@@ -371,7 +349,10 @@ def _why_not(
             and (source.speaker is not Speaker.USER or source.frame is not Frame.REAL),
             "not something they said for real",
         ),
-        (source is not None and not _holds(source, raw.quote), "the quote is not in their message"),
+        (
+            source is not None and not quote_in(source, raw.quote),
+            "the quote is not in their message",
+        ),
         (raw.scale == "minutes", "minute-scale, not worth asking about later"),
         (raw.about_companion, "about the companion or this chat, not their life"),
         (
@@ -440,7 +421,9 @@ def pick_note(
     def offerable(lp: Thread) -> bool:
         n = offers.get(lp.id, 0)
         state_ok = lp.state is ThreadState.OPEN or (lp.state is ThreadState.ASKED and n > 0)
-        return state_ok and n < MAX_OFFERS and lp.sensitivity < SENSITIVE and _note_due(lp, now, tz)
+        return (
+            state_ok and n < MAX_OFFERS and lp.sensitivity < GUARDED_AT and _note_due(lp, now, tz)
+        )
 
     due = [lp for lp in loops if offerable(lp)]
     due.sort(key=lambda lp: (_KIND_ORDER[lp.kind], -lp.follow_up_at.timestamp()))

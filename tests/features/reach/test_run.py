@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
+from companion.core.reachout import Dial
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -17,7 +18,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.reach.logic import DROPPED, HELD, WOULD_SEND, Dial, Kind
+from companion.features.reach.logic import DROPPED, HELD, WOULD_SEND, Kind
 from companion.features.reach.run import Reacher, tick_reach
 from companion.store.sqlite.store import Store
 
@@ -145,7 +146,7 @@ async def test_the_initiative_command_shows_the_rhythm_the_share_and_the_would_s
     store.close()
     out = initiative.run(tmp_path / "rel.sqlite", "rel", NOW + timedelta(hours=7))
     assert "COMPANION_REACH normal" in out
-    assert "1 conversations in two weeks, 5% theirs and 95% baseline" in out
+    assert "1 conversations in the last 14 days, 5% theirs and 95% baseline" in out
     assert "share it started: 1 of 2" in out
     assert "missing them" in out and drafter.message in out
     assert "1  the last one is unanswered" in out

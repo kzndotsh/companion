@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
+from companion.core.reachout import Dial
 from companion.core.rhythm import learn
 from companion.features.reach.gate import Hold, Share, Situation, answer, hold, pace, share
-from companion.features.reach.logic import Dial
 
 NOW = datetime(2026, 10, 20, 15, 0, tzinfo=UTC)
 RHYTHM = learn([], NOW, UTC)

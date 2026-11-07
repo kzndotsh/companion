@@ -29,7 +29,7 @@ from companion.core.reply_gate import (
 )
 from companion.core.talker import Reply, Talker
 from companion.core.turn.floor import INTIMATE_CHECK
-from companion.core.types import Frame, Json, Severity
+from companion.core.types import HEAVY_AT, Frame, Json
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, mark
 from companion.turn.crisis import method_checked
@@ -94,7 +94,7 @@ async def _habit_checks(  # noqa: PLR0913, PLR0917
     logged. Before 2026-10-24 an unread turn skipped the code checks too."""
     severity = heard[0].severity if heard is not None else None
     scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
-    code_only = scene or severity is None or severity >= Severity.SERIOUS
+    code_only = scene or severity is None or severity >= HEAVY_AT
     if not c.redraw:
         return reply
     if not reply.text.strip():

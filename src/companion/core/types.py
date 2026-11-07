@@ -28,6 +28,11 @@ class Severity(IntEnum):
     ACUTE = 3
 
 
+HEAVY_AT = Severity.SERIOUS
+"""A message at this severity or above is heavy: the weight is named, no advice, no jokes, no
+nudge, and what a heavy talk holds back elsewhere (reach-outs, closing a memory) starts here."""
+
+
 def severity_from(value: Json) -> Severity | None:
     """A number a model or a log gave as a level; None when it is not one of the four."""
     if isinstance(value, bool) or not isinstance(value, int | float):

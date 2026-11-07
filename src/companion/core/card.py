@@ -17,10 +17,18 @@ from datetime import UTC, date, datetime, timedelta, tzinfo
 from companion.core.clock import local_zone
 from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.quoted import wants_context
-from companion.core.types import Belief, BeliefId, BeliefKind, Sensitivity
+from companion.core.sensitivity import GUARDED_AT
+from companion.core.types import Belief, BeliefId, BeliefKind, Depth, Domain, Label, Sensitivity
 from companion.core.vectors import Vector, dot
 
-GUARDED_AT = Sensitivity.DELICATE
+# The opening words of each memory block, as rendered and as read back (the tagger in
+# `core/prompt/sections.py`, the stored-card reader below, the eval rebuild).
+MEMORY_HEADING = "What you remember"
+GUARDED_HEADING = "Also known"
+OLDER_HEADING = "Older, and may be out of date"
+VIEWS_HEADING = "Views of your own"
+USER_HEADINGS = (MEMORY_HEADING, GUARDED_HEADING, OLDER_HEADING)  # the blocks about the user
+
 MAX_ITEMS = 15
 MAX_OLDER = 3
 # A one-day moment of daily life (a spill, a meal, a long shower: an event the memory map labels
@@ -238,6 +246,14 @@ def _line(b: Belief, card: Card) -> str:
     return f"- {b.claim} (mentioned {when}{about}{note})"
 
 
+def everyday_ids(labels: Mapping[BeliefId, Label]) -> set[BeliefId]:
+    """The memories labelled daily life at surface depth: a one-day moment, the kind that fades from
+    the card (`EVENT_SHOWN_DAYS`) and that a re-read may close."""
+    return {
+        bid for bid, x in labels.items() if x.domain is Domain.DAILY and x.depth is Depth.SURFACE
+    }
+
+
 def render(card: Card, tz: tzinfo = UTC) -> str:
     """Plain text for the volatile part of the user message. Empty when there is nothing.
 
@@ -247,24 +263,24 @@ def render(card: Card, tz: tzinfo = UTC) -> str:
     parts: list[str] = []
     if card.usable:
         parts.append(
-            "[What you remember about them. Use it naturally, never recite it:\n"
+            f"[{MEMORY_HEADING} about them. Use it naturally, never recite it:\n"
             + "\n".join(_line(b, card) for b in card.usable)
             + "]"
         )
     if card.guarded:
         parts.append(
-            "[Also known, but only touch it if they bring it up:\n"
+            f"[{GUARDED_HEADING}, but only touch it if they bring it up:\n"
             + "\n".join(_line(b, card) for b in card.guarded)
             + "]"
         )
     if card.older:
         parts.append(
-            "[Older, and may be out of date. Do not assume these still hold. If it comes up, "
+            f"[{OLDER_HEADING}. Do not assume these still hold. If it comes up, "
             "check lightly:\n" + "\n".join(_line(b, card) for b in card.older) + "]"
         )
     if card.views:
         parts.append(
-            "[Views of your own that you have expressed. Hold to them "
+            f"[{VIEWS_HEADING} that you have expressed. Hold to them "
             "unless they give you a real reason to change your mind. If you do change your mind, "
             "say so plainly:\n" + "\n".join(f"- {b.claim}" for b in card.views) + "]"
         )
@@ -273,7 +289,7 @@ def render(card: Card, tz: tzinfo = UTC) -> str:
 
 # How a stored card is read back: the user's memory blocks and one memory per line.
 _LINE = re.compile(r"^- (.+?)(?: \(mentioned [^)]*\))?$")
-_USER_BLOCKS = ("[What you remember", "[Also known", "[Older")
+_USER_BLOCKS = tuple(f"[{h}" for h in USER_HEADINGS)
 
 
 def memories_from_card(card: str) -> list[str]:

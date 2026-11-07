@@ -8,21 +8,25 @@ from pathlib import Path
 
 from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
-from companion.features.reminders.logic import Reminder, Series, Standing
+from companion.features.reminders.logic import Reminder, ReminderState, Series, Standing
 from companion.features.reminders.run import stop
 from companion.features.reminders.series import every_words
 from companion.store.sqlite.store import Store
 
 
 def _next(s: Series, every: list[Reminder]) -> str:
-    pending = [r for r in every if r.series_id == s.id and r.state == "pending"]
+    pending = [r for r in every if r.series_id == s.id and r.state is ReminderState.PENDING]
     if pending:
         return f"next {pending[0].local_wall}"
     return "next when they write again" if s.state is Standing.PAUSED else "none"
 
 
 def _cancel(store: Store, rel: RelationshipId, prefix: str) -> str:
-    pending = [r for r in store.reminders(rel) if r.state == "pending" and r.id.startswith(prefix)]
+    pending = [
+        r
+        for r in store.reminders(rel)
+        if r.state is ReminderState.PENDING and r.id.startswith(prefix)
+    ]
     live = [
         s for s in store.series(rel) if s.state is not Standing.STOPPED and s.id.startswith(prefix)
     ]
@@ -32,7 +36,9 @@ def _cancel(store: Store, rel: RelationshipId, prefix: str) -> str:
     if live:
         stop(store, live[0], "the owner stopped it", utc_now())
         return f"stopped: {live[0].thing}, {every_words(live[0].repeat)}\n"
-    store.reminder_event(pending[0].id, "cancelled", "the owner cancelled it", utc_now())
+    store.reminder_event(
+        pending[0].id, ReminderState.CANCELLED, "the owner cancelled it", utc_now()
+    )
     return f"cancelled: {pending[0].thing}\n"
 
 

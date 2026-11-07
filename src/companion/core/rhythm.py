@@ -11,7 +11,7 @@ missing them is never under 8 hours.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 from itertools import pairwise
@@ -33,10 +33,16 @@ KEPT_DAYS = 7
 KEPT_MOST = 5  # a time they keep: the same hour on at least this many of the last 7 days
 
 
+def first_of_each[T](items: Sequence[T], at: Callable[[T], datetime]) -> list[T]:
+    """The item that began each conversation, oldest first: the first, and each one after a pause of
+    two hours or more (`EPISODE_GAP`). The one rule for where a conversation begins."""
+    ordered = sorted(items, key=at)
+    return [x for i, x in enumerate(ordered) if i == 0 or at(x) - at(ordered[i - 1]) >= EPISODE_GAP]
+
+
 def starts(times: Sequence[datetime]) -> list[datetime]:
     """When each conversation began: the first time, and each after a pause of two hours or more."""
-    ordered = sorted(times)
-    return [t for i, t in enumerate(ordered) if i == 0 or t - ordered[i - 1] >= EPISODE_GAP]
+    return first_of_each(times, lambda t: t)
 
 
 def pauses(times: Sequence[datetime]) -> list[float]:

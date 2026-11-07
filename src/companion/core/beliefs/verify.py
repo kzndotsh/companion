@@ -30,3 +30,12 @@ def evidence_from(utterance: Utterance, quote: str) -> Evidence:
         msg = f"quote not found in utterance {utterance.id}: {quote!r}"
         raise QuoteNotFoundError(msg)
     return Evidence(utterance_id=utterance.id, quote=match.group(0))
+
+
+def quote_in(utterance: Utterance, quote: str) -> bool:
+    """Whether the quote occurs in the utterance, by the same match `evidence_from` makes."""
+    try:
+        evidence_from(utterance, quote)
+    except QuoteNotFoundError:
+        return False
+    return True

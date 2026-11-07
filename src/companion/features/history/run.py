@@ -17,12 +17,12 @@ from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
 from companion.core.history import HISTORY_LIMIT
+from companion.core.memory_pass import BATCH, CONTEXT
 from companion.core.types import (
     Frame,
     Json,
     RelationshipId,
     Speaker,
-    TraceId,
     Utterance,
     UtteranceId,
 )
@@ -57,8 +57,6 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.history")
 
-BATCH = 40  # its messages read per call, as the memory pass reads them
-CONTEXT = 4  # messages before a batch shown for context
 BATCHES = 3  # batches read per pass, so a long backlog is read over several passes
 CHECKS = 10  # waiting stories checked per pass
 LOOK_SECONDS = 2.0
@@ -67,7 +65,7 @@ CAPTURER = Judge(
     CAPTURE,
     CAPTURE_SCHEMA,
     parse_capture,
-    timeout=120.0,  # a batch of 40 messages a call
+    timeout=120.0,  # a batch of messages a call
     unread="the batch is read again next pass",
 )
 CANON_SECONDS = 60.0  # one story against the sheet and the canon, read three times at once
@@ -86,7 +84,7 @@ class HistoryRead:
 
 
 def _recorder(store: Store, u: Utterance, now: datetime) -> Recorder:
-    return Recorder(store, u.relationship_id, u.turn_id, TraceId(uuid.uuid4().hex), now)
+    return Recorder.on_turn(store, u.relationship_id, u.turn_id, now)
 
 
 async def _capture(

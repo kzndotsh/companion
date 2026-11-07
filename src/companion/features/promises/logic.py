@@ -15,6 +15,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
 
+from companion.core.card import EVENT_SHOWN_DAYS
 from companion.core.types import Frame, Json, RelationshipId, Speaker, Utterance, UtteranceId
 from companion.prompts import get
 
@@ -42,9 +43,9 @@ class Scope(StrEnum):
     MOMENT = "moment"
 
 
-# A promise about one moment is in force this long, as a one-day moment leaves the card a week after
+# A promise about one moment is in force as long as a one-day moment stays on the card
 # (`core/card.py`): a promise to retire a joke about one spill outlived the spill (2026-11-03).
-MOMENT_DAYS = 7
+MOMENT_DAYS = EVENT_SHOWN_DAYS
 
 
 SCHEMA: dict[str, Json] = {

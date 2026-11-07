@@ -11,7 +11,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from companion.core.types import Belief, Json, Sensitivity, Speaker, Utterance
+from companion.core.sensitivity import GUARDED_AT
+from companion.core.types import Belief, Json, Speaker, Utterance
 from companion.prompts import get
 
 JUDGE = get("system/guess-invite")
@@ -19,7 +20,6 @@ NOTE = get("notes/guess")
 SHORT_WORDS = 10
 CONTEXT = 6
 MAX_OFFERED = 3
-HELD = Sensitivity.DELICATE  # a guess never draws on anything sensitive
 INVITED = "guess: they invited a guess"
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -50,7 +50,7 @@ def parse(data: Json) -> str | None:
 
 
 def offerable(beliefs: Sequence[Belief]) -> list[Belief]:
-    return [b for b in beliefs if b.sensitivity < HELD]
+    return [b for b in beliefs if b.sensitivity < GUARDED_AT]
 
 
 def note(about: str, offered: Sequence[Belief]) -> str | None:

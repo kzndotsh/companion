@@ -4,11 +4,10 @@ the reason, and the ones waiting for the check. `companion retire ID` retires on
 
 from __future__ import annotations
 
-import uuid
 from pathlib import Path
 
 from companion.core.clock import utc_now
-from companion.core.types import RelationshipId, TraceId
+from companion.core.types import RelationshipId
 from companion.features.history.logic import Recorded, Ruling, Standing
 from companion.features.history.store import By
 from companion.kit.record import Recorder
@@ -74,7 +73,7 @@ def retire_story(store: Store, rel: RelationshipId, id_prefix: str, reason: str)
     )
     source = store.get_utterance(story.utterance_id)
     if source is not None:
-        Recorder(store, rel, source.turn_id, TraceId(uuid.uuid4().hex), now).decide(
+        Recorder.on_turn(store, rel, source.turn_id, now).decide(
             RETIRED, {"story_id": story.id, "claim": story.claim}, reason=f"{RETIRED}: {reason}"
         )
     return f"retired  {story.claim}"

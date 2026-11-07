@@ -175,6 +175,15 @@ together.
   Any change to the turn must keep it passing.
 - Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, a named zone with its rules). A test enforces it in `core/` and `kit/`
   (`tests/core/test_clock_guard.py`).
+- A value or rule that must be the same in several places is named once and imported: in `core/` when
+  several features use it, in the feature when only it does. The sensitivity cutoff is
+  `core/sensitivity.py` `GUARDED_AT`, a heavy message is `HEAVY_AT` (`core/types.py`), the listening
+  decision's key is `LISTENING_KEY` and its labels are read back through `logged_severity` (`core/turn/listening.py`),
+  parts of the day are `core/daypart.py`, weekdays, months and a date in words are `core/dates.py`, a
+  conversation's start is `core/rhythm.py` `first_of_each`, the memory pass's batch and context are
+  `core/memory_pass.py`, the card's headings are in `core/card.py`, a fresh recorder or id is
+  `kit/record.py`. A reason a person reads is rendered from the constant, never typed with its number.
+  A table keyed by a kind names every kind (`tests/core/test_belief_kind_tables.py`).
 
 **Evals**
 - Every eval run has a spend cap, stated before the run. Check OpenRouter credits first. Keep

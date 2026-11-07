@@ -5,10 +5,10 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from companion.core.types import Belief, BeliefKind, Sensitivity, Speaker, Utterance
+from companion.core.sensitivity import GUARDED_AT
+from companion.core.types import Belief, BeliefKind, Speaker, Utterance
 
 BEFORE, AFTER = 6, 1  # messages around the quote that a memory is read with
-SENSITIVE = Sensitivity.DELICATE
 
 
 def build_prompt(b: Belief, around: Sequence[Utterance]) -> str:
@@ -21,4 +21,4 @@ def build_prompt(b: Belief, around: Sequence[Utterance]) -> str:
 def wants_context(b: Belief) -> bool:
     """A feeling or state, or a sensitive memory: where the moment carries the meaning. The card
     shows such a memory with its note, and the context feature writes the notes."""
-    return b.kind is BeliefKind.STATE or b.sensitivity >= SENSITIVE
+    return b.kind is BeliefKind.STATE or b.sensitivity >= GUARDED_AT

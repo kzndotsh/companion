@@ -14,18 +14,23 @@ from companion.core.frames import (
 )
 from companion.core.turn.context import inputs_hash
 from companion.core.turn.floor import BRUSH_NOTE, HOLD_NOTE
+from companion.core.turn.listening import (
+    LISTENING_KEY,
+    listening_labels,
+    listening_note,
+    logged_severity,
+    repair_note,
+    rude_note,
+)
 from companion.core.turn.listening import PROMPT as LISTEN_PROMPT
-from companion.core.turn.listening import listening_note, repair_note, rude_note
 from companion.core.turn.listening import render_reason as render_listening
 from companion.core.turn.mentions import ASKED_HOW_THEY_ARE
 from companion.core.turn.ownup import owned_note
 from companion.core.turn.quoted import quoted_note
 from companion.core.types import (
+    HEAVY_AT,
     Frame,
-    Json,
-    Severity,
     Speaker,
-    severity_from,
 )
 from companion.kit.features import Feature, Lookups, Moment, Offer, Offered
 from companion.prompts import get
@@ -80,18 +85,12 @@ def _listening_note(c: Runtime, t: Turn, heard: Heard | None) -> str | None:
     decide(
         c,
         t,
-        "listening",
+        LISTENING_KEY,
         {
             "scorer": model,
             "prompt": LISTEN_PROMPT.ref,
             "inputs_hash": inputs_hash(prompt),
-            "labels": {
-                "intimate": judged.intimate,
-                "severity": judged.severity,
-                "stance": judged.stance,
-                "vague": judged.vague,
-                "rude": judged.rude,
-            },
+            "labels": listening_labels(judged),
         },
         reason=render_listening(judged, note),
     )
@@ -154,18 +153,11 @@ def _owned(m: Moment, so_far: Offered) -> Offer:
     return Offer(tail=(note,) if note else ())
 
 
-def _severity(detail: dict[str, Json] | None) -> int:
-    """The severity a listening decision logged, or -1."""
-    labels = (detail or {}).get("labels")
-    level = severity_from(labels.get("severity") if isinstance(labels, dict) else None)
-    return -1 if level is None else level
-
-
 def _how_are_you(m: Moment, _: Offered) -> Offer:
     """When they come back after a gap and the talk before it was heavy (a serious message in its
     last hours), one note to ask gently how they are, once per heavy talk."""
     c, t = m.c, m.t
-    if m.heard is None or m.heard[0].severity >= Severity.SERIOUS or m.in_scene is not Frame.REAL:
+    if m.heard is None or m.heard[0].severity >= HEAVY_AT or m.in_scene is not Frame.REAL:
         return Offer()
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     if not theirs or t.now - theirs[-1].at < HOW_ARE_YOU_GAP:
@@ -175,10 +167,10 @@ def _how_are_you(m: Moment, _: Offered) -> Offer:
         return Offer()
     recent = [u.turn_id for u in theirs if last - u.at <= HEAVY_WINDOW]
     heavy = any(
-        _severity(d.detail) >= Severity.SERIOUS
+        (level := logged_severity(d.detail)) is not None and level >= HEAVY_AT
         for turn in recent
         for d in c.store.decisions_for_turn(c.rel, turn)
-        if d.has_key("listening")
+        if d.has_key(LISTENING_KEY)
     )
     if not heavy:
         return Offer()

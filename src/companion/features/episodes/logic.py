@@ -17,7 +17,7 @@ from datetime import date, datetime, time, timedelta, tzinfo
 from enum import StrEnum
 
 from companion.core.episode import EPISODE_GAP
-from companion.core.types import Frame, Json, Severity, Speaker, TurnId, Utterance
+from companion.core.types import HEAVY_AT, Frame, Json, Severity, Speaker, TurnId, Utterance
 from companion.prompts import get
 
 PROMPT = get("system/episode-gist")
@@ -91,7 +91,7 @@ def _majority(run: list[Utterance]) -> bool:
 
 
 def kind(s: Span, severity: Mapping[TurnId, Severity]) -> Kind:
-    if top_severity(s, severity) >= Severity.SERIOUS:
+    if top_severity(s, severity) >= HEAVY_AT:
         return Kind.HEAVY
     return Kind.SCENE if s.scene_share >= 0.5 else Kind.EVERYDAY
 
@@ -143,7 +143,8 @@ def parse(data: Json) -> str | None:
 
 # When their message points at a time, the stretch of the clock it means. Before MORNING, "today"
 # still means the day that is ending and "last night" means this night.
-MORNING = 7
+MORNING = 7  # their day rolls over here, for what "today" and "last night" mean
+EVENING = 18  # the evening that runs on to MORNING is "tonight"
 _LAST_NIGHT = re.compile(r"\blast night\b|\bthis night\b", re.IGNORECASE)
 _YESTERDAY = re.compile(r"\byesterday\b", re.IGNORECASE)
 _TODAY = re.compile(
@@ -160,7 +161,9 @@ def period(said: str, now: datetime, tz: tzinfo) -> tuple[datetime, datetime] | 
     start = datetime.combine(day, time(MORNING), tzinfo=tz)
     if _LAST_NIGHT.search(said):
         night = start if local.hour < MORNING else start - timedelta(days=1)
-        return night + timedelta(hours=11), night + timedelta(days=1)  # 18:00 to 07:00
+        return night + timedelta(hours=EVENING - MORNING), night + timedelta(
+            days=1
+        )  # 18:00 to 07:00
     if _YESTERDAY.search(said):
         return start - timedelta(days=1), start
     if _TODAY.search(said):
@@ -176,7 +179,7 @@ def when_said(end: datetime, now: datetime, tz: tzinfo) -> str:
     def day_of(t: datetime) -> date:
         return t.date() if t.hour >= MORNING else t.date() - timedelta(days=1)
 
-    evening = e.hour >= 18 or e.hour < MORNING
+    evening = e.hour >= EVENING or e.hour < MORNING
     days = (day_of(n) - day_of(e)).days
     if days == 0:
         return "earlier tonight" if evening else "earlier today"

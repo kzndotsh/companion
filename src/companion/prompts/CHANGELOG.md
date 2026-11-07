@@ -1124,3 +1124,6 @@ From 2026-10-26 the history carries a system line (`notes/history-gap`) wherever
 
 ## Request assembly: recall's two triggers share one rule
 - From 2026-11-05 the look-up when they ask it to remember and the relevance look-up are one feature (`features/recall`) with one rule for what may be found and what is shown. Two changes to what the model is sent: a memory the recall note already shows is no longer offered again in the relevant note (on 5 of 17 asked turns the same memory was sent twice), and with `COMPANION_INTIMATE_MEMORY=on` the asked look-up no longer searches the intimate lane, as the relevance look-up and the card already did not (on 2 everyday turns it showed a memory the card had left off as intimate; the roleplay card shows the lane on a roleplay turn). From the decision log; not replayed.
+
+## Request assembly: the reach-out brief names the part of the day from one shared rule
+2026-11-07 (refactor, shadow only). The brief `system/reach-ideas` sees names the part of the day from `core/daypart.py`, the one definition the topic note also uses: 22:00 to 04:59 is now "night", where it said "late evening" from 22 and "morning" from midnight. Nothing else a model is sent changed in the untangle refactor.

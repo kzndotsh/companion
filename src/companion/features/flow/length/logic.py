@@ -21,7 +21,7 @@ import random
 import re
 from dataclasses import dataclass
 
-from companion.core.types import Severity
+from companion.core.types import HEAVY_AT, Severity
 from companion.prompts import get
 
 MAX_USER_WORDS = 12
@@ -67,7 +67,7 @@ def length_target(
     """The one length target for this turn, or None when nothing should cap it."""
     if in_scene or (severity is not None and severity >= Severity.ACUTE):
         return None
-    if severity is not None and severity >= Severity.SERIOUS:
+    if severity is not None and severity >= HEAVY_AT:
         note = _SERIOUS_NOTE.render(limit=SERIOUS_WORDS)
         return LengthTarget(SERIOUS_WORDS, "serious message", note)
     words = len(user_text.split())

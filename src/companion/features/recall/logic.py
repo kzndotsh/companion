@@ -16,6 +16,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from companion.core.frames import is_assertable
+from companion.core.recall import ASKED_SENSITIVITY, MAX_SENSITIVITY
 from companion.core.types import Belief, BeliefId, Json, Sensitivity
 from companion.prompts import get
 
@@ -25,8 +26,6 @@ LIVE = "relevance: what it was shown"
 GATE = 0.42  # live: the small model picks only when the closest memory is this near (1 turn in 5)
 SHOWN = 2  # live: at most this many picks reach the talker, none already on the card
 MAX_PICKS = 3
-MAX_SENSITIVITY = Sensitivity.DELICATE  # never a crisis-level memory on its own
-ASKED_SENSITIVITY = Sensitivity.GRAVE  # when they ask it to remember, anything they said
 
 SCHEMA: dict[str, Json] = {
     "type": "object",

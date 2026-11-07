@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
-from companion.core.card import EVENT_SHOWN_DAYS, GUARDED_AT, build_card, render
+from companion.core.card import EVENT_SHOWN_DAYS, build_card, render
+from companion.core.sensitivity import GUARDED_AT
 from companion.core.types import Belief, BeliefId, BeliefKind
 from tests.conftest import T0
 

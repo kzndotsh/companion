@@ -8,7 +8,6 @@ Idempotent: the run log is the cursor, so a crashed or repeated pass re-reads no
 from __future__ import annotations
 
 import logging
-import uuid
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime, tzinfo
@@ -36,7 +35,7 @@ from companion.core.beliefs.self_extract import SCHEMA as SELF_SCHEMA
 from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
-from companion.core.memory_pass import PassRun
+from companion.core.memory_pass import BATCH, CONTEXT, PassRun
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -56,19 +55,13 @@ from companion.features.upkeep.reread.logic import ASK_RULE
 from companion.features.upkeep.reread.run import SameCheck
 from companion.kit.ask import Judge, ask_or_raise
 from companion.kit.embed import bounded, embed_missing
-from companion.kit.record import Recorder
+from companion.kit.record import Recorder, new_id
 from companion.memory.views import WANT_KINDS, check_views
 from companion.registry import FEATURES
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.memory")
-BATCH = 40
 EMBED_SECONDS = 60.0  # embedding what the pass stored; was unlimited
-CONTEXT = 4
-
-
-def _id() -> str:
-    return uuid.uuid4().hex
 
 
 @dataclass(frozen=True, slots=True)
@@ -298,7 +291,7 @@ async def _extract_pass(
                     },
                 )
             continue
-        made = spec.make(c, window, run.rel, run.now, _id)
+        made = spec.make(c, window, run.rel, run.now, new_id)
         if isinstance(made, Rejection):
             rejections.append(made)
             continue
@@ -383,7 +376,7 @@ async def memory_pass_from(
     user_targets = [u for u in batch if u.speaker is Speaker.USER]
     own_targets = [u for u in batch if u.speaker is Speaker.COMPANION]
     anchor = user_targets[-1] if user_targets else last
-    run = _Pass(store, rel, _id(), now, anchor.turn_id)
+    run = _Pass(store, rel, new_id(), now, anchor.turn_id)
     if not user_targets and not own_targets:
         run.finish(last, len(batch))
         return PassResult(ran=True, upto=upto)

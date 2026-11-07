@@ -13,8 +13,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, tzinfo
 from typing import cast
 
-from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
+from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from, quote_in
 from companion.core.clock import utc_now
+from companion.core.sensitivity import GUARDED_AT
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -40,7 +41,6 @@ MIN_CONFIDENCE = 0.4
 # applies only to low-sensitivity states and preferences, where the noise is, and never to events,
 # threads, habits or anything sensitive.
 MOMENTARY_KINDS = frozenset({BeliefKind.STATE, BeliefKind.PREFERENCE})
-SENSITIVE = Sensitivity.DELICATE
 # What the user plainly says about themselves in a romantic or sexual setting may be kept. What the
 # model concludes from how they behave in the chat (a tell, an event, a state) may not.
 ROMANTIC_KINDS = frozenset({BeliefKind.TRAIT, BeliefKind.PREFERENCE, BeliefKind.BOUNDARY})
@@ -226,16 +226,8 @@ def _resolve(
     cited = index.get(c.ref)
     if cited is not None:
         return cited
-    holders = [u for u in index.values() if u.speaker is speaker and _holds(u, c.quote)]
+    holders = [u for u in index.values() if u.speaker is speaker and quote_in(u, c.quote)]
     return holders[0] if len(holders) == 1 else None
-
-
-def _holds(u: Utterance, quote: str) -> bool:
-    try:
-        evidence_from(u, quote)
-    except QuoteNotFoundError:
-        return False
-    return True
 
 
 def _screen(c: MemoryCandidate, source: Utterance | None) -> str | None:
@@ -246,7 +238,7 @@ def _screen(c: MemoryCandidate, source: Utterance | None) -> str | None:
     checks = (
         (source.speaker is not Speaker.USER, "evidence is the companion's own words"),
         (
-            not c.lasting and c.kind in MOMENTARY_KINDS and c.sensitivity < SENSITIVE,
+            not c.lasting and c.kind in MOMENTARY_KINDS and c.sensitivity < GUARDED_AT,
             "momentary, not lasting",
         ),
         (c.confidence < MIN_CONFIDENCE, "too uncertain to record"),

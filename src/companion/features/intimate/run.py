@@ -25,8 +25,6 @@ from companion.core.types import (
     Json,
     RelationshipId,
     Speaker,
-    TraceId,
-    TurnId,
     Utterance,
     UtteranceId,
 )
@@ -119,11 +117,6 @@ class Spent:
     cost_usd: float = 0.0
 
 
-def _pass_recorder(store: Store, rel: RelationshipId, now: datetime) -> Recorder:
-    run = uuid.uuid4().hex
-    return Recorder(store, rel, TurnId(run), TraceId(run), now)
-
-
 def facts_of(b: Belief, held: frozenset[UtteranceId], heavy: frozenset[UtteranceId]) -> Facts:
     ids = {e.utterance_id for e in b.evidence}
     return Facts(held=bool(ids & held), heavy=bool(ids & heavy))
@@ -182,7 +175,7 @@ async def label_lanes(
             if not sure:
                 places[b.id] = Excluded(Why.DOUBT)
     sm.place(places, By(got.model, LANE.ref, now))
-    record = _pass_recorder(store, rel, now)
+    record = Recorder.fresh(store, rel, now)
     for bid, p in places.items():
         logged = _placed_detail(bid, p)
         if logged is not None:
@@ -251,7 +244,7 @@ async def _read_scene(
     sm = store.intimate_memory()
     theirs = [u.id for u in scene.messages if u.speaker is Speaker.USER]
     held, _ = sm.facts(rel, theirs)
-    record = _pass_recorder(store, rel, now)
+    record = Recorder.fresh(store, rel, now)
     if held:
         record.decide(UNREAD, {"scene": scene.key, "messages": len(scene.messages)})
         return 0.0

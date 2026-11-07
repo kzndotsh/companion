@@ -17,9 +17,10 @@ from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 from itertools import pairwise
 
+from companion.core.daypart import NIGHT_FROM
 from companion.core.turn.energy import texting_energy
 from companion.core.turn.goodbye import leaving
-from companion.core.types import Severity, TurnId
+from companion.core.types import HEAVY_AT, Severity, TurnId
 from companion.prompts import get
 
 PARAMS_VERSION = "1"
@@ -70,7 +71,8 @@ EASING = frozenset({Source.EASED})
 # is never teasing while tender.
 HOLDS_BACK: tuple[tuple[State, State], ...] = ((State.TENDER, State.PLAYFUL),)
 
-NIGHT_HOURS = frozenset({22, 23, 0, 1, 2})
+# Late at night, from where the night starts (core/daypart.py) until 3 am: five hours.
+COZY_HOURS = frozenset(h % 24 for h in range(NIGHT_FROM, NIGHT_FROM + 5))
 NIGHT_COZY = 0.35  # late at night it leans cozy: calmer, unhurried, a bit shorter
 
 CHAT_SPAN_FROM_MINUTES = 15
@@ -140,7 +142,7 @@ def effects_for(i: Inputs) -> list[Effect]:
     serious, and a failed call never moves the mood."""
     if i.severity is None:
         return []
-    if i.severity >= Severity.SERIOUS:
+    if i.severity >= HEAVY_AT:
         return [effect(Source.SERIOUS, RULES[Source.SERIOUS].cap, i.at, i.turn)]
     out: list[Effect] = []
     if i.chat_minutes >= CHAT_SPAN_FROM_MINUTES:
@@ -197,13 +199,13 @@ def mood_at(effects: Iterable[Effect], now: datetime, zone: tzinfo) -> Mood:
 
 def baseline(now: datetime, zone: tzinfo) -> dict[State, float]:
     """The floor the time of day sets: cozy late at night, nothing otherwise."""
-    return {State.COZY: NIGHT_COZY} if now.astimezone(zone).hour in NIGHT_HOURS else {}
+    return {State.COZY: NIGHT_COZY} if now.astimezone(zone).hour in COZY_HOURS else {}
 
 
 def held_because(*, severity: Severity | None, text: str, in_scene: bool) -> str | None:
     """Why no mood line is shown this turn, or None. A serious turn has the listening note, a
     goodbye must never get a mood that could read as a pull to stay, and a scene has its voice."""
-    if severity is not None and severity >= Severity.SERIOUS:
+    if severity is not None and severity >= HEAVY_AT:
         return "the turn is serious"
     if in_scene:
         return "a scene is in progress"

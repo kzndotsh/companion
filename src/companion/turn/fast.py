@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import uuid
 from dataclasses import replace
 from datetime import datetime
 
@@ -20,7 +19,7 @@ from companion.core.types import (
     TurnId,
 )
 from companion.kit.current import Turn
-from companion.kit.record import Recorder
+from companion.kit.record import Recorder, new_id
 from companion.kit.runtime import Runtime
 from companion.kit.spendcap import NOTICE, first_notice_today, over_cap
 from companion.turn.assemble import assemble
@@ -41,10 +40,6 @@ from companion.turn.talk import talk
 log = logging.getLogger("companion.turn")
 
 
-def _id() -> str:
-    return uuid.uuid4().hex
-
-
 async def handle(  # noqa: PLR0913
     c: Runtime,
     text: str,
@@ -57,7 +52,7 @@ async def handle(  # noqa: PLR0913
     """One message in, one reply out (or a reaction, or nothing at the cap). `quoted` is the
     message they used reply on, if they did; `message_id` their message's id on the platform."""
     now = now or utc_now()
-    t = Turn(TurnId(_id()), now, [], text, quoted, message_id)
+    t = Turn(TurnId(new_id()), now, [], text, quoted, message_id)
     capped = _stopped_by_cap(c, t, platform)
     if capped is not None:
         return capped

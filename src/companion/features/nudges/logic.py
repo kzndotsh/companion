@@ -23,6 +23,7 @@ DRAFT = get("system/nudge-draft")
 MIN_WAIT = timedelta(hours=1)
 GONE = timedelta(hours=6)
 PER_DAY = 2
+RECENT = 40  # the latest messages read for when they last wrote
 
 
 @dataclass(frozen=True, slots=True)

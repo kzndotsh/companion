@@ -29,7 +29,9 @@ SYSTEM = PROMPT.text
 _NOTE = get("notes/recall")
 _EMPTY = get("notes/recall-empty")
 MAX_PICKS = 5
-MAX_SENSITIVITY = Sensitivity.DELICATE  # never look up crisis-level beliefs on its own
+# What a look-up may find. Unprompted, up to a guarded memory and never a crisis-level one; the
+# near and asked look-ups share these two limits.
+MAX_SENSITIVITY = Sensitivity.DELICATE
 # When they ask it to remember, anything they said may be found.
 ASKED_SENSITIVITY = Sensitivity.GRAVE
 RECENT = 6  # messages of the conversation the look-up reads when they asked, theirs last

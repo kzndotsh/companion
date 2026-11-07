@@ -16,10 +16,10 @@ from datetime import datetime, timedelta, tzinfo
 from enum import StrEnum
 
 from companion.core.crisis import PAUSE_REASON
-from companion.core.episode import EPISODE_GAP
-from companion.core.rhythm import WINDOW, Rhythm
+from companion.core.reachout import Dial
+from companion.core.rhythm import WINDOW, Rhythm, first_of_each
 from companion.core.types import Json
-from companion.features.reach.logic import TARGET, Dial, step_down
+from companion.features.reach.logic import TARGET, step_down
 
 ACTIVE_MINUTES = 90
 MIN_GAP = timedelta(hours=6)
@@ -28,6 +28,10 @@ MIN_GAP = timedelta(hours=6)
 AFTER_HEAVY = timedelta(hours=12)
 BRIEF_WORDS = 3  # an answer this short, all told, is brief
 ANSWER_SPAN = timedelta(minutes=10)  # their words in this long after the first count as the answer
+
+
+def _hours(span: timedelta) -> float:
+    return span.total_seconds() / 3600
 
 
 class Hold(StrEnum):
@@ -58,7 +62,7 @@ class Share:
 def firsts(events: Sequence[tuple[datetime, bool]], now: datetime) -> list[tuple[datetime, bool]]:
     """The first message of each conversation in the last two weeks, from (time, it was mine)."""
     seen = sorted(e for e in events if now - WINDOW <= e[0] <= now)
-    return [e for i, e in enumerate(seen) if i == 0 or e[0] - seen[i - 1][0] >= EPISODE_GAP]
+    return first_of_each(seen, lambda e: e[0])
 
 
 def share(events: Sequence[tuple[datetime, bool]], now: datetime) -> Share:
@@ -155,8 +159,8 @@ def hold(sit: Situation) -> tuple[Hold, str] | None:
             heavy is not None and heavy < AFTER_HEAVY,
             Hold.HEAVY,
             lambda: (
-                f"a message of theirs was read as heavy"
-                f" {(heavy or AFTER_HEAVY).total_seconds() / 3600:.1f}h ago, under 12h"
+                f"a message of theirs was read as heavy {_hours(heavy or AFTER_HEAVY):.1f}h ago,"
+                f" under {_hours(AFTER_HEAVY):.0f}h"
             ),
         ),
         (
@@ -172,7 +176,7 @@ def hold(sit: Situation) -> tuple[Hold, str] | None:
         (
             gap is not None and gap < MIN_GAP,
             Hold.GAP,
-            lambda: f"its last was {(gap or MIN_GAP).total_seconds() / 3600:.1f}h ago, under 6h",
+            lambda: f"its last was {_hours(gap or MIN_GAP):.1f}h ago, under {_hours(MIN_GAP):.0f}h",
         ),
         (
             sit.effective is Dial.OFF or sit.share.value >= target,

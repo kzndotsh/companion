@@ -7,7 +7,15 @@ import sqlite3
 from datetime import datetime, time
 
 from companion.core.types import RelationshipId, TurnId
-from companion.features.reminders.logic import Kind, Part, Reminder, Repeat, Series, Standing
+from companion.features.reminders.logic import (
+    Kind,
+    Part,
+    Reminder,
+    ReminderState,
+    Repeat,
+    Series,
+    Standing,
+)
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
 _INSERT = (
@@ -35,8 +43,8 @@ def _row(r: Reminder) -> tuple[object, ...]:
 
 def _pending(conn: sqlite3.Connection, r: Reminder, reason: str) -> None:
     conn.execute(
-        "INSERT INTO reminder_events (reminder_id, state, reason, at) VALUES (?, 'pending', ?, ?)",
-        (r.id, reason, iso(r.created_at)),
+        "INSERT INTO reminder_events (reminder_id, state, reason, at) VALUES (?, ?, ?, ?)",
+        (r.id, ReminderState.PENDING, reason, iso(r.created_at)),
     )
 
 
@@ -57,7 +65,7 @@ def add_occurrence(conn: sqlite3.Connection, r: Reminder) -> bool:
 
 
 def event(
-    conn: sqlite3.Connection, reminder_id: str, state: str, reason: str, at: datetime
+    conn: sqlite3.Connection, reminder_id: str, state: ReminderState, reason: str, at: datetime
 ) -> None:
     with write_tx(conn):
         conn.execute(
@@ -72,9 +80,9 @@ def claim(conn: sqlite3.Connection, reminder_id: str, at: datetime) -> bool:
     with write_tx(conn):
         cur = conn.execute(
             "INSERT INTO reminder_events (reminder_id, state, reason, at)"
-            " SELECT ?, 'claimed', 'due, being sent', ? WHERE (SELECT state FROM reminder_events"
-            " WHERE reminder_id = ? ORDER BY id DESC LIMIT 1) = 'pending'",
-            (reminder_id, iso(at), reminder_id),
+            " SELECT ?, ?, 'due, being sent', ? WHERE (SELECT state FROM reminder_events"
+            " WHERE reminder_id = ? ORDER BY id DESC LIMIT 1) = ?",
+            (reminder_id, ReminderState.CLAIMED, iso(at), reminder_id, ReminderState.PENDING),
         )
     return cur.rowcount == 1
 
@@ -98,7 +106,7 @@ def all_(conn: sqlite3.Connection, rel: RelationshipId) -> list[Reminder]:
             str(r["zone"]),
             TurnId(str(r["turn_id"])),
             parse_iso(str(r["created_at"])),
-            str(r["state"]),
+            ReminderState(str(r["state"])),
             None if r["series_id"] is None else str(r["series_id"]),
             None if r["seq"] is None else int(r["seq"]),
             parse_iso(str(r["state_at"])),

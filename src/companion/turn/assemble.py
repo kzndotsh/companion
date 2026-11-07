@@ -9,7 +9,15 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from companion.core.card import EVENT_SHOWN_DAYS, Card, Focus, build_card, day_over, render
+from companion.core.card import (
+    EVENT_SHOWN_DAYS,
+    Card,
+    Focus,
+    build_card,
+    day_over,
+    everyday_ids,
+    render,
+)
 from companion.core.clock import now_line
 from companion.core.frames import (
     is_assertable,
@@ -26,8 +34,6 @@ from companion.core.types import (
     Belief,
     BeliefId,
     DecisionKind,
-    Depth,
-    Domain,
     Frame,
     Severity,
     Speaker,
@@ -167,9 +173,6 @@ def assemble(  # noqa: PLR0913
     assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
     sharing = heard is not None and heard[0].severity >= Severity.EVERYDAY
     labels = store.belief_labels(c.rel)
-    everyday = {
-        bid for bid, x in labels.items() if x.domain is Domain.DAILY and x.depth is Depth.SURFACE
-    }
     support, contexts = store.last_support(c.rel), store.belief_contexts(c.rel)
     found = looked.found.get(FOCUS.name)
     focus = found if isinstance(found, Focus) else None
@@ -181,7 +184,7 @@ def assemble(  # noqa: PLR0913
             now,
             views=shown_views,
             show_guarded=sharing,
-            everyday=everyday,
+            everyday=everyday_ids(labels),
             contexts=contexts,
             focus=focus,
         )
