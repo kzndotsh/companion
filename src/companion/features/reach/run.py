@@ -7,21 +7,32 @@ the pick and the numbers, and nothing is sent: no code path here sends a message
 from __future__ import annotations
 
 import logging
+from collections.abc import Container, Iterable
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
-from companion.core.clock import local_zone, utc_now
 from companion.core.crisis import crisis_paused
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
 from companion.core.ids import new_id
-from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, WOULD_NUDGE, Dial, Held, Kind
+from companion.core.reachout import (
+    OWN_HELD,
+    OWN_KINDS,
+    OWN_WOULD_SEND,
+    Dial,
+    Held,
+    Kind,
+    Mode,
+    ReachRecord,
+)
 from companion.core.rhythm import WINDOW, kept_hour, learn
 from companion.core.sensitivity import GUARDED_AT
 from companion.core.turn.listening import LISTENING_KEY, logged_heavy, logged_intimate
 from companion.core.types import (
     HEAVY_AT,
+    Belief,
+    BeliefId,
     BeliefKind,
     DecisionKind,
     Frame,
@@ -71,15 +82,15 @@ from companion.features.reach.outcome import (
     STOPPED,
     UNANSWERED_AFTER,
     Landed,
-    Sent,
     landed_prompt,
     outcome,
     parse_landed,
     stopped,
 )
-from companion.features.reach.store import Own, Reaches
+from companion.features.reach.store import Own, Reaches, records
 from companion.kit.ask import Judge, ask
 from companion.kit.features import Feature, Move
+from companion.kit.reachdraft import DraftKeys, record_draft
 from companion.kit.record import Recorder
 from companion.kit.spendcap import over_cap
 from companion.store.sqlite.store import Store
@@ -126,6 +137,21 @@ class Reacher:
     paced: str | None = None
 
 
+def _plain(
+    beliefs: Iterable[Belief], kinds: Container[BeliefKind], intimate: Container[BeliefId]
+) -> list[Belief]:
+    """What they said about themselves, as it was: of the kinds asked for, in real talk, and never
+    one the scene lane placed as intimate (ADR 0026)."""
+    return [
+        b
+        for b in beliefs
+        if b.subject is Subject.USER
+        and b.kind in kinds
+        and b.frame is Frame.REAL
+        and b.id not in intimate
+    ]
+
+
 def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
     """What a thought could be about. Never a memory the scene lane placed as intimate (ADR 0026):
     some are stored at a low sensitivity, and one was picked for a weekday morning (2026-11-03)."""
@@ -135,11 +161,7 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
     return Pool(
         memories=[
             (str(b.id), b.claim, b.sensitivity)
-            for b in store.user_beliefs(rel)
-            if b.subject is Subject.USER
-            and b.kind in keep
-            and b.frame is Frame.REAL
-            and b.id not in intimate
+            for b in _plain(store.user_beliefs(rel), keep, intimate)
         ],
         tastes=[
             (str(b.id), b.claim)
@@ -152,22 +174,6 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
             if e.kind == "everyday" and e.top_severity < HEAVY_AT and now - e.end_at <= EPISODE_DAYS
         ],
     )
-
-
-def _sent(store: Store, rel: RelationshipId, start: datetime) -> tuple[list[Sent], list[Own]]:
-    """Every reach-out of any kind it sent (or would have, in shadow), oldest first, and its own
-    rows, dropped drafts included."""
-    own = store.part(Reaches).since(rel, start)
-    nudges = [
-        Sent(str(d.id), Kind.AWAY, False, str((d.detail or {}).get("draft") or ""), d.at)
-        for d in store.decisions_with_key(rel, WOULD_NUDGE, start)
-    ]
-    loops = [
-        Sent(r.id, Kind.PLAN, r.mode == "live", r.draft, r.at) for r in store.reach_outs(rel, start)
-    ]
-    mine = [Sent(r.id, Kind(r.kind), r.mode == "live", r.draft, r.at) for r in own]
-    kept = [s for s, r in zip(mine, own, strict=True) if r.mode != "dropped"]
-    return sorted([*kept, *nudges, *loops], key=lambda s: s.at), own
 
 
 def _heavy_at(store: Store, rel: RelationshipId, now: datetime) -> datetime | None:
@@ -210,18 +216,14 @@ def context(
     theirs = sorted(
         (
             b
-            for b in store.user_beliefs_as_of(rel, now)
-            if b.subject is Subject.USER
-            and b.kind in keep
-            and b.frame is Frame.REAL
-            and b.sensitivity < GUARDED_AT
-            and b.id not in intimate
+            for b in _plain(store.user_beliefs_as_of(rel, now), keep, intimate)
+            if b.sensitivity < GUARDED_AT
         ),
         key=lambda b: b.valid_from,
         reverse=True,
     )
     pool = _pool(store, rel, now)
-    own = store.part(Reaches).since(rel, now - WINDOW)
+    own = records(store, rel, now - WINDOW, OWN_KINDS)
     return Context(
         local=now.astimezone(tz),
         kind=kind,
@@ -230,12 +232,12 @@ def context(
         gists=[g for _, g in pool.episodes],
         memories=[b.claim for b in theirs],
         tastes=[c for _, c in pool.tastes if not about_us(c)],
-        sent=[r.draft for r in own if r.mode != "dropped" and r.at <= now],
+        sent=[r.text for r in own if r.mode is not Mode.DROPPED and r.at <= now],
     )
 
 
-def _newest(own: list[Own], kind: Kind) -> datetime | None:
-    return max((r.at for r in own if r.kind == kind and r.mode != "dropped"), default=None)
+def _newest(own: list[ReachRecord], kind: Kind) -> datetime | None:
+    return max((r.at for r in own if r.kind == kind and r.mode is not Mode.DROPPED), default=None)
 
 
 def situation(
@@ -247,7 +249,8 @@ def situation(
     theirs = [(u.at, u.text) for u in history if u.speaker is Speaker.USER]
     times = [at for at, _ in theirs]
     rhythm = learn(times, now, tz)
-    every, own = _sent(store, rel, now - WINDOW)
+    own = records(store, rel, now - WINDOW)
+    every = [r for r in own if r.mode is not Mode.DROPPED]
     sent = [s.at for s in every]
     last_sent = max(sent, default=None)
     last_theirs = max(times, default=None)
@@ -259,7 +262,7 @@ def situation(
         and last_sent is not None
         and any(not mine and at > last_sent + got.after for at, mine in firsts(events, now))
     )
-    attempts = [*sent, *(r.at for r in own if r.mode == "dropped")]
+    attempts = [*sent, *(r.at for r in own if r.mode is Mode.DROPPED)]
     used = frozenset(r.thing for r in own if r.thing and now - r.at <= THING_REUSE)
     seed = now.astimezone(tz).date().isoformat()
     sit = Situation(
@@ -385,29 +388,28 @@ async def _draft(
     about: Json = None if thing is None else {"source": thing.source, "text": thing.text}
     detail = {**detail, "kind": kind.value, "why": why, "thing": about, **step}
     dropped = step.get("dropped")
+    got = ("", str(dropped)) if idea is None else (idea.message, None)  # screened already
     row = Own(
         new_id(),
         rel,
-        kind.value,
+        kind,
         "" if thing is None else thing.id,
-        "" if idea is None else idea.message,
-        "dropped" if idea is None else "shadow",
+        got[0],
+        Mode.DROPPED if idea is None else Mode.SHADOW,
         detail,
         now,
     )
     store.part(Reaches).add(row)
+    record_draft(
+        Recorder.fresh(store, rel, now),
+        DraftKeys(DROPPED, OWN_WOULD_SEND, DecisionKind.DO_NOTHING, f" ({kind})"),
+        got,
+        detail,
+        f"{OWN_WOULD_SEND} ({kind}): {why}",
+    )
     if idea is None:
-        Recorder.fresh(store, rel, now).decide(
-            DROPPED, detail, reason=f"{DROPPED} ({kind}): {dropped}", kind=DecisionKind.DO_NOTHING
-        )
         log.info("reach: nothing sent (%s): %s", kind, dropped)
         return None
-    Recorder.fresh(store, rel, now).decide(
-        OWN_WOULD_SEND,
-        detail,
-        reason=f"{OWN_WOULD_SEND} ({kind}): {why}",
-        kind=DecisionKind.INITIATE,
-    )
     log.info("reach shadow: would send %r (%s, %s)", idea.message, kind, idea.angle)
     return row
 
@@ -430,7 +432,9 @@ async def record_outcomes(
         if u.speaker is Speaker.USER and u.at >= start
     ]
     count = 0
-    for sent in _sent(store, rel, start)[0]:
+    for sent in records(store, rel, start):
+        if sent.mode is Mode.DROPPED:
+            continue
         got = None if sent.id in done else outcome(sent, theirs, now)
         if got is None:
             continue
@@ -483,7 +487,7 @@ def reaching(c: Runtime) -> tuple[Move, ...]:
         r.held = holds(c.store, c.rel, (r.now, r.tz), reacher)
 
     async def own(r: Round) -> None:
-        await tick_reach(c.store, c.rel, (utc_now(), local_zone()), reacher, r.first)
+        await tick_reach(c.store, c.rel, (r.now, r.tz), reacher, r.first)
 
     return (Move(None, gate), Move(Kind.KEPT, own))  # KEPT: the first kind it decides
 

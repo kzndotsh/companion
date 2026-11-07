@@ -25,9 +25,10 @@ from companion.core.reachout import (
     PLAN_WOULD_SEND,
     Held,
     Kind,
+    Mode,
     ReachOut,
-    checked,
     draft_text,
+    drafted,
     parse_draft,
 )
 from companion.core.turn.mentions import LOOP_OFFERED, MentionCandidate, Rank
@@ -63,6 +64,7 @@ from companion.features.threads.met import read_met
 from companion.features.threads.store import Threads
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.features import Feature, Log, Loops, Move, OwnReader, Passing
+from companion.kit.reachdraft import DraftKeys, record_draft
 from companion.kit.record import Recorder, new_id
 from companion.prompts import get
 from companion.store.sqlite.store import Store
@@ -196,6 +198,7 @@ class Ticker:
 
 
 DRAFT_DROPPED = "open loop: the check-in draft was dropped, not sent"
+KEYS = DraftKeys(DRAFT_DROPPED, PLAN_WOULD_SEND)
 
 
 async def tick(  # noqa: PLR0913, PLR0917
@@ -236,28 +239,24 @@ async def tick(  # noqa: PLR0913, PLR0917
             )
             log.info("initiative held: %s (%s)", verdict.loop.claim, verdict.reason)
         return verdict
-    text, why = checked(await draft(verdict.loop) if draft is not None else "")
+    got = drafted(await draft(verdict.loop) if draft is not None else "", "empty")
+    text, why = got
     if not text:
         detail["why"] = why
-        Recorder.fresh(store, rel, now).decide(
-            DRAFT_DROPPED, detail, reason=f"{DRAFT_DROPPED}: {why}"
-        )
+        record_draft(Recorder.fresh(store, rel, now), KEYS, got, detail, "")
         log.info(
             "initiative: the check-in draft about %s was dropped (%s)", verdict.loop.claim, why
         )
         return Verdict(False, f"{DRAFT_DROPPED}: {why}", verdict.loop, verdict.expired)
     store.add_reach_out(
-        ReachOut(new_id(), rel, verdict.loop.id, "shadow", text, verdict.reason, now)
+        ReachOut(new_id(), rel, verdict.loop.id, Mode.SHADOW, text, verdict.reason, now)
     )
     store.part(Threads).add_event(
         verdict.loop.id, ThreadState.ASKED, "shadow reach-out, not sent", now
     )
     detail["draft"] = text
-    Recorder.fresh(store, rel, now).decide(
-        PLAN_WOULD_SEND,
-        detail,
-        reason=f"shadow, would send: {verdict.reason}",
-        kind=DecisionKind.INITIATE,
+    record_draft(
+        Recorder.fresh(store, rel, now), KEYS, got, detail, f"shadow, would send: {verdict.reason}"
     )
     log.info("initiative shadow: would send %r about %s", text, verdict.loop.claim)
     return verdict

@@ -51,8 +51,8 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 | `logic.py` | pure: the dial and its targets, the kinds and their precedence, the seed thing, what the brainstorm and the pick see, and the screen (`Kind`, `consider`, `choose`, `pick_thing`, `Context`, `brief`, `screened`, `about_us`); the needy check and the `Dial` (the COMPANION_REACH values and the one fallback for a bad one) are shared, in `core/reachout.py` |
 | `gate.py` | pure: the share of conversations it started, how its last was answered, the step down, and the holds in order (`hold`, `share`, `pace`) |
 | `run.py` | effects: reads the store, learns the rhythm, the tick, the context, and the brainstorm and pick (`tick_reach`, `Reacher`, `context`, `ideas`) |
-| `store.py` | its queries as `Reaches` (`Store.part(Reaches)`) (the table is in `store/sqlite/migrations/0032_own_reach_outs.sql`) |
-| `outcome.py` | pure: how a reach-out landed, the stop, and the summary (`outcome`, `Sent`, `Landed`, `stopped`, `summary`) |
+| `store.py` | its queries as `Reaches` (`Store.part(Reaches)`) (the table is in `store/sqlite/migrations/0032_own_reach_outs.sql`), and `records`, the one reader of every reach-out of any kind (its own rows, plans' rows and nudges' decisions) as `ReachRecord`s |
+| `outcome.py` | pure: how a reach-out landed, the stop, and the summary (`outcome`, `Landed`, `stopped`, `summary`; the reach-out it scores is a `ReachRecord` from `core/reachout.py`) |
 | `cli.py` | its part of `companion initiative` |
 
 ## Prompts

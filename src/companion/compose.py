@@ -16,7 +16,6 @@ from companion.core import switch as sw
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.prefix import Prefix
-from companion.core.reachout import dial
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
@@ -26,6 +25,8 @@ from companion.kit.runtime import Runtime
 from companion.memory.memory_pass import PassOptions
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import ByJudge, RefusalFallback, TalkerFallback
+from companion.models.kiro import PREFIX as KIRO
+from companion.models.kiro import KiroTalker
 from companion.registry import FEATURES
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
@@ -33,8 +34,13 @@ from companion.store.sqlite.store import Store
 ROLEPLAY_MAX_TOKENS = 700  # scene replies run longer; 400 cut some off mid-sentence
 
 
+def api_key(name: str) -> str | None:
+    """A key from the environment, None when it is unset or empty."""
+    return os.environ.get(name) or None
+
+
 def need(name: str) -> str:
-    value = os.environ.get(name)
+    value = api_key(name)
     if not value:
         msg = f"{name} is not set (put it in .env)"
         raise SystemExit(msg)
@@ -76,6 +82,22 @@ def _talker(client: httpx.AsyncClient, s: Settings) -> Talker:
     if s.openrouter:
         return openrouter.OpenRouterTalker(need("OPENROUTER_API_KEY"), client, s.everyday_model)
     return anthropic.AnthropicTalker(need("ANTHROPIC_API_KEY"), client, s.everyday_model)
+
+
+def eval_talker(
+    client: httpx.AsyncClient, s: Settings, key: str, model: str | None, effort: str | None
+) -> Talker:
+    """The talker an eval variant names: through the local Kiro gateway for a `kiro/` model, else
+    on OpenRouter, with more room to reply when it thinks."""
+    if model is not None and model.startswith(KIRO):
+        return KiroTalker(s.kiro_key, client, model.removeprefix(KIRO), s.kiro_url)
+    return openrouter.OpenRouterTalker(
+        key,
+        client,
+        model or openrouter.DEFAULT_MODEL,
+        max_tokens=openrouter.REPLY_TOKENS if effort is None else openrouter.REASONING_REPLY_TOKENS,
+        reasoning_effort=effort,
+    )
 
 
 def _roleplay_talker(client: httpx.AsyncClient, s: Settings) -> Talker | None:
@@ -167,7 +189,7 @@ def runtime(
         rel=rel,
         judge=parts.get("judge"),
         memory=parts.get("memory"),
-        reach=dial(s.position(sw.REACH)),
+        reach=s.reach,
         roleplay_talker=parts.get("roleplay_talker"),
         roleplay_prefix=parts.get("roleplay_prefix"),
         embedder=parts.get("embedder"),

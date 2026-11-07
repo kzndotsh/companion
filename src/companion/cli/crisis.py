@@ -7,18 +7,17 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import os
 import sys
 from pathlib import Path
 
 import httpx
 
-from companion.compose import extractor
+from companion.compose import api_key, extractor
 from companion.features.crisis.cli import FIXTURES, check, load_cases
 from companion.features.crisis.cli import run as counts
 from companion.kit.command import Command, Group, db_args, emit, target
 from companion.lib.vote import READS
-from companion.models.credits import credits
+from companion.models.credits import spend_gate
 from companion.settings import Settings
 
 EST_READ = 0.0006  # dollars per risk read, a guess for the plan line only
@@ -31,15 +30,14 @@ async def run(path: Path, cap: float) -> str:
         f"{len(cases)} cases x {READS} reads, at most about ${len(cases) * READS * EST_READ:.3f}"
         f" (cap ${cap:.2f})\n"
     )
-    key = os.environ.get("OPENROUTER_API_KEY")
+    key = api_key("OPENROUTER_API_KEY")
     if not key:
         return "OPENROUTER_API_KEY is not set (put it in .env)\n"
     async with httpx.AsyncClient() as client:
-        before = await credits(key, client)
-        if before is not None:
-            header += f"OpenRouter balance ${before.balance:.4f}\n"
-            if before.balance < cap:
-                return header + "the balance is below the cap: top up or lower --cap\n"
+        gate = await spend_gate(key, client, cap)
+        header += gate.line
+        if gate.refusal:
+            return header + gate.refusal
         return header + await check(cases, extractor(client, s, s.judge_routes), cap)
 
 

@@ -17,6 +17,7 @@ from companion.core.types import RelationshipId
 from companion.kit.services import Services
 from companion.memory.memory_pass import memory_pass_from
 from companion.memory.rebuild import rebuild
+from companion.paths import Paths
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
@@ -49,7 +50,7 @@ async def memory_pass_now(db: Path, relationship: str, *, from_start: bool = Fal
     lines: list[str] = []
     s = Settings.from_env()
     async with _services(db, relationship) as x:
-        character = chosen(s.character, sheets_dir(db.parent))  # the data folder holds the db
+        character = chosen(s.character, sheets_dir(Paths.beside(db).data))
         options = pass_options(
             s,
             x.judge,

@@ -14,6 +14,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.kit.target import resolve_db, resolve_relationship
+from companion.paths import Paths
 from companion.store.sqlite.store import Store
 
 
@@ -67,3 +68,13 @@ def test_a_database_with_two_relationships_asks_which(tmp_path: Path) -> None:
     store.close()
     with pytest.raises(SystemExit, match="several relationships"):
         resolve_relationship(None, db)
+
+
+def test_the_database_the_bot_creates_is_the_one_a_command_finds(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("COMPANION_DB", raising=False)
+    paths = Paths.in_(tmp_path)
+    paths.db.touch()
+    assert resolve_db(None, tmp_path) == paths.db
+    assert Paths.beside(paths.db) == paths

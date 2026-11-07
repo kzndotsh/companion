@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 from pathlib import Path
 
+from companion.core.clock import utc_now
 from companion.core.freshness import status, when_phrase
 from companion.core.types import RelationshipId
 from companion.core.views import ViewMode, gates, is_settled, overstated, parse_mode
@@ -24,7 +24,7 @@ def run(db: Path, relationship: str) -> str:
         support = store.last_support(rel)
     if not found:
         return "no beliefs yet\n"
-    now = datetime.now(UTC)
+    now = utc_now()
     lines: list[str] = []
     for b in sorted(found, key=lambda x: (x.kind, x.valid_from)):
         quote = b.evidence[0].quote
@@ -75,7 +75,7 @@ def opinions(db: Path, relationship: str) -> str:
         mode = parse_mode(store.setting(rel, VIEWS_MODE_KEY))
     if not found:
         return "no views recorded yet\n"
-    now = datetime.now(UTC)
+    now = utc_now()
     lines: list[str] = []
     for b in sorted(found, key=lambda x: support.get(x.id, x.valid_from), reverse=True):
         n = days.get(b.id, 1)
@@ -108,14 +108,12 @@ def approve_one(db: Path, relationship: str, id_prefix: str) -> str:
 
 def views_mode(db: Path, relationship: str, mode: str | None) -> str:
     """Show or set how views reach the card: auto, review (approved only) or off."""
-    from datetime import UTC, datetime  # noqa: PLC0415
-
     with Store(db) as store:
         rel = RelationshipId(relationship)
         if mode is None:
             return f"views mode: {parse_mode(store.setting(rel, VIEWS_MODE_KEY))}\n"
         chosen = ViewMode(mode)
-        store.set_setting(rel, VIEWS_MODE_KEY, chosen.value, datetime.now(UTC))
+        store.set_setting(rel, VIEWS_MODE_KEY, chosen.value, utc_now())
         return f"views mode set to {chosen}\n"
 
 

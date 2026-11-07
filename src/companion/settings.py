@@ -14,6 +14,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
+from companion.core import switch as sw
+from companion.core.reachout import Dial, dial
 from companion.core.switch import SWITCHES, Mode, Switch
 from companion.io.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.models import anthropic, embeddings, openrouter
@@ -142,6 +144,16 @@ class Settings:
     def modes(self) -> Mapping[Switch, Mode]:
         """Every on, shadow or off switch's position: what the `Runtime` carries."""
         return {s: Mode(v) for s, v in self.switches.items() if s.is_mode}
+
+    @property
+    def reach(self) -> Dial:
+        """The reach-out dial (`COMPANION_REACH`)."""
+        return dial(self.switches[sw.REACH])
+
+    @property
+    def scene_model(self) -> str:
+        """The model that plays scenes: the roleplay model, or the everyday one when none is set."""
+        return self.roleplay_model or self.everyday_model
 
     @property
     def cap_text(self) -> str:

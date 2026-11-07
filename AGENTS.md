@@ -251,6 +251,8 @@ together.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`lib/logs.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.
+- The data folder and the database are one `Paths(data, db)` (`paths.py`): the bot's is `Paths.in_(--data)`,
+  a command's is `Paths.beside(db)`. Sheets, backups and logs come from it, never from `db.parent`.
 - Never log or print a bot token. Telegram errors carry no URL (`TelegramError`), Discord errors only the
   call and its status (`DiscordError`).
 - Restart with `just restart` in a terminal the owner can see, never as a hidden background job or under a

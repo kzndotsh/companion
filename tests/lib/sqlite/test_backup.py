@@ -9,6 +9,7 @@ import pytest
 from companion import backups
 from companion.core.types import Utterance
 from companion.lib.sqlite.backup import BackupError, check, prune, restore, snapshot, snapshots
+from companion.paths import Paths
 from companion.store.sqlite.store import Store
 from tests.conftest import T0
 
@@ -87,7 +88,7 @@ def test_backing_up_copies_the_character_sheets_and_skips_the_env(
     db = _db(tmp_path, utterance)
     (db.parent / "characters").mkdir()
     (db.parent / "characters" / "sam.md").write_text("a sheet")
-    said = backups.back_up(db.parent, db, "manual", T0, db.parent / "backups")
+    said = backups.back_up(Paths.beside(db), "manual", T0, db.parent / "backups")
     into = db.parent / "backups"
     assert "backed up 2 messages" in said
     assert [p.name for p in into.glob("characters-*/sam.md")] == ["sam.md"]

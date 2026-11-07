@@ -35,7 +35,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.kit.beside import beside
-from companion.kit.current import Turn, decide, mark
+from companion.kit.current import Turn, decide, mark, recorder
 from companion.kit.features import Moment
 from companion.registry import FEATURES
 from companion.turn.assemble import Assembled
@@ -129,21 +129,10 @@ def log_frame(c: Runtime, t: Turn, outcome: Scored[Judgement] | None, stored: Fr
 def persist_reply(c: Runtime, t: Turn, reply: Reply, user_frame: Frame, platform: str) -> str:
     """Store the companion's reply and the decision that sent it. Returns what to send."""
     replied_at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1))
-    ids = (c.rel, t.turn)
     if not reply.text:
         decide(c, t, "model returned no text", kind=DecisionKind.DO_NOTHING, at=replied_at)
         return ""
-    c.store.append_utterance(
-        Utterance(
-            UtteranceId(new_id()),
-            *ids,
-            Speaker.COMPANION,
-            reply.text,
-            companion_frame(user_frame),
-            platform,
-            replied_at,
-        )
-    )
+    recorder(c, t).say(reply.text, platform, frame=companion_frame(user_frame), at=replied_at)
     decide(
         c,
         t,

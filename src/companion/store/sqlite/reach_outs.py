@@ -7,7 +7,7 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime
 
-from companion.core.reachout import ReachOut
+from companion.core.reachout import Mode, ReachOut
 from companion.core.types import RelationshipId
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 
@@ -17,7 +17,7 @@ def add(conn: sqlite3.Connection, r: ReachOut) -> None:
         conn.execute(
             "INSERT INTO reach_outs (id, relationship_id, loop_id, mode, draft, reason, at)"
             " VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (r.id, r.relationship_id, r.loop_id, r.mode, r.draft, r.reason, iso(r.at)),
+            (r.id, r.relationship_id, r.loop_id, r.mode.value, r.draft, r.reason, iso(r.at)),
         )
 
 
@@ -33,7 +33,7 @@ def since(
             str(r["id"]),
             RelationshipId(str(r["relationship_id"])),
             str(r["loop_id"]),
-            str(r["mode"]),
+            Mode(str(r["mode"])),
             str(r["draft"]),
             str(r["reason"]),
             parse_iso(str(r["at"])),

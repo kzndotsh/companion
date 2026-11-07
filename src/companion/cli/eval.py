@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import difflib
-import os
 import shutil
 import sys
 import textwrap
@@ -15,7 +14,7 @@ from pathlib import Path
 import httpx
 
 from companion import characters, prompts
-from companion.compose import extractor
+from companion.compose import api_key, eval_talker, extractor
 from companion.core.clock import utc_now
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
@@ -35,10 +34,7 @@ from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import Place, parse_spec
 from companion.kit.command import Command, Group, db_args, emit
 from companion.kit.target import find_db
-from companion.models.credits import charged_since, credits
-from companion.models.kiro import PREFIX as KIRO
-from companion.models.kiro import KiroTalker
-from companion.models.openrouter import DEFAULT_MODEL, OpenRouterTalker
+from companion.models.credits import Gate, charged_since, spend_gate
 from companion.settings import DATA_DIR, Settings
 from companion.store.sqlite.replay import replay_file
 
@@ -203,35 +199,24 @@ async def run(a: EvalArgs) -> str:
         f" = {len(fixtures) * len(variants) * samples} replies, at most about ${plan_cost:.3f}"
         f" (cap ${cap:.2f})\n"
     )
-    key = os.environ.get("OPENROUTER_API_KEY")
+    key = api_key("OPENROUTER_API_KEY")
     async with httpx.AsyncClient() as client:
-        before = await credits(key, client) if key else None
-        if before is not None:
-            header += f"OpenRouter balance ${before.balance:.4f}\n"
+        gate = await spend_gate(key, client, cap) if key else Gate(None, "", None)
+        header += gate.line
         if a.dry_run:
             return header
         if not key:
             return "OPENROUTER_API_KEY is not set (put it in .env)\n"
-        if before is not None and before.balance < cap:
-            return (
-                header
-                + "the balance is below the cap and the bot shares it: top up or lower --cap\n"
-            )
+        if gate.refusal:
+            return header + gate.refusal
+        before = gate.before
         built = _inputs(fixtures, a.specs, db)
         if isinstance(built, str):
             return built
         requests, rebuilt_requests = built
 
         def talker_for(model: str | None, effort: str | None) -> Talker:
-            if model is not None and model.startswith(KIRO):
-                return KiroTalker(s.kiro_key, client, model.removeprefix(KIRO), s.kiro_url)
-            return OpenRouterTalker(
-                key,
-                client,
-                model or DEFAULT_MODEL,
-                max_tokens=400 if effort is None else 4000,
-                reasoning_effort=effort,
-            )
+            return eval_talker(client, s, key, model, effort)
 
         models = Models(talker_for, extractor(client, s, s.judge_routes))
         plan = Plan(fixtures, requests, variants, samples, cap, rebuilt_requests)

@@ -10,13 +10,13 @@ from datetime import datetime
 from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
-from companion.core.reachout import HELD_KEYS, WOULD_NUDGE, dial
-from companion.core.switch import REACH
+from companion.core.reachout import HELD_KEYS, Kind
 from companion.core.turn.now import KEY as NOW_KEY
 from companion.core.turn.now import Phase, from_decisions
 from companion.core.types import RelationshipId
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.run import resume as resume_reach
+from companion.features.reach.store import records
 from companion.features.threads.store import Threads
 from companion.kit.command import Command, Group, db_args, emit, target
 from companion.settings import Settings
@@ -28,19 +28,20 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
     rel = RelationshipId(relationship)
     with Store(db) as store:
         loops = store.part(Threads).loops(rel)
-        reach = store.reach_outs(rel)
+        sent = records(store, rel)
+        plans = [r for r in sent if r.kind is Kind.PLAN]
+        nudges = [r for r in sent if r.kind is Kind.AWAY]
         held = sorted(
             (d for key in HELD_KEYS for d in store.decisions_with_key(rel, key)),
             key=lambda d: d.at,
         )
         said = from_decisions(store.decisions_with_key(rel, NOW_KEY))
         away = [s for s in said if s.label.phase is Phase.LEAVING]
-        nudges = store.decisions_with_key(rel, WOULD_NUDGE)
         own = own_reasons.lines(
             store,
             rel,
             (now or utc_now(), local_zone()),
-            dial(Settings.from_env().position(REACH)),
+            Settings.from_env().reach,
         )
     out = ["open loops (state, kind, when to reach out, what they said)"]
     out += [
@@ -49,16 +50,15 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
         for lp in loops
     ] or ["  none yet"]
     out += ["", "shadow reach-outs (would have sent)"]
-    out += [f"  {r.at:%m-%d %H:%M}  {r.draft or '(no draft)'}  [{r.reason}]" for r in reach] or [
-        "  none yet"
-    ]
+    out += [
+        f"  {r.at:%m-%d %H:%M}  {r.text or '(no draft)'}  [{r.detail.get('reason')}]" for r in plans
+    ] or ["  none yet"]
     out += ["", "held (due, but something was in the way: a plan or its own reasons)"]
     out += [f"  {d.at:%m-%d %H:%M}  {d.reason}" for d in held] or ["  none"]
     out += ["", f"stepped away ({len(away)} read), and the nudges it would have sent (shadow)"]
     out += [
-        f"  {d.at:%m-%d %H:%M}  {(d.detail or {}).get('draft') or '(no draft)'}"
-        f"  [after {(d.detail or {}).get('said', '')!r:.60}]"
-        for d in nudges
+        f"  {n.at:%m-%d %H:%M}  {n.text or '(no draft)'}  [after {n.detail.get('said', '')!r:.60}]"
+        for n in nudges
     ] or ["  none yet"]
     out += ["", *own]
     return "\n".join(out) + "\n"

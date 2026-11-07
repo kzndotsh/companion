@@ -8,7 +8,6 @@ import asyncio
 import contextlib
 import logging
 from collections.abc import AsyncGenerator
-from pathlib import Path
 
 import httpx
 
@@ -29,12 +28,12 @@ from companion.kit.features import Outlet
 from companion.kit.jobs import keep_running
 from companion.lib import logs
 from companion.memory.idle import IdlePass
+from companion.paths import Paths
 from companion.settings import Settings
 from companion.startup import startup_lines
 from companion.store.sqlite.store import FIRST_RELATIONSHIP, Store, relationship_in
 from companion.turn.fast import handle
 
-DATABASE = "companion.sqlite"  # in the data folder, whichever platform it runs on
 UPDATE_KEY = "telegram.last_update_id"
 DISCORD_KEY = "discord.last_message_id"
 COMMANDS_KEY = "discord.commands_synced"  # the fingerprint of the slash commands Discord has
@@ -89,18 +88,17 @@ async def _delivery(
     yield Delivery(telegram, hooks, s.pace_factor, s.on(sw.SPLIT))
 
 
-async def run(data_dir: Path) -> None:
+async def run(paths: Paths) -> None:
     s = Settings.from_env()
-    log_file = logs.configure(data_dir / "logs")
-    db = data_dir / DATABASE
-    rel = relationship_in(db) or FIRST_RELATIONSHIP
-    into = backups.backup_dir(data_dir, s.backup_dir)
-    backups.back_up_quietly(data_dir, db, "start", utc_now(), into)  # before any migration runs
-    character = characters.chosen(s.character, characters.sheets_dir(data_dir))
+    log_file = logs.configure(paths.logs)
+    rel = relationship_in(paths.db) or FIRST_RELATIONSHIP
+    into = paths.backups(s.backup_dir)
+    backups.back_up_quietly(paths, "start", utc_now(), into)  # before any migration runs
+    character = characters.chosen(s.character, characters.sheets_dir(paths.data))
     persona = prompts.get("system/persona").raw
     prefix = build_prefix(characters.system_prompt(persona, character))
     roleplay_prefix = build_prefix(characters.system_prompt(persona, character, roleplay=True))
-    with Store(db) as store:
+    with Store(paths.db) as store:
         async with contextlib.AsyncExitStack() as stack:
             client = await stack.enter_async_context(httpx.AsyncClient())
             m = models(client, store, rel, s)
@@ -142,13 +140,13 @@ async def run(data_dir: Path) -> None:
                 return reply
 
             logging.getLogger("companion").info(
-                "\n".join(startup_lines(db.stem, prefix.sha256, character, s))
+                "\n".join(startup_lines(paths.db.stem, prefix.sha256, character, s))
             )
             logging.getLogger("companion").info("full log: %s", log_file)
             outlet = Outlet(delivery.transport.send, s.position(sw.PLATFORM))
             background = [
                 asyncio.create_task(keep_running(runtime, job))
-                for job in jobs(runtime, outlet, data_dir, db, into)
+                for job in jobs(runtime, outlet, paths, into)
             ]
             try:
                 await until_stopped(lambda stop: delivery.run(answer, commands, stop))
