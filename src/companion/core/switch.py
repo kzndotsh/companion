@@ -44,8 +44,8 @@ class Switch:
 
     def read(self, environ: Mapping[str, str]) -> str:
         """Unset is the default, and an on or off word on a switch without that position (on for one
-        with no live mode) is its first one. Any other value it does not know stops the bot: a typo
-        used to become the default without a word."""
+        with no live position) is its first one. Any other value it does not know stops the bot: a
+        typo used to become the default without a word."""
         raw = environ.get(self.env, "").strip().lower()
         value = Position.OFF if raw in OFF_WORDS else Position.ON if raw in ON_WORDS else raw
         if value in self.values:
