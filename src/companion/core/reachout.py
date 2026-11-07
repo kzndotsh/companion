@@ -14,7 +14,7 @@ from typing import cast
 from companion.core.types import Json, RelationshipId
 
 
-class Mode(StrEnum):
+class Fate(StrEnum):
     """What became of a reach-out. The strings are stored in the reach-out tables."""
 
     SHADOW = "shadow"  # drafted and checked, never sent
@@ -30,7 +30,7 @@ class ReachOut:
     id: str
     relationship_id: RelationshipId
     loop_id: str
-    mode: Mode
+    fate: Fate
     draft: str
     reason: str
     at: datetime
@@ -44,7 +44,7 @@ class ReachRecord:
 
     id: str
     kind: Kind
-    mode: Mode
+    fate: Fate
     text: str
     at: datetime
     thing: str = ""  # what it was about (its own reasons), an id, or empty
@@ -52,7 +52,7 @@ class ReachRecord:
 
     @property
     def live(self) -> bool:
-        return self.mode is Mode.LIVE
+        return self.fate is Fate.LIVE
 
 
 # The decision keys of the three kinds of reach-out, each named here once because readers (the

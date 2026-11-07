@@ -628,6 +628,10 @@ The words a small model writes for a reach-out, made only after every cheap chec
 **Would-send**:
 What a reach-out in shadow records instead of sending: its draft and its reason.
 
+**Fate**:
+What became of a reach-out: live (sent), shadow (a would-send) or dropped (nothing to send).
+_Avoid_: mode (that is the /mode command), delivery (that is how any reply goes out)
+
 **Unanswered rule**:
 After a reach-out goes unanswered, the companion waits for them to write first.
 

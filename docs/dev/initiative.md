@@ -120,7 +120,7 @@ is never counted as sent, and not drafted again.
 
 A reach-out is stored in three places, by kind: a plan in `reach_outs` (written by threads), its own
 reasons in `own_reach_outs` (reach, dropped drafts too) and a nudge only as its decision. Every reader
-sees one record, `ReachRecord` in `core/reachout.py` (kind, `Mode` shadow, live or dropped, the text, the
+sees one record, `ReachRecord` in `core/reachout.py` (kind, `Fate` shadow, live or dropped, the text, the
 time, and the detail its kind stored), through `records` in `features/reach/store.py`: the shared gate's
 pacing, the outcomes and `companion initiative` read nothing else. Going live (issue 143) adds a live
 row beside the shadow one in the tables, and changes `records` nowhere.

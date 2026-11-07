@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from statistics import median
 
-from companion.core.reachout import Mode, ReachRecord
+from companion.core.reachout import Fate, ReachRecord
 from companion.core.types import Json
 from companion.features.reach.gate import ANSWER_SPAN, Answer, answer
 from companion.prompts import get
@@ -66,7 +66,7 @@ class Outcome:
         return {
             "reach_out": self.sent.id,
             "kind": self.sent.kind.value,
-            "mode": (Mode.LIVE if self.sent.live else Mode.SHADOW).value,
+            "mode": (Fate.LIVE if self.sent.live else Fate.SHADOW).value,
             "base_rate": not self.sent.live,
             "sent_at": self.sent.at.isoformat(),
             "answered": got is not None,
@@ -98,18 +98,18 @@ def stopped(stops: Sequence[datetime], resumes: Sequence[datetime]) -> bool:
 
 
 def summary(records: Sequence[dict[str, Json]]) -> list[str]:
-    """How the reach-outs landed, by kind and mode, from their records: how many were answered, the
+    """How the reach-outs landed, by kind and fate, from their records: how many were answered, the
     median hours to an answer, and for live ones how they took them."""
     groups: dict[tuple[str, str], list[dict[str, Json]]] = {}
     for r in records:
         groups.setdefault((str(r.get("kind")), str(r.get("mode"))), []).append(r)
     out: list[str] = []
-    for (kind, mode), rs in sorted(groups.items()):
+    for (kind, fate), rs in sorted(groups.items()):
         hours = [h for r in rs if isinstance(h := r.get("after_hours"), int | float)]
         answered = sum(r.get("answered") is True for r in rs)
         mid = f", median {median(hours):.1f}h" if hours else ""
-        line = f"  {kind:16} {mode:6} {answered} of {len(rs)} answered{mid}"
-        if mode == "live":
+        line = f"  {kind:16} {fate:6} {answered} of {len(rs)} answered{mid}"
+        if fate == "live":
             took = Counter(str(r.get("landed")) for r in rs if r.get("answered") is True)
             line += "".join(f", {n} {k}" for k, n in sorted(took.items()))
         out.append(line)

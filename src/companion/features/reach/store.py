@@ -9,7 +9,7 @@ from collections.abc import Container
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.reachout import WOULD_NUDGE, Kind, Mode, ReachRecord
+from companion.core.reachout import WOULD_NUDGE, Fate, Kind, ReachRecord
 from companion.core.types import Json, RelationshipId
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 from companion.store.sqlite.store import Store
@@ -22,7 +22,7 @@ class Own:
     kind: Kind
     thing: str  # the one thing it is about, its id and text, or empty
     draft: str
-    mode: Mode
+    fate: Fate
     detail: dict[str, Json]  # the rhythm, the share, the dial and why
     at: datetime
 
@@ -45,7 +45,7 @@ class Reaches:
                     r.kind.value,
                     r.thing,
                     r.draft,
-                    r.mode.value,
+                    r.fate.value,
                     json.dumps(r.detail, sort_keys=True),
                     iso(r.at),
                 ),
@@ -66,7 +66,7 @@ class Reaches:
                     Kind(str(r["kind"])),
                     str(r["thing"]),
                     str(r["draft"]),
-                    Mode(str(r["mode"])),
+                    Fate(str(r["mode"])),
                     loaded if isinstance(loaded, dict) else {},
                     parse_iso(str(r["at"])),
                 )
@@ -84,14 +84,14 @@ def records(
     stored: its own reasons' rows (dropped drafts included), the nudges it would have sent (their
     decisions) and the plans it would have reached out about (their rows)."""
     own = [
-        ReachRecord(r.id, r.kind, r.mode, r.draft, r.at, r.thing, r.detail)
+        ReachRecord(r.id, r.kind, r.fate, r.draft, r.at, r.thing, r.detail)
         for r in store.part(Reaches).since(rel, start)
     ]
     nudges = [
         ReachRecord(
             str(d.id),
             Kind.AWAY,
-            Mode.SHADOW,
+            Fate.SHADOW,
             str((d.detail or {}).get("draft") or ""),
             d.at,
             detail=d.detail or {},
@@ -102,7 +102,7 @@ def records(
         ReachRecord(
             r.id,
             Kind.PLAN,
-            r.mode,
+            r.fate,
             r.draft,
             r.at,
             detail={"loop_id": r.loop_id, "reason": r.reason},

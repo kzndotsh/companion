@@ -21,9 +21,9 @@ from companion.core.reachout import (
     OWN_KINDS,
     OWN_WOULD_SEND,
     Dial,
+    Fate,
     Held,
     Kind,
-    Mode,
     ReachRecord,
 )
 from companion.core.rhythm import WINDOW, kept_hour, learn
@@ -232,12 +232,12 @@ def context(
         gists=[g for _, g in pool.episodes],
         memories=[b.claim for b in theirs],
         tastes=[c for _, c in pool.tastes if not about_us(c)],
-        sent=[r.text for r in own if r.mode is not Mode.DROPPED and r.at <= now],
+        sent=[r.text for r in own if r.fate is not Fate.DROPPED and r.at <= now],
     )
 
 
 def _newest(own: list[ReachRecord], kind: Kind) -> datetime | None:
-    return max((r.at for r in own if r.kind == kind and r.mode is not Mode.DROPPED), default=None)
+    return max((r.at for r in own if r.kind == kind and r.fate is not Fate.DROPPED), default=None)
 
 
 def situation(
@@ -250,7 +250,7 @@ def situation(
     times = [at for at, _ in theirs]
     rhythm = learn(times, now, tz)
     own = records(store, rel, now - WINDOW)
-    every = [r for r in own if r.mode is not Mode.DROPPED]
+    every = [r for r in own if r.fate is not Fate.DROPPED]
     sent = [s.at for s in every]
     last_sent = max(sent, default=None)
     last_theirs = max(times, default=None)
@@ -262,7 +262,7 @@ def situation(
         and last_sent is not None
         and any(not mine and at > last_sent + got.after for at, mine in firsts(events, now))
     )
-    attempts = [*sent, *(r.at for r in own if r.mode is Mode.DROPPED)]
+    attempts = [*sent, *(r.at for r in own if r.fate is Fate.DROPPED)]
     used = frozenset(r.thing for r in own if r.thing and now - r.at <= THING_REUSE)
     seed = now.astimezone(tz).date().isoformat()
     sit = Situation(
@@ -395,7 +395,7 @@ async def _draft(
         kind,
         "" if thing is None else thing.id,
         got[0],
-        Mode.DROPPED if idea is None else Mode.SHADOW,
+        Fate.DROPPED if idea is None else Fate.SHADOW,
         detail,
         now,
     )
@@ -433,7 +433,7 @@ async def record_outcomes(
     ]
     count = 0
     for sent in records(store, rel, start):
-        if sent.mode is Mode.DROPPED:
+        if sent.fate is Fate.DROPPED:
             continue
         got = None if sent.id in done else outcome(sent, theirs, now)
         if got is None:

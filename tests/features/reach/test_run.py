@@ -87,7 +87,7 @@ async def test_a_shadow_tick_records_a_would_send_and_sends_nothing(store: Store
     reacher = Reacher(Dial.WARM, drafter)
     row = await tick_reach(store, REL, WHEN, reacher)
     assert row is not None
-    assert (row.kind, row.mode, row.draft) == (Kind.MISSING, "shadow", drafter.message)
+    assert (row.kind, row.fate, row.draft) == (Kind.MISSING, "shadow", drafter.message)
     assert row.detail["dial"] == "warm"
     assert isinstance(row.detail["rhythm"], dict)
     assert _keys(store, DecisionKind.INITIATE, OWN_WOULD_SEND) == 1
@@ -124,7 +124,7 @@ async def test_a_needy_draft_is_dropped_and_recorded(store: Store) -> None:
     reacher = Reacher(Dial.WARM, drafter)
     assert await tick_reach(store, REL, WHEN, reacher) is None
     rows = store.part(Reaches).since(REL)
-    assert [(r.mode, r.draft) for r in rows] == [("dropped", "")]
+    assert [(r.fate, r.draft) for r in rows] == [("dropped", "")]
     why = "how long they have been gone"
     assert rows[0].detail["screened_out"] == [{"message": drafter.message, "why": why}]
     assert _keys(store, DecisionKind.DO_NOTHING, DROPPED) == 1
@@ -159,7 +159,7 @@ async def test_nothing_goes_when_the_judge_picks_none_and_it_waits_six_hours(sto
     reacher = Reacher(Dial.WARM, drafter)
     assert await tick_reach(store, REL, WHEN, reacher) is None
     rows = store.part(Reaches).since(REL)
-    assert [(r.mode, r.detail["dropped"]) for r in rows] == [
+    assert [(r.fate, r.detail["dropped"]) for r in rows] == [
         ("dropped", "the judge sent none: fits")
     ]
     assert await tick_reach(store, REL, (NOW + timedelta(hours=1), UTC), reacher) is None

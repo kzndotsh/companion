@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime, tzinfo
 
-from companion.core.reachout import OWN_HELD, OWN_KINDS, Dial, Mode, dial
+from companion.core.reachout import OWN_HELD, OWN_KINDS, Dial, Fate, dial
 from companion.core.rhythm import BASE_PAUSE_HOURS, FLOOR_HOURS, WINDOW
 from companion.core.types import RelationshipId
 from companion.features.reach.gate import Hold
@@ -62,9 +62,9 @@ def lines(
     out += [
         f"  {o.at.astimezone(tz):%m-%d %H:%M}  {o.kind:16} {o.text}"
         for o in own
-        if o.mode is not Mode.DROPPED
+        if o.fate is not Fate.DROPPED
     ] or ["  none yet"]
-    dropped = [o for o in own if o.mode is Mode.DROPPED]
+    dropped = [o for o in own if o.fate is Fate.DROPPED]
     out += ["", f"drafts dropped by the check ({len(dropped)})"]
     out += [
         f"  {o.at.astimezone(tz):%m-%d %H:%M}  {o.kind:16} {o.detail.get('drafted') or '(none)'}"

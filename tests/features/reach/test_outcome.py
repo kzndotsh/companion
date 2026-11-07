@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
-from companion.core.reachout import Kind, Mode, ReachRecord
+from companion.core.reachout import Fate, Kind, ReachRecord
 from companion.core.types import Json
 from companion.features.reach.outcome import Landed, outcome, stopped, summary
 
 AT = datetime(2026, 11, 1, 15, 0, tzinfo=UTC)
-SENT = ReachRecord("r1", Kind.THOUGHT, Mode.LIVE, "saw a cat that looked like yours", AT)
+SENT = ReachRecord("r1", Kind.THOUGHT, Fate.LIVE, "saw a cat that looked like yours", AT)
 H = timedelta(hours=1)
 
 
@@ -44,7 +44,7 @@ def test_a_message_before_it_is_not_an_answer() -> None:
 
 
 def test_a_shadow_record_is_the_base_rate_and_never_read() -> None:
-    shadow = ReachRecord("r2", Kind.MISSING, Mode.SHADOW, "hi", AT)
+    shadow = ReachRecord("r2", Kind.MISSING, Fate.SHADOW, "hi", AT)
     got = outcome(shadow, [(AT + 9 * H, "back")], AT + 10 * H)
     assert got is not None
     detail = got.detail(None)

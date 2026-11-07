@@ -22,9 +22,9 @@ from companion.core.reachout import (
     DRAFT_SCHEMA,
     PLAN_HELD,
     PLAN_WOULD_SEND,
+    Fate,
     Held,
     Kind,
-    Mode,
     ReachOut,
     draft_text,
     drafted,
@@ -248,7 +248,7 @@ async def tick(  # noqa: PLR0913, PLR0917
         )
         return Verdict(False, f"{DRAFT_DROPPED}: {why}", verdict.loop, verdict.expired)
     store.add_reach_out(
-        ReachOut(new_id(), rel, verdict.loop.id, Mode.SHADOW, text, verdict.reason, now)
+        ReachOut(new_id(), rel, verdict.loop.id, Fate.SHADOW, text, verdict.reason, now)
     )
     store.part(Threads).add_event(
         verdict.loop.id, ThreadState.ASKED, "shadow reach-out, not sent", now

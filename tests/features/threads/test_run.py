@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.reachout import PLAN_HELD, PLAN_WOULD_SEND, Dial, Mode, ReachOut
+from companion.core.reachout import PLAN_HELD, PLAN_WOULD_SEND, Dial, Fate, ReachOut
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -178,7 +178,7 @@ async def test_a_shadow_tick_records_the_draft_and_marks_the_loop_asked_without_
     assert verdict.send
     reach = store.reach_outs(REL)
     assert len(reach) == 1
-    assert reach[0].mode == "shadow"
+    assert reach[0].fate == "shadow"
     assert reach[0].draft == "how did the vet visit go?"
     assert reach[0].loop_id == loop.id
     assert store.part(Threads).loops(REL)[0].state is ThreadState.ASKED
@@ -258,9 +258,9 @@ async def test_a_reach_out_they_never_answered_holds_the_next_one(store: Store) 
     """The shared gate counts every reach-out, a shadow would-send as sent, so shadow shows what
     live would do (ADR 0021, 0023)."""
     loop = await _recorded(store)
-    for mode in (Mode.LIVE, Mode.SHADOW):
+    for fate in (Fate.LIVE, Fate.SHADOW):
         at = LATER - timedelta(hours=30)
-        store.add_reach_out(ReachOut(f"r-{mode.value}", REL, loop.id, mode, "how?", "due", at))
+        store.add_reach_out(ReachOut(f"r-{fate.value}", REL, loop.id, fate, "how?", "due", at))
         verdict = await _tick(store, LATER)
         assert not verdict.send
         assert "not written since its last reach-out" in verdict.reason
