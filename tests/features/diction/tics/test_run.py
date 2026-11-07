@@ -11,6 +11,7 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json, RelationshipId
+from companion.kit.beside import settled
 from companion.kit.tics import TicMemory
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
@@ -60,8 +61,7 @@ async def _chat(store: Store, judge: Judge | None, n: int) -> Talker:
     runtime = make_runtime(store, talker, PREFIX, REL, judge=judge)
     for i in range(n):
         await handle(runtime, f"message {i}", "test", NOW + timedelta(minutes=2 * i))
-        if runtime.tics.pending is not None:
-            await runtime.tics.pending
+        await settled()
     return talker
 
 
@@ -110,9 +110,9 @@ async def test_only_one_check_runs_at_a_time() -> None:
     async def other() -> list[str]:
         return ["second"]
 
-    memory.start(slow())
-    memory.start(other())  # dropped: one is still running
+    first = asyncio.ensure_future(memory.run(slow()))
+    await asyncio.sleep(0)
+    await memory.run(other())  # dropped: one is still running
     release.set()
-    assert memory.pending is not None
-    await memory.pending
+    await first
     assert memory.tics == ["first"]

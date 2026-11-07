@@ -76,9 +76,9 @@ from companion.features.intimate.logic import (
 )
 from companion.features.intimate.store import By, IntimateMemory
 from companion.kit.ask import Judge, ask
-from companion.kit.current import Heard, Turn, decide
-from companion.kit.embed import embed_query, embedder_in
-from companion.kit.features import CardLane, Feature, Lookups, Passing
+from companion.kit.current import Turn, decide
+from companion.kit.embed import LOOK_SECONDS, embed_query, embedder_in
+from companion.kit.features import CardLane, Feature, Lookups, Moment, Passing
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
@@ -359,17 +359,16 @@ async def _vectors(
     return got.query, {**have, **got.fresh}
 
 
-async def nearest_for_turn(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
-) -> Scored | None:
+async def nearest_for_turn(m: Moment) -> Scored | None:
     """On a turn that may be a scene (a pretend scene in progress, or intimate talk the operator
     lets the roleplay talker answer), how near each entry is to the moment: their message with the
     reply before it."""
-    intimate = c.on(switch.ROUTE_INTIMATE) and heard is not None and heard.read.intimate
+    c, t = m.c, m.t
+    intimate = c.on(switch.ROUTE_INTIMATE) and m.heard is not None and m.heard.read.intimate
     embedder = embedder_in(c, switch.INTIMATE_MEMORY, Mode.SHADOW, Mode.ON)
     if embedder is None or c.roleplay_talker is None:
         return None
-    if in_scene is not Frame.PLAY and not intimate:
+    if m.in_scene is not Frame.PLAY and not intimate:
         return None
     found = entries(c.store, c.rel)
     if not found:
@@ -423,8 +422,6 @@ def _card_detail(card: RoleplayCard, text: str, *, sent: bool, scored: bool) -> 
 def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card) -> CardLane:
     """On a turn the roleplay talker answers: the scene card, logged, and sent when on. On any other
     turn: the intimate memories the everyday card holds, logged, and left off when on."""
-    if c.mode(switch.INTIMATE_MEMORY) is Mode.OFF:
-        return CardLane()
     live = c.mode(switch.INTIMATE_MEMORY) is Mode.ON
     if not roleplay:
         hidden = c.store.intimate_lane(c.rel)
@@ -477,4 +474,11 @@ def set_up(p: Passing) -> Step | None:
     return pass_step(p.mode(switch.INTIMATE_MEMORY))
 
 
-SCENE = Feature("scene", look=nearest_for_turn, lane=intimate_lane, after_pass=set_up)
+SCENE = Feature(
+    "scene",
+    look=nearest_for_turn,
+    lane=intimate_lane,
+    after_pass=set_up,
+    switch=switch.INTIMATE_MEMORY,
+    look_seconds=LOOK_SECONDS,
+)

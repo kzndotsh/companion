@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 from companion.cli.beliefs import retire_one
-from companion.core.card import Card
 from companion.core.extractor import Extraction
 from companion.core.switch import Mode
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance
@@ -23,6 +22,7 @@ from companion.features.history.run import (
 )
 from companion.features.history.store import Stories
 from companion.kit.current import Turn
+from companion.kit.features import Moment
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 from tests.features.diction.marks.test_run import CALM
@@ -194,7 +194,7 @@ async def _beside(store: Store, words: Words, mode: str, text: str = "my cat ign
         store, talker, PREFIX, REL, embedder=words, embed_model="fake", history=mode
     )
     t = Turn(TurnId("t-now"), T0.replace(hour=23), [], text)
-    await stories_beside(runtime, t, Frame.REAL, CALM, Card((), (), (), (), {}, t.now))
+    await stories_beside(Moment(runtime, t, Frame.REAL, CALM))
     return talker
 
 

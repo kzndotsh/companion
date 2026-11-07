@@ -32,14 +32,15 @@ if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
 
 PACE_SOONER = "threads: the learned pace would bring one up now (shadow)"
-# Every feature that mentions things has its decision key in `MENTION_KEYS` (core/turn/mentions.py),
-# checked when the module loads, so none can be left out of the day's count.
+# Every feature that mentions things declares its decision key (`Feature.mention_key`), and the keys
+# `MENTION_KEYS` lists (core/turn/mentions.py, read where no feature can be: how they met it) must
+# be those, checked when the module loads, so none can be left out of the day's count.
 
 
 def _check_keys() -> None:
-    mentions = {f.name for f in FEATURES if f.mention is not None}
-    if mentions != set(MENTION_KEYS):
-        msg = f"mentions: features {sorted(mentions)} but keys for {sorted(MENTION_KEYS)}"
+    declared = [f.mention_key for f in FEATURES if f.mention is not None]
+    if None in declared or sorted(map(str, declared)) != sorted(MENTION_KEYS):
+        msg = f"mentions: features declare keys {declared} but core lists {sorted(MENTION_KEYS)}"
         raise RuntimeError(msg)
 
 
@@ -50,7 +51,7 @@ def _offers(c: Runtime, since: datetime) -> list[tuple[datetime, Rank]]:
     """What was brought up since a time, with its rank; one from before ranks were logged counts as
     the lowest, so it holds back only a lead-up."""
     out: list[tuple[datetime, Rank]] = []
-    for key in MENTION_KEYS.values():
+    for key in MENTION_KEYS:
         for d in c.store.decisions_with_key(c.rel, key, since):
             rank = (d.detail or {}).get("rank")
             out.append((d.at, Rank(rank) if isinstance(rank, int) else Rank.LEAD_UP))
@@ -88,7 +89,9 @@ def mention_note(m: Moment, so_far: Offered) -> Offer:
     found = [
         cand
         for f in FEATURES
-        if f.mention is not None and (cand := f.mention(m, m.looked.found.get(f.name)))
+        if f.mention is not None
+        and f.live(m.c)
+        and (cand := f.mention(m, m.looked.found.get(f.name)))
     ]
     if not found:
         return Offer()

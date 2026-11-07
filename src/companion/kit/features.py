@@ -11,11 +11,12 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Collection, Coroutine, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
 from companion.core.reachout import PRECEDENCE, Held, Kind
 from companion.core.switch import Mode, Switch
-from companion.core.types import Belief, BeliefId, Frame, Utterance
+from companion.core.types import Belief, BeliefId, Frame, Severity, Utterance, is_heavy
 from companion.kit.current import Heard, Turn, is_casual
 
 if TYPE_CHECKING:
@@ -53,13 +54,18 @@ class CardLane:
     after: tuple[Callable[[], None], ...] = ()
 
 
-type Look = Callable[[Runtime, Turn, Frame, Heard | None], Awaitable[object]]
+# Every hook reads the turn through one `Moment` (what is known by then: a look-up has no `looked`,
+# `beliefs` or `on_card` yet), and gets besides it only what exists at its own stage.
+LOOKS_TOGETHER_SECONDS = 9.0  # every look-up together; past it the reply goes without the late ones
+
+type Look = Callable[[Moment], Awaitable[object]]
 # Once the turn is stored: their message as kept, and the reply sent (None when it only reacted).
-# A step that should not hold up the reply starts its own task and returns.
-type AfterTurn = Callable[[Runtime, Turn, Utterance, str | None], Awaitable[None]]
-# A look-up in shadow: run beside the turn once the reply is out, with the card it was sent; it logs
-# what it would have done and never changes the reply. A failure is logged by `turn/beside.py`.
-type Shadow = Callable[[Runtime, Turn, Frame, Heard | None, Card], Coroutine[object, object, None]]
+# The dispatcher runs the step beside the reply unless the feature says `must_finish`.
+type AfterTurn = Callable[[Moment, Utterance, str | None], Coroutine[object, object, None]]
+# A look-up in shadow: run beside the turn once the reply is out (`Moment.on_card` is the card it
+# was sent); it logs what it would have done and never changes the reply. A failure is logged by
+# `kit/beside.py`.
+type Shadow = Callable[[Moment], Coroutine[object, object, None]]
 
 
 # A feature's part in the request's card, given the card built so far (`turn/assemble.py`).
@@ -102,14 +108,52 @@ class Offered(Mapping[str, Offer]):
         return len(self._named)
 
 
+class NoteName(StrEnum):
+    """Every note's name, in one place: `ORDER` in `turn/notes.py`, a `Feature`'s name and the notes
+    one reads through `reads` all use these, so a rename is one edit."""
+
+    TICS = "tics"
+    BASE = "base"
+    LENGTH = "length"
+    REPLIED_TO = "replied-to"
+    LISTENING = "listening"
+    RUDE = "rude"
+    REPAIR = "repair"
+    OWNED = "owned"
+    RECALL = "recall"
+    NOW = "now"
+    RELEVANT = "relevant"
+    RECENT = "recent"
+    HOW_ARE_YOU = "how-are-you"
+    MOOD = "mood"
+    HOLD = "hold"
+    BRUSH_OFF = "brush-off"
+    NAME = "name"
+    MEMORY_MAP = "memory map"
+    GUESS = "guess"
+    REMINDER = "reminder"
+    CRISIS = "crisis"
+    GAME = "game"
+    MENTION = "mention"
+    TOPIC = "topic"
+    LORE = "lore"
+    MARK = "mark"
+    QUESTIONS = "questions"
+
+
 # The earlier notes `has_room` reads, for a note to declare.
-ROOM_READS = ("name", "how-are-you")
+ROOM_READS = (NoteName.NAME, NoteName.HOW_ARE_YOU)
 
 
 def has_room(m: Moment, so_far: Offered) -> bool:
     """A casual turn with no name asked, no how-are-you question and nothing held: room for a plan
     or a move on. Reads `ROOM_READS`."""
-    return m.casual and not so_far["name"].lines and not so_far["how-are-you"].lines and not m.held
+    return (
+        m.casual
+        and not so_far[NoteName.NAME].lines
+        and not so_far[NoteName.HOW_ARE_YOU].lines
+        and not m.held
+    )
 
 
 def asking(so_far: Offered) -> bool:
@@ -195,6 +239,12 @@ type Reaching = Callable[[Runtime], Sequence[Move]]
 
 @dataclass(frozen=True, slots=True)
 class Feature:
+    """The parts a feature has, and the policy the dispatchers apply to all of them, so no hook
+    checks it again: its `switch` (off leaves out its look-up, note, shadow look-up, mention, lane
+    and step after the turn; the steps after a memory pass, the night, reaching and jobs keep their
+    own), whether it needs a judge, and whether its step after the turn must finish before the
+    reply goes out."""
+
     name: str  # its name in the notes' order and in the look-ups' log lines
     look: Look | None = None
     note: Note | None = None
@@ -207,10 +257,36 @@ class Feature:
     shadow: Shadow | None = None
     after_turn: AfterTurn | None = None
     mention: Mention | None = None  # what it would bring up on its own this turn (ADR 0023)
+    mention_key: str | None = None  # the decision key its brought-up offers are logged under
     lane: Lane | None = None  # what it does to the request's card (the scene card, memories hidden)
     reads: tuple[str, ...] = ()  # earlier notes its note reads by name; they must come before it
     # Its look-up gets the route's read in a scene, where the listening judge does not run.
     scene_read: bool = False
+    # The longest its look-up waits on its models in all, under `LOOKS_TOGETHER_SECONDS`: one that
+    # waits longer is cut off at the shared deadline, so its own limit would be dead. Checked at
+    # load (`turn/notes.py`); a look-up must state it.
+    look_seconds: float | None = None
+    switch: Switch | None = None  # while it is off, the hooks the docstring names are left out
+    # Its look-up, shadow look-up and step after the turn read a judge, and are left out of a
+    # runtime that has none (a note, a mention and a lane never are).
+    needs_judge: bool = False
+    # Its step after the turn is waited for before the reply goes out: it writes what the next
+    # message reads. Any other step runs beside the reply and never holds it up.
+    must_finish: bool = False
+
+    def live(self, c: Runtime) -> bool:
+        """Whether its switch leaves it on, or it has none."""
+        return self.switch is None or c.mode(self.switch) is not Mode.OFF
+
+    def offer(self, m: Moment, found: object, so_far: Offered) -> Offer:
+        """Its note's offer, none while it is switched off."""
+        assert self.note is not None
+        return self.note(m, found, so_far) if self.live(m.c) else Offer()
+
+    def can_read(self, c: Runtime) -> bool:
+        """Whether its look-up, shadow look-up or step after the turn runs: live, and a judge
+        where it needs one."""
+        return self.live(c) and not (self.needs_judge and c.judge is None)
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,18 +307,56 @@ class Lookups:
 
 @dataclass(frozen=True, slots=True)
 class Moment:
-    """What every note reads about the turn being answered."""
+    """The turn being answered, as every hook reads it: the facts about it worked out once, here.
+    Built when the turn is routed and filled in as it goes (`looked` after the look-ups; `risk`,
+    `beliefs` and `on_card` once the card is built), so what a hook sees depends on its stage."""
 
     c: Runtime
     t: Turn
     in_scene: Frame
     heard: Heard | None
-    looked: Lookups
-    held: bool  # the floor held this turn (ADR 0017)
-    beliefs: Sequence[Belief]  # the memories that may be stated as true
+    looked: Lookups = field(default_factory=Lookups)
+    held: bool = False  # the floor held this turn (ADR 0017)
+    beliefs: Sequence[Belief] = ()  # the memories that may be stated as true
     on_card: frozenset[BeliefId] = frozenset()  # what the card already shows this turn
     brushed: bool = False  # they pushed the flirting or the scene back (`system/brush-off`)
-    risk: bool = False  # the crisis path acts on a concern or urgent reading (ADR 0022)
+    risk: bool = False  # the crisis path acts on a concern or urgent reading (ADR 0022); a
+    # look-up cannot see it, since the crisis look-up is one of them
+
+    @property
+    def judge(self) -> StructuredModel:
+        """The judges' model, for a hook of a feature that `needs_judge`: the dispatcher leaves it
+        out of a runtime with none, so there is always one."""
+        if self.c.judge is None:
+            msg = "a hook that needs a judge ran without one"
+            raise RuntimeError(msg)
+        return self.c.judge
+
+    @property
+    def severity(self) -> Severity | None:
+        """What the listening judge read, None when it could not read the message."""
+        return self.heard.read.severity if self.heard is not None else None
+
+    @property
+    def heavy(self) -> bool:
+        """Serious or acute; an unread turn is not (it gets what an ordinary one does)."""
+        return is_heavy(self.severity, unread=False)
+
+    @property
+    def unread_or_heavy(self) -> bool:
+        """The turn is serious or acute, or could not be read: for what must not run on a turn that
+        may be heavy."""
+        return is_heavy(self.severity, unread=True)
+
+    @property
+    def sharing(self) -> bool:
+        """They are telling it something, not only chatting (everyday weight or more)."""
+        return self.severity is not None and self.severity >= Severity.EVERYDAY
+
+    @property
+    def pretend(self) -> bool:
+        """The turn is in a pretend scene (not real)."""
+        return self.in_scene is not Frame.REAL
 
     @property
     def casual(self) -> bool:

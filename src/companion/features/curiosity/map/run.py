@@ -23,7 +23,7 @@ from companion.features.curiosity.map.logic import (
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.batches import Batch, Swept, label_in_batches
 from companion.kit.current import decide
-from companion.kit.features import Feature, Offer, Offered, asking
+from companion.kit.features import Feature, NoteName, Offer, Offered, asking
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
@@ -97,4 +97,4 @@ def map_offer(m: Moment, found: object, so_far: Offered) -> Offer:
 
 
 # Each new memory placed in their life, and a light question about the thinnest part.
-KNOWING = Feature("memory map", note=map_offer, after_theirs=label_new)
+KNOWING = Feature(NoteName.MEMORY_MAP, note=map_offer, after_theirs=label_new)

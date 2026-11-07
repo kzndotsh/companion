@@ -123,8 +123,8 @@ together.
   that asks them something says so on its offer (`Offer(asks=True)`, read by `asking` in
   `kit/features.py`), so the question-run note and the calendar stay out that turn. A note that reads an
   earlier note by name declares it (`Feature.reads`, `_LOCAL_READS`), checked at load against `ORDER`. A reply that
-  came back empty runs none of the notes' writes. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
-  failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `turn/beside.py` runs each beside the turn and logs a failure.
+  came back empty runs none of the notes' writes. The look-ups a note reads (`look`) run side by side under one 9 s deadline (`LOOKS_TOGETHER_SECONDS`); a late or
+  failed one adds nothing that turn, and each states how long it waits (`Feature.look_seconds`, checked at load against the deadline). A feature's shadow look-up is its `Feature.shadow`; `turn/beside.py` runs each beside the turn and logs a failure.
 - A turn runs in stages, one module each: `turn/listen.py` (a reaction instead of a reply, the listening
   read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the
   request), `turn/crisis.py` (a risk read sets a scene aside and adds the fixed crisis-line message),
@@ -135,7 +135,8 @@ together.
 - A feature declares its parts as a `Feature` in its own module (`kit/features.py`): a look-up before the
   reply, a note, steps after a memory pass, a look-up in shadow beside the turn, and a step once the
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
-  also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
+  also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. A note's name is a `NoteName` (`kit/features.py`), used by its `Feature`, `ORDER` and every `reads`.
+  Every hook of the turn reads it through one `Moment` (`kit/features.py`), built when the turn is routed and filled in as it goes: look-up `(m)`, shadow `(m)` (`m.on_card` is the card sent), note `(m, found, so_far)`, mention `(m, found)`, step after the turn `(m, said, sent)`. The facts about the turn are worked out there once: `m.severity`, `m.heavy` (an unread turn is not heavy), `m.unread_or_heavy` (an unread turn counts as heavy), `m.sharing`, `m.pretend`, `m.casual` (never on a risk turn; a look-up cannot see `m.risk`, since the crisis look-up is one of them). A hook never re-derives them from `heard` and `in_scene`. The dispatchers own the policy every hook used to repeat: `Feature.switch` (off leaves out its look-up, note, shadow, mention, lane and step after the turn; the others keep their own), `Feature.needs_judge` (its look-up, shadow and step after the turn are left out of a runtime with no judge, and the hook reads `m.judge`) and `Feature.must_finish` (a step after the turn runs beside the reply, a failure logged, unless it writes what the next message reads, and then it is waited for). A hook still tells shadow from on with `c.mode(...)`. No field on
   `Lookups`, no branch in `look`. Background work is a part too, never a loop of its own in `daemon.py`:
   `Feature.jobs` (a `Job` in `kit/jobs.py`: what to run, `Every` or `Daily`, and whether the spend cap
   stops it; one loop, `keep_running`, runs every job with one failure policy), `Feature.reaching` (its
@@ -149,7 +150,7 @@ together.
   check and fixed message) lives in `turn/` and `core/`. A feature that would bring something up on its
   own declares a `mention` (its best candidate, `core/turn/mentions.py` `MentionCandidate`), not a note:
   one picker (`turn/mention.py`) gates, ranks, counts one a day and logs it, and a new mentioning feature
-  names its decision key in `MENTION_KEYS` in `core/turn/mentions.py` (checked when the picker loads). `FEATURES` in `registry.py` is the list of what is
+  declares its decision key (`Feature.mention_key`; `MENTION_KEYS` in `core/turn/mentions.py` lists them for what no feature can import, and the picker checks at load that they match). `FEATURES` in `registry.py` is the list of what is
   registered, in the order the after-steps run.
 - A command is one `Command` (`kit/command.py`: name, heading, help, arguments, what it does), declared
   in the module that does the work and exported as `COMMANDS`; `cli/main.py` only lists the modules. A
@@ -199,7 +200,7 @@ together.
 - Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the
   allowed fallbacks for rows written before a key or field existed (listed there with the date each began), no file over 600 lines (a file listed in `CAPS` may be over it and may only shrink;
   none is listed today, and when one shrinks, lower its limit), and no more than 64 `noqa` comments in
-  `src` (the limit; 60 today; a new one replaces an old one).
+  `src` (the limit; 48 today; a new one replaces an old one).
 - Every feature in shadow has a row in `core/shadows.py` with a review date and what it is judged on
   (`companion shadows` lists them, overdue first); a test fails when a setting defaults to shadow without
   one. At its review it graduates or is removed, and its row goes.

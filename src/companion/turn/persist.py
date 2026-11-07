@@ -34,7 +34,9 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.kit.beside import beside
 from companion.kit.current import Turn, decide, mark
+from companion.kit.features import Moment
 from companion.registry import FEATURES
 from companion.turn.assemble import Assembled
 from companion.turn.reactions import react_alongside
@@ -97,11 +99,17 @@ def with_reaction(
     return ReactAndReply(reacted, sent) if reacted is not None else sent
 
 
-async def after_turn(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
-    """Each feature's step once the turn is stored, in the registry's order."""
+async def after_turn(m: Moment, said: Utterance, sent: str | None) -> None:
+    """Each feature's step once the turn is stored, in the registry's order. One that must finish
+    first (`Feature.must_finish`) is waited for; the rest run beside the reply, a failure logged."""
     for feature in FEATURES:
-        if feature.after_turn is not None:
-            await feature.after_turn(c, t, said, sent)
+        if feature.after_turn is None or not feature.can_read(m.c):
+            continue
+        step = feature.after_turn(m, said, sent)
+        if feature.must_finish:
+            await step
+        else:
+            beside(step)
 
 
 def log_frame(c: Runtime, t: Turn, outcome: Scored[Judgement] | None, stored: Frame) -> None:
@@ -152,12 +160,11 @@ def persist_reply(c: Runtime, t: Turn, reply: Reply, user_frame: Frame, platform
     return reply.text
 
 
-async def reaction_only(
-    c: Runtime, t: Turn, keep: TheirMessage, in_scene: Frame, reaction: Reaction
-) -> Reaction:
+async def reaction_only(m: Moment, keep: TheirMessage, reaction: Reaction) -> Reaction:
     """A turn answered by a reaction alone: their message is kept, and nothing else is stored."""
-    said = keep.store(in_scene)
-    await after_turn(c, t, said, None)
+    t = m.t
+    said = keep.store(m.in_scene)
+    await after_turn(m, said, None)
     mark(t, "done: reaction only")
     log.info("turn %s | ack -> %s\n  you: %s", t.turn[:8], reaction.emoji, t.text)
     return reaction
@@ -204,5 +211,5 @@ async def finish(
     if sent:  # what the notes used up, now that a reply is stored; an empty one uses none
         for write in asm.after:
             write()
-    await after_turn(c, t, said, sent)
+    await after_turn(asm.moment, said, sent)
     return with_reaction(c, t, answered.felt, sent)

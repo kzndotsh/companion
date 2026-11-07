@@ -33,6 +33,13 @@ HEAVY_AT = Severity.SERIOUS
 nudge, and what a heavy talk holds back elsewhere (reach-outs, closing a memory) starts here."""
 
 
+def is_heavy(severity: Severity | None, *, unread: bool) -> bool:
+    """Whether a read severity is heavy. `unread` is what a turn the listening judge could not read
+    counts as: True where a missing read must not be treated lightly, False where it must not hold
+    back what an ordinary turn gets. Read through `Moment.heavy` and `Moment.unread_or_heavy`."""
+    return unread if severity is None else severity >= HEAVY_AT
+
+
 def severity_from(value: Json) -> Severity | None:
     """A number a model or a log gave as a level; None when it is not one of the four."""
     if isinstance(value, bool) or not isinstance(value, int | float):

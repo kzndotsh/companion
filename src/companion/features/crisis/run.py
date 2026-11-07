@@ -25,8 +25,7 @@ from companion.core.crisis import (
 )
 from companion.core.episode import EPISODE_GAP
 from companion.core.extractor import StructuredModel
-from companion.core.switch import Mode
-from companion.core.types import Frame, Json, Speaker
+from companion.core.types import Json, Speaker
 from companion.features.crisis.logic import (
     PROMPT,
     SCHEMA,
@@ -43,16 +42,14 @@ from companion.features.crisis.logic import (
     stay_note,
     strong_cue,
 )
-from companion.kit.current import Heard, Turn, decide, mark
-from companion.kit.features import Feature, Offer, Offered
+from companion.kit.current import Turn, decide, mark
+from companion.kit.features import Feature, Moment, NoteName, Offer, Offered
 from companion.kit.reads import Reads, read_times
 
 if TYPE_CHECKING:
-    from companion.kit.features import Moment
     from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.crisis")
-NAME = "crisis"
 TIMEOUT_SECONDS = 6.0  # each read; under the turn's 9 s look-up deadline
 LEVEL = "crisis: level"
 LIGHT_KEY = "crisis: checked lightly"
@@ -85,13 +82,11 @@ def would_do(reading: Reading) -> list[str]:
     return ["add one light check"] if reading.light else []
 
 
-async def assess(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> Reading | None:
+async def assess(m: Moment) -> Reading | None:
     """The level of this turn, logged once. The risk judge is asked only when the listening judge
     read the message as serious or acute, or a cue word is in it."""
-    del in_scene
-    if c.mode(switch.CRISIS) is Mode.OFF or c.judge is None:
-        return None
-    severity = heard.read.severity if heard is not None else None
+    c, t = m.c, m.t
+    severity = m.severity
     words = cue_words(t.text)
     detail: dict[str, Json] = {
         "mode": c.mode(switch.CRISIS),
@@ -100,7 +95,7 @@ async def assess(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> R
     outcome = Outcome(CrisisLevel.NONE)
     if cued(severity, words):
         mark(t, "risk judge")
-        got = await read_risk(c.judge, said_before(t.prior), t.text)
+        got = await read_risk(m.judge, said_before(t.prior), t.text)
         outcome = combine(got.values, strong=strong_cue(severity, words))
         detail |= {
             "reads": [r.detail() if r is not None else None for r in got.values],
@@ -152,4 +147,11 @@ def crisis_offer(m: Moment, found: object, so_far: Offered) -> Offer:
 
 
 # Reads every turn for risk (ADR 0022), `COMPANION_CRISIS`: shadow by default, on or off.
-CRISIS = Feature(NAME, look=assess, note=crisis_offer)
+CRISIS = Feature(
+    NoteName.CRISIS,
+    look=assess,
+    note=crisis_offer,
+    switch=switch.CRISIS,
+    needs_judge=True,
+    look_seconds=TIMEOUT_SECONDS,
+)

@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
-from companion.core.types import Belief, Frame, Utterance
+from companion.core.types import Belief, Utterance
 from companion.features.curiosity.guess.logic import INVITED as GUESS_INVITED
 from companion.features.curiosity.guess.logic import (
     JUDGE,
@@ -21,13 +21,13 @@ from companion.features.curiosity.guess.logic import NOTE as GUESS_NOTE
 from companion.features.curiosity.guess.logic import likely as guess_likely
 from companion.features.curiosity.guess.logic import note as guess_note
 from companion.kit.ask import Judge, ask
-from companion.kit.current import Heard, Turn, decide, is_casual, mark
-from companion.kit.features import Feature, Offer, Offered
+from companion.kit.current import decide, mark
+from companion.kit.features import Feature, NoteName, Offer, Offered
+from companion.kit.recall import TIMEOUT_SECONDS as RECALL_SECONDS
 from companion.kit.recall import look_up
 
 if TYPE_CHECKING:
     from companion.kit.features import Moment
-    from companion.kit.runtime import Runtime
 
 TIMEOUT_SECONDS = 3.0
 INVITE = Judge(
@@ -53,18 +53,17 @@ async def invited_guess(
     return Invited(about, tuple(picked))
 
 
-async def guess_for_turn(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
-) -> Invited | None:
+async def guess_for_turn(m: Moment) -> Invited | None:
     """When their short question invites a guess about them (J16), what memory holds that may fit.
     Casual turns only, and never when they asked it to remember something (recall answers that);
     logged with what was offered, so guesses can later be scored by kind."""
-    if heard is not None and heard.read.recall:
+    c, t = m.c, m.t
+    if m.heard is not None and m.heard.read.recall:
         return None
-    if c.judge is None or not is_casual(t, in_scene, heard) or not guess_likely(t.text):
+    if not m.casual or not guess_likely(t.text):
         return None
     mark(t, "guess judge")
-    found = await invited_guess(c.judge, t.prior, t.text, c.store.user_beliefs(c.rel))
+    found = await invited_guess(m.judge, t.prior, t.text, c.store.user_beliefs(c.rel))
     if found is not None:
         decide(
             c,
@@ -87,4 +86,10 @@ def guess_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer((note,) if note else (), asks=True)
 
 
-GUESS = Feature("guess", look=guess_for_turn, note=guess_offer)
+GUESS = Feature(
+    NoteName.GUESS,
+    look=guess_for_turn,
+    note=guess_offer,
+    needs_judge=True,
+    look_seconds=TIMEOUT_SECONDS + RECALL_SECONDS,  # the guess judge, then the memory look-up
+)

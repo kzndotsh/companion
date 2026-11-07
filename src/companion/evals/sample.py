@@ -53,6 +53,7 @@ from companion.store.sqlite.store import Store
 from companion.turn.assemble import Layout
 from companion.turn.gate import checked
 from companion.turn.notes import Notes, notes_for
+from companion.turn.values import Routed
 
 REL = RelationshipId("eval")
 CLOCK = "Right now it is Thursday 12:00."  # a script with no clock line of its own
@@ -244,5 +245,8 @@ async def draw(
         if v.raw:
             return Drawn(request, first, ())
         checking = replace(c, judge=judge)
-        reply = await checked(checking, t, request, first, heard, in_scene, talker, held=False)
+        routed = Routed(
+            talker, held=False, read=heard, brushed=False, heard=heard, in_scene=in_scene
+        )
+        reply = await checked(checking, t, request, first, routed)
         return Drawn(request, reply, _redraws(c.store, t.turn))

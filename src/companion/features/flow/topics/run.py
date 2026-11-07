@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
-from companion.core.types import Frame, Speaker, Utterance
+from companion.core.types import Speaker, Utterance
 from companion.features.flow.topics.logic import EVERY_TURNS as TOPIC_EVERY
 from companion.features.flow.topics.logic import (
     JUDGE,
@@ -21,12 +21,11 @@ from companion.features.flow.topics.logic import NOTE as TOPIC_NOTE
 from companion.features.flow.topics.logic import SPENT as TOPIC_SPENT
 from companion.features.flow.topics.logic import likely as topic_likely
 from companion.kit.ask import Judge, ask
-from companion.kit.current import Heard, Turn, decide, is_casual, mark
-from companion.kit.features import ROOM_READS, Feature, Offer, Offered, has_room
+from companion.kit.current import decide, mark
+from companion.kit.features import ROOM_READS, Feature, NoteName, Offer, Offered, has_room
 
 if TYPE_CHECKING:
     from companion.kit.features import Moment
-    from companion.kit.runtime import Runtime
 
 TIMEOUT_SECONDS = 3.0
 SPENT = Judge(
@@ -39,13 +38,14 @@ async def judge_spent(extractor: StructuredModel, prior: Sequence[Utterance], sa
     return got is not None and got.value
 
 
-async def spent_for_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> bool:
+async def spent_for_turn(m: Moment) -> bool:
     """Whether a small topic has run its course: asked of its own judge only on a likely moment on
     a casual turn, so the listening judge, which carries the age floor, stays as it was."""
-    if c.judge is None or not is_casual(t, in_scene, heard) or not topic_likely(t.prior, t.text):
+    t = m.t
+    if not m.casual or not topic_likely(t.prior, t.text):
         return False
     mark(t, "topic judge")
-    return await judge_spent(c.judge, t.prior, t.text)
+    return await judge_spent(m.judge, t.prior, t.text)
 
 
 def _move_on(m: Moment, found: object, *, casual: bool, loop_offered: bool) -> Offer:
@@ -79,8 +79,15 @@ def topic_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """On a quiet turn, knowing whether a plan of theirs was just brought up: the picker sends a
     plan in the system block and a day after the history (`turn/mention.py`)."""
     return _move_on(
-        m, found, casual=has_room(m, so_far), loop_offered=bool(so_far["mention"].lines)
+        m, found, casual=has_room(m, so_far), loop_offered=bool(so_far[NoteName.MENTION].lines)
     )
 
 
-TOPICS = Feature("topic", look=spent_for_turn, note=topic_offer, reads=(*ROOM_READS, "mention"))
+TOPICS = Feature(
+    NoteName.TOPIC,
+    look=spent_for_turn,
+    note=topic_offer,
+    reads=(*ROOM_READS, NoteName.MENTION),
+    needs_judge=True,
+    look_seconds=TIMEOUT_SECONDS,
+)

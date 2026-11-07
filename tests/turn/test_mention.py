@@ -123,7 +123,7 @@ async def test_how_they_met_a_day_is_read_like_a_plan(store: Store) -> None:
     runtime = make_runtime(store, Talker(), PREFIX, REL, judge=Meets())
     then = HALLOWEEN + timedelta(minutes=2)
     t = Turn(TurnId("t1"), then, [reply], "yes!! a costume party")
-    await read_met(runtime, t, reply, None)
+    await read_met(Moment(runtime, t, Frame.REAL, None), reply, None)
     met = store.decisions_with_key(REL, MET)
     assert [(d.detail or {}).get("about") for d in met] == ["Halloween"]
 

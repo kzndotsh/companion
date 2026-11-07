@@ -11,14 +11,14 @@ from companion.core.episode import EPISODE_GAP
 from companion.core.ids import new_id
 from companion.core.switch import Mode
 from companion.core.turn.listening import LISTENING_KEY, logged_severity
-from companion.core.types import Frame, Json, Severity, Speaker
+from companion.core.types import Json, Severity, Speaker
 from companion.features.episodes.logic import GAP_BACK, Told, period
 from companion.features.episodes.logic import NOTE as EPISODES_NOTE
 from companion.features.episodes.logic import note as episodes_note
 from companion.features.episodes.logic import recent as recent_times
 from companion.features.episodes.store import Episodes
-from companion.kit.current import Heard, Turn, decide, mark
-from companion.kit.features import Feature, NightStep, Offer, Offered
+from companion.kit.current import decide, mark
+from companion.kit.features import Feature, NightStep, NoteName, Offer, Offered
 
 if TYPE_CHECKING:
     from companion.kit.features import Moment
@@ -120,13 +120,11 @@ EPISODE_SECONDS = 8.0  # writing a just-ended episode before the reply; slower m
 EPISODES_SHOWN = "episodes: what the two of them did recently, shown"
 
 
-async def recent_for_turn(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
-) -> tuple[Told, ...]:
+async def recent_for_turn(m: Moment) -> tuple[Told, ...]:
     """What the two of them did recently, when their words point at a time or they come back after
     a gap (J12, J49). An episode not yet recorded is written first. Logged; shown only when on."""
-    del heard
-    if c.mode(switch.EPISODES) is Mode.OFF or c.judge is None or in_scene is not Frame.REAL:
+    c, t = m.c, m.t
+    if m.pretend:
         return ()
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     last = theirs[-1].at if theirs else None
@@ -137,7 +135,7 @@ async def recent_for_turn(
         return ()
     mark(t, "recent times")
     await bounded(  # what is already recorded is still shown
-        write_closed(c.store, c.judge, c.rel, t.now),
+        write_closed(c.store, m.judge, c.rel, t.now),
         deadline=EPISODE_SECONDS,
         what="writing episodes before the reply",
         unread="what is already recorded is shown",
@@ -167,8 +165,11 @@ async def write_step(c: Runtime, judge: StructuredModel) -> None:
 
 
 EPISODES = Feature(
-    "recent",
+    NoteName.RECENT,
     look=recent_for_turn,
     note=recent_offer,
     nightly=NightStep("episodes", write_step),
+    switch=switch.EPISODES,
+    needs_judge=True,
+    look_seconds=EPISODE_SECONDS,
 )

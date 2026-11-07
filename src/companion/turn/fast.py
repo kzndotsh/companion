@@ -17,6 +17,7 @@ from companion.core.types import (
     TurnId,
 )
 from companion.kit.current import Turn, recorder
+from companion.kit.features import Moment
 from companion.kit.record import new_id
 from companion.kit.runtime import Runtime
 from companion.kit.spendcap import NOTICE, first_notice_today, over_cap
@@ -34,7 +35,7 @@ from companion.turn.persist import (
 )
 from companion.turn.route import route_turn
 from companion.turn.talk import talk
-from companion.turn.values import Outcome
+from companion.turn.values import Outcome, moment_of
 
 log = logging.getLogger("companion.turn")
 
@@ -81,14 +82,13 @@ async def _turn(c: Runtime, t: Turn, keep: TheirMessage, in_scene: Frame) -> Out
     """The stages of one turn, inside the guard that keeps their message."""
     listened = await listen(c, t, in_scene)
     if listened.reaction is not None:
-        return await reaction_only(c, t, keep, in_scene, listened.reaction)
-    heard = listened.heard
-    routed = await route_turn(c, t, in_scene, heard)
-    looked = await look(c, t, in_scene, heard, routed.read)
+        return await reaction_only(Moment(c, t, in_scene, listened.heard), keep, listened.reaction)
+    routed = await route_turn(c, t, in_scene, listened.heard)
+    looked = await look(moment_of(c, t, routed), routed.read)
     reading = reading_of(looked)
     routed = off_scene(c, t, routed, reading)
     asm = assemble(c, t, routed, looked)
-    shadows(c, t, routed.in_scene, heard, asm.card)
+    shadows(asm.moment)
     answered = await talk(c, t, asm.request, routed)
     out = await finish(c, t, keep, asm, answered)
     return then_line(keep, reading, out, answered.reply)

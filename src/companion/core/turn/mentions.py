@@ -42,11 +42,11 @@ class MentionCandidate:
 
 
 WINDOW = timedelta(hours=24)
-# The decision key each mentioning feature logs its offers under, by feature name (the picker,
-# `turn/mention.py`, checks at load that every feature with a mention has one).
+# The decision key each mentioning feature logs its offers under; each declares its own
+# (`Feature.mention_key`), and the picker (`turn/mention.py`) checks at load that these match.
 LOOP_OFFERED = "open loop: offered as a note when they wrote"
 CALENDAR_OFFERED = "calendar: offered"
-MENTION_KEYS = {"loop": LOOP_OFFERED, "calendar": CALENDAR_OFFERED}
+MENTION_KEYS = (LOOP_OFFERED, CALENDAR_OFFERED)
 # How they met what was brought up, read from their next message (`features/threads`).
 MET = "threads: how they met it"
 # The how-are-you question after a heavy talk is its own note (it comes at serious moments the

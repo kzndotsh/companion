@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from companion.core.types import Frame
 from companion.features.flow.length.logic import LengthTarget, length_target
 from companion.kit.current import decide
-from companion.kit.features import Feature, Offer, Offered
+from companion.kit.features import Feature, NoteName, Offer, Offered
 
 if TYPE_CHECKING:
     from companion.kit.features import Moment
@@ -17,13 +16,11 @@ def target(m: Moment) -> LengthTarget | None:
     """The one length target for this turn, logged with the reason code wrote for it. None on a
     turn the crisis path reads as a risk (ADR 0022)."""
     c, t = m.c, m.t
-    severity = m.heard.read.severity if m.heard is not None else None
+    severity = m.severity
     size = (
         None
         if m.risk
-        else length_target(
-            t.text, severity=severity, in_scene=m.in_scene is not Frame.REAL, seed=str(t.turn)
-        )
+        else length_target(t.text, severity=severity, in_scene=m.pretend, seed=str(t.turn))
     )
     reason = f"length: under about {size.words} words, {size.why}" if size else "length: no cap"
     if m.risk:
@@ -39,4 +36,4 @@ def length_offer(m: Moment, _: object, __: Offered) -> Offer:
     return Offer((size.note,) if size else ())
 
 
-LENGTH = Feature("length", note=length_offer)
+LENGTH = Feature(NoteName.LENGTH, note=length_offer)

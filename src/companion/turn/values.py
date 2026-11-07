@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from companion.core.crisis import Reading
 from companion.core.frames import Judgement as FrameJudgement
@@ -14,7 +14,11 @@ from companion.core.turn.context import Scored
 from companion.core.turn.reactions import ToneRead
 from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Frame
-from companion.kit.current import Heard
+from companion.kit.current import Heard, Turn
+from companion.kit.features import Moment
+
+if TYPE_CHECKING:
+    from companion.kit.runtime import Runtime
 
 # What a turn gives back: a reply, a reaction, a reply with one, or a reply and a second message.
 type Outcome = str | Reaction | ReactAndReply | ThenSend
@@ -41,6 +45,11 @@ class Routed:
     heard: Heard | None  # the listening judge's read of their message
     in_scene: Frame
     crisis: Reading | None = None  # the crisis path's reading (ADR 0022), set after the look-ups
+
+
+def moment_of(c: Runtime, t: Turn, routed: Routed) -> Moment:
+    """The turn as every hook reads it (`kit/features.py` `Moment`), from what the route decided."""
+    return Moment(c, t, routed.in_scene, routed.heard, held=routed.held, brushed=routed.brushed)
 
 
 @dataclass(frozen=True, slots=True)

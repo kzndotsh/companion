@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, cast
 from companion.core import switch
 from companion.core.extractor import StructuredModel
 from companion.core.switch import Mode
-from companion.core.types import Belief, BeliefId, Frame, RelationshipId
+from companion.core.types import Belief, BeliefId, RelationshipId
 from companion.core.vectors import NEAR_AT, Embedder, nearest
 from companion.features.lore.logic import (
     BATCH,
@@ -27,15 +27,14 @@ from companion.features.lore.logic import (
 )
 from companion.features.lore.store import ViewKinds
 from companion.kit.batches import Batch, Swept, label_in_batches
-from companion.kit.current import Heard, Turn, decide, is_casual
-from companion.kit.embed import embed_query, embedder_in
-from companion.kit.features import Feature, Offer, Offered
+from companion.kit.current import decide
+from companion.kit.embed import LOOK_SECONDS, embed_query, embedder_in
+from companion.kit.features import Feature, NoteName, Offer, Offered
 from companion.kit.reads import read_times
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
     from companion.kit.features import Moment
-    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.lore")
 
@@ -123,13 +122,12 @@ async def nearest_tastes(  # noqa: PLR0913, PLR0917
 LORE_SHOWN = "lore: its own tastes nearest their message"
 
 
-async def tastes_for_turn(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
-) -> tuple[str, ...]:
+async def tastes_for_turn(m: Moment) -> tuple[str, ...]:
     """Its tastes nearest their message on an ordinary turn (ADR 0020), as the words it said. In
     shadow they are logged and not shown."""
+    c, t = m.c, m.t
     embedder = embedder_in(c, switch.LORE, Mode.SHADOW, Mode.ON)
-    if embedder is None or not is_casual(t, in_scene, heard):
+    if embedder is None or not m.casual:
         return ()
     found = await nearest_tastes(c.store, embedder, c.rel, c.embed_model, t.text, t.now)
     if found is None or not found.tastes:
@@ -159,4 +157,11 @@ def lore_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer((note,) if note else ())
 
 
-LORE = Feature("lore", look=tastes_for_turn, note=lore_offer, after_own=label_views)
+LORE = Feature(
+    NoteName.LORE,
+    look=tastes_for_turn,
+    note=lore_offer,
+    after_own=label_views,
+    switch=switch.LORE,
+    look_seconds=LOOK_SECONDS,
+)

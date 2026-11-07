@@ -71,17 +71,7 @@ async def talk(c: Runtime, t: Turn, request: TalkerRequest, routed: Routed) -> A
     running, framing, feeling = start_beside(c, t, request, routed.talker)
     try:
         reply, framed, felt = await await_beside(t, running, framing, feeling)
-        reply = await checked(
-            c,
-            t,
-            request,
-            reply,
-            routed.heard,
-            routed.in_scene,
-            routed.talker,
-            held=routed.held,
-            crisis=routed.crisis,
-        )
+        reply = await checked(c, t, request, reply, routed)
     except BaseException:
         await stop(running, framing, feeling)
         raise

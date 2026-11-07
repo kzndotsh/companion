@@ -25,8 +25,8 @@ from companion.features.curiosity.basics.logic import (
     parse_name,
     parse_pronouns,
 )
-from companion.kit.current import Turn, decide
-from companion.kit.features import Feature, Moment, Offer, Offered
+from companion.kit.current import decide
+from companion.kit.features import Feature, Moment, NoteName, Offer, Offered
 
 if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
@@ -74,7 +74,7 @@ def basics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     """On a casual turn, at most once a day each: ask what to call them until memory knows, then
     which pronouns they use until the setting holds them. Never both on one turn."""
     del found
-    if so_far["how-are-you"].lines:
+    if so_far[NoteName.HOW_ARE_YOU].lines:
         return Offer()
     c, t = m.c, m.t
     known = knows_name(m.beliefs)
@@ -96,16 +96,16 @@ def basics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     )
 
 
-async def capture_name(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
+async def capture_name(m: Moment, said: Utterance) -> None:
     """When its last message asked what to call them, read their answer and remember the name,
     quoting their own words. Logged either way."""
-    del sent
+    c, t = m.c, m.t
     asked = next((u.text for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), "")
-    if c.judge is None or not asked_for_name(asked):
+    if not asked_for_name(asked):
         return
     if knows_name(c.store.user_beliefs(c.rel)):
         return
-    name = await judge_name(c.judge, asked, t.text)
+    name = await judge_name(m.judge, asked, t.text)
     reason = "basics: no name in their answer"
     if name is not None:
         c.store.insert_belief(name_belief(said, name, new_id(), t.now))
@@ -113,13 +113,14 @@ async def capture_name(c: Runtime, t: Turn, said: Utterance, sent: str | None) -
     decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
 
 
-async def capture_pronouns(c: Runtime, t: Turn) -> None:
+async def capture_pronouns(m: Moment) -> None:
     """When its last message asked their pronouns and nothing is set, read their answer and set how
     they want to be referred to, in their own words. Logged either way."""
+    c, t = m.c, m.t
     asked = next((u.text for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), "")
-    if c.judge is None or not asked_for_pronouns(asked) or _address_set(c):
+    if not asked_for_pronouns(asked) or _address_set(c):
         return
-    pronouns = await judge_pronouns(c.judge, asked, t.text)
+    pronouns = await judge_pronouns(m.judge, asked, t.text)
     reason = "basics: no pronouns in their answer"
     if pronouns is not None:
         c.store.set_setting(c.rel, ADDRESS_KEY, pronouns, t.now)
@@ -127,11 +128,19 @@ async def capture_pronouns(c: Runtime, t: Turn) -> None:
     decide(c, t, "basics: pronoun capture", {"prompt": PRONOUN_CAPTURE.ref}, reason=reason)
 
 
-async def capture(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
+async def capture(m: Moment, said: Utterance, sent: str | None) -> None:
     """Once the turn is stored: the name, then the pronouns, from their answer."""
-    await capture_name(c, t, said, sent)
-    await capture_pronouns(c, t)
+    del sent
+    await capture_name(m, said)
+    await capture_pronouns(m)
 
 
 # What to call them and their pronouns: asked for on a casual turn until known, answers kept.
-BASICS = Feature("name", note=basics_offer, after_turn=capture, reads=("how-are-you",))
+BASICS = Feature(
+    NoteName.NAME,
+    note=basics_offer,
+    after_turn=capture,
+    reads=(NoteName.HOW_ARE_YOU,),
+    needs_judge=True,
+    must_finish=True,  # the name and pronouns it keeps are read by the next message
+)

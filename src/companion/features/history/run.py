@@ -21,7 +21,6 @@ from companion.core.ids import new_id
 from companion.core.memory_pass import BATCH, CONTEXT
 from companion.core.switch import Mode
 from companion.core.types import (
-    Frame,
     Json,
     RelationshipId,
     Speaker,
@@ -46,16 +45,15 @@ from companion.features.history.logic import (
 )
 from companion.features.history.store import By, Stories
 from companion.kit.ask import Judge, ask
-from companion.kit.current import Heard, Turn, decide, is_casual
+from companion.kit.current import decide
 from companion.kit.embed import embed_query, embedder_in
-from companion.kit.features import Feature, Passing
+from companion.kit.features import Feature, Moment, Passing
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.core.card import Card
-    from companion.kit.runtime import Runtime
+    pass
 
 log = logging.getLogger("companion.history")
 
@@ -246,14 +244,12 @@ async def nearest_stories(
     return nearest(got.query, canon, have)
 
 
-async def stories_beside(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
-) -> None:
+async def stories_beside(m: Moment) -> None:
     """Log the canon stories it would show on an ordinary turn, and whether each was told already
     and is still in the messages the talker reads. Shows nothing (step 1)."""
-    del card
+    c, t = m.c, m.t
     embedder = embedder_in(c, switch.HISTORY, Mode.SHADOW, Mode.ON)
-    if embedder is None or not is_casual(t, in_scene, heard):
+    if embedder is None or not m.casual:
         return
     found = await nearest_stories(c.store, (embedder, c.embed_model), c.rel, t.text, t.now)
     if not found:
@@ -281,4 +277,4 @@ def set_up(p: Passing) -> Step | None:
     return pass_step(p.mode(switch.HISTORY), p.sheet)
 
 
-HISTORY = Feature("history", shadow=stories_beside, after_pass=set_up)
+HISTORY = Feature("history", shadow=stories_beside, after_pass=set_up, switch=switch.HISTORY)

@@ -12,12 +12,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from companion.core import switch
-from companion.core.card import Card
 from companion.core.extractor import StructuredModel
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.spend import purpose
 from companion.core.switch import Mode
-from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Severity, Speaker
+from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Speaker
 from companion.core.vectors import Embedder, nearest
 from companion.features.recall.logic import GATE as RELEVANCE_GATE
 from companion.features.recall.logic import LIVE as RELEVANCE_LIVE
@@ -33,16 +32,16 @@ from companion.features.recall.logic import (
 )
 from companion.features.recall.logic import SHADOW as RELEVANCE_SHADOW
 from companion.kit.ask import Judge, ask, whole_answer
-from companion.kit.current import Heard, Turn, decide, mark
-from companion.kit.embed import bounded, embed_missing, embedder_in
-from companion.kit.features import Feature, Offer, Offered
+from companion.kit.current import decide, mark
+from companion.kit.embed import LOOK_SECONDS, bounded, embed_missing, embedder_in
+from companion.kit.features import Feature, Moment, NoteName, Offer, Offered
+from companion.kit.recall import TIMEOUT_SECONDS as RECALL_SECONDS
 from companion.kit.recall import Context, Recalled
 from companion.kit.recall import look_up as recall_look_up
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.kit.features import Moment
     from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.relevance")
@@ -191,31 +190,30 @@ RELEVANT_NOTE = get("notes/relevant")
 LIVE_SECONDS = 3.0  # a slow look-up only means no memories are offered this turn
 
 
-async def relevant_for_turn(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
-) -> tuple[tuple[BeliefId, str], ...]:
+async def relevant_for_turn(m: Moment) -> tuple[tuple[BeliefId, str], ...]:
     """With the look-up on (ADR 0018): the memories a small model picks as bearing on their message,
     asked only when the closest memory is near (GATE), outside a scene. Logged either way. With no
     listening read because the judge failed it still runs, as a turn that is not sharing, so nothing
     held is offered; with listening switched off it does not run, as before."""
+    c, t = m.c, m.t
     embedder = embedder_in(c, switch.RELEVANCE, Mode.ON)
-    if embedder is None or c.judge is None:
+    if embedder is None:
         return ()
-    if heard is None and not c.on(switch.LISTEN):
+    if m.heard is None and not c.on(switch.LISTEN):
         return ()
-    if in_scene is not Frame.REAL:
+    if m.pretend:
         return ()
     mark(t, "relevance look-up")
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
     found = await shadow(
         c.store,
         embedder,
-        c.judge,
+        m.judge,
         c.rel,
         model=c.embed_model,
         said=t.text,
         last_reply=replies[-1] if replies else None,
-        sharing=heard is not None and heard.read.severity >= Severity.EVERYDAY,
+        sharing=m.sharing,
         on_card=(),
         now=t.now,
         gate=RELEVANCE_GATE,
@@ -244,30 +242,24 @@ def relevant_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer((RELEVANT_NOTE.render(items="\n".join(f"- {p}" for p in picks)),))
 
 
-async def shadow_for_turn(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card
-) -> None:
+async def shadow_for_turn(m: Moment) -> None:
     """With the look-up in shadow: what it would have kept in mind on an ordinary message, logged
     beside the turn; it never holds up or changes the reply."""
+    c, t = m.c, m.t
     embedder = embedder_in(c, switch.RELEVANCE, Mode.SHADOW)
-    if (
-        embedder is None
-        or c.judge is None
-        or (heard is None and not c.on(switch.LISTEN))
-        or in_scene is not Frame.REAL
-    ):
+    if embedder is None or (m.heard is None and not c.on(switch.LISTEN)) or m.pretend:
         return
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
     found = await shadow(
         c.store,
         embedder,
-        c.judge,
+        m.judge,
         c.rel,
         model=c.embed_model,
         said=t.text,
         last_reply=replies[-1] if replies else None,
-        sharing=heard is not None and heard.read.severity >= Severity.EVERYDAY,
-        on_card=[b.id for b in (*card.usable, *card.guarded, *card.older)],
+        sharing=m.sharing,
+        on_card=list(m.on_card),
         now=t.now,
         hidden=_hidden(c),
     )
@@ -275,21 +267,19 @@ async def shadow_for_turn(
         decide(c, t, RELEVANCE_SHADOW, found.detail)
 
 
-async def recall_for_turn(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
-) -> Recalled | None:
+async def recall_for_turn(m: Moment) -> Recalled | None:
     """When they asked it to remember something, look it up across what they may be asked about,
     and log it. In a scene `heard` is the route's read (`scene_read`), since listening does not run
     there."""
-    del in_scene
-    if c.judge is None or heard is None or not heard.read.recall or not heard.read.topic:
+    c, t, heard = m.c, m.t, m.heard
+    if heard is None or not heard.read.recall or not heard.read.topic:
         return None
     topic = heard.read.topic
     mark(t, f"recall look-up: {topic!r}")
     said = [f"{'they' if u.speaker is Speaker.USER else 'you'}: {u.text}" for u in t.prior]
     pool = eligible(c.store.user_beliefs(c.rel), asked=True, sharing=True, hidden=_hidden(c))
     recalled = await recall_look_up(
-        c.judge,
+        m.judge,
         pool,
         topic,
         Context(c.store.last_support(c.rel), t.now, [*said[-(RECENT - 1) :], f"they: {t.text}"]),
@@ -325,5 +315,20 @@ def recall_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer((recall_note(recalled.picked),))
 
 
-RECALL = Feature("recall", look=recall_for_turn, note=recall_offer, scene_read=True)
-RELEVANCE = Feature("relevant", look=relevant_for_turn, note=relevant_offer, shadow=shadow_for_turn)
+RECALL = Feature(
+    NoteName.RECALL,
+    look=recall_for_turn,
+    note=recall_offer,
+    scene_read=True,
+    needs_judge=True,
+    look_seconds=RECALL_SECONDS,
+)
+RELEVANCE = Feature(
+    NoteName.RELEVANT,
+    look=relevant_for_turn,
+    note=relevant_offer,
+    shadow=shadow_for_turn,
+    switch=switch.RELEVANCE,
+    needs_judge=True,
+    look_seconds=LIVE_SECONDS + LOOK_SECONDS,
+)

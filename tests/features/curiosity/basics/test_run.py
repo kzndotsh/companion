@@ -103,7 +103,7 @@ async def _capture(store: Store, reader: Reader, asked: str, said: str) -> None:
         )
     ]
     runtime = make_runtime(store, Talker(), PREFIX, REL, judge=reader)
-    await capture_pronouns(runtime, Turn(TurnId("t1"), NOW, prior, said))
+    await capture_pronouns(Moment(runtime, Turn(TurnId("t1"), NOW, prior, said), Frame.REAL, None))
 
 
 async def test_capture_sets_how_to_refer_to_them_from_their_own_words(store: Store) -> None:

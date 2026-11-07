@@ -70,7 +70,7 @@ A hold is logged once per loop and per kind of hold as `held, would otherwise re
 | `logic.py` | pure: which plans become loops, their kinds and times, the labels for settling, which loop becomes the note, the note text (`MAX_OFFERS`; the sensitivity cutoff is `core/sensitivity.py` `GUARDED_AT`) |
 | `gate.py` | pure: which due loop to reach out about and which have expired, held with the shared gate's reason (`evaluate`) |
 | `run.py` | effects: reading new messages for loops, the tick, the drafter, the loop's candidate for the picker (`loop_candidate`, `OPENLOOPS`) |
-| `met.py` | effects: how they met what was brought up (`read_met`, started beside the turn by `read_met_beside`, `OPENLOOPS.after_turn`), for the learned pace |
+| `met.py` | effects: how they met what was brought up (`read_met`, `OPENLOOPS.after_turn`, which the dispatcher runs beside the reply), for the learned pace |
 | `store.py` | its queries as `Threads` (`Store.part(Threads)`; the tables are in `store/sqlite/migrations/0012_open_loops.sql`). The reach-outs it writes are core storage (`store/sqlite/reach_outs.py`, `Store.add_reach_out`), because every kind of reach-out is read together |
 
 ## Prompts

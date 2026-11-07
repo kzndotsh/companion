@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
 from companion.core.turn.context import Scored, conversation_prompt
+from companion.core.turn.listening import logged_heavy
 from companion.core.turn.reactions import (
     ALONGSIDE_PROMPT,
     ALONGSIDE_SCHEMA,
@@ -23,7 +24,7 @@ from companion.core.turn.reactions import (
     render_reason,
 )
 from companion.core.turn.reply import Reaction
-from companion.core.types import HEAVY_AT, Speaker, Utterance, severity_from
+from companion.core.types import Speaker, Utterance
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Turn, decide, mark
 from companion.store.sqlite.decisions import REACTED
@@ -108,12 +109,9 @@ def _after_serious(c: Runtime, t: Turn) -> bool:
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     if not theirs:
         return False
-    for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id):
-        labels = d.detail.get("labels") if d.detail else None
-        severity = severity_from(labels.get("severity") if isinstance(labels, dict) else None)
-        if severity is not None and severity >= HEAVY_AT:
-            return True
-    return False
+    return any(
+        logged_heavy(d.detail) for d in c.store.decisions_for_turn(c.rel, theirs[-1].turn_id)
+    )
 
 
 def react_alongside(c: Runtime, t: Turn, felt: Scored[ToneRead] | None) -> Reaction | None:

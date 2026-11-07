@@ -15,7 +15,7 @@ import random
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from companion.core.types import Json, Severity, severity_from
+from companion.core.types import Json, Severity, is_heavy, severity_from
 from companion.lib.prompts import Prompt
 from companion.prompts import get
 
@@ -121,6 +121,11 @@ def _logged(detail: dict[str, Json] | None, name: str) -> Json:
 def logged_severity(detail: dict[str, Json] | None) -> Severity | None:
     """The severity a listening decision logged, or None when its detail has none."""
     return severity_from(_logged(detail, "severity"))
+
+
+def logged_heavy(detail: dict[str, Json] | None) -> bool:
+    """Whether a listening decision logged the message as heavy; one with no severity is not."""
+    return is_heavy(logged_severity(detail), unread=False)
 
 
 def logged_intimate(detail: dict[str, Json] | None) -> bool:

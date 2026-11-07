@@ -57,7 +57,7 @@ from companion.features.threads.logic import (
     to_loop,
     to_resolution,
 )
-from companion.features.threads.met import read_met_beside
+from companion.features.threads.met import read_met
 from companion.features.threads.store import Threads
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.features import Feature, Move
@@ -434,4 +434,11 @@ def reaching(c: Runtime) -> tuple[Move, ...]:
     return (Move(Kind.PLAN, plan),)
 
 
-OPENLOOPS = Feature("loop", mention=loop_candidate, after_turn=read_met_beside, reaching=reaching)
+OPENLOOPS = Feature(
+    "loop",
+    mention=loop_candidate,
+    mention_key=LOOP_OFFERED,
+    after_turn=read_met,
+    reaching=reaching,
+    needs_judge=True,
+)

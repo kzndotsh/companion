@@ -9,7 +9,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from companion.core import switch
-from companion.core.card import Card
 from companion.core.switch import Mode
 from companion.core.turn.now import (
     KEY,
@@ -23,29 +22,29 @@ from companion.core.turn.now import (
     reader_input,
     soon_note,
 )
-from companion.core.types import HEAVY_AT, Frame, Json
+from companion.core.types import Json
 from companion.kit.ask import Judge, ask
-from companion.kit.current import Heard, Turn, decide
-from companion.kit.features import Feature, Moment, Offer, Offered
+from companion.kit.current import decide
+from companion.kit.features import Feature, Moment, NoteName, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.kit.runtime import Runtime
+    pass
 
 READER = Judge("now", PROMPT, SCHEMA, parse, timeout=8.0, unread="no label for this message")
 SENT = "now: told it what they said is still coming"
 SHADOW = "now: would tell it what they said is still coming (shadow, not sent)"
 
 
-async def read_now(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, card: Card) -> None:
+async def read_now(m: Moment) -> None:
     """Label their message once the reply is out, on any real turn that is not serious: "gotta run"
     and "food's here" are exactly the messages to read. Nothing is logged for `none`. Runs while the
     note or reaching out is on, since nudges read the labels too."""
-    del card
-    serious = heard is None or heard.read.severity >= HEAVY_AT
+    c, t = m.c, m.t
+    # Not behind `Feature.switch`: nudges read the labels with the note off.
     wanted = c.mode(switch.NOW) is not Mode.OFF or c.on(switch.INITIATIVE)
-    if not wanted or c.judge is None or serious or in_scene is not Frame.REAL:
+    if not wanted or m.unread_or_heavy or m.pretend:
         return
-    got = await ask(c.judge, READER, reader_input(t.prior, t.text))
+    got = await ask(m.judge, READER, reader_input(t.prior, t.text))
     if got is None or got.value.phase is Phase.NONE:
         return
     label = got.value
@@ -65,7 +64,7 @@ def now_note(m: Moment, found: object, so_far: Offered) -> Offer:
     and how long ago, outside a scene and the crisis path. Logged once the turn is stored."""
     del found, so_far
     c, t = m.c, m.t
-    if c.mode(switch.NOW) is Mode.OFF or m.in_scene is not Frame.REAL or m.risk:
+    if c.mode(switch.NOW) is Mode.OFF or m.pretend or m.risk:
         return Offer()
     line = soon_note(
         from_decisions(c.store.decisions_with_key(c.rel, KEY, t.now - LOOKBACK)), t.now
@@ -79,4 +78,4 @@ def now_note(m: Moment, found: object, so_far: Offered) -> Offer:
 
 
 # What they said is coming, kept until it happens (ADR 0024).
-NOW = Feature("now", note=now_note, shadow=read_now)
+NOW = Feature(NoteName.NOW, note=now_note, shadow=read_now, needs_judge=True)

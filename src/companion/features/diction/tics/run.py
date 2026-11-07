@@ -20,11 +20,11 @@ from companion.features.diction.tics.logic import (
     tic_note,
 )
 from companion.kit.ask import Judge, ask
-from companion.kit.current import Turn, decide
-from companion.kit.features import Feature, Moment, Offer, Offered
+from companion.kit.current import decide
+from companion.kit.features import Feature, Moment, NoteName, Offer, Offered
 
 if TYPE_CHECKING:
-    from companion.kit.runtime import Runtime
+    pass
 
 TIMEOUT_SECONDS = 6.0
 TICS_JUDGE = Judge("tics", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="no note")
@@ -37,17 +37,18 @@ async def find_tics(extractor: StructuredModel, replies: Sequence[str]) -> Score
     return None if got is None else Scored(got.value, got.model, prompt)
 
 
-async def check_tics(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
+async def check_tics(m: Moment, said: Utterance, sent: str | None) -> None:
     """After the reply is out, read the last few replies in the background for habits."""
     del said
-    if c.judge is None or not sent:
+    c, t = m.c, m.t
+    if not sent:
         return
     replies = replies_to_read(t.prior, sent)
     if not replies:
         return
 
     async def look() -> list[str] | None:
-        found = await find_tics(c.judge, replies)  # type: ignore[arg-type]
+        found = await find_tics(m.judge, replies)
         if found is None:
             return None
         habits = found.read
@@ -61,7 +62,7 @@ async def check_tics(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> 
         )
         return habits
 
-    c.tics.start(look())
+    await c.tics.run(look())
 
 
 def tics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
@@ -73,4 +74,4 @@ def tics_offer(m: Moment, found: object, so_far: Offered) -> Offer:
 
 
 # What its replies keep repeating, read after each reply and shown to the next ones.
-TICS = Feature("tics", note=tics_offer, after_turn=check_tics)
+TICS = Feature(NoteName.TICS, note=tics_offer, after_turn=check_tics, needs_judge=True)

@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.card import Card
 from companion.core.extractor import Extraction
 from companion.core.turn.listening import ListeningRead
 from companion.core.turn.now import KEY
@@ -69,7 +68,7 @@ def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str
 async def _read(store: Store, judge: Reads, heard: Heard | None, **kw: object) -> None:
     runtime = make_runtime(store, Talker(), PREFIX, REL, judge=judge, **kw)  # type: ignore[arg-type]
     t = Turn(TurnId("t"), NOW, [], "getting dinner soon")
-    await read_now(runtime, t, Frame.REAL, heard, Card((), (), (), (), {}, NOW))
+    await read_now(Moment(runtime, t, Frame.REAL, heard))
 
 
 def test_what_they_said_is_coming_reaches_the_reply_while_it_is_open(store: Store) -> None:

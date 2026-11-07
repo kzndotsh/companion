@@ -12,7 +12,6 @@ from companion.core import switch
 from companion.core.beliefs.extract import build_user_prompt
 from companion.core.extractor import StructuredModel
 from companion.core.ids import new_id
-from companion.core.switch import Mode
 from companion.core.types import Json, Speaker, Utterance, UtteranceId
 from companion.features.promises.logic import (
     CHECK,
@@ -30,11 +29,9 @@ from companion.features.promises.logic import (
 )
 from companion.features.promises.store import Promises
 from companion.kit.ask import Judge, ask
-from companion.kit.beside import beside
-from companion.kit.current import Turn, decide
-from companion.kit.features import Feature
+from companion.kit.current import decide
+from companion.kit.features import Feature, Moment
 from companion.kit.reads import read_times
-from companion.kit.runtime import Runtime
 from companion.lib.vote import READS
 from companion.store.sqlite.store import Store
 
@@ -105,26 +102,24 @@ KEPT = "promise check: kept"
 WOULD_RETIRE = "promise check (shadow): would retire"
 
 
-async def check_reply(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
-    """Once the reply is stored, read it against its current promises beside the turn, so the
-    next message never waits on it. Shadow: it logs what it would redraw and retire."""
+async def check_reply(m: Moment, said: Utterance, sent: str | None) -> None:
+    """Once the reply is stored, read it against its current promises (the dispatcher runs the step
+    beside the turn, so the next message never waits on it). Shadow: it logs what it would redraw
+    and retire."""
     del said
-    if c.mode(switch.PROMISES) is Mode.OFF or c.judge is None or not sent:
+    c, t = m.c, m.t
+    if not sent:
         return
-    beside(_check(c, t, sent))
-
-
-async def _check(c: Runtime, t: Turn, sent: str) -> None:
     current = [
         r.promise
         for r in c.store.part(Promises).recorded(c.rel)
         if r.mark is None and in_force(r.promise, t.now)
     ]
-    if not current or c.judge is None:
+    if not current:
         return
     recent = [(u.speaker, u.text) for u in t.prior[-(RECENT - 1) :]] + [(Speaker.USER, t.text)]
     text, labels = check_input(current, recent, sent)
-    got = await ask(c.judge, CHECK_JUDGE, text)
+    got = await ask(m.judge, CHECK_JUDGE, text)
     if got is None:
         return
     found = got.value
@@ -143,4 +138,6 @@ async def _check(c: Runtime, t: Turn, sent: str) -> None:
     decide(c, t, WOULD_REDRAW, {**detail, "promise_id": broken.id}, reason=reason)
 
 
-PROMISE_CHECK = Feature("promise check", after_turn=check_reply)
+PROMISE_CHECK = Feature(
+    "promise check", after_turn=check_reply, switch=switch.PROMISES, needs_judge=True
+)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Coroutine
 from dataclasses import dataclass, field
 
@@ -17,7 +16,7 @@ class TicMemory:
 
     tics: list[str] = field(default_factory=list[str])
     age: int = 0
-    pending: asyncio.Task[None] | None = None
+    running: bool = False
 
     def fresh(self, turns: int) -> list[str]:
         """What was found, while it is fewer than `turns` turns old; each call is one turn."""
@@ -25,14 +24,16 @@ class TicMemory:
         self.age += 1
         return found
 
-    def start(self, run: Coroutine[object, object, list[str] | None]) -> None:
-        if self.pending is not None and not self.pending.done():
-            run.close()  # one check at a time
+    async def run(self, check: Coroutine[object, object, list[str] | None]) -> None:
+        """Keep what the check finds. One check at a time: asked while one is running, it is not
+        awaited."""
+        if self.running:
+            check.close()
             return
-
-        async def go() -> None:
-            found = await run
-            if found is not None:
-                self.tics, self.age = found, 0
-
-        self.pending = asyncio.ensure_future(go())
+        self.running = True
+        try:
+            found = await check
+        finally:
+            self.running = False
+        if found is not None:
+            self.tics, self.age = found, 0

@@ -8,7 +8,7 @@ from datetime import datetime, time
 
 from companion.core import switch
 from companion.core.clock import local_zone
-from companion.core.turn.mentions import MentionCandidate, Rank
+from companion.core.turn.mentions import CALENDAR_OFFERED, MentionCandidate, Rank
 from companion.core.types import Frame, Json, RelationshipId
 from companion.features.calendar.logic import (
     LOOKBACK,
@@ -57,11 +57,9 @@ def rank(o: Occasion) -> Rank:
 
 def calendar_candidate(m: Moment, found: object) -> MentionCandidate | None:
     """The occasion today holds (their own dates from memory first), never one offered in the
-    last few days; nothing when switched off. The picker decides whether it is brought up."""
+    last few days. The picker decides whether it is brought up."""
     del found
     c, t = m.c, m.t
-    if not c.on(switch.CALENDAR):
-        return None
     zone = local_zone()
     local = t.now.astimezone(zone)
     today = local.date()
@@ -81,4 +79,6 @@ def calendar_candidate(m: Moment, found: object) -> MentionCandidate | None:
 
 # Holidays, cultural days, their own dates and the relationship's (`COMPANION_CALENDAR`, on unless
 # off): a candidate for the one thing brought up when they write.
-CALENDAR = Feature("calendar", mention=calendar_candidate)
+CALENDAR = Feature(
+    "calendar", mention=calendar_candidate, mention_key=CALENDAR_OFFERED, switch=switch.CALENDAR
+)

@@ -19,7 +19,7 @@ from companion.core.ids import new_id
 from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, WOULD_NUDGE, Dial, Held, Kind
 from companion.core.rhythm import WINDOW, kept_hour, learn
 from companion.core.sensitivity import GUARDED_AT
-from companion.core.turn.listening import LISTENING_KEY, logged_intimate, logged_severity
+from companion.core.turn.listening import LISTENING_KEY, logged_heavy, logged_intimate
 from companion.core.types import (
     HEAVY_AT,
     BeliefKind,
@@ -175,7 +175,7 @@ def _heavy_at(store: Store, rel: RelationshipId, now: datetime) -> datetime | No
     found = [
         d.at
         for d in store.decisions_with_key(rel, LISTENING_KEY, now - AFTER_HEAVY)
-        if (sev := logged_severity(d.detail)) is not None and sev >= HEAVY_AT and d.at <= now
+        if logged_heavy(d.detail) and d.at <= now
     ]
     return max(found, default=None)
 
@@ -185,8 +185,7 @@ def _kept_out(store: Store, rel: RelationshipId, since: datetime, now: datetime)
     last lines are shown only when they are plain everyday talk: an intimate episode is not always
     a pretend frame, and lines skipping a scene reached back to a heavy disclosure (2026-11-03)."""
     return any(
-        logged_intimate(d.detail)
-        or ((sev := logged_severity(d.detail)) is not None and sev >= HEAVY_AT)
+        logged_intimate(d.detail) or logged_heavy(d.detail)
         for d in store.decisions_with_key(rel, LISTENING_KEY, since)
         if d.at <= now
     )

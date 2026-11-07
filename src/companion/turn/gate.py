@@ -12,7 +12,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from companion.core import switch
-from companion.core.crisis import Reading
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.request import TalkerRequest
 from companion.core.reply_gate import (
@@ -30,11 +29,12 @@ from companion.core.reply_gate import (
 )
 from companion.core.talker import Reply, Talker
 from companion.core.turn.floor import INTIMATE_CHECK
-from companion.core.types import HEAVY_AT, Frame, Json
+from companion.core.types import Json
 from companion.kit.ask import Judge, ask
-from companion.kit.current import Heard, Turn, decide, mark
+from companion.kit.current import Turn, decide, mark
 from companion.turn.crisis import method_checked
 from companion.turn.floor import judge_intimate
+from companion.turn.values import Routed, moment_of
 
 if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
@@ -79,28 +79,23 @@ async def _redraw_empty(c: Runtime, t: Turn, request: TalkerRequest, talker: Tal
     return again
 
 
-async def _habit_checks(  # noqa: PLR0913, PLR0917
-    c: Runtime,
-    t: Turn,
-    request: TalkerRequest,
-    reply: Reply,
-    heard: Heard | None,
-    in_scene: Frame,
-    talker: Talker,
+async def _habit_checks(
+    c: Runtime, t: Turn, request: TalkerRequest, reply: Reply, routed: Routed
 ) -> Reply:
     """The reply to send: the first, or one fresh draw when the first fails a check (two when the
     redraw still has an em dash: one redraw left 4 of 10 dashes in). On an ordinary
     turn every check runs and the result is logged; in a scene, on a serious turn, or when the
     listening judge could not read the turn, only the code checks run, and only a redraw is
     logged. Before 2026-10-24 an unread turn skipped the code checks too."""
-    severity = heard.read.severity if heard is not None else None
-    scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
-    code_only = scene or severity is None or severity >= HEAVY_AT
+    m = moment_of(c, t, routed)
+    talker = routed.talker
+    scene = talker is c.roleplay_talker or m.pretend
+    code_only = scene or m.unread_or_heavy
     if not c.on(switch.REDRAW):
         return reply
     if not reply.text.strip():
         return await _redraw_empty(c, t, request, talker)
-    if not code_only and not eligible(severity=severity, in_scene=False, reply=reply.text):
+    if not code_only and not eligible(severity=m.severity, in_scene=False, reply=reply.text):
         return reply
     failed = code_checks(reply.text, t.text, scene=scene)
     if code_only and not failed:
@@ -131,25 +126,17 @@ async def _habit_checks(  # noqa: PLR0913, PLR0917
     return again if again is not None and again.text else reply
 
 
-async def checked(  # noqa: PLR0913, PLR0917
-    c: Runtime,
-    t: Turn,
-    request: TalkerRequest,
-    reply: Reply,
-    heard: Heard | None,
-    in_scene: Frame,
-    talker: Talker,
-    *,
-    held: bool,
-    crisis: Reading | None = None,
+async def checked(
+    c: Runtime, t: Turn, request: TalkerRequest, reply: Reply, routed: Routed
 ) -> Reply:
     """The reply gate: the reply after its checks, in this order. The habit checks (an empty
     reply, then the code checks, then the quip judge), the crisis path's method check
     on a risk turn (ADR 0022), then on a held turn the intimate check and the announced-hold check.
     The first to fail is what the decision logs."""
-    reply = await _habit_checks(c, t, request, reply, heard, in_scene, talker)
-    reply = await method_checked(c, t, lambda: talker.reply(request), reply, crisis)
-    if not held:
+    talker = routed.talker
+    reply = await _habit_checks(c, t, request, reply, routed)
+    reply = await method_checked(c, t, lambda: talker.reply(request), reply, routed.crisis)
+    if not routed.held:
         return reply
     return await _quiet_hold(c, t, request, await _hold_check(c, t, request, reply, talker), talker)
 

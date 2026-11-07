@@ -74,8 +74,8 @@ from companion.features.reminders.series import (
 )
 from companion.features.reminders.store import Reminders
 from companion.kit.ask import Judge, ask
-from companion.kit.current import Heard, Turn, mark
-from companion.kit.features import Feature, Offer, Offered, Outlet
+from companion.kit.current import mark
+from companion.kit.features import Feature, NoteName, Offer, Offered, Outlet
 from companion.kit.jobs import Every, Job
 from companion.kit.record import Recorder
 from companion.kit.spendcap import over_cap
@@ -393,21 +393,19 @@ def unhandled(c: Runtime, prior: Sequence[Utterance]) -> list[Utterance]:
     ]
 
 
-async def reminder_for_turn(
-    c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None
-) -> Read | None:
+async def reminder_for_turn(m: Moment) -> Read | None:
     """When they ask to be reminded or checked on, or answer its asking when (J50): read the words,
     let code set the time, and say in a note what happened."""
-    del in_scene, heard
+    c, t = m.c, m.t
     last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
     asked = last is not None and any(
         d.has_key(ASKED) for d in c.store.decisions_for_turn(c.rel, last.turn_id)
     )
-    if c.judge is None or not c.on(switch.REMINDERS) or not likely(t.text, asked_when=asked):
+    if not likely(t.text, asked_when=asked):
         return None
     mark(t, "reminder judge")
     zone = local_zone()
-    slots = await read_slots(c.judge, unhandled(c, t.prior), t.text, t.now, zone)
+    slots = await read_slots(m.judge, unhandled(c, t.prior), t.text, t.now, zone)
     done = act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
     if done is None:
         return None
@@ -439,4 +437,12 @@ def jobs(c: Runtime, outlet: Outlet) -> tuple[Job, ...]:
     return (Job("reminders", send_due, Every(REMINDER_TICK_SECONDS), capped=False),)
 
 
-REMINDERS = Feature("reminder", look=reminder_for_turn, note=reminder_offer, jobs=jobs)
+REMINDERS = Feature(
+    NoteName.REMINDER,
+    look=reminder_for_turn,
+    note=reminder_offer,
+    jobs=jobs,
+    switch=switch.REMINDERS,
+    needs_judge=True,
+    look_seconds=TIMEOUT_SECONDS,
+)

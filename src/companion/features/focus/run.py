@@ -9,24 +9,24 @@ from companion.core import switch
 from companion.core.card import Focus
 from companion.core.spend import purpose
 from companion.core.switch import Mode
-from companion.core.types import Frame, Speaker
+from companion.core.types import Speaker
 from companion.core.vectors import unit
 from companion.features.focus.logic import closeness, moment_texts
-from companion.kit.current import Heard, Turn, mark
+from companion.kit.current import mark
 from companion.kit.embed import LOOK_SECONDS, bounded, embed_missing, embedder_in
-from companion.kit.features import Feature
+from companion.kit.features import Feature, Moment
 
 if TYPE_CHECKING:
-    from companion.kit.runtime import Runtime
+    pass
 
 log = logging.getLogger("companion.focus")
 
 
-async def focus_for_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> Focus | None:
+async def focus_for_turn(m: Moment) -> Focus | None:
     """With the focus on, every memory's closeness to the moment, scenes included. None when it is
     off, there is no embedder, or the look-up failed or ran past `LOOK_SECONDS`: the card is then
     built as before."""
-    del in_scene, heard
+    c, t = m.c, m.t
     embedder = embedder_in(c, switch.FOCUS, Mode.ON)
     if embedder is None:
         return None
@@ -48,4 +48,4 @@ async def focus_for_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | No
     return found
 
 
-FOCUS = Feature("focus", look=focus_for_turn)
+FOCUS = Feature("focus", look=focus_for_turn, switch=switch.FOCUS, look_seconds=LOOK_SECONDS)
