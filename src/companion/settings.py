@@ -1,10 +1,10 @@
 """What the bot runs with, read from the environment once (`.env`, README's table).
 
-Every switch is one row of a table: its variable, its name on the startup block, the values it takes
-and its default. "off", "0", "no" and "false" mean off and "on", "1", "yes" and "true" mean on for
-every switch; anything else is the default. The startup block is printed from the same values the
-bot is configured with, so the two cannot drift. Keys and tokens are not settings: they are read
-where a client is made and never kept here.
+Every switch is one row of a table in `core/switch.py`: its variable, its name on the startup block,
+the values it takes and its default. "off", "0", "no" and "false" mean off and "on", "1", "yes" and
+"true" mean on for every switch; anything else is the default. The startup block is printed from
+the same values the bot is configured with, so the two cannot drift. Keys and tokens are not
+settings: they are read where a client is made and never kept here.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from companion.core.reachout import DEFAULT_DIAL, Dial
+from companion.core.switch import SWITCHES, Mode, Switch
 from companion.io.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.models import anthropic, embeddings, openrouter
 
@@ -26,8 +26,6 @@ DEFAULT_DAILY_CAP_USD = 10.0
 # (judge bake-off, evals/CHANGELOG.md, 2026-10-25). Haiku answers when DeepSeek refuses.
 JUDGE_ROUTES = f"crisis={openrouter.DEEPSEEK}"
 
-OFF = frozenset({"off", "0", "no", "false"})
-ON = frozenset({"on", "1", "yes", "true"})
 # Settings that were renamed (vocabulary audit, kzndotsh/companion#1). An old name still set stops
 # the bot with the new one, so a stale .env line is never silently read as the default.
 RENAMED = {
@@ -43,87 +41,6 @@ RENAMED = {
     "COMPANION_RESAMPLE": "COMPANION_REDRAW",
     "COMPANION_MARKS": "COMPANION_OWN_MARKS",
 }
-
-
-@dataclass(frozen=True, slots=True)
-class Switch:
-    env: str
-    label: str  # its name on the startup block
-    values: tuple[str, ...]  # the first is the default
-    shown: Mapping[str, str] | None = None  # how a value reads on the startup block, when not as is
-
-    def read(self, environ: Mapping[str, str]) -> str:
-        """Unset is the default, and an on or off word on a switch without that position (on for one
-        with no live mode) is its first one. Any other value it does not know stops the bot: a typo
-        used to become the default without a word."""
-        raw = environ.get(self.env, "").strip().lower()
-        value = "off" if raw in OFF else "on" if raw in ON else raw
-        if value in self.values:
-            return value
-        if raw and value not in ("on", "off"):
-            msg = f"{self.env}={raw!r} is not a value it knows: {', '.join(self.values)}"
-            raise SystemExit(msg)
-        return self.values[0]
-
-
-# One name per switch: a use names the row itself, so a typo fails at import or type-check time and
-# a new switch is one row here, its place in SWITCHES and its uses.
-PLATFORM = Switch(
-    "COMPANION_PLATFORM", "platform", ("telegram", "discord")
-)  # which chat it runs on
-SPLIT = Switch("COMPANION_SPLIT", "split", ("on", "off"))
-LISTEN = Switch("COMPANION_LISTEN", "listen", ("on", "off"))
-INITIATIVE = Switch("COMPANION_INITIATIVE", "initiative", ("shadow", "off"))
-MOOD = Switch("COMPANION_MOOD", "mood", ("on", "shadow", "off"))
-REDRAW = Switch("COMPANION_REDRAW", "redraw", ("on", "off"))
-ROUTE_INTIMATE = Switch(
-    "COMPANION_ROUTE_INTIMATE", "intimate", ("off", "on"), {"on": "may route", "off": "stays"}
-)
-RELEVANCE = Switch("COMPANION_RELEVANCE", "relevance", ("on", "shadow", "off"))
-REREAD = Switch("COMPANION_REREAD", "re-read", ("on", "shadow", "off"))
-PROMISES = Switch("COMPANION_PROMISES", "promises", ("shadow", "off"))
-LORE = Switch("COMPANION_LORE", "lore", ("on", "shadow", "off"))
-FOCUS = Switch("COMPANION_FOCUS", "focus", ("on", "off"))
-REMINDERS = Switch("COMPANION_REMINDERS", "reminders", ("on", "off"))
-EPISODES = Switch("COMPANION_EPISODES", "episodes", ("on", "shadow", "off"))
-OWN_MARKS = Switch("COMPANION_OWN_MARKS", "own marks", ("on", "off"))
-HEDGED_PLANS = Switch("COMPANION_HEDGED_PLANS", "hedged plans", ("loose", "off"), {"off": "strict"})
-REACH = Switch(
-    "COMPANION_REACH",
-    "reach",
-    (DEFAULT_DIAL.value, *(d.value for d in Dial if d is not DEFAULT_DIAL)),
-)
-CRISIS = Switch("COMPANION_CRISIS", "crisis", ("on", "shadow", "off"))
-CALENDAR = Switch("COMPANION_CALENDAR", "calendar", ("on", "off"))
-NOW = Switch("COMPANION_NOW", "now", ("shadow", "on", "off"))
-HISTORY = Switch("COMPANION_HISTORY", "history", ("shadow", "on", "off"))
-INTIMATE_MEMORY = Switch("COMPANION_INTIMATE_MEMORY", "intimate memory", ("on", "shadow", "off"))
-
-# In the order they appear on the startup block, within its rows.
-SWITCHES: tuple[Switch, ...] = (
-    PLATFORM,
-    SPLIT,
-    LISTEN,
-    INITIATIVE,
-    MOOD,
-    REDRAW,
-    ROUTE_INTIMATE,
-    RELEVANCE,
-    REREAD,
-    PROMISES,
-    LORE,
-    FOCUS,
-    REMINDERS,
-    EPISODES,
-    OWN_MARKS,
-    HEDGED_PLANS,
-    REACH,
-    CRISIS,
-    CALENDAR,
-    NOW,
-    HISTORY,
-    INTIMATE_MEMORY,
-)
 
 
 def _daily_cap(raw: str) -> float | None:
@@ -159,7 +76,7 @@ def _judge_routes(raw: str) -> Mapping[str, str]:
 
 @dataclass(frozen=True, slots=True)
 class Settings:
-    switches: Mapping[str, str]  # by its label
+    switches: Mapping[Switch, str]  # each switch's position, by the row
     daily_cap: float | None
     pace: str
     openrouter: bool  # whether an OpenRouter key is set
@@ -190,7 +107,7 @@ class Settings:
         backup = env.get("COMPANION_BACKUP_DIR", "").strip()
         db = env.get("COMPANION_DB")
         return cls(
-            switches={s.label: s.read(env) for s in SWITCHES},
+            switches={s: s.read(env) for s in SWITCHES},
             daily_cap=_daily_cap(env.get("COMPANION_DAILY_CAP_USD", "")),
             pace=pace if pace in PACES else DEFAULT_PACE,
             openrouter=has_key,
@@ -211,11 +128,19 @@ class Settings:
 
     def position(self, switch: Switch) -> str:
         """A switch's position: on, off or shadow, or the value it names."""
-        return self.switches[switch.label]
+        return self.switches[switch]
+
+    def mode(self, switch: Switch) -> Mode:
+        """The position of a switch that takes on, shadow or off."""
+        return Mode(self.switches[switch])
 
     def on(self, switch: Switch) -> bool:
         """Whether a switch is anything but off."""
-        return self.position(switch) != "off"
+        return self.switches[switch] != Mode.OFF
+
+    def modes(self) -> Mapping[Switch, Mode]:
+        """Every on, shadow or off switch's position: what the `Runtime` carries."""
+        return {s: Mode(v) for s, v in self.switches.items() if s.is_mode}
 
     @property
     def cap_text(self) -> str:
@@ -230,9 +155,9 @@ class Settings:
         takes another value (a platform, a dial, a routing choice) is in `dials` instead."""
         out: dict[str, list[str]] = {"live": [], "shadow": [], "off": []}
         for s in SWITCHES:
-            value = self.switches[s.label]
-            if s.shown is None and set(s.values) <= {"on", "shadow", "off"}:
-                out["live" if value == "on" else value].append(s.label)
+            if s.shown is None and s.is_mode:
+                value = Mode(self.switches[s])
+                out["live" if value is Mode.ON else value.value].append(s.label)
         return out
 
     def dials(self) -> list[str]:
@@ -240,7 +165,6 @@ class Settings:
         return [
             f"{s.label} {(s.shown or {}).get(v, v)}"
             for s in SWITCHES
-            if s.label != "platform"
-            and not (s.shown is None and set(s.values) <= {"on", "shadow", "off"})
-            for v in (self.switches[s.label],)
+            if s.label != "platform" and not (s.shown is None and s.is_mode)
+            for v in (self.switches[s],)
         ]

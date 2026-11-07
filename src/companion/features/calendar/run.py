@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from datetime import datetime, time
 
+from companion.core import switch
 from companion.core.clock import local_zone
 from companion.core.turn.mentions import MentionCandidate, Rank
 from companion.core.types import Frame, Json, RelationshipId
@@ -59,7 +60,7 @@ def calendar_candidate(m: Moment, found: object) -> MentionCandidate | None:
     last few days; nothing when switched off. The picker decides whether it is brought up."""
     del found
     c, t = m.c, m.t
-    if not c.calendar:
+    if not c.on(switch.CALENDAR):
         return None
     zone = local_zone()
     local = t.now.astimezone(zone)

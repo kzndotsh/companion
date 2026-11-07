@@ -14,8 +14,10 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
+from companion.core.switch import Mode
 from companion.core.turn.address import names_them
 from companion.core.turn.floor import BRUSH_KEY
 from companion.core.types import (
@@ -288,9 +290,9 @@ async def _read_scene(
 type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[Spent]]
 
 
-def pass_step(mode: str) -> Step | None:
+def pass_step(mode: Mode) -> Step | None:
     """The step the memory pass runs for `COMPANION_SCENE_MEMORY`, or None when it is off."""
-    if mode == "off":
+    if mode is Mode.OFF:
         return None
 
     async def step(
@@ -365,8 +367,12 @@ async def nearest_for_turn(
     """On a turn that may be a scene (a pretend scene in progress, or intimate talk the operator
     lets the roleplay talker answer), how near each entry is to the moment: their message with the
     reply before it."""
-    intimate = c.route_intimate and heard is not None and heard[0].intimate
-    if c.intimate_memory == "off" or c.embedder is None or c.roleplay_talker is None:
+    intimate = c.on(switch.ROUTE_INTIMATE) and heard is not None and heard[0].intimate
+    if (
+        c.mode(switch.INTIMATE_MEMORY) is Mode.OFF
+        or c.embedder is None
+        or c.roleplay_talker is None
+    ):
         return None
     if in_scene is not Frame.PLAY and not intimate:
         return None
@@ -422,9 +428,9 @@ def _card_detail(card: RoleplayCard, text: str, *, sent: bool, scored: bool) -> 
 def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card) -> CardLane:
     """On a turn the roleplay talker answers: the scene card, logged, and sent when on. On any other
     turn: the intimate memories the everyday card holds, logged, and left off when on."""
-    if c.intimate_memory == "off":
+    if c.mode(switch.INTIMATE_MEMORY) is Mode.OFF:
         return CardLane()
-    live = c.intimate_memory == "on"
+    live = c.mode(switch.INTIMATE_MEMORY) is Mode.ON
     if not roleplay:
         hidden = c.store.part(IntimateMemory).intimate(c.rel)
         on_card = hidden & {b.id for b in (*card.usable, *card.guarded, *card.older)}

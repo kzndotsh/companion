@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, tzinfo
 
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
+from companion.core.switch import Mode
 from companion.core.types import RelationshipId
 from companion.features.episodes.run import write_closed
 from companion.features.upkeep.merging import run as merging
@@ -28,7 +29,7 @@ def missed(store: Store, rel: RelationshipId, now: datetime) -> bool:
 
 
 async def night(
-    store: Store, judge: StructuredModel, rel: RelationshipId, zone: tzinfo, *, mode: str
+    store: Store, judge: StructuredModel, rel: RelationshipId, zone: tzinfo, *, mode: Mode
 ) -> list[str]:
     """Run every step once, each on its own; the names of those that failed. The run is recorded
     when at least one step worked, so one step that keeps failing is tried again the next night,
@@ -49,7 +50,7 @@ async def night(
 
     # The re-read is the only step behind its switch; the rest of the night's work always runs.
     steps: tuple[tuple[str, Callable[[], Awaitable[None]]], ...] = (
-        *((("re-read", check),) if mode != "off" else ()),
+        *((("re-read", check),) if mode is not Mode.OFF else ()),
         ("grouping", group),
         ("routine expiry", routine),
         ("episodes", episodes),

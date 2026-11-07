@@ -26,6 +26,7 @@ from companion.core.extractor import Extraction, StructuredModel
 from companion.core.history import HISTORY_LIMIT
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
+from companion.core.switch import CALENDAR
 from companion.core.talker import Reply, Talker
 from companion.core.turn.listening import ListeningRead
 from companion.core.types import (
@@ -199,7 +200,7 @@ def _scratch(talker: Talker, prefix: Prefix, *, roleplay: bool) -> Generator[Run
         store = Store(Path(tmp) / "eval.sqlite")
         try:
             live = compose.runtime(
-                Settings.from_env({}),
+                Settings.from_env({CALENDAR.env: "off"}),
                 store,
                 talker,
                 prefix,
@@ -207,7 +208,7 @@ def _scratch(talker: Talker, prefix: Prefix, *, roleplay: bool) -> Generator[Run
                 judge=Unread(),
                 roleplay_talker=talker if roleplay else None,
             )
-            yield replace(live, calendar=False, daily_cap_usd=None)
+            yield replace(live, daily_cap_usd=None)
         finally:
             store.close()
 

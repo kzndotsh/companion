@@ -5,8 +5,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.card import Focus
 from companion.core.spend import purpose
+from companion.core.switch import Mode
 from companion.core.types import Frame, Speaker
 from companion.core.vectors import unit
 from companion.features.focus.logic import LOOK_SECONDS, closeness, moment_texts
@@ -25,7 +27,7 @@ async def focus_for_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | No
     off, there is no embedder, or the look-up failed or ran past `LOOK_SECONDS`: the card is then
     built as before."""
     del in_scene, heard
-    if c.focus != "on" or c.embedder is None:
+    if c.mode(switch.FOCUS) is not Mode.ON or c.embedder is None:
         return None
     embedder = c.embedder
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]

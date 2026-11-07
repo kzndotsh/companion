@@ -14,6 +14,7 @@ from collections.abc import Sequence
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.crisis import (
     PAUSE_KEY,
     PAUSE_REASON,
@@ -24,6 +25,7 @@ from companion.core.crisis import (
 )
 from companion.core.episode import EPISODE_GAP
 from companion.core.extractor import StructuredModel
+from companion.core.switch import Mode
 from companion.core.types import Frame, Json, Speaker
 from companion.features.crisis.logic import (
     PROMPT,
@@ -87,12 +89,12 @@ async def assess(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> R
     """The level of this turn, logged once. The risk judge is asked only when the listening judge
     read the message as serious or acute, or a cue word is in it."""
     del in_scene
-    if c.crisis == "off" or c.judge is None:
+    if c.mode(switch.CRISIS) is Mode.OFF or c.judge is None:
         return None
     severity = heard[0].severity if heard is not None else None
     words = cue_words(t.text)
     detail: dict[str, Json] = {
-        "mode": c.crisis,
+        "mode": c.mode(switch.CRISIS),
         "cue": {"severity": severity, "words": list[Json](words)},
     }
     outcome = Outcome(CrisisLevel.NONE)
@@ -107,7 +109,7 @@ async def assess(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> R
         }
     light = outcome.light and not c.store.decided_since(c.rel, LIGHT_KEY, t.now - LIGHT_EVERY)
     asked = outcome.level is CrisisLevel.CONCERN and _risk_in_stretch(c, t)
-    reading = Reading(outcome.level, c.crisis, light, asked)
+    reading = Reading(outcome.level, c.mode(switch.CRISIS), light, asked)
     done = would_do(reading)
     detail |= {
         "level": outcome.level.value,
@@ -117,7 +119,7 @@ async def assess(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> R
         "light": light,
         "would": list[Json](done),
     }
-    decide(c, t, LEVEL, detail, reason=render_reason(outcome, c.crisis, done))
+    decide(c, t, LEVEL, detail, reason=render_reason(outcome, c.mode(switch.CRISIS), done))
     return reading
 
 

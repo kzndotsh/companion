@@ -15,6 +15,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.clock import local_zone, now_line
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
@@ -405,7 +406,7 @@ async def reminder_for_turn(
     asked = last is not None and any(
         d.has_key(ASKED) for d in c.store.decisions_for_turn(c.rel, last.turn_id)
     )
-    if c.judge is None or not c.reminders or not likely(t.text, asked_when=asked):
+    if c.judge is None or not c.on(switch.REMINDERS) or not likely(t.text, asked_when=asked):
         return None
     mark(t, "reminder judge")
     zone = local_zone()

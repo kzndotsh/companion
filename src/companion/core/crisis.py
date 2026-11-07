@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from string import Template
 
+from companion.core.switch import Mode
 from companion.prompts import get
 
 MESSAGE = get("messages/crisis-line")
@@ -41,7 +42,7 @@ class Reading:
     (`shadow`)."""
 
     level: CrisisLevel
-    mode: str
+    mode: Mode
     light: bool = False  # a joke touched the subject and a read was unsure: one light check
     asked: bool = False  # a concern turn after one earlier in the stretch: stay, do not ask again
 
@@ -51,7 +52,7 @@ class Reading:
 
     @property
     def acts(self) -> bool:
-        return self.mode == "on"
+        return self.mode is Mode.ON
 
 
 # The decision keys of the turn's own crisis stage (`turn/crisis.py`), written by it and read by the

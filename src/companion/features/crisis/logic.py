@@ -14,6 +14,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from companion.core.crisis import LINE, CrisisLevel
+from companion.core.switch import Mode
 from companion.core.types import HEAVY_AT, Json, Severity, Speaker, Utterance
 from companion.prompts import get
 
@@ -144,7 +145,7 @@ def combine(reads: Sequence[Risk | None], *, strong: bool = True) -> Outcome:
     return Outcome(level, kind, timing, plan, light, len(literal), failed)
 
 
-def render_reason(outcome: Outcome, mode: str, would: Sequence[str]) -> str:
+def render_reason(outcome: Outcome, mode: Mode, would: Sequence[str]) -> str:
     """The logged reason, built from the labels."""
     if outcome.level is CrisisLevel.NONE and not outcome.literal_reads and not outcome.failed_reads:
         head = "crisis: none"
@@ -156,7 +157,7 @@ def render_reason(outcome: Outcome, mode: str, would: Sequence[str]) -> str:
         )
     if not would:
         return head
-    return f"{head}; {'would ' if mode == 'shadow' else ''}{', '.join(would)}"
+    return f"{head}; {'would ' if mode is Mode.SHADOW else ''}{', '.join(would)}"
 
 
 def concern_note() -> str:

@@ -10,13 +10,14 @@ from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
 from companion.core.reachout import HELD_KEYS, WOULD_NUDGE, dial
+from companion.core.switch import REACH
 from companion.core.turn.now import KEY as NOW_KEY
 from companion.core.turn.now import Phase, from_decisions
 from companion.core.types import RelationshipId
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.run import resume as resume_reach
 from companion.features.threads.store import Threads
-from companion.settings import REACH, Settings
+from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
 

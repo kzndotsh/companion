@@ -5,7 +5,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.clock import local_zone
+from companion.core.switch import Mode
 from companion.core.types import Frame, Speaker
 from companion.features.mood.logic import PARAMS_VERSION as MOOD_PARAMS
 from companion.features.mood.logic import WINDOW as MOOD_WINDOW
@@ -33,7 +35,7 @@ def _mood(
 ) -> tuple[str | None, list[MoodEffect]]:
     """The mood line for the system block when the mood is on, and what this message adds to it.
     The decision is logged in shadow mode too, so the replay and the live log can be compared."""
-    if c.mood == "off":
+    if c.mode(switch.MOOD) is Mode.OFF:
         return None, []
     zone = local_zone()
     severity = heard[0].severity if heard is not None else None
@@ -51,16 +53,16 @@ def _mood(
         t,
         "mood",
         {
-            "mode": c.mood,
+            "mode": c.mode(switch.MOOD),
             "params": MOOD_PARAMS,
             "before": {s.value: round(v, 3) for s, v in before.strengths.items()},
             "after": {s.value: round(v, 3) for s, v in after.strengths.items()},
             "added": [[e.source.value, round(e.amount, 3)] for e in added],
             "line": shown,
         },
-        reason=f"{why} [{c.mood}]",
+        reason=f"{why} [{c.mode(switch.MOOD)}]",
     )
-    return (shown if c.mood == "on" else None), added
+    return (shown if c.mode(switch.MOOD) is Mode.ON else None), added
 
 
 def mood_offer(m: Moment, found: object, so_far: Offered) -> Offer:

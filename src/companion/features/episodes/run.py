@@ -6,8 +6,10 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, cast
 
+from companion.core import switch
 from companion.core.clock import local_zone
 from companion.core.episode import EPISODE_GAP
+from companion.core.switch import Mode
 from companion.core.turn.listening import LISTENING_KEY, logged_severity
 from companion.core.types import Frame, Json, Severity, Speaker
 from companion.features.episodes.logic import GAP_BACK, Told, period
@@ -126,7 +128,7 @@ async def recent_for_turn(
     """What the two of them did recently, when their words point at a time or they come back after
     a gap (J12, J49). An episode not yet recorded is written first. Logged; shown only when on."""
     del heard
-    if c.episodes == "off" or c.judge is None or in_scene is not Frame.REAL:
+    if c.mode(switch.EPISODES) is Mode.OFF or c.judge is None or in_scene is not Frame.REAL:
         return ()
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     last = theirs[-1].at if theirs else None
@@ -144,14 +146,14 @@ async def recent_for_turn(
     told = recent_times(ends, t.text, last, t.now, zone)
     if told:
         detail: dict[str, Json] = {
-            "mode": c.episodes,
+            "mode": c.mode(switch.EPISODES),
             "why": "pointed at a time" if pointed else "back after a gap",
             "shown": [f"{x.when}: {x.gist}" for x in told],
             "note": EPISODES_NOTE.ref,
         }
-        shadow = "" if c.episodes == "on" else " (shadow, not sent)"
+        shadow = "" if c.mode(switch.EPISODES) is Mode.ON else " (shadow, not sent)"
         decide(c, t, EPISODES_SHOWN, detail, reason=EPISODES_SHOWN + shadow)
-    return tuple(told) if c.episodes == "on" else ()
+    return tuple(told) if c.mode(switch.EPISODES) is Mode.ON else ()
 
 
 def recent_offer(m: Moment, found: object, so_far: Offered) -> Offer:

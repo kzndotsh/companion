@@ -15,9 +15,9 @@ from pathlib import Path
 import httpx
 
 from companion import backups, characters, compose, prompts
-from companion import settings as sw
 from companion.characters import Character
 from companion.compose import models, need
+from companion.core import switch as sw
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.flags import parse_flag
@@ -221,7 +221,7 @@ async def _nightly_memory(
     async def run() -> None:
         if over_cap(store, rel, s.daily_cap, utc_now()) is not None:
             return
-        failed = await night(store, judge, rel, local_zone(), mode=s.position(sw.REREAD))
+        failed = await night(store, judge, rel, local_zone(), mode=s.mode(sw.REREAD))
         if failed:
             logging.getLogger("companion.nightly").warning("nightly: %s failed", ", ".join(failed))
 
@@ -353,7 +353,7 @@ async def run(data_dir: Path) -> None:
             serious_message=character.serious if character is not None else "",
         )
         same = (
-            SameCheck(judges, runtime.embedder, runtime.embed_model, s.position(sw.REREAD))
+            SameCheck(judges, runtime.embedder, runtime.embed_model, s.mode(sw.REREAD))
             if runtime.embedder is not None and s.on(sw.REREAD)
             else None
         )
@@ -361,8 +361,8 @@ async def run(data_dir: Path) -> None:
         steps = [
             step
             for step in (
-                pass_step(s.position(sw.HISTORY), character.sheet if character is not None else ""),
-                scene_step(s.position(sw.INTIMATE_MEMORY)),
+                pass_step(s.mode(sw.HISTORY), character.sheet if character is not None else ""),
+                scene_step(s.mode(sw.INTIMATE_MEMORY)),
             )
             if step is not None
         ]

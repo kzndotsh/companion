@@ -3,10 +3,12 @@ the bot runs. Plain data; the turn itself is run by `handle` in the stages above
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.prefix import Prefix
+from companion.core.switch import Mode, Switch
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
 from companion.core.vectors import Embedder
@@ -16,8 +18,8 @@ from companion.store.sqlite.store import Store
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Runtime:
-    """Built only by `compose.runtime`, so every switch has Settings' value: a field here has no
-    default of its own."""
+    """Built only by `compose.runtime`, so every switch has Settings' value, and none has a field of
+    its own: a switch is read as `c.mode(MOOD)` or `c.on(MOOD)`."""
 
     store: Store
     talker: Talker
@@ -34,20 +36,12 @@ class Runtime:
     scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
     serious_message: str = ""  # the sheet's `## Crisis message` section, sent by code
     daily_cap_usd: float | None  # nothing paid runs once today's spend reaches this
-    listen: bool  # ask how serious a message is before the reply
-    mood: str  # off, shadow (worked out and logged, never shown) or on (ADR 0016)
-    redraw: bool  # draw one fresh reply when the first fails a check (core/reply_gate.py)
-    route_intimate: bool  # intimate talk may go to the roleplay talker (ADR 0017)
-    lore: str  # on, shadow or off: its tastes nearest their message (ADR 0020)
-    focus: str  # on or off: the card ranked by closeness to the moment
-    relevance: str  # on (picks shown when a memory is near), shadow or off (ADR 0018)
-    reminders: bool  # reminders they ask for are read and set (J50)
-    initiative: bool  # reach-outs and the reads that only feed them (nudges' away read)
-    calendar: bool  # a note about the day: a holiday, a lead-up, their date (`features/calendar`)
-    own_marks: bool  # one of its own emoticons now and then (`features/diction/marks`)
-    episodes: str  # what they did together lately, when it bears: on, shadow or off (J12)
-    crisis: str  # the crisis path: on, shadow (reads and logs only) or off (ADR 0022)
-    now: str  # what they said is coming, kept until it happens: on, shadow or off (ADR 0024)
-    history: str  # its own history: shadow logs the stories it would show (ADR 0025)
-    intimate_memory: str  # the intimate memory lane: on, shadow or off (ADR 0026)
-    promises: str  # its promises: shadow checks each reply and logs what it would redraw
+    modes: Mapping[Switch, Mode]  # where each on, shadow or off switch stands (`core/switch.py`)
+
+    def mode(self, switch: Switch) -> Mode:
+        """Where a switch stands: on, shadow or off."""
+        return self.modes[switch]
+
+    def on(self, switch: Switch) -> bool:
+        """Whether a switch is anything but off."""
+        return self.modes[switch] is not Mode.OFF

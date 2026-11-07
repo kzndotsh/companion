@@ -13,11 +13,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
 from companion.core.history import HISTORY_LIMIT
 from companion.core.memory_pass import BATCH, CONTEXT
+from companion.core.switch import Mode
 from companion.core.types import (
     Frame,
     Json,
@@ -205,9 +207,9 @@ async def read_history(
 type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[HistoryRead]]
 
 
-def pass_step(mode: str, sheet: str) -> Step | None:
+def pass_step(mode: Mode, sheet: str) -> Step | None:
     """The step the memory pass runs for `COMPANION_HISTORY`, or None when it is off."""
-    if mode == "off":
+    if mode is Mode.OFF:
         return None
 
     async def step(
@@ -252,7 +254,11 @@ async def stories_beside(
     """Log the canon stories it would show on an ordinary turn, and whether each was told already
     and is still in the messages the talker reads. Shows nothing (step 1)."""
     del card
-    if c.history == "off" or c.embedder is None or not is_casual(t, in_scene, heard):
+    if (
+        c.mode(switch.HISTORY) is Mode.OFF
+        or c.embedder is None
+        or not is_casual(t, in_scene, heard)
+    ):
         return
     found = await nearest_stories(c.store, (c.embedder, c.embed_model), c.rel, t.text, t.now)
     if not found:

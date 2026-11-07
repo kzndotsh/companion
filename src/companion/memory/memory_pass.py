@@ -36,6 +36,7 @@ from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.memory_pass import BATCH, CONTEXT, PassRun
+from companion.core.switch import Mode
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -238,13 +239,13 @@ class _Ctx:
 async def _stored_as_evidence(ctx: _Ctx, spec: _Spec, made: Belief) -> bool:
     """When a new memory of theirs is the same as an existing one (three pair reads, ADR 0019):
     `on` adds its quote to the existing memory instead of storing it; shadow only logs that."""
-    if ctx.same is None or spec is not USER_SPEC or ctx.same.mode == "off":
+    if ctx.same is None or spec is not USER_SPEC or ctx.same.mode is Mode.OFF:
         return False
     older = await ctx.same.find(ctx.store, ctx.run.rel, made, ctx.run.now)
     if older is None:
         return False
     detail: dict[str, Json] = {"belief_id": older.id, "claim": older.claim, "new": made.claim}
-    if ctx.same.mode != "on":
+    if ctx.same.mode is not Mode.ON:
         ctx.run.log("would store as evidence on an existing memory (shadow)", detail)
         return False
     ctx.store.add_evidence(older.id, made.evidence[0])

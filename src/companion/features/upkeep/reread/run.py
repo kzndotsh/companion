@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, tzinfo
 from companion.core.card import everyday_ids, faded
 from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
+from companion.core.switch import Mode
 from companion.core.types import Belief, RelationshipId
 from companion.core.vectors import Embedder, nearest
 from companion.features.upkeep.merging.run import propose_group
@@ -72,7 +73,7 @@ async def nightly(  # noqa: PLR0913
     now: datetime,
     tz: tzinfo,
     *,
-    mode: str,
+    mode: Mode,
 ) -> Night:
     # A new version reads every memory again.
     checked = store.part(MemoryChecks).checked(rel, CHECK_NAMES, CHECK.version)
@@ -100,7 +101,7 @@ async def nightly(  # noqa: PLR0913
         plan = plan_for(b, found, faded=b.id in everyday and faded(b, last, now))
         if plan.close:
             closed += 1
-            if mode == "on":
+            if mode is Mode.ON:
                 retire(store, rel, b.id, CLOSED, now)
             else:
                 log_would_close(store, b, CLOSED, now)
@@ -109,7 +110,7 @@ async def nightly(  # noqa: PLR0913
         "re-read: %d read, %d %s, %d questions for the owner, $%.4f",
         len(due),
         closed,
-        "closed" if mode == "on" else "would be closed (shadow)",
+        "closed" if mode is Mode.ON else "would be closed (shadow)",
         questions,
         cost,
     )
@@ -129,7 +130,7 @@ class SameCheck:
     judge: StructuredModel
     embedder: Embedder
     model: str
-    mode: str
+    mode: Mode
 
     async def find(
         self, store: Store, rel: RelationshipId, new: Belief, now: datetime
@@ -167,6 +168,8 @@ class SameCheck:
         reads = got.values
         found = verdict(reads)
         store.part(MemoryChecks).add(rel, older.id, new.id, reads, found, prompt=PAIR.ref, at=now)
-        if found == Relation.MERGE and self.mode == "on":  # both are kept; the owner may join them
+        if (
+            found == Relation.MERGE and self.mode is Mode.ON
+        ):  # both are kept; the owner may join them
             await propose_group(store, self.judge, rel, [older, new], now)
         return older if same_as(found) else None

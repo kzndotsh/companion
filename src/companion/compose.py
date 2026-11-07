@@ -12,7 +12,7 @@ from typing import TypedDict, Unpack
 
 import httpx
 
-from companion import settings as sw
+from companion.core import switch as sw
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.prefix import Prefix
@@ -163,21 +163,5 @@ def runtime(
         scene_reminder=parts.get("scene_reminder", ""),
         serious_message=parts.get("serious_message", ""),
         daily_cap_usd=s.daily_cap,
-        listen=s.on(sw.LISTEN),
-        mood=s.position(sw.MOOD),
-        redraw=s.on(sw.REDRAW),
-        route_intimate=s.on(sw.ROUTE_INTIMATE),
-        lore=s.position(sw.LORE),
-        focus=s.position(sw.FOCUS),
-        relevance=s.position(sw.RELEVANCE),
-        reminders=s.on(sw.REMINDERS),
-        initiative=s.on(sw.INITIATIVE),
-        calendar=s.on(sw.CALENDAR),
-        own_marks=s.on(sw.OWN_MARKS),
-        episodes=s.position(sw.EPISODES),
-        crisis=s.position(sw.CRISIS),
-        now=s.position(sw.NOW),
-        history=s.position(sw.HISTORY),
-        intimate_memory=s.position(sw.INTIMATE_MEMORY),
-        promises=s.position(sw.PROMISES),
+        modes=s.modes(),
     )

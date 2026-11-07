@@ -11,11 +11,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
+from companion.core.switch import HISTORY, INITIATIVE, NOW, PROMISES, Switch
+
 
 @dataclass(frozen=True, slots=True)
 class Shadow:
     name: str
-    switch: str | None  # its label in `settings.SWITCHES`, or None when always in shadow
+    switch: Switch | None  # its row in `core/switch.py`, or None when always in shadow
     read_with: str  # how the owner reads what it would have done
     review_by: date
     judged_on: str  # what decides whether it graduates
@@ -24,7 +26,7 @@ class Shadow:
 SHADOWS: tuple[Shadow, ...] = (
     Shadow(
         "reaching out first about a due plan",
-        "initiative",
+        INITIATIVE,
         "companion initiative",
         date(2026, 11, 24),
         "would-sends that read right to the owner, none in quiet hours or mid-chat"
@@ -32,14 +34,14 @@ SHADOWS: tuple[Shadow, ...] = (
     ),
     Shadow(
         "a nudge after they stepped away and stayed gone",
-        "initiative",
+        INITIATIVE,
         "companion initiative",
         date(2026, 11, 24),
         "drafts that do not read needy, at most two a day",
     ),
     Shadow(
         "reaching out for its own reasons: a thought, a time they keep, missing them (ADR 0021)",
-        "initiative",
+        INITIATIVE,
         "companion initiative",
         date(2026, 11, 10),
         "picks the owner marks as wanted, specific to them and not generic, landing at hours they"
@@ -48,7 +50,7 @@ SHADOWS: tuple[Shadow, ...] = (
     ),
     Shadow(
         "promises it made in its own replies, and each reply checked against them",
-        "promises",
+        PROMISES,
         "companion promises, the decision log (promise check)",
         date(2026, 11, 17),
         "would-redraws that read as real breaks to the owner, none on a reply that kept them,"
@@ -63,7 +65,7 @@ SHADOWS: tuple[Shadow, ...] = (
     ),
     Shadow(
         "what they said is coming, kept until it happens, and the note that says so (ADR 0024)",
-        "now",
+        NOW,
         "companion now",
         date(2026, 11, 8),
         "labels that read right on real messages and notes that would have stopped a time skip",
@@ -71,7 +73,7 @@ SHADOWS: tuple[Shadow, ...] = (
     Shadow(
         "its own history: stories of its past it made up in chat, checked against the sheet and"
         " kept as canon, and the ones it would show (ADR 0025)",
-        "history",
+        HISTORY,
         "companion history, the decision log",
         date(2026, 11, 9),
         "canon rulings that read right to the owner (nothing big or contradicting kept, the same"

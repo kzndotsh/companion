@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 import companion.memory.nightly as nightly_module
+from companion.core.switch import Mode
 from companion.memory.nightly import LAST_RUN, MISSED_AFTER, missed, night
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
@@ -87,6 +88,6 @@ async def test_with_the_memory_check_off_the_rest_of_the_night_still_runs(
     monkeypatch.setattr(nightly_module.merging, "recent", step)
     monkeypatch.setattr(nightly_module, "expire_routine", routine)
     monkeypatch.setattr(nightly_module, "write_closed", step)
-    assert await night(store, None, REL, UTC, mode="off") == []  # type: ignore[arg-type]
+    assert await night(store, None, REL, UTC, mode=Mode.OFF) == []  # type: ignore[arg-type]
     assert ran == ["step", "routine", "step"]
     assert store.setting(REL, LAST_RUN) is not None

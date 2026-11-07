@@ -8,7 +8,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
+from companion.core import switch
 from companion.core.extractor import StructuredModel
+from companion.core.switch import Mode
 from companion.core.types import Belief, BeliefId, Frame, RelationshipId
 from companion.core.vectors import Embedder, nearest
 from companion.features.lore.logic import (
@@ -136,7 +138,7 @@ async def tastes_for_turn(
 ) -> tuple[str, ...]:
     """Its tastes nearest their message on an ordinary turn (ADR 0020), as the words it said. In
     shadow they are logged and not shown."""
-    if c.lore == "off" or c.embedder is None or not is_casual(t, in_scene, heard):
+    if c.mode(switch.LORE) is Mode.OFF or c.embedder is None or not is_casual(t, in_scene, heard):
         return ()
     found = await nearest_tastes(c.store, c.embedder, c.rel, c.embed_model, t.text, t.now)
     if found is None or not found.tastes:
@@ -144,14 +146,18 @@ async def tastes_for_turn(
     decide(
         c,
         t,
-        LORE_SHOWN + ("" if c.lore == "on" else " (shadow)"),
+        LORE_SHOWN + ("" if c.mode(switch.LORE) is Mode.ON else " (shadow)"),
         {
             "tastes": [str(b.id) for b, _ in found.tastes],
             "scores": [round(s, 3) for _, s in found.tastes],
             "claims": [b.claim for b, _ in found.tastes],
         },
     )
-    return tuple(b.evidence[0].quote for b, _ in found.tastes) if c.lore == "on" else ()
+    return (
+        tuple(b.evidence[0].quote for b, _ in found.tastes)
+        if c.mode(switch.LORE) is Mode.ON
+        else ()
+    )
 
 
 def lore_offer(m: Moment, found: object, so_far: Offered) -> Offer:

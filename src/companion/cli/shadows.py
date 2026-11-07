@@ -12,7 +12,7 @@ def run() -> str:
     lines = [f"{len(SHADOWS)} features in shadow; {len(late)} overdue for review", ""]
     for s in sorted(SHADOWS, key=lambda s: s.review_by):
         mark = "OVERDUE " if s in late else ""
-        setting = f"setting {s.switch}" if s.switch else "always shadow"
+        setting = f"setting {s.switch.label}" if s.switch else "always shadow"
         lines += [
             f"{mark}{s.review_by.isoformat()}  {s.name}",
             f"    read with {s.read_with}; {setting}",

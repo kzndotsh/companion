@@ -8,6 +8,7 @@ import pytest
 from companion.cli.beliefs import retire_one
 from companion.core.card import Card
 from companion.core.extractor import Extraction
+from companion.core.switch import Mode
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance
 from companion.core.vectors import Embedded, unit
 from companion.features.history.cli import run as listing
@@ -219,9 +220,9 @@ async def test_the_shadow_look_up_logs_the_nearest_canon_story_and_sends_nothing
 async def test_switch_off_reads_nothing_and_logs_nothing(
     store: Store, utterance: Callable[..., Utterance]
 ) -> None:
-    assert pass_step("off", SHEET) is None
+    assert pass_step(Mode.OFF, SHEET) is None
     _said(store, utterance, PEBBLE)
-    step = pass_step("shadow", SHEET)
+    step = pass_step(Mode.SHADOW, SHEET)
     assert step is not None
     await step(store, Judge([(PEBBLE, "its_past")], _by_story), REL, T0)
     words = Words()

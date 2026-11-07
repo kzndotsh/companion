@@ -5,6 +5,7 @@ only; logged with the mark offered once the turn is stored."""
 
 from __future__ import annotations
 
+from companion.core import switch
 from companion.core.types import Speaker
 from companion.features.diction.marks.logic import OFFERED, note, offered, pick
 from companion.kit.current import decide
@@ -15,7 +16,7 @@ def mark_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     del found, so_far
     c, t = m.c, m.t
     mine = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
-    if not c.own_marks or not m.casual or not offered(str(t.turn), t.text, mine):
+    if not c.on(switch.OWN_MARKS) or not m.casual or not offered(str(t.turn), t.text, mine):
         return Offer()
     mark = pick(str(t.turn), t.text, mine)
     if mark is None:

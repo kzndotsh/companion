@@ -4,7 +4,8 @@ import dataclasses
 from pathlib import Path
 
 from companion import compose
-from companion import settings as sw
+from companion.core import switch as sw
+from companion.core.switch import Mode
 from companion.kit.runtime import Runtime
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
@@ -46,10 +47,20 @@ def test_a_runtime_reads_every_switch_as_settings_has_it(tmp_path: Path) -> None
     store = Store(tmp_path / "c.sqlite")
     try:
         live = compose.runtime(Settings.from_env({}), store, Talker(), PREFIX, REL)
-        assert (live.mood, live.crisis, live.redraw, live.daily_cap_usd) == ("on", "on", True, 10.0)
+        assert (
+            live.mode(sw.MOOD),
+            live.mode(sw.CRISIS),
+            live.on(sw.REDRAW),
+            live.daily_cap_usd,
+        ) == (
+            Mode.ON,
+            Mode.ON,
+            True,
+            10.0,
+        )
         quiet = compose.runtime(
             Settings.from_env({sw.MOOD.env: "off"}), store, Talker(), PREFIX, REL
         )
-        assert quiet.mood == "off"
+        assert quiet.mode(sw.MOOD) is Mode.OFF
     finally:
         store.close()

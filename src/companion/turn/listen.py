@@ -8,8 +8,10 @@ import asyncio
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.crisis import cue_words
 from companion.core.extractor import StructuredModel
+from companion.core.switch import Mode
 from companion.core.turn.context import build_prompt
 from companion.core.turn.listening import PROMPT, SCHEMA, ListeningRead, parse
 from companion.core.turn.reply import Reaction
@@ -50,14 +52,14 @@ async def judge_listening(
 
 async def hear_them(c: Runtime, t: Turn, in_scene: Frame) -> Heard | None:
     """How serious the message is and what they are doing. Not asked in a scene."""
-    if c.judge is None or not c.listen or in_scene is not Frame.REAL:
+    if c.judge is None or not c.on(switch.LISTEN) or in_scene is not Frame.REAL:
         return None
     return await judge_listening(c.judge, t.prior, t.text)
 
 
 async def _reaction_instead(c: Runtime, t: Turn) -> Reaction | None:
     """With the crisis path on, a message with a crisis cue word always gets a reply (ADR 0022)."""
-    cue = c.crisis == "on" and bool(cue_words(t.text))
+    cue = c.mode(switch.CRISIS) is Mode.ON and bool(cue_words(t.text))
     return await react_instead(c, t, crisis_cue=cue)
 
 

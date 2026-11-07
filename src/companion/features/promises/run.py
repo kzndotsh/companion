@@ -9,8 +9,10 @@ import uuid
 from collections.abc import Callable, Mapping
 from datetime import datetime, tzinfo
 
+from companion.core import switch
 from companion.core.beliefs.extract import build_user_prompt
 from companion.core.extractor import StructuredModel
+from companion.core.switch import Mode
 from companion.core.types import Json, Speaker, Utterance, UtteranceId
 from companion.features.promises.logic import (
     CHECK,
@@ -107,7 +109,7 @@ async def check_reply(c: Runtime, t: Turn, said: Utterance, sent: str | None) ->
     """Once the reply is stored, read it against its current promises beside the turn, so the
     next message never waits on it. Shadow: it logs what it would redraw and retire."""
     del said
-    if c.promises == "off" or c.judge is None or not sent:
+    if c.mode(switch.PROMISES) is Mode.OFF or c.judge is None or not sent:
         return
     beside(_check(c, t, sent))
 

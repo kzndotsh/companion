@@ -4,9 +4,10 @@ import pytest
 
 from companion import daemon, prompts
 from companion.characters import parse
+from companion.core.switch import SWITCHES
 from companion.core.types import RelationshipId
 from companion.models import openrouter
-from companion.settings import JUDGE_MODEL, ROLEPLAY_MODEL, SWITCHES
+from companion.settings import JUDGE_MODEL, ROLEPLAY_MODEL
 
 
 @pytest.fixture(autouse=True)

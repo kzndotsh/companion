@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.crisis import Reading
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.request import TalkerRequest
@@ -95,7 +96,7 @@ async def _habit_checks(  # noqa: PLR0913, PLR0917
     severity = heard[0].severity if heard is not None else None
     scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
     code_only = scene or severity is None or severity >= HEAVY_AT
-    if not c.redraw:
+    if not c.on(switch.REDRAW):
         return reply
     if not reply.text.strip():
         return await _redraw_empty(c, t, request, talker)

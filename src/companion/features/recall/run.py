@@ -11,11 +11,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
+from companion.core import switch
 from companion.core.card import Card
 from companion.core.extractor import StructuredModel
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.recall import RECENT, recall_note
 from companion.core.spend import purpose
+from companion.core.switch import Mode
 from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Severity, Speaker
 from companion.core.vectors import Embedder, nearest
 from companion.features.intimate.store import IntimateMemory
@@ -174,7 +176,9 @@ async def shadow(  # noqa: PLR0913
 def _hidden(c: Runtime) -> frozenset[BeliefId]:
     """The intimate lane, left out of the look-up when the scene memory is on (ADR 0026)."""
     return (
-        c.store.part(IntimateMemory).intimate(c.rel) if c.intimate_memory == "on" else frozenset()
+        c.store.part(IntimateMemory).intimate(c.rel)
+        if c.mode(switch.INTIMATE_MEMORY) is Mode.ON
+        else frozenset()
     )
 
 
@@ -189,9 +193,9 @@ async def relevant_for_turn(
     asked only when the closest memory is near (GATE), outside a scene. Logged either way. With no
     listening read because the judge failed it still runs, as a turn that is not sharing, so nothing
     held is offered; with listening switched off it does not run, as before."""
-    if c.relevance != "on" or c.embedder is None or c.judge is None:
+    if c.mode(switch.RELEVANCE) is not Mode.ON or c.embedder is None or c.judge is None:
         return ()
-    if heard is None and not c.listen:
+    if heard is None and not c.on(switch.LISTEN):
         return ()
     if in_scene is not Frame.REAL:
         return ()
@@ -240,10 +244,10 @@ async def shadow_for_turn(
     """With the look-up in shadow: what it would have kept in mind on an ordinary message, logged
     beside the turn; it never holds up or changes the reply."""
     if (
-        c.relevance != "shadow"
+        c.mode(switch.RELEVANCE) is not Mode.SHADOW
         or c.embedder is None
         or c.judge is None
-        or (heard is None and not c.listen)
+        or (heard is None and not c.on(switch.LISTEN))
         or in_scene is not Frame.REAL
     ):
         return

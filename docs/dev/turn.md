@@ -47,7 +47,7 @@ On an urgent crisis turn with the path on, a fixed message follows the reply (th
 below).
 
 The values each stage hands the next live in `turn/values.py`. The `Runtime` the turn runs with (store, models, switches) is
-plain data in `kit/runtime.py`, built only by `compose.runtime` from `Settings`.
+plain data in `kit/runtime.py`, built only by `compose.runtime` from `Settings`; its switch positions are one map read as `c.mode(SWITCH)` or `c.on(SWITCH)` (`core/switch.py`).
 
 ## Reading the message
 

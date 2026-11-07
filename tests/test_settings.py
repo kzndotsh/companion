@@ -6,18 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from companion import settings
+from companion.core import switch as switches
+from companion.core.switch import INITIATIVE, PLATFORM, ROUTE_INTIMATE, SWITCHES, Switch
 from companion.lib.dotenv import load_dotenv
-from companion.settings import (
-    INITIATIVE,
-    PLATFORM,
-    RENAMED,
-    ROLEPLAY_MODEL,
-    ROUTE_INTIMATE,
-    SWITCHES,
-    Settings,
-    Switch,
-)
+from companion.settings import RENAMED, ROLEPLAY_MODEL, Settings
 
 
 def test_every_switch_reads_on_and_off_the_same_way() -> None:
@@ -30,7 +22,7 @@ def test_every_switch_reads_on_and_off_the_same_way() -> None:
 
 
 def test_every_named_switch_is_in_the_table() -> None:
-    named = [v for v in vars(settings).values() if isinstance(v, Switch)]
+    named = [v for v in vars(switches).values() if isinstance(v, Switch)]
     assert sorted(s.env for s in named) == sorted(s.env for s in SWITCHES)
 
 
@@ -44,7 +36,7 @@ def test_the_platform_is_telegram_unless_discord_is_named(raw: str, platform: st
 
 def test_unset_is_the_default() -> None:
     blank = Settings.from_env({sw.env: " " for sw in SWITCHES})
-    assert blank.switches == {sw.label: sw.values[0] for sw in SWITCHES}
+    assert blank.switches == {sw: sw.values[0] for sw in SWITCHES}
 
 
 @pytest.mark.parametrize("switch", SWITCHES, ids=lambda sw: sw.env)
