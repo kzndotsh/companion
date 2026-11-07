@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
 from typing import cast
@@ -14,18 +14,45 @@ from typing import cast
 from companion.core.types import Json, RelationshipId
 
 
+class Mode(StrEnum):
+    """What became of a reach-out. The strings are stored in the reach-out tables."""
+
+    SHADOW = "shadow"  # drafted and checked, never sent
+    LIVE = "live"  # sent
+    DROPPED = "dropped"  # failed the check, so nothing was drafted to send
+
+
 @dataclass(frozen=True, slots=True)
 class ReachOut:
-    """A reach-out about a plan, kept in `reach_outs`: written by threads, read with every other
-    kind (the reach feature's pacing, `companion initiative`)."""
+    """A reach-out about a plan, as its table `reach_outs` keeps it: written by threads. Read it
+    with every other kind as a `ReachRecord`."""
 
     id: str
     relationship_id: RelationshipId
     loop_id: str
-    mode: str  # "shadow" (drafted, never sent) or "live"
+    mode: Mode
     draft: str
     reason: str
     at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class ReachRecord:
+    """One reach-out of any kind, however it was stored (a plan's row, its own reasons' row, or a
+    nudge's decision): what the pacing, the outcomes and `companion initiative` read. `detail`
+    holds what is particular to the kind, the way its writer stored it."""
+
+    id: str
+    kind: Kind
+    mode: Mode
+    text: str
+    at: datetime
+    thing: str = ""  # what it was about (its own reasons), an id, or empty
+    detail: dict[str, Json] = field(default_factory=dict[str, Json])
+
+    @property
+    def live(self) -> bool:
+        return self.mode is Mode.LIVE
 
 
 # The decision keys of the three kinds of reach-out, each named here once because readers (the
@@ -52,6 +79,7 @@ class Kind(StrEnum):
 
 
 PRECEDENCE = tuple(Kind)
+OWN_KINDS = frozenset({Kind.KEPT, Kind.THOUGHT, Kind.MISSING})  # its own reasons (features/reach)
 
 
 class Dial(StrEnum):
@@ -178,6 +206,12 @@ _NEEDY: tuple[tuple[str, re.Pattern[str]], ...] = tuple(
 def needy(draft: str) -> str | None:
     """Why a draft reads as guilt, need, blame or urgency, or None when it does not."""
     return next((why for why, rx in _NEEDY if rx.search(draft)), None)
+
+
+def drafted(message: str | None, missing: str) -> tuple[str, str | None]:
+    """`checked`, for a drafting call that may have given no message at all (`missing` says why):
+    the draft as it would go, or empty with why it was dropped."""
+    return ("", missing) if message is None else checked(message)
 
 
 def checked(message: str) -> tuple[str, str | None]:

@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from statistics import median
 
-from companion.core.reachout import Kind
+from companion.core.reachout import Mode, ReachRecord
 from companion.core.types import Json
 from companion.features.reach.gate import ANSWER_SPAN, Answer, answer
 from companion.prompts import get
@@ -55,19 +55,8 @@ def landed_prompt(sent: str, theirs: str) -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class Sent:
-    """One reach-out of any kind: sent (live) or would have been (shadow)."""
-
-    id: str
-    kind: Kind
-    live: bool
-    text: str
-    at: datetime
-
-
-@dataclass(frozen=True, slots=True)
 class Outcome:
-    sent: Sent
+    sent: ReachRecord
     got: Answer | None  # None: unanswered
     reply: str  # their words in the answer, empty when unanswered
 
@@ -77,7 +66,7 @@ class Outcome:
         return {
             "reach_out": self.sent.id,
             "kind": self.sent.kind.value,
-            "mode": "live" if self.sent.live else "shadow",
+            "mode": (Mode.LIVE if self.sent.live else Mode.SHADOW).value,
             "base_rate": not self.sent.live,
             "sent_at": self.sent.at.isoformat(),
             "answered": got is not None,
@@ -87,7 +76,9 @@ class Outcome:
         }
 
 
-def outcome(sent: Sent, theirs: Sequence[tuple[datetime, str]], now: datetime) -> Outcome | None:
+def outcome(
+    sent: ReachRecord, theirs: Sequence[tuple[datetime, str]], now: datetime
+) -> Outcome | None:
     """How it landed as of `now`, or None while still open: their answer is still coming in, or two
     days have not yet passed without one. An answer after two days counts as unanswered."""
     got = answer(sent.at, [t for t in theirs if t[0] <= now])

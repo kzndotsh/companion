@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.reachout import Dial, Kind
+from companion.core.reachout import Dial, Kind, Mode
 from companion.core.types import (
     Frame,
     Json,
@@ -53,8 +53,8 @@ def store(tmp_path: Path) -> Store:
     return Store(tmp_path / "rel.sqlite")
 
 
-def _reach_out(store: Store, mode: str, rid: str = "r1", at: datetime = SENT_AT) -> None:
-    store.part(Reaches).add(Own(rid, REL, Kind.THOUGHT.value, "", "saw a cat", mode, {}, at))
+def _reach_out(store: Store, mode: Mode, rid: str = "r1", at: datetime = SENT_AT) -> None:
+    store.part(Reaches).add(Own(rid, REL, Kind.THOUGHT, "", "saw a cat", mode, {}, at))
 
 
 def _said(store: Store, at: datetime, text: str, uid: str = "u1") -> None:
@@ -70,7 +70,7 @@ def _outcomes(store: Store) -> list[dict[str, Json]]:
 async def test_a_shadow_reach_out_is_recorded_once_as_the_base_rate_without_a_read(
     store: Store,
 ) -> None:
-    _reach_out(store, "shadow")
+    _reach_out(store, Mode.SHADOW)
     _said(store, SENT_AT + 9 * H, "morning, what did i miss")
     reader = Reader("picked_up")
     assert await record_outcomes(store, REL, SENT_AT + 10 * H, reader) == 1
@@ -86,12 +86,12 @@ async def test_a_shadow_reach_out_is_recorded_once_as_the_base_rate_without_a_re
 
 
 async def test_a_dropped_draft_has_no_outcome(store: Store) -> None:
-    _reach_out(store, "dropped")
+    _reach_out(store, Mode.DROPPED)
     assert await record_outcomes(store, REL, SENT_AT + 49 * H, Reader("ignored")) == 0
 
 
 async def test_a_live_answer_is_read_for_how_they_took_it(store: Store) -> None:
-    _reach_out(store, "live")
+    _reach_out(store, Mode.LIVE)
     _said(store, SENT_AT + H, "omg yes, send a pic")
     reader = Reader("picked_up")
     await record_outcomes(store, REL, SENT_AT + 2 * H, reader)
@@ -101,7 +101,7 @@ async def test_a_live_answer_is_read_for_how_they_took_it(store: Store) -> None:
 
 
 async def test_a_stop_holds_every_reach_out_until_resumed(store: Store) -> None:
-    _reach_out(store, "live")
+    _reach_out(store, Mode.LIVE)
     _said(store, SENT_AT + H, "please don't text me first like that")
     now = SENT_AT + 20 * H
     await record_outcomes(store, REL, SENT_AT + 2 * H, Reader("asked_to_stop"))
@@ -116,7 +116,7 @@ async def test_a_stop_holds_every_reach_out_until_resumed(store: Store) -> None:
 
 
 async def test_a_late_answer_to_a_shadow_one_never_steps_the_dial_down(store: Store) -> None:
-    _reach_out(store, "shadow")
+    _reach_out(store, Mode.SHADOW)
     _said(store, SENT_AT + 30 * H, "hey")
     sit, _ = situation(store, REL, (SENT_AT + 40 * H, UTC), Reacher(Dial.WARM, None))
     assert sit.paced is None
@@ -125,7 +125,7 @@ async def test_a_late_answer_to_a_shadow_one_never_steps_the_dial_down(store: St
 
 
 async def test_a_late_answer_to_a_live_one_steps_it_down(store: Store) -> None:
-    _reach_out(store, "live")
+    _reach_out(store, Mode.LIVE)
     _said(store, SENT_AT + 30 * H, "hey")
     sit, _ = situation(store, REL, (SENT_AT + 40 * H, UTC), Reacher(Dial.WARM, None))
     assert sit.paced is not None

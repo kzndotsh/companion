@@ -7,7 +7,7 @@ from datetime import timedelta
 
 import pytest
 
-from companion.core.reachout import ReachOut
+from companion.core.reachout import Mode, ReachOut
 from companion.core.types import Sensitivity, Utterance, UtteranceId
 from companion.features.threads.logic import Source, Thread, ThreadState
 from companion.features.threads.store import Threads
@@ -70,7 +70,7 @@ def test_the_three_tables_are_append_only(
     conn: sqlite3.Connection, utterance: Callable[..., Utterance]
 ) -> None:
     _loop(conn, utterance)
-    reach_outs.add(conn, ReachOut("r1", REL, "l1", "shadow", "how did the vet go?", "due", T0))
+    reach_outs.add(conn, ReachOut("r1", REL, "l1", Mode.SHADOW, "how did the vet go?", "due", T0))
     for sql in (
         "UPDATE open_loops SET claim = 'x'",
         "DELETE FROM open_loops",
@@ -87,8 +87,8 @@ def test_reach_outs_can_be_listed_since_a_time(
     conn: sqlite3.Connection, utterance: Callable[..., Utterance]
 ) -> None:
     _loop(conn, utterance)
-    old = ReachOut("r1", REL, "l1", "shadow", "old", "why", T0)
-    new = ReachOut("r2", REL, "l1", "shadow", "new", "why", T0 + timedelta(days=2))
+    old = ReachOut("r1", REL, "l1", Mode.SHADOW, "old", "why", T0)
+    new = ReachOut("r2", REL, "l1", Mode.SHADOW, "new", "why", T0 + timedelta(days=2))
     reach_outs.add(conn, old)
     reach_outs.add(conn, new)
     assert [r.id for r in reach_outs.since(conn, REL)] == ["r1", "r2"]

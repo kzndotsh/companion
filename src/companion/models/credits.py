@@ -40,6 +40,29 @@ async def credits(key: str, client: httpx.AsyncClient) -> Credits | None:
     return Credits(bought=number(data.get("total_credits")), used=number(data.get("total_usage")))
 
 
+@dataclass(frozen=True, slots=True)
+class Gate:
+    """What a paid run learns before it spends: the balance, a line saying so, and why it must not
+    go ahead (None: it may)."""
+
+    before: Credits | None
+    line: str
+    refusal: str | None
+
+
+async def spend_gate(key: str, client: httpx.AsyncClient, cap: float) -> Gate:
+    """The account's balance, and a refusal when it is below the run's cap: the bot shares it."""
+    before = await credits(key, client)
+    if before is None:
+        return Gate(None, "", None)
+    refusal = (
+        "the balance is below the cap and the bot shares it: top up or lower --cap\n"
+        if before.balance < cap
+        else None
+    )
+    return Gate(before, f"OpenRouter balance ${before.balance:.4f}\n", refusal)
+
+
 async def charged_since(
     key: str,
     client: httpx.AsyncClient,

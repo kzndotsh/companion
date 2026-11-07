@@ -4,6 +4,7 @@ import dataclasses
 import json
 from pathlib import Path
 
+import httpx
 import pytest
 
 from companion.core.extractor import Extraction
@@ -11,6 +12,7 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.talker import Reply
 from companion.core.types import Json
+from companion.evals import runner as runner_module
 from companion.evals.checks import run_deterministic
 from companion.evals.fixtures import (
     Fixture,
@@ -26,6 +28,7 @@ from companion.evals.report import render_table
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.sample import draw, recorded_request
 from companion.evals.variants import parse_spec
+from companion.lib import retry as retry_module
 
 PREFIX = build_prefix("You are steady and warm. " * 200)
 OTHER = build_prefix("You are blunt and brief. " * 200)
@@ -425,44 +428,60 @@ def test_directories_that_do_not_exist_are_skipped_and_ids_must_stay_unique(
         load_fixtures(tmp_path, other)
 
 
-async def test_a_failing_provider_costs_samples_not_the_run(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from companion.evals import runner as runner_module  # noqa: PLC0415
+def _status(code: int) -> httpx.HTTPStatusError:
+    request = httpx.Request("POST", "https://example.test")
+    return httpx.HTTPStatusError(str(code), request=request, response=httpx.Response(code))
 
-    monkeypatch.setattr(runner_module, "RETRY_WAIT_SECONDS", 0.0)
 
-    class Down:
-        def __init__(self) -> None:
-            self.calls = 0
+class _Down:
+    def __init__(self, error: Exception) -> None:
+        self.calls, self.error = 0, error
 
-        async def reply(self, request: TalkerRequest) -> Reply:
-            del request
-            self.calls += 1
-            msg = "429"
-            raise RuntimeError(msg)
+    async def reply(self, request: TalkerRequest) -> Reply:
+        del request
+        self.calls += 1
+        raise self.error
 
-    down = Down()
+
+async def _run_down(down: _Down, monkeypatch: pytest.MonkeyPatch) -> tuple[int, int]:
+    async def no_wait(_: float) -> None:
+        return None
+
+    monkeypatch.setattr(retry_module.asyncio, "sleep", no_wait)
     res = await run_eval(
         _plan(_fixture(MaxWords(5)), [Variant("a", PREFIX)], samples=2),
         Models(lambda m, e: down, Judge()),
     )
     cell = res.cells[("f1", "a")]
-    assert (len(cell.samples), cell.skipped) == (0, 2)
-    assert down.calls == 2 * runner_module.RETRIES
+    return len(cell.samples), cell.skipped
+
+
+async def test_a_rate_limited_provider_is_tried_again_then_costs_samples_not_the_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    down = _Down(_status(429))
+    assert await _run_down(down, monkeypatch) == (0, 2)
+    assert down.calls == 2 * (len(runner_module.RETRY_DELAYS) + 1)
+
+
+async def test_a_refusal_or_bad_request_is_not_retried(monkeypatch: pytest.MonkeyPatch) -> None:
+    down = _Down(_status(400))
+    assert await _run_down(down, monkeypatch) == (0, 2)
+    assert down.calls == 2
 
 
 async def test_run_refuses_when_the_balance_is_below_the_cap(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     from companion.cli import eval as eval_cli  # noqa: PLC0415
+    from companion.models import credits as credits_module  # noqa: PLC0415
     from companion.models.credits import Credits  # noqa: PLC0415
 
     async def low(*_: object) -> Credits:
         return Credits(bought=15, used=14.95)
 
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
-    monkeypatch.setattr(eval_cli, "credits", low)
+    monkeypatch.setattr(credits_module, "credits", low)
 
     args = eval_cli.EvalArgs(
         None, (Path("evals/fixtures"),), [], ["agree-and-invent"], 1, 0.2, show=False, dry_run=False

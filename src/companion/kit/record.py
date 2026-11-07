@@ -16,10 +16,14 @@ from companion.core.types import (
     Decision,
     DecisionId,
     DecisionKind,
+    Frame,
     Json,
     RelationshipId,
+    Speaker,
     TraceId,
     TurnId,
+    Utterance,
+    UtteranceId,
 )
 from companion.store.sqlite.store import Store
 
@@ -68,5 +72,23 @@ class Recorder:
                 belief_id=belief,
                 detail=detail or None,
                 key=key,
+            )
+        )
+
+    def say(
+        self, text: str, platform: str, *, frame: Frame = Frame.REAL, at: datetime | None = None
+    ) -> None:
+        """Store a message the companion sent, as its own: the one recipe for every send (a reply,
+        the crisis line, a reminder, a reach-out)."""
+        self.store.append_utterance(
+            Utterance(
+                UtteranceId(new_id()),
+                self.rel,
+                self.turn,
+                Speaker.COMPANION,
+                text,
+                frame,
+                platform,
+                at or self.now,
             )
         )

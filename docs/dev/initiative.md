@@ -114,8 +114,16 @@ Since 2026-10-25 every reach-out waits on this one gate (ADR 0023): its own reas
 nudges alike use the learned quiet hours, wait while its last of any kind is unanswered, keep six hours
 from its last of any kind, and count toward the share. Each kind keeps only what is its own on top: a
 plan is asked about once, a nudge at most twice a day and once per time away. Every draft passes the
-same needy check (`checked` in `core/reachout.py`); a dropped plan or nudge draft is logged, never
-counted as sent, and not drafted again.
+same needy check (`drafted` in `core/reachout.py`) and the same last step (`record_draft` in
+`kit/reachdraft.py`: a would-send, or a dropped draft logged with why); a dropped plan or nudge draft
+is never counted as sent, and not drafted again.
+
+A reach-out is stored in three places, by kind: a plan in `reach_outs` (written by threads), its own
+reasons in `own_reach_outs` (reach, dropped drafts too) and a nudge only as its decision. Every reader
+sees one record, `ReachRecord` in `core/reachout.py` (kind, `Mode` shadow, live or dropped, the text, the
+time, and the detail its kind stored), through `records` in `features/reach/store.py`: the shared gate's
+pacing, the outcomes and `companion initiative` read nothing else. Going live (issue 143) adds a live
+row beside the shadow one in the tables, and changes `records` nowhere.
 
 ## Related
 

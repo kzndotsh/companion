@@ -19,11 +19,10 @@ from companion.core.crisis import (
     line_message,
     method_words,
 )
-from companion.core.ids import new_id
 from companion.core.talker import Reply
 from companion.core.turn.reply import ReactAndReply, ThenSend
-from companion.core.types import Frame, Speaker, Utterance, UtteranceId
-from companion.kit.current import Turn, decide, mark
+from companion.core.types import Frame
+from companion.kit.current import Turn, decide, mark, recorder
 from companion.kit.features import Lookups
 from companion.turn.values import Routed
 
@@ -117,16 +116,6 @@ def then_line(
         return out
     text, source = line_message(c.serious_message)
     at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1) + 1)
-    said = Utterance(
-        UtteranceId(new_id()),
-        c.rel,
-        t.turn,
-        Speaker.COMPANION,
-        text,
-        Frame.REAL,
-        keep.platform,
-        at,
-    )
-    c.store.append_utterance(said)
+    recorder(c, t).say(text, keep.platform, at=at)
     decide(c, t, LINE_SENT, {"source": source}, reason=f"crisis: line sent, from {source}", at=at)
     return ThenSend(out, text)

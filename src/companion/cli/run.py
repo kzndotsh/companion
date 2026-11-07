@@ -9,6 +9,7 @@ from pathlib import Path
 
 from companion import daemon
 from companion.kit.command import Command, Group
+from companion.paths import Paths
 from companion.settings import DATA_DIR
 
 
@@ -18,7 +19,7 @@ def _args(p: argparse.ArgumentParser) -> None:
 
 def _run(a: argparse.Namespace) -> int:
     try:
-        asyncio.run(daemon.run(Path(a.data)))
+        asyncio.run(daemon.run(Paths.in_(Path(a.data))))
     except KeyboardInterrupt:
         sys.stderr.write("stopped\n")
     return 0

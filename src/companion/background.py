@@ -15,6 +15,7 @@ from companion.kit.features import Feature, Outlet, Round
 from companion.kit.jobs import Every, Job
 from companion.kit.runtime import Runtime
 from companion.memory import nightly
+from companion.paths import Paths
 from companion.registry import FEATURES
 
 INITIATIVE_TICK_SECONDS = 900
@@ -36,17 +37,17 @@ def initiative(c: Runtime, features: Sequence[Feature] = FEATURES) -> Job | None
     return Job("initiative", tick, Every(INITIATIVE_TICK_SECONDS))
 
 
-def daily_backup(data_dir: Path, db: Path, into: Path) -> Job:
+def daily_backup(paths: Paths, into: Path) -> Job:
     """A snapshot once a day while the bot runs, besides the one at every start."""
 
     async def snapshot() -> None:
-        await asyncio.to_thread(backups.back_up_quietly, data_dir, db, "daily", utc_now(), into)
+        await asyncio.to_thread(backups.back_up_quietly, paths, "daily", utc_now(), into)
 
     return Job("backups", snapshot, Every(backups.EVERY_SECONDS), capped=False)
 
 
-def jobs(c: Runtime, outlet: Outlet, data_dir: Path, db: Path, into: Path) -> list[Job]:
+def jobs(c: Runtime, outlet: Outlet, paths: Paths, into: Path) -> list[Job]:
     """Every job the bot runs, over the platform it is on."""
     own = [job for f in FEATURES if f.jobs for job in f.jobs(c, outlet)]
-    rest = (initiative(c), daily_backup(data_dir, db, into), nightly.job(c))
+    rest = (initiative(c), daily_backup(paths, into), nightly.job(c))
     return [*own, *(job for job in rest if job is not None)]

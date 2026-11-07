@@ -4,7 +4,7 @@ import httpx
 import pytest
 
 from companion.lib import retry
-from companion.lib.retry import retry_on_network_error
+from companion.lib.retry import retry_on_network_error, retry_transient
 
 
 @pytest.fixture(autouse=True)
@@ -51,3 +51,23 @@ async def test_a_timeout_counts_as_a_network_error() -> None:
     calls, call = _flaky(1, httpx.ReadTimeout("slow"))
     assert await retry_on_network_error(call) == "ok"  # type: ignore[arg-type]
     assert len(calls) == 2
+
+
+def _status(code: int) -> httpx.HTTPStatusError:
+    request = httpx.Request("POST", "https://example.test")
+    return httpx.HTTPStatusError(str(code), request=request, response=httpx.Response(code))
+
+
+@pytest.mark.parametrize("code", [429, 500, 503])
+async def test_a_rate_limit_or_server_error_is_retried_when_asked(code: int) -> None:
+    calls, call = _flaky(2, _status(code))
+    assert await retry_transient(call, (0.1, 0.1)) == "ok"  # type: ignore[arg-type]
+    assert len(calls) == 3
+
+
+@pytest.mark.parametrize("code", [400, 401, 402, 403])
+async def test_a_refusal_or_bad_request_is_raised_at_once(code: int) -> None:
+    calls, call = _flaky(10, _status(code))
+    with pytest.raises(httpx.HTTPStatusError):
+        await retry_transient(call, (0.1, 0.1))  # type: ignore[arg-type]
+    assert len(calls) == 1

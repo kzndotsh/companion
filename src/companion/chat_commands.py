@@ -70,7 +70,6 @@ def chat_commands(
 
     async def mode(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
         del arg, replied_to
-        roleplay = s.roleplay_model or s.everyday_model
-        return mode_report(store, rel, utc_now(), s.everyday_model, roleplay)
+        return mode_report(store, rel, utc_now(), s.everyday_model, s.scene_model)
 
     return {FLAG: flag, FAV: favorite, FAVORITE: favorite, MODE: mode}

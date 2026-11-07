@@ -7,14 +7,14 @@ from __future__ import annotations
 from collections import Counter
 from datetime import datetime, tzinfo
 
-from companion.core.reachout import OWN_HELD, Dial, dial
+from companion.core.reachout import OWN_HELD, OWN_KINDS, Dial, Mode, dial
 from companion.core.rhythm import BASE_PAUSE_HOURS, FLOOR_HOURS, WINDOW
 from companion.core.types import RelationshipId
 from companion.features.reach.gate import Hold
 from companion.features.reach.logic import PACED, TARGET
 from companion.features.reach.outcome import OUTCOME, summary
 from companion.features.reach.run import Reacher, situation
-from companion.features.reach.store import Reaches
+from companion.features.reach.store import records
 from companion.store.sqlite.store import Store
 
 
@@ -26,7 +26,7 @@ def _dial(store: Store, rel: RelationshipId, fallback: Dial) -> Dial:
     """The dial the bot last ran with, from its newest record; the setting here when none."""
     held = store.decisions_with_key(rel, OWN_HELD)
     newest = [(d.at, (d.detail or {}).get("dial")) for d in held]
-    newest += [(o.at, o.detail.get("dial")) for o in store.part(Reaches).since(rel)]
+    newest += [(o.at, o.detail.get("dial")) for o in records(store, rel, kinds=OWN_KINDS)]
     found = max(newest, key=lambda n: n[0], default=(None, None))[1]
     return dial(found, fallback)
 
@@ -58,13 +58,13 @@ def lines(
         "",
         "its own reach-outs (would have sent)",
     ]
-    own = store.part(Reaches).since(rel)
+    own = records(store, rel, kinds=OWN_KINDS)
     out += [
-        f"  {o.at.astimezone(tz):%m-%d %H:%M}  {o.kind:16} {o.draft}"
+        f"  {o.at.astimezone(tz):%m-%d %H:%M}  {o.kind:16} {o.text}"
         for o in own
-        if o.mode != "dropped"
+        if o.mode is not Mode.DROPPED
     ] or ["  none yet"]
-    dropped = [o for o in own if o.mode == "dropped"]
+    dropped = [o for o in own if o.mode is Mode.DROPPED]
     out += ["", f"drafts dropped by the check ({len(dropped)})"]
     out += [
         f"  {o.at.astimezone(tz):%m-%d %H:%M}  {o.kind:16} {o.detail.get('drafted') or '(none)'}"

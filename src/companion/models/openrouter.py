@@ -26,6 +26,8 @@ from companion.models.wire import (
 log = logging.getLogger("companion.openrouter")
 URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "openai/gpt-6-luna"
+REPLY_TOKENS = 400  # a chat reply is short
+REASONING_REPLY_TOKENS = 4000  # a reasoning model spends part of its allowance thinking
 HAIKU = "anthropic/claude-haiku-5.5"  # the judges' model
 DEEPSEEK = "deepseek/deepseek-v4.1-flash"
 DEFAULT_PROVIDER = (
@@ -48,7 +50,7 @@ class OpenRouterTalker:
         client: httpx.AsyncClient,
         model: str = DEFAULT_MODEL,
         provider: str = DEFAULT_PROVIDER,
-        max_tokens: int = 400,
+        max_tokens: int = REPLY_TOKENS,
         reasoning_effort: str | None = None,
         timeout: float = 25,  # past this a reply is not coming; a backup model answers (J21)
     ) -> None:

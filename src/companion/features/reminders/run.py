@@ -27,10 +27,8 @@ from companion.core.types import (
     Frame,
     Json,
     Speaker,
-    TraceId,
     TurnId,
     Utterance,
-    UtteranceId,
 )
 from companion.features.reminders.logic import (
     ASKED_WHEN,
@@ -237,16 +235,6 @@ def act(  # noqa: PLR0913, PLR0917
     )
 
 
-def log_decision(
-    c: Runtime,
-    turn: TurnId,
-    reason: str,
-    now: datetime,
-    detail: dict[str, Json] | None = None,
-) -> None:
-    Recorder(c.store, c.rel, turn, TraceId(turn), now).decide(reason, detail)
-
-
 async def _write(
     c: Runtime, r: Reminder, prior: Sequence[Utterance], now: datetime
 ) -> tuple[str, str]:
@@ -295,24 +283,19 @@ async def deliver_due(
                 r.id, ReminderState.EXPIRED, why + ", so it is not sent again", now
             )
             detail_stuck: dict[str, Json] = {"reminder": r.id, "series": r.series_id}
-            log_decision(c, TurnId(new_id()), STUCK_GONE, now, detail_stuck)
+            Recorder.fresh(c.store, c.rel, now).decide(STUCK_GONE, detail_stuck)
     due = [r for r in held if r.state is ReminderState.PENDING and r.due_at <= now]
     every, zone = {x.id: x for x in c.store.part(Reminders).all_series(c.rel)}, local_zone()
     theirs = c.store.part(Reminders).their_times(c.rel, now - LOOK_BACK)
     sent = 0
     for r in due:
         turn = TurnId(new_id())
+        rec = Recorder.on_turn(c.store, c.rel, turn, now)
         if r.due_at < started and now - r.due_at > GRACE:
             c.store.part(Reminders).event(
                 r.id, ReminderState.EXPIRED, "the bot was not running when it was due", now
             )
-            log_decision(
-                c,
-                turn,
-                "reminders: let go, missed while not running",
-                now,
-                {"reminder": r.id},
-            )
+            rec.decide("reminders: let go, missed while not running", {"reminder": r.id})
             continue
         series = every.get(r.series_id or "")
         why = None if series is None else skip_reason(series, r.due_at, theirs, now, zone)
@@ -320,7 +303,7 @@ async def deliver_due(
             if c.store.part(Reminders).claim(r.id, now):
                 c.store.part(Reminders).event(r.id, ReminderState.SKIPPED, why, now)
                 detail: dict[str, Json] = {"reminder": r.id, "series": r.series_id, "why": why}
-                log_decision(c, turn, SKIPPED, now, detail)
+                rec.decide(SKIPPED, detail)
             continue
         prior = c.store.history_before(c.rel, now, HISTORY_LIMIT)
         if scene_frame(prior, now) is not Frame.REAL:
@@ -337,27 +320,13 @@ async def deliver_due(
                 r.id, ReminderState.PENDING, "sending failed, tried again next time", now
             )
             continue
-        c.store.append_utterance(
-            Utterance(
-                UtteranceId(new_id()),
-                c.rel,
-                turn,
-                Speaker.COMPANION,
-                text,
-                Frame.REAL,
-                platform,
-                now,
-            )
-        )
+        rec.say(text, platform)
         late = now - r.due_at > LATE
         c.store.part(Reminders).event(
             r.id, ReminderState.LATE if late else ReminderState.SENT, f"sent by {by}", now
         )
-        log_decision(
-            c,
-            turn,
+        rec.decide(
             f"reminders: sent{' late' if late else ''}",
-            now,
             {"reminder": r.id, "kind": r.kind.value, "by": by, "prompt": sent_with(r.kind)},
         )
         log.info("reminder %s sent%s: %s", r.id[:8], " late" if late else "", text)
@@ -375,7 +344,7 @@ def _tend(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> None:
     if step.state is not None:
         key = PAUSED if step.state is Standing.PAUSED else RESUMED
         detail: dict[str, Json] = {"series": series.id, "why": step.reason}
-        log_decision(c, TurnId(new_id()), key, now, detail)
+        Recorder.fresh(c.store, c.rel, now).decide(key, detail)
 
 
 def unhandled(c: Runtime, prior: Sequence[Utterance]) -> list[Utterance]:
@@ -409,7 +378,9 @@ async def reminder_for_turn(m: Moment) -> Read | None:
     done = act(c, slots, t.text, t.turn, t.now, zone) if slots is not None else None
     if done is None:
         return None
-    log_decision(c, t.turn, done.reason, t.now, done.detail | {"prompt": PROMPT.ref})
+    Recorder.on_turn(c.store, c.rel, t.turn, t.now).decide(
+        done.reason, done.detail | {"prompt": PROMPT.ref}
+    )
     return done
 
 

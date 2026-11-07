@@ -89,7 +89,10 @@ second, fixed message of code's own after the reply (`ThenSend`, ADR 0022): the 
 straight after the reply, and it goes even when the reply could not be delivered. It is stored as the
 companion's own message; if it fails to send, it is marked undelivered like a reply.
 
-Reminders go out over the running platform and are stored with its name.
+Reminders go out over the running platform and are stored with its name. Every message it sends is
+stored as its own by one recipe, `Recorder.say` in `kit/record.py` (a reply, the crisis line and a
+reminder today, a reach-out when it goes live), so the turn, the frame and the platform are filled in
+in one place.
 
 ## What was never seen
 

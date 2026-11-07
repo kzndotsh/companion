@@ -9,14 +9,10 @@ from typing import TYPE_CHECKING
 
 from companion.core.clock import local_midnight
 from companion.core.extractor import StructuredModel
-from companion.core.reachout import DRAFT_SCHEMA, WOULD_NUDGE, Held, Kind, checked, parse_draft
+from companion.core.reachout import DRAFT_SCHEMA, WOULD_NUDGE, Held, Kind, drafted, parse_draft
 from companion.core.turn.now import KEY as NOW_KEY
 from companion.core.turn.now import from_decisions
-from companion.core.types import (
-    DecisionKind,
-    RelationshipId,
-    Speaker,
-)
+from companion.core.types import Json, RelationshipId, Speaker
 from companion.features.nudges.logic import (
     DRAFT,
     GONE,
@@ -29,6 +25,7 @@ from companion.features.nudges.logic import (
 )
 from companion.kit.ask import Judge, ask
 from companion.kit.features import Feature, Move
+from companion.kit.reachdraft import DraftKeys, record_draft
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
@@ -47,6 +44,7 @@ DRAFTER = Judge(
     spend="initiative",  # every reach-out's drafting is one line in `companion spend`
 )
 NUDGE_DROPPED = "nudge (shadow): draft dropped, not sent"
+KEYS = DraftKeys(NUDGE_DROPPED, WOULD_NUDGE)
 
 
 def _look(store: Store, rel: RelationshipId, now: datetime) -> Look:
@@ -78,32 +76,22 @@ async def tick_nudge(
     if away is None:
         log.debug("nudge: %s", reason)
         return None
-    text, dropped = "", "no drafter"
+    got: tuple[str, str | None] = ("", "no drafter")
     if extractor is not None:
-        got = await ask(extractor, DRAFTER, draft_prompt(away, now))
-        if got is None:
-            dropped = "the draft call failed or had no message"
-        else:
-            text, dropped = checked(got.value)
-    if not text:
-        Recorder.fresh(store, rel, now).decide(
-            NUDGE_DROPPED,
-            {"turn": away.turn, "said": away.said, "why": dropped, "prompt": DRAFT.ref},
-            reason=f"{NUDGE_DROPPED}: {dropped}",
+        read = await ask(extractor, DRAFTER, draft_prompt(away, now))
+        got = drafted(
+            None if read is None else read.value, "the draft call failed or had no message"
         )
+    text, dropped = got
+    detail: dict[str, Json] = {"turn": away.turn, "said": away.said, "prompt": DRAFT.ref}
+    if text:
+        detail["draft"] = text
+    else:
+        detail["why"] = dropped
+    record_draft(Recorder.fresh(store, rel, now), KEYS, got, detail, f"{WOULD_NUDGE}: {reason}")
+    if not text:
         log.info("nudge dropped: %s", dropped)
         return None
-    Recorder.fresh(store, rel, now).decide(
-        WOULD_NUDGE,
-        {
-            "turn": away.turn,
-            "said": away.said,
-            "draft": text,
-            "prompt": DRAFT.ref,
-        },
-        reason=f"{WOULD_NUDGE}: {reason}",
-        kind=DecisionKind.INITIATE,
-    )
     log.info("nudge shadow: would send %r (%s)", text, reason)
     return text
 

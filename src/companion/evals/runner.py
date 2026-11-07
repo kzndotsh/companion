@@ -21,13 +21,13 @@ from companion.evals.checks import Verdict, run_deterministic
 from companion.evals.fixtures import EmpathyCheck, Fixture, JudgeCheck
 from companion.evals.judge import grade, grade_empathy
 from companion.evals.sample import Variant, draw
+from companion.lib.retry import retry_transient
 
 log = logging.getLogger("companion.evals")
 
 CONCURRENCY = 4
 FREE_SPACING_SECONDS = 3.1
-RETRIES = 3
-RETRY_WAIT_SECONDS = 2.0
+RETRY_DELAYS = (2.0, 4.0)  # a rate limit or a dropped connection; a refusal is not retried
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,19 +84,16 @@ class Models:
 
 
 class _Metered:
-    """The variant's talker as a sample uses it: a provider that rate-limits or errors is tried
-    again, and every reply's cost is added up, redraws included."""
+    """The variant's talker as a sample uses it: a provider that rate-limits, errors or drops the
+    connection is tried again (`lib/retry.py`), and every reply's cost is added up, redraws
+    included."""
 
     def __init__(self, talker: Talker) -> None:
         self.talker, self.spent = talker, 0.0
 
     async def reply(self, request: TalkerRequest) -> Reply:
-        for attempt in range(RETRIES - 1):
-            try:
-                return self._count(await self.talker.reply(request))
-            except Exception:
-                await asyncio.sleep(RETRY_WAIT_SECONDS * (attempt + 1))
-        return self._count(await self.talker.reply(request))
+        got = await retry_transient(lambda: self.talker.reply(request), RETRY_DELAYS, "eval reply")
+        return self._count(got)
 
     def _count(self, reply: Reply) -> Reply:
         self.spent += reply.cost_usd
