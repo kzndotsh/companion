@@ -7,7 +7,7 @@ import pytest
 
 from companion.cli.beliefs import retire_one
 from companion.core.extractor import Extraction
-from companion.core.switch import SWITCHES, Mode
+from companion.core.switch import SWITCHES, Position
 from companion.core.types import Frame, Json, Speaker, TurnId, Utterance
 from companion.core.vectors import Embedded, unit
 from companion.features.history.cli import run as listing
@@ -221,7 +221,7 @@ async def test_the_shadow_look_up_logs_the_nearest_canon_story_and_sends_nothing
 async def test_switch_off_reads_nothing_and_logs_nothing(
     store: Store, utterance: Callable[..., Utterance]
 ) -> None:
-    off = Passing({s: Mode.OFF for s in SWITCHES if s.is_mode})
+    off = Passing({s: Position.OFF for s in SWITCHES if s.is_position})
     assert PassParts.of([HISTORY], off).steps == ()
     _said(store, utterance, PEBBLE)
     step = pass_step(SHEET)

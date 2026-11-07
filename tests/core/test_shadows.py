@@ -3,11 +3,11 @@ from __future__ import annotations
 from datetime import date
 
 from companion.core.shadows import SHADOWS, overdue
-from companion.core.switch import SWITCHES, Mode
+from companion.core.switch import SWITCHES, Position
 
 
 def test_every_setting_that_defaults_to_shadow_has_a_review_date() -> None:
-    shadowed = {s for s in SWITCHES if s.values[0] == Mode.SHADOW}
+    shadowed = {s for s in SWITCHES if s.values[0] == Position.SHADOW}
     listed = {s.switch for s in SHADOWS}
     missing = [s.label for s in shadowed - listed]
     assert not missing, f"add a row to core/shadows.py for: {missing}"

@@ -55,7 +55,7 @@ On an urgent crisis turn with the path on, a fixed message follows the reply (th
 below).
 
 The values each stage hands the next live in `turn/values.py`; a judge's read that a later stage logs is a `Scored` (`core/turn/context.py`: the read, the model, the prompt text), and the listening read is `Heard` in `kit/current.py`. `assemble` takes the `Routed` and the look-ups, and so does the reply gate (`gate.checked`). A reading from the fallback model is flagged on the answer (`Extraction.fallback`, `Read.fallback`, `Scored.fallback`), not found by its name. The `Runtime` the turn runs with (store, models, switches) is
-plain data in `kit/runtime.py`, built only by `compose.runtime` from `Settings`; its switch positions are one map read as `c.mode(SWITCH)` or `c.on(SWITCH)` (`core/switch.py`).
+plain data in `kit/runtime.py`, built only by `compose.runtime` from `Settings`; its switch positions are one map read as `c.position(SWITCH)` or `c.on(SWITCH)` (`core/switch.py`).
 
 ## Reading the message
 

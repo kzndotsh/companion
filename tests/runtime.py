@@ -10,7 +10,7 @@ from dataclasses import replace
 from companion import compose
 from companion.core import switch as sw
 from companion.core.prompt.prefix import Prefix
-from companion.core.switch import Mode, Switch
+from companion.core.switch import Position, Switch
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
 from companion.kit.runtime import Runtime
@@ -38,14 +38,16 @@ def make_runtime(
     bool for one that is on or off). A name that is neither stops the test."""
     base = compose.runtime(QUIET, store, talker, prefix, rel)
     fields = {k: v for k, v in changes.items() if k not in _BY_NAME}
-    modes: Mapping[Switch, Mode] = {
-        **base.modes,
+    positions: Mapping[Switch, Position] = {
+        **base.positions,
         **{_BY_NAME[k]: _mode(v) for k, v in changes.items() if k in _BY_NAME},
     }
-    return replace(base, modes=modes, **{"daily_cap_usd": None, "embed_model": "", **fields})
+    return replace(
+        base, positions=positions, **{"daily_cap_usd": None, "embed_model": "", **fields}
+    )
 
 
-def _mode(value: object) -> Mode:
+def _mode(value: object) -> Position:
     if isinstance(value, bool):
-        return Mode.ON if value else Mode.OFF
-    return Mode(str(value))
+        return Position.ON if value else Position.OFF
+    return Position(str(value))

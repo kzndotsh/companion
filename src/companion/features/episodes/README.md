@@ -2,7 +2,7 @@
 
 Keeps a record of the times the two of them spent together, so when they say "last night" or come back after a while, it knows roughly what that time was like. Facts about them are memories and their plans are open loops, but what they did together had no record.
 
-**Status:** live. `COMPANION_EPISODES`: `on` (default), `shadow` (logs what would be shown, shows nothing), `off`. The lines are written nightly at 04:00, by a command, and just before a reply when needed. The note rides the system block (it is the feature named `recent` in `registry.py`, and `recent` in `ORDER` in `turn/notes.py`).
+**Status:** live. `COMPANION_EPISODES`: `on` (default), `shadow` (logs what would be shown, shows nothing), `off`. The lines are written nightly at 04:00, by a command, and just before a reply when needed. The note rides the system block (it is the `EPISODES` feature in `registry.py`, its note named `NoteName.RECENT` in `run.py`, and `recent` in `ORDER` in `turn/notes.py`).
 
 ## How it works
 

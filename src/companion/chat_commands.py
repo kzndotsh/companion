@@ -45,7 +45,7 @@ def chat_commands(
     def marked(replied_to: str | None) -> TurnId | None:
         if replied_to is None:
             return store.latest_turn(rel)
-        return store.turn_of_message(rel, s.position(sw.PLATFORM), replied_to)
+        return store.turn_of_message(rel, s.value(sw.PLATFORM), replied_to)
 
     async def flag(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
         turn = marked(replied_to)

@@ -77,8 +77,9 @@ def test_lint_exceptions_do_not_pile_up() -> None:
     assert count <= NOQA_CAP, f"{count} noqa comments in src, the cap is {NOQA_CAP}"
 
 
-# A switch's position is a `Mode` (core/switch.py), never a bare word: a typo in "shadow" would read
-# as a third state. Dials and platforms keep their own words, so only on, shadow and off count.
+# A switch's position is a `Position` (core/switch.py), never a bare word: a typo in "shadow"
+# would read as a third state. Dials and platforms keep their own words, so only on, shadow and
+# off count.
 MODE_WORD = re.compile(r"(?:[!=]=|\bin\b|\bnot in\b)\s*[(\[]?\s*[\"'](?:on|shadow|off)[\"']")
 MODE_WORD_FIRST = re.compile(r"[\"'](?:on|shadow|off)[\"']\s*(?:[!=]=|\bin\b)")
 # core/switch.py is where the words are defined and parsed; settings.py reads the daily cap, which
@@ -94,6 +95,7 @@ def test_no_switch_position_is_compared_as_a_bare_word() -> None:
         for n, line in enumerate(text.splitlines(), 1)
         if MODE_WORD.search(line) or MODE_WORD_FIRST.search(line)
     ]
-    assert not found, "compare with Mode (`c.mode(MOOD) is Mode.OFF`), not a word:\n" + "\n".join(
-        found
+    assert not found, (
+        "compare with Position (`c.position(MOOD) is Position.OFF`), not a word:\n"
+        + "\n".join(found)
     )

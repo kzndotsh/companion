@@ -19,7 +19,7 @@ from companion.core.extractor import StructuredModel
 from companion.core.history import HISTORY_LIMIT
 from companion.core.ids import new_id
 from companion.core.memory_pass import BATCH, CONTEXT
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.types import (
     Json,
     RelationshipId,
@@ -249,7 +249,7 @@ async def stories_beside(m: Moment) -> None:
     """Log the canon stories it would show on an ordinary turn, and whether each was told already
     and is still in the messages the talker reads. Shows nothing (step 1)."""
     c, t = m.c, m.t
-    embedder = embedder_in(c, switch.HISTORY, Mode.SHADOW, Mode.ON)
+    embedder = embedder_in(c, switch.HISTORY, Position.SHADOW, Position.ON)
     if embedder is None or not m.casual:
         return
     found = await nearest_stories(c.store, (embedder, c.embed_model), c.rel, t.text, t.now)

@@ -74,7 +74,7 @@ async def _delivery(
 ) -> AsyncGenerator[Delivery]:
     """Delivery on the platform `COMPANION_PLATFORM` names, ready to send, with its own resume
     point. On Discord the commands are slash commands too."""
-    if s.position(sw.PLATFORM) == "discord":
+    if s.value(sw.PLATFORM) == "discord":
         token, user = need("DISCORD_BOT_TOKEN"), int(need("DISCORD_USER_ID"))
         synced = discord.Synced(
             lambda: store.setting(rel, COMMANDS_KEY),
@@ -134,7 +134,7 @@ async def run(paths: Paths) -> None:
                 reply = await handle(
                     runtime,
                     msg.text,
-                    s.position(sw.PLATFORM),
+                    s.value(sw.PLATFORM),
                     quoted=msg.quoted,
                     message_id=msg.id,
                 )
@@ -145,7 +145,7 @@ async def run(paths: Paths) -> None:
                 "\n".join(startup_lines(paths.db.stem, prefix.sha256, character, s))
             )
             logging.getLogger("companion").info("full log: %s", log_file)
-            outlet = Outlet(delivery.transport.send, s.position(sw.PLATFORM))
+            outlet = Outlet(delivery.transport.send, s.value(sw.PLATFORM))
             background = [
                 asyncio.create_task(keep_running(runtime, job))
                 for job in jobs(runtime, outlet, paths, into)

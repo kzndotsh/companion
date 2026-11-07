@@ -35,7 +35,7 @@ from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.memory_pass import BATCH, CONTEXT, PassRun
-from companion.core.switch import SWITCHES, Mode
+from companion.core.switch import SWITCHES, Position
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -63,7 +63,7 @@ EMBED_SECONDS = 60.0  # embedding what the pass stored; was unlimited
 def plain_parts() -> PassParts:
     """What a pass runs with every switch off: the open-loop read (strict) and the check on a new
     boundary, which no switch turns off. A rebuild's and a test's."""
-    return PassParts.of(FEATURES, Passing({s: Mode.OFF for s in SWITCHES if s.is_mode}))
+    return PassParts.of(FEATURES, Passing({s: Position.OFF for s in SWITCHES if s.is_position}))
 
 
 @dataclass(frozen=True, slots=True)

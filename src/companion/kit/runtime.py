@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.prefix import Prefix
 from companion.core.reachout import Dial
-from companion.core.switch import Mode, Switch
+from companion.core.switch import Position, Switch
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
 from companion.core.vectors import Embedder
@@ -20,7 +20,7 @@ from companion.store.sqlite.store import Store
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Runtime:
     """Built only by `compose.runtime`, so every switch has Settings' value, and none has a field of
-    its own: a switch is read as `c.mode(MOOD)` or `c.on(MOOD)`."""
+    its own: a switch is read as `c.position(MOOD)` or `c.on(MOOD)`."""
 
     store: Store
     talker: Talker
@@ -38,13 +38,13 @@ class Runtime:
     scene_reminder: str = ""  # the character's scene reminder, sent after the history in scenes
     serious_message: str = ""  # the sheet's `## Crisis message` section, sent by code
     daily_cap_usd: float | None  # nothing paid runs once today's spend reaches this
-    modes: Mapping[Switch, Mode]  # where each on, shadow or off switch stands (`core/switch.py`)
+    positions: Mapping[Switch, Position]  # each on, shadow or off switch (`core/switch.py`)
     reach: Dial  # how much of the conversation it may start (COMPANION_REACH)
 
-    def mode(self, switch: Switch) -> Mode:
+    def position(self, switch: Switch) -> Position:
         """Where a switch stands: on, shadow or off."""
-        return self.modes[switch]
+        return self.positions[switch]
 
     def on(self, switch: Switch) -> bool:
         """Whether a switch is anything but off."""
-        return self.modes[switch] is not Mode.OFF
+        return self.positions[switch] is not Position.OFF

@@ -203,7 +203,7 @@ def runtime(
         scene_reminder=parts.get("scene_reminder", ""),
         serious_message=parts.get("serious_message", ""),
         daily_cap_usd=s.daily_cap,
-        modes=s.modes(),
+        positions=s.positions(),
     )
 
 
@@ -213,7 +213,7 @@ def pass_options(
     """What a memory pass runs with, built once so the bot's idle pass and `companion memory-pass`
     do the same: what the features add (`PassParts.of`: the same-memory check, the loop and promise
     reads, the steps after) and embedding what it stored."""
-    passing = Passing(s.modes(), s.on(sw.HEDGED_PLANS), sheet, embed, s.embed_model, judges)
+    passing = Passing(s.positions(), s.on(sw.HEDGED_PLANS), sheet, embed, s.embed_model, judges)
     return PassOptions(
         embed=(embed, s.embed_model) if embed is not None else None,
         parts=PassParts.of(FEATURES, passing),

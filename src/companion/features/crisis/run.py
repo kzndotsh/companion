@@ -95,7 +95,7 @@ async def assess(m: Moment) -> Reading | None:
     severity = m.severity
     words = cue_words(t.text)
     detail: dict[str, Json] = {
-        "mode": c.mode(switch.CRISIS),
+        "mode": c.position(switch.CRISIS),
         "cue": {"severity": severity, "words": list[Json](words)},
     }
     outcome = Outcome(CrisisLevel.NONE)
@@ -110,7 +110,7 @@ async def assess(m: Moment) -> Reading | None:
         }
     light = outcome.light and not c.store.decided_since(c.rel, LIGHT_KEY, t.now - LIGHT_EVERY)
     asked = outcome.level is CrisisLevel.CONCERN and _risk_in_stretch(c, t)
-    reading = Reading(outcome.level, c.mode(switch.CRISIS), light, asked)
+    reading = Reading(outcome.level, c.position(switch.CRISIS), light, asked)
     done = would_do(reading)
     detail |= {
         **level_detail(outcome.level),
@@ -120,7 +120,7 @@ async def assess(m: Moment) -> Reading | None:
         "light": light,
         "would": list[Json](done),
     }
-    decide(c, t, LEVEL, detail, reason=render_reason(outcome, c.mode(switch.CRISIS), done))
+    decide(c, t, LEVEL, detail, reason=render_reason(outcome, c.position(switch.CRISIS), done))
     return reading
 
 

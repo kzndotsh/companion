@@ -15,7 +15,7 @@ from companion.core import switch
 from companion.core.extractor import StructuredModel
 from companion.core.recall import PROMPT as RECALL_PROMPT
 from companion.core.spend import purpose
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.types import Belief, BeliefId, Frame, Json, RelationshipId, Speaker
 from companion.core.vectors import Embedder, nearest
 from companion.features.recall.logic import GATE as RELEVANCE_GATE
@@ -194,7 +194,7 @@ async def relevant_for_turn(m: Moment) -> tuple[tuple[BeliefId, str], ...]:
     listening read because the judge failed it still runs, as a turn that is not sharing, so nothing
     held is offered; with listening switched off it does not run, as before."""
     c, t = m.c, m.t
-    embedder = embedder_in(c, switch.RELEVANCE, Mode.ON)
+    embedder = embedder_in(c, switch.RELEVANCE, Position.ON)
     if embedder is None:
         return ()
     if m.heard is None and not c.on(switch.LISTEN):
@@ -244,7 +244,7 @@ async def shadow_for_turn(m: Moment) -> None:
     """With the look-up in shadow: what it would have kept in mind on an ordinary message, logged
     beside the turn; it never holds up or changes the reply."""
     c, t = m.c, m.t
-    embedder = embedder_in(c, switch.RELEVANCE, Mode.SHADOW)
+    embedder = embedder_in(c, switch.RELEVANCE, Position.SHADOW)
     if embedder is None or (m.heard is None and not c.on(switch.LISTEN)) or m.pretend:
         return
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]

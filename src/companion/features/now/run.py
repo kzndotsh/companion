@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from companion.core import switch
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.turn.now import (
     KEY,
     LOOKBACK,
@@ -41,7 +41,7 @@ async def read_now(m: Moment) -> None:
     note or reaching out is on, since nudges read the labels too."""
     c, t = m.c, m.t
     # Not behind `Feature.switch`: nudges read the labels with the note off.
-    wanted = c.mode(switch.NOW) is not Mode.OFF or c.on(switch.INITIATIVE)
+    wanted = c.position(switch.NOW) is not Position.OFF or c.on(switch.INITIATIVE)
     if not wanted or m.unread_or_heavy or m.pretend:
         return
     got = await ask(m.judge, READER, reader_input(t.prior, t.text))
@@ -64,7 +64,7 @@ def now_note(m: Moment, found: object, so_far: Offered) -> Offer:
     and how long ago, outside a scene and the crisis path. Logged once the turn is stored."""
     del found, so_far
     c, t = m.c, m.t
-    if c.mode(switch.NOW) is Mode.OFF or m.pretend or m.risk:
+    if c.position(switch.NOW) is Position.OFF or m.pretend or m.risk:
         return Offer()
     line = soon_note(
         from_decisions(c.store.decisions_with_key(c.rel, KEY, t.now - LOOKBACK)), t.now
@@ -72,7 +72,7 @@ def now_note(m: Moment, found: object, so_far: Offered) -> Offer:
     if line is None:
         return Offer()
     detail: dict[str, Json] = {"note": line, "prompt": NOTE.ref}
-    if c.mode(switch.NOW) is Mode.SHADOW:
+    if c.position(switch.NOW) is Position.SHADOW:
         return Offer(after=(lambda: decide(c, t, SHADOW, detail),))
     return Offer(tail=(line,), after=(lambda: decide(c, t, SENT, detail),))
 

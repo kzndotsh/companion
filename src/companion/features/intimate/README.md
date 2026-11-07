@@ -33,7 +33,7 @@ The age check is deliberately broad: it also matches a number under 18 that is n
 
 A pattern becomes an entry only once its quotes come from two separate scenes (`MIN_SCENES`, `pattern_entry`). A failed or unreadable read leaves the bookmark before that scene, so it is read again next pass. A batch that ends mid-scene leaves that scene for later, so one long scene never counts as two.
 
-**The roleplay card** (`scene_lane` in `run.py`, called by `turn/assemble.py`). On a turn the roleplay talker answers (a pretend scene, or intimate talk the operator lets it answer; never a turn the floor held or one where they pushed back), code builds:
+**The roleplay card** (`intimate_lane` in `run.py`, the feature's `Feature.lane`, joined with the others by `turn/assemble.py`). On a turn the roleplay talker answers (a pretend scene, or intimate talk the operator lets it answer; never a turn the floor held or one where they pushed back), code builds:
 1. every current limit, hard first, then soft (`notes/scene-limits`);
 2. at most 6 entries nearest the moment that say what they are into, how they like it to go, or what they want after (`NEAREST`, `notes/scene-known`);
 3. at most one curious item, the nearest one, which it may invite once (`notes/scene-offer`);
@@ -53,8 +53,8 @@ What they are into and the offer go in the system block in place of the memory c
 
 | File | What |
 |---|---|
-| `logic.py` | pure: the lanes, stances and reasons (`Stance`, `Why`, `Place`; the `Lane` enum is in `core/lane.py`), the floor (`touches_age`, `screen`), the lane prompt, parse and agreement (`lane_prompt`, `parse_lanes`, `agree`), scenes and patterns (`scenes`, `closed`, `Pattern`, `pattern_prompt`, `parse_patterns`, `refuse`, `pattern_entry`), the card (`Entry`, `scene_card`, `render_scene`) and the cooling (`cooled`) |
-| `run.py` | effects: the pass step (`label_lanes`, `read_scenes`, `pass_step`), the entries (`entries`), the look-up (`nearest_for_turn`), the turn's lane (`scene_lane`), and `SCENE` |
+| `logic.py` | pure: the lanes, stances and reasons (`Stance`, `Why`, `Place`; the `Lane` enum is in `core/lane.py`), the floor (`touches_age`, `screen`), the lane prompt, parse and agreement (`lane_prompt`, `parse_lanes`, `agree`), scenes and patterns (`scenes`, `closed`, `Pattern`, `pattern_prompt`, `parse_patterns`, `refuse`, `pattern_entry`), the card (`Entry`, `RoleplayCard`, `roleplay_card`, `render_roleplay_card`, `render_pinned`) and the cooling (`cooled`) |
+| `run.py` | effects: the pass step (`label_lanes`, `read_scenes`, `pass_step`), the entries (`entries`), the look-up (`nearest_for_turn`), the turn's lane (`intimate_lane`), and `SCENE` |
 | `store.py` | its tables behind `Store.part(IntimateMemory)` (which memories are in the intimate lane is read through `Store.intimate_lane`, `Lane` is in `core/lane.py`, so reach and recall leave them out without importing this feature): places, patterns and their quotes and retires, vectors, the bookmark, and the floor's facts about a message's turn (`facts`) |
 | `cli.py` | `companion intimate`, and retiring a pattern (`retire_pattern`, used by `companion retire`) |
 

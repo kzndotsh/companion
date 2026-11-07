@@ -160,7 +160,7 @@ assembly has changed over time is in the `assembly` section of `CHANGELOG.md`.
 | `system/react` | system | the alongside judge, `core/turn/reactions.py` | v2 |
 | `system/recall` | system | the recall look-up, `features/recall` | v2 |
 | `system/topic-spent` | system | whether a small topic has run its course, asked only on short answers after a question | v1 |
-| `system/thread-met` | system | how their next message met a thread it brought up (picked up, brushed off, ignored), for the learned pace, `features/threads/run.py` (ADR 0023) | v1 |
+| `system/thread-met` | system | how their next message met a thread it brought up (picked up, brushed off, ignored), for the learned pace, `features/threads/met.py` (ADR 0023) | v1 |
 | `system/memory-check` | system | one memory: keep, passing, out of date or overstated, read three times (ADR 0019) | v1 |
 | `system/basics-hook` | system | not used since 2026-11-05 (the hook removed after its shadow review): which basic fact their own words touch without giving it (age, birthday, work, school, home, place), read three times (J48 hook) | v2 |
 | `system/basics-known` | system | not used since 2026-11-05 (the hook removed after its shadow review): whether a memory states a basic fact outright, before the hook would ask (J48 hook) | v1 |

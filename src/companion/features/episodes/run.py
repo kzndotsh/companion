@@ -9,7 +9,7 @@ from companion.core import switch
 from companion.core.clock import local_zone, utc_now
 from companion.core.episode import EPISODE_GAP
 from companion.core.ids import new_id
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.turn.listening import LISTENING_KEY, logged_severity
 from companion.core.types import Json, Severity, Speaker
 from companion.features.episodes.logic import GAP_BACK, Told, period
@@ -144,14 +144,14 @@ async def recent_for_turn(m: Moment) -> tuple[Told, ...]:
     told = recent_times(ends, t.text, last, t.now, zone)
     if told:
         detail: dict[str, Json] = {
-            "mode": c.mode(switch.EPISODES),
+            "mode": c.position(switch.EPISODES),
             "why": "pointed at a time" if pointed else "back after a gap",
             "shown": [f"{x.when}: {x.gist}" for x in told],
             "note": EPISODES_NOTE.ref,
         }
-        shadow = "" if c.mode(switch.EPISODES) is Mode.ON else " (shadow, not sent)"
+        shadow = "" if c.position(switch.EPISODES) is Position.ON else " (shadow, not sent)"
         decide(c, t, EPISODES_SHOWN, detail, reason=EPISODES_SHOWN + shadow)
-    return tuple(told) if c.mode(switch.EPISODES) is Mode.ON else ()
+    return tuple(told) if c.position(switch.EPISODES) is Position.ON else ()
 
 
 def recent_offer(m: Moment, found: object, so_far: Offered) -> Offer:

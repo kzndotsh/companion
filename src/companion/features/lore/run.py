@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, cast
 
 from companion.core import switch
 from companion.core.extractor import StructuredModel
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.types import Belief, BeliefId, RelationshipId
 from companion.core.vectors import NEAR_AT, Embedder, nearest
 from companion.features.lore.logic import (
@@ -130,7 +130,7 @@ async def tastes_for_turn(m: Moment) -> tuple[str, ...]:
     """Its tastes nearest their message on an ordinary turn (ADR 0020), as the words it said. In
     shadow they are logged and not shown."""
     c, t = m.c, m.t
-    embedder = embedder_in(c, switch.LORE, Mode.SHADOW, Mode.ON)
+    embedder = embedder_in(c, switch.LORE, Position.SHADOW, Position.ON)
     if embedder is None or not m.casual:
         return ()
     found = await nearest_tastes(c.store, embedder, c.rel, c.embed_model, t.text, t.now)
@@ -139,7 +139,7 @@ async def tastes_for_turn(m: Moment) -> tuple[str, ...]:
     decide(
         c,
         t,
-        LORE_SHOWN + ("" if c.mode(switch.LORE) is Mode.ON else " (shadow)"),
+        LORE_SHOWN + ("" if c.position(switch.LORE) is Position.ON else " (shadow)"),
         {
             "tastes": [str(b.id) for b, _ in found.tastes],
             "scores": [round(s, 3) for _, s in found.tastes],
@@ -148,7 +148,7 @@ async def tastes_for_turn(m: Moment) -> tuple[str, ...]:
     )
     return (
         tuple(b.evidence[0].quote for b, _ in found.tastes)
-        if c.mode(switch.LORE) is Mode.ON
+        if c.position(switch.LORE) is Position.ON
         else ()
     )
 

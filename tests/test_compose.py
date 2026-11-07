@@ -5,7 +5,7 @@ from pathlib import Path
 
 from companion import compose
 from companion.core import switch as sw
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.kit.features import Feature
 from companion.kit.runtime import Runtime
 from companion.registry import FEATURES
@@ -51,20 +51,20 @@ def test_a_runtime_reads_every_switch_as_settings_has_it(tmp_path: Path) -> None
     try:
         live = compose.runtime(Settings.from_env({}), store, Talker(), PREFIX, REL)
         assert (
-            live.mode(sw.MOOD),
-            live.mode(sw.CRISIS),
+            live.position(sw.MOOD),
+            live.position(sw.CRISIS),
             live.on(sw.REDRAW),
             live.daily_cap_usd,
         ) == (
-            Mode.ON,
-            Mode.ON,
+            Position.ON,
+            Position.ON,
             True,
             10.0,
         )
         quiet = compose.runtime(
             Settings.from_env({sw.MOOD.env: "off"}), store, Talker(), PREFIX, REL
         )
-        assert quiet.mode(sw.MOOD) is Mode.OFF
+        assert quiet.position(sw.MOOD) is Position.OFF
     finally:
         store.close()
 

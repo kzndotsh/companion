@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.types import (
     Frame,
     Json,
@@ -247,9 +247,9 @@ class _PairJudge:
         return Extraction({"relation": "same"}, "j", 0.0, 1)
 
 
-@pytest.mark.parametrize(("mode", "stored"), [(Mode.SHADOW, 2), (Mode.ON, 1)])
+@pytest.mark.parametrize(("mode", "stored"), [(Position.SHADOW, 2), (Position.ON, 1)])
 async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
-    store: Store, mode: Mode, stored: int
+    store: Store, mode: Position, stored: int
 ) -> None:
     _say(store, 1, Speaker.USER, "i drink green tea")
     await memory_pass(
@@ -270,7 +270,7 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
         ),
     )
     assert len(store.current_beliefs(REL)) == stored
-    if mode is Mode.ON:
+    if mode is Position.ON:
         assert result.restated == 1
         [b] = store.current_beliefs(REL)
         assert {e.quote for e in b.evidence} == {"green tea", "green tea always"}
@@ -289,9 +289,9 @@ class _MergeJudge:
         return Extraction({"relation": "merge"}, "j", 0.0, 1)
 
 
-@pytest.mark.parametrize(("mode", "proposed"), [(Mode.SHADOW, 0), (Mode.ON, 1)])
+@pytest.mark.parametrize(("mode", "proposed"), [(Position.SHADOW, 0), (Position.ON, 1)])
 async def test_a_new_memory_to_merge_with_an_old_one_is_kept_and_proposed_at_once_when_on(
-    store: Store, mode: Mode, proposed: int
+    store: Store, mode: Position, proposed: int
 ) -> None:
     _say(store, 1, Speaker.USER, "i drink green tea")
     await memory_pass(

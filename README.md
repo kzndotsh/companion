@@ -208,6 +208,8 @@ TELEGRAM_USER_ID=...        # the one Telegram user the bot answers
 OPENROUTER_API_KEY=...      # models are called through OpenRouter
 ```
 
+Without an OpenRouter key, `ANTHROPIC_API_KEY` lets Claude talk instead, with no roleplay model or standby.
+
 To talk on Discord instead, add the three lines below (setup: [docs/dev/delivery.md](docs/dev/delivery.md#discord-setup)).
 Its memory is `data/companion.sqlite` on either platform, so it is the same companion and the same
 memory on both; `TELEGRAM_USER_ID` and `TELEGRAM_BOT_TOKEN` are needed only on Telegram. (The rows

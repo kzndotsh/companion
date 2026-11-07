@@ -16,7 +16,7 @@ from pathlib import Path
 
 from companion.core import switch as sw
 from companion.core.reachout import Dial, dial
-from companion.core.switch import SWITCHES, Mode, Switch
+from companion.core.switch import SWITCHES, Position, Switch
 from companion.io.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.models import anthropic, embeddings, openrouter
 
@@ -129,21 +129,21 @@ class Settings:
             kiro_key=env.get("KIRO_GATEWAY_API_KEY") or env.get("PROXY_API_KEY", ""),
         )
 
-    def position(self, switch: Switch) -> str:
+    def value(self, switch: Switch) -> str:
         """A switch's position: on, off or shadow, or the value it names."""
         return self.switches[switch]
 
-    def mode(self, switch: Switch) -> Mode:
+    def position(self, switch: Switch) -> Position:
         """The position of a switch that takes on, shadow or off."""
-        return Mode(self.switches[switch])
+        return Position(self.switches[switch])
 
     def on(self, switch: Switch) -> bool:
         """Whether a switch is anything but off."""
-        return self.switches[switch] != Mode.OFF
+        return self.switches[switch] != Position.OFF
 
-    def modes(self) -> Mapping[Switch, Mode]:
+    def positions(self) -> Mapping[Switch, Position]:
         """Every on, shadow or off switch's position: what the `Runtime` carries."""
-        return {s: Mode(v) for s, v in self.switches.items() if s.is_mode}
+        return {s: Position(v) for s, v in self.switches.items() if s.is_position}
 
     @property
     def reach(self) -> Dial:
@@ -168,9 +168,9 @@ class Settings:
         takes another value (a platform, a dial, a routing choice) is in `dials` instead."""
         out: dict[str, list[str]] = {"live": [], "shadow": [], "off": []}
         for s in SWITCHES:
-            if s.shown is None and s.is_mode:
-                value = Mode(self.switches[s])
-                out["live" if value is Mode.ON else value.value].append(s.label)
+            if s.shown is None and s.is_position:
+                value = Position(self.switches[s])
+                out["live" if value is Position.ON else value.value].append(s.label)
         return out
 
     def dials(self) -> list[str]:
@@ -178,6 +178,6 @@ class Settings:
         return [
             f"{s.label} {(s.shown or {}).get(v, v)}"
             for s in SWITCHES
-            if s.label != "platform" and not (s.shown is None and s.is_mode)
+            if s.label != "platform" and not (s.shown is None and s.is_position)
             for v in (self.switches[s],)
         ]

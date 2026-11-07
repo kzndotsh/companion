@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from companion.core import switch
 from companion.core.clock import local_zone
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.types import Speaker
 from companion.features.mood.logic import PARAMS_VERSION as MOOD_PARAMS
 from companion.features.mood.logic import WINDOW as MOOD_WINDOW
@@ -50,16 +50,16 @@ def _mood(m: Moment) -> tuple[str | None, list[MoodEffect]]:
         t,
         "mood",
         {
-            "mode": c.mode(switch.MOOD),
+            "mode": c.position(switch.MOOD),
             "params": MOOD_PARAMS,
             "before": {s.value: round(v, 3) for s, v in before.strengths.items()},
             "after": {s.value: round(v, 3) for s, v in after.strengths.items()},
             "added": [[e.source.value, round(e.amount, 3)] for e in added],
             "line": shown,
         },
-        reason=f"{why} [{c.mode(switch.MOOD)}]",
+        reason=f"{why} [{c.position(switch.MOOD)}]",
     )
-    return (shown if c.mode(switch.MOOD) is Mode.ON else None), added
+    return (shown if c.position(switch.MOOD) is Position.ON else None), added
 
 
 def mood_offer(m: Moment, found: object, so_far: Offered) -> Offer:

@@ -40,7 +40,7 @@ def startup_lines(
         ("off", states["off"]),
         ("dials", s.dials()),
     ]
-    return [f"up as {name} on {s.position(sw.PLATFORM)}"] + [
+    return [f"up as {name} on {s.value(sw.PLATFORM)}"] + [
         line for label, items in rows for line in _row(label, items)
     ]
 

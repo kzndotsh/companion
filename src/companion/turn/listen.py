@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 from companion.core import switch
 from companion.core.crisis import cue_words
 from companion.core.extractor import StructuredModel
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.turn.context import Scored, conversation_prompt
 from companion.core.turn.listening import PROMPT, SCHEMA, parse
 from companion.core.turn.reply import Reaction
@@ -59,7 +59,7 @@ async def hear_them(c: Runtime, t: Turn, in_scene: Frame) -> Heard | None:
 
 async def _reaction_instead(c: Runtime, t: Turn) -> Reaction | None:
     """With the crisis path on, a message with a crisis cue word always gets a reply (ADR 0022)."""
-    cue = c.mode(switch.CRISIS) is Mode.ON and bool(cue_words(t.text))
+    cue = c.position(switch.CRISIS) is Position.ON and bool(cue_words(t.text))
     return await react_instead(c, t, crisis_cue=cue)
 
 

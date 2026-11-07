@@ -17,8 +17,8 @@ def test_every_switch_reads_on_and_off_the_same_way() -> None:
         s = Settings.from_env({sw.env: word for sw in SWITCHES})
         assert all(not s.on(sw) for sw in SWITCHES if "off" in sw.values), word
     on = Settings.from_env({sw.env: "yes" for sw in SWITCHES})
-    assert on.position(ROUTE_INTIMATE) == "on"
-    assert on.position(INITIATIVE) == "shadow"  # it has no live mode: anything but off is shadow
+    assert on.value(ROUTE_INTIMATE) == "on"
+    assert on.value(INITIATIVE) == "shadow"  # it has no live mode: anything but off is shadow
 
 
 def test_every_named_switch_is_in_the_table() -> None:
@@ -31,7 +31,7 @@ def test_every_named_switch_is_in_the_table() -> None:
     [("", "telegram"), ("Discord", "discord"), ("off", "telegram"), ("on", "telegram")],
 )
 def test_the_platform_is_telegram_unless_discord_is_named(raw: str, platform: str) -> None:
-    assert Settings.from_env({"COMPANION_PLATFORM": raw}).position(PLATFORM) == platform
+    assert Settings.from_env({"COMPANION_PLATFORM": raw}).value(PLATFORM) == platform
 
 
 def test_unset_is_the_default() -> None:

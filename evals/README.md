@@ -35,7 +35,7 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
   replays the request it logged. Then every reply passes the turn's reply checks and their redraws
   (`turn/gate.py`: the em dash, an unasked disclaimer, a copied clock line, the stock lines,
   markdown, an empty reply, and the quip judge, which is asked for real on the eval's judge model,
-  Haiku, `JUDGE_MODEL` in `cli/eval.py`). The table's replies
+  the judges' model, Haiku unless `COMPANION_JUDGE_MODEL` says otherwise, built by `compose.extractor`). The table's replies
   (`--show`) and the saved results say what made a sample draw again. As live, a turn with no
   listening reading, so a fixture without `labels`, gets the code checks but not the quip judge,
   and none of the notes that need a casual turn (such as the emoticon offer); add
@@ -93,7 +93,7 @@ uv run companion eval --variants v40.md,v41.md --samples 12 --cap 0.20 --show
 - Three samples per cell is a smoke test, not evidence. Differences of one or two samples between
   variants are noise. Do not act on fewer than about 12 samples per cell, and use 30 on a signal
   that matters.
-- The grader is a model (Haiku, `JUDGE_MODEL` in `cli/eval.py`; `system/judge` and
+- The grader is a model (the judges' model, Haiku unless `COMPANION_JUDGE_MODEL` says otherwise; `system/judge` and
   `system/judge-empathy`) and can be wrong. On the first run it agreed with a human reading on 23 of
   24 judged replies. Read the replies (`--show`) for anything that decides a change.
 - Fixtures marked as measuring "the talker alone" test the model without the live loop's other

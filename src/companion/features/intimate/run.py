@@ -17,7 +17,7 @@ from companion.core import switch
 from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
 from companion.core.ids import new_id
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.turn.address import names_them
 from companion.core.turn.floor import BRUSH_KEY
 from companion.core.types import (
@@ -366,7 +366,7 @@ async def nearest_for_turn(m: Moment) -> Scored | None:
     reply before it."""
     c, t = m.c, m.t
     intimate = c.on(switch.ROUTE_INTIMATE) and m.heard is not None and m.heard.read.intimate
-    embedder = embedder_in(c, switch.INTIMATE_MEMORY, Mode.SHADOW, Mode.ON)
+    embedder = embedder_in(c, switch.INTIMATE_MEMORY, Position.SHADOW, Position.ON)
     if embedder is None or c.roleplay_talker is None:
         return None
     if m.in_scene is not Frame.PLAY and not intimate:
@@ -424,7 +424,7 @@ def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card:
     """On a turn the roleplay talker answers: the scene card, logged, and sent when on. On any other
     turn: the intimate memories the everyday card would hold, logged; the turn leaves them off
     whatever the mode (`turn/assemble.py`)."""
-    live = c.mode(switch.INTIMATE_MEMORY) is Mode.ON
+    live = c.position(switch.INTIMATE_MEMORY) is Position.ON
     if not roleplay:
         hidden = c.store.intimate_lane(c.rel)
         on_card = hidden & {b.id for b in (*card.usable, *card.guarded, *card.older)}

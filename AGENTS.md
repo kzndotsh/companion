@@ -143,7 +143,7 @@ together.
   `Move`s in the initiative tick, run in `Kind` order, the one place the precedence plan, then nudge, then
   its own reasons is stated, `core/reachout.py`), `Feature.nightly` (a `NightStep`, run by
   `memory/nightly.py` in the registry's order) and the parts of a memory pass, all set up from `Passing`
-  and collected into `PassParts` (`kit/features.py`; `Passing` carries the same `modes` mapping as the `Runtime`): `Feature.after_pass` (a step every pass runs),
+  and collected into `PassParts` (`kit/features.py`; `Passing` carries the same `positions` mapping as the `Runtime`): `Feature.after_pass` (a step every pass runs),
   `Feature.loops` (the open-loop read) with the `Feature.own_loop` readers that ride its batch and
   bookmark, and `Feature.memory_write` (a check as each memory of theirs is written). `memory_pass.py`
   imports no feature for them. `background.py` collects them into the jobs the daemon starts. Its look-up runs with the others under the deadline, and what it found
@@ -207,7 +207,7 @@ together.
 - Some rules are tests (`tests/test_code_rules.py`): no matching a decision's reason text outside the
   allowed fallbacks for rows written before a key or field existed (listed there with the date each began), no file over 600 lines (a file listed in `CAPS` may be over it and may only shrink;
   none is listed today, and when one shrinks, lower its limit), and no more than 64 `noqa` comments in
-  `src` (the limit; 48 today; a new one replaces an old one).
+  `src` (the limit; 47 today; a new one replaces an old one).
 - Every feature in shadow has a row in `core/shadows.py` with a review date and what it is judged on
   (`companion shadows` lists them, overdue first); a test fails when a setting defaults to shadow without
   one. At its review it graduates or is removed, and its row goes.
@@ -251,7 +251,7 @@ together.
 - Settings are environment variables in `.env`, listed with their defaults in `README.md`. They are read
   once into `companion/settings.py` (`Settings`, one row per switch in `SWITCHES` of `core/switch.py`); the startup block
   (`startup_lines` in `startup.py`: prompts, models, limits, then the switches as live, shadow, off and
-  dials) is printed from it. A new switch is one named row in `core/switch.py` (`MOOD = Switch(...)`, listed in `SWITCHES`; settings read the rows, and core and the kit may not import `settings`), plus a row in `core/shadows.py` if it defaults to shadow. The `Runtime` carries every on, shadow or off position once, keyed by the row: a use reads `c.mode(MOOD)` (a `Mode`, compared as `is Mode.OFF`, never a word; `tests/test_code_rules.py` fails on one) or `c.on(MOOD)`, and a dial or a platform is read through `Settings.position`. No field on `Runtime`, no line in `compose.runtime`. `companion/compose.py` is the one place the models, spend sink and `Runtime` are built, for the bot, the one-off commands and the evals.
+  dials) is printed from it. A new switch is one named row in `core/switch.py` (`MOOD = Switch(...)`, listed in `SWITCHES`; settings read the rows, and core and the kit may not import `settings`), plus a row in `core/shadows.py` if it defaults to shadow. The `Runtime` carries every on, shadow or off position once, keyed by the row: a use reads `c.position(MOOD)` (a `Position`, compared as `is Position.OFF`, never a word; `tests/test_code_rules.py` fails on one) or `c.on(MOOD)`, and a dial or a platform is read through `Settings.position`. No field on `Runtime`, no line in `compose.runtime`. `companion/compose.py` is the one place the models, spend sink and `Runtime` are built, for the bot, the one-off commands and the evals.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`lib/logs.py`), and
   `httpx` stays at WARNING because its URLs carry the bot token.

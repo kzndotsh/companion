@@ -24,7 +24,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
 from companion.core.reachout import PRECEDENCE, Held, Kind
-from companion.core.switch import Mode, Switch
+from companion.core.switch import Position, Switch
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -196,19 +196,19 @@ class Passing:
     (`compose.pass_options`) for the bot and for the commands that run a pass, so they run the
     same one."""
 
-    modes: Mapping[Switch, Mode]  # where each on, shadow or off switch stands
+    positions: Mapping[Switch, Position]  # where each on, shadow or off switch stands
     loose_plans: bool = False  # `COMPANION_HEDGED_PLANS`, the one pass setting that is not a mode
     sheet: str = ""
     embedder: Embedder | None = None
     embed_model: str = ""
     judge: StructuredModel | None = None  # the model the pass reads with
 
-    def mode(self, switch: Switch) -> Mode:
-        return self.modes[switch]
+    def position(self, switch: Switch) -> Position:
+        return self.positions[switch]
 
     def on(self, switch: Switch) -> bool:
         """Whether a switch is anything but off."""
-        return self.modes[switch] is not Mode.OFF
+        return self.positions[switch] is not Position.OFF
 
 
 # A step every pass runs, set up from `Passing`; None when its switch is off.
@@ -371,7 +371,7 @@ class Feature:
 
     def live(self, c: Runtime) -> bool:
         """Whether its switch leaves it on, or it has none."""
-        return self.switch is None or c.mode(self.switch) is not Mode.OFF
+        return self.switch is None or c.position(self.switch) is not Position.OFF
 
     def offer(self, m: Moment, found: object, so_far: Offered) -> Offer:
         """Its note's offer, none while it is switched off."""

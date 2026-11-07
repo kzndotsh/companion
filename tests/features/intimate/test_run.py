@@ -9,7 +9,7 @@ import pytest
 
 from companion.cli.beliefs import retire_one
 from companion.core.extractor import Extraction
-from companion.core.switch import SWITCHES, Mode
+from companion.core.switch import SWITCHES, Position
 from companion.core.turn.floor import MINOR_KEY
 from companion.core.types import (
     Belief,
@@ -345,7 +345,7 @@ async def test_retire_works_for_a_pattern_and_it_leaves_the_lane(
 
 
 async def test_switch_off_has_no_pass_step(store: Store) -> None:
-    off = Passing({s: Mode.OFF for s in SWITCHES if s.is_mode})
+    off = Passing({s: Position.OFF for s in SWITCHES if s.is_position})
     assert PassParts.of([SCENE], off).steps == ()
     _told(store, "likes slow kissing", "i love slow kissing")
     step = pass_step()

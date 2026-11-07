@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.spend import purpose
-from companion.core.switch import Mode, Switch
+from companion.core.switch import Position, Switch
 from companion.core.types import RelationshipId
 from companion.core.vectors import Embedded, Embedder, Vector
 from companion.store.sqlite.store import Store
@@ -49,10 +49,10 @@ async def embed_within(
     return await bounded(embed(), deadline=deadline, what=f"{spend} look-up", unread=unread)
 
 
-def embedder_in(c: Runtime, row: Switch, *modes: Mode) -> Embedder | None:
-    """The turn's embedder, only while the switch stands in one of `modes` and there is an embedder:
-    the guard every embedding look-up starts with."""
-    return c.embedder if c.mode(row) in modes else None
+def embedder_in(c: Runtime, row: Switch, *positions: Position) -> Embedder | None:
+    """The turn's embedder, only while the switch stands in one of `positions` and there is an
+    embedder: the guard every embedding look-up starts with."""
+    return c.embedder if c.position(row) in positions else None
 
 
 @dataclass(frozen=True, slots=True)

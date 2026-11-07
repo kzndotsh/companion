@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
-from companion.core.switch import Mode
+from companion.core.switch import Position
 from companion.core.types import RelationshipId
 from companion.kit.features import Feature
 from companion.kit.jobs import Daily, Job
@@ -41,7 +41,7 @@ async def night(
         f.nightly
         for f in features
         if f.nightly is not None
-        and (f.nightly.switch is None or c.mode(f.nightly.switch) is not Mode.OFF)
+        and (f.nightly.switch is None or c.position(f.nightly.switch) is not Position.OFF)
     ]
     failed: list[str] = []
     for step in steps:

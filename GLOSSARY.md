@@ -116,7 +116,7 @@ Everything sent to the talker for one turn: persona, system block, history, thei
 What is kept of each turn's request so a replay can rebuild it exactly.
 
 **Moment**:
-What every note reads about the turn being answered: the frame, the listening read, the look-ups, whether it is held, and the risk.
+What every hook of the turn reads about the turn being answered (look-up, shadow, note, mention and the step after it is stored): the frame, the listening read, the look-ups, whether it is held, and the risk.
 
 **Prefix**:
 The opening of every request that never changes between turns, so the provider can cache it.
