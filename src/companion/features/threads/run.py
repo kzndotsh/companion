@@ -14,7 +14,6 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, tzinfo
 from typing import TYPE_CHECKING
 
-from companion.core import switch
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
@@ -420,7 +419,7 @@ def reaching(c: Runtime) -> tuple[Move, ...]:
 
 def pass_loops(p: Passing, own: Sequence[OwnReader]) -> Loops:
     """The open-loop read the memory pass runs, with the own-message readers that ride its batch."""
-    reading = Reading(BATCH, CONTEXT, own=tuple(own), loose=p.on(switch.HEDGED_PLANS))
+    reading = Reading(BATCH, CONTEXT, own=tuple(own), loose=p.loose_plans)
 
     async def read(
         store: Store,

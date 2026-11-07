@@ -24,6 +24,7 @@ from companion.io import discord
 from companion.io.delivery import Commands, Delivery, Hooks, Incoming
 from companion.io.stop import until_stopped
 from companion.io.telegram import Telegram
+from companion.kit.ask import check_routes
 from companion.kit.features import Outlet
 from companion.kit.jobs import keep_running
 from companion.lib import logs
@@ -90,6 +91,7 @@ async def _delivery(
 
 async def run(paths: Paths) -> None:
     s = Settings.from_env()
+    check_routes(s.judge_routes)
     log_file = logs.configure(paths.logs)
     rel = relationship_in(paths.db) or FIRST_RELATIONSHIP
     into = paths.backups(s.backup_dir)

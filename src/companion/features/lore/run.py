@@ -26,6 +26,7 @@ from companion.features.lore.logic import (
     prompt,
 )
 from companion.features.lore.store import ViewKinds
+from companion.kit.ask import judge_name
 from companion.kit.batches import Batch, Swept, label_in_batches
 from companion.kit.current import decide
 from companion.kit.embed import LOOK_SECONDS, embed_query, embedder_in
@@ -37,6 +38,9 @@ if TYPE_CHECKING:
     from companion.kit.features import Moment
 
 log = logging.getLogger("companion.lore")
+
+
+READ_NAME = judge_name("lore")  # what `COMPANION_JUDGE_ROUTES` calls its reads
 
 
 async def label_views(  # noqa: PLR0913
@@ -65,7 +69,7 @@ async def label_views(  # noqa: PLR0913
             text,
             SCHEMA,
             lambda data: parse(data, refs),
-            spend="lore",
+            spend=READ_NAME,
             timeout=60.0,  # a batch of views, three reads at once
         )
         if got.failed:  # the batch is labelled again next time, never from fewer reads
@@ -163,5 +167,6 @@ LORE = Feature(
     note=lore_offer,
     after_own=label_views,
     switch=switch.LORE,
+    embeds=(switch.LORE,),
     look_seconds=LOOK_SECONDS,
 )

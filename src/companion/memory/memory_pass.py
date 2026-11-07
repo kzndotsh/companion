@@ -63,7 +63,7 @@ EMBED_SECONDS = 60.0  # embedding what the pass stored; was unlimited
 def plain_parts() -> PassParts:
     """What a pass runs with every switch off: the open-loop read (strict) and the check on a new
     boundary, which no switch turns off. A rebuild's and a test's."""
-    return PassParts.of(FEATURES, Passing({s: Mode.OFF for s in SWITCHES}))
+    return PassParts.of(FEATURES, Passing({s: Mode.OFF for s in SWITCHES if s.is_mode}))
 
 
 @dataclass(frozen=True, slots=True)

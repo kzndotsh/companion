@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from companion.cli.main import COMMANDS, HANDLERS, _parser  # pyright: ignore[reportPrivateUsage]
+from companion.cli.main import BY_NAME, COMMANDS, _parser  # pyright: ignore[reportPrivateUsage]
 from companion.kit.command import Group
 
 
 def test_every_command_is_declared_once_under_one_heading() -> None:
     names = [c.name for c in COMMANDS]
     assert len(names) == len(set(names))
-    assert sorted(names) == sorted(HANDLERS)
+    assert sorted(names) == sorted(BY_NAME)
     assert all(isinstance(c.group, Group) for c in COMMANDS)
 
 
@@ -18,7 +18,7 @@ def test_the_help_lists_one_command_per_line(capsys: pytest.CaptureFixture[str])
         _parser().parse_args(["--help"])
     out = capsys.readouterr().out
     assert "{" not in out
-    for name in HANDLERS:
+    for name in BY_NAME:
         assert any(line.startswith(f"  {name} ") for line in out.splitlines()), name
 
 

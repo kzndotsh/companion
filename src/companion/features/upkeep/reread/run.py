@@ -34,6 +34,7 @@ from companion.features.upkeep.reread.logic import (
     verdict,
 )
 from companion.features.upkeep.reread.store import MemoryChecks
+from companion.kit.ask import judge_name
 from companion.kit.curate import log_would_close, retire
 from companion.kit.embed import bounded, embed_missing
 from companion.kit.features import Feature, Log, MemoryWrite, NightStep, Passing
@@ -46,6 +47,9 @@ SAME_SECONDS = 120.0  # embedding, three pair reads and a proposal; was unlimite
 SETTLED_DAYS = 7  # a memory is only read once it has had a week to be restated
 PER_NIGHT = 40
 CLOSED = "a passing moment, faded from the card (ADR 0019)"
+
+
+READ_NAME = judge_name("consolidate")  # what `COMPANION_JUDGE_ROUTES` calls its reads
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,7 +69,7 @@ async def _reads(
         check_prompt(b, today),
         CHECK_SCHEMA,
         read_label,
-        spend="consolidate",
+        spend=READ_NAME,
         timeout=30.0,  # one memory, three reads at once
     )
     return got.values, got.cost_usd
@@ -165,7 +169,7 @@ class SameCheck:
             pair_prompt(older, new),
             PAIR_SCHEMA,
             read_relation,
-            spend="consolidate",
+            spend=READ_NAME,
             timeout=30.0,  # one pair of memories, three reads at once
         )
         if got.failed:  # the memory is stored as usual; nothing is recorded about the pair
@@ -226,5 +230,8 @@ async def night_step(c: Runtime, judge: StructuredModel) -> None:
 
 # The re-read is the only part of the night behind a switch: it is left out while that is off.
 REREAD = Feature(
-    "reread", nightly=NightStep("re-read", night_step, switch.REREAD), memory_write=write_checks
+    "reread",
+    nightly=NightStep("re-read", night_step, switch.REREAD),
+    memory_write=write_checks,
+    embeds=(switch.REREAD,),
 )

@@ -28,7 +28,7 @@ from companion.features.upkeep.merging.logic import (
     unsupported,
 )
 from companion.features.upkeep.merging.store import MergeProposals
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ask, judge_name
 from companion.kit.features import Feature, NightStep
 from companion.kit.reads import read_times
 from companion.kit.runtime import Runtime
@@ -48,6 +48,9 @@ GROUP_SECONDS = 60.0  # one list of memories grouped, three reads at once
 RECENT_DAYS = 2  # the nightly run groups what was recorded in the last two days
 
 
+READ_NAME = judge_name("consolidate")  # what `COMPANION_JUDGE_ROUTES` calls its reads
+
+
 @dataclass(frozen=True, slots=True)
 class Proposed:
     groups: int = 0
@@ -63,7 +66,7 @@ async def _group_reads(
         listing(beliefs),
         GROUP_SCHEMA,
         lambda data: read_groups(data, len(beliefs)),
-        spend="consolidate",
+        spend=READ_NAME,
         timeout=GROUP_SECONDS,
     )
     return agreed(got.values), got.cost_usd

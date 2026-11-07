@@ -136,14 +136,14 @@ together.
   reply, a note, steps after a memory pass, a look-up in shadow beside the turn, and a step once the
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
   also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. A note's name is a `NoteName` (`kit/features.py`), used by its `Feature`, `ORDER` and every `reads`.
-  Every hook of the turn reads it through one `Moment` (`kit/features.py`), built when the turn is routed and filled in as it goes: look-up `(m)`, shadow `(m)` (`m.on_card` is the card sent), note `(m, found, so_far)`, mention `(m, found)`, step after the turn `(m, said, sent)`. The facts about the turn are worked out there once: `m.severity`, `m.heavy` (an unread turn is not heavy), `m.unread_or_heavy` (an unread turn counts as heavy), `m.sharing`, `m.pretend`, `m.casual` (never on a risk turn; a look-up cannot see `m.risk`, since the crisis look-up is one of them). A hook never re-derives them from `heard` and `in_scene`. The dispatchers own the policy every hook used to repeat: `Feature.switch` (off leaves out its look-up, note, shadow, mention, lane and step after the turn; the others keep their own), `Feature.needs_judge` (its look-up, shadow and step after the turn are left out of a runtime with no judge, and the hook reads `m.judge`) and `Feature.must_finish` (a step after the turn runs beside the reply, a failure logged, unless it writes what the next message reads, and then it is waited for). A hook still tells shadow from on with `c.mode(...)`. No field on
+  Every hook of the turn reads it through one `Moment` (`kit/features.py`), built when the turn is routed and filled in as it goes: look-up `(m)`, shadow `(m)` (`m.on_card` is the card sent), note `(m, found, so_far)`, mention `(m, found)`, step after the turn `(m, said, sent)`. The facts about the turn are worked out there once: `m.severity`, `m.heavy` (an unread turn is not heavy), `m.unread_or_heavy` (an unread turn counts as heavy), `m.sharing`, `m.pretend`, `m.casual` (never on a risk turn; a look-up cannot see `m.risk`, since the crisis look-up is one of them). A hook never re-derives them from `heard` and `in_scene`. The dispatchers own the policy every hook used to repeat: `Feature.switch` (off leaves out its look-up, note, shadow, mention, lane and step after the turn, and what it adds to a memory pass through `PassParts.of`, so a pass setup never re-checks it and reads only the mode it needs; the steps after stored memories, the night, reaching and jobs keep their own; a feature whose switch gates only part of it, like the re-read's night step, leaves `switch` unset and names the part's own), `Feature.embeds` (the switches under which it reads vectors: the bot builds the embedder when any of them is not off, `compose.embeds`, so a feature that embeds names its switches here and nothing else edits compose; a test fails when a feature module reads the embedder without declaring it), `Feature.needs_judge` (its look-up, shadow and step after the turn are left out of a runtime with no judge, and the hook reads `m.judge`) and `Feature.must_finish` (a step after the turn runs beside the reply, a failure logged, unless it writes what the next message reads, and then it is waited for). A hook still tells shadow from on with `c.mode(...)`. No field on
   `Lookups`, no branch in `look`. Background work is a part too, never a loop of its own in `daemon.py`:
   `Feature.jobs` (a `Job` in `kit/jobs.py`: what to run, `Every` or `Daily`, and whether the spend cap
   stops it; one loop, `keep_running`, runs every job with one failure policy), `Feature.reaching` (its
   `Move`s in the initiative tick, run in `Kind` order, the one place the precedence plan, then nudge, then
   its own reasons is stated, `core/reachout.py`), `Feature.nightly` (a `NightStep`, run by
   `memory/nightly.py` in the registry's order) and the parts of a memory pass, all set up from `Passing`
-  and collected into `PassParts` (`kit/features.py`): `Feature.after_pass` (a step every pass runs),
+  and collected into `PassParts` (`kit/features.py`; `Passing` carries the same `modes` mapping as the `Runtime`): `Feature.after_pass` (a step every pass runs),
   `Feature.loops` (the open-loop read) with the `Feature.own_loop` readers that ride its batch and
   bookmark, and `Feature.memory_write` (a check as each memory of theirs is written). `memory_pass.py`
   imports no feature for them. `background.py` collects them into the jobs the daemon starts. Its look-up runs with the others under the deadline, and what it found
@@ -157,6 +157,10 @@ together.
   registered, in the order the after-steps run.
 - A command is one `Command` (`kit/command.py`: name, heading, help, arguments, what it does), declared
   in the module that does the work and exported as `COMMANDS`; `cli/main.py` only lists the modules. A
+  feature's own commands live in its `cli.py`; `cli/` keeps the ones that span features or need the shell
+  (`memory`, `beliefs`, `initiative`, `audit`, `crisis --check`, `eval`, `replay`). A feature command that
+  sometimes asks a model is `served(...)`: its function gets `serve(job)`, which runs the job on the store and
+  the judges' model (`kit/command.py`, opened by `companion/commands.py`), so no feature imports `compose`. A
   command that opens the database does `with Store(db) as store:`. The memory pass is built once,
   `compose.pass_options`, and used by the bot's idle pass (`memory/idle.py`) and `companion memory-pass`, so
   they cannot differ; a rebuild uses the plain parts on purpose (`plain_parts`: no same-memory check, it would match
@@ -164,7 +168,7 @@ together.
   character sheets are in `characters.sheets_dir(data)` for the bot and the evals alike.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries, as a class bound to the
-  connection), `cli.py` (its report, and its `COMMANDS` when it needs no model), `README.md` (how it works). A group of close features (`upkeep/`, `curiosity/`, `flow/`, `diction/`) holds one such folder per part and a README naming them;
+  connection), `cli.py` (its report and its `COMMANDS`, `served` when a flag asks a model), `README.md` (how it works). A group of close features (`upkeep/`, `curiosity/`, `flow/`, `diction/`) holds one such folder per part and a README naming them;
   its parts may import each other. import-linter keeps a feature's logic pure, keeps features from importing
   each other, and lets only a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests
   mirror the folder (`tests/features/<name>/`).
@@ -181,7 +185,7 @@ together.
 - Ask a judge through `kit/ask.py`: declare it once, at module level, as a `Judge` (prompt, schema, parse, time limit, what a
   failed read means, whether a fallback model's answer counts, tries, and optionally a hedge: a second try started while a slow one still runs, first answer wins) and call `ask`, which returns a `Read`
   (value, model, cost, `name@version`) or None; `ask_or_raise` is for a step that fails as a whole (the memory pass). A judge's name is unique (`tests/kit/test_judge_names.py`): it is the log's name and the
-  `COMPANION_JUDGE_ROUTES` key; its spend purpose is the name unless `spend` says another (the floor's three judges, the reach-out drafters and the name and pronoun captures each have a name and share one spend line). An answer
+  `COMPANION_JUDGE_ROUTES` key (every `Judge` records its name as it is declared, a `read_times` caller declares its `spend` with `judge_name`, and the bot refuses to start when a route names none of them, `check_routes`; a test keeps the default routes real); its spend purpose is the name unless `spend` says another (the floor's three judges, the reach-out drafters and the name and pronoun captures each have a name and share one spend line). An answer
   only the caller can check (the labels it numbered) is parsed with `whole_answer` and finished by the caller; never build a `Judge` per call. Nothing calls `extract` outside `kit/ask.py` (a test checks it), and every
   call has a time limit.
 - Ask a small model the same question several times with `kit/reads.py` `read_times` (each failed or
@@ -189,7 +193,7 @@ together.
   feature states what a failed read means for it (no agreement, or try the batch again later).
 - Bound an embedding look-up with `kit/embed.py` (`embed_within` for one call, `bounded` for a look-up that embeds and more): it logs the failure with what it means and gives None. No new `asyncio.wait_for` around an `embed` call.
 - Judges share one model (Haiku, DeepSeek on a refusal) unless `COMPANION_JUDGE_ROUTES` names the judge
-  (by its `Judge` name or `read_times` `spend`); then it reads on that model first and Haiku second
+  (by its `Judge` name or `read_times` `spend`, checked at start); then it reads on that model first and Haiku second
   (`models/fallback.py` `ByJudge`; by default the crisis judge reads on DeepSeek). Route a judge there, never by choosing a model in a feature.
 - Record a decision through `kit/record.py` (`Recorder.decide(key, detail, reason=...)`; in the turn,
   `decide(c, t, ...)` from `kit/current.py`), never by building `Decision(...)` by hand. Code that looks a past decision up

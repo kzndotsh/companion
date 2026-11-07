@@ -191,22 +191,24 @@ type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitab
 
 @dataclass(frozen=True, slots=True)
 class Passing:
-    """What a memory pass is set up with besides the store and the model: where each switch stands,
-    the character's sheet, and the embedder. Built once (`compose.pass_options`) for the bot and for
-    the commands that run a pass, so they run the same one."""
+    """What a memory pass is set up with besides the store and the model: where each switch stands
+    (the same mapping the `Runtime` carries), the character's sheet, and the embedder. Built once
+    (`compose.pass_options`) for the bot and for the commands that run a pass, so they run the
+    same one."""
 
-    switches: Mapping[Switch, str]  # each switch's position, by the row
+    modes: Mapping[Switch, Mode]  # where each on, shadow or off switch stands
+    loose_plans: bool = False  # `COMPANION_HEDGED_PLANS`, the one pass setting that is not a mode
     sheet: str = ""
     embedder: Embedder | None = None
     embed_model: str = ""
     judge: StructuredModel | None = None  # the model the pass reads with
 
     def mode(self, switch: Switch) -> Mode:
-        return Mode(self.switches[switch])
+        return self.modes[switch]
 
     def on(self, switch: Switch) -> bool:
         """Whether a switch is anything but off."""
-        return self.switches[switch] != Mode.OFF
+        return self.modes[switch] is not Mode.OFF
 
 
 # A step every pass runs, set up from `Passing`; None when its switch is off.
@@ -257,7 +259,8 @@ type WriteSetup = Callable[[Passing], MemoryWrite | None]
 class PassParts:
     """What the features add to one memory pass, set up once from `Passing`: the open-loop reads
     (with the own-message readers riding their batch), the checks on each memory of theirs as it is
-    written, and the steps after."""
+    written, and the steps after. A feature whose `switch` is off adds nothing, so its setup reads
+    only the mode it needs, never whether it is off."""
 
     steps: tuple[Step, ...] = ()
     loops: tuple[Loops, ...] = ()
@@ -265,7 +268,7 @@ class PassParts:
 
     @classmethod
     def of(cls, features: Iterable[Feature], p: Passing) -> PassParts:
-        features = tuple(features)
+        features = tuple(f for f in features if f.switch is None or p.on(f.switch))
         own = [r for f in features if f.own_loop and (r := f.own_loop(p))]
         steps = [step for f in features if f.after_pass and (step := f.after_pass(p))]
         loops = [read for f in features if f.loops and (read := f.loops(p, own))]
@@ -327,9 +330,9 @@ type Reaching = Callable[[Runtime], Sequence[Move]]
 class Feature:
     """The parts a feature has, and the policy the dispatchers apply to all of them, so no hook
     checks it again: its `switch` (off leaves out its look-up, note, shadow look-up, mention, lane
-    and step after the turn; the steps after a memory pass, the night, reaching and jobs keep their
-    own), whether it needs a judge, and whether its step after the turn must finish before the
-    reply goes out."""
+    and step after the turn, and what it adds to a memory pass (`PassParts.of`); the steps after a
+    pass's stored memories, the night, reaching and jobs keep their own), whether it needs a judge,
+    and whether its step after the turn must finish before the reply goes out."""
 
     name: str  # its name in the notes' order and in the look-ups' log lines
     look: Look | None = None
@@ -362,6 +365,9 @@ class Feature:
     # Its step after the turn is waited for before the reply goes out: it writes what the next
     # message reads. Any other step runs beside the reply and never holds it up.
     must_finish: bool = False
+    # The switches under which it reads vectors through the embedder (a look-up, a check in the
+    # pass): the bot builds an embedder when any of them is not off (`compose.embedder`).
+    embeds: tuple[Switch, ...] = ()
 
     def live(self, c: Runtime) -> bool:
         """Whether its switch leaves it on, or it has none."""

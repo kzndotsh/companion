@@ -22,6 +22,7 @@ from companion.features.upkeep.sort.logic import (
     to_ask,
     verdict,
 )
+from companion.kit.ask import judge_name
 from companion.kit.curate import retire
 from companion.kit.features import Feature, NightStep
 from companion.kit.reads import read_times
@@ -31,6 +32,9 @@ from companion.store.sqlite.store import Store
 log = logging.getLogger("companion.worth")
 DROPPED = "a remark about the bot, not their life (three reads agreed)"
 EXPIRED = "a routine moment, a week on"
+
+
+READ_NAME = judge_name("worth")  # what `COMPANION_JUDGE_ROUTES` calls its reads
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,7 +52,7 @@ async def _reads(extractor: StructuredModel, prompt: str) -> tuple[tuple[str | N
         prompt,
         SCHEMA,
         read,
-        spend="worth",
+        spend=READ_NAME,
         timeout=60.0,  # a batch of memories, three reads at once
     )
     return got.values, got.cost_usd

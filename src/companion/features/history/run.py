@@ -44,7 +44,7 @@ from companion.features.history.logic import (
     to_story,
 )
 from companion.features.history.store import By, Stories
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ask, judge_name
 from companion.kit.current import decide
 from companion.kit.embed import embed_query, embedder_in
 from companion.kit.features import Feature, Moment, Passing
@@ -73,6 +73,9 @@ CAPTURED = "history: a story of its own past recorded"
 DROPPED = "history: a story dropped"
 RULED = "history: the canon check ruled"
 NEAREST = "history: its canon stories nearest their message (shadow)"
+
+
+READ_NAME = judge_name("history")  # what `COMPANION_JUDGE_ROUTES` calls its reads
 
 
 @dataclass(frozen=True, slots=True)
@@ -149,7 +152,7 @@ async def _check(
         text,
         CANON_SCHEMA,
         lambda data: parse_canon(data, refs),
-        spend="history",
+        spend=READ_NAME,
         timeout=CANON_SECONDS,
     )
     ruling = rule(got.values, {s.id: s.claim for s in canon})
@@ -204,10 +207,8 @@ async def read_history(
 type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[HistoryRead]]
 
 
-def pass_step(mode: Mode, sheet: str) -> Step | None:
-    """The step the memory pass runs for `COMPANION_HISTORY`, or None when it is off."""
-    if mode is Mode.OFF:
-        return None
+def pass_step(sheet: str) -> Step:
+    """The step the memory pass runs for `COMPANION_HISTORY` (left out while it is off)."""
 
     async def step(
         store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
@@ -273,8 +274,14 @@ async def stories_beside(m: Moment) -> None:
     )
 
 
-def set_up(p: Passing) -> Step | None:
-    return pass_step(p.mode(switch.HISTORY), p.sheet)
+def set_up(p: Passing) -> Step:
+    return pass_step(p.sheet)
 
 
-HISTORY = Feature("history", shadow=stories_beside, after_pass=set_up, switch=switch.HISTORY)
+HISTORY = Feature(
+    "history",
+    shadow=stories_beside,
+    after_pass=set_up,
+    switch=switch.HISTORY,
+    embeds=(switch.HISTORY,),
+)

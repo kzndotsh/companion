@@ -3,6 +3,7 @@ about now, and the recent picks (J48). Writes nothing; `--label` labels new ones
 
 from __future__ import annotations
 
+import argparse
 from collections import Counter
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.types import Depth, Domain, RelationshipId
 from companion.features.curiosity.map.logic import ASKED, WOULD_ASK, pick_gap
 from companion.features.curiosity.map.run import label_new
+from companion.kit.command import Group, Serve, db_args, emit, served, target
 from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
@@ -46,3 +48,25 @@ async def label_now(x: Services) -> str:
     """Label memories that have no label yet, for `companion map --label`."""
     done = await label_new(x.store, x.judge, x.rel, utc_now(), batches=10)
     return f"labelled {done.labelled}, {done.left} left, ${done.cost_usd:.4f}\n"
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--label", action="store_true", help="label new memories first (a model call)")
+    db_args(p)
+
+
+def _map(a: argparse.Namespace, serve: Serve) -> int:
+    db, rel = target(a)
+    first = serve(label_now) if a.label else ""
+    return emit(first + run(db, rel) + "\n")
+
+
+COMMANDS = (
+    served(
+        "map",
+        Group.MEMORY,
+        "what it knows about them by part of their life, and the gap it would ask",
+        _map,
+        _args,
+    ),
+)

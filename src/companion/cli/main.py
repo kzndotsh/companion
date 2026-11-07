@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import shutil
 import textwrap
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 
+from companion import commands
 from companion.cli import (
     address,
     audit,
@@ -13,7 +15,6 @@ from companion.cli import (
     favorites,
     flags,
     initiative,
-    labelling,
     memory,
     replay,
     shadows,
@@ -24,13 +25,16 @@ from companion.cli import eval as eval_cli
 from companion.cli import prompts as prompts_cli
 from companion.cli import run as run_cli
 from companion.features.calendar import cli as calendar
+from companion.features.curiosity.map import cli as knowing
+from companion.features.episodes import cli as episodes
 from companion.features.history import cli as history
 from companion.features.intimate import cli as intimate
+from companion.features.lore import cli as lore
 from companion.features.mood import cli as mood
 from companion.features.now import cli as now_cli
 from companion.features.promises import cli as promises
 from companion.features.reminders import cli as reminders
-from companion.kit.command import Command, Group
+from companion.kit.command import Command, Group, Job, target
 
 # Every module that declares commands (`COMMANDS`). A new command is one `Command` in its module;
 # a new module is one line here. The order is the order of `companion --help` within a heading.
@@ -45,7 +49,9 @@ MODULES = (
     replay,
     beliefs,
     memory,
-    labelling,
+    knowing,
+    lore,
+    episodes,
     address,
     now_cli,
     reminders,
@@ -60,7 +66,7 @@ MODULES = (
     eval_cli,
 )
 COMMANDS: tuple[Command, ...] = tuple(c for m in MODULES for c in m.COMMANDS)
-HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {c.name: c.run for c in COMMANDS}
+BY_NAME: dict[str, Command] = {c.name: c for c in COMMANDS}
 
 
 class _Parser(argparse.ArgumentParser):
@@ -93,4 +99,16 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    return HANDLERS[str(args.command)](args)
+    return _run(BY_NAME[str(args.command)], args)
+
+
+def _run(command: Command, args: argparse.Namespace) -> int:
+    if command.run is not None:
+        return command.run(args)
+    assert command.serving is not None
+
+    def serve(job: Job) -> str:
+        db, rel = target(args)
+        return asyncio.run(commands.run(db, rel, job))
+
+    return command.serving(args, serve)

@@ -28,7 +28,7 @@ from companion.features.promises.logic import (
     to_promise,
 )
 from companion.features.promises.store import Promises
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ask, judge_name
 from companion.kit.current import decide
 from companion.kit.features import Feature, Log, Moment, OwnReader, Passing
 from companion.kit.reads import read_times
@@ -36,6 +36,9 @@ from companion.lib.vote import READS
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.promises")
+
+
+READ_NAME = judge_name("promises")  # what `COMPANION_JUDGE_ROUTES` calls its reads
 
 
 async def read_promises(  # noqa: PLR0913, PLR0917
@@ -55,7 +58,7 @@ async def read_promises(  # noqa: PLR0913, PLR0917
         build_user_prompt(window, targets, {}, tz),
         SCHEMA,
         parse,
-        spend="promises",
+        spend=READ_NAME,
         timeout=90.0,  # a batch of the companion's messages, three reads at once
     )
     reads = [r for r in got.values if r is not None]
@@ -138,8 +141,9 @@ async def check_reply(m: Moment, said: Utterance, sent: str | None) -> None:
 
 
 def promise_reader(p: Passing) -> OwnReader | None:
-    """The read of its own messages that rides the open-loop batch, none while the switch is off."""
-    return read_promises if p.on(switch.PROMISES) else None
+    """The read of its own messages that rides the open-loop batch."""
+    del p
+    return read_promises
 
 
 PROMISE_CHECK = Feature(

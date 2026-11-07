@@ -9,7 +9,7 @@ import pytest
 
 from companion.cli.beliefs import retire_one
 from companion.core.extractor import Extraction
-from companion.core.switch import Mode
+from companion.core.switch import SWITCHES, Mode
 from companion.core.turn.floor import MINOR_KEY
 from companion.core.types import (
     Belief,
@@ -41,6 +41,7 @@ from companion.features.intimate.logic import (
 from companion.features.intimate.run import (
     NOTED,
     PLACED,
+    SCENE,
     UNREAD,
     entries,
     label_lanes,
@@ -48,6 +49,7 @@ from companion.features.intimate.run import (
     read_scenes,
 )
 from companion.features.intimate.store import IntimateMemory
+from companion.kit.features import Passing, PassParts
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
@@ -343,10 +345,10 @@ async def test_retire_works_for_a_pattern_and_it_leaves_the_lane(
 
 
 async def test_switch_off_has_no_pass_step(store: Store) -> None:
-    assert pass_step(Mode.OFF) is None
+    off = Passing({s: Mode.OFF for s in SWITCHES if s.is_mode})
+    assert PassParts.of([SCENE], off).steps == ()
     _told(store, "likes slow kissing", "i love slow kissing")
-    step = pass_step(Mode.SHADOW)
-    assert step is not None
+    step = pass_step()
     await step(store, Judge({"likes slow kissing": _agreed("intimate", "into")}), REL, LATER)
     assert len(store.part(IntimateMemory).places(REL)) == 1
 

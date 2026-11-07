@@ -3,11 +3,13 @@ written about each. `--write` writes the ones not written yet (a model call)."""
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 from companion.core.clock import local_zone, utc_now
 from companion.core.types import RelationshipId
 from companion.features.episodes.run import write_closed
+from companion.kit.command import Group, Serve, db_args, emit, served, target
 from companion.kit.services import Services
 from companion.store.sqlite.store import Store
 
@@ -32,3 +34,27 @@ async def write_now(x: Services) -> str:
     """Write a record of every finished episode that has none, for `companion episodes`."""
     done = await write_closed(x.store, x.judge, x.rel, utc_now())
     return f"wrote {done.written} episodes, ${done.cost_usd:.4f}\n"
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "--write", action="store_true", help="write the ones not written yet (a model call)"
+    )
+    db_args(p)
+
+
+def _episodes(a: argparse.Namespace, serve: Serve) -> int:
+    db, rel = target(a)
+    first = serve(write_now) if a.write else ""
+    return emit(first + run(db, rel))
+
+
+COMMANDS = (
+    served(
+        "episodes",
+        Group.DAYS,
+        "the times they spent together, with a line about each",
+        _episodes,
+        _args,
+    ),
+)

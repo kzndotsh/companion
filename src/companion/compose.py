@@ -6,7 +6,7 @@ they cannot drift apart. Keys and tokens are read here, where a client is made."
 from __future__ import annotations
 
 import os
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import TypedDict, Unpack
 
@@ -20,7 +20,7 @@ from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalke
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
 from companion.core.vectors import Embedder
-from companion.kit.features import Passing, PassParts
+from companion.kit.features import Feature, Passing, PassParts
 from companion.kit.runtime import Runtime
 from companion.memory.memory_pass import PassOptions
 from companion.models import anthropic, embeddings, openrouter
@@ -126,14 +126,20 @@ class Models:
     roleplay: Talker | None
     judge: StructuredModel  # the judges, with their routes
     memory: StructuredModel  # the memory pass and the night's work
-    embedder: Embedder | None  # None when relevance, lore and focus are all off
+    embedder: Embedder | None  # None when no feature that embeds is on (`embeds`)
+
+
+def embeds(s: Settings, features: Iterable[Feature] = FEATURES) -> bool:
+    """Whether any feature that reads vectors names a switch (`Feature.embeds`) that is on or in
+    shadow. The memory pass's embedding of new memories serves those same features."""
+    return any(s.on(row) for f in features for row in f.embeds)
 
 
 def embedder(
     client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Settings
 ) -> Embedder | None:
-    """The embedder, metered; None when relevance, lore and focus are all off."""
-    if not (s.openrouter and (s.on(sw.RELEVANCE) or s.on(sw.LORE) or s.on(sw.FOCUS))):
+    """The embedder, metered; None when no feature that embeds is on."""
+    if not (s.openrouter and embeds(s)):
         return None
     return MeteredEmbedder(
         embeddings.OpenRouterEmbedder(need("OPENROUTER_API_KEY"), client, s.embed_model),
@@ -207,7 +213,7 @@ def pass_options(
     """What a memory pass runs with, built once so the bot's idle pass and `companion memory-pass`
     do the same: what the features add (`PassParts.of`: the same-memory check, the loop and promise
     reads, the steps after) and embedding what it stored."""
-    passing = Passing(s.switches, sheet, embed, s.embed_model, judges)
+    passing = Passing(s.modes(), s.on(sw.HEDGED_PLANS), sheet, embed, s.embed_model, judges)
     return PassOptions(
         embed=(embed, s.embed_model) if embed is not None else None,
         parts=PassParts.of(FEATURES, passing),

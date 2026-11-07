@@ -330,5 +330,6 @@ RELEVANCE = Feature(
     shadow=shadow_for_turn,
     switch=switch.RELEVANCE,
     needs_judge=True,
+    embeds=(switch.RELEVANCE,),
     look_seconds=LIVE_SECONDS + LOOK_SECONDS,
 )

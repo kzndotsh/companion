@@ -75,7 +75,7 @@ from companion.features.intimate.logic import (
     touches_age,
 )
 from companion.features.intimate.store import By, IntimateMemory
-from companion.kit.ask import Judge, ask
+from companion.kit.ask import Judge, ask, judge_name
 from companion.kit.current import Turn, decide
 from companion.kit.embed import LOOK_SECONDS, embed_query, embedder_in
 from companion.kit.features import CardLane, Feature, Lookups, Moment, Passing
@@ -111,6 +111,9 @@ UNREAD = "scene memory: a scene left unread by the floor"
 CARD = "scene memory: the scene card"
 LEFT_OFF = "scene memory: intimate memories left off the everyday card"
 OFFERED = "scene memory: a curious item offered"
+
+
+READ_NAME = judge_name("scene memory")  # what `COMPANION_JUDGE_ROUTES` calls its reads
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,7 +161,7 @@ async def label_lanes(
         text,
         LANE_SCHEMA,
         lambda data: parse_lanes(data, refs),
-        spend="scene memory",
+        spend=READ_NAME,
         timeout=READS_SECONDS,
     )
     if got.failed:
@@ -192,7 +195,7 @@ async def _a_limit(extractor: StructuredModel, b: Belief) -> tuple[bool, float]:
         limit_prompt(b),
         LIMIT_SCHEMA,
         parse_limit,
-        spend="scene memory",
+        spend=READ_NAME,
         timeout=READS_SECONDS,
     )
     sure = not got.failed and all(v is True for v in got.values)
@@ -289,10 +292,8 @@ async def _read_scene(
 type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[Spent]]
 
 
-def pass_step(mode: Mode) -> Step | None:
-    """The step the memory pass runs for `COMPANION_INTIMATE_MEMORY`, or None when it is off."""
-    if mode is Mode.OFF:
-        return None
+def pass_step() -> Step:
+    """The step the memory pass runs for `COMPANION_INTIMATE_MEMORY` (left out while it is off)."""
 
     async def step(
         store: Store, extractor: StructuredModel, rel: RelationshipId, now: datetime
@@ -470,8 +471,9 @@ def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card:
     )
 
 
-def set_up(p: Passing) -> Step | None:
-    return pass_step(p.mode(switch.INTIMATE_MEMORY))
+def set_up(p: Passing) -> Step:
+    del p
+    return pass_step()
 
 
 SCENE = Feature(
@@ -481,4 +483,5 @@ SCENE = Feature(
     after_pass=set_up,
     switch=switch.INTIMATE_MEMORY,
     look_seconds=LOOK_SECONDS,
+    embeds=(switch.INTIMATE_MEMORY,),
 )

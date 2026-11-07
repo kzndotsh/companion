@@ -48,4 +48,10 @@ async def focus_for_turn(m: Moment) -> Focus | None:
     return found
 
 
-FOCUS = Feature("focus", look=focus_for_turn, switch=switch.FOCUS, look_seconds=LOOK_SECONDS)
+FOCUS = Feature(
+    "focus",
+    look=focus_for_turn,
+    switch=switch.FOCUS,
+    look_seconds=LOOK_SECONDS,
+    embeds=(switch.FOCUS,),
+)

@@ -6,7 +6,9 @@ from pathlib import Path
 from companion import compose
 from companion.core import switch as sw
 from companion.core.switch import Mode
+from companion.kit.features import Feature
 from companion.kit.runtime import Runtime
+from companion.registry import FEATURES
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import PREFIX, REL, Talker
@@ -78,3 +80,31 @@ def test_the_bots_memory_pass_and_the_command_are_built_by_one_function() -> Non
     assert len(options.parts.loops) == 1  # the open-loop read, with the promise read riding it
     assert options.embed is None
     assert options.parts.writes[0].same is None  # type: ignore[attr-defined]
+
+
+def _modules(feature: Feature) -> set[str]:
+    hooks = (getattr(feature, f.name) for f in dataclasses.fields(feature))
+    return {h.__module__ for h in hooks if callable(h)}
+
+
+def test_an_embedder_is_built_for_each_feature_that_embeds_alone() -> None:
+    """With only one embedding switch on, the embedder is still wanted (the old hand-kept list
+    named relevance, lore and focus, so history, the scene memory and the re-read did nothing)."""
+    rows = {row for f in FEATURES for row in f.embeds}
+    quiet = {row.env: "off" for row in rows}
+    assert not compose.embeds(Settings.from_env(quiet))
+    for row in rows:
+        assert compose.embeds(Settings.from_env({**quiet, row.env: "on"})), row.env
+    assert {sw.HISTORY, sw.INTIMATE_MEMORY, sw.REREAD} <= rows
+
+
+def test_a_feature_module_that_reads_the_embedder_declares_that_it_embeds() -> None:
+    src = Path(__file__).parents[1] / "src"
+    declaring = {m for f in FEATURES if f.embeds for m in _modules(f)}
+    reading = {
+        name
+        for f in FEATURES
+        for name in _modules(f)
+        if "embedder" in (src / (name.replace(".", "/") + ".py")).read_text()
+    }
+    assert reading <= declaring, f"{sorted(reading - declaring)} read an embedder, undeclared"

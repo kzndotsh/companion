@@ -9,7 +9,7 @@ worth) is in its README under `src/companion/features/`.
 Memory is written by the memory pass (`src/companion/memory/memory_pass.py`),
 never during a reply. It runs once the chat has been quiet for 90 seconds (`memory/idle.py`), or at
 once with `companion memory-pass`. Both run the same pass: its options are built once
-(`compose.pass_options`): embedding the new memories, and what the features add (`PassParts.of`, all set
+(`compose.pass_options`): embedding the new memories (the embedder exists when any feature that embeds, `Feature.embeds`, is on), and what the features add (`PassParts.of`, all set
 up from `Passing`): the same-memory check and the new-boundary question as each memory of theirs is
 written (`Feature.memory_write`, reread), the open-loop read (`Feature.loops`, threads, with hedged
 plans) with the promise read riding its batch and bookmark (`Feature.own_loop`, promises), and the

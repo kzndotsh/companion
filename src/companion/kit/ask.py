@@ -8,7 +8,9 @@ It returns a `Read` with the value, the model, the cost and the prompt's `name@v
 when nothing usable came back; the caller says what None means in one line.
 
 A judge's name is unique across the code (`tests/kit/test_judge_names.py`): it is the log's name
-and what `COMPANION_JUDGE_ROUTES` routes by. Its spend purpose is the name unless `spend` says
+and what `COMPANION_JUDGE_ROUTES` routes by. Every `Judge` records its name as it is declared, and a
+`read_times` caller declares its name with `judge_name`; `check_routes` stops the bot at start when
+a route names none of them. Its spend purpose is the name unless `spend` says
 otherwise, so judges of one family can share a line in `companion spend`.
 
 An answer that can only be checked against what the caller showed (the labels it numbered) is read
@@ -20,7 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 from companion.core.extractor import Extraction, StructuredModel, judging
@@ -29,6 +31,31 @@ from companion.core.types import Json, member
 from companion.lib.prompts import Prompt
 
 log = logging.getLogger("companion.judges")
+
+_NAMES: set[str] = set()  # every judge name declared so far, for `check_routes`
+
+
+def judge_name(name: str) -> str:
+    """Declare the name a `read_times` caller reads under, at module level; returns it."""
+    _NAMES.add(name)
+    return name
+
+
+def declared_judges() -> frozenset[str]:
+    """The names of the judges declared by the modules imported so far."""
+    return frozenset(_NAMES)
+
+
+def check_routes(routes: Iterable[str]) -> None:
+    """Stop the bot with the names it knows when a route names no declared judge: a typo or a
+    renamed judge would otherwise send its calls to the shared model without a word."""
+    unknown = sorted(set(routes) - _NAMES)
+    if unknown:
+        msg = (
+            f"COMPANION_JUDGE_ROUTES names no judge called {', '.join(unknown)}; "
+            f"the judges are {', '.join(sorted(_NAMES))}"
+        )
+        raise SystemExit(msg)
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +73,9 @@ class Judge[T]:
     # last to fail or time out.
     hedge: float | None = None
     spend: str | None = None  # the spend purpose when it is not the name (a family of judges)
+
+    def __post_init__(self) -> None:
+        judge_name(self.name)
 
     @property
     def call(self) -> Call:

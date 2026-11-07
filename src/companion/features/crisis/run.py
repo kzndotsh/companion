@@ -45,6 +45,7 @@ from companion.features.crisis.logic import (
     stay_note,
     strong_cue,
 )
+from companion.kit.ask import judge_name
 from companion.kit.current import Turn, decide, mark
 from companion.kit.features import Feature, Moment, NoteName, Offer, Offered
 from companion.kit.reads import Reads, read_times
@@ -58,6 +59,9 @@ LIGHT_KEY = "crisis: checked lightly"
 LIGHT_EVERY = timedelta(days=1)
 
 
+READ_NAME = judge_name("crisis")  # what `COMPANION_JUDGE_ROUTES` calls its reads
+
+
 async def read_risk(
     extractor: StructuredModel, before: Sequence[tuple[Speaker, str]], said: str
 ) -> Reads[Risk]:
@@ -68,7 +72,7 @@ async def read_risk(
         risk_prompt(before, said),
         SCHEMA,
         parse,
-        spend="crisis",
+        spend=READ_NAME,
         timeout=TIMEOUT_SECONDS,
     )
 
