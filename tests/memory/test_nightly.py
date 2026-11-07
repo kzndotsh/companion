@@ -1,44 +1,45 @@
 from __future__ import annotations
 
-from datetime import UTC, timedelta
+from datetime import timedelta
 from pathlib import Path
 
-import pytest
-
-import companion.memory.nightly as nightly_module
-from companion.core.switch import Mode
+from companion.core import switch as sw
+from companion.core.extractor import StructuredModel
+from companion.kit.features import Feature, NightStep
+from companion.kit.runtime import Runtime
 from companion.memory.nightly import LAST_RUN, MISSED_AFTER, missed, night
+from companion.registry import FEATURES
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
+from tests.runtime import make_runtime
+from tests.turn.test_mood_loop import PREFIX, Talker
+
+
+def _runtime(tmp_path: Path, **changes: object) -> Runtime:
+    return make_runtime(Store(tmp_path / "rel.sqlite"), Talker(), PREFIX, REL, **changes)
+
+
+def _step(
+    name: str, ran: list[str], *, fails: bool = False, switch: sw.Switch | None = None
+) -> Feature:
+    async def run(c: Runtime, judge: StructuredModel) -> None:
+        del c, judge
+        ran.append(name)
+        if fails:
+            raise RuntimeError("judge down")
+
+    return Feature(name, nightly=NightStep(name, run, switch))
 
 
 async def test_one_failing_step_does_not_skip_the_others_and_the_run_is_kept(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
-    store = Store(tmp_path / "rel.sqlite")
-    ran: list[str] = []
-
-    async def check_fails(*_: object, **__: object) -> None:
-        raise RuntimeError("judge down")
-
-    async def group(*_: object, **__: object) -> None:
-        ran.append("grouping")
-
-    def routine(*_: object, **__: object) -> None:
-        ran.append("routine")
-
-    async def episodes(*_: object, **__: object) -> None:
-        ran.append("episodes")
-
-    monkeypatch.setattr(nightly_module, "nightly", check_fails)
-    monkeypatch.setattr(nightly_module.merging, "recent", group)
-    monkeypatch.setattr(nightly_module, "expire_routine", routine)
-    monkeypatch.setattr(nightly_module, "write_closed", episodes)
-    assert missed(store, REL, T0)
-    failed = await night(store, None, REL, UTC, mode="shadow")  # type: ignore[arg-type]
-    assert failed == ["re-read"]
-    assert ran == ["grouping", "routine", "episodes"]
-    assert store.setting(REL, LAST_RUN) is not None
+    c, ran = _runtime(tmp_path), list[str]()
+    steps = [_step("re-read", ran, fails=True), _step("grouping", ran), _step("episodes", ran)]
+    assert missed(c.store, REL, T0)
+    assert await night(c, None, steps) == ["re-read"]  # type: ignore[arg-type]
+    assert ran == ["re-read", "grouping", "episodes"]
+    assert c.store.setting(REL, LAST_RUN) is not None
 
 
 def test_a_night_is_missed_only_after_more_than_a_day(tmp_path: Path) -> None:
@@ -49,45 +50,25 @@ def test_a_night_is_missed_only_after_more_than_a_day(tmp_path: Path) -> None:
 
 
 async def test_a_night_where_every_step_failed_is_not_recorded_so_it_is_made_up(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path,
 ) -> None:
-    store = Store(tmp_path / "rel.sqlite")
-
-    async def fails(*_: object, **__: object) -> None:
-        raise RuntimeError("judge down")
-
-    def fails_now(*_: object, **__: object) -> None:
-        raise RuntimeError("store busy")
-
-    monkeypatch.setattr(nightly_module, "nightly", fails)
-    monkeypatch.setattr(nightly_module.merging, "recent", fails)
-    monkeypatch.setattr(nightly_module, "expire_routine", fails_now)
-    monkeypatch.setattr(nightly_module, "write_closed", fails)
-    failed = await night(store, None, REL, UTC, mode="shadow")  # type: ignore[arg-type]
-    assert len(failed) == 4
-    assert store.setting(REL, LAST_RUN) is None
-    assert missed(store, REL, T0)
+    c, ran = _runtime(tmp_path), list[str]()
+    steps = [_step(name, ran, fails=True) for name in ("a", "b", "c", "d")]
+    assert len(await night(c, None, steps)) == 4  # type: ignore[arg-type]
+    assert c.store.setting(REL, LAST_RUN) is None
+    assert missed(c.store, REL, T0)
 
 
-async def test_with_the_memory_check_off_the_rest_of_the_night_still_runs(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+async def test_a_step_behind_a_switch_that_is_off_is_left_out_and_the_rest_of_the_night_runs(
+    tmp_path: Path,
 ) -> None:
-    store = Store(tmp_path / "rel.sqlite")
-    ran: list[str] = []
+    c, ran = _runtime(tmp_path, reread="off"), list[str]()
+    steps = [_step("re-read", ran, switch=sw.REREAD), _step("grouping", ran)]
+    assert await night(c, None, steps) == []  # type: ignore[arg-type]
+    assert ran == ["grouping"]
+    assert c.store.setting(REL, LAST_RUN) is not None
 
-    async def check(*_: object, **__: object) -> None:
-        ran.append("check")
 
-    async def step(*_: object, **__: object) -> None:
-        ran.append("step")
-
-    def routine(*_: object, **__: object) -> None:
-        ran.append("routine")
-
-    monkeypatch.setattr(nightly_module, "nightly", check)
-    monkeypatch.setattr(nightly_module.merging, "recent", step)
-    monkeypatch.setattr(nightly_module, "expire_routine", routine)
-    monkeypatch.setattr(nightly_module, "write_closed", step)
-    assert await night(store, None, REL, UTC, mode=Mode.OFF) == []  # type: ignore[arg-type]
-    assert ran == ["step", "routine", "step"]
-    assert store.setting(REL, LAST_RUN) is not None
+def test_the_night_runs_the_registry_steps_in_the_order_of_the_upkeep_work() -> None:
+    names = [f.nightly.name for f in FEATURES if f.nightly is not None]
+    assert names == ["re-read", "grouping", "routine expiry", "episodes"]

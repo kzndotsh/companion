@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion import daemon, prompts
+from companion import prompts, startup
 from companion.characters import parse
 from companion.core.switch import SWITCHES
 from companion.core.types import RelationshipId
@@ -30,7 +30,7 @@ def _clean(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def _lines(character: str | None = None) -> list[str]:
     char = parse(f"You are {character}.\n", character, "local") if character else None
-    return daemon.startup_lines(RelationshipId("t"), "abcdef0123456789", char)
+    return startup.startup_lines(RelationshipId("t"), "abcdef0123456789", char)
 
 
 def _row(label: str) -> list[str]:

@@ -5,13 +5,18 @@ itself is `features/crisis/cli.py`."""
 
 from __future__ import annotations
 
+import argparse
+import asyncio
 import os
+import sys
 from pathlib import Path
 
 import httpx
 
 from companion.compose import extractor
-from companion.features.crisis.cli import check, load_cases
+from companion.features.crisis.cli import FIXTURES, check, load_cases
+from companion.features.crisis.cli import run as counts
+from companion.kit.command import Command, Group, db_args, emit, target
 from companion.lib.vote import READS
 from companion.models.credits import credits
 from companion.settings import Settings
@@ -36,3 +41,32 @@ async def run(path: Path, cap: float) -> str:
             if before.balance < cap:
                 return header + "the balance is below the cap: top up or lower --cap\n"
         return header + await check(cases, extractor(client, s, s.judge_routes), cap)
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "--check", action="store_true", help="read every crisis fixture three times (model calls)"
+    )
+    p.add_argument("--cap", type=float, help="required with --check: stop at this much spend")
+    p.add_argument("--fixtures", type=Path, default=FIXTURES, help="the fixture file")
+    db_args(p)
+
+
+def _run(a: argparse.Namespace) -> int:
+    if not a.check:
+        return emit(counts(*target(a)))
+    if a.cap is None or a.cap <= 0:
+        sys.stderr.write("pass --cap with --check, for example --cap 0.10; it costs money\n")
+        return 2
+    return emit(asyncio.run(run(Path(a.fixtures), float(a.cap))))
+
+
+COMMANDS = (
+    Command(
+        "crisis",
+        Group.MEASURING,
+        "how often each crisis level was read lately, or --check the fixtures",
+        _run,
+        _args,
+    ),
+)

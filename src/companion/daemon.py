@@ -7,129 +7,37 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-import uuid
 from collections.abc import AsyncGenerator
-from datetime import timedelta
 from pathlib import Path
 
 import httpx
 
 from companion import backups, characters, compose, prompts
-from companion.characters import Character
+from companion.background import jobs
+from companion.chat_commands import chat_commands
 from companion.compose import models, need
 from companion.core import switch as sw
-from companion.core.clock import local_zone, utc_now
-from companion.core.extractor import StructuredModel
-from companion.core.flags import parse_flag
+from companion.core.clock import utc_now
 from companion.core.prompt.prefix import build_prefix
-from companion.core.reachout import dial
 from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
-from companion.core.types import (
-    Favorite,
-    FavoriteId,
-    Flag,
-    FlagId,
-    RelationshipId,
-    TurnId,
-)
-from companion.features.history.run import pass_step
-from companion.features.intimate.run import pass_step as scene_step
-from companion.features.nudges.run import tick_nudge
-from companion.features.reach.logic import Kind
-from companion.features.reach.run import Reacher, holds, record_outcomes, tick_reach
-from companion.features.reminders.run import deliver_due
-from companion.features.threads.run import Ticker, drafter, tick
-from companion.features.upkeep.reread.run import SameCheck
+from companion.core.types import RelationshipId
 from companion.io import discord
-from companion.io.delivery import (
-    FAV,
-    FAVORITE,
-    FLAG,
-    MODE,
-    Commands,
-    Delivery,
-    Hooks,
-    Incoming,
-    Transport,
-)
+from companion.io.delivery import Commands, Delivery, Hooks, Incoming
 from companion.io.stop import until_stopped
 from companion.io.telegram import Telegram
-from companion.kit import curate
-from companion.kit.runtime import Runtime
-from companion.kit.spendcap import over_cap
-from companion.lib import logs, retry
-from companion.memory.memory_pass import memory_pass
-from companion.memory.nightly import missed, night
-from companion.memory.views import views_implicated
+from companion.kit.features import Outlet
+from companion.kit.jobs import keep_running
+from companion.lib import logs
+from companion.memory.idle import IdlePass
 from companion.settings import Settings
+from companion.startup import startup_lines
 from companion.store.sqlite.store import FIRST_RELATIONSHIP, Store, relationship_in
 from companion.turn.fast import handle
-from companion.turn.mode import mode_report
 
-FLAG_REACTION = "✍"
-FAVORITE_REACTION = "❤"
 DATABASE = "companion.sqlite"  # in the data folder, whichever platform it runs on
 UPDATE_KEY = "telegram.last_update_id"
-UNKNOWN_REPLY = (
-    "can't tell which reply that was (it's from before i kept track), so nothing was marked."
-    " send it again without replying, with a note saying which one"
-)
 DISCORD_KEY = "discord.last_message_id"
 COMMANDS_KEY = "discord.commands_synced"  # the fingerprint of the slash commands Discord has
-PASS_IDLE_SECONDS = 90
-PASS_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
-REMINDER_TICK_SECONDS = 60
-
-
-def startup_lines(
-    name: str,
-    prefix_sha: str,
-    character: Character | None = None,
-    settings: Settings | None = None,
-) -> list[str]:
-    """What is running, a heading and one labelled row each for the prompts, the models, the limits
-    and the switches by where they stand, printed from the same values the bot is configured
-    with."""
-    s = settings or Settings.from_env()
-    judges = s.judge_model
-    routed = ", ".join(f"{k} on {v}" for k, v in s.judge_routes.items())
-    states = s.states()
-    rows = [
-        (
-            "prompts",
-            [
-                f"persona {prompts.get('system/persona').version} (prefix {prefix_sha[:12]})",
-                f"character {character.ref if character else 'none'}",
-                f"set {prompts.set_hash()}",
-            ],
-        ),
-        ("everyday", [s.everyday_model, f"standby {s.everyday_standby or 'none'}"]),
-        ("roleplay", [s.roleplay_model or "the everyday model"]),
-        ("judges", [judges + (f" ({routed})" if routed else "")]),
-        ("limits", [f"daily cap {s.cap_text}", f"pace {s.pace}"]),
-        ("live", states["live"]),
-        ("shadow", states["shadow"]),
-        ("off", states["off"]),
-        ("dials", s.dials()),
-    ]
-    return [f"up as {name} on {s.position(sw.PLATFORM)}"] + [
-        line for label, items in rows for line in _row(label, items)
-    ]
-
-
-def _row(label: str, items: list[str], width: int = 100) -> list[str]:
-    """One labelled row, its items joined by commas and wrapped under the first."""
-    lead = f"  {label:<9}"
-    lines: list[str] = []
-    line = lead
-    for item in items or ["none"]:
-        piece = item if line == lead else f", {item}"
-        if line != lead and len(line) + len(piece) > width:
-            lines.append(line + ",")
-            line = " " * len(lead) + item
-        else:
-            line += piece
-    return [*lines, line]
 
 
 def delivery_hooks(store: Store, rel: RelationshipId, key: str, platform: str) -> Hooks:
@@ -160,147 +68,6 @@ def delivery_hooks(store: Store, rel: RelationshipId, key: str, platform: str) -
     return Hooks(undelivered, last_handled, mark_handled, sent)
 
 
-def chat_commands(
-    store: Store, rel: RelationshipId, judges: StructuredModel, s: Settings
-) -> Commands:
-    """The commands: `/flag` and `/fav` (typed `!flag` and `!fav` on Discord) answer with a
-    reaction, `/mode` with which talker. `/flag` and `/fav` mark the latest reply, or, sent as a
-    reply to one of its messages or of theirs, that turn, with any words after them as the
-    comment."""
-
-    def marked(replied_to: str | None) -> TurnId | None:
-        if replied_to is None:
-            return store.latest_turn(rel)
-        return store.turn_of_message(rel, s.position(sw.PLATFORM), replied_to)
-
-    async def flag(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
-        turn = marked(replied_to)
-        if turn is None:
-            return UNKNOWN_REPLY if replied_to is not None else "nothing to flag yet"
-        kind, comment = parse_flag(arg)
-        store.add_flag(Flag(FlagId(uuid.uuid4().hex), rel, turn, kind, comment, utc_now()))
-        logging.getLogger("companion").info("flag on turn %s (%s): %s", turn[:8], kind, comment)
-        implicated = await views_implicated(store, judges, rel, turn, comment)
-        logging.getLogger("companion").debug("flag implicates %d view(s)", len(implicated))
-        for claim in curate.retire_implicated_views(store, implicated):
-            logging.getLogger("companion").info("flag retired a view: %s", claim)
-        return Reaction(FLAG_REACTION)
-
-    async def favorite(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
-        turn = marked(replied_to)
-        if turn is None:
-            return UNKNOWN_REPLY if replied_to is not None else "nothing to favorite yet"
-        store.add_favorite(
-            Favorite(FavoriteId(uuid.uuid4().hex), rel, turn, arg.strip(), utc_now())
-        )
-        logging.getLogger("companion").info("favorite on turn %s: %s", turn[:8], arg.strip())
-        return Reaction(FAVORITE_REACTION)
-
-    async def mode(arg: str, replied_to: str | None) -> str | Reaction | ReactAndReply:
-        del arg, replied_to
-        roleplay = s.roleplay_model or s.everyday_model
-        return mode_report(store, rel, utc_now(), s.everyday_model, roleplay)
-
-    return {FLAG: flag, FAV: favorite, FAVORITE: favorite, MODE: mode}
-
-
-INITIATIVE_TICK_SECONDS = 900
-
-
-NIGHTLY_HOUR = 4  # local time, when they are least likely to be chatting
-CATCH_UP = timedelta(minutes=5)  # after a start, a missed night runs this much later
-
-
-async def _nightly_memory(
-    store: Store, judge: StructuredModel, rel: RelationshipId, s: Settings
-) -> None:
-    """The night's memory work once a night (ADR 0019, `memory/nightly.py`), each step on its own. A
-    night missed while the bot was down is made up CATCH_UP after it starts. The re-read's
-    switch turns off that step only, never the night."""
-
-    async def run() -> None:
-        if over_cap(store, rel, s.daily_cap, utc_now()) is not None:
-            return
-        failed = await night(store, judge, rel, local_zone(), mode=s.mode(sw.REREAD))
-        if failed:
-            logging.getLogger("companion.nightly").warning("nightly: %s failed", ", ".join(failed))
-
-    if missed(store, rel, utc_now()):
-        await asyncio.sleep(CATCH_UP.total_seconds())
-        await run()
-    while True:
-        now = utc_now().astimezone(local_zone())
-        nxt = now.replace(hour=NIGHTLY_HOUR, minute=0, second=0, microsecond=0)
-        if nxt <= now:
-            nxt += timedelta(days=1)
-        await asyncio.sleep((nxt - now).total_seconds())
-        await run()
-
-
-async def _daily_backups(data_dir: Path, db: Path, into: Path) -> None:
-    """A snapshot once a day while the bot runs, besides the one at every start."""
-    while True:
-        await asyncio.sleep(backups.EVERY_SECONDS)
-        await asyncio.to_thread(backups.back_up_quietly, data_dir, db, "daily", utc_now(), into)
-
-
-def _start_initiative(
-    store: Store, rel: RelationshipId, judge: StructuredModel, s: Settings
-) -> asyncio.Task[None] | None:
-    """The timer that looks at open loops, times away and its own reasons to reach out (ADR 0021).
-    In shadow mode it records and sends nothing."""
-    if not s.on(sw.INITIATIVE):
-        return None
-    ticker, draft = Ticker(), drafter(judge)
-    reacher = Reacher(dial(s.position(sw.REACH)), judge, s.daily_cap)
-    log = logging.getLogger("companion.initiative")
-
-    async def loop() -> None:
-        while True:
-            await asyncio.sleep(INITIATIVE_TICK_SECONDS)
-            if over_cap(store, rel, s.daily_cap, utc_now()) is not None:
-                continue
-            try:
-                when = (utc_now(), local_zone())
-                await record_outcomes(store, rel, when[0], judge)
-                held = holds(store, rel, when, reacher)
-                plan = (await tick(store, rel, *when, draft, ticker, held=held)).send
-                nudged = (
-                    not plan and await tick_nudge(store, rel, when[0], judge, held=held) is not None
-                )
-                first = Kind.PLAN if plan else Kind.AWAY if nudged else None
-                await tick_reach(store, rel, (utc_now(), local_zone()), reacher, first)
-            except Exception:
-                log.exception("initiative tick failed; will try again next time")
-
-    return asyncio.create_task(loop())
-
-
-def _start_reminders(
-    runtime: Runtime, transport: Transport, s: Settings
-) -> asyncio.Task[None] | None:
-    """The timer that sends reminders when they fall due (J50), over the running platform."""
-    if not s.on(sw.REMINDERS):
-        return None
-    started, log = utc_now(), logging.getLogger("companion.reminders")
-
-    async def loop() -> None:
-        while True:
-            await asyncio.sleep(REMINDER_TICK_SECONDS)
-            try:
-                await deliver_due(
-                    runtime,
-                    transport.send,
-                    utc_now(),
-                    started,
-                    platform=s.position(sw.PLATFORM),
-                )
-            except Exception:
-                log.exception("reminder tick failed; will try again next time")
-
-    return asyncio.create_task(loop())
-
-
 @contextlib.asynccontextmanager
 async def _delivery(
     s: Settings, client: httpx.AsyncClient, store: Store, rel: RelationshipId, commands: Commands
@@ -329,132 +96,63 @@ async def run(data_dir: Path) -> None:
     rel = relationship_in(db) or FIRST_RELATIONSHIP
     into = backups.backup_dir(data_dir, s.backup_dir)
     backups.back_up_quietly(data_dir, db, "start", utc_now(), into)  # before any migration runs
-    store = Store(db)
-    character = characters.chosen(s.character, data_dir / "characters")
-    prefix = build_prefix(characters.system_prompt(prompts.get("system/persona").raw, character))
-    roleplay_prefix = build_prefix(
-        characters.system_prompt(prompts.get("system/persona").raw, character, roleplay=True)
-    )
-    async with contextlib.AsyncExitStack() as stack:
-        client = await stack.enter_async_context(httpx.AsyncClient())
-        m = models(client, store, rel, s)
-        judge, judges = m.judge, m.memory
-        runtime = compose.runtime(
-            s,
-            store,
-            m.talker,
-            prefix,
-            rel,
-            judge=judge,
-            roleplay_talker=m.roleplay,
-            roleplay_prefix=roleplay_prefix,
-            embedder=m.embedder,
-            scene_reminder=character.scene_reminder if character is not None else "",
-            serious_message=character.serious if character is not None else "",
-        )
-        same = (
-            SameCheck(judges, runtime.embedder, runtime.embed_model, s.mode(sw.REREAD))
-            if runtime.embedder is not None and s.on(sw.REREAD)
-            else None
-        )
-        embed = (runtime.embedder, runtime.embed_model) if runtime.embedder is not None else None
-        steps = [
-            step
-            for step in (
-                pass_step(s.mode(sw.HISTORY), character.sheet if character is not None else ""),
-                scene_step(s.mode(sw.INTIMATE_MEMORY)),
+    character = characters.chosen(s.character, characters.sheets_dir(data_dir))
+    persona = prompts.get("system/persona").raw
+    prefix = build_prefix(characters.system_prompt(persona, character))
+    roleplay_prefix = build_prefix(characters.system_prompt(persona, character, roleplay=True))
+    with Store(db) as store:
+        async with contextlib.AsyncExitStack() as stack:
+            client = await stack.enter_async_context(httpx.AsyncClient())
+            m = models(client, store, rel, s)
+            runtime = compose.runtime(
+                s,
+                store,
+                m.talker,
+                prefix,
+                rel,
+                judge=m.judge,
+                memory=m.memory,
+                roleplay_talker=m.roleplay,
+                roleplay_prefix=roleplay_prefix,
+                embedder=m.embedder,
+                scene_reminder=character.scene_reminder if character is not None else "",
+                serious_message=character.serious if character is not None else "",
             )
-            if step is not None
-        ]
-        pending: list[asyncio.Task[None]] = []
+            idle = IdlePass(
+                store,
+                m.memory,
+                rel,
+                compose.pass_options(
+                    s, m.memory, m.embedder, character.sheet if character is not None else ""
+                ),
+                s.daily_cap,
+            )
+            commands = chat_commands(store, rel, m.memory, s)
+            delivery = await stack.enter_async_context(_delivery(s, client, store, rel, commands))
 
-        async def pass_after_idle() -> None:
-            await asyncio.sleep(PASS_IDLE_SECONDS)
-            logging.getLogger("companion.memory").debug(
-                "idle for %ds; reading what has not been read", PASS_IDLE_SECONDS
-            )
-            if over_cap(store, rel, s.daily_cap, utc_now()) is not None:
-                logging.getLogger("companion.memory").warning(
-                    "daily spend cap reached; no memory pass"
+            async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
+                reply = await handle(
+                    runtime,
+                    msg.text,
+                    s.position(sw.PLATFORM),
+                    quoted=msg.quoted,
+                    message_id=msg.id,
                 )
-                return
+                idle.schedule()
+                return reply
+
+            logging.getLogger("companion").info(
+                "\n".join(startup_lines(db.stem, prefix.sha256, character, s))
+            )
+            logging.getLogger("companion").info("full log: %s", log_file)
+            outlet = Outlet(delivery.transport.send, s.position(sw.PLATFORM))
+            background = [
+                asyncio.create_task(keep_running(runtime, job))
+                for job in jobs(runtime, outlet, data_dir, db, into)
+            ]
             try:
-                result = await retry.retry_on_network_error(
-                    lambda: memory_pass(
-                        store,
-                        judges,
-                        rel,
-                        same=same,
-                        promises=s.on(sw.PROMISES),
-                        embed=embed,
-                        loose_loops=s.on(sw.HEDGED_PLANS),
-                        steps=steps,
-                    ),
-                    PASS_RETRY_DELAYS,
-                    "memory pass",
-                )
-            except httpx.TransportError as err:
-                logging.getLogger("companion.memory").warning(
-                    "memory pass could not reach the model (%s); it runs after their next message",
-                    type(err).__name__,
-                )
-                return
-            except Exception:
-                logging.getLogger("companion.memory").exception(
-                    "the memory pass failed, will retry"
-                )
-                return
-            if result.ran:
-                logging.getLogger("companion.memory").info(
-                    "memory pass: +%d beliefs, %d restated, %d rejected, %d already known;"
-                    " views +%d, %d restated, %d rejected, %d checked (%d conflict); $%.5f",
-                    result.accepted,
-                    result.restated,
-                    result.rejected,
-                    result.already_known,
-                    result.views_accepted,
-                    result.views_restated,
-                    result.views_rejected,
-                    result.views_checked,
-                    result.views_conflicts,
-                    result.cost_usd,
-                )
-
-        def schedule_reflect() -> None:
-            for task in pending:
-                task.cancel()
-            pending[:] = [asyncio.create_task(pass_after_idle())]
-
-        commands = chat_commands(store, rel, judges, s)
-        delivery = await stack.enter_async_context(_delivery(s, client, store, rel, commands))
-
-        async def answer(msg: Incoming) -> str | Reaction | ReactAndReply | ThenSend:
-            reply = await handle(
-                runtime,
-                msg.text,
-                s.position(sw.PLATFORM),
-                quoted=msg.quoted,
-                message_id=msg.id,
-            )
-            schedule_reflect()
-            return reply
-
-        logging.getLogger("companion").info(
-            "\n".join(startup_lines(db.stem, prefix.sha256, character, s))
-        )
-        logging.getLogger("companion").info("full log: %s", log_file)
-        background = [
-            task
-            for task in (
-                _start_initiative(store, rel, judge, s),
-                _start_reminders(runtime, delivery.transport, s),
-                asyncio.create_task(_daily_backups(data_dir, db, into)),
-                asyncio.create_task(_nightly_memory(store, judges, rel, s)),
-            )
-            if task is not None
-        ]
-        try:
-            await until_stopped(lambda stop: delivery.run(answer, commands, stop))
-        finally:
-            for task in (*background, *pending):  # a memory pass waiting to run stops too
-                task.cancel()
+                await until_stopped(lambda stop: delivery.run(answer, commands, stop))
+            finally:
+                for task in background:
+                    task.cancel()
+                idle.cancel()  # a memory pass waiting to run stops too

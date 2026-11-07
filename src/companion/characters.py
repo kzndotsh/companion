@@ -27,7 +27,6 @@ from pathlib import Path
 
 from companion import prompts
 
-PRIVATE_DIR = Path("data/characters")
 _ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 # The heading as people write it: with or without the "##", a colon, any case. A sheet edited by
 # hand once lost its "##", and the whole section reached the everyday talker unnoticed.
@@ -95,7 +94,12 @@ def parse(text: str, char_id: str, version: str) -> Character:
     return Character(char_id, version, sheet.strip(), scene.strip(), reminder.strip(), serious)
 
 
-def load(char_id: str, private_dir: Path = PRIVATE_DIR) -> Character:
+def sheets_dir(data: Path) -> Path:
+    """Where the private sheets are kept, under the data folder the bot and the evals both use."""
+    return data / "characters"
+
+
+def load(char_id: str, private_dir: Path) -> Character:
     """The private sheet if there is one, otherwise the current public version."""
     if not _ID.fullmatch(char_id):
         msg = f"character id {char_id!r} must be lowercase letters, digits and dashes"
@@ -111,7 +115,7 @@ def load(char_id: str, private_dir: Path = PRIVATE_DIR) -> Character:
     return parse(prompt.raw, char_id, prompt.version)
 
 
-def chosen(char_id: str | None, private_dir: Path = PRIVATE_DIR) -> Character | None:
+def chosen(char_id: str | None, private_dir: Path) -> Character | None:
     """The character `COMPANION_CHARACTER` names (`Settings.character`), or None when unset."""
     return load(char_id, private_dir) if char_id else None
 

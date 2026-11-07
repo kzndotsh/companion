@@ -10,6 +10,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
+from companion import characters
 from companion.lib.sqlite.backup import BackupError, prune, snapshot
 
 log = logging.getLogger("companion.backup")
@@ -33,7 +34,7 @@ def back_up(data: Path, db: Path, tag: str, now: datetime, into: Path) -> str:
     daily = tag == "daily"
     keep = KEEP_DAILY if daily else KEEP_RECENT
     removed = prune(into, db.stem, keep, daily=daily)
-    sheets = data / "characters"
+    sheets = characters.sheets_dir(data)
     if sheets.is_dir():
         shutil.copytree(sheets, into / f"characters-{now:%Y%m%d-%H%M%S}-{tag}")
         mine = [p for p in sorted(into.glob("characters-*")) if p.name.endswith("-daily") == daily]

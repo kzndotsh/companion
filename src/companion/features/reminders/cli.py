@@ -4,6 +4,7 @@ drops a pending reminder or stops a series; it is recorded, never deleted."""
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 from companion.core.clock import utc_now
@@ -12,6 +13,7 @@ from companion.features.reminders.logic import Reminder, ReminderState, Series, 
 from companion.features.reminders.run import stop
 from companion.features.reminders.series import every_words
 from companion.features.reminders.store import Reminders
+from companion.kit.command import Command, Group, db_args, emit, target
 from companion.store.sqlite.store import Store
 
 
@@ -46,9 +48,8 @@ def _cancel(store: Store, rel: RelationshipId, prefix: str) -> str:
 
 
 def run(db: Path, relationship: str, *, cancel: str | None = None) -> str:
-    store = Store(db)
     rel = RelationshipId(relationship)
-    try:
+    with Store(db) as store:
         if cancel:
             return _cancel(store, rel, cancel)
         every, series = store.part(Reminders).all_(rel), store.part(Reminders).all_series(rel)
@@ -68,5 +69,19 @@ def run(db: Path, relationship: str, *, cancel: str | None = None) -> str:
             for r in every
         ]
         return "\n".join(lines) + "\n"
-    finally:
-        store.close()
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--cancel", metavar="ID", help="drop a pending one or stop a repeating one")
+    db_args(p)
+
+
+COMMANDS = (
+    Command(
+        "reminders",
+        Group.DAYS,
+        "the reminders and repeating ones they asked for, and what became of each",
+        lambda a: emit(run(*target(a), cancel=a.cancel)),
+        _args,
+    ),
+)

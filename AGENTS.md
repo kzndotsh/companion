@@ -136,7 +136,13 @@ together.
   reply, a note, steps after a memory pass, a look-up in shadow beside the turn, and a step once the
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
   also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
-  `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
+  `Lookups`, no branch in `look`. Background work is a part too, never a loop of its own in `daemon.py`:
+  `Feature.jobs` (a `Job` in `kit/jobs.py`: what to run, `Every` or `Daily`, and whether the spend cap
+  stops it; one loop, `keep_running`, runs every job with one failure policy), `Feature.reaching` (its
+  `Move`s in the initiative tick, run in `Kind` order, the one place the precedence plan, then nudge, then
+  its own reasons is stated, `core/reachout.py`), `Feature.nightly` (a `NightStep`, run by
+  `memory/nightly.py` in the registry's order) and `Feature.after_pass` (a step every memory pass runs,
+  set up from `Passing`). `background.py` collects them into the jobs the daemon starts. Its look-up runs with the others under the deadline, and what it found
   reaches its note as its argument; a stage that cannot name the feature asks `Lookups.find(Type)`. A
   feature that changes the request's card declares a `lane` (`Feature.lane`, `kit/features.py`). A stage
   never imports a feature: what the turn owns itself (reactions, the crisis path's scene rule, method
@@ -145,9 +151,16 @@ together.
   one picker (`turn/mention.py`) gates, ranks, counts one a day and logs it, and a new mentioning feature
   names its decision key in `MENTION_KEYS` in `core/turn/mentions.py` (checked when the picker loads). `FEATURES` in `registry.py` is the list of what is
   registered, in the order the after-steps run.
+- A command is one `Command` (`kit/command.py`: name, heading, help, arguments, what it does), declared
+  in the module that does the work and exported as `COMMANDS`; `cli/main.py` only lists the modules. A
+  command that opens the database does `with Store(db) as store:`. The memory pass is built once,
+  `compose.pass_options`, and used by the bot's idle pass (`memory/idle.py`) and `companion memory-pass`, so
+  they cannot differ; a rebuild uses none of it on purpose (the same-memory check would match the old
+  memories it is replacing). The data folder is `DATA_DIR` (`settings.py`) or `--data`, and the private
+  character sheets are in `characters.sheets_dir(data)` for the bot and the evals alike.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries, as a class bound to the
-  connection), `cli.py`, `README.md` (how it works). A group of close features (`upkeep/`, `curiosity/`, `flow/`, `diction/`) holds one such folder per part and a README naming them;
+  connection), `cli.py` (its report, and its `COMMANDS` when it needs no model), `README.md` (how it works). A group of close features (`upkeep/`, `curiosity/`, `flow/`, `diction/`) holds one such folder per part and a README naming them;
   its parts may import each other. import-linter keeps a feature's logic pure, keeps features from importing
   each other, and lets only a feature's `store.py` touch sqlite. Prompts and migrations stay central. Tests
   mirror the folder (`tests/features/<name>/`).
@@ -225,7 +238,7 @@ together.
 **Running the bot**
 - Settings are environment variables in `.env`, listed with their defaults in `README.md`. They are read
   once into `companion/settings.py` (`Settings`, one row per switch in `SWITCHES` of `core/switch.py`); the startup block
-  (`startup_lines` in `daemon.py`: prompts, models, limits, then the switches as live, shadow, off and
+  (`startup_lines` in `startup.py`: prompts, models, limits, then the switches as live, shadow, off and
   dials) is printed from it. A new switch is one named row in `core/switch.py` (`MOOD = Switch(...)`, listed in `SWITCHES`; settings read the rows, and core and the kit may not import `settings`), plus a row in `core/shadows.py` if it defaults to shadow. The `Runtime` carries every on, shadow or off position once, keyed by the row: a use reads `c.mode(MOOD)` (a `Mode`, compared as `is Mode.OFF`, never a word; `tests/test_code_rules.py` fails on one) or `c.on(MOOD)`, and a dial or a platform is read through `Settings.position`. No field on `Runtime`, no line in `compose.runtime`. `companion/compose.py` is the one place the models, spend sink and `Runtime` are built, for the bot, the one-off commands and the evals.
 - The console shows INFO; `data/logs/companion.log` (rotating, not committed) keeps DEBUG with timings
   per stage and the full text of what was said. Secrets are scrubbed by value (`lib/logs.py`), and

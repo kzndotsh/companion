@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+from companion.core.reachout import Kind
 from companion.core.types import Json
-from companion.features.reach.logic import Kind
 from companion.features.reach.outcome import Landed, Sent, outcome, stopped, summary
 
 AT = datetime(2026, 11, 1, 15, 0, tzinfo=UTC)

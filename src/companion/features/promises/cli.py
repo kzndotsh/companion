@@ -5,12 +5,14 @@ and `--lasting ID` relabel how long one lasts; a moment's promise binds for a we
 
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 
 from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
 from companion.features.promises.logic import Scope, in_force
 from companion.features.promises.store import Promises
+from companion.kit.command import Command, Group, db_args, emit, target
 from companion.store.sqlite.store import Store
 
 SHOWN = 30
@@ -25,9 +27,8 @@ def run(  # noqa: PLR0913
     moment: str | None = None,
     lasting: str | None = None,
 ) -> str:
-    store = Store(db)
     rel = RelationshipId(relationship)
-    try:
+    with Store(db) as store:
         current = [r for r in store.part(Promises).recorded(rel) if r.mark is None]
         if moment or lasting:
             prefix, scope = (moment, Scope.MOMENT) if moment else (lasting, Scope.LASTING)
@@ -54,5 +55,24 @@ def run(  # noqa: PLR0913
             head = f"{p.id[:8]}  {p.at:%a %d %b %H:%M}  {p.kind:8} {p.scope:7}{word}{ended}"
             lines.append(f"{head}\n  {p.quote}")
         return "\n".join(lines) + "\n"
-    finally:
-        store.close()
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--not", dest="wrong", metavar="ID", help="mark one as not a promise")
+    p.add_argument("--retire", metavar="ID", help="retire one")
+    p.add_argument("--moment", metavar="ID", help="mark one as about a moment: it binds a week")
+    p.add_argument("--lasting", metavar="ID", help="mark one as lasting until released")
+    db_args(p)
+
+
+COMMANDS = (
+    Command(
+        "promises",
+        Group.ITSELF,
+        "the promises it made in its own replies, newest first",
+        lambda a: emit(
+            run(*target(a), wrong=a.wrong, retire=a.retire, moment=a.moment, lasting=a.lasting)
+        ),
+        _args,
+    ),
+)

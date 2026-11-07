@@ -17,7 +17,10 @@ that way: an occasion is a note after the history on a casual turn (`docs/dev/tu
 reason to write first is planned (phase 3 of the calendar plan) and not built.
 
 Everything else is reaching out: a tick every 15 minutes decides whether to send a message first,
-and skips that look entirely once the daily spend cap is reached.
+and skips that look entirely once the daily spend cap is reached. The tick is one job (`background.py`)
+that runs each feature's steps (`Feature.reaching`) in the order of `Kind` (`core/reachout.py`): the shared
+gate first (the outcomes of earlier reach-outs, then what holds every reach-out), then a plan of
+theirs, then a nudge, then its own reasons, each step skipped or respected by what an earlier one took.
 This is shadow only, behind `COMPANION_INITIATIVE` (`shadow` or `off`). `off` stops the whole tick. The
 read of whether they stepped away belongs to `now` (`COMPANION_NOW`) and keeps running while that is
 not `off`, since its labels feed its own note too; with both off it stops. The note in the chat is not

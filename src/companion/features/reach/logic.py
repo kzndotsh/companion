@@ -14,10 +14,9 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
-from enum import StrEnum
 
 from companion.core.daypart import part_of_day
-from companion.core.reachout import Dial, checked
+from companion.core.reachout import PRECEDENCE, Dial, Kind, checked
 from companion.core.rhythm import KEPT_DAYS, Rhythm
 from companion.core.sensitivity import GUARDED_AT
 from companion.core.types import Json, Sensitivity
@@ -45,19 +44,6 @@ TARGET = {
 
 def step_down(d: Dial) -> Dial:
     return LEVELS[max(0, LEVELS.index(d) - 1)]
-
-
-class Kind(StrEnum):
-    """Why it would reach out, first to last: the order is the precedence."""
-
-    PLAN = "a plan of theirs"
-    AWAY = "stepping away"
-    KEPT = "a time they keep"
-    THOUGHT = "a thought"
-    MISSING = "missing them"
-
-
-PRECEDENCE = tuple(Kind)
 
 
 @dataclass(frozen=True, slots=True)

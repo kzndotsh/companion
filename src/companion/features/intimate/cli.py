@@ -26,6 +26,7 @@ from companion.features.intimate.logic import (
 )
 from companion.features.intimate.run import facts_of
 from companion.features.intimate.store import IntimateMemory
+from companion.kit.command import Group, plain
 from companion.store.sqlite.store import Store
 
 type Marks = tuple[frozenset[UtteranceId], frozenset[UtteranceId]]  # held, heavy
@@ -94,8 +95,7 @@ def _place_patterns(patterns: list[Pattern], held: frozenset[UtteranceId], out: 
 
 def run(db: Path, relationship: str) -> str:
     rel = RelationshipId(relationship)
-    store = Store(db)
-    try:
+    with Store(db) as store:
         sm = store.part(IntimateMemory)
         places = sm.places(rel)
         beliefs = [b for b in store.user_beliefs(rel) if is_assertable(b) and b.id in places]
@@ -107,8 +107,6 @@ def run(db: Path, relationship: str) -> str:
                 *(q.utterance for p in patterns for q in p.quotes),
             ],
         )
-    finally:
-        store.close()
     out: Sections = {t: [] for t in (*_TITLES.values(), WAITING, KEPT_OUT, RETIRED)}
     _place_beliefs(beliefs, places, facts, out)
     _place_patterns(patterns, facts[0], out)
@@ -131,3 +129,8 @@ def retire_pattern(store: Store, rel: RelationshipId, id_prefix: str, reason: st
         raise ValueError(msg)
     store.part(IntimateMemory).retire(matches[0].id, reason, utc_now())
     return f"retired  {matches[0].id[:8]}"
+
+
+COMMANDS = (
+    plain("intimate", Group.REACH, "the intimate memory lane by stance, and what is kept out", run),
+)

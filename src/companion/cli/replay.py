@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import argparse
+import sys
 from pathlib import Path
 
 from companion.core.replay import ReplayError
+from companion.kit.command import Command, Group, db_args
+from companion.kit.target import resolve_db
 from companion.store.sqlite.replay import ReplayReport, replay_file
 
 
@@ -54,3 +58,24 @@ def run(db: Path, turn_id: str, *, show_prompt: bool = False) -> tuple[str, int]
     except ReplayError as err:
         return f"{err}\n", 2
     return render(report, show_prompt=show_prompt), 0 if report.matched else 1
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("turn_id")
+    p.add_argument(
+        "--show-prompt",
+        action="store_true",
+        help="print everything the talker was sent, in order, with the persona in full",
+    )
+    db_args(p, relationship=False)
+
+
+def _run(a: argparse.Namespace) -> int:
+    out, code = run(resolve_db(a.db), str(a.turn_id), show_prompt=bool(a.show_prompt))
+    (sys.stdout if code != 2 else sys.stderr).write(out)
+    return code
+
+
+COMMANDS = (
+    Command("replay", Group.FLAGS, "rebuild what the reply path saw for one turn", _run, _args),
+)

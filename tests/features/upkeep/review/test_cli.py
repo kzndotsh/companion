@@ -3,13 +3,12 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from tests.conftest import REL, T0
-
-from companion.cli.memory import review
 from companion.core.types import Belief, Utterance
 from companion.features.upkeep.merging.store import MergeProposals
 from companion.features.upkeep.reread.store import MemoryChecks
+from companion.features.upkeep.review.cli import review
 from companion.store.sqlite.store import Store
+from tests.conftest import REL, T0
 
 
 def _store(
@@ -203,7 +202,7 @@ def test_a_pick_is_recorded_and_changes_nothing_yet(
 
 
 def test_a_pick_needs_two_or_more_valid_numbers() -> None:
-    from companion.cli.memory import picked  # noqa: PLC0415
+    from companion.features.upkeep.review.cli import picked  # noqa: PLC0415
 
     assert picked("1, 3", 3) == [0, 2]
     assert picked("2", 3) is None

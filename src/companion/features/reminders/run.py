@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
 
 from companion.core import switch
-from companion.core.clock import local_zone, now_line
+from companion.core.clock import local_zone, now_line, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
 from companion.core.history import HISTORY_LIMIT, to_messages
@@ -75,7 +75,8 @@ from companion.features.reminders.series import (
 from companion.features.reminders.store import Reminders
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, mark
-from companion.kit.features import Feature, Offer, Offered
+from companion.kit.features import Feature, Offer, Offered, Outlet
+from companion.kit.jobs import Every, Job
 from companion.kit.record import Recorder
 from companion.kit.spendcap import over_cap
 
@@ -426,4 +427,20 @@ def reminder_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer((found.note,), asks=found.asks)
 
 
-REMINDERS = Feature("reminder", look=reminder_for_turn, note=reminder_offer)
+REMINDER_TICK_SECONDS = 60
+
+
+def jobs(c: Runtime, outlet: Outlet) -> tuple[Job, ...]:
+    """The timer that sends reminders when they fall due (J50), over the running platform. It costs
+    nothing, so the spend cap does not stop it."""
+    if not c.on(switch.REMINDERS):
+        return ()
+    started = utc_now()
+
+    async def send_due() -> None:
+        await deliver_due(c, outlet.send, utc_now(), started, platform=outlet.platform)
+
+    return (Job("reminders", send_due, Every(REMINDER_TICK_SECONDS), capped=False),)
+
+
+REMINDERS = Feature("reminder", look=reminder_for_turn, note=reminder_offer, jobs=jobs)

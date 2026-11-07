@@ -14,11 +14,8 @@ from companion.store.sqlite.store import Store
 
 
 def run(db: Path, relationship: str) -> str:
-    store = Store(db)
-    try:
+    with Store(db) as store:
         found = store.part(Episodes).all_(RelationshipId(relationship))
-    finally:
-        store.close()
     if not found:
         return "no episodes written yet (companion episodes --write)\n"
     zone = local_zone()

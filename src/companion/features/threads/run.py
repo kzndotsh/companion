@@ -22,6 +22,7 @@ from companion.core.reachout import (
     PLAN_HELD,
     PLAN_WOULD_SEND,
     Held,
+    Kind,
     ReachOut,
     checked,
     draft_text,
@@ -59,13 +60,14 @@ from companion.features.threads.logic import (
 from companion.features.threads.met import read_met_beside
 from companion.features.threads.store import Threads
 from companion.kit.ask import Judge, ask, whole_answer
-from companion.kit.features import Feature
+from companion.kit.features import Feature, Move
 from companion.kit.record import Recorder, new_id
 from companion.prompts import get
 from companion.store.sqlite.store import Store
 
 if TYPE_CHECKING:
-    from companion.kit.features import Moment
+    from companion.kit.features import Moment, Round
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.initiative")
 LOOPS = Judge(
@@ -419,4 +421,17 @@ def loop_candidate(m: Moment, found: object) -> MentionCandidate | None:
 
 # Threads (ADR 0023): today plans of theirs, read in the open-loop batch; a due one is a candidate
 # for the one thing brought up when they write.
-OPENLOOPS = Feature("loop", mention=loop_candidate, after_turn=read_met_beside)
+def reaching(c: Runtime) -> tuple[Move, ...]:
+    """Its step in the initiative tick: a plan of theirs that is due comes first (ADR 0021)."""
+    ticker = Ticker()
+    draft = drafter(c.judge) if c.judge is not None else None
+
+    async def plan(r: Round) -> None:
+        verdict = await tick(c.store, c.rel, r.now, r.tz, draft, ticker, held=r.held)
+        if verdict.send:
+            r.first = Kind.PLAN
+
+    return (Move(Kind.PLAN, plan),)
+
+
+OPENLOOPS = Feature("loop", mention=loop_candidate, after_turn=read_met_beside, reaching=reaching)

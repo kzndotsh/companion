@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import argparse
+import asyncio
 import difflib
 import os
 import shutil
+import sys
 import textwrap
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,18 +33,20 @@ from companion.evals.rebuild import rebuilt
 from companion.evals.report import render_replies, render_table, save
 from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import Place, parse_spec
+from companion.kit.command import Command, Group, db_args, emit
+from companion.kit.target import find_db
 from companion.models.credits import charged_since, credits
 from companion.models.kiro import PREFIX as KIRO
 from companion.models.kiro import KiroTalker
 from companion.models.openrouter import DEFAULT_MODEL, OpenRouterTalker
-from companion.settings import Settings
+from companion.settings import DATA_DIR, Settings
 from companion.store.sqlite.replay import replay_file
 
 EST_TALKER = 0.0036
 EST_JUDGE = 0.0004
 
 
-def _variants(specs: list[str]) -> list[Variant]:
+def _variants(specs: list[str], data: Path) -> list[Variant]:
     out: list[Variant] = []
     for text in specs:
         spec = parse_spec(text)
@@ -51,7 +56,11 @@ def _variants(specs: list[str]) -> list[Variant]:
             msg = f"no persona file {spec.persona}"
             raise ValueError(msg) from err
         try:
-            character = characters.load(spec.character) if spec.character else None
+            character = (
+                characters.load(spec.character, characters.sheets_dir(data))
+                if spec.character
+                else None
+            )
         except characters.CharacterError as err:
             raise ValueError(str(err)) from err
         prefix = build_prefix(
@@ -161,6 +170,7 @@ class EvalArgs:
     cap: float
     show: bool
     dry_run: bool
+    data: Path = DATA_DIR  # where the private character sheets are kept
 
 
 def _requests(fixtures: list[Fixture], db: Path | None) -> dict[str, TalkerRequest] | str:
@@ -186,7 +196,7 @@ async def run(a: EvalArgs) -> str:
     fixtures = _select(load_fixtures(*a.fixtures_dirs), a.only) or "no fixtures to run\n"
     if isinstance(fixtures, str):
         return fixtures
-    variants = _variants(a.specs)
+    variants = _variants(a.specs, a.data)
     plan_cost = estimate(fixtures, len(variants), samples)
     header = (
         f"{len(fixtures)} fixtures x {len(variants)} variants x {samples} samples"
@@ -238,3 +248,64 @@ async def run(a: EvalArgs) -> str:
 
 
 __all__ = ["FixtureError", "describe", "estimate", "run"]
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--variants", default="", help="comma list: v10.md,v9.md,v10.md+nocard")
+    p.add_argument("--fixture", action="append", default=[], help="only this fixture id")
+    p.add_argument("--samples", type=int, default=3)
+    p.add_argument("--cap", type=float, default=0.10, help="stop at this much spend, in dollars")
+    p.add_argument(
+        "--fixtures-dir",
+        type=Path,
+        action="append",
+        default=[],
+        help="default: evals/fixtures (public scripts) and evals/local (private recorded turns)",
+    )
+    p.add_argument("--show", action="store_true", help="print every reply with its verdict")
+    p.add_argument("--dry-run", action="store_true", help="print the plan and estimate only")
+    p.add_argument("--list", action="store_true", help="list fixtures and exit")
+    p.add_argument(
+        "--data",
+        type=Path,
+        default=DATA_DIR,
+        help="the data folder, for the private character sheets",
+    )
+    db_args(p, relationship=False)
+
+
+def _fixture_dirs(a: argparse.Namespace) -> tuple[Path, ...]:
+    given = [Path(p) for p in a.fixtures_dir]
+    return tuple(given) if given else (Path("evals/fixtures"), Path("evals/local"))
+
+
+def _run(a: argparse.Namespace) -> int:
+    if a.list:
+        return emit(describe(load_fixtures(*_fixture_dirs(a))))
+    specs = [x.strip() for x in str(a.variants).split(",") if x.strip()]
+    if not specs:
+        sys.stderr.write("pass --variants, for example --variants v9.md,v10.md\n")
+        return 2
+    args = EvalArgs(
+        find_db(a.db),
+        _fixture_dirs(a),
+        specs,
+        list(a.fixture),
+        int(a.samples),
+        float(a.cap),
+        bool(a.show),
+        bool(a.dry_run),
+        Path(a.data),
+    )
+    return emit(asyncio.run(run(args)))
+
+
+COMMANDS = (
+    Command(
+        "eval",
+        Group.MEASURING,
+        "replay recorded turns against persona variants and score them",
+        _run,
+        _args,
+    ),
+)

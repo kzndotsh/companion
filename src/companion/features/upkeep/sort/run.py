@@ -7,6 +7,7 @@ import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.quoted import AFTER, BEFORE, build_prompt
 from companion.core.types import Belief, RelationshipId
@@ -22,8 +23,9 @@ from companion.features.upkeep.sort.logic import (
     verdict,
 )
 from companion.kit.curate import retire
-from companion.kit.features import Feature
+from companion.kit.features import Feature, NightStep
 from companion.kit.reads import read_times
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.worth")
@@ -113,4 +115,9 @@ async def sort_new(
     return await label(store, extractor, rel, now, act_since=now - timedelta(days=1))
 
 
-WORTH = Feature("worth", after_theirs=sort_new)
+async def expire_step(c: Runtime, judge: StructuredModel) -> None:
+    del judge
+    expire_routine(c.store, c.rel, utc_now())
+
+
+WORTH = Feature("worth", after_theirs=sort_new, nightly=NightStep("routine expiry", expire_step))

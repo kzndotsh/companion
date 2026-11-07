@@ -5,6 +5,7 @@ its holds."""
 
 from __future__ import annotations
 
+import argparse
 from datetime import datetime
 from pathlib import Path
 
@@ -17,15 +18,15 @@ from companion.core.types import RelationshipId
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.run import resume as resume_reach
 from companion.features.threads.store import Threads
+from companion.kit.command import Command, Group, db_args, emit, target
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
 
 def run(db: Path, relationship: str, now: datetime | None = None) -> str:
     """`now` pins the time for a test; the wall clock otherwise."""
-    store = Store(db)
     rel = RelationshipId(relationship)
-    try:
+    with Store(db) as store:
         loops = store.part(Threads).loops(rel)
         reach = store.reach_outs(rel)
         held = sorted(
@@ -41,8 +42,6 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
             (now or utc_now(), local_zone()),
             dial(Settings.from_env().position(REACH)),
         )
-    finally:
-        store.close()
     out = ["open loops (state, kind, when to reach out, what they said)"]
     out += [
         f"  {lp.state:8} {lp.kind:9} {lp.follow_up_at:%a %m-%d %H:%M}  {lp.claim}"
@@ -67,11 +66,34 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
 
 def resume(db: Path, relationship: str, now: datetime | None = None) -> str:
     """Turn reaching out back on after they asked it to stop (issue 123)."""
-    store = Store(db)
-    try:
+    with Store(db) as store:
         done = resume_reach(store, RelationshipId(relationship), now or utc_now())
-    finally:
-        store.close()
     if not done:
         return "reaching out is not stopped; nothing to resume\n"
     return "reaching out is back on: they asked it to stop, and you turned it back on\n"
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument(
+        "--resume",
+        action="store_true",
+        help="turn reaching out back on after they asked it to stop",
+    )
+    db_args(p)
+
+
+def _run(a: argparse.Namespace) -> int:
+    if a.resume:
+        return emit(resume(*target(a)))
+    return emit(run(*target(a)))
+
+
+COMMANDS = (
+    Command(
+        "initiative",
+        Group.REACH,
+        "open loops, and the messages it would send you first",
+        _run,
+        _args,
+    ),
+)

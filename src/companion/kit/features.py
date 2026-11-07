@@ -13,16 +13,19 @@ from collections.abc import Awaitable, Callable, Collection, Coroutine, Iterator
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
+from companion.core.reachout import PRECEDENCE, Held, Kind
+from companion.core.switch import Mode, Switch
 from companion.core.types import Belief, BeliefId, Frame, Utterance
 from companion.kit.current import Heard, Turn, is_casual
 
 if TYPE_CHECKING:
-    from datetime import datetime
+    from datetime import datetime, tzinfo
 
     from companion.core.card import Card
     from companion.core.extractor import StructuredModel
     from companion.core.turn.mentions import MentionCandidate
     from companion.core.types import RelationshipId
+    from companion.kit.jobs import Job
     from companion.kit.runtime import Runtime
     from companion.store.sqlite.store import Store
 
@@ -124,12 +127,83 @@ type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitab
 
 
 @dataclass(frozen=True, slots=True)
+class Passing:
+    """What a memory pass is set up with besides the store and the model: where each switch stands
+    and the character's sheet. Built once (`compose.pass_options`) for the bot and for the commands
+    that run a pass, so they run the same one."""
+
+    modes: Mapping[Switch, Mode]
+    sheet: str = ""
+
+    def mode(self, switch: Switch) -> Mode:
+        return self.modes[switch]
+
+
+# A step every pass runs, set up from `Passing`; None when its switch is off.
+type PassStep = Callable[[Passing], Step | None]
+
+
+@dataclass(frozen=True, slots=True)
+class NightStep:
+    """One part of the night's memory work (`memory/nightly.py`), run on its own so one failing does
+    not skip the rest. With a `switch`, it is left out while that switch is off."""
+
+    name: str  # in the log line that says it failed
+    run: Callable[[Runtime, StructuredModel], Awaitable[None]]
+    switch: Switch | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Outlet:
+    """Where the bot sends its own messages while it runs: the platform's send, and its name."""
+
+    send: Callable[[str], Awaitable[object]]
+    platform: str
+
+
+type Jobs = Callable[[Runtime, Outlet], Sequence[Job]]  # background work, as data (`kit/jobs.py`)
+
+
+@dataclass(slots=True)
+class Round:
+    """One tick of the timer that reaches out first (ADR 0021), as the steps that can take it see
+    it. A step takes the tick by setting `first` to its kind, which the later steps respect."""
+
+    now: datetime
+    tz: tzinfo
+    held: Held | None = None  # what holds every reach-out now (the shared gate), set by its step
+    first: Kind | None = None  # the reach-out an earlier step took this tick
+
+
+@dataclass(frozen=True, slots=True)
+class Move:
+    """A feature's step in the initiative tick. `kind` is the reach-out it can take, and the steps
+    run in `Kind` order (`core/reachout.py`: a plan, then a nudge, then its own reasons); None runs
+    before them all, for the shared gate."""
+
+    kind: Kind | None
+    run: Callable[[Round], Awaitable[None]]
+
+    @property
+    def rank(self) -> int:
+        return -1 if self.kind is None else PRECEDENCE.index(self.kind)
+
+
+# What a feature adds to the initiative tick, built once at the start (it keeps what it must).
+type Reaching = Callable[[Runtime], Sequence[Move]]
+
+
+@dataclass(frozen=True, slots=True)
 class Feature:
     name: str  # its name in the notes' order and in the look-ups' log lines
     look: Look | None = None
     note: Note | None = None
     after_theirs: Step | None = None  # after a memory pass stored new memories of theirs
     after_own: Step | None = None  # after a memory pass stored new views of its own
+    after_pass: PassStep | None = None  # after every memory pass, whatever it stored
+    nightly: NightStep | None = None  # its part of the night's memory work, in registry order
+    reaching: Reaching | None = None  # its steps in the initiative tick
+    jobs: Jobs | None = None  # background work of its own, started with the bot
     shadow: Shadow | None = None
     after_turn: AfterTurn | None = None
     mention: Mention | None = None  # what it would bring up on its own this turn (ADR 0023)

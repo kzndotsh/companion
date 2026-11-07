@@ -78,7 +78,7 @@ from companion.features.intimate.store import By, IntimateMemory
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide
 from companion.kit.embed import embed_within
-from companion.kit.features import CardLane, Feature, Lookups
+from companion.kit.features import CardLane, Feature, Lookups, Passing
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
@@ -478,4 +478,8 @@ def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card:
     )
 
 
-SCENE = Feature("scene", look=nearest_for_turn, lane=intimate_lane)
+def set_up(p: Passing) -> Step | None:
+    return pass_step(p.mode(switch.INTIMATE_MEMORY))
+
+
+SCENE = Feature("scene", look=nearest_for_turn, lane=intimate_lane, after_pass=set_up)

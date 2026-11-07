@@ -31,14 +31,11 @@ _RANK = {
 
 
 def run(db: Path, relationship: str) -> str:
-    store = Store(db)
     rel = RelationshipId(relationship)
-    try:
+    with Store(db) as store:
         since = utc_now() - timedelta(days=DAYS)
         read = store.decisions_with_key(rel, LEVEL, since)
         lines = len(store.decisions_with_key(rel, LINE_SENT, since))
-    finally:
-        store.close()
     levels = Counter(str(d.detail.get("level")) for d in read if isinstance(d.detail, dict))
     if not levels:
         return f"no crisis readings in the last {DAYS} days\n"

@@ -9,10 +9,13 @@ Everything done to a memory after it is written, feeding one review queue for th
   quote for it and raises a question when a new memory may replace or contradict an older one.
 - `context/`: a short line on what was being talked about, shown beside the memory.
 
-**Nightly**, at 04:00 local time (`memory/nightly.py`):
+**For the owner**: `review/`, the one queue of questions (`companion memory review`) that the merge proposals, the
+re-read and the sorter all feed.
+
+**Nightly**, at 04:00 local time (`memory/nightly.py`, running each part's `Feature.nightly` step in the registry's order):
 - `reread/`: the re-read of settled memories, which closes faded passing moments and queues questions.
 - `merging/`: merge proposals, memories about one thing grouped for the owner to approve.
 - `sort/` (its nightly half): retiring routine moments after their week.
 
 The parts may use each other; nothing outside upkeep imports a part except the registry, the memory
-side, as for any feature.
+side and the command line, as for any feature.

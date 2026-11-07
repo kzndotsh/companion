@@ -7,7 +7,12 @@ worth) is in its README under `src/companion/features/`.
 ## How a memory is made
 
 Memory is written by the memory pass (`src/companion/memory/memory_pass.py`),
-never during a reply. It runs once the chat has been quiet for 90 seconds. It reads the messages not
+never during a reply. It runs once the chat has been quiet for 90 seconds (`memory/idle.py`), or at
+once with `companion memory-pass`. Both run the same pass: its options are built once
+(`compose.pass_options`), with the same-memory check, the promise read, hedged plans, embedding the new
+memories and the steps the features add after every pass (`Feature.after_pass`: its own history and
+the scene memory). A rebuild runs none of those, because the check would match the memories it is
+replacing. It reads the messages not
 yet read, in batches of 40 with the 4 before each for context, and asks a small model for candidate
 memories.
 
@@ -80,7 +85,8 @@ is as above (ADR 0026).
 
 ## How memory tidies itself
 
-Each night at 04:00 local, the night's memory work runs (`src/companion/memory/nightly.py`). Each step
+Each night at 04:00 local, the night's memory work runs (`src/companion/memory/nightly.py`): the steps
+the features declare (`Feature.nightly`), in the registry's order. Each step
 runs on its own, so one failing does not skip the rest, and a night missed while the bot was down is
 made up five minutes after it starts. Nothing runs that night once the daily spend cap is reached. The
 steps are:

@@ -8,10 +8,9 @@ Idempotent: the run log is the cursor, so a crashed or repeated pass re-reads no
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime, tzinfo
-from typing import Protocol
 
 from companion.core.beliefs.dedupe import is_already_known
 from companion.core.beliefs.extract import (
@@ -57,6 +56,7 @@ from companion.features.upkeep.reread.run import SameCheck
 from companion.features.upkeep.reread.store import MemoryChecks
 from companion.kit.ask import Judge, ask_or_raise
 from companion.kit.embed import bounded, embed_missing
+from companion.kit.features import Step
 from companion.kit.record import Recorder, new_id
 from companion.memory.views import WANT_KINDS, check_views
 from companion.registry import FEATURES
@@ -75,8 +75,12 @@ class PassOptions:
     promises: bool = False  # read its own messages for promises it made (J12, shadow)
     embed: tuple[Embedder, str] | None = None  # embed new memories after the pass (model name)
     loose_loops: bool = False  # hedged plans become note-only loops (COMPANION_HEDGED_PLANS)
-    # Steps a switch adds to every pass: its own history (ADR 0025), the scene memory (ADR 0026).
-    steps: Sequence[_Step] = ()
+    # Steps the features add to every pass (`Feature.after_pass`): its own history (ADR 0025), the
+    # scene memory (ADR 0026).
+    steps: Sequence[Step] = ()
+
+
+PLAIN = PassOptions()  # nothing added: a rebuild's, and a test's
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +97,16 @@ class PassResult:
     views_rejected: int = 0
     views_checked: int = 0
     views_conflicts: int = 0
+
+    def summary(self) -> str:
+        """What the pass did in one line, for the log and for `companion memory-pass`."""
+        return (
+            f"+{self.accepted} beliefs, {self.restated} restated, {self.rejected} rejected,"
+            f" {self.already_known} already known; views +{self.views_accepted},"
+            f" {self.views_restated} restated, {self.views_rejected} rejected,"
+            f" {self.views_checked} checked ({self.views_conflicts} conflict);"
+            f" ${self.cost_usd:.5f}"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,38 +146,23 @@ class _Pass:
         )
 
 
-class _Spent(Protocol):
-    @property
-    def cost_usd(self) -> float: ...
-
-
-_Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitable[_Spent]]
-
-
 # What runs once a pass has stored new memories of theirs, and new views of its own: each feature's
 # step, in the registry's order (the map of their life, names, what they were talking about, what
 # kind of memory it is; for views, lore).
-AFTER_THEIRS: tuple[_Step, ...] = tuple(
+AFTER_THEIRS: tuple[Step, ...] = tuple(
     f.after_theirs for f in FEATURES if f.after_theirs is not None
 )
-AFTER_OWN: tuple[_Step, ...] = tuple(f.after_own for f in FEATURES if f.after_own is not None)
+AFTER_OWN: tuple[Step, ...] = tuple(f.after_own for f in FEATURES if f.after_own is not None)
 
 
-async def memory_pass(  # noqa: PLR0913
+async def memory_pass(
     store: Store,
     extractor: StructuredModel,
     rel: RelationshipId,
-    now: datetime | None = None,
-    same: SameCheck | None = None,
-    *,
-    promises: bool = False,
-    embed: tuple[Embedder, str] | None = None,
-    loose_loops: bool = False,
-    steps: Sequence[_Step] = (),
+    options: PassOptions = PLAIN,
 ) -> PassResult:
-    options = PassOptions(
-        now, same=same, promises=promises, embed=embed, loose_loops=loose_loops, steps=steps
-    )
+    """One batch after the cursor, the pass the bot runs when it has been quiet and `companion
+    memory-pass` runs now. Build `options` once (`compose.pass_options`) so they are the same."""
     return await memory_pass_from(store, extractor, rel, store.pass_cursor(rel), options)
 
 
@@ -358,7 +357,7 @@ async def memory_pass_from(
     extractor: StructuredModel,
     rel: RelationshipId,
     start: tuple[datetime, UtteranceId] | None,
-    options: PassOptions = PassOptions(),  # noqa: B008
+    options: PassOptions = PLAIN,
 ) -> PassResult:
     """One batch after `start`. Pass None to read from the beginning, for a re-read.
 

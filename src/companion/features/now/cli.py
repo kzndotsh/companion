@@ -10,24 +10,22 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.turn.now import KEY, from_decisions, open_now
 from companion.core.types import RelationshipId
 from companion.features.now.run import SENT, SHADOW
+from companion.kit.command import Group, plain
 from companion.store.sqlite.store import Store
 
 DAYS = 3
 
 
 def run(db: Path, relationship: str, *, now: datetime | None = None) -> str:
-    store = Store(db)
     rel = RelationshipId(relationship)
     at = now or utc_now()
     since = at - timedelta(days=DAYS)
-    try:
+    with Store(db) as store:
         said = from_decisions(store.decisions_with_key(rel, KEY, since))
         notes = [
             *store.decisions_with_key(rel, SENT, since),
             *store.decisions_with_key(rel, SHADOW, since),
         ]
-    finally:
-        store.close()
     zone = local_zone()
     lines = [f"labelled in the last {DAYS} days ({len(said)}):"]
     lines += [
@@ -42,3 +40,8 @@ def run(db: Path, relationship: str, *, now: datetime | None = None) -> str:
         for d in sorted(notes, key=lambda d: d.at)
     ]
     return "\n".join(lines) + "\n"
+
+
+COMMANDS = (
+    plain("now", Group.DAYS, "what they said is coming: the labels, what is open, the notes", run),
+)

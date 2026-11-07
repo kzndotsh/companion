@@ -16,9 +16,9 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 from statistics import median
 
+from companion.core.reachout import Kind
 from companion.core.types import Json
 from companion.features.reach.gate import ANSWER_SPAN, Answer, answer
-from companion.features.reach.logic import Kind
 from companion.prompts import get
 
 OUTCOME = "reach out: outcome"

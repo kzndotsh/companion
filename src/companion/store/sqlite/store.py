@@ -74,6 +74,12 @@ class Store:
     def close(self) -> None:
         self._conn.close()
 
+    def __enter__(self) -> Store:
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.close()
+
     def part[P: Part](self, cls: type[P]) -> P:
         """A feature's queries over this file: `store.part(Stories)`. The store holds the ledger
         and the tables the whole system reads; each feature's tables are its own class."""

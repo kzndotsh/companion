@@ -1,25 +1,27 @@
-"""The night's memory work: each step on its own, so one failing does not skip the rest, and the
-time of the last full run kept, so a night the bot was down is made up when it starts again."""
+"""The night's memory work (ADR 0019): the steps the features declare (`Feature.nightly`, in the
+registry's order), each on its own so one failing does not skip the rest, and the time of the last
+full run kept, so a night the bot was down is made up when it starts again."""
 
 from __future__ import annotations
 
 import logging
-from collections.abc import Awaitable, Callable
-from datetime import datetime, timedelta, tzinfo
+from collections.abc import Sequence
+from datetime import datetime, timedelta
 
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.switch import Mode
 from companion.core.types import RelationshipId
-from companion.features.episodes.run import write_closed
-from companion.features.upkeep.merging import run as merging
-from companion.features.upkeep.reread.run import nightly
-from companion.features.upkeep.sort.run import expire_routine
+from companion.kit.features import Feature
+from companion.kit.jobs import Daily, Job
+from companion.kit.runtime import Runtime
+from companion.registry import FEATURES
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.nightly")
 LAST_RUN = "nightly: last run"  # a setting: when every step was last tried
 MISSED_AFTER = timedelta(hours=26)  # longer than this since the last run, a night was missed
+NIGHTLY_HOUR = 4  # local time, when they are least likely to be chatting
 
 
 def missed(store: Store, rel: RelationshipId, now: datetime) -> bool:
@@ -29,39 +31,40 @@ def missed(store: Store, rel: RelationshipId, now: datetime) -> bool:
 
 
 async def night(
-    store: Store, judge: StructuredModel, rel: RelationshipId, zone: tzinfo, *, mode: Mode
+    c: Runtime, judge: StructuredModel, features: Sequence[Feature] = FEATURES
 ) -> list[str]:
-    """Run every step once, each on its own; the names of those that failed. The run is recorded
-    when at least one step worked, so one step that keeps failing is tried again the next night,
-    not in a loop, while a night where every step failed (the judge down) is made up at the next
-    start."""
-
-    async def check() -> None:
-        await nightly(store, judge, rel, utc_now(), zone, mode=mode)
-
-    async def group() -> None:
-        await merging.recent(store, judge, rel, utc_now(), zone)
-
-    async def routine() -> None:
-        expire_routine(store, rel, utc_now())
-
-    async def episodes() -> None:
-        await write_closed(store, judge, rel, utc_now())
-
-    # The re-read is the only step behind its switch; the rest of the night's work always runs.
-    steps: tuple[tuple[str, Callable[[], Awaitable[None]]], ...] = (
-        *((("re-read", check),) if mode is not Mode.OFF else ()),
-        ("grouping", group),
-        ("routine expiry", routine),
-        ("episodes", episodes),
-    )
+    """Run every step once, each on its own; the names of those that failed. A step behind a switch
+    that is off is left out. The run is recorded when at least one step worked, so one step that
+    keeps failing is tried again the next night, not in a loop, while a night where every step
+    failed (the judge down) is made up at the next start."""
+    steps = [
+        f.nightly
+        for f in features
+        if f.nightly is not None
+        and (f.nightly.switch is None or c.mode(f.nightly.switch) is not Mode.OFF)
+    ]
     failed: list[str] = []
-    for name, step in steps:
+    for step in steps:
         try:
-            await step()
+            await step.run(c, judge)
         except Exception:
-            log.exception("nightly %s failed; the other steps still run", name)
-            failed.append(name)
+            log.exception("nightly %s failed; the other steps still run", step.name)
+            failed.append(step.name)
     if len(failed) < len(steps):
-        store.set_setting(rel, LAST_RUN, utc_now().isoformat(), utc_now())
+        c.store.set_setting(c.rel, LAST_RUN, utc_now().isoformat(), utc_now())
     return failed
+
+
+def job(c: Runtime) -> Job | None:
+    """The night's work once a night at NIGHTLY_HOUR, made up shortly after a start when the last
+    night was missed. None when the runtime has no memory model."""
+    judge = c.memory
+    if judge is None:
+        return None
+
+    async def run() -> None:
+        failed = await night(c, judge)
+        if failed:
+            log.warning("nightly: %s failed", ", ".join(failed))
+
+    return Job("nightly", run, Daily(NIGHTLY_HOUR, lambda: missed(c.store, c.rel, utc_now())))

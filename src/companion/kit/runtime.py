@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.prefix import Prefix
+from companion.core.reachout import Dial
 from companion.core.switch import Mode, Switch
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
@@ -26,6 +27,7 @@ class Runtime:
     prefix: Prefix
     rel: RelationshipId
     judge: StructuredModel | None = None
+    memory: StructuredModel | None = None  # the memory pass's and the night's model, no routes
     tics: TicMemory = field(default_factory=TicMemory)
     roleplay_talker: Talker | None = None  # replies while a pretend scene is in progress
     roleplay_prefix: Prefix | None = (
@@ -37,6 +39,7 @@ class Runtime:
     serious_message: str = ""  # the sheet's `## Crisis message` section, sent by code
     daily_cap_usd: float | None  # nothing paid runs once today's spend reaches this
     modes: Mapping[Switch, Mode]  # where each on, shadow or off switch stands (`core/switch.py`)
+    reach: Dial  # how much of the conversation it may start (COMPANION_REACH)
 
     def mode(self, switch: Switch) -> Mode:
         """Where a switch stands: on, shadow or off."""

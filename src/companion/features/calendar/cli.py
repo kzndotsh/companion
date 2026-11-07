@@ -11,24 +11,22 @@ from companion.core.types import RelationshipId
 from companion.features.calendar.logic import REGION, How, occasions, when
 from companion.features.calendar.run import theirs
 from companion.features.calendar.store import Calendar
+from companion.kit.command import Group, plain
 from companion.store.sqlite.store import Store
 
 DAYS = 30
 
 
 def run(db: Path, relationship: str, *, now: datetime | None = None) -> str:
-    store = Store(db)
     rel = RelationshipId(relationship)
     zone = local_zone()
     local = (now or utc_now()).astimezone(zone)
     today = local.date()
-    try:
+    with Store(db) as store:
         first = store.part(Calendar).first_message(rel)
         since = datetime.combine(today - timedelta(days=DAYS), time.min, tzinfo=zone)
         offered = store.part(Calendar).offered_since(rel, since)
         dates = theirs(store, rel)
-    finally:
-        store.close()
     first_met = first.astimezone(zone).date() if first is not None else None
     known = ", ".join(f"{d.name} {d.month}/{d.day}" for d in dates) or "none"
     lines = [f"their dates from memory: {known}"]
@@ -48,3 +46,10 @@ def run(db: Path, relationship: str, *, now: datetime | None = None) -> str:
     if not offered:
         lines.append("  nothing")
     return "\n".join(lines) + "\n"
+
+
+COMMANDS = (
+    plain(
+        "calendar", Group.DAYS, "the occasions in the next 30 days and what was offered lately", run
+    ),
+)

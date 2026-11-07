@@ -9,7 +9,7 @@ menu. `/flag` and `/fav` are not slash commands: a slash command does not carry 
 typed in reply to, so it could only mark the latest reply. On Discord they are typed `!flag` and
 `!fav`, as text that keeps the reply, since a typed `/` opens Discord's command picker. A
 command name another app also uses brings up that app's command. The menu and `/mode` run the same
-handlers as the text commands (`daemon.chat_commands`), answer only the allowed user, and answer
+handlers as the text commands (`chat_commands.py`), answer only the allowed user, and answer
 privately, never as part of the chat."""
 
 from __future__ import annotations

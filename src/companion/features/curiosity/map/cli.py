@@ -17,14 +17,11 @@ SHOWN_PICKS = 7
 
 
 def run(db: Path, relationship: str) -> str:
-    store = Store(db)
     rel = RelationshipId(relationship)
-    try:
+    with Store(db) as store:
         beliefs = store.user_beliefs(rel)
         labels = store.belief_labels(rel)
         picks = store.decisions_with_key(rel, WOULD_ASK) + store.decisions_with_key(rel, ASKED)
-    finally:
-        store.close()
     cells = Counter((labels[b.id].domain, labels[b.id].depth) for b in beliefs if b.id in labels)
     head = "".join(f"{d.value:>10}" for d in Depth)
     out = [f"{'':10}{head}     total"]

@@ -10,7 +10,7 @@ A light nudge when they step away and stay gone much longer than they said, the 
 
 **The draft judge** is `nudge-draft` (30 s; spend `initiative`). Its schema and reading are shared with the open-loop check-in drafter in `core/reachout.py` (`DRAFT_SCHEMA`, `parse_draft`). A call that fails or gives no message drops the draft.
 
-**The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` (`daemon.py`) looks at their newest recorded time away. It is skipped on a tick when a plan check-in would go. It holds, with a reason, for the first of these:
+**The tick.** Every 15 minutes, after the open-loop tick and under the same daily spend cap, `tick_nudge` (its step in the initiative tick, `Feature.reaching`) looks at their newest recorded time away. It is skipped on a tick when a plan check-in would go. It holds, with a reason, for the first of these:
 
 - no time away is recorded
 - they wrote after it (any message from them cancels it)
@@ -18,7 +18,7 @@ A light nudge when they step away and stay gone much longer than they said, the 
 - more than 6 hours have passed, so it is past nudging
 - not yet twice the minutes they said, and not yet an hour (the longer of the two)
 - already 2 nudges today
-- the shared gate every reach-out asks holds it (`holds` in `features/reach/run.py`, ADR 0023, passed in by the daemon): a crisis turn under a day old, their learned quiet hours, a scene, a chat active in the last 90 minutes, its last reach-out of any kind unanswered, under six hours since its last of any kind, or its share of conversations at the dial
+- the shared gate every reach-out asks holds it (`holds` in `features/reach/run.py`, ADR 0023, passed in by the initiative tick): a crisis turn under a day old, their learned quiet hours, a scene, a chat active in the last 90 minutes, its last reach-out of any kind unanswered, under six hours since its last of any kind, or its share of conversations at the dial
 
 Since 2026-10-25 nudges use the shared gate instead of fixed quiet hours of 23:00 to 08:00. One effect: a short time away is nudged no sooner than 90 minutes after the last message, the shared gate's active chat, where an hour was enough before. The reason is rendered from the numbers by code.
 

@@ -8,7 +8,9 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 
+from companion.core import switch
 from companion.core.card import everyday_ids, faded
+from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.switch import Mode
@@ -33,7 +35,9 @@ from companion.features.upkeep.reread.logic import (
 from companion.features.upkeep.reread.store import MemoryChecks
 from companion.kit.curate import log_would_close, retire
 from companion.kit.embed import bounded, embed_missing
+from companion.kit.features import Feature, NightStep
 from companion.kit.reads import read_times
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.upkeep")
@@ -173,3 +177,11 @@ class SameCheck:
         ):  # both are kept; the owner may join them
             await propose_group(store, self.judge, rel, [older, new], now)
         return older if same_as(found) else None
+
+
+async def night_step(c: Runtime, judge: StructuredModel) -> None:
+    await nightly(c.store, judge, c.rel, utc_now(), local_zone(), mode=c.mode(switch.REREAD))
+
+
+# The re-read is the only part of the night behind a switch: it is left out while that is off.
+REREAD = Feature("reread", nightly=NightStep("re-read", night_step, switch.REREAD))

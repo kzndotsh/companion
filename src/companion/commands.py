@@ -10,7 +10,8 @@ from pathlib import Path
 
 import httpx
 
-from companion.compose import extractor, spend_sink
+from companion.characters import chosen, sheets_dir
+from companion.compose import embedder, extractor, pass_options, spend_sink
 from companion.core.spend import MeteredExtractor
 from companion.core.types import RelationshipId
 from companion.kit.services import Services
@@ -24,19 +25,12 @@ from companion.store.sqlite.store import Store
 async def _services(db: Path, relationship: str) -> AsyncGenerator[Services]:
     """What a one-off command needs: the store, the judges' model and the relationship. Closed
     after."""
-    store = Store(db)
     rel = RelationshipId(relationship)
-
-    sink = spend_sink(store, rel)
-    try:
+    with Store(db) as store:
         async with httpx.AsyncClient() as client:
-            yield Services(
-                store,
-                MeteredExtractor(extractor(client, Settings.from_env()), sink, "command"),
-                rel,
-            )
-    finally:
-        store.close()
+            sink = spend_sink(store, rel)
+            judges = MeteredExtractor(extractor(client, Settings.from_env()), sink, "command")
+            yield Services(store, judges, rel, client)
 
 
 async def run(db: Path, relationship: str, job: Callable[[Services], Awaitable[str]]) -> str:
@@ -46,25 +40,29 @@ async def run(db: Path, relationship: str, job: Callable[[Services], Awaitable[s
 
 
 async def memory_pass_now(db: Path, relationship: str, *, from_start: bool = False) -> str:
-    """Drain the memory pass's backlog, one batch at a time. For `companion memory-pass`.
+    """Drain the memory pass's backlog, one batch at a time, the pass the bot runs when it is idle
+    (`compose.pass_options`). For `companion memory-pass`.
 
     `from_start` re-reads everything, for after the extraction prompt improves. Claims already
     recorded are skipped as already known, so it only adds what was missed.
     """
     lines: list[str] = []
+    s = Settings.from_env()
     async with _services(db, relationship) as x:
+        character = chosen(s.character, sheets_dir(db.parent))  # the data folder holds the db
+        options = pass_options(
+            s,
+            x.judge,
+            embedder(x.client, x.store, x.rel, s),
+            character.sheet if character is not None else "",
+        )
         start = None if from_start else x.store.pass_cursor(x.rel)
         while True:
-            result = await memory_pass_from(x.store, x.judge, x.rel, start)
+            result = await memory_pass_from(x.store, x.judge, x.rel, start, options)
             if not result.ran:
                 break
             start = result.upto
-            lines.append(
-                f"+{result.accepted} beliefs, {result.restated} restated, "
-                f"{result.rejected} rejected, {result.already_known} already known; "
-                f"views +{result.views_accepted}, {result.views_restated} restated, "
-                f"{result.views_rejected} rejected; ${result.cost_usd:.5f}"
-            )
+            lines.append(result.summary())
     return "\n".join(lines or ["nothing new to read"]) + "\n"
 
 

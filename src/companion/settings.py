@@ -18,6 +18,7 @@ from companion.core.switch import SWITCHES, Mode, Switch
 from companion.io.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.models import anthropic, embeddings, openrouter
 
+DATA_DIR = Path("data")  # the data folder `companion run --data` and the evals default to
 ROLEPLAY_MODEL = openrouter.DEEPSEEK
 JUDGE_MODEL = openrouter.HAIKU
 JUDGE_STANDBY = openrouter.DEEPSEEK  # asked only when the judges' model refuses

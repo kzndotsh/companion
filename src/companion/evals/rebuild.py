@@ -39,8 +39,7 @@ def rebuilt(
     report = replay_file(db, turn_id)
     base, record = report.request, report.record
     at, rel = record.at, record.relationship_id
-    store = Store(db)
-    try:
+    with Store(db) as store:
         request = base
         if card_size is not None:
             beliefs = [b for b in store.user_beliefs_as_of(rel, at) if is_assertable(b)]
@@ -59,6 +58,4 @@ def rebuilt(
             said = base.messages[-1]
             prior = [u for u in store.history_before(rel, at, history + 1) if u.turn_id != turn_id]
             request = replace(request, messages=(*to_messages(prior[-history:], at), said))
-    finally:
-        store.close()
     return request

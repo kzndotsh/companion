@@ -39,6 +39,21 @@ OWN_WOULD_SEND = "reach out (shadow): would send"
 WOULD_NUDGE = "nudge (shadow): would send"  # after they stepped away (features/nudges)
 
 
+class Kind(StrEnum):
+    """Why it would reach out, first to last: the order is the precedence, stated here once. The
+    initiative timer runs the features that can take a tick in this order (`kit/features.py`
+    `Reaching`)."""
+
+    PLAN = "a plan of theirs"
+    AWAY = "stepping away"
+    KEPT = "a time they keep"
+    THOUGHT = "a thought"
+    MISSING = "missing them"
+
+
+PRECEDENCE = tuple(Kind)
+
+
 class Dial(StrEnum):
     """COMPANION_REACH: the share of conversations it may start over the last two weeks."""
 

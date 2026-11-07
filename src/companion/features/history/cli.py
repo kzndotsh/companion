@@ -10,6 +10,7 @@ from companion.core.clock import utc_now
 from companion.core.types import RelationshipId
 from companion.features.history.logic import Recorded, Ruling, Standing
 from companion.features.history.store import By, Stories
+from companion.kit.command import Group, plain
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 
@@ -38,11 +39,8 @@ _SECTIONS = (
 
 
 def run(db: Path, relationship: str) -> str:
-    store = Store(db)
-    try:
+    with Store(db) as store:
         stories = store.part(Stories).recorded(RelationshipId(relationship))
-    finally:
-        store.close()
     if not stories:
         return "no stories of its own past yet\n"
     out: list[str] = []
@@ -77,3 +75,8 @@ def retire_story(store: Store, rel: RelationshipId, id_prefix: str, reason: str)
             RETIRED, {"story_id": story.id, "claim": story.claim}, reason=f"{RETIRED}: {reason}"
         )
     return f"retired  {story.claim}"
+
+
+COMMANDS = (
+    plain("history", Group.ITSELF, "the stories of its own past and their canon standing", run),
+)

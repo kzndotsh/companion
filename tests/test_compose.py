@@ -13,6 +13,7 @@ from tests.turn.test_mood_loop import PREFIX, REL, Talker
 
 PARTS = {
     "judge",
+    "memory",
     "tics",
     "roleplay_talker",
     "roleplay_prefix",
@@ -64,3 +65,16 @@ def test_a_runtime_reads_every_switch_as_settings_has_it(tmp_path: Path) -> None
         assert quiet.mode(sw.MOOD) is Mode.OFF
     finally:
         store.close()
+
+
+def test_the_bots_memory_pass_and_the_command_are_built_by_one_function() -> None:
+    """The steps the features add (its own history, the scene memory) come from `after_pass`, and
+    what the settings switch on is in the options, whoever asks."""
+    on = Settings.from_env({sw.HISTORY.env: "shadow", sw.INTIMATE_MEMORY.env: "on"})
+    off = Settings.from_env({sw.HISTORY.env: "off", sw.INTIMATE_MEMORY.env: "off"})
+    assert len(compose.pass_options(on, None, None, "sheet").steps) == 2  # type: ignore[arg-type]
+    assert compose.pass_options(off, None, None).steps == ()  # type: ignore[arg-type]
+    options = compose.pass_options(Settings.from_env({sw.PROMISES.env: "shadow"}), None, None)  # type: ignore[arg-type]
+    assert options.promises
+    assert options.embed is None
+    assert options.same is None

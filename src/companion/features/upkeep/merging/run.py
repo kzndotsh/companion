@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta, tzinfo
 
+from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.types import Belief, RelationshipId
 from companion.features.upkeep.merging.logic import (
@@ -27,7 +28,9 @@ from companion.features.upkeep.merging.logic import (
 )
 from companion.features.upkeep.merging.store import MergeProposals
 from companion.kit.ask import Judge, ask
+from companion.kit.features import Feature, NightStep
 from companion.kit.reads import read_times
+from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.merging")
@@ -169,3 +172,10 @@ async def everything(
         got = await propose(store, judge, rel, day, now)
         total = Proposed(total.groups + got.groups, total.cost_usd + got.cost_usd)
     return total
+
+
+async def night_step(c: Runtime, judge: StructuredModel) -> None:
+    await recent(c.store, judge, c.rel, utc_now(), local_zone())
+
+
+MERGING = Feature("merging", nightly=NightStep("grouping", night_step))

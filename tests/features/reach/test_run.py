@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from companion.core.extractor import Extraction
-from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, Dial
+from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, Dial, Kind
 from companion.core.types import (
     DecisionKind,
     Frame,
@@ -18,7 +18,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.features.reach.logic import DROPPED, Kind
+from companion.features.reach.logic import DROPPED
 from companion.features.reach.run import Reacher, tick_reach
 from companion.features.reach.store import Reaches
 from companion.store.sqlite.store import Store

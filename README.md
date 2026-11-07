@@ -410,6 +410,7 @@ companion/
 │   ├── evals/            the eval runner
 │   ├── lib/              small general helpers
 │   ├── daemon.py         starts the bot
+│   ├── background.py     the timers beside the chat, as jobs the features declare
 │   ├── compose.py        builds the models, spend sink and runtime from the settings
 │   ├── settings.py       reads the settings
 │   └── registry.py       the list of features

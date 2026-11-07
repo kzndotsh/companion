@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from companion.core.clock import local_zone, utc_now
 from companion.core.shadows import SHADOWS, overdue
+from companion.kit.command import Command, Group, emit, no_args
 
 
 def run() -> str:
@@ -23,3 +24,14 @@ def run() -> str:
         "at its review a feature graduates to live or is removed: either way, delete its row",
     ]
     return "\n".join(lines) + "\n"
+
+
+COMMANDS = (
+    Command(
+        "shadows",
+        Group.RUNNING,
+        "every feature in shadow, its review date and the overdue ones",
+        lambda _: emit(run()),
+        no_args,
+    ),
+)

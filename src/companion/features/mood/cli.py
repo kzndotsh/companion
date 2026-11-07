@@ -3,6 +3,7 @@ have been on each of their messages, from the same rules the bot uses. Writes no
 
 from __future__ import annotations
 
+import argparse
 from collections import Counter
 from datetime import datetime, timedelta
 from itertools import pairwise
@@ -12,14 +13,14 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.types import RelationshipId
 from companion.features.mood.logic import WINDOW, Mood, Replayed, mood_at, reason, replay
 from companion.features.mood.store import MoodEffects
+from companion.kit.command import Command, Group, db_args, emit, target
 from companion.store.sqlite.store import Store
 
 
 def run(db: Path, relationship: str, replay_days: int | None, now: datetime | None = None) -> str:
     now = now or utc_now()
-    store = Store(db)
     rel = RelationshipId(relationship)
-    try:
+    with Store(db) as store:
         if replay_days is None:
             return _now(
                 mood_at(store.part(MoodEffects).since(rel, now - WINDOW), now, local_zone())
@@ -27,8 +28,6 @@ def run(db: Path, relationship: str, replay_days: int | None, now: datetime | No
         start = now - timedelta(days=replay_days)
         said = store.part(MoodEffects).said_since(rel, start)
         times = store.part(MoodEffects).times_since(rel, start - timedelta(days=1))
-    finally:
-        store.close()
     return _replayed(replay(said, times, local_zone()), replay_days)
 
 
@@ -72,3 +71,19 @@ def _replayed(rows: list[Replayed], days: int) -> str:
         f"what shows changed on {changes} of {len(rows) - 1} messages",
     ]
     return "\n".join(out)
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--replay", type=int, metavar="DAYS", help="rebuild it over the last DAYS days")
+    db_args(p)
+
+
+COMMANDS = (
+    Command(
+        "mood",
+        Group.ITSELF,
+        "the mood now, or --replay DAYS of what it would have been",
+        lambda a: emit(run(*target(a), a.replay)),
+        _args,
+    ),
+)

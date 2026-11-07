@@ -16,13 +16,18 @@ from companion.core import switch as sw
 from companion.core.clock import utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.prefix import Prefix
+from companion.core.reachout import dial
 from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalker, SpendEvent
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
 from companion.core.vectors import Embedder
+from companion.features.upkeep.reread.run import SameCheck
+from companion.kit.features import Passing
 from companion.kit.runtime import Runtime
+from companion.memory.memory_pass import PassOptions
 from companion.models import anthropic, embeddings, openrouter
 from companion.models.fallback import ByJudge, RefusalFallback, TalkerFallback
+from companion.registry import FEATURES
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
@@ -103,6 +108,18 @@ class Models:
     embedder: Embedder | None  # None when relevance, lore and focus are all off
 
 
+def embedder(
+    client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Settings
+) -> Embedder | None:
+    """The embedder, metered; None when relevance, lore and focus are all off."""
+    if not (s.openrouter and (s.on(sw.RELEVANCE) or s.on(sw.LORE) or s.on(sw.FOCUS))):
+        return None
+    return MeteredEmbedder(
+        embeddings.OpenRouterEmbedder(need("OPENROUTER_API_KEY"), client, s.embed_model),
+        spend_sink(store, rel),
+    )
+
+
 def models(client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Settings) -> Models:
     """The talkers, extractors and embedder, metered. Each talker has a fallback: the everyday one
     the standby model, the roleplay one the everyday model."""
@@ -113,19 +130,12 @@ def models(client: httpx.AsyncClient, store: Store, rel: RelationshipId, s: Sett
     roleplay = (
         _with_fallback(client, scene, s.everyday_model if fallback else None) if scene else None
     )
-    embedder = (
-        MeteredEmbedder(
-            embeddings.OpenRouterEmbedder(need("OPENROUTER_API_KEY"), client, s.embed_model), sink
-        )
-        if s.openrouter and (s.on(sw.RELEVANCE) or s.on(sw.LORE) or s.on(sw.FOCUS))
-        else None
-    )
     return Models(
         MeteredTalker(talker, sink, "talker"),
         MeteredTalker(roleplay, sink, "roleplay talker") if roleplay is not None else None,
         MeteredExtractor(extractor(client, s, s.judge_routes), sink, "judge"),
         MeteredExtractor(extractor(client, s), sink, "memory"),
-        embedder,
+        embedder(client, store, rel, s),
     )
 
 
@@ -133,6 +143,7 @@ class Parts(TypedDict, total=False):
     """What a runtime may be given besides the store, the talker and the persona."""
 
     judge: StructuredModel | None
+    memory: StructuredModel | None
     roleplay_talker: Talker | None
     roleplay_prefix: Prefix | None
     embedder: Embedder | None
@@ -156,6 +167,8 @@ def runtime(
         prefix=prefix,
         rel=rel,
         judge=parts.get("judge"),
+        memory=parts.get("memory"),
+        reach=dial(s.position(sw.REACH)),
         roleplay_talker=parts.get("roleplay_talker"),
         roleplay_prefix=parts.get("roleplay_prefix"),
         embedder=parts.get("embedder"),
@@ -164,4 +177,23 @@ def runtime(
         serious_message=parts.get("serious_message", ""),
         daily_cap_usd=s.daily_cap,
         modes=s.modes(),
+    )
+
+
+def pass_options(
+    s: Settings, judges: StructuredModel, embed: Embedder | None, sheet: str = ""
+) -> PassOptions:
+    """What a memory pass runs with, built once so the bot's idle pass and `companion memory-pass`
+    do the same: the same-memory check, the promise read, hedged plans, embedding what it stored,
+    and the steps the features add (`Feature.after_pass`)."""
+    passing = Passing(s.modes(), sheet)
+    steps = (f.after_pass(passing) for f in FEATURES if f.after_pass is not None)
+    return PassOptions(
+        same=SameCheck(judges, embed, s.embed_model, s.mode(sw.REREAD))
+        if embed is not None and s.on(sw.REREAD)
+        else None,
+        promises=s.on(sw.PROMISES),
+        embed=(embed, s.embed_model) if embed is not None else None,
+        loose_loops=s.on(sw.HEDGED_PLANS),
+        steps=tuple(step for step in steps if step is not None),
     )

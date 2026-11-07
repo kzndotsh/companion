@@ -10,11 +10,13 @@ import logging
 import uuid
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
+from typing import TYPE_CHECKING
 
+from companion.core.clock import local_zone, utc_now
 from companion.core.crisis import crisis_paused
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
-from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, WOULD_NUDGE, Dial, Held
+from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, WOULD_NUDGE, Dial, Held, Kind
 from companion.core.rhythm import WINDOW, kept_hour, learn
 from companion.core.sensitivity import GUARDED_AT
 from companion.core.turn.listening import LISTENING_KEY, logged_intimate, logged_severity
@@ -51,7 +53,6 @@ from companion.features.reach.logic import (
     THING_REUSE,
     Context,
     Idea,
-    Kind,
     Look,
     Pool,
     Thing,
@@ -81,9 +82,14 @@ from companion.features.reach.outcome import (
 )
 from companion.features.reach.store import Own, Reaches
 from companion.kit.ask import Judge, ask
+from companion.kit.features import Feature, Move
 from companion.kit.record import Recorder
 from companion.kit.spendcap import over_cap
 from companion.store.sqlite.store import Store
+
+if TYPE_CHECKING:
+    from companion.kit.features import Round
+    from companion.kit.runtime import Runtime
 
 log = logging.getLogger("companion.initiative")
 HISTORY = 5000  # messages read back, enough for two weeks
@@ -468,3 +474,22 @@ def resume(store: Store, rel: RelationshipId, now: datetime) -> bool:
         RESUMED, {}, reason=f"{RESUMED}: the owner turned it back on", kind=DecisionKind.POLICY
     )
     return True
+
+
+def reaching(c: Runtime) -> tuple[Move, ...]:
+    """Its steps in the initiative tick: first how each earlier reach-out landed and what the shared
+    gate holds, which a plan and a nudge also read; last its own reasons, after any plan or nudge
+    that took the tick (ADR 0021)."""
+    reacher = Reacher(c.reach, c.judge, c.daily_cap_usd)
+
+    async def gate(r: Round) -> None:
+        await record_outcomes(c.store, c.rel, r.now, c.judge)
+        r.held = holds(c.store, c.rel, (r.now, r.tz), reacher)
+
+    async def own(r: Round) -> None:
+        await tick_reach(c.store, c.rel, (utc_now(), local_zone()), reacher, r.first)
+
+    return (Move(None, gate), Move(Kind.KEPT, own))  # KEPT: the first kind it decides
+
+
+REACH = Feature("reach", reaching=reaching)

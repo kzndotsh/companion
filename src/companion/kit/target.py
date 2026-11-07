@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from companion.settings import Settings
+from companion.settings import DATA_DIR, Settings
 from companion.store.sqlite.store import FIRST_RELATIONSHIP, relationship_in
 
 
-def resolve_db(arg: Path | None, data: Path = Path("data")) -> Path:
+def resolve_db(arg: Path | None, data: Path = DATA_DIR) -> Path:
     """--db, else $COMPANION_DB, else the one database in data/."""
     if arg is not None:
         return arg
@@ -32,7 +32,7 @@ def resolve_relationship(arg: str | None, db: Path) -> str:
     return arg or relationship_in(db) or FIRST_RELATIONSHIP
 
 
-def find_db(arg: Path | None, data: Path = Path("data")) -> Path | None:
+def find_db(arg: Path | None, data: Path = DATA_DIR) -> Path | None:
     """Like resolve_db, but None when there is no database, for commands that can work without."""
     try:
         return resolve_db(arg, data)

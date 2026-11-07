@@ -5,10 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from companion.chat_commands import UNKNOWN_REPLY, chat_commands
 from companion.core.prompt.prefix import build_prefix
 from companion.core.replay import TurnRecord
 from companion.core.types import TurnId
-from companion.daemon import UNKNOWN_REPLY, chat_commands, delivery_hooks
+from companion.daemon import delivery_hooks
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0

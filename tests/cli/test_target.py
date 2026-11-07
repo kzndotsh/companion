@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 from tests.conftest import T0
 
-from companion.cli.target import resolve_db, resolve_relationship
 from companion.core.types import (
     Frame,
     RelationshipId,
@@ -14,6 +13,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
+from companion.kit.target import resolve_db, resolve_relationship
 from companion.store.sqlite.store import Store
 
 

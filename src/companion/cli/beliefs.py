@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -10,19 +11,17 @@ from companion.core.types import RelationshipId
 from companion.core.views import ViewMode, gates, is_settled, overstated, parse_mode
 from companion.features.history.cli import retire_story
 from companion.features.intimate.cli import retire_pattern
+from companion.kit.command import Command, Group, db_args, emit, plain, target
 from companion.kit.curate import approve, close_duplicates, merge, retire
 from companion.memory.calibrate import report, reviewed_views
 from companion.store.sqlite.store import VIEWS_MODE_KEY, Store
 
 
 def run(db: Path, relationship: str) -> str:
-    store = Store(db)
-    try:
+    with Store(db) as store:
         rel = RelationshipId(relationship)
         found = store.user_beliefs(rel)
         support = store.last_support(rel)
-    finally:
-        store.close()
     if not found:
         return "no beliefs yet\n"
     now = datetime.now(UTC)
@@ -40,28 +39,21 @@ def run(db: Path, relationship: str) -> str:
 
 
 def dedupe(db: Path, relationship: str) -> str:
-    store = Store(db)
-    try:
+    with Store(db) as store:
         report = close_duplicates(store, RelationshipId(relationship))
-    finally:
-        store.close()
     return ("\n".join(report) + "\n") if report else "no duplicates\n"
 
 
 def merge_some(db: Path, relationship: str, id_prefixes: list[str], claim: str) -> str:
-    store = Store(db)
-    try:
+    with Store(db) as store:
         return merge(store, RelationshipId(relationship), id_prefixes, claim) + "\n"
-    finally:
-        store.close()
 
 
 def retire_one(db: Path, relationship: str, id_prefix: str, reason: str) -> str:
     """Retire a belief or view by id prefix, or, when no current belief has that prefix, a story of
     its own past (ADR 0025) or a pattern from scenes (ADR 0026)."""
-    store = Store(db)
     rel = RelationshipId(relationship)
-    try:
+    with Store(db) as store:
         if not any(b.id.startswith(id_prefix) for b in store.current_beliefs(rel)):
             done = retire_story(store, rel, id_prefix, reason) or retire_pattern(
                 store, rel, id_prefix, reason
@@ -69,14 +61,11 @@ def retire_one(db: Path, relationship: str, id_prefix: str, reason: str) -> str:
             if done is not None:
                 return done + "\n"
         return retire(store, rel, id_prefix, reason) + "\n"
-    finally:
-        store.close()
 
 
 def opinions(db: Path, relationship: str) -> str:
     """The companion's own views: tentative until restated on a second day, then settled."""
-    store = Store(db)
-    try:
+    with Store(db) as store:
         rel = RelationshipId(relationship)
         found = store.self_beliefs(rel)
         days = store.evidence_days(rel)
@@ -84,8 +73,6 @@ def opinions(db: Path, relationship: str) -> str:
         approved = store.approved_views(rel)
         checks = store.view_checks(rel)
         mode = parse_mode(store.setting(rel, VIEWS_MODE_KEY))
-    finally:
-        store.close()
     if not found:
         return "no views recorded yet\n"
     now = datetime.now(UTC)
@@ -115,32 +102,83 @@ def opinions(db: Path, relationship: str) -> str:
 
 
 def approve_one(db: Path, relationship: str, id_prefix: str) -> str:
-    store = Store(db)
-    try:
+    with Store(db) as store:
         return approve(store, RelationshipId(relationship), id_prefix) + "\n"
-    finally:
-        store.close()
 
 
 def views_mode(db: Path, relationship: str, mode: str | None) -> str:
     """Show or set how views reach the card: auto, review (approved only) or off."""
     from datetime import UTC, datetime  # noqa: PLC0415
 
-    store = Store(db)
-    try:
+    with Store(db) as store:
         rel = RelationshipId(relationship)
         if mode is None:
             return f"views mode: {parse_mode(store.setting(rel, VIEWS_MODE_KEY))}\n"
         chosen = ViewMode(mode)
         store.set_setting(rel, VIEWS_MODE_KEY, chosen.value, datetime.now(UTC))
         return f"views mode set to {chosen}\n"
-    finally:
-        store.close()
 
 
 def calibrate(db: Path, relationship: str) -> str:
-    store = Store(db)
-    try:
+    with Store(db) as store:
         return report(reviewed_views(store, RelationshipId(relationship)))
-    finally:
-        store.close()
+
+
+def _merge_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("id_prefix", nargs="+")
+    p.add_argument("--claim", required=True, help="the merged wording")
+    db_args(p)
+
+
+def _retire_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("id_prefix")
+    p.add_argument("--reason", required=True)
+    db_args(p)
+
+
+def _approve_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("id_prefix")
+    db_args(p)
+
+
+def _views_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--mode", choices=[m.value for m in ViewMode])
+    db_args(p)
+
+
+COMMANDS = (
+    plain("beliefs", Group.MEMORY, "what it currently believes, with quotes", run),
+    Command(
+        "merge",
+        Group.MEMORY,
+        "merge beliefs that say one thing into one, keeping every quote",
+        lambda a: emit(merge_some(*target(a), [str(x) for x in a.id_prefix], str(a.claim))),
+        _merge_args,
+    ),
+    Command(
+        "retire",
+        Group.MEMORY,
+        "close one belief, or retire a story of its past, by id prefix",
+        lambda a: emit(retire_one(*target(a), str(a.id_prefix), str(a.reason))),
+        _retire_args,
+    ),
+    plain("dedupe", Group.MEMORY, "close beliefs that rest on the same words", dedupe),
+    plain("opinions", Group.ITSELF, "the companion's own views, tentative or settled", opinions),
+    Command(
+        "approve",
+        Group.ITSELF,
+        "approve one of the companion's own views, so it reaches the card",
+        lambda a: emit(approve_one(*target(a), str(a.id_prefix))),
+        _approve_args,
+    ),
+    Command(
+        "views",
+        Group.ITSELF,
+        "show or set how the companion's views reach the card",
+        lambda a: emit(views_mode(*target(a), a.mode)),
+        _views_args,
+    ),
+    plain(
+        "calibrate", Group.MEASURING, "compare the automatic gates with your approvals", calibrate
+    ),
+)

@@ -48,7 +48,7 @@ from companion.features.history.store import By, Stories
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, is_casual
 from companion.kit.embed import embed_within
-from companion.kit.features import Feature
+from companion.kit.features import Feature, Passing
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
@@ -282,4 +282,8 @@ async def stories_beside(
     )
 
 
-HISTORY = Feature("history", shadow=stories_beside)
+def set_up(p: Passing) -> Step | None:
+    return pass_step(p.mode(switch.HISTORY), p.sheet)
+
+
+HISTORY = Feature("history", shadow=stories_beside, after_pass=set_up)

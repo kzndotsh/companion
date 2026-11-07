@@ -7,7 +7,7 @@ import asyncio
 from typing import TYPE_CHECKING, cast
 
 from companion.core import switch
-from companion.core.clock import local_zone
+from companion.core.clock import local_zone, utc_now
 from companion.core.episode import EPISODE_GAP
 from companion.core.switch import Mode
 from companion.core.turn.listening import LISTENING_KEY, logged_severity
@@ -18,7 +18,7 @@ from companion.features.episodes.logic import note as episodes_note
 from companion.features.episodes.logic import recent as recent_times
 from companion.features.episodes.store import Episodes
 from companion.kit.current import Heard, Turn, decide, mark
-from companion.kit.features import Feature, Offer, Offered
+from companion.kit.features import Feature, NightStep, Offer, Offered
 
 if TYPE_CHECKING:
     from companion.kit.features import Moment
@@ -162,4 +162,13 @@ def recent_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     return Offer((text,) if text else ())
 
 
-EPISODES = Feature("recent", look=recent_for_turn, note=recent_offer)
+async def write_step(c: Runtime, judge: StructuredModel) -> None:
+    await write_closed(c.store, judge, c.rel, utc_now())
+
+
+EPISODES = Feature(
+    "recent",
+    look=recent_for_turn,
+    note=recent_offer,
+    nightly=NightStep("episodes", write_step),
+)

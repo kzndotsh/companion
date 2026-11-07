@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+import argparse
 import subprocess
 from pathlib import Path
 
 from companion import backups
 from companion.core.clock import utc_now
+from companion.kit.command import Command, Group, db_args, emit, target
 from companion.lib.sqlite.backup import BackupError, check, restore, snapshots
 from companion.settings import Settings
 
@@ -42,3 +44,25 @@ def run(db: Path, *, listing: bool = False, restore_from: Path | None = None) ->
     except BackupError as err:
         return f"nothing changed: {err}"
     return f"restored {source.name} ({n} messages); the database before it is kept as {kept.name}"
+
+
+def _args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--list", action="store_true", dest="listing", help="list the snapshots")
+    p.add_argument("--restore", type=Path, metavar="FILE", help="put a snapshot back (bot stopped)")
+    db_args(p)
+
+
+def _run(a: argparse.Namespace) -> int:
+    db, _ = target(a)
+    return emit(run(db, listing=bool(a.listing), restore_from=a.restore) + "\n")
+
+
+COMMANDS = (
+    Command(
+        "backup",
+        Group.RUNNING,
+        "snapshot the database and character sheets now, or list or restore one",
+        _run,
+        _args,
+    ),
+)

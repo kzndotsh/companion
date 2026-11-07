@@ -17,13 +17,10 @@ from companion.store.sqlite.store import Store
 
 
 def run(db: Path, relationship: str) -> str:
-    store = Store(db)
     rel = RelationshipId(relationship)
-    try:
+    with Store(db) as store:
         views = store.self_beliefs(rel)
         kinds = store.part(ViewKinds).kinds(rel)
-    finally:
-        store.close()
     tastes = lore(views, kinds)
     lines = [f'{b.id[:8]}  {b.claim}\n    "{b.evidence[0].quote}"' for b in reversed(tastes)]
     counts = Counter(kinds[b.id] for b in views if b.id in kinds)
