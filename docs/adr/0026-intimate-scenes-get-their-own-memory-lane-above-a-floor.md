@@ -87,3 +87,7 @@ word list in code, never a model; the age floor applies), and the limits and bas
 history with a heading that asks to keep to them (`notes/scene-basics` v2). On three recorded turns, 12
 draws each, the assumed body fell from 21 to 12 of 36 and their own rose from 1 to 12 (`evals/CHANGELOG.md`,
 2026-11-05).
+
+_Update 2026-11-07 (the owner):_ memories already placed in the intimate lane stay off every everyday
+card and out of both recall look-ups in every mode, not only `on`; reaching out always did. The rule
+lives in the turn (`turn/assemble.py`), so `off` keeps them out too.

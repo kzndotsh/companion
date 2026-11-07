@@ -1127,3 +1127,6 @@ From 2026-10-26 the history carries a system line (`notes/history-gap`) wherever
 
 ## Request assembly: the reach-out brief names the part of the day from one shared rule
 2026-11-07 (refactor, shadow only). The brief `system/reach-ideas` sees names the part of the day from `core/daypart.py`, the one definition the topic note also uses: 22:00 to 04:59 is now "night", where it said "late evening" from 22 and "morning" from midnight. Nothing else a model is sent changed in the untangle refactor.
+
+## Request assembly: the intimate lane stays out of everyday chat in every mode
+2026-11-07, the owner's choice. Memories the scene lane placed as intimate are left off the everyday card and out of both recall look-ups whatever `COMPANION_INTIMATE_MEMORY` says (`turn/assemble.py`, `features/recall`). Before, `shadow` and `off` still sent them on everyday turns, while reaching out always left them out. With the default `on` nothing changes.

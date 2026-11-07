@@ -153,15 +153,17 @@ class Assembled:
 
 def _lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card) -> CardLane:
     """What the features' lanes do to the card, joined: the first card sent instead wins, memories
-    left off and pinned text and writes add up."""
+    left off and pinned text and writes add up. Memories the scene lane placed as intimate never go
+    on a card the everyday talker reads, whatever `COMPANION_INTIMATE_MEMORY` says (2026-11-07)."""
     lanes = [
         f.lane(c, t, looked, roleplay=roleplay, card=card)
         for f in FEATURES
         if f.lane is not None and f.live(c)
     ]
     text = next((lane.text for lane in lanes if lane.text is not None), None)
+    intimate = frozenset[BeliefId]() if roleplay else c.store.intimate_lane(c.rel)
     return CardLane(
-        frozenset[BeliefId]().union(*(lane.hidden for lane in lanes)),
+        intimate.union(*(lane.hidden for lane in lanes)),
         text,
         "\n".join(lane.pinned for lane in lanes if lane.pinned),
         tuple(w for lane in lanes for w in lane.after),

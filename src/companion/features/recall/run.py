@@ -181,9 +181,7 @@ async def shadow(  # noqa: PLR0913
 
 def _hidden(c: Runtime) -> frozenset[BeliefId]:
     """The intimate lane, left out of the look-up when the scene memory is on (ADR 0026)."""
-    return (
-        c.store.intimate_lane(c.rel) if c.mode(switch.INTIMATE_MEMORY) is Mode.ON else frozenset()
-    )
+    return c.store.intimate_lane(c.rel)
 
 
 RELEVANT_NOTE = get("notes/relevant")

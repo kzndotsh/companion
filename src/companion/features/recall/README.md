@@ -8,7 +8,7 @@ The memories a reply gets beyond the card, by trigger. The card holds only 15 me
 
 ### One rule for both
 
-What a trigger may find (`eligible` in `logic.py`): memories stated for real, and never the intimate lane while `COMPANION_INTIMATE_MEMORY` is `on` (the roleplay card shows it on a roleplay turn instead, ADR 0026). Asked reaches anything they said, crisis level included, since they asked for it. Near never reaches crisis level, and held (sensitive) memories only on a turn where they share something, the same rule as the card.
+What a trigger may find (`eligible` in `logic.py`): memories stated for real, and never the intimate lane, whatever `COMPANION_INTIMATE_MEMORY` says (2026-11-07) (the roleplay card shows it on a roleplay turn instead, ADR 0026). Asked reaches anything they said, crisis level included, since they asked for it. Near never reaches crisis level, and held (sensitive) memories only on a turn where they share something, the same rule as the card.
 
 What is shown (`extras`): a near pick already on the card, or already shown by the asked note that turn, is not offered again.
 

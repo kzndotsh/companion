@@ -422,7 +422,8 @@ def _card_detail(card: RoleplayCard, text: str, *, sent: bool, scored: bool) -> 
 
 def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card) -> CardLane:
     """On a turn the roleplay talker answers: the scene card, logged, and sent when on. On any other
-    turn: the intimate memories the everyday card holds, logged, and left off when on."""
+    turn: the intimate memories the everyday card would hold, logged; the turn leaves them off
+    whatever the mode (`turn/assemble.py`)."""
     live = c.mode(switch.INTIMATE_MEMORY) is Mode.ON
     if not roleplay:
         hidden = c.store.intimate_lane(c.rel)
@@ -432,10 +433,10 @@ def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card:
                 c,
                 t,
                 LEFT_OFF,
-                {"beliefs": [str(b) for b in sorted(on_card)], "sent": not live},
-                reason=f"{LEFT_OFF}: {len(on_card)}" + ("" if live else " (shadow: still sent)"),
+                {"beliefs": [str(b) for b in sorted(on_card)], "sent": False},
+                reason=f"{LEFT_OFF}: {len(on_card)}",
             )
-        return CardLane(hidden=hidden if live else frozenset())
+        return CardLane()
     scored = looked.find(Scored)
     may = _may_offer(c, t)
     made = roleplay_card(

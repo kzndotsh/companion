@@ -83,8 +83,9 @@ With `COMPANION_INTIMATE_MEMORY=on`, the default since 2026-11-05, a turn the ro
 the roleplay card instead: the intimate memories and patterns nearest the moment and perhaps one thing they
 are curious about, with their limits, what they are called and what they said about their own body sent
 after the history. Every other turn leaves the intimate lane off the card, and both recall look-ups
-(asked and near, `features/recall`) leave it out on every turn. In `shadow` both are logged and the card
-is as above (ADR 0026).
+(asked and near, `features/recall`) leave it out on every turn. In `shadow` the roleplay card is only
+logged. Since 2026-11-07 the intimate lane stays out of every everyday card and both recall look-ups
+whatever the mode, as it always did for reaching out (ADR 0026).
 
 ## How memory tidies itself
 

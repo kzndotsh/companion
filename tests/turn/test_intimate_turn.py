@@ -179,13 +179,10 @@ def test_on_an_everyday_turn_never_shows_the_intimate_lane(store: Store) -> None
     assert logged["sent"] is False
 
 
-def test_in_shadow_an_everyday_turn_logs_what_it_would_leave_off_and_sends_it(
-    store: Store,
-) -> None:
-    card = _turn(store, "shadow", roleplay=False).request.card
-    assert SLOW in card
-    [logged] = _keys(store, LEFT_OFF)
-    assert logged["sent"] is True
+def test_an_everyday_turn_leaves_the_intimate_lane_off_whatever_the_mode(store: Store) -> None:
+    for mode in ("on", "shadow", "off"):
+        assert SLOW not in _turn(store, mode, roleplay=False).request.card, mode
+    assert [logged["sent"] for logged in _keys(store, LEFT_OFF)] == [False, False]
 
 
 def test_switch_off_logs_nothing_and_changes_nothing(store: Store) -> None:
