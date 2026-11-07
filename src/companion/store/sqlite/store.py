@@ -7,12 +7,12 @@ from __future__ import annotations
 import dataclasses
 import logging
 import sqlite3
-import uuid
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Protocol
 
+from companion.core.ids import new_id
 from companion.core.memory_pass import PassRun
 from companion.core.prompt.prefix import Prefix
 from companion.core.reachout import ReachOut
@@ -112,7 +112,7 @@ class Store:
         marked = ledger.mark_undelivered(self._conn, rel, text, reason, now)
         if marked is None:
             return None
-        seen = dataclasses.replace(marked, id=UtteranceId(uuid.uuid4().hex), text=delivered)
+        seen = dataclasses.replace(marked, id=UtteranceId(new_id()), text=delivered)
         ledger.append_utterance(self._conn, seen)
         self._policy(
             marked,
@@ -129,7 +129,7 @@ class Store:
         decisions.append_decision(
             self._conn,
             Decision(
-                DecisionId(uuid.uuid4().hex),
+                DecisionId(new_id()),
                 about.relationship_id,
                 about.turn_id,
                 TraceId(about.turn_id),

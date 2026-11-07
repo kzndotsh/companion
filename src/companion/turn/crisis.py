@@ -5,7 +5,6 @@ message with the crisis line goes after the reply. In shadow each only logs what
 from __future__ import annotations
 
 import dataclasses
-import uuid
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import TYPE_CHECKING
@@ -20,6 +19,7 @@ from companion.core.crisis import (
     line_message,
     method_words,
 )
+from companion.core.ids import new_id
 from companion.core.talker import Reply
 from companion.core.turn.reply import ReactAndReply, ThenSend
 from companion.core.types import Frame, Speaker, Utterance, UtteranceId
@@ -118,7 +118,7 @@ def then_line(
     text, source = line_message(c.serious_message)
     at = t.now + timedelta(milliseconds=max(reply.latency_ms, 1) + 1)
     said = Utterance(
-        UtteranceId(uuid.uuid4().hex),
+        UtteranceId(new_id()),
         c.rel,
         t.turn,
         Speaker.COMPANION,

@@ -12,7 +12,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from companion.core.sensitivity import GUARDED_AT
-from companion.core.types import Belief, Json, Speaker, Utterance
+from companion.core.turn.context import conversation_prompt
+from companion.core.types import Belief, Json, Utterance
 from companion.prompts import get
 
 JUDGE = get("system/guess-invite")
@@ -34,11 +35,7 @@ def likely(said: str) -> bool:
 
 
 def judge_prompt(prior: Sequence[Utterance], said: str) -> str:
-    lines = [
-        f"[{'USER' if u.speaker is Speaker.USER else 'COMPANION'}] {u.text}"
-        for u in prior[-CONTEXT:]
-    ]
-    return "\n".join(["Conversation:", *lines, "", f"Newest USER message: {said}"])
+    return conversation_prompt(prior, said, last=CONTEXT)
 
 
 def parse(data: Json) -> str | None:

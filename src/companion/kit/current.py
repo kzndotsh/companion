@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+from companion.core.turn.context import Scored
 from companion.core.turn.goodbye import leaving
 from companion.core.turn.listening import ListeningRead
 from companion.core.turn.quoted import Quoted
@@ -67,10 +68,10 @@ def is_casual(t: Turn, in_scene: Frame, heard: Heard | None) -> bool:
     """An ordinary moment: read as not serious, not in a scene, not a goodbye."""
     return (
         heard is not None
-        and heard[0].severity == Severity.TRIVIAL
+        and heard.read.severity == Severity.TRIVIAL
         and in_scene is Frame.REAL
         and not leaving(t.text)
     )
 
 
-Heard = tuple[ListeningRead, str, str]
+Heard = Scored[ListeningRead]

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from companion.core.frames import (
     Judgement,
@@ -13,6 +13,7 @@ from companion.core.frames import (
 )
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply, Talker
+from companion.core.turn.context import Scored
 from companion.core.turn.reactions import ToneRead
 from companion.kit.current import Turn, mark
 from companion.turn.frames import judge_frame
@@ -30,8 +31,8 @@ def start_beside(
     c: Runtime, t: Turn, request: TalkerRequest, talker: Talker
 ) -> tuple[
     asyncio.Future[Reply],
-    asyncio.Future[tuple[Judgement, str, str] | None] | None,
-    asyncio.Future[tuple[ToneRead, str, str] | None] | None,
+    asyncio.Future[Scored[Judgement] | None] | None,
+    asyncio.Future[Scored[ToneRead] | None] | None,
 ]:
     """Start the reply, and beside it the frame judge and the reaction judge, so neither adds a
     wait. A confident acknowledgement cancels all of them."""
@@ -49,9 +50,9 @@ def start_beside(
 async def await_beside(
     t: Turn,
     talk: asyncio.Future[Reply],
-    framing: asyncio.Future[Any] | None,
-    feeling: asyncio.Future[Any] | None,
-) -> tuple[Reply, Any, Any]:
+    framing: asyncio.Future[Scored[Judgement] | None] | None,
+    feeling: asyncio.Future[Scored[ToneRead] | None] | None,
+) -> tuple[Reply, Scored[Judgement] | None, Scored[ToneRead] | None]:
     """The reply, then the frame and reaction judgements that ran beside it, marking each."""
     reply = await talk
     mark_reply(t, reply)

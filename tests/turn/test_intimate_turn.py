@@ -40,6 +40,7 @@ from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
 from companion.turn.assemble import Assembled, assemble
 from companion.turn.fast import handle
+from companion.turn.values import Routed
 from tests.features.recall.test_run import Embedder, Picker
 from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
@@ -121,10 +122,11 @@ def _scores(store: Store) -> Lookups:
 
 def _turn(store: Store, mode: str, *, roleplay: bool, looked: Lookups | None = None) -> Assembled:
     t = Turn(TURN, NOW, [], "*leans in*")
+    runtime = _runtime(store, mode)
     in_scene = Frame.PLAY if roleplay else Frame.REAL
-    return assemble(
-        _runtime(store, mode), t, in_scene, None, looked or _scores(store), roleplay=roleplay
-    )
+    talker = runtime.roleplay_talker if roleplay and runtime.roleplay_talker else runtime.talker
+    routed = Routed(talker, held=False, read=None, brushed=False, heard=None, in_scene=in_scene)
+    return assemble(runtime, t, routed, looked or _scores(store))
 
 
 def _keys(store: Store, key: str) -> list[dict[str, Json]]:

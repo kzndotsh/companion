@@ -54,6 +54,16 @@ def test_no_code_matches_a_decisions_reason_text() -> None:
     assert not extra, f"match a decision's key (Decision.has_key), not its reason text: {extra}"
 
 
+# A raw uuid is how an id was made before `core/ids.py`. These two still make one and may only
+# shrink: `daemon.py` (a flag and a favorite) and `cli/flags.py` (a favorite from a flag).
+UUID_ALLOWED = {"core/ids.py", "daemon.py", "cli/flags.py"}
+
+
+def test_ids_are_made_by_new_id() -> None:
+    raw = [n for n, text in _sources().items() if "uuid.uuid4" in text and n not in UUID_ALLOWED]
+    assert not raw, f"make an id with companion.core.ids.new_id, not a raw uuid: {raw}"
+
+
 def test_no_file_grows_past_its_cap() -> None:
     over = {
         name: lines

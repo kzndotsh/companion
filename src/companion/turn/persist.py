@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 import logging
-import uuid
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from typing import TYPE_CHECKING
@@ -13,15 +12,18 @@ from companion.core.frames import (
     MIN_CONFIDENCE as FRAME_MIN_CONFIDENCE,
 )
 from companion.core.frames import PROMPT as FRAMES_PROMPT
+from companion.core.frames import SCHEMA as FRAMES_SCHEMA
 from companion.core.frames import (
     Judgement,
     companion_frame,
 )
 from companion.core.frames import render_reason as frame_reason
 from companion.core.frames import resolve as frame_resolve
+from companion.core.ids import new_id
 from companion.core.prompt.request import request_sha256
 from companion.core.replay import TurnRecord
 from companion.core.talker import Reply
+from companion.core.turn.context import Scored
 from companion.core.turn.reactions import ToneRead
 from companion.core.turn.reply import ReactAndReply, Reaction
 from companion.core.types import (
@@ -32,12 +34,9 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.core.views import why
-from companion.kit.current import Turn, decide, mark, recorder
+from companion.kit.current import Turn, decide, mark
 from companion.registry import FEATURES
-from companion.turn.assemble import Assembled, CardLog
-from companion.turn.frames import inputs_hash as frames_inputs_hash
-from companion.turn.frames import schema_hash as frames_schema_hash
+from companion.turn.assemble import Assembled
 from companion.turn.reactions import react_alongside
 from companion.turn.values import Answered
 
@@ -49,7 +48,7 @@ log = logging.getLogger("companion.turn")
 
 def store_user(c: Runtime, t: Turn, platform: str, frame: Frame) -> Utterance:
     said = Utterance(
-        UtteranceId(uuid.uuid4().hex),
+        UtteranceId(new_id()),
         c.rel,
         t.turn,
         Speaker.USER,
@@ -91,7 +90,7 @@ async def their_message(c: Runtime, t: Turn, platform: str) -> AsyncGenerator[Th
 
 
 def with_reaction(
-    c: Runtime, t: Turn, felt: tuple[ToneRead, str, str] | None, sent: str
+    c: Runtime, t: Turn, felt: Scored[ToneRead] | None, sent: str
 ) -> str | ReactAndReply:
     reacted = react_alongside(c, t, felt)
     mark(t, f"done: reply{' + ' + reacted.emoji if reacted else ''}, stored; handed to the chat")
@@ -105,21 +104,17 @@ async def after_turn(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> 
             await feature.after_turn(c, t, said, sent)
 
 
-def log_frame(
-    c: Runtime, t: Turn, outcome: tuple[Judgement, str, str] | None, stored: Frame
-) -> None:
+def log_frame(c: Runtime, t: Turn, outcome: Scored[Judgement] | None, stored: Frame) -> None:
     """Record every frame judgement and what was stored, with the reason built by code."""
-    judged = outcome[0] if outcome else None
+    judged = outcome.read if outcome else None
     detail: dict[str, Json] = {"stored": stored.value}
-    if outcome is not None:
-        detail |= {
-            "scorer": outcome[1],
-            "prompt": FRAMES_PROMPT.ref,
-            "schema_hash": frames_schema_hash(),
-            "inputs_hash": frames_inputs_hash(outcome[2]),
-            "scores": {"frame": outcome[0].frame.value, "confidence": outcome[0].confidence},
-            "threshold": FRAME_MIN_CONFIDENCE,
-        }
+    if outcome is not None and judged is not None:
+        detail |= outcome.detail(
+            FRAMES_PROMPT.ref,
+            schema=FRAMES_SCHEMA,
+            scores={"frame": judged.frame.value, "confidence": judged.confidence},
+            threshold=FRAME_MIN_CONFIDENCE,
+        )
     decide(c, t, "frame", detail, reason=frame_reason(judged, stored))
 
 
@@ -132,7 +127,7 @@ def persist_reply(c: Runtime, t: Turn, reply: Reply, user_frame: Frame, platform
         return ""
     c.store.append_utterance(
         Utterance(
-            UtteranceId(uuid.uuid4().hex),
+            UtteranceId(new_id()),
             *ids,
             Speaker.COMPANION,
             reply.text,
@@ -176,7 +171,7 @@ async def finish(
     send handed back."""
     reply, request = answered.reply, asm.request
     framed = answered.framed
-    user_frame = frame_resolve(framed[0] if framed else None, fallback=answered.in_scene)
+    user_frame = frame_resolve(framed.read if framed else None, fallback=answered.in_scene)
     said = keep.store(user_frame)
     if framed is not None:
         log_frame(c, t, framed, user_frame)
@@ -192,7 +187,7 @@ async def finish(
             asm.card_text,
         )
     )
-    CardLog(recorder(c, t), {b.id: why(b, asm.view_state) for b in asm.views}).write(asm.card)
+    asm.cards.write(asm.card)
     log.info(
         "turn %s | %s %dms in=%d cache_read=%d cache_write=%d%s\n  you: %s\n  it:  %s",
         t.turn[:8],

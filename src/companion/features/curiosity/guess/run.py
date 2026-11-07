@@ -59,7 +59,7 @@ async def guess_for_turn(
     """When their short question invites a guess about them (J16), what memory holds that may fit.
     Casual turns only, and never when they asked it to remember something (recall answers that);
     logged with what was offered, so guesses can later be scored by kind."""
-    if heard is not None and heard[0].recall:
+    if heard is not None and heard.read.recall:
         return None
     if c.judge is None or not is_casual(t, in_scene, heard) or not guess_likely(t.text):
         return None

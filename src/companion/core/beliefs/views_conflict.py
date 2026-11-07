@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
 
-from companion.core.types import Belief, Json
+from companion.core.types import Belief, Json, unit_interval
 from companion.prompts import get
 
 PROMPT = get("system/views-conflict")
@@ -68,7 +68,8 @@ def parse(data: Json) -> dict[str, Check]:
         label, conflicts, conf = d.get("view"), d.get("conflicts"), d.get("confidence")
         if not isinstance(label, str) or not isinstance(conflicts, bool):
             continue
-        if isinstance(conf, bool) or not isinstance(conf, int | float):
+        confidence = unit_interval(conf)
+        if confidence is None:
             continue
-        out[label] = Check(conflicts, str(d.get("with") or ""), min(max(float(conf), 0.0), 1.0))
+        out[label] = Check(conflicts, str(d.get("with") or ""), confidence)
     return out

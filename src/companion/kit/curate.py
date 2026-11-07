@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import replace
 from datetime import datetime
 
 from companion.core.beliefs.dedupe import duplicate_groups
 from companion.core.clock import utc_now
+from companion.core.ids import new_id
 from companion.core.types import (
     Belief,
     BeliefId,
@@ -95,7 +95,7 @@ def merge(  # noqa: PLR0913
     evidence = tuple(dict.fromkeys(e for b in found for e in b.evidence))
     merged = replace(
         first,
-        id=BeliefId(uuid.uuid4().hex),
+        id=BeliefId(new_id()),
         claim=claim.strip(),
         kind=kind or first.kind,
         evidence=evidence,

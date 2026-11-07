@@ -15,6 +15,7 @@ from dataclasses import dataclass
 
 from companion.core.crisis import LINE, CrisisLevel
 from companion.core.switch import Mode
+from companion.core.turn.context import transcript_prompt
 from companion.core.types import HEAVY_AT, Json, Severity, Speaker, Utterance
 from companion.prompts import get
 
@@ -91,8 +92,7 @@ def said_before(prior: Sequence[Utterance]) -> list[tuple[Speaker, str]]:
 
 def risk_prompt(before: Sequence[tuple[Speaker, str]], said: str) -> str:
     """Their message with the messages before it."""
-    lines = [f"{'USER' if who is Speaker.USER else 'COMPANION'}: {text}" for who, text in before]
-    return "\n".join(["Conversation:", *lines, "", f"Newest USER message: {said}"])
+    return transcript_prompt(before, said, tags="colon")
 
 
 @dataclass(frozen=True, slots=True)

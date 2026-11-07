@@ -159,24 +159,24 @@ def build_user_prompt(
     return "\n".join(out)
 
 
-def _obj(value: Json) -> dict[str, Json] | None:
+def as_dict(value: Json) -> dict[str, Json] | None:
     return cast("dict[str, Json]", value) if isinstance(value, dict) else None
 
 
-def _list(value: Json) -> list[Json] | None:
+def as_list(value: Json) -> list[Json] | None:
     return cast("list[Json]", value) if isinstance(value, list) else None
 
 
 def parse(data: Json) -> tuple[list[MemoryCandidate], list[Rejection]]:
     """Malformed items become rejections. A malformed whole yields one rejection and no items."""
-    top = _obj(data)
-    items = _list(top.get("beliefs")) if top is not None else None
+    top = as_dict(data)
+    items = as_list(top.get("beliefs")) if top is not None else None
     if items is None:
         return [], [Rejection("response did not match the schema", data)]
     ok: list[MemoryCandidate] = []
     bad: list[Rejection] = []
     for item in items:
-        fields = _obj(item)
+        fields = as_dict(item)
         try:
             if fields is None:
                 msg = "item is not an object"
@@ -215,7 +215,7 @@ def normalise(claim: str) -> str:
     return re.sub(r"[^a-z0-9 ]+", "", claim.lower()).strip()
 
 
-def _resolve(
+def resolve_source(
     c: MemoryCandidate, index: Mapping[str, Utterance], speaker: Speaker = Speaker.USER
 ) -> Utterance | None:
     """The cited message, or failing that the one message by `speaker` that contains the quote.
@@ -262,7 +262,7 @@ def to_belief(
     new_id: Callable[[], str],
 ) -> Belief | Rejection:
     raw: Json = {"claim": c.claim, "quote": c.quote, "ref": c.ref}
-    source = _resolve(c, index)
+    source = resolve_source(c, index)
     reason = _screen(c, source)
     if reason is not None or source is None:
         return Rejection(reason or "no source", raw)
@@ -327,7 +327,7 @@ def to_confirmation(
 ) -> Confirmation | Rejection | Skip:
     raw: Json = {"claim": c.claim, "quote": c.quote, "ref": c.ref, "confirms": c.confirms}
     belief = known.get(c.confirms)
-    source = _resolve(c, index, speaker)
+    source = resolve_source(c, index, speaker)
     problem = _confirmation_problem(source, belief, speaker)
     if problem is not None or belief is None or source is None:
         return Rejection(problem or "nothing to confirm", raw)

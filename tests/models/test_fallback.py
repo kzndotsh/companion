@@ -5,7 +5,7 @@ import asyncio
 import httpx
 import pytest
 
-from companion.core.extractor import FALLBACK, Extraction, from_fallback
+from companion.core.extractor import FALLBACK, Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.talker import Reply
@@ -37,7 +37,8 @@ class Answers:
 async def test_a_refused_call_goes_to_the_second_model_and_is_marked() -> None:
     got = await RefusalFallback(Refuses(403), Answers()).extract("s", "u", {})
     assert got.data == {"ok": True}
-    assert from_fallback(got.model)
+    assert got.fallback
+    assert got.model == "second/model" + FALLBACK
 
 
 async def test_other_errors_are_raised_as_before() -> None:
@@ -47,7 +48,7 @@ async def test_other_errors_are_raised_as_before() -> None:
 
 async def test_an_answer_from_the_first_model_is_not_marked() -> None:
     got = await RefusalFallback(Answers(), Refuses(403)).extract("s", "u", {})
-    assert not from_fallback(got.model)
+    assert not got.fallback
 
 
 class _Talker:

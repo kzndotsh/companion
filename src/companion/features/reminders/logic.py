@@ -20,7 +20,8 @@ from enum import StrEnum
 from random import Random
 
 from companion.core.dates import WEEKDAYS
-from companion.core.types import Json, RelationshipId, Speaker, TurnId, Utterance
+from companion.core.turn.context import conversation_prompt
+from companion.core.types import Json, RelationshipId, TurnId, Utterance
 from companion.prompts import get
 
 PROMPT = get("system/reminder-read")
@@ -315,14 +316,8 @@ def likely(said: str, *, asked_when: bool) -> bool:
 
 
 def read_prompt(prior: Sequence[Utterance], said: str, now: datetime, tz: tzinfo) -> str:
-    lines = [
-        f"[{'USER' if u.speaker is Speaker.USER else 'COMPANION'}] {u.text}"
-        for u in prior[-CONTEXT:]
-    ]
     stamp = now.astimezone(tz).strftime("%A %d %B %Y, %H:%M")
-    return "\n".join(
-        [f"It is now {stamp}.", "Conversation:", *lines, "", f"Newest USER message: {said}"]
-    )
+    return conversation_prompt(prior, said, last=CONTEXT, preamble=[f"It is now {stamp}."])
 
 
 _FILLER = {

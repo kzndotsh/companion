@@ -17,7 +17,7 @@ def target(m: Moment) -> LengthTarget | None:
     """The one length target for this turn, logged with the reason code wrote for it. None on a
     turn the crisis path reads as a risk (ADR 0022)."""
     c, t = m.c, m.t
-    severity = m.heard[0].severity if m.heard is not None else None
+    severity = m.heard.read.severity if m.heard is not None else None
     size = (
         None
         if m.risk

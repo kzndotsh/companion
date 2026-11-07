@@ -12,8 +12,8 @@ from companion.core import switch
 from companion.core.crisis import cue_words
 from companion.core.extractor import StructuredModel
 from companion.core.switch import Mode
-from companion.core.turn.context import build_prompt
-from companion.core.turn.listening import PROMPT, SCHEMA, ListeningRead, parse
+from companion.core.turn.context import Scored, conversation_prompt
+from companion.core.turn.listening import PROMPT, SCHEMA, parse
 from companion.core.turn.reply import Reaction
 from companion.core.types import Frame, Utterance
 from companion.kit.ask import Judge, ask
@@ -43,11 +43,11 @@ LISTEN = Judge(
 
 async def judge_listening(
     extractor: StructuredModel, history: Sequence[Utterance], text: str
-) -> tuple[ListeningRead, str, str] | None:
+) -> Heard | None:
     """The labels, the model id and the prompt, or None if two tries could not make them in time."""
-    prompt = build_prompt(history, text)
+    prompt = conversation_prompt(history, text)
     got = await ask(extractor, LISTEN, prompt)
-    return None if got is None else (got.value, got.model, prompt)
+    return None if got is None else Scored(got.value, got.model, prompt, got.fallback)
 
 
 async def hear_them(c: Runtime, t: Turn, in_scene: Frame) -> Heard | None:

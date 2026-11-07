@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 from companion.core import switch
 from companion.core.episode import EPISODE_GAP
-from companion.core.extractor import from_fallback
 from companion.core.turn.floor import BRUSH_KEY, MINOR_KEY, Route
 from companion.core.turn.floor import Talker as RouteTalker
 from companion.core.turn.floor import choose as choose_route
@@ -52,7 +51,7 @@ async def route_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) 
     if read is None and in_play and c.judge is not None:
         mark(t, "floor: reading the scene turn")
         read = await judge_listening(c.judge, t.prior, t.text)  # for routing only, no note
-    intimate = read is not None and read[0].intimate
+    intimate = read is not None and read.read.intimate
     under_way = True
     if intimate and c.on(switch.ROUTE_INTIMATE) and not in_play:
         under_way = _intimate_before(c, t) or await _explicit(c, t)
@@ -61,8 +60,8 @@ async def route_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) 
     # unsure read goes to the narrow minor check like a yes: only that check's yes, or no reading,
     # holds the turn. Before, a refusal by the judge model held the turn outright, mid-scene
     # (owner flag 2026-11-05).
-    unsure = read is not None and from_fallback(read[1])
-    age_coded = read[0].age_coded if read is not None and not unsure else None
+    unsure = read is not None and read.fallback
+    age_coded = read.read.age_coded if read is not None and not unsure else None
     if (age_coded or unsure) and (in_play or (c.on(switch.ROUTE_INTIMATE) and intimate)):
         age_coded = await _minor(c, t, unsure=unsure)
 

@@ -7,7 +7,6 @@ the pick and the numbers, and nothing is sent: no code path here sends a message
 from __future__ import annotations
 
 import logging
-import uuid
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
 from typing import TYPE_CHECKING
@@ -16,6 +15,7 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.crisis import crisis_paused
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
+from companion.core.ids import new_id
 from companion.core.reachout import OWN_HELD, OWN_WOULD_SEND, WOULD_NUDGE, Dial, Held, Kind
 from companion.core.rhythm import WINDOW, kept_hour, learn
 from companion.core.sensitivity import GUARDED_AT
@@ -390,7 +390,7 @@ async def _draft(
     detail = {**detail, "kind": kind.value, "why": why, "thing": about, **step}
     dropped = step.get("dropped")
     row = Own(
-        uuid.uuid4().hex,
+        new_id(),
         rel,
         kind.value,
         "" if thing is None else thing.id,

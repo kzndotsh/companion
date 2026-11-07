@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 from companion.core.frames import (
     scene_note,
 )
-from companion.core.turn.context import inputs_hash
 from companion.core.turn.floor import BRUSH_NOTE, HOLD_NOTE
 from companion.core.turn.listening import (
     LISTENING_KEY,
@@ -79,19 +78,14 @@ def _listening_note(c: Runtime, t: Turn, heard: Heard | None) -> str | None:
     """The line for the system block, with the decision logged from the labels."""
     if heard is None:
         return None
-    judged, model, prompt = heard
+    judged = heard.read
     replies = [u.text for u in t.prior if u.speaker is Speaker.COMPANION]
     note = listening_note(judged, replies, seed=t.turn)
     decide(
         c,
         t,
         LISTENING_KEY,
-        {
-            "scorer": model,
-            "prompt": LISTEN_PROMPT.ref,
-            "inputs_hash": inputs_hash(prompt),
-            "labels": listening_labels(judged),
-        },
+        heard.detail(LISTEN_PROMPT.ref, labels=listening_labels(judged)),
         reason=render_listening(judged, note),
     )
     return note
@@ -133,12 +127,12 @@ def _listening(m: Moment, _: Offered) -> Offer:
 
 
 def _rude(m: Moment, _: Offered) -> Offer:
-    note = rude_note(m.heard[0]) if m.heard is not None else None
+    note = rude_note(m.heard.read) if m.heard is not None else None
     return Offer((note,) if note else ())
 
 
 def _repair(m: Moment, _: Offered) -> Offer:
-    note = repair_note(m.heard[0]) if m.heard is not None else None
+    note = repair_note(m.heard.read) if m.heard is not None else None
     return Offer((note,) if note else ())
 
 
@@ -157,7 +151,7 @@ def _how_are_you(m: Moment, _: Offered) -> Offer:
     """When they come back after a gap and the talk before it was heavy (a serious message in its
     last hours), one note to ask gently how they are, once per heavy talk."""
     c, t = m.c, m.t
-    if m.heard is None or m.heard[0].severity >= HEAVY_AT or m.in_scene is not Frame.REAL:
+    if m.heard is None or m.heard.read.severity >= HEAVY_AT or m.in_scene is not Frame.REAL:
         return Offer()
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     if not theirs or t.now - theirs[-1].at < HOW_ARE_YOU_GAP:

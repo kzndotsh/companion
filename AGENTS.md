@@ -207,6 +207,9 @@ together.
   model or return junk at random (seeded): their message is stored once, a turn ends in a reply, a reaction
   or the floor's logged withholding, and a judge that always fails sends the talker what no judge would.
   Any change to the turn must keep it passing.
+- Make ids with `new_id()` from `core/ids.py`, never a raw `uuid` (a test enforces it). Build a small judge's transcript with
+  `conversation_prompt` (`core/turn/context.py`), and its logged detail with `Scored.detail`; a judge that answers one
+  yes or no is `yes_no_judge` in `kit/ask.py`.
 - Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, a named zone with its rules). A test enforces it in `core/` and `kit/`
   (`tests/core/test_clock_guard.py`).
 - A value or rule that must be the same in several places is named once and imported: in `core/` when

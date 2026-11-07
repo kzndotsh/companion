@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, cast
 from companion.core import switch
 from companion.core.clock import local_zone, utc_now
 from companion.core.episode import EPISODE_GAP
+from companion.core.ids import new_id
 from companion.core.switch import Mode
 from companion.core.turn.listening import LISTENING_KEY, logged_severity
 from companion.core.types import Frame, Json, Severity, Speaker
@@ -25,7 +26,6 @@ if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
 
 import logging
-import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -99,7 +99,7 @@ async def write_closed(
         store.part(Episodes).add(
             rel,
             Episode(
-                uuid.uuid4().hex,
+                new_id(),
                 s.said[0].id,
                 s.said[-1].id,
                 s.said[0].at,

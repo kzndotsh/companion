@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
 
-from companion.core.types import Belief, Json
+from companion.core.types import Belief, Json, unit_interval
 from companion.prompts import get
 
 MIN_CONFIDENCE = 0.7
@@ -54,7 +54,8 @@ def parse(data: Json, valid: set[str]) -> Implication | None:
         return None
     d = cast("dict[str, Json]", data)
     raw, conf = d.get("implicated"), d.get("confidence")
-    if not isinstance(raw, list) or isinstance(conf, bool) or not isinstance(conf, int | float):
+    confidence = unit_interval(conf)
+    if not isinstance(raw, list) or confidence is None:
         return None
     labels = frozenset(x for x in cast("list[Json]", raw) if isinstance(x, str) and x in valid)
-    return Implication(labels, min(max(float(conf), 0.0), 1.0))
+    return Implication(labels, confidence)

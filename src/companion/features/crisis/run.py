@@ -91,7 +91,7 @@ async def assess(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) -> R
     del in_scene
     if c.mode(switch.CRISIS) is Mode.OFF or c.judge is None:
         return None
-    severity = heard[0].severity if heard is not None else None
+    severity = heard.read.severity if heard is not None else None
     words = cue_words(t.text)
     detail: dict[str, Json] = {
         "mode": c.mode(switch.CRISIS),

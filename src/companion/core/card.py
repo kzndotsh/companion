@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, timedelta, tzinfo
+from datetime import date, datetime, timedelta
 
 from companion.core.clock import local_zone
 from companion.core.freshness import Freshness, status, when_phrase
@@ -250,12 +250,8 @@ def everyday_ids(labels: Mapping[BeliefId, Label]) -> set[BeliefId]:
     }
 
 
-def render(card: Card, tz: tzinfo = UTC) -> str:
-    """Plain text for the volatile part of the user message. Empty when there is nothing.
-
-    `tz` is kept so callers need not change; ages are relative, so no zone is needed to print them.
-    """
-    del tz
+def render(card: Card) -> str:
+    """Plain text for the memory block of the system prompt. Empty when there is nothing."""
     parts: list[str] = []
     if card.usable:
         parts.append(

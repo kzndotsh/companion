@@ -511,9 +511,6 @@ def test_tags_keep_every_word_and_gather_the_notes() -> None:
     )
     out = tagged(card)
     assert out.startswith("<clock>Right now it is Friday 19:40.</clock>")
-    memory = "What you remember about them. Use it naturally, never recite it:\n- likes tea"
-    assert f"<memory>\n{memory}\n</memory>" in out
+    memory = "[What you remember about them. Use it naturally, never recite it:\n- likes tea]"
+    assert memory in out
     assert out.endswith("<notes>\nA pretend scene is in progress.\n</notes>")
-    kept = tagged(card, memory=False)
-    assert "[What you remember about them. Use it naturally, never recite it:\n- likes tea]" in kept
-    assert "<notes>" in kept

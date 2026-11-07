@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.extractor import FALLBACK, Extraction
+from companion.core.extractor import Extraction, as_fallback
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
@@ -260,7 +260,7 @@ async def test_a_scene_reading_from_the_fallback_model_never_routes(store: Store
     class FallbackJudge(Judge):
         async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
             got = await super().extract(system, user, schema)
-            return Extraction(got.data, got.model + FALLBACK, 0.0, 1)
+            return as_fallback(got)
 
     scene = Talker("scene")
     everyday = await _chat(
@@ -443,7 +443,7 @@ async def test_a_read_only_the_fallback_model_gave_goes_to_the_minor_check(store
             got = await super().extract(system, user, schema)
             props = schema["properties"]
             if isinstance(props, dict) and "age_coded" in props:
-                return Extraction(got.data, got.model + FALLBACK, 0.0, 1)
+                return as_fallback(got)
             return got
 
     everyday, scene = Talker("everyday"), Talker("scene")

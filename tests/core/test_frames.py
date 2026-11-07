@@ -7,9 +7,9 @@ import pytest
 
 from companion.core.episode import EPISODE_GAP
 from companion.core.frames import (
+    CONTEXT_MESSAGES,
     MIN_CONFIDENCE,
     Judgement,
-    build_prompt,
     companion_frame,
     has_cue,
     is_assertable,
@@ -21,6 +21,7 @@ from companion.core.frames import (
     scene_frame,
     scene_note,
 )
+from companion.core.turn.context import conversation_prompt
 from companion.core.types import Belief, Frame, Json, Provenance, Speaker, Utterance
 
 
@@ -182,7 +183,7 @@ def test_the_prompt_has_the_last_messages(utterance: Callable[..., Utterance]) -
         utterance(text=f"m{i}", speaker=Speaker.USER if i % 2 else Speaker.COMPANION)
         for i in range(6)
     ]
-    prompt = build_prompt(hist, "pretend")
+    prompt = conversation_prompt(hist, "pretend", last=CONTEXT_MESSAGES)
     assert "m1" not in prompt
     assert prompt.endswith("Newest USER message: pretend")
 

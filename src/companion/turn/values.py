@@ -10,10 +10,14 @@ from typing import Any
 from companion.core.crisis import Reading
 from companion.core.frames import Judgement as FrameJudgement
 from companion.core.talker import Reply, Talker
+from companion.core.turn.context import Scored
 from companion.core.turn.reactions import ToneRead
-from companion.core.turn.reply import Reaction
+from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Frame
 from companion.kit.current import Heard
+
+# What a turn gives back: a reply, a reaction, a reply with one, or a reply and a second message.
+type Outcome = str | Reaction | ReactAndReply | ThenSend
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,8 +48,8 @@ class Answered:
     """The talk stage: the checked reply, and the frame and reaction readings made beside it."""
 
     reply: Reply
-    framed: tuple[FrameJudgement, str, str] | None
-    felt: tuple[ToneRead, str, str] | None
+    framed: Scored[FrameJudgement] | None
+    felt: Scored[ToneRead] | None
     in_scene: Frame
 
 

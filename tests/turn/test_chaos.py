@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.extractor import FALLBACK, Extraction
+from companion.core.extractor import Extraction, as_fallback
 from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, Speaker, TurnId
 from companion.kit.runtime import Runtime
@@ -83,8 +83,8 @@ class Chaos:
             raise TimeoutError
         if kind == "junk":
             return Extraction("not json at all", "j", 0.0, 1)
-        model = f"j{FALLBACK}" if kind == "fallback" else "j"
-        return Extraction(_fill(schema, self.rng), model, 0.0, 1)
+        got = Extraction(_fill(schema, self.rng), "j", 0.0, 1)
+        return as_fallback(got) if kind == "fallback" else got
 
 
 def _unvaried(card: str) -> str:

@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def game_offer(m: Moment, _: object, __: Offered) -> Offer:
     """When they asked it to keep asking them things, a note after the history to ask the next
     one: outside a scene, not on a serious turn and not on one the crisis path reads as a risk."""
-    serious = m.risk or (m.heard is not None and m.heard[0].severity >= HEAVY_AT)
+    serious = m.risk or (m.heard is not None and m.heard.read.severity >= HEAVY_AT)
     if m.in_scene is not Frame.REAL or serious:
         return Offer()
     note = game_note(m.t.prior, m.t.text, m.t.now)
@@ -26,7 +26,7 @@ def game_offer(m: Moment, _: object, __: Offered) -> Offer:
 def run_offer(m: Moment, _: object, so_far: Offered) -> Offer:
     """When its last replies were all questions, a note to ask nothing this time: outside a scene,
     not on a serious turn, and not when another note asks them something. After the history."""
-    serious = m.heard is not None and m.heard[0].severity >= HEAVY_AT
+    serious = m.heard is not None and m.heard.read.severity >= HEAVY_AT
     if m.in_scene is not Frame.REAL or serious or asking(so_far):
         return Offer()
     replies = [u.text for u in m.t.prior if u.speaker is Speaker.COMPANION]

@@ -7,10 +7,10 @@ key itself.
 
 from __future__ import annotations
 
-import uuid
 from dataclasses import dataclass
 from datetime import datetime
 
+from companion.core.ids import new_id
 from companion.core.types import (
     BeliefId,
     Decision,
@@ -22,11 +22,6 @@ from companion.core.types import (
     TurnId,
 )
 from companion.store.sqlite.store import Store
-
-
-def new_id() -> str:
-    """A fresh id for a turn, a trace, a pass or a row."""
-    return uuid.uuid4().hex
 
 
 @dataclass(frozen=True, slots=True)

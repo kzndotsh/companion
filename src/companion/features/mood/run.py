@@ -38,7 +38,7 @@ def _mood(
     if c.mode(switch.MOOD) is Mode.OFF:
         return None, []
     zone = local_zone()
-    severity = heard[0].severity if heard is not None else None
+    severity = heard.read.severity if heard is not None else None
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     earlier = c.store.part(MoodEffects).said_since(c.rel, theirs[-1].at)[:1] if theirs else []
     minutes = chat_minutes([u.at for u in t.prior], t.now, zone)

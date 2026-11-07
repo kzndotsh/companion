@@ -5,13 +5,13 @@ is read again. Shadow only: nothing reaches the talker."""
 from __future__ import annotations
 
 import logging
-import uuid
 from collections.abc import Callable, Mapping
 from datetime import datetime, tzinfo
 
 from companion.core import switch
 from companion.core.beliefs.extract import build_user_prompt
 from companion.core.extractor import StructuredModel
+from companion.core.ids import new_id
 from companion.core.switch import Mode
 from companion.core.types import Json, Speaker, Utterance, UtteranceId
 from companion.features.promises.logic import (
@@ -75,7 +75,7 @@ async def read_promises(  # noqa: PLR0913, PLR0917
         for r in store.part(Promises).recorded(rel)
     }
     for p in proposed:
-        outcome = to_promise(p, window, uuid.uuid4().hex)
+        outcome = to_promise(p, window, new_id())
         if isinstance(outcome, str):
             note(f"promise dropped: {outcome}", {"quote": p.quote, "claim": p.claim})
             continue
