@@ -19,6 +19,7 @@ class Fake:
     `receive` queues: each message after its delay. `refuse` says whether the nth send fails."""
 
     limit: int = 4096
+    bang_commands: bool = True
     script: list[tuple[float, Incoming]] = field(default_factory=list[tuple[float, Incoming]])
     refuse: Callable[[int], bool] = lambda n: False
     react_fails: bool = False

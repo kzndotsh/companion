@@ -29,7 +29,6 @@ from companion import prompts
 
 PRIVATE_DIR = Path("data/characters")
 _ID = re.compile(r"[a-z0-9][a-z0-9-]*")
-ROLEPLAY_HEADING = "\n## In roleplay and intimate moments\n"
 # The heading as people write it: with or without the "##", a colon, any case. A sheet edited by
 # hand once lost its "##", and the whole section reached the everyday talker unnoticed.
 _ROLEPLAY_LINE = re.compile(
@@ -119,8 +118,8 @@ def chosen(char_id: str | None, private_dir: Path = PRIVATE_DIR) -> Character | 
 
 def system_prompt(persona: str, character: Character | None, *, roleplay: bool = False) -> str:
     """The persona, then the frame and the sheet. Without a character, the persona unchanged. The
-    roleplay talker's prompt (`roleplay`) adds the part of the sheet after ROLEPLAY_HEADING, which
-    the everyday talker never sees (ADR 0017)."""
+    roleplay talker's prompt (`roleplay`) adds the part of the sheet after its roleplay heading,
+    which the everyday talker never sees (ADR 0017)."""
     parts = [persona.rstrip()]
     if character is not None:
         parts += [prompts.get("system/character-frame").text, character.sheet]

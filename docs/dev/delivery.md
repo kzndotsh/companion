@@ -36,11 +36,11 @@ too, since the poll offset has already moved past them; Discord fetches those ag
 A plain message that arrives while the previous one is still being answered, either being written or
 held before sending, replaces that answer, and the new reply sees both of their messages. A reply
 that was already written and then dropped is marked undelivered. Commands (`/flag`, `/fav`, `/mode`)
-never replace anything. Typed as text they work on both platforms. On Discord `/mode` is also the bot's own
+never replace anything. Typed as text with `/` they work on both platforms. On Discord `/mode` is also the bot's own
 slash command; `/flag` and `/fav` are not, because a slash command does not carry the message it was
 typed in reply to and so marked only the latest reply (fixed 2026-11-02). On Discord they are typed
-`!flag` and `!fav`, since a typed `/` opens Discord's command picker; `!` counts only before a command
-it knows, so "!!! omg" is a message. A message's Apps menu has Flag this and Favorite this, which mark that
+`!flag` and `!fav`, since a typed `/` opens Discord's command picker; `!` counts only on Discord (the
+transport's `bang_commands`) and only before a command it knows, so "!!! omg" is a message. A message's Apps menu has Flag this and Favorite this, which mark that
 message's turn and ask for an optional note (`io/discord.py`). A flag or favorite made there
 answers with its emoji on the message it marks (the one picked from the menu, or the bot's latest
 message), with no text; when that reaction cannot be added, and for `/mode` and anything else, the

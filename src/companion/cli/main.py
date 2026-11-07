@@ -342,10 +342,6 @@ def _eval(a: argparse.Namespace) -> int:
     return _out(out)
 
 
-def _spend(a: argparse.Namespace) -> int:
-    return _out(spend.run(*_target(a)))
-
-
 def _shadows(_: argparse.Namespace) -> int:
     return _out(shadows_cli.run())
 
@@ -389,14 +385,6 @@ def _lore(a: argparse.Namespace) -> int:
     return _out(first + lore.run(db, rel))
 
 
-def _history(a: argparse.Namespace) -> int:
-    return _out(history.run(*_target(a)))
-
-
-def _intimate(a: argparse.Namespace) -> int:
-    return _out(scene.run(*_target(a)))
-
-
 def _episodes(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     first = asyncio.run(commands.run(db, rel, episodes.write_now)) if a.write else ""
@@ -407,14 +395,6 @@ def _reminders(a: argparse.Namespace) -> int:
     return _out(reminders.run(*_target(a), cancel=a.cancel))
 
 
-def _calendar(a: argparse.Namespace) -> int:
-    return _out(calendar.run(*_target(a)))
-
-
-def _now(a: argparse.Namespace) -> int:
-    return _out(now_cli.run(*_target(a)))
-
-
 def _promises(a: argparse.Namespace) -> int:
     return _out(
         promises.run(
@@ -423,35 +403,15 @@ def _promises(a: argparse.Namespace) -> int:
     )
 
 
-def _favorites(a: argparse.Namespace) -> int:
-    return _out(favorites.run(*_target(a)))
-
-
 def _flags(a: argparse.Namespace) -> int:
     if a.to_fav:
         return _out(flags.to_favorite(*_target(a), str(a.to_fav)))
     return _out(flags.run(*_target(a)))
 
 
-def _beliefs(a: argparse.Namespace) -> int:
-    return _out(beliefs.run(*_target(a)))
-
-
 def _views(a: argparse.Namespace) -> int:
     db, rel = _target(a)
     return _out(beliefs.views_mode(db, rel, a.mode))
-
-
-def _calibrate(a: argparse.Namespace) -> int:
-    return _out(beliefs.calibrate(*_target(a)))
-
-
-def _opinions(a: argparse.Namespace) -> int:
-    return _out(beliefs.opinions(*_target(a)))
-
-
-def _dedupe(a: argparse.Namespace) -> int:
-    return _out(beliefs.dedupe(*_target(a)))
 
 
 def _approve(a: argparse.Namespace) -> int:
@@ -480,31 +440,36 @@ def _retire(a: argparse.Namespace) -> int:
     return _out(beliefs.retire_one(db, rel, str(a.id_prefix), str(a.reason)))
 
 
+def _plain(report: Callable[[Path, str], str]) -> Callable[[argparse.Namespace], int]:
+    """A command that only prints a report of the relationship: its handler is `report(db, rel)`."""
+    return lambda a: _out(report(*_target(a)))
+
+
 HANDLERS: dict[str, Callable[[argparse.Namespace], int]] = {
+    "spend": _plain(spend.run),
+    "history": _plain(history.run),
+    "intimate": _plain(scene.run),
+    "calendar": _plain(calendar.run),
+    "now": _plain(now_cli.run),
+    "favorites": _plain(favorites.run),
+    "beliefs": _plain(beliefs.run),
+    "calibrate": _plain(beliefs.calibrate),
+    "opinions": _plain(beliefs.opinions),
+    "dedupe": _plain(beliefs.dedupe),
     "replay": _replay,
     "flags": _flags,
-    "favorites": _favorites,
     "initiative": _initiative,
     "mood": _mood,
     "promises": _promises,
     "reminders": _reminders,
-    "calendar": _calendar,
-    "now": _now,
     "episodes": _episodes,
     "lore": _lore,
-    "history": _history,
-    "intimate": _intimate,
     "map": _map,
     "backup": _backup,
     "address": _address,
     "prompts": _prompts,
     "shadows": _shadows,
-    "spend": _spend,
-    "beliefs": _beliefs,
     "views": _views,
-    "calibrate": _calibrate,
-    "opinions": _opinions,
-    "dedupe": _dedupe,
     "approve": _approve,
     "retire": _retire,
     "merge": _merge,

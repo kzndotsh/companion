@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from companion.core.clock import local_midnight
 from companion.core.extractor import StructuredModel
@@ -30,9 +29,6 @@ from companion.features.nudges.logic import (
 from companion.kit.ask import Judge, ask
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
-
-if TYPE_CHECKING:
-    pass
 
 log = logging.getLogger("companion.nudges")
 DRAFTER = Judge(

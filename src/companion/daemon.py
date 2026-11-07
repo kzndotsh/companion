@@ -41,7 +41,17 @@ from companion.features.reminders.run import deliver_due
 from companion.features.threads.run import Ticker, drafter, tick
 from companion.features.upkeep.reread.run import SameCheck
 from companion.io import discord
-from companion.io.delivery import Commands, Delivery, Hooks, Incoming, Transport
+from companion.io.delivery import (
+    FAV,
+    FAVORITE,
+    FLAG,
+    MODE,
+    Commands,
+    Delivery,
+    Hooks,
+    Incoming,
+    Transport,
+)
 from companion.io.stop import until_stopped
 from companion.io.telegram import Telegram
 from companion.kit import curate
@@ -191,7 +201,7 @@ def chat_commands(
         roleplay = s.roleplay_model or s.everyday_model
         return mode_report(store, rel, utc_now(), s.everyday_model, roleplay)
 
-    return {"flag": flag, "fav": favorite, "favorite": favorite, "mode": mode}
+    return {FLAG: flag, FAV: favorite, FAVORITE: favorite, MODE: mode}
 
 
 INITIATIVE_TICK_SECONDS = 900

@@ -122,14 +122,14 @@ def build_card(  # noqa: PLR0913
         )
         for b in beliefs
     }
-    faded = [
+    gone = [
         b
         for b in beliefs
-        if (b.id in everyday and _faded(b, aged[b.id].last_supported, now))
+        if (b.id in everyday and faded(b, aged[b.id].last_supported, now))
         or _dated_past(b, aged[b.id].last_supported, now)
         or day_over(b, now)
     ]
-    current = [b for b in beliefs if aged[b.id].status is not Freshness.STALE and b not in faded]
+    current = [b for b in beliefs if aged[b.id].status is not Freshness.STALE and b not in gone]
     kept_back = [] if show_guarded else [b for b in current if b.sensitivity >= GUARDED_AT]
     current = [b for b in current if b not in kept_back]
     stale = sorted(
@@ -158,7 +158,7 @@ def build_card(  # noqa: PLR0913
         usable=tuple(b for b in ranked if b.sensitivity < GUARDED_AT),
         guarded=tuple(b for b in ranked if b.sensitivity >= GUARDED_AT),
         older=older,
-        dropped=tuple(b for b in [*stale, *faded] if b not in older),
+        dropped=tuple(b for b in [*stale, *gone] if b not in older),
         aged=aged,
         now=now,
         views=tuple(views),
@@ -226,10 +226,6 @@ def day_over(b: Belief, now: datetime) -> bool:
 
 def faded(b: Belief, last: datetime, now: datetime) -> bool:
     """Whether a memory labelled a one-day moment of daily life is past its week on the card."""
-    return _faded(b, last, now)
-
-
-def _faded(b: Belief, last: datetime, now: datetime) -> bool:
     return (
         b.kind is BeliefKind.EVENT
         and b.sensitivity == Sensitivity.ORDINARY

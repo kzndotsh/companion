@@ -111,7 +111,7 @@ class OpenRouterExtractor:
         self,
         api_key: str,
         client: httpx.AsyncClient,
-        model: str = HAIKU,
+        model: str,
         provider: str = DEFAULT_PROVIDER,
         max_tokens: int = 2000,
     ) -> None:

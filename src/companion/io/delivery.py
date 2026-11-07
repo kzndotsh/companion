@@ -17,12 +17,19 @@ from typing import Protocol
 
 from companion.core.turn.quoted import Quoted
 from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
+from companion.core.types import Speaker
 from companion.io.pace import hold_seconds, read_seconds
 from companion.io.split import fit, split_reply
 from companion.io.stop import cancel_when, next_message
 
 log = logging.getLogger("companion.delivery")
 TYPING_REFRESH_SECONDS = 4.0  # both surfaces drop the typing indicator after five to ten seconds
+
+# The chat commands, named once for the daemon's handlers, the text parser and Discord's own menus.
+MODE = "mode"
+FLAG = "flag"
+FAV = "fav"
+FAVORITE = "favorite"  # typed as an alias of FAV
 
 Reply = str | Reaction | ReactAndReply | ThenSend
 # The command's argument, and the id of the message it was sent as a reply to, if any.
@@ -55,12 +62,34 @@ class Incoming:
 Handler = Callable[[Incoming], Awaitable[Reply]]
 
 
+def allowed_sender(sender: int, allowed: int) -> bool:
+    """Whether a message is from the one person the bot talks to; anyone else is logged and
+    ignored. Both transports ask this of each message."""
+    if sender == allowed:
+        return True
+    log.warning("ignored a message from a user who is not allowed")
+    return False
+
+
+def quoted_reply(text: object, mine: bool) -> Quoted | None:
+    """The message they replied to, from its text and whether the bot sent it. A reply to a
+    message with no text is None."""
+    if not isinstance(text, str) or not text:
+        return None
+    return Quoted(text, Speaker.COMPANION if mine else Speaker.USER)
+
+
 class Transport(Protocol):
     """One platform's transport, talking to the one allowed user."""
 
     @property
     def limit(self) -> int:
         """The longest message it accepts, in characters."""
+        ...
+
+    @property
+    def bang_commands(self) -> bool:
+        """Whether `!flag` also types a command. Only where a typed `/` is taken by the platform."""
         ...
 
     async def receive(self, inbox: asyncio.Queue[Incoming], after: str | None) -> None:
@@ -171,7 +200,10 @@ class Delivery:
                 await turn
                 return
             newer = arrival.result()
-            if any(_command(m.text, commands) is not None for m in (current, newer)):
+            if any(
+                _command(m.text, commands, self.transport.bang_commands) is not None
+                for m in (current, newer)
+            ):
                 waiting.append(newer)
                 await turn
                 return
@@ -190,7 +222,7 @@ class Delivery:
     async def reply_to(self, msg: Incoming, handle: Handler, commands: Commands) -> None:
         """Run the turn for one message and deliver what it returns. Never raises but on a
         cancel."""
-        command = _command(msg.text, commands)
+        command = _command(msg.text, commands, self.transport.bang_commands)
         log.debug(
             "message %s in: %d chars%s",
             msg.id,
@@ -376,11 +408,11 @@ def _kind(reply: Reply) -> str:
     return f"{len(reply.split())} words"
 
 
-def _command(text: str, commands: Commands) -> tuple[str, str] | None:
-    """`/flag too long` -> ("flag", "too long"). `/flag@my_bot x` is the same command. `!flag x`
-    is too, but only for a command it knows: Discord turns a typed `/flag` into the app's slash
-    command and drops the reply it was sent as, and "!!! omg" is a message, not a command."""
-    if not text.startswith(("/", "!")):
+def _command(text: str, commands: Commands, bang: bool) -> tuple[str, str] | None:
+    """`/flag too long` -> ("flag", "too long"). `/flag@my_bot x` is the same command. Where `bang`
+    is set (Discord, which turns a typed `/flag` into the app's slash command and drops the reply it
+    was sent as), `!flag x` is too, but only for a command it knows: "!!! omg" is a message."""
+    if not text.startswith(("/", "!") if bang else "/"):
         return None
     head, _, arg = text[1:].partition(" ")
     name = head.partition("@")[0].lower()

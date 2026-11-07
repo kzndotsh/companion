@@ -75,6 +75,23 @@ async def test_a_bang_command_marks_the_message_it_replies_to() -> None:
     assert marked == [("too formal", "sent-3")]
 
 
+async def test_a_bang_is_a_message_where_the_platform_keeps_slash_replies() -> None:
+    fake = Fake(bang_commands=False)
+    handled = list[str]()
+
+    async def talk(m: Incoming) -> Reply:
+        handled.append(m.text)
+        return "reply"
+
+    flagged = Incoming("7", "!flag too formal", "7", "sent-3")
+    await Delivery(fake).reply_to(flagged, talk, {"flag": _never})
+    assert handled == ["!flag too formal"]
+
+
+async def _never(arg: str, replied_to: str | None) -> str:
+    raise AssertionError(arg)
+
+
 async def test_a_bang_that_names_no_command_is_a_message() -> None:
     for text in ("!!! omg", "!nonsense here"):
         fake, handled = await _one(text)

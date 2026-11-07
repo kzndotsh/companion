@@ -259,7 +259,7 @@ async def test_a_typing_indicator_held_up_is_skipped(monkeypatch: pytest.MonkeyP
 async def test_a_send_that_hangs_is_tried_once_more_then_fails(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(module, "SEND_SECONDS", 0.01)
+    monkeypatch.setattr(module, "HUNG_SEND_SECONDS", 0.01)
     dc, dm = _discord()
     calls: list[str] = []
     real = dm.send

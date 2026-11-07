@@ -11,14 +11,16 @@ import time
 import httpx
 
 from companion.core.turn.quoted import Quoted
-from companion.core.types import Speaker
-from companion.io.delivery import DeliveryError, Incoming
+from companion.io.delivery import DeliveryError, Incoming, allowed_sender, quoted_reply
 from companion.models.wire import integer, obj, seq
 
 log = logging.getLogger("companion.telegram")
 # How long one call may wait in all on Telegram's "too many requests" before giving up. Each wait is
 # the full time Telegram asks for: asking again sooner is refused and can lengthen the block.
 RATE_LIMIT_BUDGET_SECONDS = 60.0
+# A send the Bot API refused with an error is tried once more after a pause: the message did not
+# go out. (Its rate limits are waited out in `_call`.) Discord repeats only a send that hangs.
+SEND_RETRY_PAUSE_SECONDS = 2.0
 
 
 # Telegram takes only a fixed list of reaction emoji; each of these has a near one there.
@@ -46,6 +48,7 @@ class RateLimited(TelegramError):
 
 class Telegram:
     limit = 4096  # the Bot API refuses a longer message
+    bang_commands = False  # a typed `/flag` keeps its reply here
 
     def __init__(self, token: str, allowed_user: int, client: httpx.AsyncClient) -> None:
         self._base = f"https://api.telegram.org/bot{token}"
@@ -92,7 +95,7 @@ class Telegram:
             except TelegramError:
                 if attempt == 1:
                     raise
-                await asyncio.sleep(2.0)
+                await asyncio.sleep(SEND_RETRY_PAUSE_SECONDS)
             else:
                 return str(integer(obj(sent).get("message_id")))
         msg = "telegram sendMessage failed"
@@ -151,8 +154,7 @@ class Telegram:
             text = msg.get("text")
             if not isinstance(text, str):
                 continue
-            if integer(obj(msg.get("from")).get("id")) != self._allowed:
-                log.warning("ignored a message from a user who is not allowed")
+            if not allowed_sender(integer(obj(msg.get("from")).get("id")), self._allowed):
                 continue
             if integer(obj(msg.get("chat")).get("id")) != self._allowed:
                 log.warning("ignored a message outside their private chat")
@@ -176,10 +178,7 @@ def _quoted(msg: dict[str, object]) -> Quoted | None:
     replied = obj(msg.get("reply_to_message"))
     part = obj(msg.get("quote")).get("text")
     text = part if isinstance(part, str) and part else replied.get("text")
-    if not isinstance(text, str) or not text:
-        return None
-    mine = obj(replied.get("from")).get("is_bot") is True
-    return Quoted(text, Speaker.COMPANION if mine else Speaker.USER)
+    return quoted_reply(text, obj(replied.get("from")).get("is_bot") is True)
 
 
 def _retry_after(resp: httpx.Response) -> float:

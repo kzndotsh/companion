@@ -29,16 +29,24 @@ from discord import app_commands
 
 from companion.core.turn.quoted import Quoted
 from companion.core.turn.reply import ReactAndReply, Reaction
-from companion.core.types import Speaker
-from companion.io.delivery import Commands, DeliveryError, Incoming
+from companion.io.delivery import (
+    FAV,
+    FLAG,
+    MODE,
+    Commands,
+    DeliveryError,
+    Incoming,
+    allowed_sender,
+    quoted_reply,
+)
 
 log = logging.getLogger("companion.discord")
 TYPING_SECONDS = 2.0  # a typing indicator stuck behind a rate limit is skipped, never waited on
 # discord.py sets no time limit on a call, so a send over a dropped connection waited 80 s, until
 # their next message replaced the reply (2026-10-29). A send that hangs is tried once more; if the
 # first had in fact gone through, the message shows twice, which is rarer than a dropped connection.
-SEND_SECONDS = 15.0
-SEND_TRIES = 2
+HUNG_SEND_SECONDS = 15.0
+HUNG_SEND_TRIES = 2  # only a send that hangs is repeated: discord.py itself waits out rate limits
 COMMENT_CHARS = 500  # a comment on a mark is a line or two
 MARK_SEARCH = 20  # messages looked back through for the bot's latest, which a slash mark reacts to
 NOT_YOURS = "these commands are only for the person this bot talks to"
@@ -70,6 +78,7 @@ def _failed(call: str, err: BaseException) -> str:
 
 class Discord:
     limit = 2000  # Discord refuses a longer message
+    bang_commands = True  # a typed `/flag` becomes the app's slash command and loses its reply
 
     def __init__(self, client: discord.Client, allowed_user: int) -> None:
         self._client = client
@@ -146,8 +155,7 @@ class Discord:
         me = self._client.user
         if me is not None and message.author.id == me.id:
             return False
-        if message.author.id != self._allowed:
-            log.warning("ignored a message from a user who is not allowed")
+        if not allowed_sender(message.author.id, self._allowed):
             return False
         return bool(message.content)
 
@@ -169,11 +177,8 @@ class Discord:
         replied = ref.resolved
         if replied is None or isinstance(replied, discord.DeletedReferencedMessage):
             return None
-        if not replied.content:
-            return None
         me = self._client.user
-        mine = me is not None and replied.author.id == me.id
-        return Quoted(replied.content, Speaker.COMPANION if mine else Speaker.USER)
+        return quoted_reply(replied.content, me is not None and replied.author.id == me.id)
 
     async def _channel(self) -> discord.DMChannel:
         if self._dm is None:
@@ -182,14 +187,16 @@ class Discord:
         return self._dm
 
     async def send(self, text: str) -> str:
-        for attempt in range(1, SEND_TRIES + 1):
+        for attempt in range(1, HUNG_SEND_TRIES + 1):
             try:
-                async with asyncio.timeout(SEND_SECONDS):
+                async with asyncio.timeout(HUNG_SEND_SECONDS):
                     return str((await (await self._channel()).send(text)).id)
             except TimeoutError:
-                if attempt == SEND_TRIES:
+                if attempt == HUNG_SEND_TRIES:
                     raise DiscordError(_failed("send", TimeoutError())) from None
-                log.warning("discord send got no answer in %.0fs; trying once more", SEND_SECONDS)
+                log.warning(
+                    "discord send got no answer in %.0fs; trying once more", HUNG_SEND_SECONDS
+                )
             except _FAILURES as err:
                 raise DiscordError(_failed("send", err)) from None
         raise AssertionError  # unreachable: the last try returns or raises
@@ -322,7 +329,7 @@ def command_tree(
     installs = app_commands.AppInstallationType(guild=True, user=True)
 
     async def mode(interaction: discord.Interaction) -> None:
-        await marks.answer(interaction, "mode", "", None)
+        await marks.answer(interaction, MODE, "", None)
 
     def on_message(menu: _Menu) -> app_commands.ContextMenu:
         async def run(interaction: discord.Interaction, message: discord.Message) -> None:
@@ -337,15 +344,15 @@ def command_tree(
 
     tree.add_command(
         app_commands.Command(
-            name="mode",
+            name=MODE,
             description="Which model is talking now",
             callback=mode,
             allowed_contexts=where,
             allowed_installs=installs,
         )
     )
-    tree.add_command(on_message(_Menu("flag", "Flag this", "What feels off? (optional)")))
-    tree.add_command(on_message(_Menu("fav", "Favorite this", "What did you love? (optional)")))
+    tree.add_command(on_message(_Menu(FLAG, "Flag this", "What feels off? (optional)")))
+    tree.add_command(on_message(_Menu(FAV, "Favorite this", "What did you love? (optional)")))
     return tree
 
 
