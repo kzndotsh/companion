@@ -4,6 +4,7 @@ every feature that searches by meaning."""
 from __future__ import annotations
 
 import math
+from array import array
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
@@ -28,6 +29,18 @@ class Embedder(Protocol):
 def unit(v: Sequence[float]) -> Vector:
     norm = math.sqrt(sum(x * x for x in v)) or 1.0
     return tuple(x / norm for x in v)
+
+
+def to_blob(v: Sequence[float]) -> bytes:
+    """A vector as the bytes the stores keep (32-bit floats)."""
+    return array("f", v).tobytes()
+
+
+def from_blob(blob: bytes) -> Vector:
+    """The vector a stored blob holds."""
+    floats = array("f")
+    floats.frombytes(bytes(blob))
+    return tuple(floats)
 
 
 def dot(a: Vector, b: Vector) -> float:

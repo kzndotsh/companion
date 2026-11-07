@@ -72,9 +72,9 @@ def test_the_bots_memory_pass_and_the_command_are_built_by_one_function() -> Non
     what the settings switch on is in the options, whoever asks."""
     on = Settings.from_env({sw.HISTORY.env: "shadow", sw.INTIMATE_MEMORY.env: "on"})
     off = Settings.from_env({sw.HISTORY.env: "off", sw.INTIMATE_MEMORY.env: "off"})
-    assert len(compose.pass_options(on, None, None, "sheet").steps) == 2  # type: ignore[arg-type]
-    assert compose.pass_options(off, None, None).steps == ()  # type: ignore[arg-type]
+    assert len(compose.pass_options(on, None, None, "sheet").parts.steps) == 2  # type: ignore[arg-type]
+    assert compose.pass_options(off, None, None).parts.steps == ()  # type: ignore[arg-type]
     options = compose.pass_options(Settings.from_env({sw.PROMISES.env: "shadow"}), None, None)  # type: ignore[arg-type]
-    assert options.promises
+    assert len(options.parts.loops) == 1  # the open-loop read, with the promise read riding it
     assert options.embed is None
-    assert options.same is None
+    assert options.parts.writes[0].same is None  # type: ignore[attr-defined]

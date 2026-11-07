@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import IntEnum, StrEnum
 
-from companion.core.types import Json
+from companion.core.types import Json, member
 from companion.prompts import get
 
 
@@ -82,7 +82,7 @@ MET_SCHEMA: dict[str, Json] = {
 
 
 def parse_met(data: Json) -> Met | None:
-    met = data.get("met") if isinstance(data, dict) else None
+    met = member(data, "met")
     return next((m for m in Met if m.value == met), None)
 
 

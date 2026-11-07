@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import sqlite3
-from array import array
 from collections.abc import Mapping
 from datetime import datetime
 
 from companion.core.types import BeliefId, RelationshipId
-from companion.core.vectors import Vector
+from companion.core.vectors import Vector, from_blob, to_blob
 from companion.lib.sqlite.db import iso, write_tx
 
 
@@ -24,7 +23,7 @@ def add(
         conn.executemany(
             "INSERT INTO belief_embeddings (relationship_id, belief_id, model, vector, at)"
             " VALUES (?,?,?,?,?)",
-            [(rel, bid, model, array("f", v).tobytes(), iso(at)) for bid, v in vectors.items()],
+            [(rel, bid, model, to_blob(v), iso(at)) for bid, v in vectors.items()],
         )
 
 
@@ -39,7 +38,5 @@ def latest(conn: sqlite3.Connection, rel: RelationshipId, model: str) -> dict[Be
     ).fetchall()
     out: dict[BeliefId, Vector] = {}
     for r in rows:
-        floats = array("f")
-        floats.frombytes(bytes(r["vector"]))
-        out[BeliefId(str(r["belief_id"]))] = tuple(floats)
+        out[BeliefId(str(r["belief_id"]))] = from_blob(r["vector"])
     return out

@@ -4,15 +4,15 @@ far its messages have been read. Append-only: the newest event is a story's stan
 from __future__ import annotations
 
 import sqlite3
-from array import array
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.types import Frame, RelationshipId, UtteranceId
-from companion.core.vectors import Vector
+from companion.core.vectors import Vector, from_blob, to_blob
 from companion.features.history.logic import Recorded, Ruling, Standing, Story, StoryId
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
+from companion.store.sqlite import bookmark
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,30 +101,17 @@ class Stories:
             for x in bare
         ]
 
-    def cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
-        row = self.conn.execute(
-            "SELECT upto_at, upto_id FROM story_reads WHERE relationship_id = ?"
-            " ORDER BY id DESC LIMIT 1",
-            (rel,),
-        ).fetchone()
-        if row is None:
-            return None
-        return parse_iso(str(row["upto_at"])), UtteranceId(str(row["upto_id"]))
+    def cursor(self, rel: RelationshipId) -> bookmark.Place | None:
+        return bookmark.newest(self.conn, "story_reads", rel)
 
-    def read_upto(
-        self, rel: RelationshipId, upto: tuple[datetime, UtteranceId], at: datetime
-    ) -> None:
-        with write_tx(self.conn):
-            self.conn.execute(
-                "INSERT INTO story_reads (relationship_id, upto_at, upto_id, at) VALUES (?,?,?,?)",
-                (rel, iso(upto[0]), upto[1], iso(at)),
-            )
+    def read_upto(self, rel: RelationshipId, upto: bookmark.Place, at: datetime) -> None:
+        bookmark.mark(self.conn, "story_reads", rel, upto, at)
 
     def add_vectors(self, vectors: Mapping[StoryId, Vector], model: str, at: datetime) -> None:
         with write_tx(self.conn):
             self.conn.executemany(
                 "INSERT INTO story_vectors (story_id, model, vector, at) VALUES (?,?,?,?)",
-                [(sid, model, array("f", v).tobytes(), iso(at)) for sid, v in vectors.items()],
+                [(sid, model, to_blob(v), iso(at)) for sid, v in vectors.items()],
             )
 
     def vectors(self, rel: RelationshipId, model: str) -> dict[StoryId, Vector]:
@@ -135,7 +122,5 @@ class Stories:
         ).fetchall()
         out: dict[StoryId, Vector] = {}
         for r in rows:
-            floats = array("f")
-            floats.frombytes(bytes(r["vector"]))
-            out[StoryId(str(r["story_id"]))] = tuple(floats)
+            out[StoryId(str(r["story_id"]))] = from_blob(r["vector"])
         return out

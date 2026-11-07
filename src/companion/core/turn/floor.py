@@ -48,6 +48,8 @@ EXPLICIT_LEAD = get("system/explicit-lead")
 
 
 MINOR_KEY = "minor check"  # the decision the narrow minor check logs, with `minor` in its detail
+MINOR_FIELD = "minor"
+MINOR_PATH = f"$.{MINOR_FIELD}"  # where a query finds whether it held the turn (`json_extract`)
 BRUSH_KEY = "brush-off"  # the decision the brush-off read logs, with `declines` in its detail
 
 # The listening judge's age_coded is broad, and read adults' teasing in a pretend scene as

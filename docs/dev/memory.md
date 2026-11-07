@@ -9,10 +9,13 @@ worth) is in its README under `src/companion/features/`.
 Memory is written by the memory pass (`src/companion/memory/memory_pass.py`),
 never during a reply. It runs once the chat has been quiet for 90 seconds (`memory/idle.py`), or at
 once with `companion memory-pass`. Both run the same pass: its options are built once
-(`compose.pass_options`), with the same-memory check, the promise read, hedged plans, embedding the new
-memories and the steps the features add after every pass (`Feature.after_pass`: its own history and
-the scene memory). A rebuild runs none of those, because the check would match the memories it is
-replacing. It reads the messages not
+(`compose.pass_options`): embedding the new memories, and what the features add (`PassParts.of`, all set
+up from `Passing`): the same-memory check and the new-boundary question as each memory of theirs is
+written (`Feature.memory_write`, reread), the open-loop read (`Feature.loops`, threads, with hedged
+plans) with the promise read riding its batch and bookmark (`Feature.own_loop`, promises), and the
+steps after every pass (`Feature.after_pass`: its own history and the scene memory). A rebuild runs
+the plain parts (`plain_parts`: the strict open-loop read and the boundary question, no same-memory
+check), because that check would match the memories it is replacing. It reads the messages not
 yet read, in batches of 40 with the 4 before each for context, and asks a small model for candidate
 memories.
 

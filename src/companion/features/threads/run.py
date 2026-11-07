@@ -9,14 +9,16 @@ from __future__ import annotations
 
 import functools
 import logging
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime, tzinfo
 from typing import TYPE_CHECKING
 
+from companion.core import switch
 from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
+from companion.core.memory_pass import BATCH, CONTEXT
 from companion.core.reachout import (
     DRAFT_SCHEMA,
     PLAN_HELD,
@@ -60,7 +62,7 @@ from companion.features.threads.logic import (
 from companion.features.threads.met import read_met
 from companion.features.threads.store import Threads
 from companion.kit.ask import Judge, ask, whole_answer
-from companion.kit.features import Feature, Move
+from companion.kit.features import Feature, Log, Loops, Move, OwnReader, Passing
 from companion.kit.record import Recorder, new_id
 from companion.prompts import get
 from companion.store.sqlite.store import Store
@@ -79,7 +81,6 @@ LOOPS = Judge(
     unread="the batch is kept for another try",
 )
 Draft = Callable[[Thread], Awaitable[str]]
-Log = Callable[[str, dict[str, Json]], None]
 
 
 @dataclass(frozen=True, slots=True)
@@ -288,21 +289,6 @@ def drafter(extractor: StructuredModel) -> Draft:
 MAX_TRIES = 3  # a batch that keeps failing is let go, so plans can never block on one
 
 
-# A reader of its own messages in the same batch: the cost, or None when its call failed so the
-# batch is read again. The memory pass passes the promise reader (J12) when it is on.
-type OwnReader = Callable[
-    [
-        Store,
-        StructuredModel,
-        Mapping[str, Utterance],
-        set[UtteranceId],
-        tuple[datetime, tzinfo],
-        Log,
-    ],
-    Awaitable[float | None],
-]
-
-
 @dataclass(frozen=True, slots=True)
 class Reading:
     """Where the open-loop pass reads from: its batch size, the context before it, and how many
@@ -311,7 +297,7 @@ class Reading:
     batch: int
     context: int
     batches: int = 3
-    promises: OwnReader | None = None  # also reads its own messages, for promises (J12, shadow)
+    own: tuple[OwnReader, ...] = ()  # also read its own messages in the batch (promises, J12)
     loose: bool = False  # hedged plans become note-only loops (COMPANION_HEDGED_PLANS=loose)
 
 
@@ -335,7 +321,7 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
         upto = (batch[-1].at, batch[-1].id)
         targets = {u.id for u in batch if u.speaker is Speaker.USER}
         mine = {u.id for u in batch if u.speaker is Speaker.COMPANION}
-        own: set[UtteranceId] = mine if reading.promises is not None else set()
+        own: set[UtteranceId] = mine if reading.own else set()
         if not targets and not own:
             store.part(Threads).record_loop_run(
                 rel, upto, ok=True, reason="none of their messages", at=now
@@ -349,11 +335,10 @@ async def catch_up_loops(  # noqa: PLR0913, PLR0917
             if targets
             else LoopCounts()
         )
-        spent = (
-            await reading.promises(store, extractor, window, own, when, note)
-            if own and reading.promises is not None
-            else 0.0
-        )
+        spent: float | None = 0.0
+        for read_own in reading.own if own else ():
+            more = await read_own(store, extractor, window, own, when, note)
+            spent = None if spent is None or more is None else spent + more
         if counts is not None and spent is not None:
             store.part(Threads).record_loop_run(rel, upto, ok=True, reason="read", at=now)
             total = _add(total, replace(counts, cost_usd=counts.cost_usd + spent))
@@ -434,8 +419,25 @@ def reaching(c: Runtime) -> tuple[Move, ...]:
     return (Move(Kind.PLAN, plan),)
 
 
+def pass_loops(p: Passing, own: Sequence[OwnReader]) -> Loops:
+    """The open-loop read the memory pass runs, with the own-message readers that ride its batch."""
+    reading = Reading(BATCH, CONTEXT, own=tuple(own), loose=p.on(switch.HEDGED_PLANS))
+
+    async def read(
+        store: Store,
+        extractor: StructuredModel,
+        rel: RelationshipId,
+        when: tuple[datetime, tzinfo],
+        note: Log,
+    ) -> LoopCounts:
+        return await catch_up_loops(store, extractor, rel, when, note, reading)
+
+    return read
+
+
 OPENLOOPS = Feature(
     "loop",
+    loops=pass_loops,
     mention=loop_candidate,
     mention_key=LOOP_OFFERED,
     after_turn=read_met,

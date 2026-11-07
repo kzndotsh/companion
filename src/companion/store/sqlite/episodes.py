@@ -1,4 +1,5 @@
-"""Episodes, read only (the episodes feature writes them; the newest gist of each wins)."""
+"""Episodes, in one place: the columns of `episodes` are named here. The episodes feature writes
+through `insert`; every reader gets the newest gist of each episode from `all_`."""
 
 from __future__ import annotations
 
@@ -7,7 +8,32 @@ import sqlite3
 
 from companion.core.episode import Episode
 from companion.core.types import RelationshipId, Severity, UtteranceId
-from companion.lib.sqlite.db import parse_iso
+from companion.lib.sqlite.db import iso, parse_iso, write_tx
+
+
+def insert(conn: sqlite3.Connection, rel: RelationshipId, e: Episode) -> None:
+    with write_tx(conn):
+        conn.execute(
+            "INSERT INTO episodes (id, relationship_id, first_id, last_id, start_at, end_at,"
+            " messages, kind, scene_share, top_severity, firsts, gist, prompt, at)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (
+                e.id,
+                rel,
+                e.first_id,
+                e.last_id,
+                iso(e.start_at),
+                iso(e.end_at),
+                e.messages,
+                e.kind,
+                e.scene_share,
+                e.top_severity,
+                json.dumps(list(e.firsts)),
+                e.gist,
+                e.prompt,
+                iso(e.at),
+            ),
+        )
 
 
 def all_(conn: sqlite3.Connection, rel: RelationshipId) -> list[Episode]:

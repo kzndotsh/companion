@@ -15,11 +15,12 @@ from companion.core.types import Belief, RelationshipId
 from companion.features.upkeep.merging.logic import (
     GROUP,
     GROUP_SCHEMA,
-    PICK,
     WRITE,
     WRITE_SCHEMA,
     Group,
+    Picked,
     agreed,
+    decode,
     kept_wording,
     listing,
     read_groups,
@@ -89,9 +90,10 @@ async def repick(
     asked = {frozenset(p.members) for p in proposals}
     made, cost = 0, 0.0
     for p in proposals:
-        if p.answer is None or not p.answer.startswith(PICK):
+        answer = decode(p.answer)
+        if not isinstance(answer, Picked):
             continue
-        ids = [p.members[int(n) - 1] for n in p.answer.removeprefix(PICK).split()]
+        ids = [p.members[n - 1] for n in answer.positions]
         if frozenset(ids) in asked or not all(i in current for i in ids):
             continue
         members = [current[i] for i in ids]

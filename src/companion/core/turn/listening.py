@@ -101,12 +101,16 @@ def parse(data: Json) -> ListeningRead | None:
     )
 
 
+_SEVERITY = "severity"
+SEVERITY_PATH = f"$.labels.{_SEVERITY}"  # where a query finds the severity (`json_extract`)
+
+
 def listening_labels(j: ListeningRead) -> dict[str, Json]:
     """The labels the listening decision keeps, read back by `logged_severity` and
     `logged_intimate`."""
     return {
         "intimate": j.intimate,
-        "severity": j.severity,
+        _SEVERITY: j.severity,
         "stance": j.stance,
         "vague": j.vague,
         "rude": j.rude,
@@ -120,7 +124,7 @@ def _logged(detail: dict[str, Json] | None, name: str) -> Json:
 
 def logged_severity(detail: dict[str, Json] | None) -> Severity | None:
     """The severity a listening decision logged, or None when its detail has none."""
-    return severity_from(_logged(detail, "severity"))
+    return severity_from(_logged(detail, _SEVERITY))
 
 
 def logged_heavy(detail: dict[str, Json] | None) -> bool:

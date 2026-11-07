@@ -5,7 +5,7 @@ is read again. Shadow only: nothing reaches the talker."""
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from datetime import datetime, tzinfo
 
 from companion.core import switch
@@ -30,13 +30,12 @@ from companion.features.promises.logic import (
 from companion.features.promises.store import Promises
 from companion.kit.ask import Judge, ask
 from companion.kit.current import decide
-from companion.kit.features import Feature, Moment
+from companion.kit.features import Feature, Log, Moment, OwnReader, Passing
 from companion.kit.reads import read_times
 from companion.lib.vote import READS
 from companion.store.sqlite.store import Store
 
 log = logging.getLogger("companion.promises")
-Log = Callable[[str, dict[str, Json]], None]
 
 
 async def read_promises(  # noqa: PLR0913, PLR0917
@@ -138,6 +137,15 @@ async def check_reply(m: Moment, said: Utterance, sent: str | None) -> None:
     decide(c, t, WOULD_REDRAW, {**detail, "promise_id": broken.id}, reason=reason)
 
 
+def promise_reader(p: Passing) -> OwnReader | None:
+    """The read of its own messages that rides the open-loop batch, none while the switch is off."""
+    return read_promises if p.on(switch.PROMISES) else None
+
+
 PROMISE_CHECK = Feature(
-    "promise check", after_turn=check_reply, switch=switch.PROMISES, needs_judge=True
+    "promise check",
+    after_turn=check_reply,
+    own_loop=promise_reader,
+    switch=switch.PROMISES,
+    needs_judge=True,
 )

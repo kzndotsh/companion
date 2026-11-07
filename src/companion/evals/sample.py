@@ -26,6 +26,7 @@ from companion.core.history import HISTORY_LIMIT
 from companion.core.ids import new_id
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
+from companion.core.reply_gate import RECHECK, RESAMPLED
 from companion.core.switch import CALENDAR
 from companion.core.talker import Reply, Talker
 from companion.core.turn.listening import ListeningRead
@@ -219,9 +220,9 @@ def _redraws(store: Store, turn: TurnId) -> tuple[str, ...]:
     out: list[str] = []
     for d in store.decisions_for_turn(REL, turn):
         checks = d.detail.get("checks") if isinstance(d.detail, dict) else None
-        if d.has_key("resampled"):
+        if d.has_key(RESAMPLED):
             out.append(EMPTY)
-        elif d.has_key("recheck") and isinstance(checks, list):
+        elif d.has_key(RECHECK) and isinstance(checks, list):
             out.extend(str(x) for x in checks)
     return tuple(out)
 

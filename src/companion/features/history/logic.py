@@ -18,7 +18,15 @@ from enum import StrEnum
 from typing import NewType
 
 from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
-from companion.core.types import Frame, Json, RelationshipId, Speaker, Utterance, UtteranceId
+from companion.core.types import (
+    Frame,
+    Json,
+    RelationshipId,
+    Speaker,
+    Utterance,
+    UtteranceId,
+    member,
+)
 from companion.core.vectors import NEAR_AT, Vector, dot
 from companion.prompts import get
 
@@ -151,7 +159,7 @@ def nearest(
 
 def parse_capture(data: Json) -> list[Proposed] | None:
     """The proposed stories, or None when the answer does not have the shape asked for."""
-    items = data.get("stories") if isinstance(data, dict) else None
+    items = member(data, "stories")
     if not isinstance(items, list):
         return None
     out: list[Proposed] = []

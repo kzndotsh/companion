@@ -16,12 +16,15 @@ from typing import TYPE_CHECKING
 
 from companion.core import switch
 from companion.core.crisis import (
+    LEVEL,
     PAUSE_KEY,
     PAUSE_REASON,
     RISK,
     CrisisLevel,
     Reading,
     cue_words,
+    level_detail,
+    logged_level,
 )
 from companion.core.episode import EPISODE_GAP
 from companion.core.extractor import StructuredModel
@@ -51,7 +54,6 @@ if TYPE_CHECKING:
 
 log = logging.getLogger("companion.crisis")
 TIMEOUT_SECONDS = 6.0  # each read; under the turn's 9 s look-up deadline
-LEVEL = "crisis: level"
 LIGHT_KEY = "crisis: checked lightly"
 LIGHT_EVERY = timedelta(days=1)
 
@@ -107,7 +109,7 @@ async def assess(m: Moment) -> Reading | None:
     reading = Reading(outcome.level, c.mode(switch.CRISIS), light, asked)
     done = would_do(reading)
     detail |= {
-        "level": outcome.level.value,
+        **level_detail(outcome.level),
         "kind": outcome.kind,
         "timing": outcome.timing,
         "plan_or_means": outcome.plan_or_means,
@@ -123,7 +125,7 @@ def _risk_in_stretch(c: Runtime, t: Turn) -> bool:
     they were already asked and given the line. In real chat concern fired five times in 18
     minutes (2026-11-04)."""
     for d in c.store.decisions_with_key(c.rel, LEVEL, t.now - EPISODE_GAP):
-        if (d.detail or {}).get("level") in RISK:
+        if logged_level(d.detail) in RISK:
             return True
     return False
 

@@ -21,8 +21,7 @@ from companion.core.spend import MeteredEmbedder, MeteredExtractor, MeteredTalke
 from companion.core.talker import Talker
 from companion.core.types import RelationshipId
 from companion.core.vectors import Embedder
-from companion.features.upkeep.reread.run import SameCheck
-from companion.kit.features import Passing
+from companion.kit.features import Passing, PassParts
 from companion.kit.runtime import Runtime
 from companion.memory.memory_pass import PassOptions
 from companion.models import anthropic, embeddings, openrouter
@@ -184,16 +183,10 @@ def pass_options(
     s: Settings, judges: StructuredModel, embed: Embedder | None, sheet: str = ""
 ) -> PassOptions:
     """What a memory pass runs with, built once so the bot's idle pass and `companion memory-pass`
-    do the same: the same-memory check, the promise read, hedged plans, embedding what it stored,
-    and the steps the features add (`Feature.after_pass`)."""
-    passing = Passing(s.modes(), sheet)
-    steps = (f.after_pass(passing) for f in FEATURES if f.after_pass is not None)
+    do the same: what the features add (`PassParts.of`: the same-memory check, the loop and promise
+    reads, the steps after) and embedding what it stored."""
+    passing = Passing(s.switches, sheet, embed, s.embed_model, judges)
     return PassOptions(
-        same=SameCheck(judges, embed, s.embed_model, s.mode(sw.REREAD))
-        if embed is not None and s.on(sw.REREAD)
-        else None,
-        promises=s.on(sw.PROMISES),
         embed=(embed, s.embed_model) if embed is not None else None,
-        loose_loops=s.on(sw.HEDGED_PLANS),
-        steps=tuple(step for step in steps if step is not None),
+        parts=PassParts.of(FEATURES, passing),
     )

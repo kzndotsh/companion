@@ -25,7 +25,7 @@ from dataclasses import dataclass
 
 from companion.core.extractor import Extraction, StructuredModel, judging
 from companion.core.spend import purpose
-from companion.core.types import Json
+from companion.core.types import Json, member
 from companion.lib.prompts import Prompt
 
 log = logging.getLogger("companion.judges")
@@ -71,7 +71,7 @@ def yes_no_judge(  # noqa: PLR0913
     field's name, and anything that is not a boolean is unread."""
 
     def parse(data: Json) -> bool | None:
-        value = data.get(field) if isinstance(data, dict) else None
+        value = member(data, field)
         return value if isinstance(value, bool) else None
 
     schema: dict[str, Json] = {

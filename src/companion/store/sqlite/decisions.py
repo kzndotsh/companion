@@ -7,6 +7,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 
+from companion.core.turn.reactions import REACTED
 from companion.core.types import (
     BeliefId,
     Decision,
@@ -20,7 +21,6 @@ from companion.core.types import (
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
 from companion.store.sqlite.ledger import SESSION
 
-REACTED = "reacted "  # the key of a reaction sent instead of a reply
 CLOSED = "closed belief:"  # the key of a memory closed
 
 

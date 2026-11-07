@@ -30,6 +30,10 @@ from companion.core.types import HEAVY_AT, Json, Severity
 from companion.prompts import get
 
 EM_DASH = "—"
+# The decisions a turn's redraws log, read back by the eval sample: the model returned no text, or
+# the reply was checked (the failed checks are in the detail under `checks`).
+RESAMPLED = "resampled"
+RECHECK = "recheck"
 DASHED = "an em dash"  # the reason a reply with one fails
 QUIP = "a joke bolted onto an ordinary message"
 GENERIC = "a canned generic reaction"

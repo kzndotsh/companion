@@ -9,14 +9,32 @@ hand in `SOURCES`. The turn reaches a feature only through the parts it declares
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Collection, Coroutine, Iterator, Mapping, Sequence
+from collections.abc import (
+    Awaitable,
+    Callable,
+    Collection,
+    Coroutine,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
 from companion.core.reachout import PRECEDENCE, Held, Kind
 from companion.core.switch import Mode, Switch
-from companion.core.types import Belief, BeliefId, Frame, Severity, Utterance, is_heavy
+from companion.core.types import (
+    Belief,
+    BeliefId,
+    Frame,
+    Json,
+    Severity,
+    Utterance,
+    UtteranceId,
+    is_heavy,
+)
 from companion.kit.current import Heard, Turn, is_casual
 
 if TYPE_CHECKING:
@@ -26,6 +44,7 @@ if TYPE_CHECKING:
     from companion.core.extractor import StructuredModel
     from companion.core.turn.mentions import MentionCandidate
     from companion.core.types import RelationshipId
+    from companion.core.vectors import Embedder
     from companion.kit.jobs import Job
     from companion.kit.runtime import Runtime
     from companion.store.sqlite.store import Store
@@ -172,19 +191,86 @@ type Step = Callable[[Store, StructuredModel, RelationshipId, datetime], Awaitab
 
 @dataclass(frozen=True, slots=True)
 class Passing:
-    """What a memory pass is set up with besides the store and the model: where each switch stands
-    and the character's sheet. Built once (`compose.pass_options`) for the bot and for the commands
-    that run a pass, so they run the same one."""
+    """What a memory pass is set up with besides the store and the model: where each switch stands,
+    the character's sheet, and the embedder. Built once (`compose.pass_options`) for the bot and for
+    the commands that run a pass, so they run the same one."""
 
-    modes: Mapping[Switch, Mode]
+    switches: Mapping[Switch, str]  # each switch's position, by the row
     sheet: str = ""
+    embedder: Embedder | None = None
+    embed_model: str = ""
+    judge: StructuredModel | None = None  # the model the pass reads with
 
     def mode(self, switch: Switch) -> Mode:
-        return self.modes[switch]
+        return Mode(self.switches[switch])
+
+    def on(self, switch: Switch) -> bool:
+        """Whether a switch is anything but off."""
+        return self.switches[switch] != Mode.OFF
 
 
 # A step every pass runs, set up from `Passing`; None when its switch is off.
 type PassStep = Callable[[Passing], Step | None]
+
+# Writes a decision of the pass: its reason and detail. The pass records it under its own run.
+type Log = Callable[[str, dict[str, Json]], None]
+
+# A reader of the companion's own messages in the open-loop batch: the cost, or None when its call
+# failed so the batch is read again. It rides the loop batch and its bookmark (`Feature.own_loop`).
+type OwnReader = Callable[
+    [
+        Store,
+        StructuredModel,
+        Mapping[str, Utterance],
+        set[UtteranceId],
+        tuple[datetime, tzinfo],
+        Log,
+    ],
+    Awaitable[float | None],
+]
+type OwnLoopSetup = Callable[[Passing], OwnReader | None]
+
+# The open-loop read of a pass: their messages from its own bookmark, with the readers of the
+# companion's own messages that ride the same batch. A failed call leaves the bookmark, so the
+# batch is read again.
+type Loops = Callable[
+    [Store, StructuredModel, RelationshipId, tuple[datetime, tzinfo], Log], Awaitable[Spent]
+]
+type LoopSetup = Callable[[Passing, Sequence[OwnReader]], Loops | None]
+
+
+class MemoryWrite(Protocol):
+    """What a feature does as the pass writes a memory of theirs: `repeat` before it is stored (the
+    older memory it repeats, whose evidence it becomes, or None), `stored` once it is."""
+
+    async def repeat(
+        self, store: Store, rel: RelationshipId, made: Belief, now: datetime, log: Log
+    ) -> Belief | None: ...
+
+    def stored(self, store: Store, rel: RelationshipId, made: Belief, now: datetime) -> None: ...
+
+
+type WriteSetup = Callable[[Passing], MemoryWrite | None]
+
+
+@dataclass(frozen=True, slots=True)
+class PassParts:
+    """What the features add to one memory pass, set up once from `Passing`: the open-loop reads
+    (with the own-message readers riding their batch), the checks on each memory of theirs as it is
+    written, and the steps after."""
+
+    steps: tuple[Step, ...] = ()
+    loops: tuple[Loops, ...] = ()
+    writes: tuple[MemoryWrite, ...] = ()
+
+    @classmethod
+    def of(cls, features: Iterable[Feature], p: Passing) -> PassParts:
+        features = tuple(features)
+        own = [r for f in features if f.own_loop and (r := f.own_loop(p))]
+        steps = [step for f in features if f.after_pass and (step := f.after_pass(p))]
+        loops = [read for f in features if f.loops and (read := f.loops(p, own))]
+        writes = [check for f in features if f.memory_write and (check := f.memory_write(p))]
+        return cls(tuple(steps), tuple(loops), tuple(writes))
 
 
 @dataclass(frozen=True, slots=True)
@@ -251,6 +337,9 @@ class Feature:
     after_theirs: Step | None = None  # after a memory pass stored new memories of theirs
     after_own: Step | None = None  # after a memory pass stored new views of its own
     after_pass: PassStep | None = None  # after every memory pass, whatever it stored
+    loops: LoopSetup | None = None  # the open-loop read of a pass, with the readers `own_loop` adds
+    own_loop: OwnLoopSetup | None = None  # reads its own messages in the open-loop batch
+    memory_write: WriteSetup | None = None  # as the pass writes a memory of theirs
     nightly: NightStep | None = None  # its part of the night's memory work, in registry order
     reaching: Reaching | None = None  # its steps in the initiative tick
     jobs: Jobs | None = None  # background work of its own, started with the bot

@@ -11,6 +11,7 @@ from datetime import datetime
 from companion.core.types import RelationshipId, UtteranceId, nearest_sensitivity
 from companion.features.threads.logic import Source, Thread, ThreadKind, ThreadState
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
+from companion.store.sqlite import bookmark
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,17 +110,14 @@ class Threads:
                 (rel, iso(upto[0]), upto[1], int(ok), reason, iso(at)),
             )
 
-    def loop_cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
+    def loop_cursor(self, rel: RelationshipId) -> bookmark.Place | None:
         """Where the open-loop pass has read up to: its newest successful run."""
-        row = self.conn.execute(
-            "SELECT upto_at, upto_id FROM open_loop_runs WHERE relationship_id = ? AND ok = 1"
-            " ORDER BY id DESC LIMIT 1",
-            (rel,),
-        ).fetchone()
-        return (
-            None
-            if row is None
-            else (parse_iso(str(row["upto_at"])), UtteranceId(str(row["upto_id"])))
+        return bookmark.place_of(
+            self.conn.execute(
+                "SELECT upto_at, upto_id FROM open_loop_runs WHERE relationship_id = ? AND ok = 1"
+                " ORDER BY id DESC LIMIT 1",
+                (rel,),
+            ).fetchone()
         )
 
     def failed_tries(self, rel: RelationshipId, upto_id: UtteranceId) -> int:

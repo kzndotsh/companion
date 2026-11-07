@@ -1,5 +1,6 @@
-"""The kind of each of the companion's views (ADR 0020). Append-only; the newest label wins.
-Reading them is `Store.view_kinds`."""
+"""The kind of each of the companion's views (ADR 0020). Append-only; the newest label wins. The
+table's columns are owned by `store/sqlite/view_kinds.py`, which also reads them
+(`Store.view_kinds`)."""
 
 from __future__ import annotations
 
@@ -10,7 +11,8 @@ from datetime import datetime
 
 from companion.core.types import RelationshipId
 from companion.features.lore.logic import Labelled
-from companion.lib.sqlite.db import iso, write_tx
+from companion.store.sqlite import view_kinds
+from companion.store.sqlite.view_kinds import KindRow
 
 
 @dataclass(frozen=True, slots=True)
@@ -28,9 +30,6 @@ class ViewKinds:
         prompt: str,
         at: datetime,
     ) -> None:
-        with write_tx(self.conn):
-            self.conn.executemany(
-                "INSERT INTO view_kinds (relationship_id, belief_id, kind, model, prompt, at)"
-                " VALUES (?, ?, ?, ?, ?, ?)",
-                [(rel, x.belief_id, x.kind, model, prompt, iso(at)) for x in labels],
-            )
+        view_kinds.insert(
+            self.conn, rel, [KindRow(x.belief_id, x.kind, model, prompt, at) for x in labels]
+        )

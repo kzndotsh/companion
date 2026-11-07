@@ -12,7 +12,7 @@ from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
-from companion.core.types import Belief, BeliefId, Json
+from companion.core.types import Belief, BeliefId, Json, member
 from companion.core.views import ViewKind
 from companion.prompts import get
 
@@ -60,7 +60,7 @@ def prompt(views: Iterable[Belief]) -> tuple[str, dict[str, BeliefId]]:
 
 def parse(data: Json, refs: Mapping[str, BeliefId]) -> list[Labelled] | None:
     """One label per view it was shown, known kinds only. None for an answer of the wrong shape."""
-    items = data.get("labels") if isinstance(data, dict) else None
+    items = member(data, "labels")
     if not isinstance(items, list):
         return None
     out: dict[BeliefId, Labelled] = {}

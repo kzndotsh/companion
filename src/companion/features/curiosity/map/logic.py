@@ -13,7 +13,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 
-from companion.core.types import Belief, BeliefId, Depth, Domain, Json, Label
+from companion.core.types import Belief, BeliefId, Depth, Domain, Json, Label, member
 from companion.prompts import get
 
 # Their inner life is only ever received, never asked about.
@@ -91,7 +91,7 @@ def label_prompt(beliefs: Iterable[Belief]) -> tuple[str, dict[str, BeliefId]]:
 
 def parse_labels(data: Json, refs: Mapping[str, BeliefId]) -> list[Label]:
     """The labels the model gave, keeping only known refs and known values, one per memory."""
-    items = data.get("labels") if isinstance(data, dict) else None
+    items = member(data, "labels")
     out: dict[BeliefId, Label] = {}
     for item in items if isinstance(items, list) else []:
         if not isinstance(item, dict):

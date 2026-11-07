@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 from companion.core.sensitivity import GUARDED_AT
-from companion.core.types import Belief, Json
+from companion.core.types import Belief, Json, member
 from companion.lib.vote import unanimous
 from companion.prompts import get
 
@@ -44,7 +44,34 @@ MIXED = "mixed"
 # as meant for that moment. A request to pause until tomorrow stood first on every card for twelve
 # days, and the extractor's own one-off flag missed a rule the owner kept (2026-11-02).
 ASK_RULE = "rule?"
-ASK_OWNER = frozenset({Label.OUT_OF_DATE, Label.OVERSTATED})
+_OWNER = (Label.OUT_OF_DATE, Label.OVERSTATED)
+ASK_OWNER = frozenset(_OWNER)
+# The verdicts that become a question about one memory (a passing moment only when it is sensitive,
+# see `plan_for`), and about a pair; `WHY` says each in words for `companion memory review`.
+ASKED = (*_OWNER, Label.PASSING, ASK_RULE)
+CONFLICT = (Relation.REPLACES, Relation.CONTRADICTS)
+WHY: dict[str, str] = {
+    ASK_RULE: "a new rule for how to treat you: keep it from now on, or retire it if it was only"
+    " for that moment",
+    Label.OUT_OF_DATE: "looks out of date",
+    Label.OVERSTATED: "states a habit from what reads like one occasion",
+    Label.PASSING: "looks like a passing moment (sensitive, so it is your call)",
+    Relation.REPLACES: "the later one may replace the earlier",
+    Relation.CONTRADICTS: "these two may not both be true",
+}
+
+
+class Said(StrEnum):
+    """What the owner answered to a check, as stored."""
+
+    RETIRE = "retire"
+    KEEP = "keep"
+    BOTH = "both"
+    KEEP_FIRST = "keep 1"
+    KEEP_SECOND = "keep 2"
+    GONE = "gone"  # a memory it names has since closed
+
+
 CHECK_SCHEMA: dict[str, Json] = {
     "type": "object",
     "properties": {"label": {"type": "string", "enum": [x.value for x in Label]}},
@@ -58,12 +85,12 @@ PAIR_SCHEMA: dict[str, Json] = {
 
 
 def read_label(data: Json) -> str | None:
-    value = data.get("label") if isinstance(data, dict) else None
+    value = member(data, "label")
     return value if isinstance(value, str) and value in set(Label) else None
 
 
 def read_relation(data: Json) -> str | None:
-    value = data.get("relation") if isinstance(data, dict) else None
+    value = member(data, "relation")
     return value if isinstance(value, str) and value in set(Relation) else None
 
 

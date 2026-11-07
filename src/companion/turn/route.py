@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from companion.core import switch
 from companion.core.episode import EPISODE_GAP
-from companion.core.turn.floor import BRUSH_KEY, MINOR_KEY, Route
+from companion.core.turn.floor import BRUSH_KEY, MINOR_FIELD, MINOR_KEY, Route
 from companion.core.turn.floor import Talker as RouteTalker
 from companion.core.turn.floor import choose as choose_route
 from companion.core.types import (
@@ -82,7 +82,7 @@ async def route_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) 
         detail: dict[str, Json] = {"talker": route.talker.value}
         if route.because is not None:
             detail["because"] = route.because
-        decide(c, t, "route", detail, reason=route.reason)
+        decide(c, t, ROUTE, detail, reason=route.reason)
     talker = c.roleplay_talker if route.talker is RouteTalker.ROLEPLAY else c.talker
     return Routed(
         talker,
@@ -92,6 +92,9 @@ async def route_turn(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None) 
         heard=heard,
         in_scene=in_scene,
     )
+
+
+ROUTE = "route"  # the decision key of where a turn was routed
 
 
 def routed_to_roleplay(d: Decision) -> bool:
@@ -119,7 +122,11 @@ async def _minor(c: Runtime, t: Turn, *, unsure: bool = False) -> bool | None:
     mark(t, "minor check")
     got = await confirm_minor(c.judge, t.prior, t.text)
     held = got is None or got.value
-    detail: dict[str, Json] = {"minor": held, "read": got is not None, "prompt": MINOR.prompt.ref}
+    detail: dict[str, Json] = {
+        MINOR_FIELD: held,
+        "read": got is not None,
+        "prompt": MINOR.prompt.ref,
+    }
     if got is not None:
         detail["scorer"] = got.model
     decide(c, t, MINOR_KEY, detail)
@@ -150,7 +157,7 @@ def _intimate_before(c: Runtime, t: Turn) -> bool:
         -UNDER_WAY_LOOKBACK:
     ]
     return any(
-        d.has_key("route") and routed_to_roleplay(d)
+        d.has_key(ROUTE) and routed_to_roleplay(d)
         for u in theirs
         for d in c.store.decisions_for_turn(c.rel, u.turn_id)
     )

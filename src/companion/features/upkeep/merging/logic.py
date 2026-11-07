@@ -12,16 +12,75 @@ from __future__ import annotations
 import itertools
 import re
 from collections.abc import Sequence
+from dataclasses import dataclass
+from enum import StrEnum
 
-from companion.core.types import Belief, BeliefKind, Json
+from companion.core.types import Belief, BeliefKind, Json, member
 from companion.lib.vote import READS
 from companion.prompts import get
 
 GROUP = get("system/memory-group")
 WRITE = get("system/memory-merge")
 PROPOSED = "memory: proposed merging memories about one thing"
-NOTE = "note: "  # an owner's note on a merge question; it stays open
-PICK = "pick "  # the members the owner said belong together, by number, proposed again alone
+
+
+class Settled(StrEnum):
+    """An answer that closes a merge question: stored as these words."""
+
+    APART = "apart"
+    MERGED = "merged"
+    WORDED = "worded"
+    GONE = "gone"  # a memory it names has since closed
+
+
+@dataclass(frozen=True, slots=True)
+class Noted:
+    """The owner's note on a merge question: it stays open."""
+
+    why: str
+
+
+@dataclass(frozen=True, slots=True)
+class Picked:
+    """The members the owner said belong together, by position (from 1), proposed again alone."""
+
+    positions: tuple[int, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class Earlier:
+    """A closing answer in a form no longer written ("reworded ...", "superseded by ..."): it closes
+    the question as any settled answer does, and is kept as it was stored."""
+
+    text: str
+
+
+type Answer = Settled | Noted | Picked | Earlier
+_NOTE = "note: "
+_PICK = "pick "
+
+
+def encode(answer: Answer) -> str:
+    """The text a merge answer is stored as."""
+    if isinstance(answer, Noted):
+        return _NOTE + answer.why
+    if isinstance(answer, Picked):
+        return _PICK + " ".join(str(n) for n in answer.positions)
+    if isinstance(answer, Earlier):
+        return answer.text
+    return answer.value
+
+
+def decode(stored: str | None) -> Answer | None:
+    """The answer a stored text holds, or None when there is none."""
+    if stored is None:
+        return None
+    if stored.startswith(_NOTE):
+        return Noted(stored.removeprefix(_NOTE))
+    if stored.startswith(_PICK):
+        return Picked(tuple(int(n) for n in stored.removeprefix(_PICK).split()))
+    return Settled(stored) if stored in set(Settled) else Earlier(stored)
+
 
 GROUP_SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -49,7 +108,7 @@ def listing(beliefs: Sequence[Belief]) -> str:
 
 def read_groups(data: Json, size: int) -> list[Group] | None:
     """The groups in one read, as positions in the listing; None when the answer is malformed."""
-    raw = data.get("groups") if isinstance(data, dict) else None
+    raw = member(data, "groups")
     if not isinstance(raw, list):
         return None
     found: list[Group] = []

@@ -116,7 +116,7 @@ async def _catch_up(store: Store, model: Reads, *, promises: bool = True) -> Non
         REL,
         (T0, UTC),
         lambda r, d: None,
-        Reading(40, 4, 1, promises=read_promises if promises else None),
+        Reading(40, 4, 1, own=(read_promises,) if promises else ()),
     )
 
 

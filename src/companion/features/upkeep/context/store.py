@@ -1,5 +1,5 @@
-"""What they were talking about when each memory was said (J51). Append-only. Reading them is
-`Store.belief_contexts`."""
+"""What they were talking about when each memory was said (J51). Append-only. The table's columns
+are owned by `store/sqlite/belief_context.py`, which also reads them (`Store.belief_contexts`)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.types import BeliefId, RelationshipId
-from companion.lib.sqlite.db import iso, write_tx
+from companion.store.sqlite import belief_context
+from companion.store.sqlite.belief_context import ContextRow
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,9 +27,4 @@ class BeliefContexts:
         prompt: str,
         at: datetime,
     ) -> None:
-        with write_tx(self.conn):
-            self.conn.execute(
-                "INSERT INTO belief_context (relationship_id, belief_id, context, prompt, at)"
-                " VALUES (?,?,?,?,?)",
-                (rel, belief_id, context, prompt, iso(at)),
-            )
+        belief_context.insert(self.conn, rel, ContextRow(belief_id, context, prompt, at))

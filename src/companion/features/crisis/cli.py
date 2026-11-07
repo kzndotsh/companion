@@ -12,11 +12,11 @@ from datetime import timedelta
 from pathlib import Path
 
 from companion.core.clock import utc_now
-from companion.core.crisis import LINE_SENT, RISK, CrisisLevel
+from companion.core.crisis import LEVEL, LINE_SENT, RISK, CrisisLevel, logged_level
 from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId, Speaker
 from companion.features.crisis.logic import Outcome, combine
-from companion.features.crisis.run import LEVEL, read_risk
+from companion.features.crisis.run import read_risk
 from companion.lib.vote import READS
 from companion.store.sqlite.store import Store
 
@@ -36,10 +36,10 @@ def run(db: Path, relationship: str) -> str:
         since = utc_now() - timedelta(days=DAYS)
         read = store.decisions_with_key(rel, LEVEL, since)
         lines = len(store.decisions_with_key(rel, LINE_SENT, since))
-    levels = Counter(str(d.detail.get("level")) for d in read if isinstance(d.detail, dict))
+    levels = Counter(level for d in read if (level := logged_level(d.detail)) is not None)
     if not levels:
         return f"no crisis readings in the last {DAYS} days\n"
-    counts = ", ".join(f"{level} {levels[level.value]}" for level in CrisisLevel)
+    counts = ", ".join(f"{level} {levels[level]}" for level in CrisisLevel)
     return f"last {DAYS} days: {counts}; crisis lines sent {lines}\n"
 
 

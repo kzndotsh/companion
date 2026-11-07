@@ -32,7 +32,7 @@ It does not check new tastes against old ones yet. A taste the owner thinks wron
 | `logic.py` | pure: the kinds (`ViewKind`, in `core/views.py`), the prompt and parse (`prompt`, `parse`), what counts as agreed (`agreed`), which views are lore (`lore`), the note (`lore_note`), `SHOWN`, `BATCH` |
 | `run.py` | effects: labelling (`label_views`), the nearest tastes (`nearest_tastes`), the look-up and note as `LORE` |
 | `cli.py` | `companion lore`: list its tastes and how its views are sorted, with `--label` and `--relabel` (`label_now`) |
-| `store.py` | its table, `view_kinds`, behind `Store.part(ViewKinds)` for writing; the kind of each view, newest label wins, is read with `Store.view_kinds` (the table is in `store/sqlite/migrations/0024_view_kinds.sql`) |
+| `store.py` | its table, `view_kinds`, behind `Store.part(ViewKinds)` for writing, through `store/sqlite/view_kinds.py`, which owns the columns; the kind of each view, newest label wins, is read with `Store.view_kinds` (the table is in `store/sqlite/migrations/0024_view_kinds.sql`) |
 
 The views themselves (`self_beliefs`) are core storage, in `store/sqlite/store.py`. The reach feature reads the kinds too (its pool of tastes), through `Store.view_kinds`.
 

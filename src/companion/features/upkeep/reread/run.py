@@ -14,10 +14,11 @@ from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.spend import purpose
 from companion.core.switch import Mode
-from companion.core.types import Belief, RelationshipId
+from companion.core.types import Belief, BeliefKind, Json, RelationshipId
 from companion.core.vectors import Embedder, nearest
 from companion.features.upkeep.merging.run import propose_group
 from companion.features.upkeep.reread.logic import (
+    ASK_RULE,
     CHECK,
     CHECK_NAMES,
     CHECK_SCHEMA,
@@ -35,7 +36,7 @@ from companion.features.upkeep.reread.logic import (
 from companion.features.upkeep.reread.store import MemoryChecks
 from companion.kit.curate import log_would_close, retire
 from companion.kit.embed import bounded, embed_missing
-from companion.kit.features import Feature, NightStep
+from companion.kit.features import Feature, Log, MemoryWrite, NightStep, Passing
 from companion.kit.reads import read_times
 from companion.kit.runtime import Runtime
 from companion.store.sqlite.store import Store
@@ -179,9 +180,51 @@ class SameCheck:
         return older if same_as(found) else None
 
 
+@dataclass(frozen=True, slots=True)
+class WriteChecks:
+    """What this feature does as the memory pass writes a memory of theirs. Before it is stored, the
+    same-memory check (ADR 0019): `on` adds the quote to the existing memory instead of storing the
+    new one, shadow only logs that. Once it is stored, a new boundary is queued for a re-read."""
+
+    same: SameCheck | None
+
+    async def repeat(
+        self, store: Store, rel: RelationshipId, made: Belief, now: datetime, log: Log
+    ) -> Belief | None:
+        if self.same is None or self.same.mode is Mode.OFF:
+            return None
+        older = await self.same.find(store, rel, made, now)
+        if older is None:
+            return None
+        detail: dict[str, Json] = {"belief_id": older.id, "claim": older.claim, "new": made.claim}
+        if self.same.mode is not Mode.ON:
+            log("would store as evidence on an existing memory (shadow)", detail)
+            return None
+        store.add_evidence(older.id, made.evidence[0])
+        log("confirmed: the same as an existing memory, stored as evidence on it", detail)
+        return older
+
+    def stored(self, store: Store, rel: RelationshipId, made: Belief, now: datetime) -> None:
+        if made.kind is BeliefKind.BOUNDARY:
+            store.part(MemoryChecks).add(
+                rel, made.id, None, [], ASK_RULE, prompt="code: a new boundary", at=now
+            )
+
+
+def write_checks(p: Passing) -> MemoryWrite:
+    same = (
+        SameCheck(p.judge, p.embedder, p.embed_model, p.mode(switch.REREAD))
+        if p.judge is not None and p.embedder is not None and p.on(switch.REREAD)
+        else None
+    )
+    return WriteChecks(same)
+
+
 async def night_step(c: Runtime, judge: StructuredModel) -> None:
     await nightly(c.store, judge, c.rel, utc_now(), local_zone(), mode=c.mode(switch.REREAD))
 
 
 # The re-read is the only part of the night behind a switch: it is left out while that is off.
-REREAD = Feature("reread", nightly=NightStep("re-read", night_step, switch.REREAD))
+REREAD = Feature(
+    "reread", nightly=NightStep("re-read", night_step, switch.REREAD), memory_write=write_checks
+)

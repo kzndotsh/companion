@@ -7,15 +7,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
-from companion.core.turn.listening import LISTENING_KEY
+from companion.core.turn.listening import LISTENING_KEY, SEVERITY_PATH
+from companion.core.turn.reactions import NO_REACTION, REACTED
 from companion.core.types import RelationshipId, Severity, TurnId
 from companion.features.mood.logic import PARAMS_VERSION, Effect, Said, Source, State
 from companion.lib.sqlite.db import iso, parse_iso, write_tx
-
-# The keys of the decisions that carry what the judges read: the listening read's severity, and the
-# tone read logged with a reaction or with none.
-REACTED = "reacted "
-NO_REACTION = "react: none"
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,7 +69,7 @@ class MoodEffects:
         decision from before keys (2026-10-21) is found by its prompt's old name."""
         rows = self.conn.execute(
             "SELECT u.turn_id, u.at, u.text,"
-            " (SELECT json_extract(d.detail, '$.labels.severity') FROM decisions d"
+            " (SELECT json_extract(d.detail, ?) FROM decisions d"
             "  WHERE d.relationship_id = u.relationship_id AND d.turn_id = u.turn_id"
             "  AND (d.key = ? OR (d.key IS NULL"
             "   AND json_extract(d.detail, '$.prompt') LIKE 'system/listening@%'))"
@@ -84,7 +80,7 @@ class MoodEffects:
             "   AND json_extract(d.detail, '$.prompt') LIKE 'system/react@%')) LIMIT 1) AS tone"
             " FROM utterances u WHERE u.relationship_id = ? AND u.speaker = 'user' AND u.at >= ?"
             " ORDER BY u.at",
-            (LISTENING_KEY, REACTED, NO_REACTION, rel, iso(start)),
+            (SEVERITY_PATH, LISTENING_KEY, REACTED, NO_REACTION, rel, iso(start)),
         ).fetchall()
         return [
             Said(

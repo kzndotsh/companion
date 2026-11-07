@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 
-from companion.core.types import Json
+from companion.core.types import Json, member
 from companion.prompts import get
 
 PROMPT = get("system/invented-judge")
@@ -71,7 +71,7 @@ def build_prompt(recent: Sequence[tuple[str, str]], memories: Sequence[str], rep
 def parse(data: Json, reply: str) -> list[Statement] | None:
     """The statements quoted from the reply that address them, with known support. None for an
     answer of the wrong shape; a quote not in the reply, or not said to them, is dropped."""
-    items = data.get("statements") if isinstance(data, dict) else None
+    items = member(data, "statements")
     if not isinstance(items, list):
         return None
     low = reply.lower()

@@ -9,7 +9,7 @@ So a note is written for those memories only and shown beside them on the card.
 
 from __future__ import annotations
 
-from companion.core.types import Json
+from companion.core.types import Json, member
 from companion.prompts import get
 
 PROMPT = get("system/memory-context")
@@ -24,7 +24,7 @@ SCHEMA: dict[str, Json] = {
 
 def parse(data: Json) -> str | None:
     """The note as a lower-case clause without a full stop, or None when empty or too long."""
-    raw = data.get("context") if isinstance(data, dict) else None
+    raw = member(data, "context")
     if not isinstance(raw, str):
         return None
     text = " ".join(raw.split()).rstrip(".")

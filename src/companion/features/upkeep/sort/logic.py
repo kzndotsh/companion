@@ -15,7 +15,7 @@ from collections.abc import Sequence
 from datetime import timedelta
 from enum import StrEnum
 
-from companion.core.types import Json
+from companion.core.types import Json, member
 from companion.lib.vote import unanimous
 from companion.prompts import get
 
@@ -36,6 +36,11 @@ class Label(StrEnum):
 ASK_ABOUT_THE_BOT = "ask_about_the_bot"
 ASK_ROUTINE = "ask_routine"
 ASKED = (ASK_ABOUT_THE_BOT, ASK_ROUTINE, Label.UNSURE.value)
+WHY: dict[str, str] = {
+    ASK_ABOUT_THE_BOT: "reads as a remark about the bot, not about you (would be dropped)",
+    ASK_ROUTINE: "reads as a routine moment of one day (would be let go)",
+    Label.UNSURE: "unclear whether this is about you, about the bot, or a routine moment",
+}
 
 SCHEMA: dict[str, Json] = {
     "type": "object",
@@ -45,7 +50,7 @@ SCHEMA: dict[str, Json] = {
 
 
 def read(data: Json) -> str | None:
-    value = data.get("label") if isinstance(data, dict) else None
+    value = member(data, "label")
     return value if isinstance(value, str) and value in set(Label) else None
 
 

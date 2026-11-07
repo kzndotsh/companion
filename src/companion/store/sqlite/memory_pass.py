@@ -7,7 +7,8 @@ from datetime import datetime
 
 from companion.core.memory_pass import PassRun
 from companion.core.types import RelationshipId, UtteranceId
-from companion.lib.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, write_tx
+from companion.store.sqlite.bookmark import place_of
 
 
 def record_run(conn: sqlite3.Connection, r: PassRun) -> None:
@@ -36,11 +37,10 @@ def record_run(conn: sqlite3.Connection, r: PassRun) -> None:
 def cursor(
     conn: sqlite3.Connection, relationship_id: RelationshipId
 ) -> tuple[datetime, UtteranceId] | None:
-    row = conn.execute(
-        "SELECT upto_at, upto_id FROM reflect_runs WHERE relationship_id = ?"
-        " ORDER BY rowid DESC LIMIT 1",
-        (relationship_id,),
-    ).fetchone()
-    if row is None:
-        return None
-    return parse_iso(str(row["upto_at"])), UtteranceId(str(row["upto_id"]))
+    return place_of(
+        conn.execute(
+            "SELECT upto_at, upto_id FROM reflect_runs WHERE relationship_id = ?"
+            " ORDER BY rowid DESC LIMIT 1",
+            (relationship_id,),
+        ).fetchone()
+    )

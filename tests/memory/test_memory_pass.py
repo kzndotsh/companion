@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -19,9 +20,9 @@ from companion.core.types import (
 )
 from companion.core.vectors import Embedded, unit
 from companion.features.upkeep.merging.store import MergeProposals
-from companion.features.upkeep.reread.run import SameCheck
+from companion.features.upkeep.reread.run import SameCheck, WriteChecks
 from companion.features.upkeep.reread.store import MemoryChecks
-from companion.memory.memory_pass import PassOptions, memory_pass
+from companion.memory.memory_pass import PassOptions, memory_pass, plain_parts
 from companion.store.sqlite.store import Store
 
 REL = RelationshipId("rel")
@@ -260,7 +261,14 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
     _say(store, 2, Speaker.USER, "green tea always, no honey")
     same = SameCheck(_PairJudge(), _Embedder(), "fake-embed", mode)
     ex = FakeExtractor({"beliefs": [_belief("m2", "green tea always", "Always drinks green tea")]})
-    result = await memory_pass(store, ex, REL, PassOptions(T0 + timedelta(hours=2), same=same))
+    result = await memory_pass(
+        store,
+        ex,
+        REL,
+        PassOptions(
+            T0 + timedelta(hours=2), parts=replace(plain_parts(), writes=(WriteChecks(same),))
+        ),
+    )
     assert len(store.current_beliefs(REL)) == stored
     if mode is Mode.ON:
         assert result.restated == 1
@@ -295,7 +303,14 @@ async def test_a_new_memory_to_merge_with_an_old_one_is_kept_and_proposed_at_onc
     _say(store, 2, Speaker.USER, "green tea always, no honey")
     same = SameCheck(_MergeJudge(), _Embedder(), "fake-embed", mode)
     ex = FakeExtractor({"beliefs": [_belief("m2", "green tea always", "Always drinks green tea")]})
-    await memory_pass(store, ex, REL, PassOptions(T0 + timedelta(hours=2), same=same))
+    await memory_pass(
+        store,
+        ex,
+        REL,
+        PassOptions(
+            T0 + timedelta(hours=2), parts=replace(plain_parts(), writes=(WriteChecks(same),))
+        ),
+    )
     assert len(store.current_beliefs(REL)) == 2  # nothing merges without the owner
     proposals = store.part(MergeProposals).all_(REL)
     assert len(proposals) == proposed
@@ -352,7 +367,7 @@ async def test_a_switch_step_runs_after_each_pass_and_its_cost_counts(store: Sto
         store,
         FakeExtractor(),
         REL,
-        PassOptions(T0, steps=[history]),  # type: ignore[list-item]
+        PassOptions(T0, parts=replace(plain_parts(), steps=(history,))),  # type: ignore[list-item]
     )
     assert ran == [T0]
     assert result.cost_usd >= 0.5
@@ -361,7 +376,7 @@ async def test_a_switch_step_runs_after_each_pass_and_its_cost_counts(store: Sto
             store,
             FakeExtractor(),
             REL,
-            PassOptions(T0, steps=[history]),  # type: ignore[list-item]
+            PassOptions(T0, parts=replace(plain_parts(), steps=(history,))),  # type: ignore[list-item]
         )
     ).ran
     assert ran == [T0]

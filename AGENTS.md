@@ -142,8 +142,11 @@ together.
   stops it; one loop, `keep_running`, runs every job with one failure policy), `Feature.reaching` (its
   `Move`s in the initiative tick, run in `Kind` order, the one place the precedence plan, then nudge, then
   its own reasons is stated, `core/reachout.py`), `Feature.nightly` (a `NightStep`, run by
-  `memory/nightly.py` in the registry's order) and `Feature.after_pass` (a step every memory pass runs,
-  set up from `Passing`). `background.py` collects them into the jobs the daemon starts. Its look-up runs with the others under the deadline, and what it found
+  `memory/nightly.py` in the registry's order) and the parts of a memory pass, all set up from `Passing`
+  and collected into `PassParts` (`kit/features.py`): `Feature.after_pass` (a step every pass runs),
+  `Feature.loops` (the open-loop read) with the `Feature.own_loop` readers that ride its batch and
+  bookmark, and `Feature.memory_write` (a check as each memory of theirs is written). `memory_pass.py`
+  imports no feature for them. `background.py` collects them into the jobs the daemon starts. Its look-up runs with the others under the deadline, and what it found
   reaches its note as its argument; a stage that cannot name the feature asks `Lookups.find(Type)`. A
   feature that changes the request's card declares a `lane` (`Feature.lane`, `kit/features.py`). A stage
   never imports a feature: what the turn owns itself (reactions, the crisis path's scene rule, method
@@ -156,8 +159,8 @@ together.
   in the module that does the work and exported as `COMMANDS`; `cli/main.py` only lists the modules. A
   command that opens the database does `with Store(db) as store:`. The memory pass is built once,
   `compose.pass_options`, and used by the bot's idle pass (`memory/idle.py`) and `companion memory-pass`, so
-  they cannot differ; a rebuild uses none of it on purpose (the same-memory check would match the old
-  memories it is replacing). The data folder is `DATA_DIR` (`settings.py`) or `--data`, and the private
+  they cannot differ; a rebuild uses the plain parts on purpose (`plain_parts`: no same-memory check, it would match
+  the old memories it is replacing). The data folder is `DATA_DIR` (`settings.py`) or `--data`, and the private
   character sheets are in `characters.sheets_dir(data)` for the bot and the evals alike.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries, as a class bound to the
@@ -211,6 +214,7 @@ together.
 - Make ids with `new_id()` from `core/ids.py`, never a raw `uuid` (a test enforces it). Build a small judge's transcript with
   `conversation_prompt` (`core/turn/context.py`), and its logged detail with `Scored.detail`; a judge that answers one
   yes or no is `yes_no_judge` in `kit/ask.py`.
+- A table written in a feature's `store.py` and read by a core reader has its columns named once, in the reader's module (`store/sqlite/episodes.py`, `view_kinds.py`, `belief_context.py`, `lanes.py`), which the feature's store writes through. A bookmark is read through `store/sqlite/bookmark.py` and a vector blob through `core/vectors.py` (`to_blob`, `from_blob`). A decision key, or a detail field a query reads, has one constant owned by the code that writes it (`ROUTE` in `turn/route.py`, `RESAMPLED` and `RECHECK` in `core/reply_gate.py`, `REACTED` and `NO_REACTION` in `core/turn/reactions.py`, `LEVEL` in `core/crisis.py`, `MINOR_PATH`, `SEVERITY_PATH`); readers import it.
 - Read the wall clock only through `core/clock.py` (`utc_now`, `local_zone`, a named zone with its rules). A test enforces it in `core/` and `kit/`
   (`tests/core/test_clock_guard.py`).
 - A value or rule that must be the same in several places is named once and imported: in `core/` when

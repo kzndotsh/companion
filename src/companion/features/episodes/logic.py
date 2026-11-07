@@ -17,7 +17,7 @@ from datetime import date, datetime, time, timedelta, tzinfo
 from enum import StrEnum
 
 from companion.core.episode import EPISODE_GAP
-from companion.core.types import HEAVY_AT, Frame, Json, Severity, Speaker, TurnId, Utterance
+from companion.core.types import HEAVY_AT, Frame, Json, Severity, Speaker, TurnId, Utterance, member
 from companion.prompts import get
 
 PROMPT = get("system/episode-gist")
@@ -135,7 +135,7 @@ GIST_MAX_WORDS = 35  # a longer line is not a summary; it is not stored
 
 
 def parse(data: Json) -> str | None:
-    raw = data.get("gist") if isinstance(data, dict) else None
+    raw = member(data, "gist")
     if not isinstance(raw, str) or not raw.strip() or len(raw.split()) > GIST_MAX_WORDS:
         return None
     return " ".join(raw.split())

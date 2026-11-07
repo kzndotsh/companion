@@ -17,7 +17,7 @@ import re
 from collections import Counter
 from collections.abc import Sequence
 
-from companion.core.types import Frame, Json, Speaker, Utterance
+from companion.core.types import Frame, Json, Speaker, Utterance, member
 from companion.prompts import get
 
 OPENER_WINDOW = 5
@@ -186,7 +186,7 @@ def build_prompt(replies: Sequence[str]) -> str:
 def parse(data: Json) -> list[str] | None:
     """The habits named, cleaned and bounded, or None if the answer was malformed. A habit the
     model saw in fewer than MIN_SEEN_IN replies is dropped, so weak or invented ones never count."""
-    raw = data.get("habits") if isinstance(data, dict) else None
+    raw = member(data, "habits")
     if not isinstance(raw, list):
         return None
     habits: list[str] = []

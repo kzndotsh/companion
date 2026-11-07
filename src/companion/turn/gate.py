@@ -20,6 +20,8 @@ from companion.core.reply_gate import (
     QUIP,
     QUIP_PROMPT,
     QUIP_SCHEMA,
+    RECHECK,
+    RESAMPLED,
     QuipVerdict,
     announces_limit,
     code_checks,
@@ -75,7 +77,7 @@ async def _redraw_empty(c: Runtime, t: Turn, request: TalkerRequest, talker: Tal
     the same model once more, and send whatever comes back."""
     again = await talker.reply(request)
     mark_reply(t, again)
-    decide(c, t, "resampled", reason="resampled: the model returned no text")
+    decide(c, t, RESAMPLED, reason="resampled: the model returned no text")
     return again
 
 
@@ -122,7 +124,7 @@ async def _habit_checks(
             mark_reply(t, third)
             again = third if third.text else again
     reason = f"resampled: {', '.join(failed)}" if failed else "kept: the reply passed its checks"
-    decide(c, t, "recheck", detail or None, reason=reason)
+    decide(c, t, RECHECK, detail or None, reason=reason)
     return again if again is not None and again.text else reply
 
 

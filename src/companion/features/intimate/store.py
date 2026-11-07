@@ -6,16 +6,15 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from array import array
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.lane import Lane
-from companion.core.turn.floor import MINOR_KEY
-from companion.core.turn.listening import LISTENING_KEY
+from companion.core.turn.floor import MINOR_KEY, MINOR_PATH
+from companion.core.turn.listening import LISTENING_KEY, SEVERITY_PATH
 from companion.core.types import HEAVY_AT, BeliefId, RelationshipId, UtteranceId
-from companion.core.vectors import Vector
+from companion.core.vectors import Vector, from_blob, to_blob
 from companion.features.intimate.logic import (
     Everyday,
     Excluded,
@@ -27,7 +26,9 @@ from companion.features.intimate.logic import (
     Why,
     lane_of,
 )
-from companion.lib.sqlite.db import iso, parse_iso, write_tx
+from companion.lib.sqlite.db import iso, write_tx
+from companion.store.sqlite import bookmark, lanes
+from companion.store.sqlite.lanes import LaneRow
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,12 +38,12 @@ class By:
     at: datetime
 
 
-def _place(row: sqlite3.Row) -> Place:
-    lane = Lane(str(row["lane"]))
+def _place(row: LaneRow) -> Place:
+    lane = Lane(row.lane)
     if lane is Lane.INTIMATE:
-        return Intimate(Stance(str(row["stance"])))
+        return Intimate(Stance(str(row.stance)))
     if lane is Lane.EXCLUDED:
-        return Excluded(Why(str(row["why"])))
+        return Excluded(Why(str(row.why)))
     return Everyday()
 
 
@@ -53,44 +54,32 @@ class IntimateMemory:
     conn: sqlite3.Connection
 
     def place(self, places: Mapping[BeliefId, Place], by: By) -> None:
-        rows = [
-            (
-                bid,
-                lane_of(p).value,
-                p.stance.value if isinstance(p, Intimate) else None,
-                p.why.value if isinstance(p, Excluded) else None,
-                by.model,
-                by.prompt,
-                iso(by.at),
-            )
-            for bid, p in places.items()
-        ]
-        with write_tx(self.conn):
-            self.conn.executemany(
-                "INSERT INTO scene_lanes (belief_id, lane, stance, why, model, prompt, at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?)",
-                rows,
-            )
+        lanes.insert(
+            self.conn,
+            [
+                LaneRow(
+                    bid,
+                    lane_of(p).value,
+                    p.stance.value if isinstance(p, Intimate) else None,
+                    p.why.value if isinstance(p, Excluded) else None,
+                    by.model,
+                    by.prompt,
+                    iso(by.at),
+                )
+                for bid, p in places.items()
+            ],
+        )
 
     def places(self, rel: RelationshipId) -> dict[BeliefId, Place]:
         """Each labelled memory's newest place."""
-        rows = self.conn.execute(
-            "SELECT l.* FROM scene_lanes l JOIN beliefs b ON b.id = l.belief_id"
-            " WHERE b.relationship_id = ? ORDER BY l.id",
-            (rel,),
-        ).fetchall()
-        return {BeliefId(str(r["belief_id"])): _place(r) for r in rows}
+        return {bid: _place(r) for bid, r in lanes.newest(self.conn, rel).items()}
 
     def doubted_before(self, rel: RelationshipId, prompt: str) -> frozenset[BeliefId]:
         """Memories whose newest place is a doubt reached under another version of the prompt."""
-        rows = self.conn.execute(
-            "SELECT l.belief_id, l.why, l.prompt FROM scene_lanes l JOIN beliefs b"
-            " ON b.id = l.belief_id WHERE b.relationship_id = ? ORDER BY l.id",
-            (rel,),
-        ).fetchall()
-        newest = {str(r["belief_id"]): (r["why"], r["prompt"]) for r in rows}
         return frozenset(
-            BeliefId(b) for b, (why, p) in newest.items() if why == Why.DOUBT.value and p != prompt
+            bid
+            for bid, r in lanes.newest(self.conn, rel).items()
+            if r.why == Why.DOUBT.value and r.prompt != prompt
         )
 
     def facts(
@@ -102,13 +91,21 @@ class IntimateMemory:
             return frozenset(), frozenset()
         rows = self.conn.execute(
             "SELECT u.id,"
-            " MAX(d.key = ? AND json_extract(d.detail, '$.minor') = 1) AS held,"
-            " MAX(d.key = ? AND json_extract(d.detail, '$.labels.severity') >= ?) AS heavy"
+            " MAX(d.key = ? AND json_extract(d.detail, ?) = 1) AS held,"
+            " MAX(d.key = ? AND json_extract(d.detail, ?) >= ?) AS heavy"
             " FROM utterances u JOIN decisions d"
             " ON d.relationship_id = u.relationship_id AND d.turn_id = u.turn_id"
             " WHERE u.relationship_id = ? AND u.id IN (SELECT value FROM json_each(?))"
             " GROUP BY u.id",
-            (MINOR_KEY, LISTENING_KEY, HEAVY_AT, rel, json.dumps(list(utterances))),
+            (
+                MINOR_KEY,
+                MINOR_PATH,
+                LISTENING_KEY,
+                SEVERITY_PATH,
+                HEAVY_AT,
+                rel,
+                json.dumps(list(utterances)),
+            ),
         ).fetchall()
         held = frozenset(UtteranceId(str(r["id"])) for r in rows if r["held"])
         heavy = frozenset(UtteranceId(str(r["id"])) for r in rows if r["heavy"])
@@ -175,30 +172,17 @@ class IntimateMemory:
             for r in rows
         ]
 
-    def cursor(self, rel: RelationshipId) -> tuple[datetime, UtteranceId] | None:
-        row = self.conn.execute(
-            "SELECT upto_at, upto_id FROM scene_reads WHERE relationship_id = ?"
-            " ORDER BY id DESC LIMIT 1",
-            (rel,),
-        ).fetchone()
-        if row is None:
-            return None
-        return parse_iso(str(row["upto_at"])), UtteranceId(str(row["upto_id"]))
+    def cursor(self, rel: RelationshipId) -> bookmark.Place | None:
+        return bookmark.newest(self.conn, "scene_reads", rel)
 
-    def read_upto(
-        self, rel: RelationshipId, upto: tuple[datetime, UtteranceId], at: datetime
-    ) -> None:
-        with write_tx(self.conn):
-            self.conn.execute(
-                "INSERT INTO scene_reads (relationship_id, upto_at, upto_id, at) VALUES (?,?,?,?)",
-                (rel, iso(upto[0]), upto[1], iso(at)),
-            )
+    def read_upto(self, rel: RelationshipId, upto: bookmark.Place, at: datetime) -> None:
+        bookmark.mark(self.conn, "scene_reads", rel, upto, at)
 
     def add_vectors(self, vectors: Mapping[str, Vector], model: str, at: datetime) -> None:
         with write_tx(self.conn):
             self.conn.executemany(
                 "INSERT INTO scene_vectors (pattern_id, model, vector, at) VALUES (?,?,?,?)",
-                [(pid, model, array("f", v).tobytes(), iso(at)) for pid, v in vectors.items()],
+                [(pid, model, to_blob(v), iso(at)) for pid, v in vectors.items()],
             )
 
     def vectors(self, rel: RelationshipId, model: str) -> dict[str, Vector]:
@@ -210,7 +194,5 @@ class IntimateMemory:
         ).fetchall()
         out: dict[str, Vector] = {}
         for r in rows:
-            floats = array("f")
-            floats.frombytes(bytes(r["vector"]))
-            out[str(r["pattern_id"])] = tuple(floats)
+            out[str(r["pattern_id"])] = from_blob(r["vector"])
         return out

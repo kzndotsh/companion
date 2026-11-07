@@ -21,7 +21,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from companion.core.frames import is_assertable
-from companion.core.types import Belief, BeliefId, Json, Sensitivity
+from companion.core.types import Belief, BeliefId, Json, Sensitivity, member
 from companion.prompts import get
 
 PROMPT = get("system/recall")
@@ -87,7 +87,7 @@ def build_prompt(
 
 def picked(data: Json, labelled: Mapping[str, Belief], limit: int) -> list[Belief]:
     """The beliefs a judge picked, in order, only from labels that were shown, at most `limit`."""
-    raw = data.get("labels") if isinstance(data, dict) else None
+    raw = member(data, "labels")
     chosen: list[Belief] = []
     for label in raw if isinstance(raw, list) else []:
         b = labelled.get(str(label).strip().strip("[]").strip())  # the list shows "[r12]"

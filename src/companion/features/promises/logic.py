@@ -16,7 +16,15 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 
 from companion.core.card import EVENT_SHOWN_DAYS
-from companion.core.types import Frame, Json, RelationshipId, Speaker, Utterance, UtteranceId
+from companion.core.types import (
+    Frame,
+    Json,
+    RelationshipId,
+    Speaker,
+    Utterance,
+    UtteranceId,
+    member,
+)
 from companion.prompts import get
 
 PROMPT = get("system/promise-read")
@@ -103,7 +111,7 @@ def in_force(p: Promise, now: datetime) -> bool:
 
 def parse(data: Json) -> list[Proposed] | None:
     """The proposed promises, or None when the answer does not have the shape asked for."""
-    items = data.get("promises") if isinstance(data, dict) else None
+    items = member(data, "promises")
     if not isinstance(items, list):
         return None
     out: list[Proposed] = []

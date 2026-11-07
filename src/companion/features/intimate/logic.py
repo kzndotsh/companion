@@ -34,6 +34,7 @@ from companion.core.types import (
     TurnId,
     Utterance,
     UtteranceId,
+    member,
 )
 from companion.prompts import get
 
@@ -51,7 +52,7 @@ LIMIT_SCHEMA: dict[str, Json] = {
 
 
 def parse_limit(data: Json) -> bool | None:
-    value = data.get("limit") if isinstance(data, dict) else None
+    value = member(data, "limit")
     return value if isinstance(value, bool) else None
 
 
@@ -233,7 +234,7 @@ def lane_prompt(beliefs: Iterable[Belief]) -> tuple[str, dict[str, BeliefId]]:
 def parse_lanes(data: Json, refs: Mapping[str, BeliefId]) -> dict[BeliefId, Vote] | None:
     """One read's vote per memory it was shown. An intimate vote with no stance is no vote. None for
     an answer of the wrong shape."""
-    items = data.get("labels") if isinstance(data, dict) else None
+    items = member(data, "labels")
     if not isinstance(items, list):
         return None
     out: dict[BeliefId, Vote] = {}
@@ -414,7 +415,7 @@ def pattern_prompt(
 
 def parse_patterns(data: Json) -> list[Proposed] | None:
     """The proposed patterns, or None when the answer does not have the shape asked for."""
-    items = data.get("patterns") if isinstance(data, dict) else None
+    items = member(data, "patterns")
     if not isinstance(items, list):
         return None
     out: list[Proposed] = []

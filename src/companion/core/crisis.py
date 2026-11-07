@@ -17,6 +17,7 @@ from enum import StrEnum
 from string import Template
 
 from companion.core.switch import Mode
+from companion.core.types import Json, member
 from companion.prompts import get
 
 MESSAGE = get("messages/crisis-line")
@@ -34,6 +35,16 @@ class CrisisLevel(StrEnum):
 
 
 RISK = frozenset({CrisisLevel.CONCERN, CrisisLevel.URGENT})
+
+
+def level_detail(level: CrisisLevel) -> dict[str, Json]:
+    return {_LEVEL_FIELD: level.value}
+
+
+def logged_level(detail: dict[str, Json] | None) -> CrisisLevel | None:
+    """The level a LEVEL decision logged, or None when its detail has none."""
+    value = member(detail, _LEVEL_FIELD)
+    return CrisisLevel(value) if value in set(CrisisLevel) else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +68,10 @@ class Reading:
 
 # The decision keys of the turn's own crisis stage (`turn/crisis.py`), written by it and read by the
 # crisis command and the tests.
+# A turn's reading is logged once under LEVEL, with its level in the detail (`level_detail` writes
+# it, `logged_level` reads it back).
+LEVEL = "crisis: level"
+_LEVEL_FIELD = "level"
 SCENE = "crisis: scene"
 METHOD = "crisis: method check"
 LINE_SENT = "crisis: line sent"

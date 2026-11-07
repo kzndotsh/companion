@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime, tzinfo
 
 from companion.core.beliefs.dedupe import is_already_known
@@ -35,11 +35,10 @@ from companion.core.beliefs.self_extract import parse_views, to_view
 from companion.core.clock import local_zone, utc_now
 from companion.core.extractor import StructuredModel
 from companion.core.memory_pass import BATCH, CONTEXT, PassRun
-from companion.core.switch import Mode
+from companion.core.switch import SWITCHES, Mode
 from companion.core.types import (
     Belief,
     BeliefId,
-    BeliefKind,
     Json,
     RelationshipId,
     Speaker,
@@ -49,14 +48,9 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.core.vectors import Embedder
-from companion.features.promises.run import read_promises
-from companion.features.threads.run import Reading, catch_up_loops
-from companion.features.upkeep.reread.logic import ASK_RULE
-from companion.features.upkeep.reread.run import SameCheck
-from companion.features.upkeep.reread.store import MemoryChecks
 from companion.kit.ask import Judge, ask_or_raise
 from companion.kit.embed import bounded, embed_missing
-from companion.kit.features import Step
+from companion.kit.features import MemoryWrite, Passing, PassParts, Step
 from companion.kit.record import Recorder, new_id
 from companion.memory.views import WANT_KINDS, check_views
 from companion.registry import FEATURES
@@ -66,18 +60,22 @@ log = logging.getLogger("companion.memory")
 EMBED_SECONDS = 60.0  # embedding what the pass stored; was unlimited
 
 
+def plain_parts() -> PassParts:
+    """What a pass runs with every switch off: the open-loop read (strict) and the check on a new
+    boundary, which no switch turns off. A rebuild's and a test's."""
+    return PassParts.of(FEATURES, Passing({s: Mode.OFF for s in SWITCHES}))
+
+
 @dataclass(frozen=True, slots=True)
 class PassOptions:
     now: datetime | None = None
     ignore: frozenset[BeliefId] = frozenset()
     tz: tzinfo | None = None
-    same: SameCheck | None = None  # write-time check against existing memories (ADR 0019)
-    promises: bool = False  # read its own messages for promises it made (J12, shadow)
     embed: tuple[Embedder, str] | None = None  # embed new memories after the pass (model name)
-    loose_loops: bool = False  # hedged plans become note-only loops (COMPANION_HEDGED_PLANS)
-    # Steps the features add to every pass (`Feature.after_pass`): its own history (ADR 0025), the
-    # scene memory (ADR 0026).
-    steps: Sequence[Step] = ()
+    # What the features add to every pass (`PassParts.of`): the open-loop read and the promise read
+    # in its batch, the check on each new memory, and the steps after (its own history, ADR 0025,
+    # the scene memory, ADR 0026).
+    parts: PassParts = field(default_factory=plain_parts)
 
 
 PLAIN = PassOptions()  # nothing added: a rebuild's, and a test's
@@ -232,24 +230,7 @@ class _Ctx:
     run: _Pass
     window: Mapping[str, Utterance]
     tz: tzinfo
-    same: SameCheck | None = None
-
-
-async def _stored_as_evidence(ctx: _Ctx, spec: _Spec, made: Belief) -> bool:
-    """When a new memory of theirs is the same as an existing one (three pair reads, ADR 0019):
-    `on` adds its quote to the existing memory instead of storing it; shadow only logs that."""
-    if ctx.same is None or spec is not USER_SPEC or ctx.same.mode is Mode.OFF:
-        return False
-    older = await ctx.same.find(ctx.store, ctx.run.rel, made, ctx.run.now)
-    if older is None:
-        return False
-    detail: dict[str, Json] = {"belief_id": older.id, "claim": older.claim, "new": made.claim}
-    if ctx.same.mode is not Mode.ON:
-        ctx.run.log("would store as evidence on an existing memory (shadow)", detail)
-        return False
-    ctx.store.add_evidence(older.id, made.evidence[0])
-    ctx.run.log("confirmed: the same as an existing memory, stored as evidence on it", detail)
-    return True
+    writes: Sequence[MemoryWrite] = ()  # what features do as a memory of theirs is written
 
 
 async def _extract_pass(
@@ -260,6 +241,7 @@ async def _extract_pass(
     rejected: list[Belief] | None = None,
 ) -> _Counts:
     store, extractor, run, window, tz = ctx.store, ctx.extractor, ctx.run, ctx.window, ctx.tz
+    writes = ctx.writes if spec is USER_SPEC else ()
     labelled = known_index(known)
     result = await ask_or_raise(
         extractor,
@@ -303,16 +285,19 @@ async def _extract_pass(
             already_known += 1
             continue
         seen.add(normalise(made.claim))
-        if await _stored_as_evidence(ctx, spec, made):
+        repeated = False
+        for w in writes:
+            if await w.repeat(store, run.rel, made, run.now, run.log) is not None:
+                repeated = True
+                break
+        if repeated:
             restated += 1
             continue
         store.insert_belief(made)
         stored.append(made)
         accepted += 1
-        if spec is USER_SPEC and made.kind is BeliefKind.BOUNDARY:
-            store.part(MemoryChecks).add(
-                run.rel, made.id, None, [], ASK_RULE, prompt="code: a new boundary", at=run.now
-            )
+        for w in writes:
+            w.stored(store, run.rel, made, run.now)
         run.log(
             spec.accepted_reason,
             {
@@ -383,7 +368,7 @@ async def memory_pass_from(
         return PassResult(ran=True, upto=upto)
     window = index_window([*store.history_before(rel, batch[0].at, CONTEXT), *batch])
     local = options.tz or local_zone()
-    ctx = _Ctx(store, extractor, run, window, local, options.same)
+    ctx = _Ctx(store, extractor, run, window, local, options.parts.writes)
     users = _Counts()
     own = _Counts()
     if user_targets:
@@ -406,24 +391,17 @@ async def memory_pass_from(
         accepted=users.accepted,
         rejected=users.rejected,
     )
-    loops = await catch_up_loops(
-        store,
-        extractor,
-        rel,
-        (now, local),
-        run.log,
-        Reading(
-            BATCH,
-            CONTEXT,
-            promises=read_promises if options.promises else None,
-            loose=options.loose_loops,
-        ),
+    loops_cost = sum(
+        [
+            (await read(store, extractor, rel, (now, local), run.log)).cost_usd
+            for read in options.parts.loops
+        ]
     )
     wanted = {b.id for b in store.user_beliefs(rel) if b.kind in WANT_KINDS}
     new_wants = users.accepted_ids & wanted
     check = await check_views(store, extractor, rel, now, recheck=bool(new_wants))
     after = [*(AFTER_THEIRS if users.accepted else ()), *(AFTER_OWN if own.accepted else ())]
-    after.extend(options.steps)
+    after.extend(options.parts.steps)
     labelled = sum([(await step(store, extractor, rel, now)).cost_usd for step in after])
     if users.accepted and options.embed is not None:
         labelled += await _embed_new(store, rel, now, options.embed)
@@ -433,7 +411,7 @@ async def memory_pass_from(
         users.rejected,
         users.already_known,
         users.restated,
-        users.cost + own.cost + check.cost_usd + loops.cost_usd + labelled,
+        users.cost + own.cost + check.cost_usd + loops_cost + labelled,
         upto,
         views_accepted=own.accepted,
         views_restated=own.restated,

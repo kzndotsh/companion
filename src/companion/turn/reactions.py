@@ -14,6 +14,9 @@ from companion.core.turn.reactions import (
     INSTEAD_PROMPT,
     INSTEAD_SCHEMA,
     INSTEAD_THRESHOLD,
+    NO_REACTION,
+    REACTED,
+    REPLIED,
     InsteadRead,
     ToneRead,
     is_candidate,
@@ -27,7 +30,6 @@ from companion.core.turn.reply import Reaction
 from companion.core.types import Speaker, Utterance
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Turn, decide, mark
-from companion.store.sqlite.decisions import REACTED
 
 if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
@@ -92,7 +94,7 @@ async def react_instead(c: Runtime, t: Turn, *, crisis_cue: bool) -> Reaction | 
     decide(
         c,
         t,
-        REACTED if reaction is not None else "ack: replied",
+        REACTED if reaction is not None else REPLIED,
         outcome.detail(
             INSTEAD_PROMPT.ref,
             schema=INSTEAD_SCHEMA,
@@ -123,7 +125,7 @@ def react_alongside(c: Runtime, t: Turn, felt: Scored[ToneRead] | None) -> React
     decide(
         c,
         t,
-        REACTED if decision.reaction is not None else "react: none",
+        REACTED if decision.reaction is not None else NO_REACTION,
         felt.detail(
             ALONGSIDE_PROMPT.ref, scores={"tone": judged.tone, "confidence": judged.confidence}
         ),

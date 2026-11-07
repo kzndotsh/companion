@@ -26,6 +26,11 @@ from companion.core.turn.reply import Reaction
 from companion.core.types import Json, Speaker, Utterance, unit_interval
 from companion.prompts import get
 
+# The keys of the decisions the two judges log: a reaction sent, or none, and a reply sent after the
+# instead judge looked. Readers (the reaction gap, the mood's tone read) match these.
+REACTED = "reacted "
+NO_REACTION = "react: none"
+REPLIED = "ack: replied"
 MAX_CHARS = 40
 MAX_WORDS = 4
 # 0.70, not higher: on 15 hand-labelled messages the clear acknowledgements scored 0.70 to 0.90

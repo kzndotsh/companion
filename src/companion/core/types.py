@@ -19,6 +19,12 @@ FavoriteId = NewType("FavoriteId", str)
 type Json = str | int | float | bool | list[Json] | dict[str, Json] | None
 
 
+def member(data: Json, name: str) -> Json:
+    """One field of a model's answer read as an object, or None when the answer is not an object
+    or has no such field. The parse of a judge says what a missing or wrong field means."""
+    return data.get(name) if isinstance(data, dict) else None
+
+
 class Severity(IntEnum):
     """How serious a message is, as the listening read levels it."""
 

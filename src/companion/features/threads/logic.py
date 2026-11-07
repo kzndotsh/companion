@@ -26,6 +26,7 @@ from companion.core.types import (
     Speaker,
     Utterance,
     UtteranceId,
+    member,
     nearest_sensitivity,
 )
 from companion.prompts import get
@@ -194,7 +195,7 @@ def _raw(item: Json) -> RawLoop | None:
 
 def parse(data: Json) -> list[RawLoop] | None:
     """The labelled items, or None if the answer was malformed."""
-    items = data.get("loops") if isinstance(data, dict) else None
+    items = member(data, "loops")
     if not isinstance(items, list):
         return None
     out = [_raw(item) for item in items]
@@ -204,7 +205,7 @@ def parse(data: Json) -> list[RawLoop] | None:
 def parse_resolved(data: Json) -> list[RawResolution]:
     """The loops their new messages settle. Malformed items are skipped: a missed resolution only
     means the loop stays open, and the gate still never asks before its time."""
-    items = data.get("resolved") if isinstance(data, dict) else None
+    items = member(data, "resolved")
     out: list[RawResolution] = []
     for item in items if isinstance(items, list) else []:
         if not isinstance(item, dict):

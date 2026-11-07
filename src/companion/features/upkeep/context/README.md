@@ -25,7 +25,7 @@ projects, and their words almost never.
 |---|---|
 | `logic.py` | pure: reading and limiting the note (`CONTEXT_MAX_WORDS`) |
 | `run.py` | effects: writing the notes (`write_missing`), the `Feature` (`CONTEXT`) |
-| `store.py` | its writes as `BeliefContexts` (`Store.part(BeliefContexts)`); the card reads the notes with `Store.belief_contexts` (the tables are in `store/sqlite/migrations/`) |
+| `store.py` | its writes as `BeliefContexts` (`Store.part(BeliefContexts)`), through `store/sqlite/belief_context.py`, which owns the table's columns and reads them; the card reads the notes with `Store.belief_contexts` (the tables are in `store/sqlite/migrations/`) |
 | `cli.py` | `companion memory context`: write the notes every memory wants (`write_now`) |
 
 ## Prompts
