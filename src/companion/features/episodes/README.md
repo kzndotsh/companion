@@ -17,7 +17,7 @@ Keeps a record of the times the two of them spent together, so when they say "la
 - When it acts, any episode not yet written is written first, under an 8 second limit (`EPISODE_SECONDS`). If that fails or is late, the lines already recorded are still used.
 - `recent` then picks: for a pointed time, the lines that overlap it, at most 3 (`SHOWN`), newest last. For a return after a gap, only the last recorded line. Each is shown with how long ago it was, said like a person ("earlier tonight", "last night", "yesterday", "on Monday").
 - The note `notes/recent-times` lists them, in the system block, with the instruction to let it shape the answer and bring it up only if they do.
-- The decision "episodes: what the two of them did recently, shown" is logged with the mode, why ("pointed at a time" or "back after a gap"), the lines and the note's `name@version`. In shadow its reason adds "(shadow, not sent)" and nothing reaches the talker.
+- The decision "episodes: what the two of them did recently, shown" is logged with the position (its `mode` field), why ("pointed at a time" or "back after a gap"), the lines and the note's `name@version`. In shadow its reason adds "(shadow, not sent)" and nothing reaches the talker.
 
 The reach feature also reads these lines: a recent everyday episode (not a heavy one) can be a thing the companion reaches out about (`features/reach/run.py`).
 

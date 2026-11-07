@@ -18,7 +18,7 @@ def test_every_switch_reads_on_and_off_the_same_way() -> None:
         assert all(not s.on(sw) for sw in SWITCHES if "off" in sw.values), word
     on = Settings.from_env({sw.env: "yes" for sw in SWITCHES})
     assert on.value(ROUTE_INTIMATE) == "on"
-    assert on.value(INITIATIVE) == "shadow"  # it has no live mode: anything but off is shadow
+    assert on.value(INITIATIVE) == "shadow"  # it has no live position: anything but off is shadow
 
 
 def test_every_named_switch_is_in_the_table() -> None:

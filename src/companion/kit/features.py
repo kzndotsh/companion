@@ -197,7 +197,9 @@ class Passing:
     same one."""
 
     positions: Mapping[Switch, Position]  # where each on, shadow or off switch stands
-    loose_plans: bool = False  # `COMPANION_HEDGED_PLANS`, the one pass setting that is not a mode
+    loose_plans: bool = (
+        False  # `COMPANION_HEDGED_PLANS`, the one pass setting that is not a position
+    )
     sheet: str = ""
     embedder: Embedder | None = None
     embed_model: str = ""
@@ -260,7 +262,7 @@ class PassParts:
     """What the features add to one memory pass, set up once from `Passing`: the open-loop reads
     (with the own-message readers riding their batch), the checks on each memory of theirs as it is
     written, and the steps after. A feature whose `switch` is off adds nothing, so its setup reads
-    only the mode it needs, never whether it is off."""
+    only the position it needs, never whether it is off."""
 
     steps: tuple[Step, ...] = ()
     loops: tuple[Loops, ...] = ()

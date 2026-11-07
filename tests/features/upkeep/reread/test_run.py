@@ -50,7 +50,7 @@ async def test_in_shadow_a_faded_passing_moment_is_logged_not_closed(
     spill: tuple[Store, Belief],
 ) -> None:
     store, _ = spill
-    night = await nightly(store, Judge("passing"), REL, LATER, UTC, mode=Position.SHADOW)
+    night = await nightly(store, Judge("passing"), REL, LATER, UTC, position=Position.SHADOW)
     assert (night.checked, night.closed) == (1, 1)
     assert [b.id for b in store.user_beliefs(REL)] == ["spill"]
 
@@ -60,10 +60,10 @@ async def test_on_it_closes_and_never_reads_the_same_memory_twice(
 ) -> None:
     store, _ = spill
     judge = Judge("passing")
-    await nightly(store, judge, REL, LATER, UTC, mode=Position.ON)
+    await nightly(store, judge, REL, LATER, UTC, position=Position.ON)
     assert store.user_beliefs(REL) == []
     calls = judge.calls
-    await nightly(store, judge, REL, LATER + timedelta(days=1), UTC, mode=Position.ON)
+    await nightly(store, judge, REL, LATER + timedelta(days=1), UTC, position=Position.ON)
     assert judge.calls == calls
 
 
@@ -73,9 +73,9 @@ async def test_out_of_date_is_a_question_and_a_young_memory_waits(
     store, _ = spill
     judge = Judge("out_of_date")
     assert (
-        await nightly(store, judge, REL, T0 + timedelta(days=3), UTC, mode=Position.ON)
+        await nightly(store, judge, REL, T0 + timedelta(days=3), UTC, position=Position.ON)
     ).checked == 0
-    night = await nightly(store, judge, REL, LATER, UTC, mode=Position.ON)
+    night = await nightly(store, judge, REL, LATER, UTC, position=Position.ON)
     assert (night.closed, night.questions) == (0, 1)
     assert [c.belief_id for c in store.part(MemoryChecks).unanswered(REL, ["out_of_date"])] == [
         "spill"
@@ -91,9 +91,9 @@ async def test_a_new_version_of_the_check_reads_every_memory_again(
 
     store, _ = spill
     judge = Judge("keep")
-    await nightly(store, judge, REL, LATER, UTC, mode=Position.SHADOW)
-    await nightly(store, judge, REL, LATER + timedelta(days=1), UTC, mode=Position.SHADOW)
+    await nightly(store, judge, REL, LATER, UTC, position=Position.SHADOW)
+    await nightly(store, judge, REL, LATER + timedelta(days=1), UTC, position=Position.SHADOW)
     assert judge.calls == 3  # read once (three reads), not again under the same version
     monkeypatch.setattr(run, "CHECK", dataclasses.replace(run.CHECK, version="v99"))
-    await nightly(store, judge, REL, LATER + timedelta(days=2), UTC, mode=Position.SHADOW)
+    await nightly(store, judge, REL, LATER + timedelta(days=2), UTC, position=Position.SHADOW)
     assert judge.calls == 6

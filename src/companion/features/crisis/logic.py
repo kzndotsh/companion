@@ -145,7 +145,7 @@ def combine(reads: Sequence[Risk | None], *, strong: bool = True) -> Outcome:
     return Outcome(level, kind, timing, plan, light, len(literal), failed)
 
 
-def render_reason(outcome: Outcome, mode: Position, would: Sequence[str]) -> str:
+def render_reason(outcome: Outcome, position: Position, would: Sequence[str]) -> str:
     """The logged reason, built from the labels."""
     if outcome.level is CrisisLevel.NONE and not outcome.literal_reads and not outcome.failed_reads:
         head = "crisis: none"
@@ -157,7 +157,7 @@ def render_reason(outcome: Outcome, mode: Position, would: Sequence[str]) -> str
         )
     if not would:
         return head
-    return f"{head}; {'would ' if mode is Position.SHADOW else ''}{', '.join(would)}"
+    return f"{head}; {'would ' if position is Position.SHADOW else ''}{', '.join(would)}"
 
 
 def concern_note() -> str:

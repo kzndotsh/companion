@@ -2,7 +2,7 @@
 
 A separate memory lane for intimate scenes. Memories about sex and intimate play are kept apart from everyday ones: a scene turn gets its own card (their limits, what they are into nearest the moment, perhaps one thing they are curious about, and what they are called), and every other turn leaves the intimate lane out.
 
-**Status:** live since 2026-11-05 (ADR 0026, review pulled forward from 2026-11-09). `COMPANION_INTIMATE_MEMORY` (was `COMPANION_SCENE_MEMORY`): `on` (default), `shadow`, `off`. `on` sends the roleplay card on a turn the roleplay talker answers and leaves the intimate lane off every other turn's card and both recall look-ups. In `shadow` the memory pass places memories and reads scenes, and each turn logs the roleplay card it would send. `off` reads nothing and logs nothing. In every mode, memories already placed in the intimate lane stay off the everyday card and out of recall.
+**Status:** live since 2026-11-05 (ADR 0026, review pulled forward from 2026-11-09). `COMPANION_INTIMATE_MEMORY` (was `COMPANION_SCENE_MEMORY`): `on` (default), `shadow`, `off`. `on` sends the roleplay card on a turn the roleplay talker answers and leaves the intimate lane off every other turn's card and both recall look-ups. In `shadow` the memory pass places memories and reads scenes, and each turn logs the roleplay card it would send. `off` reads nothing and logs nothing. In every position, memories already placed in the intimate lane stay off the everyday card and out of recall.
 
 ## How it works
 
@@ -45,7 +45,7 @@ What they are into and the offer go in the system block in place of the memory c
 
 **The curious item** is offered only when this turn's brush-off read answered and said no (a `brush-off` decision with `declines` false and a scorer), and never an item offered in the last 3 days (`COOL`) whose next brush-off read, on a later turn, said they pushed back (`cooled`). With `on`, each offer is logged once the turn is stored (`scene memory: a curious item offered`), which is what the next check reads.
 
-**Every other turn.** The memories placed `intimate` are logged when the everyday card would hold them (`scene memory: intimate memories left off the everyday card`). They are left off the card, out of what the notes may state as true, and out of both recall look-ups, asked and near (`features/recall`, `hidden`), whatever the mode: the turn does it (`turn/assemble.py`), not this feature, so `off` keeps them out too (2026-11-07, the owner's choice; before, `shadow` and `off` still sent them). A memory kept out of scenes stays on the everyday card as before.
+**Every other turn.** The memories placed `intimate` are logged when the everyday card would hold them (`scene memory: intimate memories left off the everyday card`). They are left off the card, out of what the notes may state as true, and out of both recall look-ups, asked and near (`features/recall`, `hidden`), whatever the position: the turn does it (`turn/assemble.py`), not this feature, so `off` keeps them out too (2026-11-07, the owner's choice; before, `shadow` and `off` still sent them). A memory kept out of scenes stays on the everyday card as before.
 
 **Logged.** Each scene turn logs `scene memory: the scene card` with the ids of its limits, the nearest with their scores, the offer, how many basics, whether the look-up scored it, whether it was sent, and its text. The reason is written by code.
 

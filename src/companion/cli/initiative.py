@@ -1,4 +1,4 @@
-"""`companion initiative`: the open loops, what shadow mode would have sent, the nudges after
+"""`companion initiative`: the open loops, what shadow would have sent, the nudges after
 they stepped away (times away it read, and the nudges it would have sent), and its reach-outs for
 its own reasons (ADR 0021): their learned rhythm, its share against the dial, its would-sends and
 its holds."""

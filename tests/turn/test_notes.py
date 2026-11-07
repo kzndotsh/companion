@@ -188,9 +188,9 @@ async def test_in_a_game_of_questions_it_asks_the_next_one_and_no_run_note_stops
     assert talker.seen[0].tail == GAME_NOTE.text  # not the question-run note
 
 
-@pytest.mark.parametrize("mode", ["on", "shadow"])
+@pytest.mark.parametrize("position", ["on", "shadow"])
 async def test_recent_times_reach_the_talker_only_when_on_and_the_log_says_which(
-    store: Store, mode: str
+    store: Store, position: str
 ) -> None:
     await handle(make_runtime(store, Talker(), PREFIX, REL, judge=Judge()), "hey", "t", NOW)
     [first, last] = store.history_before(REL, NOW + timedelta(hours=1), 4)
@@ -215,12 +215,12 @@ async def test_recent_times_reach_the_talker_only_when_on_and_the_log_says_which
     )
     later = NOW + timedelta(hours=5)
     talker = Talker()
-    runtime = make_runtime(store, talker, PREFIX, REL, judge=Judge(), episodes=mode)
+    runtime = make_runtime(store, talker, PREFIX, REL, judge=Judge(), episodes=position)
     await handle(runtime, "hi again", "t", later)
-    assert (gist in talker.seen[0].card) == (mode == "on")
+    assert (gist in talker.seen[0].card) == (position == "on")
     turn = store.history_before(REL, later + timedelta(minutes=1), 4)[-2].turn_id
     [logged] = [d for d in store.decisions_for_turn(REL, turn) if d.has_key(EPISODES_SHOWN)]
-    assert ("not sent" in logged.reason) == (mode == "shadow")
+    assert ("not sent" in logged.reason) == (position == "shadow")
 
 
 async def test_a_hung_look_up_is_left_out_at_the_deadline_and_a_failing_one_too(

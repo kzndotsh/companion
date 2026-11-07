@@ -117,7 +117,7 @@ def store(tmp_path: Path) -> Store:
 def _runtime(
     store: Store,
     judge: Judge,
-    mode: str,
+    position: str,
     talker: Talker,
     *,
     roleplay_talker: Talker | None = None,
@@ -129,7 +129,7 @@ def _runtime(
         PREFIX,
         REL,
         judge=judge,
-        crisis=mode,
+        crisis=position,
         roleplay_talker=roleplay_talker,
         serious_message=serious_message,
     )
@@ -267,24 +267,24 @@ async def test_every_read_failing_on_an_acute_read_or_a_cue_word_is_concern(stor
     assert concern_note() in talker.seen[1].tail
 
 
-@pytest.mark.parametrize("mode", ["on", "shadow"])
+@pytest.mark.parametrize("position", ["on", "shadow"])
 async def test_the_question_and_the_line_come_once_per_hard_stretch(
-    store: Store, mode: str
+    store: Store, position: str
 ) -> None:
     talker = Talker()
-    runtime = _runtime(store, Judge([CONCERN], severity=3), mode, talker)
+    runtime = _runtime(store, Judge([CONCERN], severity=3), position, talker)
     await handle(runtime, "i want to die honestly", "t", NOW)
     await handle(runtime, "yeah i do", "t", NOW + timedelta(minutes=5))
     would = _level(store)["would"]
     assert isinstance(would, list)
     assert "add the stay-with-them note after the history with no length cap" in would
-    if mode == "on":
+    if position == "on":
         assert concern_note() in talker.seen[0].tail
         assert stay_note() in talker.seen[1].tail
         assert concern_note() not in talker.seen[1].tail
         assert PAUSE_KEY in _keys(store)
     await handle(runtime, "still here", "t", NOW + timedelta(hours=3))
-    if mode == "on":
+    if position == "on":
         assert concern_note() in talker.seen[2].tail
 
 
@@ -324,15 +324,15 @@ def _seed_scene(store: Store) -> None:
         )
 
 
-@pytest.mark.parametrize("mode", ["on", "shadow"])
+@pytest.mark.parametrize("position", ["on", "shadow"])
 async def test_a_literal_risk_in_a_scene_goes_to_the_everyday_talker_when_on(
-    store: Store, mode: str
+    store: Store, position: str
 ) -> None:
     _seed_scene(store)
     everyday, scene = Talker(), Talker("scene")
-    runtime = _runtime(store, Judge([CONCERN]), mode, everyday, roleplay_talker=scene)
+    runtime = _runtime(store, Judge([CONCERN]), position, everyday, roleplay_talker=scene)
     await handle(runtime, "honestly i want to die, not the character, me", "t", NOW)
-    if mode == "on":
+    if position == "on":
         assert (len(everyday.seen), len(scene.seen)) == (1, 0)
         assert concern_note() in everyday.seen[0].tail
     else:
@@ -340,17 +340,17 @@ async def test_a_literal_risk_in_a_scene_goes_to_the_everyday_talker_when_on(
     assert SCENE in _keys(store)
 
 
-@pytest.mark.parametrize("mode", ["on", "shadow"])
-async def test_a_reply_naming_a_method_is_drawn_again_when_on(store: Store, mode: str) -> None:
+@pytest.mark.parametrize("position", ["on", "shadow"])
+async def test_a_reply_naming_a_method_is_drawn_again_when_on(store: Store, position: str) -> None:
     talker = Talker(replies=["a lethal dose is not something to test", "are you safe right now?"])
     out = await handle(
-        _runtime(store, Judge([CONCERN]), mode, talker),
+        _runtime(store, Judge([CONCERN]), position, talker),
         "how many pills would it take",
         "t",
         NOW,
     )
     assert METHOD in _keys(store)
-    if mode == "on":
+    if position == "on":
         assert out == "are you safe right now?"
         assert len(talker.seen) == 2
     else:
@@ -365,9 +365,9 @@ async def test_off_reads_nothing(store: Store) -> None:
     assert LEVEL not in _keys(store)
 
 
-@pytest.mark.parametrize("mode", ["on", "off"])
+@pytest.mark.parametrize("position", ["on", "off"])
 async def test_with_the_path_on_a_short_cue_message_is_never_answered_by_a_reaction_alone(
-    store: Store, mode: str
+    store: Store, position: str
 ) -> None:
     store.append_utterance(
         Utterance(
@@ -382,9 +382,9 @@ async def test_with_the_path_on_a_short_cue_message_is_never_answered_by_a_react
         )
     )
     talker = Talker()
-    runtime = _runtime(store, Judge([URGENT], ack=True), mode, talker)
+    runtime = _runtime(store, Judge([URGENT], ack=True), position, talker)
     out = await handle(runtime, "took all my pills", "t", NOW)
-    if mode == "on":
+    if position == "on":
         assert isinstance(out, ThenSend)
         assert len(talker.seen) == 1
     else:

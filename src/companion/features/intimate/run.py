@@ -423,7 +423,7 @@ def _card_detail(card: RoleplayCard, text: str, *, sent: bool, scored: bool) -> 
 def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card) -> CardLane:
     """On a turn the roleplay talker answers: the scene card, logged, and sent when on. On any other
     turn: the intimate memories the everyday card would hold, logged; the turn leaves them off
-    whatever the mode (`turn/assemble.py`)."""
+    whatever its position (`turn/assemble.py`)."""
     live = c.position(switch.INTIMATE_MEMORY) is Position.ON
     if not roleplay:
         hidden = c.store.intimate_lane(c.rel)

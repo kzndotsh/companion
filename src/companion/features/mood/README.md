@@ -32,7 +32,7 @@ Minutes chatted are the gaps between today's messages that are no longer than 10
 
 The lines describe behaviour, never name the mood word, and say never to describe its own state.
 
-**Modes and the log.** Every turn but an `off` one logs a `mood` decision whose reason is written by code, such as `mood: cozy 0.42 (chat_span, tone_sweet) [on]`, or `mood: held, the turn is serious`. The detail holds the mode, the numbers' version, the strengths before and after, what this message added and the line. In `shadow` it works out and logs everything and writes the effects, but the model is sent nothing. In `on` it also sends the line. In `off` it does nothing. The effects are written once the turn is stored, so a failed turn adds none.
+**Positions and the log.** Every turn but an `off` one logs a `mood` decision whose reason is written by code, such as `mood: cozy 0.42 (chat_span, tone_sweet) [on]`, or `mood: held, the turn is serious`. The detail holds the mode, the numbers' version, the strengths before and after, what this message added and the line. In `shadow` it works out and logs everything and writes the effects, but the model is sent nothing. In `on` it also sends the line. In `off` it does nothing. The effects are written once the turn is stored, so a failed turn adds none.
 
 **Never.** It never moves on silence, a goodbye or a failed call, never shows on a serious turn, in a scene or on a goodbye, never changes the persona or a character's temperament, and never brings up what made it tender (held memories stay held).
 

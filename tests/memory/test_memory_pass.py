@@ -247,9 +247,9 @@ class _PairJudge:
         return Extraction({"relation": "same"}, "j", 0.0, 1)
 
 
-@pytest.mark.parametrize(("mode", "stored"), [(Position.SHADOW, 2), (Position.ON, 1)])
+@pytest.mark.parametrize(("position", "stored"), [(Position.SHADOW, 2), (Position.ON, 1)])
 async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
-    store: Store, mode: Position, stored: int
+    store: Store, position: Position, stored: int
 ) -> None:
     _say(store, 1, Speaker.USER, "i drink green tea")
     await memory_pass(
@@ -259,7 +259,7 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
         PassOptions(T0 + timedelta(hours=1)),
     )
     _say(store, 2, Speaker.USER, "green tea always, no honey")
-    same = SameCheck(_PairJudge(), _Embedder(), "fake-embed", mode)
+    same = SameCheck(_PairJudge(), _Embedder(), "fake-embed", position)
     ex = FakeExtractor({"beliefs": [_belief("m2", "green tea always", "Always drinks green tea")]})
     result = await memory_pass(
         store,
@@ -270,7 +270,7 @@ async def test_a_new_memory_the_same_as_an_old_one_becomes_its_evidence_when_on(
         ),
     )
     assert len(store.current_beliefs(REL)) == stored
-    if mode is Position.ON:
+    if position is Position.ON:
         assert result.restated == 1
         [b] = store.current_beliefs(REL)
         assert {e.quote for e in b.evidence} == {"green tea", "green tea always"}
@@ -289,9 +289,9 @@ class _MergeJudge:
         return Extraction({"relation": "merge"}, "j", 0.0, 1)
 
 
-@pytest.mark.parametrize(("mode", "proposed"), [(Position.SHADOW, 0), (Position.ON, 1)])
+@pytest.mark.parametrize(("position", "proposed"), [(Position.SHADOW, 0), (Position.ON, 1)])
 async def test_a_new_memory_to_merge_with_an_old_one_is_kept_and_proposed_at_once_when_on(
-    store: Store, mode: Position, proposed: int
+    store: Store, position: Position, proposed: int
 ) -> None:
     _say(store, 1, Speaker.USER, "i drink green tea")
     await memory_pass(
@@ -301,7 +301,7 @@ async def test_a_new_memory_to_merge_with_an_old_one_is_kept_and_proposed_at_onc
         PassOptions(T0 + timedelta(hours=1)),
     )
     _say(store, 2, Speaker.USER, "green tea always, no honey")
-    same = SameCheck(_MergeJudge(), _Embedder(), "fake-embed", mode)
+    same = SameCheck(_MergeJudge(), _Embedder(), "fake-embed", position)
     ex = FakeExtractor({"beliefs": [_belief("m2", "green tea always", "Always drinks green tea")]})
     await memory_pass(
         store,

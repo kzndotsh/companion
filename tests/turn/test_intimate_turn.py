@@ -1,5 +1,5 @@
 """The scene memory on a turn (ADR 0026): what the request carries on a scene turn and on an
-everyday one, in each mode."""
+everyday one, in each position."""
 
 from __future__ import annotations
 
@@ -101,9 +101,9 @@ def store(tmp_path: Path) -> Store:
 TURN = TurnId("t-now")
 
 
-def _runtime(store: Store, mode: str) -> Runtime:
+def _runtime(store: Store, position: str) -> Runtime:
     return make_runtime(
-        store, Talker(), PREFIX, REL, roleplay_talker=Talker(), intimate_memory=mode
+        store, Talker(), PREFIX, REL, roleplay_talker=Talker(), intimate_memory=position
     )
 
 
@@ -120,9 +120,11 @@ def _scores(store: Store) -> Lookups:
     return Lookups(found={"scene": Scored(found, {e.id: near.get(e.claim, 0.1) for e in found})})
 
 
-def _turn(store: Store, mode: str, *, roleplay: bool, looked: Lookups | None = None) -> Assembled:
+def _turn(
+    store: Store, position: str, *, roleplay: bool, looked: Lookups | None = None
+) -> Assembled:
     t = Turn(TURN, NOW, [], "*leans in*")
-    runtime = _runtime(store, mode)
+    runtime = _runtime(store, position)
     in_scene = Frame.PLAY if roleplay else Frame.REAL
     talker = runtime.roleplay_talker if roleplay and runtime.roleplay_talker else runtime.talker
     routed = Routed(talker, held=False, read=None, brushed=False, heard=None, in_scene=in_scene)
@@ -180,8 +182,8 @@ def test_on_an_everyday_turn_never_shows_the_intimate_lane(store: Store) -> None
 
 
 def test_an_everyday_turn_leaves_the_intimate_lane_off_whatever_the_mode(store: Store) -> None:
-    for mode in ("on", "shadow", "off"):
-        assert SLOW not in _turn(store, mode, roleplay=False).request.card, mode
+    for position in ("on", "shadow", "off"):
+        assert SLOW not in _turn(store, position, roleplay=False).request.card, position
     assert [logged["sent"] for logged in _keys(store, LEFT_OFF)] == [False, False]
 
 

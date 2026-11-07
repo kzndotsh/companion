@@ -82,7 +82,7 @@ async def nightly(  # noqa: PLR0913
     now: datetime,
     tz: tzinfo,
     *,
-    mode: Position,
+    position: Position,
 ) -> Night:
     # A new version reads every memory again.
     checked = store.part(MemoryChecks).checked(rel, CHECK_NAMES, CHECK.version)
@@ -110,7 +110,7 @@ async def nightly(  # noqa: PLR0913
         plan = plan_for(b, found, faded=b.id in everyday and faded(b, last, now))
         if plan.close:
             closed += 1
-            if mode is Position.ON:
+            if position is Position.ON:
                 retire(store, rel, b.id, CLOSED, now)
             else:
                 log_would_close(store, b, CLOSED, now)
@@ -119,7 +119,7 @@ async def nightly(  # noqa: PLR0913
         "re-read: %d read, %d %s, %d questions for the owner, $%.4f",
         len(due),
         closed,
-        "closed" if mode is Position.ON else "would be closed (shadow)",
+        "closed" if position is Position.ON else "would be closed (shadow)",
         questions,
         cost,
     )
@@ -139,7 +139,7 @@ class SameCheck:
     judge: StructuredModel
     embedder: Embedder
     model: str
-    mode: Position
+    position: Position
 
     async def find(
         self, store: Store, rel: RelationshipId, new: Belief, now: datetime
@@ -178,7 +178,7 @@ class SameCheck:
         found = verdict(reads)
         store.part(MemoryChecks).add(rel, older.id, new.id, reads, found, prompt=PAIR.ref, at=now)
         if (
-            found == Relation.MERGE and self.mode is Position.ON
+            found == Relation.MERGE and self.position is Position.ON
         ):  # both are kept; the owner may join them
             await propose_group(store, self.judge, rel, [older, new], now)
         return older if same_as(found) else None
@@ -195,13 +195,13 @@ class WriteChecks:
     async def repeat(
         self, store: Store, rel: RelationshipId, made: Belief, now: datetime, log: Log
     ) -> Belief | None:
-        if self.same is None or self.same.mode is Position.OFF:
+        if self.same is None or self.same.position is Position.OFF:
             return None
         older = await self.same.find(store, rel, made, now)
         if older is None:
             return None
         detail: dict[str, Json] = {"belief_id": older.id, "claim": older.claim, "new": made.claim}
-        if self.same.mode is not Position.ON:
+        if self.same.position is not Position.ON:
             log("would store as evidence on an existing memory (shadow)", detail)
             return None
         store.add_evidence(older.id, made.evidence[0])
@@ -225,7 +225,9 @@ def write_checks(p: Passing) -> MemoryWrite:
 
 
 async def night_step(c: Runtime, judge: StructuredModel) -> None:
-    await nightly(c.store, judge, c.rel, utc_now(), local_zone(), mode=c.position(switch.REREAD))
+    await nightly(
+        c.store, judge, c.rel, utc_now(), local_zone(), position=c.position(switch.REREAD)
+    )
 
 
 # The re-read is the only part of the night behind a switch: it is left out while that is off.

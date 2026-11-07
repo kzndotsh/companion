@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 def _mood(m: Moment) -> tuple[str | None, list[MoodEffect]]:
     """The mood line for the system block when the mood is on, and what this message adds to it.
-    The decision is logged in shadow mode too, so the replay and the live log can be compared."""
+    The decision is logged in shadow too, so the replay and the live log can be compared."""
     c, t = m.c, m.t
     zone = local_zone()
     severity = m.severity

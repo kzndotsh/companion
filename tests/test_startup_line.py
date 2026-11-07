@@ -75,7 +75,7 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
         ("COMPANION_SPLIT", "split", "off", "off"),
         ("COMPANION_LISTEN", "listen", "off", "off"),
         ("COMPANION_INITIATIVE", "initiative", "off", "off"),
-        ("COMPANION_INITIATIVE", "initiative", "on", "shadow"),  # no live mode yet
+        ("COMPANION_INITIATIVE", "initiative", "on", "shadow"),  # no live position yet
         ("COMPANION_MOOD", "mood", "shadow", "shadow"),
         ("COMPANION_MOOD", "mood", "yes", "live"),
         ("COMPANION_REDRAW", "redraw", "off", "off"),

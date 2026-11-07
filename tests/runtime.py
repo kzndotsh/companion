@@ -34,8 +34,8 @@ def make_runtime(
     store: Store, talker: Talker, prefix: Prefix, rel: RelationshipId, **changes: object
 ) -> Runtime:
     """`QUIET` as a runtime, with no daily cap and no embedding model, and `changes` on top: a
-    `Runtime` field, or a switch by its name in `core/switch.py` with its mode (`mood="on"`, or a
-    bool for one that is on or off). A name that is neither stops the test."""
+    `Runtime` field, or a switch by its name in `core/switch.py` with its position (`mood="on"`,
+    or a bool for one that is on or off). A name that is neither stops the test."""
     base = compose.runtime(QUIET, store, talker, prefix, rel)
     fields = {k: v for k, v in changes.items() if k not in _BY_NAME}
     positions: Mapping[Switch, Position] = {

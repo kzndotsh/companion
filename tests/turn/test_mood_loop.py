@@ -87,10 +87,12 @@ def store(tmp_path: Path) -> Store:
 
 
 async def _say(
-    store: Store, judge: Judge, mode: str, text: str = "lol ok", at: datetime = NOW
+    store: Store, judge: Judge, position: str, text: str = "lol ok", at: datetime = NOW
 ) -> Talker:
     talker = Talker()
-    await handle(make_runtime(store, talker, PREFIX, REL, judge=judge, mood=mode), text, "test", at)
+    await handle(
+        make_runtime(store, talker, PREFIX, REL, judge=judge, mood=position), text, "test", at
+    )
     return talker
 
 

@@ -55,8 +55,10 @@ def _said(store: Store, phase: str, minutes_ago: int, what: str = "dinner is com
     Recorder(store, REL, TurnId(f"t{minutes_ago}"), TraceId("x"), at).decide(KEY, detail)
 
 
-def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str, ...], list[str]]:
-    runtime = make_runtime(store, Talker(), PREFIX, REL, now=mode)
+def _note(
+    store: Store, position: str, frame: Frame = Frame.REAL
+) -> tuple[tuple[str, ...], list[str]]:
+    runtime = make_runtime(store, Talker(), PREFIX, REL, now=position)
     t = Turn(TurnId("t"), NOW, [], "lol out of all the things")
     offer = now_note(Moment(runtime, t, frame, CALM, Lookups(), False, []), None, Offered({}))
     for write in offer.after:

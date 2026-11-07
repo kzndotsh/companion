@@ -23,7 +23,7 @@ INITIATIVE_TICK_SECONDS = 900
 
 def initiative(c: Runtime, features: Sequence[Feature] = FEATURES) -> Job | None:
     """The timer that looks at open loops, times away and its own reasons to reach out (ADR 0021),
-    in shadow mode recording and sending nothing. Each feature's steps (`Feature.reaching`) run in
+    in shadow, recording and sending nothing. Each feature's steps (`Feature.reaching`) run in
     the order of `Kind` (`core/reachout.py`), the one place the precedence is stated."""
     if not c.on(sw.INITIATIVE):
         return None

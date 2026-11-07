@@ -53,7 +53,7 @@ class Reading:
     (`shadow`)."""
 
     level: CrisisLevel
-    mode: Position
+    position: Position
     light: bool = False  # a joke touched the subject and a read was unsure: one light check
     asked: bool = False  # a concern turn after one earlier in the stretch: stay, do not ask again
 
@@ -63,7 +63,7 @@ class Reading:
 
     @property
     def acts(self) -> bool:
-        return self.mode is Position.ON
+        return self.position is Position.ON
 
 
 # The decision keys of the turn's own crisis stage (`turn/crisis.py`), written by it and read by the

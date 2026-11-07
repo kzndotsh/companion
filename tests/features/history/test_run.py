@@ -189,10 +189,12 @@ class Words:
         return Embedded(tuple(unit(v) for v in pick), "fake", 0.0)
 
 
-async def _beside(store: Store, words: Words, mode: str, text: str = "my cat ignores me") -> Talker:
+async def _beside(
+    store: Store, words: Words, position: str, text: str = "my cat ignores me"
+) -> Talker:
     talker = Talker()
     runtime = make_runtime(
-        store, talker, PREFIX, REL, embedder=words, embed_model="fake", history=mode
+        store, talker, PREFIX, REL, embedder=words, embed_model="fake", history=position
     )
     t = Turn(TurnId("t-now"), T0.replace(hour=23), [], text)
     await stories_beside(Moment(runtime, t, Frame.REAL, CALM))

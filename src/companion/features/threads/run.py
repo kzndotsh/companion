@@ -1,7 +1,7 @@
 """Reading what they said for loops worth asking about, and the one tick that decides to ask.
 
 Extraction runs inside the memory pass's batch, after the beliefs, and costs one small call. The
-tick runs on a timer, reads the store, asks the pure gate in `gate.py`, and in shadow mode
+tick runs on a timer, reads the store, asks the pure gate in `gate.py`, and in shadow
 only records what it would have sent. Nothing here sends a message.
 """
 
@@ -211,7 +211,7 @@ async def tick(  # noqa: PLR0913, PLR0917
     held: Held | None,
 ) -> Verdict:
     """One look at the open loops, with the shared gate's hold (ADR 0023; None when nothing holds a
-    reach-out now). In shadow mode a verdict to send is recorded with a drafted message and the
+    reach-out now). In shadow a verdict to send is recorded with a drafted message and the
     loop is marked asked, but nothing is sent. A draft that failed or reads as needy is dropped,
     logged, and that loop is not drafted again (it can still come up when they write)."""
     dropped = {
