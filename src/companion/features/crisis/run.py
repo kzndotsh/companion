@@ -14,7 +14,14 @@ from collections.abc import Sequence
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from companion.core.crisis import PAUSE_KEY, PAUSE_REASON, RISK, CrisisLevel, Reading
+from companion.core.crisis import (
+    PAUSE_KEY,
+    PAUSE_REASON,
+    RISK,
+    CrisisLevel,
+    Reading,
+    cue_words,
+)
 from companion.core.episode import EPISODE_GAP
 from companion.core.extractor import StructuredModel
 from companion.core.types import Frame, Json, Speaker
@@ -25,7 +32,6 @@ from companion.features.crisis.logic import (
     Risk,
     combine,
     concern_note,
-    cue_words,
     cued,
     light_note,
     parse,
@@ -48,10 +54,6 @@ NAME = "crisis"
 TIMEOUT_SECONDS = 6.0  # each read; under the turn's 9 s look-up deadline
 LEVEL = "crisis: level"
 LIGHT_KEY = "crisis: checked lightly"
-SCENE = "crisis: scene"
-METHOD = "crisis: method check"
-LINE_SENT = "crisis: line sent"
-LINE_NOT_REPEATED = "crisis: line not repeated"
 LIGHT_EVERY = timedelta(days=1)
 
 
@@ -145,11 +147,6 @@ def crisis_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     if found.light:
         return Offer(tail=(light_note(),), after=(lambda: decide(c, t, LIGHT_KEY),), asks=True)
     return Offer()
-
-
-def reading_in(found: object) -> Reading | None:
-    """This turn's reading, from what the look-ups found."""
-    return found if isinstance(found, Reading) else None
 
 
 # Reads every turn for risk (ADR 0022), `COMPANION_CRISIS`: shadow by default, on or off.

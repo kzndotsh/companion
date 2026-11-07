@@ -40,12 +40,11 @@ from companion.core.types import (
     Utterance,
 )
 from companion.core.views import ViewState, card_views
-from companion.features.focus.run import FOCUS
-from companion.features.intimate.run import SCENE, intimate_lane
 from companion.features.upkeep.context.store import BeliefContexts
 from companion.kit.current import Heard, Turn, decide, mark
-from companion.kit.features import Lookups, Moment
+from companion.kit.features import CardLane, Lookups, Moment
 from companion.kit.record import Recorder
+from companion.registry import FEATURES
 from companion.turn.notes import Notes, notes_for
 
 if TYPE_CHECKING:
@@ -155,6 +154,21 @@ class Assembled:
     after: Sequence[Callable[[], None]] = ()  # the notes' writes, made once the turn is stored
 
 
+def _lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card) -> CardLane:
+    """What the features' lanes do to the card, joined: the first card sent instead wins, memories
+    left off and pinned text and writes add up."""
+    lanes = [
+        f.lane(c, t, looked, roleplay=roleplay, card=card) for f in FEATURES if f.lane is not None
+    ]
+    text = next((lane.text for lane in lanes if lane.text is not None), None)
+    return CardLane(
+        frozenset[BeliefId]().union(*(lane.hidden for lane in lanes)),
+        text,
+        "\n".join(lane.pinned for lane in lanes if lane.pinned),
+        tuple(w for lane in lanes for w in lane.after),
+    )
+
+
 def assemble(  # noqa: PLR0913
     c: Runtime,
     t: Turn,
@@ -175,8 +189,7 @@ def assemble(  # noqa: PLR0913
     sharing = heard is not None and heard[0].severity >= Severity.EVERYDAY
     labels = store.belief_labels(c.rel)
     support, contexts = store.last_support(c.rel), store.part(BeliefContexts).latest(c.rel)
-    found = looked.found.get(FOCUS.name)
-    focus = found if isinstance(found, Focus) else None
+    focus = looked.find(Focus)
 
     def card_of(beliefs: Sequence[Belief], shown_views: Sequence[Belief]) -> Card:
         return build_card(
@@ -200,7 +213,7 @@ def assemble(  # noqa: PLR0913
             {"closeness": {b: round(focus.closeness.get(b, 0.0), 3) for b in shown_ids}},
             reason=f"card: {len(shown_ids)} memories, after the rules the closest to the moment",
         )
-    lane = intimate_lane(c, t, looked.found.get(SCENE.name), roleplay=roleplay, card=card)
+    lane = _lane(c, t, looked, roleplay=roleplay, card=card)
     if lane.text is not None:  # a scene turn: the scene card, and no everyday memories
         card, shown = card_of([], ()), [lane.text] if lane.text else []
     else:

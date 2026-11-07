@@ -8,15 +8,15 @@ import asyncio
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from companion.core.crisis import cue_words
 from companion.core.extractor import StructuredModel
 from companion.core.turn.context import build_prompt
 from companion.core.turn.listening import PROMPT, SCHEMA, ListeningRead, parse
 from companion.core.turn.reply import Reaction
 from companion.core.types import Frame, Utterance
-from companion.features.crisis.logic import cue_words
-from companion.features.reactions.run import react_instead
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn
+from companion.turn.reactions import react_instead
 from companion.turn.values import Listened, stop
 
 if TYPE_CHECKING:

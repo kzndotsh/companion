@@ -11,11 +11,11 @@ from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
+from companion.core.turn.reactions import INSTEAD_THRESHOLD
 from companion.core.turn.reply import ReactAndReply, Reaction, ThenSend
 from companion.core.types import Json, RelationshipId, TurnId
-from companion.features.reactions import run as ack_loop
-from companion.features.reactions.logic import INSTEAD_THRESHOLD
 from companion.store.sqlite.store import Store
+from companion.turn import reactions as ack_loop
 from companion.turn.fast import handle
 from tests.runtime import make_runtime
 

@@ -2,17 +2,14 @@ from __future__ import annotations
 
 import pytest
 
-from companion.core.crisis import LINE, CrisisLevel
+from companion.core.crisis import LINE, CrisisLevel, cue_words, line_message, method_words
 from companion.core.types import Json, Severity
 from companion.features.crisis.logic import (
     Risk,
     combine,
     concern_note,
-    cue_words,
     cued,
     level_for,
-    line_message,
-    method_words,
     parse,
     strong_cue,
 )

@@ -121,11 +121,14 @@ together.
   use up a limit or mark a plan asked, which run only once the turn is stored. Add a note there, not in
   `assemble`. A feature's note is its `Feature.note`; a note that is not a feature's goes in `_LOCAL`. A note
   that asks them something says so on its offer (`Offer(asks=True)`, read by `asking` in
-  `kit/features.py`), so the question-run note and the calendar stay out that turn. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
+  `kit/features.py`), so the question-run note and the calendar stay out that turn. A note that reads an
+  earlier note by name declares it (`Feature.reads`, `_LOCAL_READS`), checked at load against `ORDER`. A reply that
+  came back empty runs none of the notes' writes. The look-ups a note reads (`look`) run side by side under one 9 s deadline; a late or
   failed one adds nothing that turn. A feature's shadow look-up is its `Feature.shadow`; `turn/beside.py` runs each beside the turn and logs a failure.
 - A turn runs in stages, one module each: `turn/listen.py` (a reaction instead of a reply, the listening
   read), `turn/route.py` (which talker), `turn/notes.py` `look` (the look-ups), `turn/assemble.py` (the
   request), `turn/crisis.py` (a risk read sets a scene aside and adds the fixed crisis-line message),
+  `turn/reactions.py` (the reaction judges, run by listen, talk and persist),
   `turn/talk.py` (the talker), `turn/gate.py` (the reply gate: the checks before a reply is sent, their order and redraws; the checks themselves are in `core/reply_gate.py`), `turn/beside.py` (shadow tasks) and
   `turn/persist.py` (their message kept once, the reply stored). `turn/fast.py` is only the driver (`handle(runtime, ...)`;
   the `Runtime` it runs with is plain data in `kit/runtime.py`, built only by `compose.runtime` from `Settings`, so it has no switch defaults of its own; tests get one from `tests/runtime.py`): change a stage in its module.
@@ -134,10 +137,13 @@ together.
   turn is stored (`after_turn`, with their message and the reply). It is one line in `FEATURES` (`companion/registry.py`); a note
   also goes by name in `ORDER` in `turn/notes.py`, which is checked when the module loads. No field on
   `Lookups`, no branch in `look`. Its look-up runs with the others under the deadline, and what it found
-  reaches its note as `Lookups.found[name]`. A feature that would bring something up on its own declares
-  a `mention` (its best candidate, `core/turn/mentions.py` `MentionCandidate`), not a note: one picker
-  (`turn/mention.py`) gates, ranks, counts one a day and logs it, and a new mentioning feature names its
-  decision key in `KEYS` there (checked when the module loads). `FEATURES` in `registry.py` is the list of what is
+  reaches its note as its argument; a stage that cannot name the feature asks `Lookups.find(Type)`. A
+  feature that changes the request's card declares a `lane` (`Feature.lane`, `kit/features.py`). A stage
+  never imports a feature: what the turn owns itself (reactions, the crisis path's scene rule, method
+  check and fixed message) lives in `turn/` and `core/`. A feature that would bring something up on its
+  own declares a `mention` (its best candidate, `core/turn/mentions.py` `MentionCandidate`), not a note:
+  one picker (`turn/mention.py`) gates, ranks, counts one a day and logs it, and a new mentioning feature
+  names its decision key in `MENTION_KEYS` in `core/turn/mentions.py` (checked when the picker loads). `FEATURES` in `registry.py` is the list of what is
   registered, in the order the after-steps run.
 - Each feature lives in one folder under `src/companion/features/`: `logic.py`
   (pure), `run.py` (effects and its `Feature`), `store.py` (its queries, as a class bound to the

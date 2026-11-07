@@ -16,6 +16,12 @@ import httpx
 import pytest
 
 from companion.core.turn.context import build_prompt
+from companion.core.turn.reactions import (
+    INSTEAD_SCHEMA,
+    INSTEAD_SYSTEM,
+    parse_instead,
+    reaction_instead,
+)
 from companion.core.types import (
     Frame,
     RelationshipId,
@@ -23,12 +29,6 @@ from companion.core.types import (
     TurnId,
     Utterance,
     UtteranceId,
-)
-from companion.features.reactions.logic import (
-    INSTEAD_SCHEMA,
-    INSTEAD_SYSTEM,
-    parse_instead,
-    reaction_instead,
 )
 from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor

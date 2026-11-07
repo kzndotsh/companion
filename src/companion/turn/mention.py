@@ -11,23 +11,19 @@ from typing import TYPE_CHECKING
 
 from companion.core.turn.mentions import (
     ASKED_HOW_THEY_ARE,
-    MET_PROMPT,
-    MET_SCHEMA,
+    MENTION_KEYS,
+    MET,
     PACE,
     PACE_LOOKBACK,
     WINDOW,
     MentionCandidate,
     Rank,
     choose,
-    met_prompt,
     pace,
     pace_holds,
     parse_met,
 )
-from companion.core.types import Json, Speaker, Utterance
-from companion.features.calendar.logic import OFFERED as CALENDAR_OFFERED
-from companion.features.threads.run import LOOP_OFFERED
-from companion.kit.ask import Judge, ask
+from companion.core.types import Json
 from companion.kit.current import Turn, decide
 from companion.kit.features import Moment, Offer, Offered, asking, has_room
 from companion.registry import FEATURES
@@ -35,18 +31,15 @@ from companion.registry import FEATURES
 if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
 
-MET = "threads: how they met it"
 PACE_SOONER = "threads: the learned pace would bring one up now (shadow)"
-MET_JUDGE = Judge("thread-met", MET_PROMPT, MET_SCHEMA, parse_met, timeout=8.0, unread="no label")
-# The decision key each feature's mentions are logged under, by feature name. Checked when the
-# module loads, so a feature that mentions things cannot be left out of the day's count.
-KEYS = {"loop": LOOP_OFFERED, "calendar": CALENDAR_OFFERED}
+# Every feature that mentions things has its decision key in `MENTION_KEYS` (core/turn/mentions.py),
+# checked when the module loads, so none can be left out of the day's count.
 
 
 def _check_keys() -> None:
     mentions = {f.name for f in FEATURES if f.mention is not None}
-    if mentions != set(KEYS):
-        msg = f"mentions: features {sorted(mentions)} but keys for {sorted(KEYS)}"
+    if mentions != set(MENTION_KEYS):
+        msg = f"mentions: features {sorted(mentions)} but keys for {sorted(MENTION_KEYS)}"
         raise RuntimeError(msg)
 
 
@@ -57,7 +50,7 @@ def _offers(c: Runtime, since: datetime) -> list[tuple[datetime, Rank]]:
     """What was brought up since a time, with its rank; one from before ranks were logged counts as
     the lowest, so it holds back only a lead-up."""
     out: list[tuple[datetime, Rank]] = []
-    for key in KEYS.values():
+    for key in MENTION_KEYS.values():
         for d in c.store.decisions_with_key(c.rel, key, since):
             rank = (d.detail or {}).get("rank")
             out.append((d.at, Rank(rank) if isinstance(rank, int) else Rank.LEAD_UP))
@@ -127,34 +120,3 @@ def _offer(c: Runtime, t: Turn, pick: MentionCandidate, paced: dict[str, Json]) 
 
     line = (pick.line,)
     return Offer(() if pick.tail else line, (stored,), tail=line if pick.tail else (), asks=True)
-
-
-async def read_met(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
-    """Once the turn is stored: when its last message brought something up (a mention or the
-    how-are-you question), read how their message met it, once, for the learned pace."""
-    del said, sent
-    last = next((u for u in reversed(t.prior) if u.speaker is Speaker.COMPANION), None)
-    if c.judge is None or last is None:
-        return
-    keys = (*KEYS.values(), ASKED_HOW_THEY_ARE)
-    offered = next(
-        (
-            d
-            for d in c.store.decisions_for_turn(c.rel, last.turn_id)
-            if any(d.has_key(k) for k in keys)
-        ),
-        None,
-    )
-    if offered is None or c.store.decided_since(c.rel, MET, offered.at):
-        return
-    found = offered.detail or {}
-    about = str(found.get("about") or found.get("claim") or "how they are after a heavy talk")
-    got = await ask(c.judge, MET_JUDGE, met_prompt(about, last.text, t.text))
-    met = got.value.value if got is not None else None
-    detail: dict[str, Json] = {
-        "about": about,
-        "loop_id": found.get("loop_id"),
-        "met": met,
-        "prompt": MET_PROMPT.ref,
-    }
-    decide(c, t, MET, detail, reason=f"{MET}: {met or 'not read'}, about {about}")

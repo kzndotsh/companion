@@ -21,7 +21,7 @@ from companion.core.types import (
 )
 from companion.features.calendar.logic import DAY_NOTE, OFFERED, THEIRS_NOTE, US_NOTE
 from companion.kit.current import Turn
-from companion.kit.features import Lookups, Moment, Offer
+from companion.kit.features import Lookups, Moment, Offer, Offered
 from companion.store.sqlite.store import Store
 from companion.turn.fast import handle
 from companion.turn.mention import mention_note
@@ -31,7 +31,7 @@ from tests.turn.test_mood_loop import PREFIX, REL, Judge, Talker
 
 HALLOWEEN = datetime(2026, 10, 31, 16, 0, tzinfo=UTC)  # noon in New York
 NOTE = DAY_NOTE.render(name="Halloween")
-QUIET = {"name": Offer(), "how-are-you": Offer()}
+QUIET = Offered({"name": Offer(), "how-are-you": Offer()})
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +50,7 @@ def _tail(
     *,
     heard: object = CALM,
     frame: Frame = Frame.REAL,
-    so_far: dict[str, Offer] | None = None,
+    so_far: Offered | None = None,
     on: bool = True,
 ) -> Offer:
     runtime = make_runtime(store, Talker(), PREFIX, REL, calendar=on)
@@ -67,7 +67,9 @@ def test_on_a_casual_turn_the_day_goes_after_the_history_and_nowhere_else(store:
     assert not _tail(store, HALLOWEEN, heard=HEAVY).tail
     assert not _tail(store, HALLOWEEN, frame=Frame.PLAY).tail
     assert not _tail(store, HALLOWEEN, on=False).tail
-    asked = QUIET | {"game": Offer(tail=("[ask the next one]",), asks=True)}
+    asked = Offered(
+        {"name": Offer(), "how-are-you": Offer(), "game": Offer(tail=("[ask next]",), asks=True)}
+    )
     assert not _tail(store, HALLOWEEN, so_far=asked).tail
     assert not _tail(store, HALLOWEEN - timedelta(days=5)).tail  # an ordinary day
 

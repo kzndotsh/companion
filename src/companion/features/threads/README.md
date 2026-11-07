@@ -41,8 +41,8 @@ A kept loop is stored with the exact quote and its source message, and logged as
 
 The note is written from the loop's kind (`notes/loop-*`) and carries only the claim. Once the reply is stored, the loop is marked asked with the reason `open loop: offered as a note when they wrote`, and the same text is the decision key. A loop offered as a note is no longer open, so it is never also a reach-out.
 
-**The learned pace (shadow, ADR 0023).** It lives with the picker (`turn/mention.py`, pure parts in
-`core/turn/mentions.py`) and covers every source: plans, the calendar's days and the check-in after a
+**The learned pace (shadow, ADR 0023).** The picker is `turn/mention.py` (pure parts in
+`core/turn/mentions.py`) and the read of how they met it is this feature's `met.py`. It covers every source: plans, the calendar's days and the check-in after a
 heavy talk. The owner chose no fixed number a day: how often it brings something up is learned from how
 they meet it. Once a turn is stored, when the companion's last message brought something up, their
 message is read once for how it met it (`system/thread-met`):
@@ -70,6 +70,7 @@ A hold is logged once per loop and per kind of hold as `held, would otherwise re
 | `logic.py` | pure: which plans become loops, their kinds and times, the labels for settling, which loop becomes the note, the note text (`MAX_OFFERS`; the sensitivity cutoff is `core/sensitivity.py` `GUARDED_AT`) |
 | `gate.py` | pure: which due loop to reach out about and which have expired, held with the shared gate's reason (`evaluate`) |
 | `run.py` | effects: reading new messages for loops, the tick, the drafter, the loop's candidate for the picker (`loop_candidate`, `OPENLOOPS`) |
+| `met.py` | effects: how they met what was brought up (`read_met`, started beside the turn by `read_met_beside`, `OPENLOOPS.after_turn`), for the learned pace |
 | `store.py` | its queries as `Threads` (`Store.part(Threads)`; the tables are in `store/sqlite/migrations/0012_open_loops.sql`). The reach-outs it writes are core storage (`store/sqlite/reach_outs.py`, `Store.add_reach_out`), because every kind of reach-out is read together |
 
 ## Prompts

@@ -48,7 +48,7 @@ class Judge:
         return Extraction(data=self.labels, model="j", cost_usd=0.0, latency_ms=1)
 
 
-def _labels(severity: int, stance: str = "listening", *, vague: bool = False) -> Json:
+def listening_labels(severity: int, stance: str = "listening", *, vague: bool = False) -> Json:
     return {
         "severity": severity,
         "stance": stance,
@@ -75,7 +75,7 @@ async def _ask(store: Store, judge: Judge, text: str = "my boss ignored me again
 async def test_a_listening_note_reaches_the_system_block_and_never_the_message(
     store: Store,
 ) -> None:
-    talker = await _ask(store, Judge(_labels(1)))
+    talker = await _ask(store, Judge(listening_labels(1)))
     request = talker.seen[0]
     assert "They are sharing or venting" in request.card
     assert "They are sharing or venting" not in request.messages[-1].content
@@ -83,7 +83,7 @@ async def test_a_listening_note_reaches_the_system_block_and_never_the_message(
 
 
 async def test_the_labels_are_logged_as_a_decision_with_the_scorer(store: Store) -> None:
-    await _ask(store, Judge(_labels(2, vague=True)))
+    await _ask(store, Judge(listening_labels(2, vague=True)))
     [turn] = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 5)}
     reasons = [d.reason for d in store.decisions_for_turn(REL, turn)]
     assert any(r == "listening note added: severity 2, listening, vague" for r in reasons)
@@ -99,7 +99,10 @@ async def test_the_labels_are_logged_as_a_decision_with_the_scorer(store: Store)
     assert detail["scorer"] == "j"
 
 
-@pytest.mark.parametrize("labels", [_labels(3), _labels(1, "inviting"), _labels(0, "other"), None])
+@pytest.mark.parametrize(
+    "labels",
+    [listening_labels(3), listening_labels(1, "inviting"), listening_labels(0, "other"), None],
+)
 async def test_no_note_for_acute_inviting_other_or_an_unreadable_answer(
     store: Store, labels: Json
 ) -> None:
@@ -120,14 +123,16 @@ async def test_no_judge_at_all_changes_nothing(store: Store) -> None:
 
 
 async def test_acute_is_logged_as_having_no_crisis_path(store: Store) -> None:
-    await _ask(store, Judge(_labels(3)))
+    await _ask(store, Judge(listening_labels(3)))
     [turn] = {u.turn_id for u in store.history_before(REL, NOW + timedelta(days=1), 5)}
     assert any("left to the crisis path" in d.reason for d in store.decisions_for_turn(REL, turn))
 
 
 async def test_listen_off_never_asks_the_judge_and_adds_no_note(store: Store) -> None:
     talker = Talker()
-    runtime = make_runtime(store, talker, PREFIX, REL, judge=Judge(_labels(2)), listen=False)
+    runtime = make_runtime(
+        store, talker, PREFIX, REL, judge=Judge(listening_labels(2)), listen=False
+    )
     await handle(runtime, "rough week", "test", NOW)
     assert "[They are" not in talker.seen[0].card
 
@@ -139,7 +144,7 @@ SHORT_NOTE = "Their message was short"
 async def test_a_serious_or_acute_message_gets_no_length_cap(
     store: Store, severity: int, *, capped: bool
 ) -> None:
-    talker = await _ask(store, Judge(_labels(severity)), text="my mom is in the hospital")
+    talker = await _ask(store, Judge(listening_labels(severity)), text="my mom is in the hospital")
     assert (SHORT_NOTE in talker.seen[0].card) is capped
     assert ("under about 35 words" in talker.seen[0].card) is (severity == 2)
 
@@ -158,7 +163,7 @@ class AckAndListen:
         if "kind" in properties and "emoji" in properties:
             data: Json = {"kind": "ack", "confidence": 0.9, "emoji": "👍"}
         elif "severity" in properties:
-            data = _labels(self.severities.pop(0))
+            data = listening_labels(self.severities.pop(0))
         else:
             data = None
         return Extraction(data=data, model="j", cost_usd=0.0, latency_ms=1)

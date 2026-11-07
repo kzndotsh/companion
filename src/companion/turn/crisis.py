@@ -10,19 +10,19 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from companion.core.crisis import CrisisLevel, Reading
-from companion.core.talker import Reply
-from companion.core.turn.reply import ReactAndReply, ThenSend
-from companion.core.types import Frame, Speaker, Utterance, UtteranceId
-from companion.features.crisis.logic import line_message, method_words
-from companion.features.crisis.run import (
+from companion.core.crisis import (
     LINE_NOT_REPEATED,
     LINE_SENT,
     METHOD,
-    NAME,
     SCENE,
-    reading_in,
+    CrisisLevel,
+    Reading,
+    line_message,
+    method_words,
 )
+from companion.core.talker import Reply
+from companion.core.turn.reply import ReactAndReply, ThenSend
+from companion.core.types import Frame, Speaker, Utterance, UtteranceId
 from companion.kit.current import Turn, decide, mark
 from companion.kit.features import Lookups
 from companion.turn.values import Routed
@@ -35,7 +35,7 @@ LINE_EVERY = timedelta(hours=1)  # the same fixed message is not sent twice insi
 
 
 def reading_of(looked: Lookups) -> Reading | None:
-    return reading_in(looked.found.get(NAME))
+    return looked.find(Reading)
 
 
 def off_scene(c: Runtime, t: Turn, routed: Routed, reading: Reading | None) -> Routed:

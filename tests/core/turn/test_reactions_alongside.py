@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from companion.features.reactions.logic import (
+from companion.core.turn.reactions import (
     MIN_CONFIDENCE,
     MIN_GAP,
     ToneRead,

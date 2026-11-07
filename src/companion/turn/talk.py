@@ -13,11 +13,11 @@ from companion.core.frames import (
 )
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply, Talker
-from companion.features.reactions.logic import ToneRead
-from companion.features.reactions.run import judge_alongside
+from companion.core.turn.reactions import ToneRead
 from companion.kit.current import Turn, mark
 from companion.turn.frames import judge_frame
 from companion.turn.gate import checked, mark_reply
+from companion.turn.reactions import judge_alongside
 from companion.turn.values import Answered, Routed, stop
 
 if TYPE_CHECKING:

@@ -226,7 +226,7 @@ async def relevant_for_turn(
 def relevant_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     del so_far
     picked = cast("tuple[tuple[BeliefId, str], ...]", found or ())
-    recalled = cast("Recalled | None", m.looked.found.get("recall"))
+    recalled = m.looked.find(Recalled)
     shown = [b.id for b in recalled.picked] if recalled is not None else []
     picks = extras(picked, on_card=m.on_card, recalled=shown)
     if not picks:

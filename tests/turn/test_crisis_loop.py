@@ -9,7 +9,14 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.crisis import LINE, PAUSE_KEY, crisis_paused
+from companion.core.crisis import (
+    LINE,
+    LINE_SENT,
+    METHOD,
+    PAUSE_KEY,
+    SCENE,
+    crisis_paused,
+)
 from companion.core.extractor import Extraction
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
@@ -25,7 +32,7 @@ from companion.core.types import (
     UtteranceId,
 )
 from companion.features.crisis.logic import concern_note, light_note, stay_note
-from companion.features.crisis.run import LEVEL, LIGHT_KEY, LINE_SENT, METHOD, SCENE
+from companion.features.crisis.run import LEVEL, LIGHT_KEY
 from companion.kit.runtime import Runtime
 from companion.prompts import get
 from companion.store.sqlite.store import Store

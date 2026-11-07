@@ -76,7 +76,7 @@ from companion.features.intimate.store import By, IntimateMemory
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide
 from companion.kit.embed import embed_within
-from companion.kit.features import Feature
+from companion.kit.features import CardLane, Feature, Lookups
 from companion.kit.reads import read_times
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
@@ -382,16 +382,6 @@ async def nearest_for_turn(
     return Scored(found, {e.id: dot(query, vectors[e.id]) for e in found if e.id in vectors})
 
 
-@dataclass(frozen=True, slots=True)
-class IntimateLane:
-    """What the scene lane does to this turn's request."""
-
-    hidden: frozenset[BeliefId] = frozenset()  # left off the everyday card
-    text: str | None = None  # sent instead of the everyday card
-    pinned: str = ""  # their limits and the basics, sent after the history
-    after: tuple[Callable[[], None], ...] = ()  # the offer's log, once the turn is stored
-
-
 def _may_offer(c: Runtime, t: Turn) -> bool:
     """Only when this turn's brush-off read answered, and answered no."""
     return any(
@@ -429,18 +419,11 @@ def _card_detail(card: RoleplayCard, text: str, *, sent: bool, scored: bool) -> 
     }
 
 
-def intimate_lane(
-    c: Runtime,
-    t: Turn,
-    found: object,
-    *,
-    roleplay: bool,
-    card: Card,
-) -> IntimateLane:
+def intimate_lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card) -> CardLane:
     """On a turn the roleplay talker answers: the scene card, logged, and sent when on. On any other
     turn: the intimate memories the everyday card holds, logged, and left off when on."""
     if c.intimate_memory == "off":
-        return IntimateLane()
+        return CardLane()
     live = c.intimate_memory == "on"
     if not roleplay:
         hidden = c.store.part(IntimateMemory).intimate(c.rel)
@@ -453,8 +436,8 @@ def intimate_lane(
                 {"beliefs": [str(b) for b in sorted(on_card)], "sent": not live},
                 reason=f"{LEFT_OFF}: {len(on_card)}" + ("" if live else " (shadow: still sent)"),
             )
-        return IntimateLane(hidden=hidden if live else frozenset())
-    scored = found if isinstance(found, Scored) else None
+        return CardLane(hidden=hidden if live else frozenset())
+    scored = looked.find(Scored)
     may = _may_offer(c, t)
     made = roleplay_card(
         scored.entries if scored is not None else entries(c.store, c.rel),
@@ -483,10 +466,10 @@ def intimate_lane(
     )
     offer = made.offer
     if not live or offer is None:
-        return IntimateLane(text=text if live else None, pinned=pinned if live else "")
-    return IntimateLane(
+        return CardLane(text=text if live else None, pinned=pinned if live else "")
+    return CardLane(
         text=text, pinned=pinned, after=(lambda: decide(c, t, OFFERED, {"entry": offer.id}),)
     )
 
 
-SCENE = Feature("scene", look=nearest_for_turn)
+SCENE = Feature("scene", look=nearest_for_turn, lane=intimate_lane)

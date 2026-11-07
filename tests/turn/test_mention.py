@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from companion.core.turn.mentions import Rank
+from companion.core.turn.address import KEY as ADDRESS_KEY
+from companion.core.turn.mentions import MET, Rank
 from companion.core.types import (
     Frame,
     Sensitivity,
@@ -19,16 +20,20 @@ from companion.core.types import (
 )
 from companion.features.calendar.logic import OFFERED
 from companion.features.threads.logic import Thread, ThreadKind
+from companion.features.threads.met import read_met
 from companion.features.threads.run import LOOP_OFFERED
 from companion.features.threads.store import Threads
 from companion.kit.current import Turn
 from companion.kit.features import Lookups, Moment, Offer
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
-from companion.turn.mention import MET, mention_note, read_met
+from companion.turn.fast import handle
+from companion.turn.mention import mention_note
 from tests.features.calendar.test_run import CALM, HALLOWEEN, NOTE, QUIET, remember
 from tests.features.threads.test_note import Meets
 from tests.runtime import make_runtime
+from tests.turn.test_fast import FakeTalker
+from tests.turn.test_listen_loop import Judge, listening_labels
 from tests.turn.test_mood_loop import PREFIX, REL, Talker
 
 BIRTHDAY = "The user's birthday is October 31."
@@ -121,3 +126,18 @@ async def test_how_they_met_a_day_is_read_like_a_plan(store: Store) -> None:
     await read_met(runtime, t, reply, None)
     met = store.decisions_with_key(REL, MET)
     assert [(d.detail or {}).get("about") for d in met] == ["Halloween"]
+
+
+async def test_a_mention_is_logged_only_once_a_reply_is_stored(store: Store) -> None:
+    remember(store, "b1", BIRTHDAY)
+    remember(store, "b2", "The user's name is Sam.")  # the basics are known, so no ask takes
+    store.set_setting(REL, ADDRESS_KEY, "they/them", HALLOWEEN)  # the turn
+    judge = Judge(listening_labels(0))  # an ordinary moment, so a day may be brought up
+    runtime = make_runtime(store, FakeTalker(""), PREFIX, REL, calendar=True, judge=judge)
+    assert await handle(runtime, "hey", "test", HALLOWEEN) == ""
+    assert _brought_up(store) == 0  # nothing was sent, so the day was not used up
+    runtime = make_runtime(
+        store, FakeTalker("happy halloween"), PREFIX, REL, calendar=True, judge=judge
+    )
+    await handle(runtime, "hey again", "test", HALLOWEEN + timedelta(minutes=5))
+    assert _brought_up(store) == 1

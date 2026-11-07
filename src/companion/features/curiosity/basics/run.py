@@ -134,4 +134,4 @@ async def capture(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> Non
 
 
 # What to call them and their pronouns: asked for on a casual turn until known, answers kept.
-BASICS = Feature("name", note=basics_offer, after_turn=capture)
+BASICS = Feature("name", note=basics_offer, after_turn=capture, reads=("how-are-you",))

@@ -22,7 +22,7 @@ from companion.core.types import (
 from companion.features.curiosity.basics.logic import ASK_NAME, ASK_PRONOUNS, ASKED, ASKED_PRONOUNS
 from companion.features.curiosity.basics.run import basics_offer, capture_pronouns
 from companion.kit.current import Turn
-from companion.kit.features import Lookups, Moment, Offer
+from companion.kit.features import Lookups, Moment, Offer, Offered
 from companion.store.sqlite.store import Store
 from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
@@ -58,7 +58,7 @@ def _note(
     t = Turn(TurnId("t"), NOW, [], "just got home")
     heard = (ListeningRead(severity, "other", vague=False), "j", "")
     m = Moment(runtime, t, Frame.REAL, heard, Lookups(), False, beliefs)
-    so_far = {"how-are-you": Offer(("[how are you]",) if asked_how else ())}
+    so_far = Offered({"how-are-you": Offer(("[how are you]",) if asked_how else ())})
     offer = basics_offer(m, None, so_far)
     for write in offer.after:
         write()

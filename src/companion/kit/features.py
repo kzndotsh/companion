@@ -2,13 +2,14 @@
 
 A feature lists only the parts it has. Its look-up runs with the others before the reply, side by
 side under the turn's deadline; its note reads what the look-up found and joins the notes, in the
-order of `ORDER` in `turn/notes.py`. Adding a feature is its module plus one line there: no
-field on `Lookups`, no branch in `look`, no entry written by hand in `SOURCES`.
+order of `ORDER` in `turn/notes.py`. Adding a feature is its module plus one line in `FEATURES`
+(and a name in `ORDER` for a note): no field on `Lookups`, no branch in `look`, no entry written by
+hand in `SOURCES`. The turn reaches a feature only through the parts it declares here.
 """
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Collection, Coroutine, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Protocol
 
@@ -37,6 +38,18 @@ class Offer:
     asks: bool = False  # its lines ask them something, so the question-run note stays out
 
 
+@dataclass(frozen=True, slots=True)
+class CardLane:
+    """What a feature does to this turn's request on top of the everyday card: memories left off it,
+    a card sent instead of it, text pinned after the history, and the writes made once the turn is
+    stored."""
+
+    hidden: frozenset[BeliefId] = frozenset()  # left off the everyday card
+    text: str | None = None  # sent instead of the everyday card ("" sends no card at all)
+    pinned: str = ""  # sent after the history, where it weighs most
+    after: tuple[Callable[[], None], ...] = ()
+
+
 type Look = Callable[[Runtime, Turn, Frame, Heard | None], Awaitable[object]]
 # Once the turn is stored: their message as kept, and the reply sent (None when it only reacted).
 # A step that should not hold up the reply starts its own task and returns.
@@ -44,7 +57,14 @@ type AfterTurn = Callable[[Runtime, Turn, Utterance, str | None], Awaitable[None
 # A look-up in shadow: run beside the turn once the reply is out, with the card it was sent; it logs
 # what it would have done and never changes the reply. A failure is logged by `turn/beside.py`.
 type Shadow = Callable[[Runtime, Turn, Frame, Heard | None, Card], Coroutine[object, object, None]]
-Offered = Mapping[str, Offer]  # what the notes before this one offered, by name
+
+
+# A feature's part in the request's card, given the card built so far (`turn/assemble.py`).
+class Lane(Protocol):
+    def __call__(
+        self, c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card
+    ) -> CardLane: ...
+
 
 # A note gets what its look-up found (None when it found nothing) and what earlier notes offered.
 type Note = Callable[[Moment, object, Offered], Offer]
@@ -53,15 +73,45 @@ type Note = Callable[[Moment, object, Offered], Offer]
 type Mention = Callable[[Moment, object], MentionCandidate | None]
 
 
+class Offered(Mapping[str, Offer]):
+    """What the notes before this one offered. A note reads an earlier one by name only if it
+    declared it in `reads` (`turn/notes.py` checks at load that each comes earlier in `ORDER`); an
+    undeclared name raises. What any earlier note asks is read through `asking`."""
+
+    def __init__(self, offers: Mapping[str, Offer], reads: Collection[str] | None = None) -> None:
+        self.asking = any(o.asks and (o.lines or o.tail) for o in offers.values())
+        names = offers.keys() if reads is None else reads
+        self._named = {n: offers[n] for n in names}
+
+    asking: bool  # whether any earlier note asks them something
+
+    def __getitem__(self, name: str) -> Offer:
+        try:
+            return self._named[name]
+        except KeyError:
+            msg = f"a note read {name!r} without declaring it in `reads`"
+            raise KeyError(msg) from None
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._named)
+
+    def __len__(self) -> int:
+        return len(self._named)
+
+
+# The earlier notes `has_room` reads, for a note to declare.
+ROOM_READS = ("name", "how-are-you")
+
+
 def has_room(m: Moment, so_far: Offered) -> bool:
     """A casual turn with no name asked, no how-are-you question and nothing held: room for a plan
-    or a move on."""
+    or a move on. Reads `ROOM_READS`."""
     return m.casual and not so_far["name"].lines and not so_far["how-are-you"].lines and not m.held
 
 
 def asking(so_far: Offered) -> bool:
     """Whether a note offered so far asks them something this turn (its offer says `asks`)."""
-    return any(o.asks and (o.lines or o.tail) for o in so_far.values())
+    return so_far.asking
 
 
 class Spent(Protocol):
@@ -83,6 +133,8 @@ class Feature:
     shadow: Shadow | None = None
     after_turn: AfterTurn | None = None
     mention: Mention | None = None  # what it would bring up on its own this turn (ADR 0023)
+    lane: Lane | None = None  # what it does to the request's card (the scene card, memories hidden)
+    reads: tuple[str, ...] = ()  # earlier notes its note reads by name; they must come before it
     # Its look-up gets the route's read in a scene, where the listening judge does not run.
     scene_read: bool = False
 
@@ -92,6 +144,15 @@ class Lookups:
     """What a reply waits for besides the judges: what each feature's look-up found."""
 
     found: Mapping[str, object] = field(default_factory=dict[str, object])  # by feature name
+
+    def find[T](self, kind: type[T]) -> T | None:
+        """What the look-ups found that is a `kind`, for a consumer that cannot name the feature
+        that found it. A type no look-up returns gives None; one two look-ups return is an error."""
+        hits = [v for v in self.found.values() if isinstance(v, kind)]
+        if len(hits) > 1:
+            msg = f"{len(hits)} look-ups found a {kind.__name__}; ask by feature"
+            raise LookupError(msg)
+        return hits[0] if hits else None
 
 
 @dataclass(frozen=True, slots=True)

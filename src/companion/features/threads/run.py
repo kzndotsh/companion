@@ -27,7 +27,7 @@ from companion.core.reachout import (
     draft_text,
     parse_draft,
 )
-from companion.core.turn.mentions import MentionCandidate, Rank
+from companion.core.turn.mentions import LOOP_OFFERED, MentionCandidate, Rank
 from companion.core.types import (
     DecisionKind,
     Json,
@@ -56,6 +56,7 @@ from companion.features.threads.logic import (
     to_loop,
     to_resolution,
 )
+from companion.features.threads.met import read_met_beside
 from companion.features.threads.store import Threads
 from companion.kit.ask import Judge, ask, whole_answer
 from companion.kit.features import Feature
@@ -378,7 +379,6 @@ def _add(a: LoopCounts, b: LoopCounts) -> LoopCounts:
     )
 
 
-LOOP_OFFERED = "open loop: offered as a note when they wrote"
 _RANK = {
     ThreadKind.CELEBRATE: Rank.THEIRS,
     ThreadKind.ENCOURAGE: Rank.FACING,
@@ -419,4 +419,4 @@ def loop_candidate(m: Moment, found: object) -> MentionCandidate | None:
 
 # Threads (ADR 0023): today plans of theirs, read in the open-loop batch; a due one is a candidate
 # for the one thing brought up when they write.
-OPENLOOPS = Feature("loop", mention=loop_candidate)
+OPENLOOPS = Feature("loop", mention=loop_candidate, after_turn=read_met_beside)

@@ -7,9 +7,7 @@ from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
 from companion.core.turn.context import build_prompt, inputs_hash
-from companion.core.turn.reply import Reaction
-from companion.core.types import HEAVY_AT, Speaker, Utterance, severity_from
-from companion.features.reactions.logic import (
+from companion.core.turn.reactions import (
     ALONGSIDE_PROMPT,
     ALONGSIDE_SCHEMA,
     INSTEAD_PROMPT,
@@ -25,6 +23,8 @@ from companion.features.reactions.logic import (
     render_reason,
     schema_hash,
 )
+from companion.core.turn.reply import Reaction
+from companion.core.types import HEAVY_AT, Speaker, Utterance, severity_from
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Turn, decide, mark
 from companion.store.sqlite.decisions import REACTED

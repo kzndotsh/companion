@@ -7,7 +7,7 @@ from companion.core.types import Frame, Severity, TurnId
 from companion.features.diction.marks.logic import MARKS
 from companion.features.diction.marks.run import mark_offer
 from companion.kit.current import Heard, Turn
-from companion.kit.features import Lookups, Moment
+from companion.kit.features import Lookups, Moment, Offered
 from companion.store.sqlite.store import Store
 from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
@@ -27,7 +27,9 @@ HEAVY: Heard = (
 def _offer(tmp_path: Path, text: str, heard: Heard, *, marks: bool = True) -> tuple[str, ...]:
     runtime = make_runtime(Store(tmp_path / "r.sqlite"), Talker(), PREFIX, REL, own_marks=marks)
     t = Turn(TurnId("t1"), NOW, [], text)
-    return mark_offer(Moment(runtime, t, Frame.REAL, heard, Lookups(), False, []), None, {}).tail
+    return mark_offer(
+        Moment(runtime, t, Frame.REAL, heard, Lookups(), False, []), None, Offered({})
+    ).tail
 
 
 def test_their_mark_brings_one_of_its_own_after_the_history_never_theirs(tmp_path: Path) -> None:

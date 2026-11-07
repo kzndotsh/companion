@@ -137,6 +137,17 @@ ignore_imports = [
 ]
 
 [[tool.importlinter.contracts]]
+id = "turn-reaches-features-by-parts"
+name = "a turn stage reaches a feature only through the parts it declares in kit/features.py"
+type = "forbidden"
+source_modules = ["companion.turn"]
+forbidden_modules = ["companion.features"]
+# The card shows what a feature's batch wrote about each memory; the stage reads that table through
+# its store class, which no `Feature` part carries.
+ignore_imports = ["companion.turn.assemble -> companion.features.upkeep.context.store"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
 id = "direction"
 name = "imports point down: turn and memory, the registry, features, kit, core, lib"
 type = "layers"

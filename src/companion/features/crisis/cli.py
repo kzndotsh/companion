@@ -12,11 +12,11 @@ from datetime import timedelta
 from pathlib import Path
 
 from companion.core.clock import utc_now
-from companion.core.crisis import RISK, CrisisLevel
+from companion.core.crisis import LINE_SENT, RISK, CrisisLevel
 from companion.core.extractor import StructuredModel
 from companion.core.types import RelationshipId, Speaker
 from companion.features.crisis.logic import Outcome, combine
-from companion.features.crisis.run import LEVEL, LINE_SENT, read_risk
+from companion.features.crisis.run import LEVEL, read_risk
 from companion.lib.vote import READS
 from companion.store.sqlite.store import Store
 

@@ -4,9 +4,7 @@ from collections.abc import Callable
 
 import pytest
 
-from companion.core.turn.reply import Reaction
-from companion.core.types import Json, Speaker, Utterance
-from companion.features.reactions.logic import (
+from companion.core.turn.reactions import (
     INSTEAD_THRESHOLD,
     InsteadRead,
     is_candidate,
@@ -14,6 +12,8 @@ from companion.features.reactions.logic import (
     reaction_instead,
     render_reason,
 )
+from companion.core.turn.reply import Reaction
+from companion.core.types import Json, Speaker, Utterance
 
 
 def _hist(utterance: Callable[..., Utterance], *pairs: tuple[Speaker, str]) -> list[Utterance]:

@@ -22,7 +22,7 @@ from companion.features.flow.topics.logic import SPENT as TOPIC_SPENT
 from companion.features.flow.topics.logic import likely as topic_likely
 from companion.kit.ask import Judge, ask
 from companion.kit.current import Heard, Turn, decide, is_casual, mark
-from companion.kit.features import Feature, Offer, Offered, has_room
+from companion.kit.features import ROOM_READS, Feature, Offer, Offered, has_room
 
 if TYPE_CHECKING:
     from companion.kit.features import Moment
@@ -83,4 +83,4 @@ def topic_offer(m: Moment, found: object, so_far: Offered) -> Offer:
     )
 
 
-TOPICS = Feature("topic", look=spent_for_turn, note=topic_offer)
+TOPICS = Feature("topic", look=spent_for_turn, note=topic_offer, reads=(*ROOM_READS, "mention"))

@@ -22,6 +22,7 @@ import holidays
 
 from companion.core.dates import month_day
 from companion.core.sensitivity import GUARDED_AT
+from companion.core.turn.mentions import CALENDAR_OFFERED
 from companion.core.types import Sensitivity
 from companion.prompts import get
 
@@ -30,7 +31,7 @@ DAY_NOTE = get("notes/occasion-day")
 SOON_NOTE = get("notes/occasion-soon")
 US_NOTE = get("notes/occasion-us")
 THEIRS_NOTE = get("notes/occasion-theirs")
-OFFERED = "calendar: offered"
+OFFERED = CALENDAR_OFFERED
 LOOKBACK = timedelta(days=3)  # how far back an offer counts: a lead-up is at most two days ahead
 
 

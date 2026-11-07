@@ -13,13 +13,18 @@ never see the persona, and each logs its prompt as `name@version` with its decis
 ## The stages
 
 A turn runs in stages, one module each under `src/companion/turn/`, driven by `handle(runtime, ...)` in
-`fast.py`. Before any of them, at the daily spend cap (`COMPANION_DAILY_CAP_USD`) their message is kept,
+`fast.py`. A stage reaches a feature only through the parts it declares as a `Feature` (`kit/features.py`):
+its look-up, its note, its `lane` on the request's card, its mention, its steps after the turn. What a
+stage owns itself, it keeps in `turn/` and `core/turn/` and no feature imports it back: reactions
+(`turn/reactions.py`, `docs/dev/reactions.md`) and the crisis path's scene rule, method check and fixed
+message (`turn/crisis.py`, with their words in `core/crisis.py`). A consumer that cannot name the feature
+that found something asks for it by type, `Lookups.find(Focus)`, `Lookups.find(Reading)`. Before any of them, at the daily spend cap (`COMPANION_DAILY_CAP_USD`) their message is kept,
 nothing paid runs, and they are told once that day (`messages/spend-cap`).
 
 1. **Listen** (`listen.py`). Side by side, the instead judge decides whether the message needs a reply
    at all or only a reaction emoji, and the listening judge reads how serious it is (the listening
    read, below). Only a short message, with no question mark, that follows a statement of its own
-   and does not follow a serious message of theirs is asked about (`features/reactions/logic.py` `is_candidate`); one with a stretched word
+   and does not follow a serious message of theirs is asked about (`core/turn/reactions.py` `is_candidate`); one with a stretched word
    ("fineee", "yesss") always gets a reply, since it hands a bit back.
 2. **Route** (`route.py`). It chooses which talker answers: the everyday model or the roleplay model.
 3. **Look** (`notes.py`). Every feature that looks something up before the reply does so here, side
@@ -148,8 +153,8 @@ and at most one curious item it may invite (only when this turn's brush-off read
 they pushed back in the last three days); no everyday memory and none of its own views. Every limit and
 the basics (what they are called, what they said about their own body) are sent after the history,
 after the scene reminder. Its blocks stay bracketed like the card's. On every other turn the intimate
-lane is left off the card. In `shadow` both are worked out and logged, and the request is unchanged (`turn/assemble.py`,
-`features/intimate`, ADR 0026).
+lane is left off the card. In `shadow` both are worked out and logged, and the request is unchanged (`turn/assemble.py`
+asks each feature's `Feature.lane` for what it does to the card, `features/intimate`, ADR 0026).
 
 The notes are chosen by code from models' labels, never written by a model (ADR 0014). They go in a
 fixed order (`ORDER` in `turn/notes.py`), and the order is checked when the bot starts. A few lines
@@ -191,8 +196,14 @@ sources, unless the new one ranks higher, so a morning follow-up never holds bac
 goes in the system block and a day after the history; either asks them something, so the question-run
 note stays out. It is logged under its source's key with its rank once the turn is stored, and how
 their next message met it is read for the learned pace (shadow), as is the how-are-you question after a
-heavy talk. The notes that may ask them something themselves (guess, reminder, crisis, question game) come
-before it in `ORDER`, so it always knows.
+heavy talk (that read is the threads feature's `met.py`, a step after the turn is stored). The notes that may ask them something themselves (guess, reminder, crisis, question game) come
+before it in `ORDER`, so it always knows. A note that reads an earlier note by name declares it in
+`Feature.reads` (a local note in `_LOCAL_READS`), and the bot refuses to start when it does not come
+earlier in `ORDER`; reading an undeclared name raises.
+
+The notes' writes (a limit used up, a plan marked asked, the day's mention) are made only once a reply
+is stored. A turn whose reply came back empty stores none of them, so the day or the plan is not used up
+by a turn that sent nothing.
 
 ## Checking the reply
 
@@ -217,7 +228,7 @@ the turn, only the code checks run.
 
 On a turn the crisis path reads as concern or urgent, code also catches a reply that names means or
 methods in a how-to way (a lethal dose, a number of pills, "the easiest way to") and draws it once
-more, with the path on (`features/crisis/logic.py` `method_words`).
+more, with the path on (`core/crisis.py` `method_words`).
 
 When a check fails, the same model is asked once more, or twice if the redraw still has an em dash,
 and the last reply goes out whatever it is. The first is kept in the decision detail. Nothing is ever

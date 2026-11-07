@@ -12,7 +12,7 @@ from companion.core.turn.now import KEY
 from companion.core.types import Frame, Json, Severity, TraceId, TurnId
 from companion.features.now.run import SENT, SHADOW, now_note, read_now
 from companion.kit.current import Heard, Turn
-from companion.kit.features import Lookups, Moment
+from companion.kit.features import Lookups, Moment, Offered
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 from tests.runtime import make_runtime
@@ -59,7 +59,7 @@ def _said(store: Store, phase: str, minutes_ago: int, what: str = "dinner is com
 def _note(store: Store, mode: str, frame: Frame = Frame.REAL) -> tuple[tuple[str, ...], list[str]]:
     runtime = make_runtime(store, Talker(), PREFIX, REL, now=mode)
     t = Turn(TurnId("t"), NOW, [], "lol out of all the things")
-    offer = now_note(Moment(runtime, t, frame, CALM, Lookups(), False, []), None, {})
+    offer = now_note(Moment(runtime, t, frame, CALM, Lookups(), False, []), None, Offered({}))
     for write in offer.after:
         write()
     logged = [d.reason for k in (SENT, SHADOW) for d in store.decisions_with_key(REL, k)]

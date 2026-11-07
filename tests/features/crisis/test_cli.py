@@ -7,11 +7,11 @@ import pytest
 
 from companion.cli.main import main
 from companion.core.clock import utc_now
-from companion.core.crisis import CrisisLevel
+from companion.core.crisis import LINE_SENT, CrisisLevel
 from companion.core.extractor import Extraction
 from companion.core.types import Json, RelationshipId, TraceId, TurnId
 from companion.features.crisis.cli import FIXTURES, Case, check, load_cases, run, verdict
-from companion.features.crisis.run import LEVEL, LINE_SENT
+from companion.features.crisis.run import LEVEL
 from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 

@@ -1,5 +1,7 @@
 # Reactions
 
+Reactions are the turn's own stage, not a feature: the listen stage runs the instead judge, the talk stage starts the alongside one beside the talker and the persist stage applies it (`turn/reactions.py`), so no feature declares them. Their pure rules are in `core/turn/reactions.py`.
+
 An emoji on their message, sent in place of a reply or beside one, so it answers the way a friend does: a heart for a sweet line, a thumbs up for an "ok". Two small judges decide it, and code applies a rule to what they score.
 
 **Status:** live. No switch of its own; it needs the judge model (`COMPANION_JUDGE_ROUTES` can route either judge by its name, `ack` or `reaction`). The crisis path (`COMPANION_CRISIS`) turns the first one off for a message with a cue word.
@@ -16,8 +18,8 @@ Both write a decision with the scores, the model, the prompt and its inputs hash
 
 | File | What |
 |---|---|
-| `logic.py` | pure: both judges' schemas and reads (`InsteadRead`, `ToneRead`), the prefilter (`is_candidate`), the thresholds, `reaction_instead`, `reaction_alongside` and the reasons |
-| `run.py` | effects: the two `Judge` declarations, `react_instead` (the listen stage runs it), `react_alongside` (the persist stage runs it) and the logged decisions |
+| `core/turn/reactions.py` | pure: both judges' schemas and reads (`InsteadRead`, `ToneRead`), the prefilter (`is_candidate`), the thresholds, `reaction_instead`, `reaction_alongside` and the reasons |
+| `turn/reactions.py` | effects: the two `Judge` declarations, `react_instead` (the listen stage runs it), `react_alongside` (the persist stage runs it) and the logged decisions |
 
 The reaction types a turn hands to the chat (`Reaction`, `ReactAndReply`, `ThenSend`) are in `core/turn/reply.py`, because delivery sends them. What a small judge reads of the chat (`build_prompt`) and its hash are in `core/turn/context.py`. `stretched` is in `core/turn/energy.py`, which `marks` also uses.
 
@@ -37,4 +39,4 @@ None. Read the decisions in the decision log (`companion replay <turn_id>`).
 
 ## Tests
 
-`tests/features/reactions/`
+`tests/core/turn/test_reactions_*.py`, `tests/turn/test_reactions_*_loop.py`

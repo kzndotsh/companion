@@ -6,7 +6,7 @@ from companion.turn.notes import SOURCES
 
 
 def test_every_feature_part_is_run_where_it_belongs() -> None:
-    names = [name for name, _ in SOURCES]
+    names = [name for name, *_ in SOURCES]
     for f in FEATURES:
         assert (f.note is not None) == (f.name in names), f.name
         if f.after_theirs is not None:

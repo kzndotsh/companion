@@ -18,9 +18,10 @@ from companion.features.flow.questions.logic import GAME_NOTE, RUN
 from companion.features.flow.questions.logic import RUN_NOTE as QUESTION_NOTE
 from companion.features.reminders.run import ASKED, SET, Read, reminder_offer
 from companion.kit.current import Turn
-from companion.kit.features import Offer, asking
+from companion.kit.features import Offer, Offered, asking
 from companion.store.sqlite.replay import replay_file
 from companion.store.sqlite.store import Store
+from companion.turn import notes
 from companion.turn.fast import handle
 from companion.turn.notes import SOURCES, Lookups, Moment, notes_for
 from tests.runtime import make_runtime
@@ -91,7 +92,7 @@ def test_notes_come_in_the_listed_order_and_writes_wait(store: Store) -> None:
     assert notes.lines[-1] == "[set]"
     assert HOLD_NOTE.text in notes.lines
     assert notes.after == ()  # not read as casual, so no name is asked and nothing is used up
-    assert len({name for name, _ in SOURCES}) == len(SOURCES)
+    assert len({name for name, *_ in SOURCES}) == len(SOURCES)
 
 
 async def test_after_a_heavy_talk_and_a_gap_it_checks_in_once(store: Store) -> None:
@@ -267,8 +268,36 @@ def test_a_note_that_asks_says_so_and_a_reminder_set_does_not(store: Store) -> N
     from companion.core.types import Frame  # noqa: PLC0415
 
     m = Moment(runtime, t, Frame.REAL, None, Lookups(), True, [])
-    when = reminder_offer(m, Read("[ask when]", ASKED, {}, asks=True), {})
-    told = reminder_offer(m, Read("[set]", SET, {}), {})
-    assert asking({"reminder": when})
-    assert not asking({"reminder": told})
-    assert not asking({"game": Offer(asks=True)})  # an empty offer asks nothing
+    when = reminder_offer(m, Read("[ask when]", ASKED, {}, asks=True), Offered({}))
+    told = reminder_offer(m, Read("[set]", SET, {}), Offered({}))
+    assert asking(Offered({"reminder": when}))
+    assert not asking(Offered({"reminder": told}))
+    assert not asking(Offered({"game": Offer(asks=True)}))  # an empty offer asks nothing
+
+
+def test_a_note_reads_an_earlier_one_only_by_a_name_it_declared() -> None:
+    earlier = {"repair": Offer(("[sorry]",)), "name": Offer()}
+    seen = Offered(earlier, ("repair",))
+    assert seen["repair"].lines == ("[sorry]",)
+    with pytest.raises(KeyError, match="declaring it"):
+        seen["name"]
+    assert not asking(seen)
+
+
+def test_a_note_placed_before_one_it_reads_stops_the_bot_at_start(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    order = list(notes.ORDER)
+    order.remove("repair")
+    order.insert(order.index("owned") + 1, "repair")  # `owned` reads `repair`
+    monkeypatch.setattr(notes, "ORDER", tuple(order))
+    with pytest.raises(RuntimeError, match="owned reads repair"):
+        notes.sources()
+
+
+def test_the_look_ups_are_found_by_the_type_they_found() -> None:
+    looked = Lookups(found={"a": ("x",), "b": 3})
+    assert looked.find(int) == 3
+    assert looked.find(str) is None
+    with pytest.raises(LookupError):
+        Lookups(found={"a": 1, "b": 2}).find(int)

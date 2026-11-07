@@ -32,7 +32,7 @@ from companion.core.types import (
     Frame,
     Speaker,
 )
-from companion.kit.features import Feature, Lookups, Moment, Offer, Offered
+from companion.kit.features import ROOM_READS, Feature, Lookups, Moment, Offer, Offered
 from companion.prompts import get
 from companion.registry import FEATURES
 from companion.turn.mention import mention_note
@@ -195,6 +195,9 @@ def _feature_note(f: Feature) -> Callable[[Moment, Offered], Offer]:
     return source
 
 
+# The earlier notes a local note reads by name (a feature's note declares `Feature.reads`).
+_LOCAL_READS: dict[str, tuple[str, ...]] = {"owned": ("repair",), "mention": ROOM_READS}
+
 # The notes that are not features' own, by name.
 _LOCAL: dict[str, Callable[[Moment, Offered], Offer]] = {
     "base": _base,
@@ -243,26 +246,45 @@ ORDER: tuple[str, ...] = (
 )
 
 
-def _sources() -> tuple[tuple[str, Callable[[Moment, Offered], Offer]], ...]:
+type Source = tuple[str, Callable[[Moment, Offered], Offer], tuple[str, ...]]  # name, note, reads
+
+
+def sources() -> tuple[Source, ...]:
     """The notes in ORDER, local or a feature's, checked when the module loads: a name with no note,
-    or a feature's note left out or placed twice, stops the bot at start rather than silently."""
+    or a feature's note left out or placed twice, or a note that reads one that does not come
+    before it, stops the bot at start rather than silently."""
     noted = {f.name: f for f in FEATURES if f.note is not None}
     missing = [n for n in ORDER if n not in _LOCAL and n not in noted]
     unplaced = [n for n in noted if ORDER.count(n) != 1] + [n for n in _LOCAL if n not in ORDER]
     if missing or unplaced or len(set(ORDER)) != len(ORDER):
         msg = f"notes order: no source for {missing}, not placed once: {unplaced}"
         raise RuntimeError(msg)
-    return tuple((n, _LOCAL[n] if n in _LOCAL else _feature_note(noted[n])) for n in ORDER)
+    sources: list[Source] = [
+        (n, _LOCAL[n], _LOCAL_READS.get(n, ()))
+        if n in _LOCAL
+        else (n, _feature_note(noted[n]), noted[n].reads)
+        for n in ORDER
+    ]
+    late = [
+        f"{n} reads {r}"
+        for n, _, reads in sources
+        for r in reads
+        if r not in ORDER[: ORDER.index(n)]
+    ]
+    if late:
+        msg = f"notes order: a note reads one that does not come before it: {late}"
+        raise RuntimeError(msg)
+    return tuple(sources)
 
 
-SOURCES = _sources()
+SOURCES = sources()
 
 
 def notes_for(m: Moment) -> Notes:
     """Every note for this turn, in order, and the writes to make once the reply is stored."""
     offered: dict[str, Offer] = {}
-    for name, source in SOURCES:
-        offered[name] = source(m, offered)
+    for name, source, reads in SOURCES:
+        offered[name] = source(m, Offered(offered, reads))
     return Notes(
         tuple(line for o in offered.values() for line in o.lines),
         tuple(f for o in offered.values() for f in o.after),
