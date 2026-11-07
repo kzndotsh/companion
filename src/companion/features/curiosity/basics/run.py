@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
+from companion.core.ids import new_id
 from companion.core.turn.address import KEY as ADDRESS_KEY
 from companion.core.types import Speaker, Utterance
 from companion.features.curiosity.basics.logic import (
@@ -108,7 +108,7 @@ async def capture_name(c: Runtime, t: Turn, said: Utterance, sent: str | None) -
     name = await judge_name(c.judge, asked, t.text)
     reason = "basics: no name in their answer"
     if name is not None:
-        c.store.insert_belief(name_belief(said, name, uuid.uuid4().hex, t.now))
+        c.store.insert_belief(name_belief(said, name, new_id(), t.now))
         reason = f"basics: remembered what to call them ({name})"
     decide(c, t, "basics: name capture", {"prompt": NAME_CAPTURE.ref}, reason=reason)
 

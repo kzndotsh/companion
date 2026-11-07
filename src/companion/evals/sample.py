@@ -13,7 +13,6 @@ variant is raw.
 from __future__ import annotations
 
 import tempfile
-import uuid
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
@@ -24,6 +23,7 @@ from companion import compose
 from companion.core.clock import utc_now
 from companion.core.extractor import Extraction, StructuredModel
 from companion.core.history import HISTORY_LIMIT
+from companion.core.ids import new_id
 from companion.core.prompt.prefix import Prefix
 from companion.core.prompt.request import Message, TalkerRequest
 from companion.core.switch import CALENDAR
@@ -137,9 +137,9 @@ def _script_turn(c: Runtime, script: Script, v: Variant) -> Turn:
     for i, (role, text) in enumerate(script.history):
         c.store.append_utterance(
             Utterance(
-                UtteranceId(uuid.uuid4().hex),
+                UtteranceId(new_id()),
                 REL,
-                TurnId(uuid.uuid4().hex),
+                TurnId(new_id()),
                 Speaker.USER if role == "user" else Speaker.COMPANION,
                 text,
                 Frame.REAL,
@@ -150,7 +150,7 @@ def _script_turn(c: Runtime, script: Script, v: Variant) -> Turn:
     prior = c.store.history_before(REL, now, HISTORY_LIMIT)
     if v.history is not None:
         prior = prior[max(0, len(prior) - v.history + 1) :]
-    t = Turn(TurnId(uuid.uuid4().hex), now, prior, script.user)
+    t = Turn(TurnId(new_id()), now, prior, script.user)
     Recorder(c.store, REL, t.turn, TraceId(t.turn), now).decide(
         ASKED_NAME, at=now - timedelta(hours=1)
     )
@@ -167,7 +167,7 @@ def reading(
     if labels is None:
         return Frame.REAL, None
     severity, stance, vague, medical, rude = labels
-    return Frame.REAL, (ListeningRead(severity, stance, vague, medical, rude), READ_BY, "")
+    return Frame.REAL, Heard(ListeningRead(severity, stance, vague, medical, rude), READ_BY, "")
 
 
 def script_request(c: Runtime, t: Turn, script: Script, v: Variant) -> TalkerRequest:
@@ -239,7 +239,7 @@ async def draw(
             assert recorded is not None
             request = recorded_request(recorded, v)
             text = request.messages[-1].content
-            t = Turn(TurnId(uuid.uuid4().hex), utc_now(), [], text)
+            t = Turn(TurnId(new_id()), utc_now(), [], text)
         first = await talker.reply(request)
         if v.raw:
             return Drawn(request, first, ())

@@ -14,7 +14,7 @@ from companion.kit.record import Recorder
 from companion.store.sqlite.store import Store
 from tests.turn.test_mood_loop import NOW, REL
 
-CALM: Heard = (
+CALM: Heard = Heard(
     ListeningRead(severity=Severity.TRIVIAL, stance="other", vague=False, age_coded=False),
     "j",
     "p",

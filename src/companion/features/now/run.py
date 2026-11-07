@@ -41,7 +41,7 @@ async def read_now(c: Runtime, t: Turn, in_scene: Frame, heard: Heard | None, ca
     and "food's here" are exactly the messages to read. Nothing is logged for `none`. Runs while the
     note or reaching out is on, since nudges read the labels too."""
     del card
-    serious = heard is None or heard[0].severity >= HEAVY_AT
+    serious = heard is None or heard.read.severity >= HEAVY_AT
     wanted = c.mode(switch.NOW) is not Mode.OFF or c.on(switch.INITIATIVE)
     if not wanted or c.judge is None or serious or in_scene is not Frame.REAL:
         return

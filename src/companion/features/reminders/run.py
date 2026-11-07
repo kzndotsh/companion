@@ -9,7 +9,6 @@ pretend scene is in progress it waits until the scene ends.
 from __future__ import annotations
 
 import logging
-import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, tzinfo
@@ -20,6 +19,7 @@ from companion.core.clock import local_zone, now_line
 from companion.core.extractor import StructuredModel
 from companion.core.frames import scene_frame
 from companion.core.history import HISTORY_LIMIT, to_messages
+from companion.core.ids import new_id
 from companion.core.prompt.request import TalkerRequest
 from companion.core.prompt.sections import tagged
 from companion.core.reply_gate import code_checks
@@ -125,9 +125,7 @@ async def read_slots(
 def _reminder(c: Runtime, w: Wanted, due: datetime, tz: tzinfo, now: datetime) -> Reminder:
     """A new pending reminder, as a one-off; a series' occurrence adds its series and number."""
     wall = due.astimezone(tz).strftime("%Y-%m-%d %H:%M")
-    return Reminder(
-        uuid.uuid4().hex, c.rel, w.kind, w.thing, w.quote, due, wall, str(tz), w.turn_id, now
-    )
+    return Reminder(new_id(), c.rel, w.kind, w.thing, w.quote, due, wall, str(tz), w.turn_id, now)
 
 
 def schedule(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> Step:
@@ -221,9 +219,7 @@ def act(  # noqa: PLR0913, PLR0917
         if isinstance(planned, str):
             why: dict[str, Json] = {"why": planned, "repeats": True}
             return Read(ask_note(s.kind, s.thing, planned), ASKED, why, asks=True)
-        made = Series(
-            uuid.uuid4().hex, c.rel, s.kind, s.thing, said, planned.repeat, str(tz), turn, now
-        )
+        made = Series(new_id(), c.rel, s.kind, s.thing, said, planned.repeat, str(tz), turn, now)
         return _started(c, made, planned, now, tz)
     when = resolve(s, now, tz)
     if when.at is None:
@@ -261,7 +257,7 @@ async def _write(
     request = TalkerRequest(
         c.prefix,
         tuple(to_messages(prior, now)),
-        card=tagged(now_line(now, theirs[-1].at if theirs else None), memory=False),
+        card=tagged(now_line(now, theirs[-1].at if theirs else None)),
         tail=send_instruction(r.kind, r.thing),
     )
     text, model = "", ""
@@ -298,13 +294,13 @@ async def deliver_due(
                 r.id, ReminderState.EXPIRED, why + ", so it is not sent again", now
             )
             detail_stuck: dict[str, Json] = {"reminder": r.id, "series": r.series_id}
-            log_decision(c, TurnId(uuid.uuid4().hex), STUCK_GONE, now, detail_stuck)
+            log_decision(c, TurnId(new_id()), STUCK_GONE, now, detail_stuck)
     due = [r for r in held if r.state is ReminderState.PENDING and r.due_at <= now]
     every, zone = {x.id: x for x in c.store.part(Reminders).all_series(c.rel)}, local_zone()
     theirs = c.store.part(Reminders).their_times(c.rel, now - LOOK_BACK)
     sent = 0
     for r in due:
-        turn = TurnId(uuid.uuid4().hex)
+        turn = TurnId(new_id())
         if r.due_at < started and now - r.due_at > GRACE:
             c.store.part(Reminders).event(
                 r.id, ReminderState.EXPIRED, "the bot was not running when it was due", now
@@ -342,7 +338,7 @@ async def deliver_due(
             continue
         c.store.append_utterance(
             Utterance(
-                UtteranceId(uuid.uuid4().hex),
+                UtteranceId(new_id()),
                 c.rel,
                 turn,
                 Speaker.COMPANION,
@@ -378,7 +374,7 @@ def _tend(c: Runtime, series: Series, now: datetime, tz: tzinfo) -> None:
     if step.state is not None:
         key = PAUSED if step.state is Standing.PAUSED else RESUMED
         detail: dict[str, Json] = {"series": series.id, "why": step.reason}
-        log_decision(c, TurnId(uuid.uuid4().hex), key, now, detail)
+        log_decision(c, TurnId(new_id()), key, now, detail)
 
 
 def unhandled(c: Runtime, prior: Sequence[Utterance]) -> list[Utterance]:

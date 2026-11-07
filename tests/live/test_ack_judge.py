@@ -15,7 +15,7 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.core.turn.context import build_prompt
+from companion.core.turn.context import conversation_prompt
 from companion.core.turn.reactions import (
     INSTEAD_SCHEMA,
     INSTEAD_SYSTEM,
@@ -138,7 +138,7 @@ async def test_the_judge_reacts_only_when_closing(case: _Case) -> None:
     key = os.environ.get("OPENROUTER_API_KEY")
     if not key:
         pytest.skip("OPENROUTER_API_KEY not set")
-    prompt = build_prompt(_chat(pairs), text)
+    prompt = conversation_prompt(_chat(pairs), text)
     reacted = 0
     async with httpx.AsyncClient(timeout=60) as client:
         extractor = OpenRouterExtractor(key, client, JUDGE_MODEL)

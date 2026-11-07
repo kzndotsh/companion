@@ -12,12 +12,12 @@ from companion.store.sqlite.store import Store
 from tests.runtime import make_runtime
 from tests.turn.test_mood_loop import NOW, PREFIX, REL, Talker
 
-CALM: Heard = (
+CALM: Heard = Heard(
     ListeningRead(severity=Severity.TRIVIAL, stance="other", vague=False, age_coded=False),
     "j",
     "p",
 )
-HEAVY: Heard = (
+HEAVY: Heard = Heard(
     ListeningRead(severity=Severity.SERIOUS, stance="sharing", vague=False, age_coded=False),
     "j",
     "p",

@@ -6,7 +6,7 @@ import dataclasses
 import logging
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from companion.core.card import (
@@ -39,13 +39,14 @@ from companion.core.types import (
     Speaker,
     Utterance,
 )
-from companion.core.views import ViewState, card_views
+from companion.core.views import card_views, why
 from companion.features.upkeep.context.store import BeliefContexts
-from companion.kit.current import Heard, Turn, decide, mark
+from companion.kit.current import Turn, decide, mark, recorder
 from companion.kit.features import CardLane, Lookups, Moment
 from companion.kit.record import Recorder
 from companion.registry import FEATURES
 from companion.turn.notes import Notes, notes_for
+from companion.turn.values import Routed
 
 if TYPE_CHECKING:
     from companion.kit.runtime import Runtime
@@ -134,9 +135,7 @@ class Layout:
         """The system block in tags, the history and their message, then the scene reminder and
         the notes' tail after the history, where it weighs most."""
         pinned = [self.pinned] if self.pinned else []
-        card = tagged(
-            "\n".join([self.clock, *pinned, *self.memory, *self.notes.lines]), memory=False
-        )
+        card = tagged("\n".join([self.clock, *pinned, *self.memory, *self.notes.lines]))
         request = build_request(self.prefix, to_messages(self.prior, self.now), self.text, "", card)
         tail = "\n".join([*([self.scene] if self.scene else []), *self.notes.tail])
         return dataclasses.replace(request, tail=tail) if tail else request
@@ -149,8 +148,7 @@ class Assembled:
     request: TalkerRequest
     card_text: str
     card: Card
-    views: Sequence[Belief]
-    view_state: ViewState
+    cards: CardLog  # where each belief went, written once the turn is stored
     after: Sequence[Callable[[], None]] = ()  # the notes' writes, made once the turn is stored
 
 
@@ -169,24 +167,16 @@ def _lane(c: Runtime, t: Turn, looked: Lookups, *, roleplay: bool, card: Card) -
     )
 
 
-def assemble(  # noqa: PLR0913
-    c: Runtime,
-    t: Turn,
-    in_scene: Frame,
-    heard: Heard | None,
-    looked: Lookups,
-    *,
-    held: bool = False,
-    brushed: bool = False,
-    roleplay: bool = False,
-    risk: bool = False,
-) -> Assembled:
+def assemble(c: Runtime, t: Turn, routed: Routed, looked: Lookups) -> Assembled:
     """The request for this turn: the card, the clock and every note (`turn/notes.py`)."""
     store, now = c.store, t.now
+    in_scene, heard = routed.in_scene, routed.heard
+    roleplay = routed.talker is c.roleplay_talker
+    crisis = routed.crisis
     view_state = store.view_state(c.rel)
     views = card_views(store.self_beliefs(c.rel), view_state)
     assertable = [b for b in store.user_beliefs(c.rel) if is_assertable(b)]
-    sharing = heard is not None and heard[0].severity >= Severity.EVERYDAY
+    sharing = heard is not None and heard.read.severity >= Severity.EVERYDAY
     labels = store.belief_labels(c.rel)
     support, contexts = store.last_support(c.rel), store.part(BeliefContexts).latest(c.rel)
     focus = looked.find(Focus)
@@ -220,13 +210,24 @@ def assemble(  # noqa: PLR0913
         if lane.hidden & {b.id for b in assertable}:
             assertable = [b for b in assertable if b.id not in lane.hidden]
             card = card_of(assertable, views)
-        shown = [] if card.empty else [render(card, now.astimezone().tzinfo or UTC)]
+        shown = [] if card.empty else [render(card)]
     theirs = [u for u in t.prior if u.speaker is Speaker.USER]
     clock = now_line(now, theirs[-1].at if theirs else None)
     pinned = address_note(store.setting(c.rel, ADDRESS_KEY))
     on_card = frozenset(b.id for b in (*card.usable, *card.guarded, *card.older))
     notes = notes_for(
-        Moment(c, t, in_scene, heard, looked, held, assertable, on_card, brushed, risk)
+        Moment(
+            c=c,
+            t=t,
+            in_scene=in_scene,
+            heard=heard,
+            looked=looked,
+            held=routed.held,
+            beliefs=assertable,
+            on_card=on_card,
+            brushed=routed.brushed,
+            risk=crisis is not None and crisis.acts and crisis.risk,
+        )
     )
     prefix = c.roleplay_prefix if roleplay and c.roleplay_prefix is not None else c.prefix
     scene = "\n".join(p for p in (c.scene_reminder if roleplay else "", lane.pinned) if p)
@@ -235,4 +236,5 @@ def assemble(  # noqa: PLR0913
         decide(c, t, TAIL, {"text": request.tail})  # what replay needs to rebuild it
     store.save_prefix(prefix)
     _mark_start(t, in_scene, card, request.card)
-    return Assembled(request, request.card, card, views, view_state, (*notes.after, *lane.after))
+    cards = CardLog(recorder(c, t), {b.id: why(b, view_state) for b in views})
+    return Assembled(request, request.card, card, cards, (*notes.after, *lane.after))

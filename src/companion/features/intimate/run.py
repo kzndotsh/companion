@@ -8,7 +8,6 @@ for the next pass."""
 from __future__ import annotations
 
 import logging
-import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,6 +16,7 @@ from typing import TYPE_CHECKING
 from companion.core import switch
 from companion.core.extractor import StructuredModel
 from companion.core.frames import is_assertable
+from companion.core.ids import new_id
 from companion.core.switch import Mode
 from companion.core.turn.address import names_them
 from companion.core.turn.floor import BRUSH_KEY
@@ -275,7 +275,7 @@ async def _read_scene(
             sm.add_quote(seen.id, quote, now)
             pid, claim, scenes_seen = seen.id, seen.claim, seen.scenes + 1
         else:
-            made = Pattern(uuid.uuid4().hex, p.claim, Stance(p.stance), (quote,))
+            made = Pattern(new_id(), p.claim, Stance(p.stance), (quote,))
             sm.add_pattern(rel, made, by)
             by_id[made.id] = made
             pid, claim, scenes_seen = made.id, made.claim, 1
@@ -367,7 +367,7 @@ async def nearest_for_turn(
     """On a turn that may be a scene (a pretend scene in progress, or intimate talk the operator
     lets the roleplay talker answer), how near each entry is to the moment: their message with the
     reply before it."""
-    intimate = c.on(switch.ROUTE_INTIMATE) and heard is not None and heard[0].intimate
+    intimate = c.on(switch.ROUTE_INTIMATE) and heard is not None and heard.read.intimate
     if (
         c.mode(switch.INTIMATE_MEMORY) is Mode.OFF
         or c.embedder is None

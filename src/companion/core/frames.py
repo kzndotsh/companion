@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from companion.core.episode import EPISODE_GAP
-from companion.core.types import Belief, Frame, Json, Provenance, Speaker, Utterance
+from companion.core.types import Belief, Frame, Json, Provenance, Speaker, Utterance, unit_interval
 from companion.prompts import get
 
 NON_REAL = frozenset({Frame.PLAY, Frame.STORY, Frame.HYPOTHETICAL})
@@ -105,25 +105,18 @@ def scene_note(frame: Frame) -> str | None:
     return note.text if note else None
 
 
-def build_prompt(history: Sequence[Utterance], text: str) -> str:
-    lines = [
-        f"[{'USER' if u.speaker is Speaker.USER else 'COMPANION'}] {u.text}"
-        for u in history[-CONTEXT_MESSAGES:]
-    ]
-    return "\n".join(["Conversation:", *lines, "", f"Newest USER message: {text}"])
-
-
 def parse(data: Json) -> Judgement | None:
     if not isinstance(data, dict):
         return None
     raw, conf = data.get("frame"), data.get("confidence")
-    if not isinstance(raw, str) or isinstance(conf, bool) or not isinstance(conf, int | float):
+    confidence = unit_interval(conf)
+    if not isinstance(raw, str) or confidence is None:
         return None
     try:
         frame = Frame(raw)
     except ValueError:
         return None
-    return Judgement(frame, min(max(float(conf), 0.0), 1.0))
+    return Judgement(frame, confidence)
 
 
 def resolve(judgement: Judgement | None, fallback: Frame = Frame.REAL) -> Frame:

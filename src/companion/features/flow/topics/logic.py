@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from companion.core.daypart import DayPart, part_of_day
+from companion.core.turn.context import conversation_prompt
 from companion.core.types import Json, Speaker, Utterance
 from companion.lib.prompts import Prompt
 from companion.prompts import get
@@ -48,11 +49,7 @@ def likely(prior: Sequence[Utterance], said: str) -> bool:
 
 
 def judge_prompt(prior: Sequence[Utterance], said: str) -> str:
-    lines = [
-        f"[{'USER' if u.speaker is Speaker.USER else 'COMPANION'}] {u.text}"
-        for u in prior[-CONTEXT:]
-    ]
-    return "\n".join(["Conversation:", *lines, "", f"Newest USER message: {said}"])
+    return conversation_prompt(prior, said, last=CONTEXT)
 
 
 def parse(data: Json) -> bool:

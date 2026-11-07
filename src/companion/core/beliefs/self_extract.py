@@ -18,10 +18,10 @@ from companion.core.beliefs.extract import (
     SINGLE_EVIDENCE_CONFIDENCE_CAP,
     MemoryCandidate,
     Rejection,
-    _list,  # pyright: ignore[reportPrivateUsage]
-    _obj,  # pyright: ignore[reportPrivateUsage]
-    _resolve,  # pyright: ignore[reportPrivateUsage]
+    as_dict,
+    as_list,
     parse,
+    resolve_source,
 )
 from companion.core.beliefs.verify import QuoteNotFoundError, evidence_from
 from companion.core.types import (
@@ -92,13 +92,13 @@ SCHEMA: dict[str, Json] = {
 
 def parse_views(data: Json) -> tuple[list[MemoryCandidate], list[Rejection]]:
     """Parse with the fixed fields filled in, so the model cannot choose subject or provenance."""
-    top = _obj(data)
-    items = _list(top.get("beliefs")) if top is not None else None
+    top = as_dict(data)
+    items = as_list(top.get("beliefs")) if top is not None else None
     if items is None:
         return parse(data)
     fixed: list[Json] = []
     for item in items:
-        fields = _obj(item)
+        fields = as_dict(item)
         fixed.append(
             item
             if fields is None
@@ -154,7 +154,7 @@ def to_view(
     new_id: Callable[[], str],
 ) -> Belief | Rejection:
     raw: Json = {"claim": c.claim, "quote": c.quote, "ref": c.ref}
-    source = _resolve(c, index, Speaker.COMPANION)
+    source = resolve_source(c, index, Speaker.COMPANION)
     problem = _view_problem(c, source)
     if problem is not None or source is None:
         return Rejection(problem or "no source", raw)

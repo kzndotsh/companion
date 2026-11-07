@@ -16,7 +16,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from companion.core.types import Json
 from companion.prompts import get
 
 
@@ -42,20 +41,10 @@ class Route:
 
 INTIMATE_CHECK = get("system/intimate-check")
 HOLD_NOTE = get("notes/floor-hold")
-INTIMATE_SCHEMA: dict[str, Json] = {
-    "type": "object",
-    "properties": {"intimate": {"type": "boolean"}},
-    "required": ["intimate"],
-}
 
 
 STARTING = "intimate talk starting: the everyday talker answers until it is under way"
 EXPLICIT_LEAD = get("system/explicit-lead")
-EXPLICIT_SCHEMA: dict[str, Json] = {
-    "type": "object",
-    "properties": {"explicit": {"type": "boolean"}},
-    "required": ["explicit"],
-}
 
 
 MINOR_KEY = "minor check"  # the decision the narrow minor check logs, with `minor` in its detail
@@ -65,43 +54,11 @@ BRUSH_KEY = "brush-off"  # the decision the brush-off read logs, with `declines`
 # child-like 8 times in 8. A yes is asked again, narrowly: does the text
 # say or imply someone is under 18. Only a yes, or no reading, holds the turn (2026-10-26).
 MINOR_CHECK = get("system/minor-check")
-MINOR_SCHEMA: dict[str, Json] = {
-    "type": "object",
-    "properties": {"minor": {"type": "boolean"}},
-    "required": ["minor"],
-}
-
-
-def parse_minor(data: Json) -> bool | None:
-    value = data.get("minor") if isinstance(data, dict) else None
-    return value if isinstance(value, bool) else None
 
 
 BRUSHED = "they pushed the flirting back: the everyday talker answers"
 BRUSH_OFF = get("system/brush-off")
 BRUSH_NOTE = get("notes/brush-off")
-BRUSH_SCHEMA: dict[str, Json] = {
-    "type": "object",
-    "properties": {"declines": {"type": "boolean"}},
-    "required": ["declines"],
-}
-
-
-def parse_declines(data: Json) -> bool | None:
-    value = data.get("declines") if isinstance(data, dict) else None
-    return value if isinstance(value, bool) else None
-
-
-def parse_explicit(data: Json) -> bool | None:
-    value = data.get("explicit") if isinstance(data, dict) else None
-    return value if isinstance(value, bool) else None
-
-
-def parse_intimate(data: Json) -> bool | None:
-    if not isinstance(data, dict):
-        return None
-    value = data.get("intimate")
-    return value if isinstance(value, bool) else None
 
 
 def choose(  # noqa: PLR0911, PLR0913  (one rule per route, kept in one place)

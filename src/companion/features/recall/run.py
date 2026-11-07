@@ -209,7 +209,7 @@ async def relevant_for_turn(
         model=c.embed_model,
         said=t.text,
         last_reply=replies[-1] if replies else None,
-        sharing=heard is not None and heard[0].severity >= Severity.EVERYDAY,
+        sharing=heard is not None and heard.read.severity >= Severity.EVERYDAY,
         on_card=(),
         now=t.now,
         gate=RELEVANCE_GATE,
@@ -260,7 +260,7 @@ async def shadow_for_turn(
         model=c.embed_model,
         said=t.text,
         last_reply=replies[-1] if replies else None,
-        sharing=heard is not None and heard[0].severity >= Severity.EVERYDAY,
+        sharing=heard is not None and heard.read.severity >= Severity.EVERYDAY,
         on_card=[b.id for b in (*card.usable, *card.guarded, *card.older)],
         now=t.now,
         hidden=_hidden(c),
@@ -276,9 +276,9 @@ async def recall_for_turn(
     and log it. In a scene `heard` is the route's read (`scene_read`), since listening does not run
     there."""
     del in_scene
-    if c.judge is None or heard is None or not heard[0].recall or not heard[0].topic:
+    if c.judge is None or heard is None or not heard.read.recall or not heard.read.topic:
         return None
-    topic = heard[0].topic
+    topic = heard.read.topic
     mark(t, f"recall look-up: {topic!r}")
     said = [f"{'they' if u.speaker is Speaker.USER else 'you'}: {u.text}" for u in t.prior]
     pool = eligible(c.store.user_beliefs(c.rel), asked=True, sharing=True, hidden=_hidden(c))

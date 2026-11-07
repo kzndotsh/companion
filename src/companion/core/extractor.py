@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Protocol
 
 from companion.core.types import Json
@@ -17,21 +17,20 @@ class Extraction:
     model: str
     cost_usd: float
     latency_ms: int
+    fallback: bool = False  # answered by the fallback model after the first refused (ADR 0017)
 
 
 class StructuredModel(Protocol):
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction: ...
 
 
-FALLBACK = (
-    " (fallback)"  # added to Extraction.model when a refused call was answered by the fallback
-)
+FALLBACK = " (fallback)"  # added to the model's name in a log when the fallback answered
 
 
-def from_fallback(model: str) -> bool:
-    """Whether an answer came from the fallback model after the first refused. The floor never
-    trusts such an answer (ADR 0017)."""
-    return model.endswith(FALLBACK)
+def as_fallback(got: Extraction) -> Extraction:
+    """An answer marked as the fallback model's: the flag the floor reads (it never trusts such an
+    answer, ADR 0017), and the model's name with `FALLBACK` after it, as logs and rows show it."""
+    return replace(got, model=got.model + FALLBACK, fallback=True)
 
 
 _judge: ContextVar[str | None] = ContextVar("judge", default=None)

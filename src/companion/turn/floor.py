@@ -5,40 +5,31 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from companion.core.extractor import StructuredModel
+from companion.core.turn.context import conversation_prompt
 from companion.core.turn.floor import (
     BRUSH_OFF,
-    BRUSH_SCHEMA,
     EXPLICIT_LEAD,
-    EXPLICIT_SCHEMA,
     INTIMATE_CHECK,
-    INTIMATE_SCHEMA,
     MINOR_CHECK,
-    MINOR_SCHEMA,
-    parse_declines,
-    parse_explicit,
-    parse_intimate,
-    parse_minor,
 )
 from companion.core.types import Utterance
-from companion.kit.ask import Judge, Read, ask
+from companion.kit.ask import Read, ask, yes_no_judge
 
 TIMEOUT_SECONDS = 3.0
-INTIMATE = Judge(
+INTIMATE = yes_no_judge(
     "floor-intimate",
     INTIMATE_CHECK,
-    INTIMATE_SCHEMA,
-    parse_intimate,
+    "intimate",
     timeout=TIMEOUT_SECONDS,
     unread="treated as intimate",
     trust_fallback=False,  # the floor never relies on the fallback model (ADR 0017)
     attempts=2,  # one late read threw away a good reply on a scene turn (2026-10-26)
     spend="floor",
 )
-MINOR = Judge(
+MINOR = yes_no_judge(
     "floor-minor",
     MINOR_CHECK,
-    MINOR_SCHEMA,
-    parse_minor,
+    "minor",
     timeout=4.0,
     unread="treated as a minor: the turn stays held",
     trust_fallback=False,
@@ -54,35 +45,28 @@ async def judge_intimate(extractor: StructuredModel, reply: str) -> bool | None:
 
 
 ROUTE_SECONDS = 4.0  # a slow read routes the turn as it would have gone
-EXPLICIT = Judge(
+EXPLICIT = yes_no_judge(
     "floor-explicit",
     EXPLICIT_LEAD,
-    EXPLICIT_SCHEMA,
-    parse_explicit,
+    "explicit",
     timeout=ROUTE_SECONDS,
     unread="not explicit: intimacy starts on the everyday talker",
     spend="floor",
 )
-DECLINES = Judge(
+DECLINES = yes_no_judge(
     "route",
     BRUSH_OFF,
-    BRUSH_SCHEMA,
-    parse_declines,
+    "declines",
     timeout=ROUTE_SECONDS,
     unread="no push back: routed as before",
 )
-
-
-def _runtime(prior: Sequence[Utterance], said: str, last: int) -> str:
-    lines = [f"{u.speaker.value.upper()}: {u.text}" for u in prior[-last:]]
-    return "\n".join(["Conversation:", *lines, "", f"Newest USER message: {said}"])
 
 
 async def explicit_lead(
     extractor: StructuredModel, prior: Sequence[Utterance], said: str
 ) -> Read[bool] | None:
     """Whether their message itself is sexually explicit (`system/explicit-lead`)."""
-    return await ask(extractor, EXPLICIT, _runtime(prior, said, 4))
+    return await ask(extractor, EXPLICIT, conversation_prompt(prior, said, last=4, tags="colon"))
 
 
 async def declines(
@@ -90,7 +74,7 @@ async def declines(
 ) -> Read[bool] | None:
     """Whether their message pushes the flirting or the scene back, even jokingly
     (`system/brush-off`)."""
-    return await ask(extractor, DECLINES, _runtime(prior, said, 6))
+    return await ask(extractor, DECLINES, conversation_prompt(prior, said, last=6, tags="colon"))
 
 
 async def confirm_minor(
@@ -98,4 +82,4 @@ async def confirm_minor(
 ) -> Read[bool] | None:
     """Whether the text says or implies someone in the romantic or sexual content is under 18,
     asked only when the listening judge read the turn as age-coded (`system/minor-check`)."""
-    return await ask(extractor, MINOR, _runtime(prior, said, 10))
+    return await ask(extractor, MINOR, conversation_prompt(prior, said, last=10, tags="colon"))

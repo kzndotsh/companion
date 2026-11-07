@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
-from companion.core.turn.context import inputs_hash
+from companion.core.turn.context import Scored
 from companion.core.types import Json, Utterance
 from companion.features.diction.tics.logic import (
     FRESH_FOR,
@@ -30,13 +30,11 @@ TIMEOUT_SECONDS = 6.0
 TICS_JUDGE = Judge("tics", PROMPT, SCHEMA, parse, timeout=TIMEOUT_SECONDS, unread="no note")
 
 
-async def find_tics(
-    extractor: StructuredModel, replies: Sequence[str]
-) -> tuple[list[str], str, str] | None:
+async def find_tics(extractor: StructuredModel, replies: Sequence[str]) -> Scored[list[str]] | None:
     """The habits, the model id and the prompt, or None if they could not be found in time."""
     prompt = build_prompt(replies)
     got = await ask(extractor, TICS_JUDGE, prompt)
-    return None if got is None else (got.value, got.model, prompt)
+    return None if got is None else Scored(got.value, got.model, prompt)
 
 
 async def check_tics(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> None:
@@ -52,13 +50,8 @@ async def check_tics(c: Runtime, t: Turn, said: Utterance, sent: str | None) -> 
         found = await find_tics(c.judge, replies)  # type: ignore[arg-type]
         if found is None:
             return None
-        habits, model, prompt = found
-        detail: dict[str, Json] = {
-            "scorer": model,
-            "prompt": PROMPT.ref,
-            "inputs_hash": inputs_hash(prompt),
-            "habits": list[Json](habits),
-        }
+        habits = found.read
+        detail = found.detail(PROMPT.ref, habits=list[Json](habits))
         decide(
             c,
             t,

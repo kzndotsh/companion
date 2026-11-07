@@ -93,7 +93,7 @@ async def _habit_checks(  # noqa: PLR0913, PLR0917
     turn every check runs and the result is logged; in a scene, on a serious turn, or when the
     listening judge could not read the turn, only the code checks run, and only a redraw is
     logged. Before 2026-10-24 an unread turn skipped the code checks too."""
-    severity = heard[0].severity if heard is not None else None
+    severity = heard.read.severity if heard is not None else None
     scene = talker is c.roleplay_talker or in_scene is not Frame.REAL
     code_only = scene or severity is None or severity >= HEAVY_AT
     if not c.on(switch.REDRAW):

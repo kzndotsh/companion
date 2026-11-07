@@ -7,7 +7,6 @@ pass."""
 from __future__ import annotations
 
 import logging
-import uuid
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,6 +17,7 @@ from companion.core.beliefs.extract import build_user_prompt, index_window
 from companion.core.clock import local_zone
 from companion.core.extractor import StructuredModel
 from companion.core.history import HISTORY_LIMIT
+from companion.core.ids import new_id
 from companion.core.memory_pass import BATCH, CONTEXT
 from companion.core.switch import Mode
 from companion.core.types import (
@@ -111,7 +111,7 @@ async def _capture(
     known = {(r.story.utterance_id, r.story.quote.lower()) for r in stories.recorded(rel)}
     kept = 0
     for p in proposed:
-        made = to_story(p, window, uuid.uuid4().hex)
+        made = to_story(p, window, new_id())
         source = window.get(p.message.strip("[] "), batch[-1])
         if isinstance(made, str):
             detail: dict[str, Json] = {"claim": p.claim, "quote": p.quote, "place": p.place}

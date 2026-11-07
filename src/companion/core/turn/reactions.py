@@ -18,14 +18,12 @@ The reason that gets logged is rendered by code from the scores, never written b
 
 from __future__ import annotations
 
-import hashlib
-import json
 from collections.abc import Sequence
 from dataclasses import dataclass
 
 from companion.core.turn.energy import stretched
 from companion.core.turn.reply import Reaction
-from companion.core.types import Json, Speaker, Utterance
+from companion.core.types import Json, Speaker, Utterance, unit_interval
 from companion.prompts import get
 
 MAX_CHARS = 40
@@ -118,10 +116,6 @@ class ReactionPick:
     reason: str
 
 
-def schema_hash() -> str:
-    return hashlib.sha256(json.dumps(INSTEAD_SCHEMA, sort_keys=True).encode()).hexdigest()
-
-
 def ends_with_question(text: str) -> bool:
     return text.rstrip().endswith("?")
 
@@ -142,11 +136,10 @@ def parse_instead(data: Json) -> InsteadRead | None:
     if not isinstance(data, dict):
         return None
     kind, conf, emoji = data.get("kind"), data.get("confidence"), data.get("emoji")
-    if kind not in KINDS or emoji not in INSTEAD_EMOJI or isinstance(conf, bool):
+    confidence = unit_interval(conf)
+    if kind not in KINDS or emoji not in INSTEAD_EMOJI or confidence is None:
         return None
-    if not isinstance(conf, int | float):
-        return None
-    return InsteadRead(str(kind), min(max(float(conf), 0.0), 1.0), str(emoji))
+    return InsteadRead(str(kind), confidence, str(emoji))
 
 
 def reaction_instead(j: InsteadRead) -> Reaction | None:
@@ -170,11 +163,10 @@ def parse_tone(data: Json) -> ToneRead | None:
     if not isinstance(data, dict):
         return None
     tone, conf, emoji = data.get("tone"), data.get("confidence"), data.get("emoji")
-    if tone not in TONES or emoji not in ALONGSIDE_EMOJI or isinstance(conf, bool):
+    confidence = unit_interval(conf)
+    if tone not in TONES or emoji not in ALONGSIDE_EMOJI or confidence is None:
         return None
-    if not isinstance(conf, int | float):
-        return None
-    return ToneRead(str(tone), min(max(float(conf), 0.0), 1.0), str(emoji))
+    return ToneRead(str(tone), confidence, str(emoji))
 
 
 def reaction_alongside(j: ToneRead, since_last: int | None) -> ReactionPick:

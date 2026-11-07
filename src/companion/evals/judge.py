@@ -15,7 +15,7 @@ from typing import cast
 
 from companion.core.extractor import StructuredModel
 from companion.core.prompt.request import Message
-from companion.core.types import Json
+from companion.core.types import Json, unit_interval
 from companion.evals.checks import Verdict
 from companion.prompts import get
 
@@ -85,11 +85,10 @@ def parse(data: Json) -> tuple[Verdict, float] | None:
         return None
     d = cast("dict[str, Json]", data)
     verdict, conf = d.get("verdict"), d.get("confidence")
-    if verdict not in ("pass", "fail", "unclear") or isinstance(conf, bool):
+    confidence = unit_interval(conf)
+    if verdict not in ("pass", "fail", "unclear") or confidence is None:
         return None
-    if not isinstance(conf, int | float):
-        return None
-    return verdict, min(max(float(conf), 0.0), 1.0)
+    return verdict, confidence
 
 
 async def grade(

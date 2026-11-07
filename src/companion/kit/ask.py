@@ -23,7 +23,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from companion.core.extractor import Extraction, StructuredModel, from_fallback, judging
+from companion.core.extractor import Extraction, StructuredModel, judging
 from companion.core.spend import purpose
 from companion.core.types import Json
 from companion.lib.prompts import Prompt
@@ -56,6 +56,42 @@ class ReadFailed(Exception):
     """`ask_or_raise`: the judge answered but not usably, and its step fails as a whole."""
 
 
+def yes_no_judge(  # noqa: PLR0913
+    name: str,
+    prompt: Prompt,
+    field: str,
+    *,
+    timeout: float,
+    unread: str,
+    trust_fallback: bool = True,
+    attempts: int = 1,
+    spend: str | None = None,
+) -> Judge[bool]:
+    """A judge that answers one yes or no in `field`: its schema and its parse are made from the
+    field's name, and anything that is not a boolean is unread."""
+
+    def parse(data: Json) -> bool | None:
+        value = data.get(field) if isinstance(data, dict) else None
+        return value if isinstance(value, bool) else None
+
+    schema: dict[str, Json] = {
+        "type": "object",
+        "properties": {field: {"type": "boolean"}},
+        "required": [field],
+    }
+    return Judge(
+        name,
+        prompt,
+        schema,
+        parse,
+        timeout=timeout,
+        unread=unread,
+        trust_fallback=trust_fallback,
+        attempts=attempts,
+        spend=spend,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class Call:
     """What one call to the model needs to be tagged and timed: a judge's, or a repeated read's."""
@@ -79,6 +115,7 @@ class Read[T]:
     cost_usd: float
     ref: str  # the prompt's name@version, for the decision it feeds
     latency_ms: int = 0
+    fallback: bool = False  # the fallback model answered, so a floor judge does not trust it
 
 
 async def attempt(extractor: StructuredModel, call: Call, user: str) -> Extraction:
@@ -114,7 +151,7 @@ async def _ask[T](
     if got is None:
         log.warning("%s judge could not be read; %s", judge.name, judge.unread)
         return None
-    if not judge.trust_fallback and from_fallback(got.model):
+    if not judge.trust_fallback and got.fallback:
         log.info(
             "%s judge answered by the fallback model, not trusted; %s", judge.name, judge.unread
         )
@@ -124,7 +161,7 @@ async def _ask[T](
         log.warning("%s judge gave an unreadable answer; %s", judge.name, judge.unread)
         return None
     log.debug("%s judge: %r, $%.5f, %dms", judge.name, value, got.cost_usd, got.latency_ms)
-    return Read(value, got.model, got.cost_usd, judge.prompt.ref, got.latency_ms)
+    return Read(value, got.model, got.cost_usd, judge.prompt.ref, got.latency_ms, got.fallback)
 
 
 async def _first_answer[T](

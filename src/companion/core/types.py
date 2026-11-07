@@ -43,6 +43,13 @@ def severity_from(value: Json) -> Severity | None:
         return None
 
 
+def unit_interval(value: Json) -> float | None:
+    """A model's confidence, held to 0 through 1; None when it is not a number."""
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return min(max(float(value), 0.0), 1.0)
+
+
 class Sensitivity(IntEnum):
     """How delicate a memory is."""
 

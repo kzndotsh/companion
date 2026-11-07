@@ -22,7 +22,7 @@ from collections.abc import Mapping
 
 import httpx
 
-from companion.core.extractor import FALLBACK, Extraction, StructuredModel, current_judge
+from companion.core.extractor import Extraction, StructuredModel, as_fallback, current_judge
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply, Talker
 from companion.core.types import Json
@@ -43,7 +43,7 @@ class RefusalFallback:
                 raise
             log.warning("the first model refused (403); asking the fallback model")
         got = await self._second.extract(system, user, schema)
-        return Extraction(got.data, got.model + FALLBACK, got.cost_usd, got.latency_ms)
+        return as_fallback(got)
 
 
 class ByJudge:

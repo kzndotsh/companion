@@ -21,7 +21,7 @@ Both write a decision with the scores, the model, the prompt and its inputs hash
 | `core/turn/reactions.py` | pure: both judges' schemas and reads (`InsteadRead`, `ToneRead`), the prefilter (`is_candidate`), the thresholds, `reaction_instead`, `reaction_alongside` and the reasons |
 | `turn/reactions.py` | effects: the two `Judge` declarations, `react_instead` (the listen stage runs it), `react_alongside` (the persist stage runs it) and the logged decisions |
 
-The reaction types a turn hands to the chat (`Reaction`, `ReactAndReply`, `ThenSend`) are in `core/turn/reply.py`, because delivery sends them. What a small judge reads of the chat (`build_prompt`) and its hash are in `core/turn/context.py`. `stretched` is in `core/turn/energy.py`, which `marks` also uses.
+The reaction types a turn hands to the chat (`Reaction`, `ReactAndReply`, `ThenSend`) are in `core/turn/reply.py`, because delivery sends them. What a small judge reads of the chat (`conversation_prompt`, one shape for every judge that reads a transcript), the hashes a logged decision keeps, and `Scored` (a read with its model and prompt, which builds the standard decision detail) are in `core/turn/context.py`. `stretched` is in `core/turn/energy.py`, which `marks` also uses.
 
 ## Prompts
 

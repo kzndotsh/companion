@@ -15,35 +15,33 @@ from companion.core.card import GUARDED_HEADING, MEMORY_HEADING, OLDER_HEADING, 
 from companion.prompts import get
 
 _BRACKETED = re.compile(r"\[(.*?)\]", re.DOTALL)
-_SECTIONS = (
-    (MEMORY_HEADING, "memory"),
-    (GUARDED_HEADING, "held"),
-    (OLDER_HEADING, "older"),
-    (VIEWS_HEADING, "views"),
-    # The scene card's blocks (ADR 0026), matched by their notes' own opening words.
+# The blocks that are memory, not notes, found by their opening words: the card's own, and the
+# scene card's blocks (ADR 0026) by their notes' own opening words.
+_MEMORY_HEADINGS = (
+    MEMORY_HEADING,
+    GUARDED_HEADING,
+    OLDER_HEADING,
+    VIEWS_HEADING,
     *(
-        (get(f"notes/scene-{part}").text.split("$")[0].lstrip("["), f"scene-{part}")
+        get(f"notes/scene-{part}").text.split("$")[0].lstrip("[")
         for part in ("limits", "known", "offer", "basics")
     ),
 )
 
 
-def tagged(card: str, *, memory: bool = True) -> str:
-    """The same system block with each part in a tag: the clock, each memory block, and every
-    other bracketed line gathered under notes. The words inside are unchanged. With `memory` off
-    the memory blocks stay bracketed as they are, as the turn sends them."""
+def tagged(card: str) -> str:
+    """The same system block with the clock in a tag and every bracketed line that is not a memory
+    block gathered under notes. The words inside are unchanged; the memory blocks stay bracketed as
+    the turn sends them."""
     parts: list[str] = []
     notes: list[str] = []
     rest = card
     for m in _BRACKETED.finditer(card):
         body = m.group(1).strip()
-        tag = next((t for head, t in _SECTIONS if body.startswith(head)), None)
-        if tag is None:
-            notes.append(body)
-        elif memory:
-            parts.append(f"<{tag}>\n{body}\n</{tag}>")
-        else:
+        if body.startswith(_MEMORY_HEADINGS):
             parts.append(m.group(0))
+        else:
+            notes.append(body)
         rest = rest.replace(m.group(0), "", 1)
     plain = [line.strip() for line in rest.splitlines() if line.strip()]
     clock = [f"<clock>{line}</clock>" for line in plain]

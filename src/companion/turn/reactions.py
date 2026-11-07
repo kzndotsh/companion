@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 from companion.core.extractor import StructuredModel
-from companion.core.turn.context import build_prompt, inputs_hash
+from companion.core.turn.context import Scored, conversation_prompt
 from companion.core.turn.reactions import (
     ALONGSIDE_PROMPT,
     ALONGSIDE_SCHEMA,
@@ -21,7 +21,6 @@ from companion.core.turn.reactions import (
     reaction_alongside,
     reaction_instead,
     render_reason,
-    schema_hash,
 )
 from companion.core.turn.reply import Reaction
 from companion.core.types import HEAVY_AT, Speaker, Utterance, severity_from
@@ -55,20 +54,20 @@ ALONGSIDE = Judge(
 
 async def judge_instead(
     extractor: StructuredModel, history: Sequence[Utterance], text: str
-) -> tuple[InsteadRead, str, str] | None:
+) -> Scored[InsteadRead] | None:
     """The judgement, the model id and the prompt, or None if it could not be made in time."""
-    prompt = build_prompt(history, text)
+    prompt = conversation_prompt(history, text)
     got = await ask(extractor, INSTEAD, prompt)
-    return None if got is None else (got.value, got.model, prompt)
+    return None if got is None else Scored(got.value, got.model, prompt)
 
 
 async def judge_alongside(
     extractor: StructuredModel, history: Sequence[Utterance], text: str
-) -> tuple[ToneRead, str, str] | None:
+) -> Scored[ToneRead] | None:
     """The judgement, the model id and the prompt, or None if it could not be made in time."""
-    prompt = build_prompt(history, text)
+    prompt = conversation_prompt(history, text)
     got = await ask(extractor, ALONGSIDE, prompt)
-    return None if got is None else (got.value, got.model, prompt)
+    return None if got is None else Scored(got.value, got.model, prompt)
 
 
 async def react_instead(c: Runtime, t: Turn, *, crisis_cue: bool) -> Reaction | None:
@@ -84,7 +83,7 @@ async def react_instead(c: Runtime, t: Turn, *, crisis_cue: bool) -> Reaction | 
     if outcome is None:
         mark(t, "ack judge gave no answer; replying")
         return None
-    judged, model, prompt = outcome
+    judged = outcome.read
     reaction = reaction_instead(judged)
     mark(
         t, f"ack judged {judged.kind} {judged.confidence:.2f} -> {'react' if reaction else 'reply'}"
@@ -93,14 +92,12 @@ async def react_instead(c: Runtime, t: Turn, *, crisis_cue: bool) -> Reaction | 
         c,
         t,
         REACTED if reaction is not None else "ack: replied",
-        {
-            "scorer": model,
-            "prompt": INSTEAD_PROMPT.ref,
-            "schema_hash": schema_hash(),
-            "inputs_hash": inputs_hash(prompt),
-            "scores": {"kind": judged.kind, "confidence": judged.confidence},
-            "threshold": INSTEAD_THRESHOLD,
-        },
+        outcome.detail(
+            INSTEAD_PROMPT.ref,
+            schema=INSTEAD_SCHEMA,
+            scores={"kind": judged.kind, "confidence": judged.confidence},
+            threshold=INSTEAD_THRESHOLD,
+        ),
         reason=render_reason(judged, reaction is not None),
     )
     return reaction
@@ -119,22 +116,19 @@ def _after_serious(c: Runtime, t: Turn) -> bool:
     return False
 
 
-def react_alongside(c: Runtime, t: Turn, felt: tuple[ToneRead, str, str] | None) -> Reaction | None:
+def react_alongside(c: Runtime, t: Turn, felt: Scored[ToneRead] | None) -> Reaction | None:
     """A reaction to send with the reply, if the message calls for one. Logs the judgement."""
     if felt is None:
         return None
-    judged, model, prompt = felt
+    judged = felt.read
     decision = reaction_alongside(judged, c.store.turns_since_reaction(c.rel))
     decide(
         c,
         t,
         REACTED if decision.reaction is not None else "react: none",
-        {
-            "scorer": model,
-            "prompt": ALONGSIDE_PROMPT.ref,
-            "inputs_hash": inputs_hash(prompt),
-            "scores": {"tone": judged.tone, "confidence": judged.confidence},
-        },
+        felt.detail(
+            ALONGSIDE_PROMPT.ref, scores={"tone": judged.tone, "confidence": judged.confidence}
+        ),
         reason=decision.reason,
     )
     return decision.reaction

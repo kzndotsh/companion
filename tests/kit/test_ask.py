@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from companion.core.extractor import FALLBACK, Extraction
+from companion.core.extractor import Extraction, as_fallback
 from companion.core.types import Json
 from companion.kit.ask import Judge, ReadFailed, ask, ask_or_raise
 from companion.prompts import get
@@ -31,8 +31,17 @@ def _judge(*, trust_fallback: bool = True, timeout: float = 1.0) -> Judge[bool]:
 
 
 class Fake:
-    def __init__(self, data: Json, model: str = "m", *, delay: float = 0, fail: bool = False):
+    def __init__(
+        self,
+        data: Json,
+        model: str = "m",
+        *,
+        delay: float = 0,
+        fail: bool = False,
+        fallback: bool = False,
+    ):
         self.data, self.model, self.delay, self.fail = data, model, delay, fail
+        self.fallback = fallback
         self.seen: list[tuple[str, str]] = []
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
@@ -42,7 +51,8 @@ class Fake:
         if self.fail:
             msg = "down"
             raise RuntimeError(msg)
-        return Extraction(self.data, self.model, 0.001, 5)
+        got = Extraction(self.data, self.model, 0.001, 5)
+        return as_fallback(got) if self.fallback else got
 
 
 async def test_a_read_carries_the_value_the_model_the_cost_and_the_prompt_version() -> None:
@@ -70,7 +80,7 @@ async def test_a_failed_slow_or_unreadable_read_is_none(
 
 
 async def test_a_fallback_answer_counts_only_where_it_is_trusted() -> None:
-    fake = Fake({"declines": True}, model=f"m{FALLBACK}")
+    fake = Fake({"declines": True}, fallback=True)
     assert await ask(fake, _judge(trust_fallback=False), "x") is None
     trusted = await ask(fake, _judge(), "x")
     assert trusted is not None
