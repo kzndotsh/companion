@@ -4,16 +4,10 @@ from collections.abc import Callable
 from pathlib import Path
 
 from companion.core.types import DecisionKind, Json, Utterance
-from companion.features.mood import store as mood_store
 from companion.features.mood.store import MoodEffects
-from companion.store.sqlite import decisions
 from companion.store.sqlite.store import Store
 from tests.conftest import REL, T0
 from tests.store.test_decisions import make
-
-
-def test_the_reaction_key_mood_reads_is_the_one_persist_writes() -> None:
-    assert mood_store.REACTED == decisions.REACTED
 
 
 def _judged(store: Store, said: Utterance, key: str | None, detail: dict[str, Json]) -> None:

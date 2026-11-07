@@ -5,14 +5,7 @@ from datetime import UTC, datetime, timedelta, tzinfo
 
 from companion.core.types import RelationshipId, Sensitivity, UtteranceId
 from companion.features.threads.gate import evaluate
-from companion.features.threads.logic import (
-    FOLLOW_UP_KEEPS,
-    NOTE_KEEPS,
-    REACH_KEEPS,
-    Thread,
-    ThreadKind,
-    ThreadState,
-)
+from companion.features.threads.logic import Thread, ThreadKind, ThreadState
 
 REL = RelationshipId("rel")
 NOON = datetime(2026, 10, 14, 12, 0, tzinfo=UTC)
@@ -87,16 +80,16 @@ def test_a_loop_past_its_horizon_is_reported_expired_and_not_sent() -> None:
 def test_a_follow_up_is_reached_out_about_for_two_days_and_stays_open_for_the_note_for_three() -> (
     None
 ):
+    recent = _loop(follow_up=NOON - timedelta(days=1), id="recent")
+    assert evaluate([recent], *_at()).send
     late = _loop(follow_up=NOON - timedelta(days=2, hours=12), id="late")
     v = evaluate([late], *_at())
     assert not v.send
     assert v.expired == ()
-    assert REACH_KEEPS < FOLLOW_UP_KEEPS == NOTE_KEEPS
-
-
-def test_the_same_inputs_always_give_the_same_answer() -> None:
-    loops = [_loop()]
-    assert evaluate(loops, *_at()) == evaluate(loops, *_at())
+    gone = _loop(follow_up=NOON - timedelta(days=3, hours=12), id="gone")
+    v = evaluate([gone], *_at())
+    assert not v.send
+    assert v.expired == (gone,)
 
 
 def test_a_celebration_keeps_only_for_its_own_day() -> None:

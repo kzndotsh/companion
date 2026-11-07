@@ -259,11 +259,16 @@ async def test_errors_never_carry_the_bot_token() -> None:
     assert caught.value.__suppress_context__
 
 
-async def test_a_recovered_poll_says_so_in_the_log(caplog: pytest.LogCaptureFixture) -> None:
+async def test_a_recovered_poll_says_so_in_the_log(
+    caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
     import asyncio  # noqa: PLC0415
     import logging  # noqa: PLC0415
 
+    import companion.io.telegram as module  # noqa: PLC0415
+
     calls = 0
+    real_sleep = asyncio.sleep
 
     async def handler(req: httpx.Request) -> httpx.Response:
         nonlocal calls
@@ -271,26 +276,22 @@ async def test_a_recovered_poll_says_so_in_the_log(caplog: pytest.LogCaptureFixt
             calls += 1
             if calls <= 2:
                 return httpx.Response(502, json={"ok": False, "description": "Bad Gateway"})
-            await asyncio.sleep(0.02)
+            await real_sleep(0.02)
             return httpx.Response(200, json={"ok": True, "result": []})
         return httpx.Response(200, json={"ok": True, "result": True})
 
     client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
     tg = Telegram("t", ALLOWED, client)
-    real_sleep = asyncio.sleep
 
     async def quick_sleep(seconds: float) -> None:
         await real_sleep(min(seconds, 0.01))
 
+    monkeypatch.setattr(module.asyncio, "sleep", quick_sleep)
     with caplog.at_level(logging.INFO, logger="companion.telegram"):
-        asyncio.sleep = quick_sleep  # type: ignore[assignment]
-        try:
-            task = asyncio.create_task(tg.receive(asyncio.Queue(), None))
-            await real_sleep(0.2)
-            task.cancel()
-            await asyncio.gather(task, return_exceptions=True)
-        finally:
-            asyncio.sleep = real_sleep  # type: ignore[assignment]
+        task = asyncio.create_task(tg.receive(asyncio.Queue(), None))
+        await real_sleep(0.2)
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
     messages = [r.getMessage() for r in caplog.records]
     assert sum("poll failed" in m for m in messages) == 2
     assert "poll recovered after 2 failed attempt(s)" in messages

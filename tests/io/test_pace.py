@@ -36,12 +36,16 @@ def test_the_wait_is_capped_however_long_the_reply() -> None:
 
 def test_a_long_message_takes_longer_to_read_up_to_about_a_minute() -> None:
     reply = "word " * 57
-    short = target_seconds("word " * 40, reply, 1.0)
+    chat = target_seconds("word " * 40, reply, 1.0)
     paste = target_seconds("word " * 600, reply, 1.0)
-    assert short == MAX_SECONDS
-    assert paste == pytest.approx(MAX_SECONDS + 56.0)
-    assert read_seconds("word " * 600, 1.0) == pytest.approx(58.0)
-    assert read_seconds("word " * 5000, 1.6, jitter=1.25) == pytest.approx(2.0 * 1.6 * 1.25 + 58.0)
+    bigger = target_seconds("word " * 900, reply, 1.0)
+    assert chat == MAX_SECONDS
+    assert chat < paste < bigger
+    assert read_seconds("word " * 600, 1.0) < read_seconds("word " * 900, 1.0)
+    huge = read_seconds("word " * 5000, 1.0)
+    assert huge == read_seconds("word " * 50000, 1.0)
+    assert 30 < huge <= 65
+    assert read_seconds("word " * 5000, 1.6, jitter=1.25) > huge
     assert target_seconds("word " * 20, reply, 1.0) == MAX_SECONDS  # short chat unchanged
 
 

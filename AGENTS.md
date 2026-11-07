@@ -110,7 +110,7 @@ together.
   next `vN.md`, an entry in `prompts/CHANGELOG.md` and a line in `manifest.toml` (`tests/test_prompts.py`
   fails otherwise). A judge's or extractor's logged decision carries `name@version` (ADR 0013).
 - Dropped and candidate persona versions stay as files. Each `vN.md` has a changelog entry and each
-  entry has its file (`tests/test_persona_versions.py` fails otherwise). Never delete a version.
+  entry has its file (`tests/test_prompts.py` fails otherwise). Never delete a version.
 - A prompt change, or a code change that alters what the model is sent, goes in
   `src/companion/prompts/CHANGELOG.md`. Shipping a persona is changing `system/persona` in
   `manifest.toml`. A measurement goes in `evals/CHANGELOG.md`.

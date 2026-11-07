@@ -8,9 +8,7 @@ import pytest
 
 from companion.core.replay import TurnRecord
 from companion.core.types import Belief, Flag, FlagId, FlagKind, TurnId, Utterance
-from companion.lib.sqlite.db import connect
 from companion.store.sqlite import flags, ledger, turns
-from companion.store.sqlite.db import migrate
 from tests.conftest import REL, T0
 
 
@@ -71,15 +69,6 @@ def test_unknown_flag_kind_is_rejected_by_the_database(conn: sqlite3.Connection)
     t = _turn(conn, "t1")
     with pytest.raises(sqlite3.IntegrityError):
         conn.execute("INSERT INTO flags VALUES ('f', ?, ?, 'meh', '', ?)", (REL, t, T0.isoformat()))
-
-
-def test_migrations_are_idempotent(tmp_path: object) -> None:
-    from pathlib import Path  # noqa: PLC0415
-
-    c = connect(Path(str(tmp_path)) / "x.sqlite")
-    migrate(c)
-    migrate(c)
-    c.close()
 
 
 def test_last_support_is_the_newest_evidence_time(

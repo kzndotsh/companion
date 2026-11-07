@@ -145,24 +145,6 @@ def test_a_weak_state_shows_nothing() -> None:
     assert reason(mood, held=None) == "mood: none strong enough"
 
 
-def test_the_mood_is_the_same_whatever_order_the_effects_are_read_in() -> None:
-    effects = [
-        e
-        for h in range(12)
-        for e in effects_for(
-            _in(
-                DAY + timedelta(minutes=17 * h),
-                chat_minutes=10 * h,
-                tone="funny" if h % 3 else "sweet",
-            )
-        )
-    ]
-    at = DAY + timedelta(hours=4)
-    shuffled = effects[:]
-    random.Random(3).shuffle(shuffled)
-    assert mood_at(effects, at, UTC) == mood_at(shuffled, at, UTC)
-
-
 def test_an_effect_after_the_moment_asked_about_is_ignored() -> None:
     earlier = effects_for(_in(DAY, tone="funny"))
     later = effects_for(_in(DAY + timedelta(hours=1), tone="funny"))

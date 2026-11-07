@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import pytest
+
+from companion.features.diction.marks import logic as marks_logic
 from companion.features.diction.marks.logic import EVERY, MARKS, note, offered, pick
 
 
@@ -46,17 +49,21 @@ def test_when_they_used_a_mark_the_note_names_it_as_theirs() -> None:
     assert ":3" not in note("(｡•̀ᴗ-)✧", "some chicken and tater tots")
 
 
-def test_the_list_holds_the_kaomoji_as_written() -> None:
-    assert "(╯°□°)╯︵ ┻━┻" in MARKS
-    assert "¯\\_(ツ)_/¯" in MARKS
+def test_the_list_has_no_duplicates_and_enough_marks_to_rotate() -> None:
     assert len(MARKS) == len(set(MARKS)) >= 20
 
 
-def test_a_mark_counts_as_used_only_where_it_stands_on_its_own() -> None:
-    from companion.features.diction.marks.logic import _used  # noqa: PLC0415  # pyright: ignore[reportPrivateUsage]
+def _is_still_free(mark: str, said: str, monkeypatch: pytest.MonkeyPatch) -> bool:
+    """With `mark` the only mark there is, whether `pick` can still give it after `said`."""
+    monkeypatch.setattr(marks_logic, "MARKS", (mark,))
+    return pick("t", said, []) == mark
 
-    assert not _used("✧", "so cute (｡•̀ᴗ-)✧")
-    assert _used("✧", "so cute ✧")
-    assert _used("^^", "ok ^^")
-    assert _used("uwu", "uwu hi")
-    assert not _used("uwu", "uwuuu")
+
+def test_a_mark_counts_as_used_only_where_it_stands_on_its_own(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert _is_still_free("✧", "so cute (｡•̀ᴗ-)✧", monkeypatch)
+    assert not _is_still_free("✧", "so cute ✧", monkeypatch)
+    assert not _is_still_free("^^", "ok ^^", monkeypatch)
+    assert not _is_still_free("uwu", "uwu hi", monkeypatch)
+    assert _is_still_free("uwu", "uwuuu", monkeypatch)

@@ -112,7 +112,6 @@ def test_render_fills_every_placeholder_and_refuses_a_missing_one() -> None:
 def test_a_prompt_has_a_name_a_version_a_ref_and_a_stable_hash() -> None:
     p = prompts.get("system/ack")
     assert p.ref == f"system/ack@{prompts.manifest()['system/ack']}"
-    assert p.sha == prompts.get("system/ack").sha
     assert len(p.sha) == 12
 
 
@@ -137,7 +136,10 @@ def test_overrides_pick_another_version_and_unknown_names_are_refused(
 
 
 def test_versions_are_listed_in_numeric_order() -> None:
-    assert prompts.versions("system/extract") == [f"v{n}" for n in range(1, 11)]
+    found = prompts.versions("system/extract")
+    numbers = [int(v.removeprefix("v")) for v in found]
+    assert numbers == sorted(set(numbers))
+    assert found[-1] == prompts.manifest()["system/extract"]
 
 
 def test_the_readme_lists_every_prompt_at_its_current_version() -> None:

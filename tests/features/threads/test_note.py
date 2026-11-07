@@ -97,21 +97,27 @@ async def test_how_they_met_a_thread_is_read_once_from_their_next_message(store:
 
 
 class SlowMeets(Meets):
-    """Reads how they met it only after a long pause."""
+    """Reads how they met it only once `release` is set."""
+
+    def __init__(self, release: asyncio.Event) -> None:
+        super().__init__()
+        self.release = release
 
     async def extract(self, system: str, user: str, schema: dict[str, Json]) -> Extraction:
         props = schema["properties"]
         if isinstance(props, dict) and set(props) == {"met"}:
-            await asyncio.sleep(0.2)
+            await self.release.wait()
         return await super().extract(system, user, schema)
 
 
 async def test_the_reply_does_not_wait_for_how_they_met_it(store: Store) -> None:
     await _say(store, Meets(), NOW)
-    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=SlowMeets())
+    release = asyncio.Event()
+    runtime = make_runtime(store, Talker(), PREFIX, REL, judge=SlowMeets(release))
     later = NOW + timedelta(minutes=1)
-    await asyncio.wait_for(handle(runtime, "it went great", "test", later), timeout=0.15)
+    await asyncio.wait_for(handle(runtime, "it went great", "test", later), timeout=10)
     assert _met(store) == []
+    release.set()
     await settled()
     assert _met(store) == ["picked_up"]
 

@@ -156,7 +156,6 @@ def test_a_look_up_with_no_limit_or_one_past_the_deadline_stops_the_bot_at_load(
 
 
 def test_each_note_name_is_one_note_and_a_feature_note_is_named_by_it() -> None:
-    assert len({n.value for n in NoteName}) == len(NoteName)
     assert set(notes.ORDER) == set(NoteName)
     named = {f.name for f in FEATURES if f.note is not None}
     assert named <= set(NoteName)

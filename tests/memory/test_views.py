@@ -286,9 +286,7 @@ async def test_only_approved_views_reach_the_model_and_the_placement_is_logged(
     assert "closed" not in reasons
 
 
-def _two_day_view(
-    store: Store, bid: str = "idea", kind: BeliefKind = BeliefKind.PREFERENCE
-) -> Belief:
+def _two_day_view(store: Store, bid: str = "idea") -> Belief:
     _say(store, 1, Speaker.COMPANION, "short replies read as more human to me")
     _say(store, 60 * 30, Speaker.COMPANION, "still: short replies read as more human")
     view = _own_view(
@@ -297,7 +295,6 @@ def _two_day_view(
         "short replies read as more human",
         "The companion thinks short replies read as more human.",
     )
-    view = Belief(**{**view.__dict__, "kind": kind}) if False else view
     store.insert_belief(view)
     store.add_evidence(
         view.id, Evidence(UtteranceId(f"u{60 * 30}"), "short replies read as more human")

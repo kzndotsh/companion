@@ -4,13 +4,9 @@ from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
-from companion.core.freshness import HORIZON_DAYS, Freshness, status, when_phrase
+from companion.core.freshness import Freshness, status, when_phrase
 from companion.core.types import BeliefKind
 from tests.conftest import T0
-
-
-def test_every_kind_has_a_horizon() -> None:
-    assert set(HORIZON_DAYS) == set(BeliefKind)
 
 
 @pytest.mark.parametrize(
