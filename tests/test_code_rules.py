@@ -54,9 +54,8 @@ def test_no_code_matches_a_decisions_reason_text() -> None:
     assert not extra, f"match a decision's key (Decision.has_key), not its reason text: {extra}"
 
 
-# A raw uuid is how an id was made before `core/ids.py`. These two still make one and may only
-# shrink: `daemon.py` (a flag and a favorite) and `cli/flags.py` (a favorite from a flag).
-UUID_ALLOWED = {"core/ids.py", "daemon.py", "cli/flags.py"}
+# An id is made by `core/ids.py` `new_id`, never by a raw uuid elsewhere.
+UUID_ALLOWED = {"core/ids.py"}
 
 
 def test_ids_are_made_by_new_id() -> None:

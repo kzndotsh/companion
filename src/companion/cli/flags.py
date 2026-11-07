@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import argparse
-import uuid
 from pathlib import Path
 
 from companion.core.clock import utc_now
+from companion.core.ids import new_id
 from companion.core.types import Favorite, FavoriteId, RelationshipId
 from companion.kit.command import Command, Group, db_args, emit, target
 from companion.store.sqlite.store import Store
@@ -26,9 +26,7 @@ def to_favorite(db: Path, relationship: str, id_prefix: str) -> str:
             return f"{len(matches)} flags match {id_prefix!r}; give more of the flag or turn id\n"
         flag, now = matches[0], utc_now()
         store.withdraw_flag(flag.id, "moved to a favourite by the owner", now)
-        store.add_favorite(
-            Favorite(FavoriteId(uuid.uuid4().hex), rel, flag.turn_id, flag.comment, now)
-        )
+        store.add_favorite(Favorite(FavoriteId(new_id()), rel, flag.turn_id, flag.comment, now))
     return f"moved to favourites: {flag.comment}\n"
 
 
