@@ -89,7 +89,7 @@ a command. The settings that turn each one on or off are listed in `README.md`.
 | Reminders | Reminds you, checks in or says good morning when you ask, once or every day | live | `features/reminders` |
 | What's coming | Remembers "dinner's almost ready" until it happens, so it doesn't jump ahead | shadow | `features/now` |
 | Writes first about a plan | Messages you first when a plan of yours is due | shadow | `features/threads` |
-| Writes first for its own reasons | Messages you first because something reminded it of you, it's your usual time, or it missed you. It thinks of a few ideas and picks one, at a share of chats you set, and waits after a hard moment | shadow | `features/reach` |
+| Writes first for its own reasons | Messages you first because something reminded it of you, it's your usual time, or it missed you. It thinks of a few ideas and picks one, at a share of chats you set, and waits after a hard moment. If you ask it not to text first, it stops until you turn it back on (`companion initiative --resume`) | shadow | `features/reach` |
 | Teases when you're gone long | One light tease when you said you'd be quick and were gone much longer | shadow | `features/nudges` |
 | Learns your pace | Learns how often to bring things up from how you reacted before | shadow | ADR 0023 |
 

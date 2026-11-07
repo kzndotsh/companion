@@ -86,6 +86,12 @@ nothing counts streaks or optimises how many messages they send.
 
 **Outcomes are recorded** (ADR 0015's card A6): sent, answered or not, how soon, how long the answer
 was, and any flag or favourite on it. These, not message counts, decide whether a kind stays.
+_Update 2026-11-07 (issue 123):_ built as one `reach out: outcome` decision per reach-out of any kind,
+once answered or after two days. Read receipts do not exist on Telegram or Discord, so "seen" is not
+recorded. Decided with the owner: a shadow one gets a record too, as the base rate (when they came
+back on their own); only a live one steps the dial down; a live answer is read for how they took it,
+and a request to stop holds every reach-out until the owner turns it back on. A direct reply, an
+emoji and a flag or favourite on it wait for live sending, which gives the message its id (issue 143).
 
 **Kept from ADR 0015.** The gate is pure code, every hold and send is a decision with a reason written
 by code, the draft is the only paid call and comes last, the tables are append-only, and the time

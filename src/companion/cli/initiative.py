@@ -15,6 +15,7 @@ from companion.core.turn.now import Phase, from_decisions
 from companion.core.types import RelationshipId
 from companion.features.reach import cli as own_reasons
 from companion.features.reach.logic import dial
+from companion.features.reach.run import resume as resume_reach
 from companion.features.threads.run import HELD
 from companion.settings import Settings
 from companion.store.sqlite.store import Store
@@ -59,3 +60,15 @@ def run(db: Path, relationship: str, now: datetime | None = None) -> str:
     ] or ["  none yet"]
     out += ["", *own]
     return "\n".join(out) + "\n"
+
+
+def resume(db: Path, relationship: str, now: datetime | None = None) -> str:
+    """Turn reaching out back on after they asked it to stop (issue 123)."""
+    store = Store(db)
+    try:
+        done = resume_reach(store, RelationshipId(relationship), now or utc_now())
+    finally:
+        store.close()
+    if not done:
+        return "reaching out is not stopped; nothing to resume\n"
+    return "reaching out is back on: they asked it to stop, and you turned it back on\n"

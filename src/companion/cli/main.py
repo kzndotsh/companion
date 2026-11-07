@@ -214,7 +214,13 @@ def _parser() -> argparse.ArgumentParser:
     _db_args(fl)
     _db_args(add("favorites", help="list the turns you loved"))
     _db_args(add("spend", help="what the paid calls cost, by purpose"))
-    _db_args(add("initiative", help="open loops, and the messages it would send you first"))
+    it = add("initiative", help="open loops, and the messages it would send you first")
+    it.add_argument(
+        "--resume",
+        action="store_true",
+        help="turn reaching out back on after they asked it to stop",
+    )
+    _db_args(it)
     _state_commands(add)
     add("shadows", help="every feature in shadow, its review date and the overdue ones")
     pr = add("prompts", help="the current version of every prompt, or the text of one")
@@ -368,6 +374,8 @@ def _mood(a: argparse.Namespace) -> int:
 
 
 def _initiative(a: argparse.Namespace) -> int:
+    if a.resume:
+        return _out(initiative.resume(*_target(a)))
     return _out(initiative.run(*_target(a)))
 
 

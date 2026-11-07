@@ -828,6 +828,8 @@ here on 2026-10-18 from its own file; what is true today is in the README.
 
 ## system/reach-pick
 - **system/reach-pick v1** (current). New, 2026-11-03 (ADR 0021, shadow). Sees what the brainstorm saw and the screened ideas, numbered, and picks the one they would be gladdest to get now, or 0 for none: generic, wrong after the last chat, resting on something they do not like or want, painful or private, about the two of them, or a repeat. None is recorded as a dropped attempt, so the six-hour gap holds.
+## system/reach-landed
+- **system/reach-landed v1** (current). New, 2026-11-07 (ADR 0021, card A6, issue 123). Reads how they took a live reach-out from their first answer: picked up, brushed off, ignored, or asked it to stop messaging first. Its own prompt rather than `system/thread-met`, which has no stop and drives the threads pace. Read only for a live reach-out; a shadow one was never seen. A stop holds every reach-out until the owner turns it back on (`companion initiative --resume`). Not yet measured: nothing is sent live yet, so check it on invented answers before reach-outs go live.
 ## system/invented-judge
 - **system/invented-judge v1** (current). New (G42, J9: the made-up facts rate). Reads a reply with the 40 messages before it and the memory card it had, and lists each statement asserting a fact about the user's own life with what supports it (conversation, memory or none). Code keeps only quotes from the reply that are said to them (you, your). Never on the reply path: `companion invented`. On 367 real replies a stronger reader confirmed only about one flag in twelve, so its flags are candidates; the rate is what the stronger reader confirms (`--dump`).
 

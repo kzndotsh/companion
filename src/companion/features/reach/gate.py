@@ -4,8 +4,8 @@ same answer, and the first hold that applies is the reason, rendered here from t
 Kept from ADR 0015: quiet hours (now learned), a scene in progress, an active chat, the spend cap
 before any paid call, and the draft last. Added: never a second while the last is unanswered, at
 least six hours between its own, and the share of conversations it starts held under the dial,
-which steps down one level after a reach-out answered late or briefly, until they start one, and
-nothing for 12 hours after a heavy message.
+which steps down one level after a live reach-out answered late or briefly, until they start one,
+nothing for 12 hours after a heavy message, and nothing at all once they asked it to stop.
 """
 
 from __future__ import annotations
@@ -32,6 +32,7 @@ ANSWER_SPAN = timedelta(minutes=10)  # their words in this long after the first 
 
 class Hold(StrEnum):
     OFF = "the dial is off"
+    STOPPED = "they asked it to stop"
     CRISIS = "a crisis turn under a day old"
     QUIET = "quiet hours"
     SCENE = "a scene in progress"
@@ -84,8 +85,9 @@ def answer(last_own: datetime, theirs: Sequence[tuple[datetime, str]]) -> Answer
 
 
 def pace(got: Answer | None, rhythm: Rhythm, they_started_since: bool) -> str | None:
-    """Why the dial is a step lower now, or None. Lowered after an answer that came later than
-    their usual pause, or was a few words, until they start a conversation themselves."""
+    """Why the dial is a step lower now, or None. Lowered after an answer to a live reach-out that
+    came later than their usual pause, or was a few words, until they start a conversation
+    themselves. The caller passes None for a shadow one: they never got it (issue 123)."""
     if got is None or they_started_since:
         return None
     hours = got.after.total_seconds() / 3600
@@ -111,6 +113,7 @@ class Situation:
     capped: bool  # the daily spend cap is reached
     crisis: bool = False  # a concern or urgent turn under a day old (ADR 0022)
     heavy_at: datetime | None = None  # their newest message read as heavy
+    stopped: bool = False  # they asked it not to reach out first, and it is not yet back on
 
     @property
     def effective(self) -> Dial:
@@ -136,6 +139,11 @@ def hold(sit: Situation) -> tuple[Hold, str] | None:
     target = TARGET[sit.effective]
     checks: tuple[tuple[bool, Hold, Callable[[], str]], ...] = (
         (sit.dial is Dial.OFF, Hold.OFF, lambda: "COMPANION_REACH is off"),
+        (
+            sit.stopped,
+            Hold.STOPPED,
+            lambda: "they asked it not to message first; off until companion initiative --resume",
+        ),
         (sit.crisis, Hold.CRISIS, lambda: PAUSE_REASON),
         (
             local.hour in sit.rhythm.quiet,

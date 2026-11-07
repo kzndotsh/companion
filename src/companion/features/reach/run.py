@@ -67,6 +67,20 @@ from companion.features.reach.logic import (
     read_pick,
     screened,
 )
+from companion.features.reach.outcome import (
+    LANDED,
+    LANDED_SCHEMA,
+    OUTCOME,
+    RESUMED,
+    STOPPED,
+    UNANSWERED_AFTER,
+    Landed,
+    Sent,
+    landed_prompt,
+    outcome,
+    parse_landed,
+    stopped,
+)
 from companion.features.reach.store import Own
 from companion.kit.ask import Judge, ask
 from companion.kit.record import Recorder
@@ -81,6 +95,9 @@ IDEAS_JUDGE = Judge(
 )
 PICK_JUDGE = Judge(
     "initiative", PICK, PICK_SCHEMA, read_pick, timeout=20.0, unread="no reach-out this time"
+)
+LANDED_JUDGE = Judge(
+    "reach-landed", LANDED, LANDED_SCHEMA, parse_landed, timeout=10.0, unread="not read"
 )
 HEAVY = Severity.SERIOUS  # a listening read at this severity or above is a heavy message
 
@@ -130,12 +147,20 @@ def _pool(store: Store, rel: RelationshipId, now: datetime) -> Pool:
     )
 
 
-def _sent(store: Store, rel: RelationshipId, start: datetime) -> tuple[list[datetime], list[Own]]:
-    """When it reached out (or would have, in shadow) in any way, and its own rows."""
+def _sent(store: Store, rel: RelationshipId, start: datetime) -> tuple[list[Sent], list[Own]]:
+    """Every reach-out of any kind it sent (or would have, in shadow), oldest first, and its own
+    rows, dropped drafts included."""
     own = store.own_reach_outs(rel, start)
-    nudges = [d.at for d in store.decisions_with_key(rel, WOULD_NUDGE, start)]
-    loops = [r.at for r in store.reach_outs(rel, start)]
-    return sorted([*(r.at for r in own if r.mode != "dropped"), *nudges, *loops]), own
+    nudges = [
+        Sent(str(d.id), Kind.AWAY, False, str((d.detail or {}).get("draft") or ""), d.at)
+        for d in store.decisions_with_key(rel, WOULD_NUDGE, start)
+    ]
+    loops = [
+        Sent(r.id, Kind.PLAN, r.mode == "live", r.draft, r.at) for r in store.reach_outs(rel, start)
+    ]
+    mine = [Sent(r.id, Kind(r.kind), r.mode == "live", r.draft, r.at) for r in own]
+    kept = [s for s, r in zip(mine, own, strict=True) if r.mode != "dropped"]
+    return sorted([*kept, *nudges, *loops], key=lambda s: s.at), own
 
 
 def _heavy_at(store: Store, rel: RelationshipId, now: datetime) -> datetime | None:
@@ -222,10 +247,12 @@ def situation(
     theirs = [(u.at, u.text) for u in history if u.speaker is Speaker.USER]
     times = [at for at, _ in theirs]
     rhythm = learn(times, now, tz)
-    sent, own = _sent(store, rel, now - WINDOW)
+    every, own = _sent(store, rel, now - WINDOW)
+    sent = [s.at for s in every]
     last_sent = max(sent, default=None)
     last_theirs = max(times, default=None)
-    got = None if last_sent is None else answer(last_sent, theirs)
+    # Only a live reach-out's answer steps the dial down: a shadow one was never seen (issue 123).
+    got = answer(every[-1].at, theirs) if every and every[-1].live else None
     events = [(u.at, u.speaker is Speaker.COMPANION) for u in history] + [(t, True) for t in sent]
     started = (
         got is not None
@@ -249,6 +276,10 @@ def situation(
         capped=over_cap(store, rel, reacher.cap, now) is not None,
         crisis=crisis_paused(lambda key, since: store.decided_since(rel, key, since), now),
         heavy_at=_heavy_at(store, rel, now),
+        stopped=stopped(
+            [d.at for d in store.decisions_with_key(rel, STOPPED) if d.at <= now],
+            [d.at for d in store.decisions_with_key(rel, RESUMED) if d.at <= now],
+        ),
     )
     look = Look(
         now=now,
@@ -376,3 +407,63 @@ async def _draft(
     )
     log.info("reach shadow: would send %r (%s, %s)", idea.message, kind, idea.angle)
     return row
+
+
+async def record_outcomes(
+    store: Store, rel: RelationshipId, now: datetime, judge: StructuredModel | None
+) -> int:
+    """Record how each reach-out landed, once (issue 123): every one in the last two weeks with no
+    record yet whose answer is in or whose two days have passed. A live one's answer is read for
+    how they took it, and a request to stop is recorded, which holds every reach-out. Returns how
+    many it recorded."""
+    start = now - WINDOW - UNANSWERED_AFTER
+    done = {
+        str((d.detail or {}).get("reach_out"))
+        for d in store.decisions_with_key(rel, OUTCOME, start)
+    }
+    theirs = [
+        (u.at, u.text)
+        for u in store.history_before(rel, now, HISTORY)
+        if u.speaker is Speaker.USER and u.at >= start
+    ]
+    count = 0
+    for sent in _sent(store, rel, start)[0]:
+        got = None if sent.id in done else outcome(sent, theirs, now)
+        if got is None:
+            continue
+        landed = None
+        if sent.live and got.got is not None and judge is not None:
+            read = await ask(judge, LANDED_JUDGE, landed_prompt(sent.text, got.reply))
+            landed = None if read is None else read.value
+        detail: dict[str, Json] = {**got.detail(landed), "prompt": LANDED.ref}
+        a = got.got
+        how = (
+            "unanswered after two days"
+            if a is None
+            else f"answered after {a.after.total_seconds() / 3600:.1f}h in {a.words} words"
+        )
+        base = "" if sent.live else ", in shadow: when they came back on their own"
+        _record(store, rel, now).decide(
+            OUTCOME, detail, reason=f"{OUTCOME} ({sent.kind}): {how}{base}"
+        )
+        if landed is Landed.STOP:
+            _record(store, rel, now).decide(
+                STOPPED,
+                {"reach_out": sent.id, "kind": sent.kind.value},
+                reason=f"{STOPPED}: they asked it not to message first; off until resumed",
+                kind=DecisionKind.POLICY,
+            )
+            log.info("reach: they asked it to stop; every reach-out holds until resumed")
+        count += 1
+    return count
+
+
+def resume(store: Store, rel: RelationshipId, now: datetime) -> bool:
+    """Turn reaching out back on after they asked it to stop. False when no stop stands."""
+    stops = [d.at for d in store.decisions_with_key(rel, STOPPED)]
+    if not stopped(stops, [d.at for d in store.decisions_with_key(rel, RESUMED)]):
+        return False
+    _record(store, rel, now).decide(
+        RESUMED, {}, reason=f"{RESUMED}: the owner turned it back on", kind=DecisionKind.POLICY
+    )
+    return True

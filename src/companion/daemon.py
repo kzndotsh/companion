@@ -38,7 +38,7 @@ from companion.features.history.run import pass_step
 from companion.features.intimate.run import pass_step as scene_step
 from companion.features.nudges.run import tick_nudge
 from companion.features.reach.logic import Kind, dial
-from companion.features.reach.run import Reacher, holds, tick_reach
+from companion.features.reach.run import Reacher, holds, record_outcomes, tick_reach
 from companion.features.reminders.run import deliver_due
 from companion.features.threads.run import Ticker, drafter, tick
 from companion.features.upkeep.reread.run import SameCheck
@@ -372,6 +372,7 @@ def _start_initiative(
                 continue
             try:
                 when = (utc_now(), local_zone())
+                await record_outcomes(store, rel, when[0], judge)
                 held = holds(store, rel, when, reacher)
                 plan = (await tick(store, rel, *when, draft, ticker, held=held)).send
                 nudged = (

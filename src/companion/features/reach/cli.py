@@ -10,6 +10,7 @@ from datetime import datetime, tzinfo
 from companion.core.types import RelationshipId
 from companion.features.reach.gate import Hold
 from companion.features.reach.logic import HELD, PACED, TARGET, Dial
+from companion.features.reach.outcome import OUTCOME, summary
 from companion.features.reach.run import Reacher, situation
 from companion.store.sqlite.store import Store
 
@@ -69,4 +70,10 @@ def lines(
     out += [f"  {counts[h.value]:4}  {h.value}" for h in Hold if counts[h.value]] or ["  none"]
     paced = store.decisions_with_key(rel, PACED)
     out += [f"  dial stepped down {len(paced)} times"] if paced else []
+    out += ["", "how they landed (shadow: when they came back on their own, the base rate)"]
+    out += summary([d.detail or {} for d in store.decisions_with_key(rel, OUTCOME)]) or [
+        "  none yet"
+    ]
+    if sit.stopped:
+        out += ["", "stopped: they asked it not to message first (companion initiative --resume)"]
     return out

@@ -70,8 +70,19 @@ one in three (the default) and `clingy` one in two; `off` stops these reasons, p
 nudges, which all ask the same gate (ADR 0023). Its own messages are at least six hours apart. In shadow a message it would have
 sent counts as a conversation it started, so shadow paces itself the way live would.
 
-Inside the dial it follows how they answer. When its last message was answered later than their usual
-pause, or in a few words, the dial steps down one level until they start a conversation themselves.
+Inside the dial it follows how they answer. When its last message, sent live, was answered later than
+their usual pause, or in a few words, the dial steps down one level until they start a conversation
+themselves. A shadow one never steps it down, since they never got it.
+
+## How each one landed
+
+Each tick records how every reach-out landed, once their answer is in or two days passed without one:
+answered or not, how soon and in how many words, and for a live one how they took it (picked up,
+brushed off, ignored, or asked it to stop). A shadow one is recorded as the base rate: it only shows
+when they came back on their own, which is what a live one is compared with. These records, by kind,
+decide whether a kind stays once it is live (ADR 0021). If they ask it not to message first, every
+reach-out holds until the owner runs `companion initiative --resume`
+(`src/companion/features/reach/README.md`, issue 123).
 
 ## What it never does
 
@@ -82,6 +93,7 @@ every reach-out, which since ADR 0023 all ask the same gate (`features/reach/gat
 - never in their quiet hours, never mid-chat (any message in the last 90 minutes), never during a
   pretend scene, and a mood never triggers one (ADR 0016)
 - never a second message while the last one is unanswered: it waits for them to write first
+- never again, of any kind, once they asked it not to message first, until the owner turns it back on
 - never a sensitive memory, and one specific thing per message, kept whole however long it runs (the prompt asks for a short one;
   code never cuts it)
 - never guilt, need or blame: a draft that mentions waiting, being forgotten or ignored, how long they

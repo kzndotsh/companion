@@ -21,25 +21,28 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 **The gate.** When a kind applies, a pure gate (`gate.py`) holds it for the first of these, in order, with a reason written from the numbers:
 
 1. the dial is `off`
-2. the crisis pause: a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `crisis_paused`, ADR 0022; the pause is logged only once `COMPANION_CRISIS` is on)
-3. one of their quiet hours (learned)
-4. a pretend scene in progress
-5. a message of theirs read as heavy (listening severity 2 or more) in the last 12 hours (`AFTER_HEAVY`): a light text out of the blue right after a heavy chat reads as not having listened
-6. the chat was active in the last 90 minutes
-7. its last reach-out is unanswered: they have not written since it, so it waits for them to write first
-8. its last reach-out, or a dropped draft, was under 6 hours ago
-9. the share of conversations it started in the last 14 days is at or above the dial's target
-10. the daily spend cap is reached
+2. they asked it to stop: a live reach-out's answer read as asking it not to message first holds every reach-out until the owner runs `companion initiative --resume`
+3. the crisis pause: a turn the crisis path read as concern or urgent, acted on, under a day old (`core/crisis.py` `crisis_paused`, ADR 0022; the pause is logged only once `COMPANION_CRISIS` is on)
+4. one of their quiet hours (learned)
+5. a pretend scene in progress
+6. a message of theirs read as heavy (listening severity 2 or more) in the last 12 hours (`AFTER_HEAVY`): a light text out of the blue right after a heavy chat reads as not having listened
+7. the chat was active in the last 90 minutes
+8. its last reach-out is unanswered: they have not written since it, so it waits for them to write first
+9. its last reach-out, or a dropped draft, was under 6 hours ago
+10. the share of conversations it started in the last 14 days is at or above the dial's target
+11. the daily spend cap is reached
 
 "Its reach-outs" here are all of them: these, the open-loop reach-outs and the nudges, shadow or live.
 
-**The dial.** `COMPANION_REACH` is the share of conversations it may start over the last 14 days: `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3 (the default), `clingy` 1/2. In shadow a would-send counts as a conversation it started and as a message they have not answered, so shadow holds and paces the way live would. Code follows how they answer: when its last reach-out was answered later than their usual pause, or in 3 words or fewer (their words in the 10 minutes after their first reply), the dial steps down one level (`warm` to `normal`, `rare` to `off`) until they start a conversation themselves after that answer. The step down is logged once as `reach out: dial stepped down`. Not answering at all is the unanswered hold above. Nothing counts streaks or optimises how often they write.
+**The dial.** `COMPANION_REACH` is the share of conversations it may start over the last 14 days: `rare` 1/8, `light` 1/5, `normal` 1/4, `warm` 1/3 (the default), `clingy` 1/2. In shadow a would-send counts as a conversation it started and as a message they have not answered, so shadow holds and paces the way live would. Code follows how they answer: when its last live reach-out was answered later than their usual pause, or in 3 words or fewer (their words in the 10 minutes after their first reply), the dial steps down one level (`warm` to `normal`, `rare` to `off`) until they start a conversation themselves after that answer. The step down is logged once as `reach out: dial stepped down`. A shadow one never steps it down: they never got it, so a late answer only shows when they came back on their own (issue 123). Not answering at all is the unanswered hold above. Nothing counts streaks or optimises how often they write.
 
 **The draft.** Only when every check has passed, two paid calls, purpose `initiative`. First a small model brainstorms (`system/reach-ideas`, 30 s, one try): it gets the moment (day, part of day, season), the kind, one thing code picked as a seed (it may skip it), the newest six lines of the chat, only when none of them is pretend or was read as intimate or heavy (lines that skipped a scene once reached back to a heavy disclosure), recent everyday episodes, non-sensitive memories about them (threads, likes, traits, as they stood then, never one the scene lane placed as intimate), its own tastes (never one about the two of them) and its own last reach-outs, and nothing about how long it has been. It writes up to five texts, each a different angle: a small moment of its own, a question about something of theirs, a callback, a playful question. Code screens each (`screened` in `logic.py`): it undoes an answer wrapped again as JSON and mis-decoded emoji, and drops, never rewrites, an empty or garbled one, a needy one (`checked` in `core/reachout.py`, the check every reach-out's draft passes, plans' and nudges' too: waiting, being forgotten or ignored, how long they were gone, why they went quiet or whether they are okay, urgency, making them responsible for how it feels) and one about the two of them (`about_us`). Then a judge (`system/reach-pick`, 20 s) sees the same and the ideas that passed, and picks the one they would be gladdest to get now, or none. When nothing passes or none is picked, the attempt is recorded as dropped with why and counts for the 6-hour gap, so it is not retried every tick. In 2026-11-02's nine days of shadow the single draft about one thing picked by a hash of the date read generic.
 
 **Recording.** A would-send is a row in the append-only `own_reach_outs` table (kind, the seed thing's id, the picked text, mode `shadow`, and the rhythm, the share, the dial, the kinds considered, every idea, the ones screened out with why, and the pick with the judge's why) and an initiate decision `reach out (shadow): would send`. A dropped draft is a row with mode `dropped` and a decision `reach out: draft dropped`. A hold is a decision `reach out: held` with its hold and the same numbers, logged once while the same kind is held for the same reason, so a hold lasting hours is one decision.
 
 **Never.** It never reaches out about a sensitive memory, in their quiet hours, mid-chat or in a scene, twice while one is unanswered, or with a line about their silence. A mood never triggers one (ADR 0016), and a model never decides when to speak.
+
+**How each landed (issue 123, card A6).** Each tick, before the gate, `record_outcomes` writes one decision `reach out: outcome` for every reach-out of any kind (its own, a plan, a nudge) in the last two weeks that has none yet, once their answer is in (their words in the 10 minutes after their first message) or two days passed without one (`outcome.py`). It holds the kind, the mode, answered or not, the hours to the answer and its words. A shadow one is marked `base_rate`: nothing was sent, so it shows only when they came back on their own, the number a live one is compared with. A live one's answer is read once for how they took it (`system/reach-landed`: picked up, brushed off, ignored, or asked it to stop; a failed read is `not read`). A stop is a decision `reach out: stopped` that holds every reach-out (above) until `companion initiative --resume` records `reach out: resumed`. `companion initiative` sums the records by kind and mode. Their direct reply to it, their emoji on it, and a `/flag` or `/fav` on it need the sent message's id, which comes with live sending (issue 143).
 
 ## Files
 
@@ -49,17 +52,20 @@ The one thing is chosen for every kind and handed to the brainstorm as a seed it
 | `gate.py` | pure: the share of conversations it started, how its last was answered, the step down, and the holds in order (`hold`, `share`, `pace`) |
 | `run.py` | effects: reads the store, learns the rhythm, the tick, the context, and the brainstorm and pick (`tick_reach`, `Reacher`, `context`, `ideas`) |
 | `store.py` | its queries (the table is in `store/sqlite/migrations/0032_own_reach_outs.sql`) |
+| `outcome.py` | pure: how a reach-out landed, the stop, and the summary (`outcome`, `Sent`, `Landed`, `stopped`, `summary`) |
 | `cli.py` | its part of `companion initiative` |
 
 ## Prompts
 
 - `system/reach-ideas`: up to five texts for the moment, each a different angle. A failure or an unreadable answer gives no reach-out, recorded as dropped.
 - `system/reach-pick`: which screened idea to send, or none.
+- `system/reach-landed`: how they took a live reach-out from their first answer, or a request to stop. Not yet measured: nothing is sent live yet.
 - `system/reach-draft`: the single draft before 2026-11-03, no longer used.
 
 ## Commands
 
-- `uv run companion initiative`: after the open loops and nudges, the learned rhythm (and how much is baseline), the share against the dial, each would-send with its time, kind and draft, the dropped drafts, and the holds by reason.
+- `uv run companion initiative`: after the open loops and nudges, the learned rhythm (and how much is baseline), the share against the dial, each would-send with its time, kind and draft, the dropped drafts, the holds by reason, and how they landed by kind (shadow ones as the base rate).
+- `uv run companion initiative --resume`: turn reaching out back on after they asked it to stop.
 
 ## Measured
 
