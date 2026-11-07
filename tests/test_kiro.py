@@ -9,7 +9,7 @@ from companion.models.kiro import KiroTalker
 
 
 def test_the_kiro_talker_turns_the_gateways_reasoning_off() -> None:
-    talker = KiroTalker("k", httpx.AsyncClient(), "claude-sonnet-4.6")
+    talker = KiroTalker("k", httpx.AsyncClient(), "claude-sonnet-4.6", "http://127.0.0.1:9000")
     request = TalkerRequest(build_prefix("persona " * 600), (Message("user", "hi"),))
     body = talker.body(request)
     assert body["thinking"] == {"type": "disabled"}

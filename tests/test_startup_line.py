@@ -5,7 +5,7 @@ import pytest
 from companion import daemon, prompts
 from companion.characters import parse
 from companion.core.types import RelationshipId
-from companion.settings import ROLEPLAY_MODEL, SWITCHES
+from companion.settings import JUDGE_MODEL, ROLEPLAY_MODEL, SWITCHES
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +54,7 @@ def test_the_startup_block_with_every_default(monkeypatch: pytest.MonkeyPatch) -
         ),
         f"  everyday {daemon.openrouter.DEFAULT_MODEL}, standby {ROLEPLAY_MODEL}",
         f"  roleplay {ROLEPLAY_MODEL}",
-        f"  judges   {daemon.JUDGE_MODEL} (crisis on deepseek/deepseek-v4.1-flash)",
+        f"  judges   {JUDGE_MODEL} (crisis on deepseek/deepseek-v4.1-flash)",
         "  limits   daily cap $10.00, pace natural",
         (
             "  live     split, listen, mood, redraw, relevance, re-read, lore, focus, reminders,"
@@ -134,9 +134,9 @@ def test_an_override_and_no_roleplay_talker_are_shown_as_they_are(
 
 def test_judge_routes_are_shown_unless_there_are_none(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("COMPANION_JUDGE_ROUTES", "crisis=a/b,listen=c/d")
-    assert " ".join(_row("judges")) == f"{daemon.JUDGE_MODEL} (crisis on a/b listen on c/d)"
+    assert " ".join(_row("judges")) == f"{JUDGE_MODEL} (crisis on a/b listen on c/d)"
     monkeypatch.setenv("COMPANION_JUDGE_ROUTES", "none")
-    assert _row("judges") == [daemon.JUDGE_MODEL]
+    assert _row("judges") == [JUDGE_MODEL]
 
 
 def test_the_startup_block_names_the_character() -> None:

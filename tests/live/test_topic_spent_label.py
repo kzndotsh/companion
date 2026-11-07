@@ -25,9 +25,9 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.daemon import load_dotenv
 from companion.features.flow.topics.logic import JUDGE, SCHEMA, judge_prompt, likely, parse
 from companion.features.mood.logic import held_because
+from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 

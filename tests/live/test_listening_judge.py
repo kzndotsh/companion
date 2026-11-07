@@ -17,7 +17,7 @@ import httpx
 import pytest
 
 from companion.core.turn.listening import SCHEMA, SYSTEM, ListeningRead, parse
-from companion.daemon import load_dotenv
+from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 

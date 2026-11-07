@@ -8,7 +8,6 @@ import asyncio
 import contextlib
 import logging
 import os
-import re
 import uuid
 from collections.abc import AsyncGenerator, Mapping
 from datetime import UTC, datetime, timedelta
@@ -62,8 +61,6 @@ from companion.turn.mode import mode_report
 
 FLAG_REACTION = "✍"
 FAVORITE_REACTION = "❤"
-JUDGE_STANDBY = "deepseek/deepseek-v4.1-flash"  # asked only when the first model refuses
-JUDGE_MODEL = "anthropic/claude-haiku-5.5"
 DATABASE = "companion.sqlite"  # in the data folder, whichever platform it runs on
 UPDATE_KEY = "telegram.last_update_id"
 UNKNOWN_REPLY = (
@@ -77,21 +74,6 @@ PASS_RETRY_DELAYS = (30.0, 120.0)  # a dropped connection, not a model error
 REMINDER_TICK_SECONDS = 60
 
 
-def load_dotenv(path: Path) -> None:
-    """KEY=value lines; a quoted value is kept whole, an unquoted one ends at a ` #` comment."""
-    if not path.exists():
-        return
-    for line in path.read_text().splitlines():
-        key, sep, value = line.partition("=")
-        if sep and not line.lstrip().startswith("#"):
-            value = value.strip()
-            if value[:1] in ("'", '"'):
-                value = value.strip("\"'")
-            else:
-                value = re.split(r"\s#", value, maxsplit=1)[0].strip()
-            os.environ.setdefault(key.strip(), value)
-
-
 def _need(name: str) -> str:
     value = os.environ.get(name)
     if not value:
@@ -101,20 +83,17 @@ def _need(name: str) -> str:
 
 
 def extractor(
-    client: httpx.AsyncClient, routes: Mapping[str, str] | None = None
+    client: httpx.AsyncClient, s: Settings, routes: Mapping[str, str] | None = None
 ) -> StructuredModel:
     """The judges' and the memory pass's model, with a second model for calls the first refuses.
     With `routes` (judge name to model, `COMPANION_JUDGE_ROUTES`), a judge named there reads on its
     own model first and on the shared first model when that one refuses (`ByJudge`)."""
     key = _need("OPENROUTER_API_KEY")
-    first = openrouter.OpenRouterExtractor(
-        key, client, os.environ.get("COMPANION_JUDGE_MODEL", JUDGE_MODEL)
-    )
-    second = os.environ.get("COMPANION_JUDGE_STANDBY", JUDGE_STANDBY)
+    first = openrouter.OpenRouterExtractor(key, client, s.judge_model)
     shared: StructuredModel = (
         first
-        if second.lower() == "none"
-        else RefusalFallback(first, openrouter.OpenRouterExtractor(key, client, second))
+        if s.judge_standby is None
+        else RefusalFallback(first, openrouter.OpenRouterExtractor(key, client, s.judge_standby))
     )
     if not routes:
         return shared
@@ -141,7 +120,7 @@ def startup_lines(
     and the switches by where they stand, printed from the same values the bot is configured
     with."""
     s = settings or Settings.from_env()
-    judges = os.environ.get("COMPANION_JUDGE_MODEL", JUDGE_MODEL)
+    judges = s.judge_model
     routed = ", ".join(f"{k} on {v}" for k, v in s.judge_routes.items())
     states = s.states()
     rows = [
@@ -222,8 +201,8 @@ def _metered_models(
     return (
         MeteredTalker(talker, sink, "talker"),
         MeteredTalker(roleplay, sink, "roleplay talker") if roleplay is not None else None,
-        MeteredExtractor(extractor(client, s.judge_routes), sink, "judge"),
-        MeteredExtractor(extractor(client), sink, "memory"),
+        MeteredExtractor(extractor(client, s, s.judge_routes), sink, "judge"),
+        MeteredExtractor(extractor(client, s), sink, "memory"),
     )
 
 
@@ -347,11 +326,11 @@ async def _nightly_memory(
         await run()
 
 
-async def _daily_backups(data_dir: Path, db: Path) -> None:
+async def _daily_backups(data_dir: Path, db: Path, into: Path) -> None:
     """A snapshot once a day while the bot runs, besides the one at every start."""
     while True:
         await asyncio.sleep(backups.EVERY_SECONDS)
-        await asyncio.to_thread(backups.back_up_quietly, data_dir, db, "daily", utc_now())
+        await asyncio.to_thread(backups.back_up_quietly, data_dir, db, "daily", utc_now(), into)
 
 
 def _start_initiative(
@@ -433,14 +412,14 @@ async def _delivery(
 
 
 async def run(data_dir: Path) -> None:
-    load_dotenv(Path(".env"))
     s = Settings.from_env()
     log_file = logs.configure(data_dir / "logs")
     db = data_dir / DATABASE
     rel = relationship_in(db) or FIRST_RELATIONSHIP
-    backups.back_up_quietly(data_dir, db, "start", utc_now())  # before any migration runs
+    into = backups.backup_dir(data_dir, s.backup_dir)
+    backups.back_up_quietly(data_dir, db, "start", utc_now(), into)  # before any migration runs
     store = Store(db)
-    character = characters.chosen(data_dir / "characters")
+    character = characters.chosen(s.character, data_dir / "characters")
     prefix = build_prefix(characters.system_prompt(prompts.get("system/persona").raw, character))
     roleplay_prefix = build_prefix(
         characters.system_prompt(prompts.get("system/persona").raw, character, roleplay=True)
@@ -575,7 +554,7 @@ async def run(data_dir: Path) -> None:
             for task in (
                 _start_initiative(store, rel, judge, s),
                 _start_reminders(runtime, delivery.transport, s),
-                asyncio.create_task(_daily_backups(data_dir, db)),
+                asyncio.create_task(_daily_backups(data_dir, db, into)),
                 asyncio.create_task(_nightly_memory(store, judges, rel, s)),
             )
             if task is not None

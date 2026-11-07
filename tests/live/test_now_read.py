@@ -23,7 +23,7 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.daemon import load_dotenv
+from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 

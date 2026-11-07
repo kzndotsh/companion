@@ -17,7 +17,6 @@ import httpx
 import pytest
 
 from companion.core.types import Belief
-from companion.daemon import load_dotenv
 from companion.features.upkeep.reread.logic import (
     PAIR,
     PAIR_SCHEMA,
@@ -25,6 +24,7 @@ from companion.features.upkeep.reread.logic import (
     pair_prompt,
     read_relation,
 )
+from companion.lib.dotenv import load_dotenv
 from companion.lib.vote import READS
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL

@@ -17,7 +17,6 @@ from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import TalkerRequest
 from companion.core.replay import ReplayError
 from companion.core.talker import Talker
-from companion.daemon import load_dotenv
 from companion.evals import judge as judge_module
 from companion.evals.fixtures import (
     EmpathyCheck,
@@ -32,11 +31,11 @@ from companion.evals.runner import Models, Plan, Variant, run_eval
 from companion.evals.variants import Place, parse_spec
 from companion.models.credits import charged_since, credits
 from companion.models.kiro import PREFIX as KIRO
-from companion.models.kiro import KiroTalker, kiro_key
+from companion.models.kiro import KiroTalker
 from companion.models.openrouter import DEFAULT_MODEL, OpenRouterExtractor, OpenRouterTalker
+from companion.settings import Settings
 from companion.store.sqlite.replay import replay_file
 
-JUDGE_MODEL = "anthropic/claude-haiku-5.5"
 EST_TALKER = 0.0036
 EST_JUDGE = 0.0004
 
@@ -182,7 +181,7 @@ def _requests(fixtures: list[Fixture], db: Path | None) -> dict[str, TalkerReque
 
 async def run(a: EvalArgs) -> str:
     db, samples, cap = a.db, a.samples, a.cap
-    load_dotenv(Path(".env"))
+    s = Settings.from_env()
     fixtures = _select(load_fixtures(*a.fixtures_dirs), a.only) or "no fixtures to run\n"
     if isinstance(fixtures, str):
         return fixtures
@@ -214,7 +213,7 @@ async def run(a: EvalArgs) -> str:
 
         def talker_for(model: str | None, effort: str | None) -> Talker:
             if model is not None and model.startswith(KIRO):
-                return KiroTalker(kiro_key(), client, model.removeprefix(KIRO))
+                return KiroTalker(s.kiro_key, client, model.removeprefix(KIRO), s.kiro_url)
             return OpenRouterTalker(
                 key,
                 client,
@@ -223,7 +222,7 @@ async def run(a: EvalArgs) -> str:
                 reasoning_effort=effort,
             )
 
-        models = Models(talker_for, OpenRouterExtractor(key, client, JUDGE_MODEL))
+        models = Models(talker_for, OpenRouterExtractor(key, client, s.judge_model))
         plan = Plan(fixtures, requests, variants, samples, cap, rebuilt_requests)
         results = await run_eval(plan, models)
         if before is not None:

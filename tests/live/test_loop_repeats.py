@@ -25,9 +25,9 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.daemon import load_dotenv
 from companion.features.threads.logic import Thread
 from companion.features.threads.run import extract_open_loops
+from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from companion.store.sqlite.store import Store
 from tests.live.models import JUDGE_MODEL

@@ -12,8 +12,8 @@ from pathlib import Path
 import httpx
 import pytest
 
-from companion.daemon import load_dotenv
 from companion.features.curiosity.guess.logic import JUDGE, SCHEMA, parse
+from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from companion.daemon import load_dotenv
+from companion.lib.dotenv import load_dotenv
 from companion.settings import RENAMED, ROLEPLAY_MODEL, SWITCHES, Settings, Switch
 
 

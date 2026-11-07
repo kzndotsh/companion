@@ -13,7 +13,7 @@ import pytest
 
 from companion.core.prompt.prefix import build_prefix
 from companion.core.prompt.request import Message, build_request
-from companion.daemon import load_dotenv
+from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterTalker
 
 pytestmark = pytest.mark.live

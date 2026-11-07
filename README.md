@@ -300,7 +300,8 @@ position is its default (`COMPANION_INITIATIVE=on` is `shadow`, as it has no liv
 | `COMPANION_DAILY_CAP_USD` | `10` | daily spend cap in dollars; `off` removes it |
 | `COMPANION_BACKUP_DIR` | `data/backups` | where snapshots go; point it at another drive or a synced folder, since a copy on the same disk does not survive the disk |
 | `COMPANION_DB` | the one database in `data/` | the SQLite database, for the CLI commands |
-| `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them; set before the process starts |
+| `COMPANION_PROMPT_OVERRIDES` | none | `system/ack=v1,notes/length=v2` runs other prompt versions without shipping them; `.env` works, it is read before anything else |
+| `KIRO_GATEWAY_URL`, `KIRO_GATEWAY_API_KEY` (or `PROXY_API_KEY`) | `http://127.0.0.1:9000`, none | the local Kiro gateway, for evals only (`kiro/` models) |
 
 </details>
 

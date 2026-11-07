@@ -21,14 +21,12 @@ with the crisis line on an urgent turn (ADR 0022), `$line` filled in by code. No
 
 from __future__ import annotations
 
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from companion import prompts
 
-CHARACTER_ENV = "COMPANION_CHARACTER"
 PRIVATE_DIR = Path("data/characters")
 _ID = re.compile(r"[a-z0-9][a-z0-9-]*")
 ROLEPLAY_HEADING = "\n## In roleplay and intimate moments\n"
@@ -114,9 +112,8 @@ def load(char_id: str, private_dir: Path = PRIVATE_DIR) -> Character:
     return parse(prompt.raw, char_id, prompt.version)
 
 
-def chosen(private_dir: Path = PRIVATE_DIR) -> Character | None:
-    """The character `COMPANION_CHARACTER` names, or None when it is unset or empty."""
-    char_id = os.environ.get(CHARACTER_ENV, "").strip()
+def chosen(char_id: str | None, private_dir: Path = PRIVATE_DIR) -> Character | None:
+    """The character `COMPANION_CHARACTER` names (`Settings.character`), or None when unset."""
     return load(char_id, private_dir) if char_id else None
 
 

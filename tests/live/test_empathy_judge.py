@@ -17,10 +17,10 @@ import httpx
 import pytest
 
 from companion.core.prompt.request import Message
-from companion.daemon import load_dotenv
 from companion.evals.judge import (
     grade_empathy,
 )
+from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 

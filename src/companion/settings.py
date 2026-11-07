@@ -12,15 +12,18 @@ from __future__ import annotations
 import os
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
 from companion.io.pace import DEFAULT_PACE, PACES, pace_factor
 from companion.models import anthropic, embeddings, openrouter
 
-ROLEPLAY_MODEL = "deepseek/deepseek-v4.1-flash"
+ROLEPLAY_MODEL = openrouter.DEEPSEEK
+JUDGE_MODEL = openrouter.HAIKU
+JUDGE_STANDBY = openrouter.DEEPSEEK  # asked only when the judges' model refuses
 DEFAULT_DAILY_CAP_USD = 10.0
 # The crisis risk judge reads on DeepSeek first: Haiku's provider refused many crisis messages
 # (judge bake-off, evals/CHANGELOG.md, 2026-10-25). Haiku answers when DeepSeek refuses.
-JUDGE_ROUTES = "crisis=deepseek/deepseek-v4.1-flash"
+JUDGE_ROUTES = f"crisis={openrouter.DEEPSEEK}"
 
 OFF = frozenset({"off", "0", "no", "false"})
 ON = frozenset({"on", "1", "yes", "true"})
@@ -134,6 +137,13 @@ class Settings:
     everyday_standby: str | None  # answers when the everyday talker fails or stalls (J21)
     embed_model: str
     judge_routes: Mapping[str, str]  # judge name to the model it reads on first
+    judge_model: str  # the judges' and the memory pass's model
+    judge_standby: str | None  # asked only when the judge model refuses; None: no standby
+    backup_dir: Path | None  # None: data/backups
+    character: str | None  # the sheet COMPANION_CHARACTER names
+    db: Path | None  # the CLI's database; None: the one in data/
+    kiro_url: str  # the local Kiro gateway, for evals
+    kiro_key: str
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> Settings:
@@ -145,6 +155,9 @@ class Settings:
         roleplay = env.get("COMPANION_ROLEPLAY_MODEL", ROLEPLAY_MODEL)
         standby = env.get("COMPANION_EVERYDAY_STANDBY", "").strip() or roleplay
         pace = env.get("COMPANION_PACE", "").strip().lower()
+        judge_standby = env.get("COMPANION_JUDGE_STANDBY", JUDGE_STANDBY)
+        backup = env.get("COMPANION_BACKUP_DIR", "").strip()
+        db = env.get("COMPANION_DB")
         return cls(
             switches={s.label: s.read(env) for s in SWITCHES},
             daily_cap=_daily_cap(env.get("COMPANION_DAILY_CAP_USD", "")),
@@ -156,6 +169,13 @@ class Settings:
             everyday_standby=None if not has_key or standby.lower() == "none" else standby,
             embed_model=env.get("COMPANION_EMBED_MODEL", embeddings.DEFAULT_MODEL),
             judge_routes=_judge_routes(env.get("COMPANION_JUDGE_ROUTES", JUDGE_ROUTES)),
+            judge_model=env.get("COMPANION_JUDGE_MODEL", JUDGE_MODEL),
+            judge_standby=None if judge_standby.lower() == "none" else judge_standby,
+            backup_dir=Path(backup).expanduser() if backup else None,
+            character=env.get("COMPANION_CHARACTER", "").strip() or None,
+            db=Path(db) if db else None,
+            kiro_url=env.get("KIRO_GATEWAY_URL", "http://127.0.0.1:9000"),
+            kiro_key=env.get("KIRO_GATEWAY_API_KEY") or env.get("PROXY_API_KEY", ""),
         )
 
     def position(self, label: str) -> str:

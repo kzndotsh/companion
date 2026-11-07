@@ -26,6 +26,8 @@ from companion.models.wire import (
 log = logging.getLogger("companion.openrouter")
 URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_MODEL = "openai/gpt-6-luna"
+HAIKU = "anthropic/claude-haiku-5.5"  # the judges' model
+DEEPSEEK = "deepseek/deepseek-v4.1-flash"
 DEFAULT_PROVIDER = (
     "Anthropic"  # pinned only for anthropic/ models, so caching works; others route freely
 )
@@ -109,7 +111,7 @@ class OpenRouterExtractor:
         self,
         api_key: str,
         client: httpx.AsyncClient,
-        model: str = "anthropic/claude-haiku-5.5",
+        model: str = HAIKU,
         provider: str = DEFAULT_PROVIDER,
         max_tokens: int = 2000,
     ) -> None:

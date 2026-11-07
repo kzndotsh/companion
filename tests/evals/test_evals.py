@@ -464,10 +464,6 @@ async def test_run_refuses_when_the_balance_is_below_the_cap(
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
     monkeypatch.setattr(eval_cli, "credits", low)
 
-    def no_env(_: Path) -> None:
-        return None
-
-    monkeypatch.setattr(eval_cli, "load_dotenv", no_env)
     args = eval_cli.EvalArgs(
         None, (Path("evals/fixtures"),), [], ["agree-and-invent"], 1, 0.2, show=False, dry_run=False
     )

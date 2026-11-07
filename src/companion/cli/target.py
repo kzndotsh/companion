@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
+from companion.settings import Settings
 from companion.store.sqlite.store import FIRST_RELATIONSHIP, relationship_in
 
 
@@ -12,9 +12,9 @@ def resolve_db(arg: Path | None, data: Path = Path("data")) -> Path:
     """--db, else $COMPANION_DB, else the one database in data/."""
     if arg is not None:
         return arg
-    env = os.environ.get("COMPANION_DB")
-    if env:
-        return Path(env)
+    configured = Settings.from_env().db
+    if configured:
+        return configured
     found = sorted(data.glob("*.sqlite"))
     if len(found) == 1:
         return found[0]

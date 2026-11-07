@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-companion = "companion.cli.main:main"
+companion = "companion.entry:main"
 
 [dependency-groups]
 dev = [

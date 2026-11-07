@@ -25,7 +25,6 @@ from companion.core.types import (
     Utterance,
     UtteranceId,
 )
-from companion.daemon import load_dotenv
 from companion.features.reminders.logic import (
     PROMPT,
     SCHEMA,
@@ -36,6 +35,7 @@ from companion.features.reminders.logic import (
     resolve,
 )
 from companion.features.reminders.series import repeat_of
+from companion.lib.dotenv import load_dotenv
 from companion.models.openrouter import OpenRouterExtractor
 from tests.live.models import JUDGE_MODEL
 

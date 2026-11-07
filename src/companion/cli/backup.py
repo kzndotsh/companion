@@ -9,6 +9,7 @@ from pathlib import Path
 from companion import backups
 from companion.core.clock import utc_now
 from companion.lib.sqlite.backup import BackupError, check, restore, snapshots
+from companion.settings import Settings
 
 BOT = r"(^uv run companion run$|\.venv/bin/companion run$)"  # as scripts/restart.sh finds it
 
@@ -24,7 +25,7 @@ def _bot_running() -> bool:
 
 def run(db: Path, *, listing: bool = False, restore_from: Path | None = None) -> str:
     data = db.parent
-    into = backups.backup_dir(data)
+    into = backups.backup_dir(data, Settings.from_env().backup_dir)
     if listing:
         found = snapshots(into, db.stem)
         if not found:
@@ -32,7 +33,7 @@ def run(db: Path, *, listing: bool = False, restore_from: Path | None = None) ->
         return "\n".join(f"{p.name}  {p.stat().st_size // 1024} KB" for p in found)
     try:
         if restore_from is None:
-            return backups.back_up(data, db, "manual", utc_now())
+            return backups.back_up(data, db, "manual", utc_now(), into)
         if _bot_running():
             return "the bot is running; stop it first (Ctrl-C in its tab), then restore"
         source = restore_from if restore_from.exists() else into / restore_from.name

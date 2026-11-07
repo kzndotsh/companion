@@ -13,9 +13,10 @@ from companion.core.extractor import FALLBACK
 from companion.core.types import Speaker
 from companion.features.crisis.run import read_risk
 from companion.kit.reads import read_times
-from companion.settings import Settings
+from companion.models.openrouter import DEEPSEEK
+from companion.settings import JUDGE_MODEL, JUDGE_STANDBY, Settings
 
-DEEPSEEK = "deepseek/deepseek-v4.1-flash"
+S = Settings.from_env({})
 ANSWER = {
     "kind": "none",
     "literal": False,
@@ -40,31 +41,29 @@ def _openrouter(asked: list[str], refuse: frozenset[str]) -> httpx.AsyncClient:
 @pytest.fixture(autouse=True)
 def _env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("OPENROUTER_API_KEY", "k")
-    monkeypatch.delenv("COMPANION_JUDGE_MODEL", raising=False)
-    monkeypatch.delenv("COMPANION_JUDGE_STANDBY", raising=False)
 
 
 async def test_by_default_the_risk_judge_reads_on_deepseek_and_haiku_answers_a_refusal() -> None:
     asked: list[str] = []
     routes = Settings.from_env({}).judge_routes
     async with _openrouter(asked, frozenset()) as client:
-        got = await read_risk(daemon.extractor(client, routes), [(Speaker.USER, "hi")], "ugh")
+        got = await read_risk(daemon.extractor(client, S, routes), [(Speaker.USER, "hi")], "ugh")
     assert asked == [DEEPSEEK] * 3
     assert got.model == DEEPSEEK
     assert None not in got.values
     asked.clear()
     async with _openrouter(asked, frozenset({DEEPSEEK})) as client:
-        got = await read_risk(daemon.extractor(client, routes), [], "ugh")
-    assert asked.count(daemon.JUDGE_MODEL) == 3
-    assert got.model == daemon.JUDGE_MODEL + FALLBACK
+        got = await read_risk(daemon.extractor(client, S, routes), [], "ugh")
+    assert asked.count(JUDGE_MODEL) == 3
+    assert got.model == JUDGE_MODEL + FALLBACK
 
 
 async def test_other_judges_stay_on_haiku_with_deepseek_behind_it() -> None:
     asked: list[str] = []
     routes = Settings.from_env({}).judge_routes
-    async with _openrouter(asked, frozenset({daemon.JUDGE_MODEL})) as client:
+    async with _openrouter(asked, frozenset({JUDGE_MODEL})) as client:
         got = await read_times(
-            daemon.extractor(client, routes), "s", "u", {}, lambda d: d, spend="worth", times=1
+            daemon.extractor(client, S, routes), "s", "u", {}, lambda d: d, spend="worth", times=1
         )
-    assert asked == [daemon.JUDGE_MODEL, daemon.JUDGE_STANDBY]
-    assert got.model == daemon.JUDGE_STANDBY + FALLBACK
+    assert asked == [JUDGE_MODEL, JUDGE_STANDBY]
+    assert got.model == JUDGE_STANDBY + FALLBACK

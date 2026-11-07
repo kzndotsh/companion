@@ -9,23 +9,23 @@ a cross-model check, never a measurement of the live talker.
 
 from __future__ import annotations
 
-import os
 import time
+
+import httpx
 
 from companion.core.prompt.request import TalkerRequest
 from companion.core.talker import Reply
 from companion.models.anthropic import AnthropicTalker
 from companion.models.wire import integer, obj, seq, string
 
-URL = os.environ.get("KIRO_GATEWAY_URL", "http://127.0.0.1:9000") + "/v1/messages"
 PREFIX = "kiro/"
 
 
-def kiro_key() -> str:
-    return os.environ.get("KIRO_GATEWAY_API_KEY") or os.environ.get("PROXY_API_KEY", "")
-
-
 class KiroTalker(AnthropicTalker):
+    def __init__(self, api_key: str, client: httpx.AsyncClient, model: str, gateway: str) -> None:
+        super().__init__(api_key, client, model)
+        self._url = gateway + "/v1/messages"
+
     def body(self, request: TalkerRequest) -> dict[str, object]:
         body = super().body(request)
         body["thinking"] = {"type": "disabled"}  # the gateway's injected reasoning, off
@@ -34,7 +34,7 @@ class KiroTalker(AnthropicTalker):
     async def reply(self, request: TalkerRequest) -> Reply:
         started = time.perf_counter()
         resp = await self._client.post(
-            URL,
+            self._url,
             headers={
                 "x-api-key": self._key,
                 "anthropic-version": "2023-06-01",

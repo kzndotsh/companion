@@ -35,14 +35,10 @@ def test_the_sheet_follows_the_persona_under_the_frame() -> None:
     assert system_prompt("PERSONA\n", None) == "PERSONA\n"
 
 
-def test_no_character_unless_the_setting_names_one(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.delenv(characters.CHARACTER_ENV, raising=False)
-    assert characters.chosen(tmp_path) is None
+def test_no_character_unless_the_setting_names_one(tmp_path: Path) -> None:
+    assert characters.chosen(None, tmp_path) is None
     (tmp_path / "mika.md").write_text(SHEET, encoding="utf-8")
-    monkeypatch.setenv(characters.CHARACTER_ENV, "mika")
-    chosen = characters.chosen(tmp_path)
+    chosen = characters.chosen("mika", tmp_path)
     assert chosen is not None
     assert chosen.ref == "mika@local"
 

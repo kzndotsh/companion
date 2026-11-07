@@ -13,10 +13,11 @@ import httpx
 
 from companion.core.spend import MeteredExtractor, SpendEvent
 from companion.core.types import RelationshipId
-from companion.daemon import extractor, load_dotenv
+from companion.daemon import extractor
 from companion.kit.services import Services
 from companion.memory.memory_pass import memory_pass_from
 from companion.memory.rebuild import rebuild
+from companion.settings import Settings
 from companion.store.sqlite.store import Store
 
 
@@ -24,7 +25,6 @@ from companion.store.sqlite.store import Store
 async def _services(db: Path, relationship: str) -> AsyncGenerator[Services]:
     """What a one-off command needs: the store, the judges' model and the relationship. Closed
     after."""
-    load_dotenv(Path(".env"))
     store = Store(db)
     rel = RelationshipId(relationship)
 
@@ -33,7 +33,11 @@ async def _services(db: Path, relationship: str) -> AsyncGenerator[Services]:
 
     try:
         async with httpx.AsyncClient() as client:
-            yield Services(store, MeteredExtractor(extractor(client), sink, "command"), rel)
+            yield Services(
+                store,
+                MeteredExtractor(extractor(client, Settings.from_env()), sink, "command"),
+                rel,
+            )
     finally:
         store.close()
 

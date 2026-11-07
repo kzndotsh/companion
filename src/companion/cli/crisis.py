@@ -10,7 +10,7 @@ from pathlib import Path
 
 import httpx
 
-from companion.daemon import extractor, load_dotenv
+from companion.daemon import extractor
 from companion.features.crisis.cli import check, load_cases
 from companion.lib.vote import READS
 from companion.models.credits import credits
@@ -20,7 +20,7 @@ EST_READ = 0.0006  # dollars per risk read, a guess for the plan line only
 
 
 async def run(path: Path, cap: float) -> str:
-    load_dotenv(Path(".env"))
+    s = Settings.from_env()
     cases = load_cases(path)
     header = (
         f"{len(cases)} cases x {READS} reads, at most about ${len(cases) * READS * EST_READ:.3f}"
@@ -35,4 +35,4 @@ async def run(path: Path, cap: float) -> str:
             header += f"OpenRouter balance ${before.balance:.4f}\n"
             if before.balance < cap:
                 return header + "the balance is below the cap: top up or lower --cap\n"
-        return header + await check(cases, extractor(client, Settings.from_env().judge_routes), cap)
+        return header + await check(cases, extractor(client, s, s.judge_routes), cap)
