@@ -36,7 +36,7 @@ It asks instead of guessing for a bare "at 8" when both are still ahead, "next f
 - A pretend scene in progress holds them until it ends.
 - One that fell due before the bot started and is more than 2 hours late is let go, marked `expired` and logged.
 - A due one is claimed once in a single statement, so it cannot go out twice. One still claimed 10 minutes later was cut off mid-send by a crash or a restart: it is marked `expired` and logged as `reminders: let go, cut off mid-send`, never sent again since whether it arrived is unknown, and its series goes on to the next.
-- The everyday talker writes it with `system/reminder-send` (a greeting: `system/greeting-send`, worded unlike the earlier days' and with no question to answer) as a tail after the history, with the clock line in the system block. If a code check fails (`code_checks` in `core/recheck.py`) it is drawn once more, and the second draw goes out whatever it is.
+- The everyday talker writes it with `system/reminder-send` (a greeting: `system/greeting-send`, worded unlike the earlier days' and with no question to answer) as a tail after the history, with the clock line in the system block. If a code check fails (`code_checks` in `core/reply_gate.py`) it is drawn once more, and the second draw goes out whatever it is.
 - If the daily spend cap is reached, the talker cannot be asked, or it says nothing, their words go out marked (a reminder as the alarm clock emoji and the thing, a check-in as a short "how did it go" line, a greeting as their words for it). The reason is stored with the sent event.
 - A send that fails puts the reminder back to `pending` to try next minute.
 - A sent message is stored as the companion's own, once. One sent more than 5 minutes after its time is marked `late`.

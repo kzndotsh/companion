@@ -78,7 +78,8 @@ the plain persona by default; the owner's character only as a labelled second ch
 A fixture passes only if every check passes. A check is either code (`max_words`, `regex`,
 `not_regex`) or a model: `judge` answers pass, fail or unclear for one written criterion, and
 `epitome` scores a reply on reaction, interpretation, exploration and support. The runner's grader
-is Haiku (`JUDGE_MODEL` in `cli/eval.py`). "Unclear" is never counted as a failure.
+is the judges' model, Haiku unless `COMPANION_JUDGE_MODEL` says otherwise, with the live judges'
+standby and routes (`compose.extractor`, since 2026-11-07). "Unclear" is never counted as a failure.
 
 A grader is a model, so it is checked too. Its first reading agreed with a person on 23 of 24
 replies. The empathy grader contradicted its own cases until 2026-10-25: it scored a friend's "did
